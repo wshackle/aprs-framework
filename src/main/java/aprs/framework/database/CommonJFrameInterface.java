@@ -20,7 +20,7 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework;
+package aprs.framework.database;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,11 +29,17 @@ import java.io.IOException;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface DisplayInterface {
+public interface CommonJFrameInterface {
     
+    public boolean isVisible();
+
+    public void dispose();
+
+    public void setPropertiesFile(File f);
+
     public File getPropertiesFile();
-    public void setPropertiesFile(File propertiesFile);
+
     public void saveProperties() throws IOException;
-    public void loadProperties() throws IOException;
-    public void close() throws Exception;
+
+    public void restoreProperties() throws IOException;
 }

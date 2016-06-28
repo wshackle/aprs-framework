@@ -20,22 +20,18 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
+package aprs.framework.database;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class ActionsToCrclJInternalFrame extends javax.swing.JInternalFrame  implements ActionsToCrclDisplayInterface{
+public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
 
     /**
-     * Creates new form ActionsToCrclJInternalFrame
+     * Creates new form DbSetupJInternalFrame
      */
-    public ActionsToCrclJInternalFrame() {
+    public DbSetupJInternalFrame() {
         initComponents();
     }
 
@@ -48,12 +44,10 @@ public class ActionsToCrclJInternalFrame extends javax.swing.JInternalFrame  imp
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        actionsToCrclJPanel1 = new aprs.framework.ActionsToCrclJPanel();
+        dbSetupJPanel1 = new aprs.framework.database.DbSetupJPanel();
 
         setIconifiable(true);
-        setMaximizable(true);
-        setResizable(true);
-        setTitle("PDDL Actions to CRCL (Executor)");
+        setTitle("Database Setup");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -61,77 +55,27 @@ public class ActionsToCrclJInternalFrame extends javax.swing.JInternalFrame  imp
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(actionsToCrclJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 775, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(dbSetupJPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(actionsToCrclJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 619, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(dbSetupJPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    @Override
-    public void browseActionsFile() throws IOException {
-        this.actionsToCrclJPanel1.browseActionsFile();
+    
+    public DbSetupPublisher getDbSetupPublisher() {
+        return this.dbSetupJPanel1;
     }
-
-    @Override
-    public List<PddlAction> getActionsList() {
-        return this.actionsToCrclJPanel1.getActionsList();
-    }
-
-    @Override
-    public void setActionsList(List<PddlAction> actionsList) {
-        this.actionsToCrclJPanel1.setActionsList(actionsList);
-    }
-
-    @Override
-    public void addAction(PddlAction action) {
-        this.actionsToCrclJPanel1.addAction(action);
-    }
-
-    @Override
-    public File getPropertiesFile() {
-        return this.actionsToCrclJPanel1.getPropertiesFile();
-    }
-
-    @Override
-    public void setPropertiesFile(File propertiesFile) {
-        this.actionsToCrclJPanel1.setPropertiesFile(propertiesFile);
-    }
-
-    @Override
-    public void saveProperties() throws IOException {
-        this.actionsToCrclJPanel1.saveProperties();
-    }
-
+    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private aprs.framework.ActionsToCrclJPanel actionsToCrclJPanel1;
+    private aprs.framework.database.DbSetupJPanel dbSetupJPanel1;
     // End of variables declaration//GEN-END:variables
-
-    @Override
-    public void loadProperties() throws IOException {
-        this.actionsToCrclJPanel1.loadProperties();
-    }
-
-    @Override
-    public void autoResizeTableColWidthsPddlOutput() {
-        this.actionsToCrclJPanel1.autoResizeTableColWidthsPddlOutput();
-    }
-
-    @Override
-    public boolean isLoadEnabled() {
-        return actionsToCrclJPanel1.isLoadEnabled();
-    }
-
-    @Override
-    public void setLoadEnabled(boolean enable) {
-        actionsToCrclJPanel1.setLoadEnabled(enable);
-    }
 }

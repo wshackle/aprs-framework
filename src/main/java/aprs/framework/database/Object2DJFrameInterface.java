@@ -20,20 +20,17 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework;
+package aprs.framework.database;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.List;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface DisplayInterface {
+public interface Object2DJFrameInterface extends CommonJFrameInterface {
     
-    public File getPropertiesFile();
-    public void setPropertiesFile(File propertiesFile);
-    public void saveProperties() throws IOException;
-    public void loadProperties() throws IOException;
-    public void close() throws Exception;
+    public List<DetectedItem> getItems();
+    
+    public void setItems(List<DetectedItem> items);
 }

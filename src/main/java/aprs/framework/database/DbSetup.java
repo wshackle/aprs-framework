@@ -20,20 +20,26 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework;
-
-import java.io.File;
-import java.io.IOException;
+package aprs.framework.database;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface DisplayInterface {
-    
-    public File getPropertiesFile();
-    public void setPropertiesFile(File propertiesFile);
-    public void saveProperties() throws IOException;
-    public void loadProperties() throws IOException;
-    public void close() throws Exception;
+public interface DbSetup {
+
+    DbType getDbType();
+
+    String getHost();
+
+    int getPort();
+
+    String getDbName();
+
+    String getDbUser();
+
+    char[] getDbPassword();
+
+    boolean isConnected();
+
 }

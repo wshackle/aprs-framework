@@ -20,8 +20,10 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework;
+package aprs.framework.pddl.executor;
 
+import aprs.framework.AprsJFrame;
+import aprs.framework.PddlAction;
 import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.File;
@@ -47,12 +49,12 @@ import javax.swing.table.TableColumn;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class ActionsToCrclJPanel extends javax.swing.JPanel implements ActionsToCrclDisplayInterface {
+public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecutorDisplayInterface {
 
     /**
      * Creates new form ActionsToCrclJPanel
      */
-    public ActionsToCrclJPanel() {
+    public PddlExecutorJPanel() {
         initComponents();
     }
 
@@ -349,5 +351,9 @@ public class ActionsToCrclJPanel extends javax.swing.JPanel implements ActionsTo
         this.jTextFieldPddlOutputActions.setEnabled(enable);
         this.jButtonLoad.setEnabled(enable);
         loadEnabled = enable;
+    }
+
+    @Override
+    public void close() throws Exception {
     }
 }

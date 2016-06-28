@@ -20,20 +20,41 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework;
 
-import java.io.File;
-import java.io.IOException;
+
+package aprs.framework.database;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface DisplayInterface {
+public class DetectedItem {
+    public String name;
+    public int repeats;
+    public int index;
+    public double rotation;
+    public double x;
+    public double y;
+    public double score;
+
+    public DetectedItem() {
+        score = 100.0;
+    }
+
     
-    public File getPropertiesFile();
-    public void setPropertiesFile(File propertiesFile);
-    public void saveProperties() throws IOException;
-    public void loadProperties() throws IOException;
-    public void close() throws Exception;
+    public DetectedItem(String name, double rotation, double x, double y) {
+        this.name = name;
+        this.rotation = rotation;
+        this.x = x;
+        this.y = y;
+        this.score = 100.0;
+    }
+
+    
+    @Override
+    public String toString() {
+        return "DetectedItem{" + "name=" + name + ", repeats=" + repeats + ", index=" + index + ", rotation=" + rotation + ", x=" + x + ", y=" + y + ", score=" + score + '}';
+    }
+    
+    
 }

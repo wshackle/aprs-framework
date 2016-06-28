@@ -20,20 +20,31 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework;
+package aprs.framework.pddl.executor;
 
-import java.io.File;
+import aprs.framework.DisplayInterface;
+import aprs.framework.PddlAction;
 import java.io.IOException;
+import java.util.List;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface DisplayInterface {
-    
-    public File getPropertiesFile();
-    public void setPropertiesFile(File propertiesFile);
-    public void saveProperties() throws IOException;
-    public void loadProperties() throws IOException;
-    public void close() throws Exception;
+public interface PddlExecutorDisplayInterface extends DisplayInterface {
+
+    public void browseActionsFile() throws IOException;
+
+    public List<PddlAction> getActionsList();
+
+    public void setActionsList(List<PddlAction> actionsList);
+
+    public void addAction(PddlAction action);
+
+    public void autoResizeTableColWidthsPddlOutput();
+
+    public boolean isLoadEnabled();
+
+    public void setLoadEnabled(boolean enable);
+
 }

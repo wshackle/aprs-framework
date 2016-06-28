@@ -20,71 +20,110 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
- 
 package aprs.framework;
 
-import com.github.wshackle.visiontodb.Object2DViewJInternalFrame;
-import com.github.wshackle.visiontodb.VisionToDbJInternalFrame;
+import aprs.framework.database.DbSetup;
+import aprs.framework.database.DbSetupBuilder;
+import aprs.framework.database.DbSetupJInternalFrame;
+import aprs.framework.database.DbSetupListener;
+import aprs.framework.database.DbSetupPublisher;
+import aprs.framework.database.DbType;
+import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
+import aprs.framework.pddl.planner.PddlPlannerJInternalFrame;
+import aprs.framework.database.Object2DViewJInternalFrame;
+import aprs.framework.database.VisionToDbJInternalFrame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenuItem;
-import javax.swing.table.DefaultTableModel;
+import aprs.framework.pddl.executor.PddlExecutorDisplayInterface;
+import java.util.Objects;
+import java.util.concurrent.Callable;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class AprsJFrame extends javax.swing.JFrame implements ActionsToCrclDisplayInterface {
+public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDisplayInterface {
 
     private VisionToDbJInternalFrame visionToDbJInternalFrame = null;
-    private ActionsToCrclJInternalFrame actionsToCrclJInternalFrame1 = null;
+    private PddlExecutorJInternalFrame pddlExecutorJInternalFrame1 = null;
     private Object2DViewJInternalFrame object2DViewJInternalFrame = null;
+    private PddlPlannerJInternalFrame pddlPlannerJInternalFrame = null;
+    private DbSetupJInternalFrame dbSetupJInternalFrame = null;
 
     /**
      * Creates new form AprsPddlWrapperJFrame
      */
     public AprsJFrame() {
-        initComponents();
-//        jDesktopPane1.setDesktopManager(d);
-        jInternalFramePddlPlannerExecutable.setVisible(true);
-        jDesktopPane1.add(jInternalFramePddlPlannerExecutable);
-        jInternalFramePddlPlannerExecutable.getDesktopPane().getDesktopManager().maximizeFrame(jInternalFramePddlPlannerExecutable);
+        try {
+            initComponents();
+            loadProperties();
+            if (jCheckBoxMenuItemStartupPDDLPlanner.isSelected()) {
+                startPddlPlanner();
+            }
+            if (jCheckBoxMenuItemStartupPDDLExecutor.isSelected()) {
+                startActionsToCrclJInternalFrame();
+            }
+            if (jCheckBoxMenuItemStartupObjectSP.isSelected()) {
+                startVisionToDbJinternalFrame();
+            }
+            if (jCheckBoxMenuItemStartupObject2DView.isSelected()) {
+                startObject2DJinternalFrame();
+            }
+            dbSetupJInternalFrame = new DbSetupJInternalFrame();
+            dbSetupJInternalFrame.pack();
+            dbSetupJInternalFrame.setVisible(true);
+            jDesktopPane1.add(dbSetupJInternalFrame);
+            DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+            if (null != pub) {
+                pub.setDbSetup(dbSetup);
+                pub.addDbSetupListener(toVisListener);
+            }
+            setupWindowsMenu();
+        } catch (IOException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
-        actionsToCrclJInternalFrame1 = new ActionsToCrclJInternalFrame();
-        this.actionsToCrclJInternalFrame1.pack();
-        this.actionsToCrclJInternalFrame1.setVisible(true);
-        jDesktopPane1.add(actionsToCrclJInternalFrame1);
-        actionsToCrclJInternalFrame1.getDesktopPane().getDesktopManager().maximizeFrame(actionsToCrclJInternalFrame1);
+        try {
+            setIconImage(ImageIO.read(AprsJFrame.class.getResource("aprs.png")));
+        } catch (Exception ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
-        visionToDbJInternalFrame = new VisionToDbJInternalFrame();
-        visionToDbJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "visionToDBProperties.txt"));
-        visionToDbJInternalFrame.restoreProperties();
-        visionToDbJInternalFrame.pack();
-        visionToDbJInternalFrame.setVisible(true);
-        jDesktopPane1.add(visionToDbJInternalFrame);
-        visionToDbJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(visionToDbJInternalFrame);
-        this.actionsToCrclJInternalFrame1.setPropertiesFile(new File(propertiesDirectory, "actionsToCrclProperties.txt"));
+    private void setupWindowsMenu() {
+        jMenuWindow.removeAll();
+        for (JInternalFrame f : jDesktopPane1.getAllFrames()) {
+            JMenuItem menuItem = new JMenuItem(f.getTitle());
+            final JInternalFrame frameToShow = f;
+            menuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    frameToShow.setVisible(true);
+                    jDesktopPane1.getDesktopManager().deiconifyFrame(frameToShow);
+                    jDesktopPane1.getDesktopManager().activateFrame(frameToShow);
+                    frameToShow.moveToFront();;
 
+                }
+            });
+            jMenuWindow.add(menuItem);
+        }
+    }
+
+    private void startObject2DJinternalFrame() {
         try {
             object2DViewJInternalFrame = new Object2DViewJInternalFrame();
             object2DViewJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "object2DViewProperties.txt"));
@@ -93,32 +132,70 @@ public class AprsJFrame extends javax.swing.JFrame implements ActionsToCrclDispl
             object2DViewJInternalFrame.setVisible(true);
             jDesktopPane1.add(object2DViewJInternalFrame);
             object2DViewJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(object2DViewJInternalFrame);
-
-        } catch (IOException iOException) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, iOException);
+        } catch (Exception ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private final Callable<DbSetupPublisher> dbSetupPublisherSupplier = new Callable<DbSetupPublisher>() {
+        @Override
+        public DbSetupPublisher call() throws Exception {
+            dbSetupJInternalFrame.setVisible(true);
+            jDesktopPane1.getDesktopManager().deiconifyFrame(dbSetupJInternalFrame);
+            jDesktopPane1.getDesktopManager().activateFrame(dbSetupJInternalFrame);
+            dbSetupJInternalFrame.moveToFront();
+            return dbSetupJInternalFrame.getDbSetupPublisher();
+        }
+    };
+
+    private void startVisionToDbJinternalFrame() {
+        visionToDbJInternalFrame = new VisionToDbJInternalFrame();
+        visionToDbJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "visionToDBProperties.txt"));
+        visionToDbJInternalFrame.restoreProperties();
+        visionToDbJInternalFrame.pack();
+        visionToDbJInternalFrame.setVisible(true);
+        visionToDbJInternalFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
+        jDesktopPane1.add(visionToDbJInternalFrame);
+        visionToDbJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(visionToDbJInternalFrame);
+        DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+        if (null != pub) {
+            pub.addDbSetupListener(toDbListener);
+        }
+    }
+
+    private void startActionsToCrclJInternalFrame() {
         try {
-            loadProperties();
+            if (null == pddlExecutorJInternalFrame1) {
+                pddlExecutorJInternalFrame1 = new PddlExecutorJInternalFrame();
+                this.pddlExecutorJInternalFrame1.pack();
+            }
+            this.pddlExecutorJInternalFrame1.setVisible(true);
+            jDesktopPane1.add(pddlExecutorJInternalFrame1);
+            pddlExecutorJInternalFrame1.getDesktopPane().getDesktopManager().maximizeFrame(pddlExecutorJInternalFrame1);
+            this.pddlExecutorJInternalFrame1.setPropertiesFile(new File(propertiesDirectory, "actionsToCrclProperties.txt"));
+            this.pddlExecutorJInternalFrame1.loadProperties();
+            if (null != pddlPlannerJInternalFrame) {
+                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
+            }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-        for (JInternalFrame f : jDesktopPane1.getAllFrames()) {
-            JMenuItem menuItem = new JMenuItem(f.getTitle());
-            final JInternalFrame frameToShow = f;
-            menuItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    frameToShow.setVisible(true);
-                    frameToShow.moveToFront();;
-                    jDesktopPane1.getDesktopManager().deiconifyFrame(frameToShow);
-                    jDesktopPane1.getDesktopManager().activateFrame(frameToShow);
-                }
-            });
-            jMenuWindow.add(menuItem);
-        }
+    }
+
+    private void startPddlPlanner() {
         try {
-            setIconImage(ImageIO.read(AprsJFrame.class.getResource("aprs.png")));
-        } catch (Exception ex) {
+            //        jDesktopPane1.setDesktopManager(d);
+            if (pddlPlannerJInternalFrame == null) {
+                pddlPlannerJInternalFrame = new PddlPlannerJInternalFrame();
+                pddlPlannerJInternalFrame.pack();
+            }
+            pddlPlannerJInternalFrame.setVisible(true);
+            jDesktopPane1.add(pddlPlannerJInternalFrame);
+            pddlPlannerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(pddlPlannerJInternalFrame);
+            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
+            pddlPlannerJInternalFrame.loadProperties();
+            pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
+        } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -132,166 +209,100 @@ public class AprsJFrame extends javax.swing.JFrame implements ActionsToCrclDispl
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jInternalFramePddlPlannerExecutable = new javax.swing.JInternalFrame();
-        jLabel1 = new javax.swing.JLabel();
-        jTextFieldPlannerProgramExecutable = new javax.swing.JTextField();
-        jButtonPlannerProgramExecutableBrowse = new javax.swing.JButton();
-        jLabel2 = new javax.swing.JLabel();
-        jTextFieldPddlDomainFile = new javax.swing.JTextField();
-        jButtonPddlDomainBrowse = new javax.swing.JButton();
-        jLabel3 = new javax.swing.JLabel();
-        jTextFieldPddlProblem = new javax.swing.JTextField();
-        jButtonPddlProblemBrowse = new javax.swing.JButton();
-        jLabel4 = new javax.swing.JLabel();
-        jTextFieldAdditionalArgs = new javax.swing.JTextField();
-        jLabel5 = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTextAreaOutput = new javax.swing.JTextArea();
-        jButtonRunOnce = new javax.swing.JButton();
         jDesktopPane1 = new javax.swing.JDesktopPane();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        jMenu2 = new javax.swing.JMenu();
+        jMenuItemLoadProperties = new javax.swing.JMenuItem();
+        jMenuItemSaveProperties = new javax.swing.JMenuItem();
+        jMenuItemSetProperiesFile = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        jMenuItemExit = new javax.swing.JMenuItem();
+        jMenu3 = new javax.swing.JMenu();
+        jCheckBoxMenuItemStartupPDDLPlanner = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemStartupPDDLExecutor = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemStartupObjectSP = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemStartupObject2DView = new javax.swing.JCheckBoxMenuItem();
         jMenuWindow = new javax.swing.JMenu();
-
-        jInternalFramePddlPlannerExecutable.setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);
-        jInternalFramePddlPlannerExecutable.setIconifiable(true);
-        jInternalFramePddlPlannerExecutable.setMaximizable(true);
-        jInternalFramePddlPlannerExecutable.setResizable(true);
-        jInternalFramePddlPlannerExecutable.setTitle("Pddl Planner Executable");
-        jInternalFramePddlPlannerExecutable.setVisible(true);
-
-        jLabel1.setText("Planner Program Executable:");
-
-        jTextFieldPlannerProgramExecutable.setText("popf3-clp");
-
-        jButtonPlannerProgramExecutableBrowse.setText("Browse");
-        jButtonPlannerProgramExecutableBrowse.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonPlannerProgramExecutableBrowseActionPerformed(evt);
-            }
-        });
-
-        jLabel2.setText("PDDL Domain File");
-
-        jTextFieldPddlDomainFile.setText("domain-kitting.pddl");
-        jTextFieldPddlDomainFile.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldPddlDomainFileActionPerformed(evt);
-            }
-        });
-
-        jButtonPddlDomainBrowse.setText("Browse");
-        jButtonPddlDomainBrowse.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonPddlDomainBrowseActionPerformed(evt);
-            }
-        });
-
-        jLabel3.setText("PDDL Problem File");
-
-        jTextFieldPddlProblem.setText("problem-a2b1c1.pddl");
-
-        jButtonPddlProblemBrowse.setText("Browse");
-        jButtonPddlProblemBrowse.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonPddlProblemBrowseActionPerformed(evt);
-            }
-        });
-
-        jLabel4.setText("Additional Arguments:");
-
-        jTextFieldAdditionalArgs.setText("-I -n");
-
-        jLabel5.setText("Output");
-
-        jTextAreaOutput.setColumns(20);
-        jTextAreaOutput.setRows(5);
-        jScrollPane1.setViewportView(jTextAreaOutput);
-
-        jButtonRunOnce.setText("Run Once");
-        jButtonRunOnce.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonRunOnceActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jInternalFramePddlPlannerExecutableLayout = new javax.swing.GroupLayout(jInternalFramePddlPlannerExecutable.getContentPane());
-        jInternalFramePddlPlannerExecutable.getContentPane().setLayout(jInternalFramePddlPlannerExecutableLayout);
-        jInternalFramePddlPlannerExecutableLayout.setHorizontalGroup(
-            jInternalFramePddlPlannerExecutableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jInternalFramePddlPlannerExecutableLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jInternalFramePddlPlannerExecutableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane1)
-                    .addComponent(jTextFieldAdditionalArgs, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jInternalFramePddlPlannerExecutableLayout.createSequentialGroup()
-                        .addComponent(jTextFieldPlannerProgramExecutable, javax.swing.GroupLayout.PREFERRED_SIZE, 508, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonPlannerProgramExecutableBrowse, javax.swing.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jInternalFramePddlPlannerExecutableLayout.createSequentialGroup()
-                        .addGroup(jInternalFramePddlPlannerExecutableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(jTextFieldPddlProblem, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 508, Short.MAX_VALUE)
-                            .addComponent(jTextFieldPddlDomainFile, javax.swing.GroupLayout.Alignment.LEADING))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jInternalFramePddlPlannerExecutableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButtonPddlDomainBrowse, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButtonPddlProblemBrowse, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jInternalFramePddlPlannerExecutableLayout.createSequentialGroup()
-                        .addGroup(jInternalFramePddlPlannerExecutableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel3)
-                            .addComponent(jLabel4))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jInternalFramePddlPlannerExecutableLayout.createSequentialGroup()
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jButtonRunOnce)))
-                .addContainerGap())
-        );
-        jInternalFramePddlPlannerExecutableLayout.setVerticalGroup(
-            jInternalFramePddlPlannerExecutableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jInternalFramePddlPlannerExecutableLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jInternalFramePddlPlannerExecutableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextFieldPlannerProgramExecutable, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonPlannerProgramExecutableBrowse))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jInternalFramePddlPlannerExecutableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextFieldPddlDomainFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonPddlDomainBrowse))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jInternalFramePddlPlannerExecutableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextFieldPddlProblem, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonPddlProblemBrowse))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel4)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextFieldAdditionalArgs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jInternalFramePddlPlannerExecutableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5)
-                    .addComponent(jButtonRunOnce))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 228, Short.MAX_VALUE)
-                .addContainerGap())
-        );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS Coordinator");
 
         jMenu1.setText("File");
+
+        jMenuItemLoadProperties.setText("Reload Property Settings");
+        jMenuItemLoadProperties.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemLoadPropertiesActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemLoadProperties);
+
+        jMenuItemSaveProperties.setText("Save Properties");
+        jMenuItemSaveProperties.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSavePropertiesActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemSaveProperties);
+
+        jMenuItemSetProperiesFile.setText("Set Properties File ...");
+        jMenuItemSetProperiesFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSetProperiesFileActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemSetProperiesFile);
+        jMenu1.add(jSeparator1);
+
+        jMenuItemExit.setText("Exit");
+        jMenuItemExit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemExitActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemExit);
+
         jMenuBar1.add(jMenu1);
 
-        jMenu2.setText("Edit");
-        jMenuBar1.add(jMenu2);
+        jMenu3.setText("Startup");
+
+        jCheckBoxMenuItemStartupPDDLPlanner.setSelected(true);
+        jCheckBoxMenuItemStartupPDDLPlanner.setText("PDDL Planner");
+        jCheckBoxMenuItemStartupPDDLPlanner.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemStartupPDDLPlannerActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jCheckBoxMenuItemStartupPDDLPlanner);
+
+        jCheckBoxMenuItemStartupPDDLExecutor.setSelected(true);
+        jCheckBoxMenuItemStartupPDDLExecutor.setText("PDDL Executor");
+        jCheckBoxMenuItemStartupPDDLExecutor.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemStartupPDDLExecutorActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jCheckBoxMenuItemStartupPDDLExecutor);
+
+        jCheckBoxMenuItemStartupObjectSP.setSelected(true);
+        jCheckBoxMenuItemStartupObjectSP.setText("Object SP");
+        jCheckBoxMenuItemStartupObjectSP.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemStartupObjectSPActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jCheckBoxMenuItemStartupObjectSP);
+
+        jCheckBoxMenuItemStartupObject2DView.setSelected(true);
+        jCheckBoxMenuItemStartupObject2DView.setText("Object 2D View/Simulate");
+        jCheckBoxMenuItemStartupObject2DView.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemStartupObject2DViewActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jCheckBoxMenuItemStartupObject2DView);
+
+        jMenuBar1.add(jMenu3);
 
         jMenuWindow.setText("Window");
         jMenuBar1.add(jMenuWindow);
@@ -304,7 +315,7 @@ public class AprsJFrame extends javax.swing.JFrame implements ActionsToCrclDispl
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jDesktopPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 807, Short.MAX_VALUE)
+                .addComponent(jDesktopPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1013, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -318,133 +329,105 @@ public class AprsJFrame extends javax.swing.JFrame implements ActionsToCrclDispl
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jTextFieldPddlDomainFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPddlDomainFileActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextFieldPddlDomainFileActionPerformed
-
-    private void jButtonPlannerProgramExecutableBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPlannerProgramExecutableBrowseActionPerformed
+    private void jCheckBoxMenuItemStartupPDDLPlannerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupPDDLPlannerActionPerformed
         try {
-            browseProgramExecutable();
+            if (jCheckBoxMenuItemStartupPDDLPlanner.isSelected()) {
+                startPddlPlanner();
+            } else {
+                closePddlPlanner();
+            }
+            setupWindowsMenu();
+            saveProperties();
+        } catch (Exception ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemStartupPDDLPlannerActionPerformed
+
+    private void jCheckBoxMenuItemStartupPDDLExecutorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupPDDLExecutorActionPerformed
+        try {
+            if (jCheckBoxMenuItemStartupPDDLExecutor.isSelected()) {
+                startActionsToCrclJInternalFrame();
+            } else {
+                closeActionsToCrclJInternalFrame();
+            }
+            setupWindowsMenu();
+            saveProperties();
+        } catch (Exception ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemStartupPDDLExecutorActionPerformed
+
+    private void jCheckBoxMenuItemStartupObjectSPActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupObjectSPActionPerformed
+        try {
+            if (jCheckBoxMenuItemStartupObjectSP.isSelected()) {
+                startVisionToDbJinternalFrame();
+            }
+            setupWindowsMenu();
+            saveProperties();
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_jButtonPlannerProgramExecutableBrowseActionPerformed
+    }//GEN-LAST:event_jCheckBoxMenuItemStartupObjectSPActionPerformed
 
-    private void jButtonPddlDomainBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlDomainBrowseActionPerformed
+    private void jCheckBoxMenuItemStartupObject2DViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupObject2DViewActionPerformed
         try {
-            browsePddlDomain();
+            if (jCheckBoxMenuItemStartupObject2DView.isSelected()) {
+                startObject2DJinternalFrame();
+            }
+            setupWindowsMenu();
+            saveProperties();
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_jButtonPddlDomainBrowseActionPerformed
+    }//GEN-LAST:event_jCheckBoxMenuItemStartupObject2DViewActionPerformed
 
-    private void jButtonPddlProblemBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlProblemBrowseActionPerformed
+    private void jMenuItemLoadPropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadPropertiesActionPerformed
         try {
-            browsePddlProblem();
+            this.loadProperties();
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_jButtonPddlProblemBrowseActionPerformed
+    }//GEN-LAST:event_jMenuItemLoadPropertiesActionPerformed
 
-    private void jButtonRunOnceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRunOnceActionPerformed
+    private void jMenuItemSavePropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePropertiesActionPerformed
         try {
-            runPddlPlannerOnce();
-            actionsToCrclJInternalFrame1.setLoadEnabled(false);
+            this.saveProperties();
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_jButtonRunOnceActionPerformed
+    }//GEN-LAST:event_jMenuItemSavePropertiesActionPerformed
 
-    private Executor executor = Executors.newCachedThreadPool();
+    private void jMenuItemSetProperiesFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetProperiesFileActionPerformed
+        JFileChooser chooser = new JFileChooser(propertiesDirectory);
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                setPropertiesFile(chooser.getSelectedFile());
+                propertiesDirectory = propertiesFile.getParentFile();
+                if (propertiesFile.exists()) {
+                    loadProperties();
+                } else {
+                    saveProperties();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jMenuItemSetProperiesFileActionPerformed
 
-    /**
-     * Get the value of executor
-     *
-     * @return the value of executor
-     */
-    public Executor getExecutor() {
-        return executor;
-    }
-
-    /**
-     * Set the value of executor
-     *
-     * @param executor new value of executor
-     */
-    public void setExecutor(Executor executor) {
-        this.executor = executor;
-    }
+    private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
+        try {
+            close();
+        } catch (Exception ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jMenuItemExitActionPerformed
 
     public void addAction(PddlAction action) {
-        this.actionsToCrclJInternalFrame1.addAction(action);
-    }
-
-    public void runPddlPlannerOnce() throws IOException {
-        List<String> commandList = new ArrayList<>();
-        this.setActionsList(new ArrayList<>());
-        commandList.add(new File(jTextFieldPlannerProgramExecutable.getText()).getCanonicalPath());
-        commandList.addAll(Arrays.asList(jTextFieldAdditionalArgs.getText().split("[ \t]+")));
-        commandList.add(jTextFieldPddlDomainFile.getText());
-        commandList.add(jTextFieldPddlProblem.getText());
-        ProcessBuilder pb = new ProcessBuilder(commandList);
-        final Process process = pb.start();
-        jTextAreaOutput.append(commandList.toString() + System.lineSeparator());
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    InputStream os = process.getErrorStream();
-                    BufferedReader br = new BufferedReader(new InputStreamReader(os));
-                    String line = null;
-                    while (null != (line = br.readLine())) {
-                        final String lineToAppend = line;
-                        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                jTextAreaOutput.append(lineToAppend + System.lineSeparator());
-                            }
-                        });
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    InputStream os = process.getInputStream();
-                    BufferedReader br = new BufferedReader(new InputStreamReader(os));
-                    String line = null;
-                    boolean planFoundFound = false;
-                    while (null != (line = br.readLine())) {
-                        final String lineToAppend = line;
-                        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                jTextAreaOutput.append(lineToAppend + System.lineSeparator());
-
-                            }
-                        });
-
-                        if (planFoundFound) {
-                            addAction(PddlAction.parse(lineToAppend));
-                        }
-                        if (line.contains("; Plan found") || line.contains("Solution Found")) {
-                            planFoundFound = true;
-                        }
-                    }
-                    actionsToCrclJInternalFrame1.autoResizeTableColWidthsPddlOutput();
-                } catch (IOException ex) {
-                    Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
+        this.pddlExecutorJInternalFrame1.addAction(action);
     }
 
     static private File propertiesFile;
-    static private final File propertiesDirectory;
+    static private File propertiesDirectory;
 
     static {
         propertiesDirectory = new File(System.getProperty("user.home"), ".aprs");
@@ -452,89 +435,177 @@ public class AprsJFrame extends javax.swing.JFrame implements ActionsToCrclDispl
         propertiesFile = new File(propertiesDirectory, "aprs_pddl_wrapper_propeties.txt");
     }
 
+    private final DbSetupListener toVisListener = new DbSetupListener() {
+        @Override
+        public void accept(DbSetup setup) {
+//            if (setup.isConnected() == (dbSetup != null && !dbSetup.isConnected())) {
+//                dbSetup = setup;
+//                DbSetup oldDbSetup = DbSetupBuilder.loadFromPropertiesFile(dbPropertiesFile).build();
+//                if (!Objects.equals(oldDbSetup.getDbType(), setup.getDbType())) {
+//                    setup = DbSetupBuilder.loadFromPropertiesFile(propertiesFile, setup.getDbType(), null, -1).build();
+//                    if (null != dbSetupJInternalFrame) {
+//                        DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+//                        if (null != pub) {
+//                            DbSetupBuilder.savePropertiesFile(dbPropertiesFile, setup);
+//                            pub.setDbSetup(setup);
+//                        }
+//                    }
+//                }
+//            }
+            dbSetup = setup;
+            if (null != visionToDbJInternalFrame) {
+                DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+                if (null != pub) {
+                    DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, "dbsetup.txt"), dbSetup);
+                    pub.setDbSetup(setup);
+                }
+            }
+        }
+    };
+
+    private File dbPropertiesFile = new File(propertiesDirectory, "dbsetup.txt");
+
+    private final DbSetupListener toDbListener = new DbSetupListener() {
+        @Override
+        public void accept(DbSetup setup) {
+//            if (setup.isConnected() == (dbSetup != null && !dbSetup.isConnected())) {
+//                dbSetup = setup;
+//
+//                DbSetup oldDbSetup = DbSetupBuilder.loadFromPropertiesFile(dbPropertiesFile).build();
+//                if (!Objects.equals(oldDbSetup.getDbType(), setup.getDbType())) {
+//                    setup = DbSetupBuilder.loadFromPropertiesFile(propertiesFile, setup.getDbType(), null, -1).build();
+//                    DbSetupBuilder.savePropertiesFile(dbPropertiesFile, setup);
+//                    if (null != visionToDbJInternalFrame) {
+//                        DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+//                        if (null != pub) {
+//                            pub.setDbSetup(setup);
+//                        }
+//                    }
+//                }
+//            }
+            dbSetup = setup;
+            if (null != dbSetupJInternalFrame) {
+                DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+                if (null != pub) {
+                    DbSetupBuilder.savePropertiesFile(dbPropertiesFile, dbSetup);
+                    pub.setDbSetup(setup);
+                }
+            }
+        }
+    };
+
+    DbSetup dbSetup = null;
+
     @Override
     public void loadProperties() throws IOException {
         Properties props = new Properties();
         try (FileReader fr = new FileReader(propertiesFile)) {
             props.load(fr);
         }
-        String executable = props.getProperty(PROGRAMEXECUTABLE);
-        if (null != executable) {
-            jTextFieldPlannerProgramExecutable.setText(executable);
+        String startPddlPlannerString = props.getProperty(STARTUPPDDLPLANNER);
+        if (null != startPddlPlannerString) {
+            jCheckBoxMenuItemStartupPDDLPlanner.setSelected(Boolean.valueOf(startPddlPlannerString));
         }
-        String domain = props.getProperty(PDDLDOMAIN);
-        if (null != domain) {
-            jTextFieldPddlDomainFile.setText(domain);
+        String startPddlExecutorString = props.getProperty(STARTUPPDDLEXECUTOR);
+        if (null != startPddlExecutorString) {
+            jCheckBoxMenuItemStartupPDDLExecutor.setSelected(Boolean.valueOf(startPddlExecutorString));
         }
-        String problem = props.getProperty(PDDLPROBLEM);
-        if (null != problem) {
-            jTextFieldPddlProblem.setText(problem);
+        String startObjectSpString = props.getProperty(STARTUPPDDLOBJECTSP);
+        if (null != startObjectSpString) {
+            jCheckBoxMenuItemStartupObjectSP.setSelected(Boolean.valueOf(startObjectSpString));
         }
+        String startObjectViewString = props.getProperty(STARTUPPDDLOBJECTVIEW);
+        if (null != startObjectViewString) {
+            jCheckBoxMenuItemStartupObject2DView.setSelected(Boolean.valueOf(startObjectViewString));
+        }
+//        String executable = props.getProperty(PROGRAMEXECUTABLE);
+//        if (null != executable) {
+//            jTextFieldPlannerProgramExecutable.setText(executable);
+//        }
+//        String domain = props.getProperty(PDDLDOMAIN);
+//        if (null != domain) {
+//            jTextFieldPddlDomainFile.setText(domain);
+//        }
+//        String problem = props.getProperty(PDDLPROBLEM);
+//        if (null != problem) {
+//            jTextFieldPddlProblem.setText(problem);
+//        }
 //        String output = props.getProperty(PDDLOUTPUT);
 //        if (null != output) {
 //            jTextFieldPddlOutputActions.setText(output);
 //        }
-        String addargs = props.getProperty(PDDLADDARGS);
-        if (null != addargs) {
-            jTextFieldAdditionalArgs.setText(addargs);
+//        String addargs = props.getProperty(PDDLADDARGS);
+//        if (null != addargs) {
+//            jTextFieldAdditionalArgs.setText(addargs);
+//        }
+        if (null != pddlPlannerJInternalFrame) {
+            this.pddlPlannerJInternalFrame.loadProperties();
         }
-        this.actionsToCrclJInternalFrame1.loadProperties();
-        this.visionToDbJInternalFrame.restoreProperties();
-        this.object2DViewJInternalFrame.restoreProperties();
+        if (null != pddlExecutorJInternalFrame1) {
+            this.pddlExecutorJInternalFrame1.loadProperties();
+        }
+        dbSetup = DbSetupBuilder.loadFromPropertiesFile(new File(propertiesDirectory, "dbsetup.txt")).build();
+
+        if (null != dbSetupJInternalFrame) {
+            DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+            if (null != pub) {
+                pub.setDbSetup(dbSetup);
+            }
+        }
+        if (null != visionToDbJInternalFrame) {
+            this.visionToDbJInternalFrame.restoreProperties();
+            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+            if (null != pub) {
+                pub.setDbSetup(dbSetup);
+            }
+        }
+        if (null != object2DViewJInternalFrame) {
+            this.object2DViewJInternalFrame.restoreProperties();
+        }
     }
 
-    private static final String PROGRAMEXECUTABLE = "program.executable";
-
+    @Override
     public void saveProperties() throws IOException {
         Map<String, String> propsMap = new HashMap<>();
-        propsMap.put(PROGRAMEXECUTABLE, jTextFieldPlannerProgramExecutable.getText());
-        propsMap.put(PDDLDOMAIN, jTextFieldPddlDomainFile.getText());
-        propsMap.put(PDDLPROBLEM, jTextFieldPddlProblem.getText());
-//        propsMap.put(PDDLOUTPUT, jTextFieldPddlOutputActions.getText());
-        propsMap.put(PDDLADDARGS, jTextFieldAdditionalArgs.getText());
+//        propsMap.put(PROGRAMEXECUTABLE, jTextFieldPlannerProgramExecutable.getText());
+//        propsMap.put(PDDLDOMAIN, jTextFieldPddlDomainFile.getText());
+//        propsMap.put(PDDLPROBLEM, jTextFieldPddlProblem.getText());
+////        propsMap.put(PDDLOUTPUT, jTextFieldPddlOutputActions.getText());
+//        propsMap.put(PDDLADDARGS, jTextFieldAdditionalArgs.getText());
+        propsMap.put(STARTUPPDDLPLANNER, Boolean.toString(jCheckBoxMenuItemStartupPDDLPlanner.isSelected()));
+        propsMap.put(STARTUPPDDLEXECUTOR, Boolean.toString(jCheckBoxMenuItemStartupPDDLExecutor.isSelected()));
+        propsMap.put(STARTUPPDDLOBJECTSP, Boolean.toString(jCheckBoxMenuItemStartupObjectSP.isSelected()));
+        propsMap.put(STARTUPPDDLOBJECTVIEW, Boolean.toString(jCheckBoxMenuItemStartupObject2DView.isSelected()));
         Properties props = new Properties();
         props.putAll(propsMap);
         try (FileWriter fw = new FileWriter(propertiesFile)) {
             props.store(fw, "");
         }
-        this.visionToDbJInternalFrame.saveProperties();
-        this.object2DViewJInternalFrame.saveProperties();
-    }
-    
-    private static final String PDDLADDARGS = "pddl.addargs";
-    private static final String PDDLPROBLEM = "pddl.problem";
-    private static final String PDDLDOMAIN = "pddl.domain";
-
-    public void browseProgramExecutable() throws IOException {
-        JFileChooser chooser = new JFileChooser(new File(jTextFieldPlannerProgramExecutable.getText()).getParent());
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File f = chooser.getSelectedFile();
-            jTextFieldPlannerProgramExecutable.setText(f.getCanonicalPath());
-            saveProperties();
+        if (null != this.pddlPlannerJInternalFrame) {
+            this.pddlPlannerJInternalFrame.saveProperties();
+        }
+        if (null != this.pddlExecutorJInternalFrame1) {
+            this.pddlExecutorJInternalFrame1.saveProperties();
+        }
+        if (null != this.visionToDbJInternalFrame) {
+            this.visionToDbJInternalFrame.saveProperties();
+        }
+        if (null != this.object2DViewJInternalFrame) {
+            this.object2DViewJInternalFrame.saveProperties();
+        }
+        if (null != dbSetup) {
+            DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, "dbsetup.txt"), dbSetup);
         }
     }
 
-    public void browsePddlDomain() throws IOException {
-        JFileChooser chooser = new JFileChooser(new File(jTextFieldPddlDomainFile.getText()).getParent());
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File f = chooser.getSelectedFile();
-            jTextFieldPddlDomainFile.setText(f.getCanonicalPath());
-            saveProperties();
-        }
-    }
-
-    public void browsePddlProblem() throws IOException {
-        JFileChooser chooser = new JFileChooser(new File(jTextFieldPddlProblem.getText()).getParent());
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File f = chooser.getSelectedFile();
-            jTextFieldPddlProblem.setText(f.getCanonicalPath());
-            saveProperties();
-        }
-    }
+    private static final String STARTUPPDDLPLANNER = "startup.pddl.planner";
+    private static final String STARTUPPDDLEXECUTOR = "startup.pddl.executor";
+    private static final String STARTUPPDDLOBJECTSP = "startup.pddl.objectsp";
+    private static final String STARTUPPDDLOBJECTVIEW = "startup.pddl.objectview";
 
     @Override
     public void browseActionsFile() throws IOException {
-        this.actionsToCrclJInternalFrame1.browseActionsFile();
+        this.pddlExecutorJInternalFrame1.browseActionsFile();
     }
 
     /**
@@ -551,16 +622,24 @@ public class AprsJFrame extends javax.swing.JFrame implements ActionsToCrclDispl
                 if ("Nimbus".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
+
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(AprsJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AprsJFrame.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
+
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(AprsJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AprsJFrame.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
+
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(AprsJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AprsJFrame.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
+
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(AprsJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AprsJFrame.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         //</editor-fold>
@@ -574,37 +653,30 @@ public class AprsJFrame extends javax.swing.JFrame implements ActionsToCrclDispl
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButtonPddlDomainBrowse;
-    private javax.swing.JButton jButtonPddlProblemBrowse;
-    private javax.swing.JButton jButtonPlannerProgramExecutableBrowse;
-    private javax.swing.JButton jButtonRunOnce;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObject2DView;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObjectSP;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupPDDLExecutor;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupPDDLPlanner;
     private javax.swing.JDesktopPane jDesktopPane1;
-    private javax.swing.JInternalFrame jInternalFramePddlPlannerExecutable;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenu jMenu3;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItemExit;
+    private javax.swing.JMenuItem jMenuItemLoadProperties;
+    private javax.swing.JMenuItem jMenuItemSaveProperties;
+    private javax.swing.JMenuItem jMenuItemSetProperiesFile;
     private javax.swing.JMenu jMenuWindow;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextArea jTextAreaOutput;
-    private javax.swing.JTextField jTextFieldAdditionalArgs;
-    private javax.swing.JTextField jTextFieldPddlDomainFile;
-    private javax.swing.JTextField jTextFieldPddlProblem;
-    private javax.swing.JTextField jTextFieldPlannerProgramExecutable;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
     // End of variables declaration//GEN-END:variables
 
     @Override
     public List<PddlAction> getActionsList() {
-        return actionsToCrclJInternalFrame1.getActionsList();
+        return pddlExecutorJInternalFrame1.getActionsList();
     }
 
     @Override
     public void setActionsList(List<PddlAction> actionsList) {
-        actionsToCrclJInternalFrame1.setActionsList(actionsList);
+        pddlExecutorJInternalFrame1.setActionsList(actionsList);
     }
 
     @Override
@@ -619,16 +691,55 @@ public class AprsJFrame extends javax.swing.JFrame implements ActionsToCrclDispl
 
     @Override
     public void autoResizeTableColWidthsPddlOutput() {
-        actionsToCrclJInternalFrame1.autoResizeTableColWidthsPddlOutput();
+        pddlExecutorJInternalFrame1.autoResizeTableColWidthsPddlOutput();
     }
 
     @Override
     public boolean isLoadEnabled() {
-        return actionsToCrclJInternalFrame1.isLoadEnabled();
+        return pddlExecutorJInternalFrame1.isLoadEnabled();
     }
 
     @Override
     public void setLoadEnabled(boolean enable) {
-        actionsToCrclJInternalFrame1.setLoadEnabled(enable);
+        pddlExecutorJInternalFrame1.setLoadEnabled(enable);
+    }
+
+    @Override
+    public void close() throws Exception {
+        try {
+            closePddlPlanner();
+
+        } catch (Exception exception) {
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, exception);
+        }
+        try {
+            closeActionsToCrclJInternalFrame();
+
+        } catch (Exception exception) {
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, exception);
+        }
+    }
+
+    private void closeActionsToCrclJInternalFrame() throws Exception {
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.close();
+            pddlExecutorJInternalFrame1.setVisible(false);
+            pddlExecutorJInternalFrame1.dispose();
+            pddlExecutorJInternalFrame1 = null;
+            if (null != pddlPlannerJInternalFrame) {
+                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
+            }
+        }
+    }
+
+    private void closePddlPlanner() throws Exception {
+        if (null != pddlPlannerJInternalFrame) {
+            pddlPlannerJInternalFrame.close();
+            pddlPlannerJInternalFrame.setVisible(false);
+            pddlPlannerJInternalFrame.dispose();
+            pddlPlannerJInternalFrame = null;
+        }
     }
 }
