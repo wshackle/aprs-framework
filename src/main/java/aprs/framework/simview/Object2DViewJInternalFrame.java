@@ -20,18 +20,23 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.database;
+package aprs.framework.simview;
+
+import aprs.framework.database.DetectedItem;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class VisionSimulatorJPanel extends javax.swing.JPanel {
+public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame implements Object2DJFrameInterface {
 
     /**
-     * Creates new form VisionSimulatorJPanel
+     * Creates new form Object2DViewJInternalFrame
      */
-    public VisionSimulatorJPanel() {
+    public Object2DViewJInternalFrame() {
         initComponents();
     }
 
@@ -44,19 +49,62 @@ public class VisionSimulatorJPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
+        object2DOuterJPanel1 = new aprs.framework.simview.Object2DOuterJPanel();
+
+        setTitle("[Cognex] Object2D View/Simulate");
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 607, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 441, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
+
+        pack();
     }// </editor-fold>//GEN-END:initComponents
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private aprs.framework.simview.Object2DOuterJPanel object2DOuterJPanel1;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public List<DetectedItem> getItems() {
+        return object2DOuterJPanel1.getItems();
+    }
+
+    @Override
+    public void setItems(List<DetectedItem> items) {
+        object2DOuterJPanel1.setItems(items);
+    }
+
+    @Override
+    public void setPropertiesFile(File f) {
+        object2DOuterJPanel1.setPropertiesFile(f);
+    }
+
+    @Override
+    public File getPropertiesFile() {
+       return object2DOuterJPanel1.getPropertiesFile();
+    }
+
+    @Override
+    public void saveProperties() throws IOException {
+       object2DOuterJPanel1.saveProperties();
+    }
+
+    @Override
+    public void restoreProperties() throws IOException {
+        object2DOuterJPanel1.restoreProperties();
+    }
+    
 }

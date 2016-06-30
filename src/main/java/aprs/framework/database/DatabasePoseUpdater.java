@@ -23,8 +23,8 @@
  */
 package aprs.framework.database;
 
+import aprs.framework.spvision.VisionToDBJFrameInterface;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,16 +32,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.neo4j.jdbc.Driver;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-class DatabasePoseUpdater implements AutoCloseable {
+public class DatabasePoseUpdater implements AutoCloseable {
 
     private Connection con;
     private PreparedStatement update_statement;
@@ -56,9 +54,9 @@ class DatabasePoseUpdater implements AutoCloseable {
     public DbType getDbType() {
         return dbtype;
     }
-    
+
     public Connection getSqlConnection() {
-       return con;
+        return con;
     }
 
     /**
@@ -78,16 +76,16 @@ class DatabasePoseUpdater implements AutoCloseable {
     public void setUseBatch(boolean useBatch) {
         this.useBatch = useBatch;
     }
-    
+
     private final boolean sharedConnection;
-    
-    public DatabasePoseUpdater(Connection con,DbType dbtype, boolean sharedConnection) throws SQLException {
+
+    public DatabasePoseUpdater(Connection con, DbType dbtype, boolean sharedConnection) throws SQLException {
         this.dbtype = dbtype;
         this.con = con;
         this.sharedConnection = sharedConnection;
         setupStatements();
     }
-    
+
     private void setupStatements() throws SQLException {
         switch (dbtype) {
             case MYSQL:
@@ -107,30 +105,13 @@ class DatabasePoseUpdater implements AutoCloseable {
 //                + " where _NAME =  ("
 //                + " select hasSolidObject_PrimaryLocation from SolidObject"
 //                + " where _NAME = ? ) )");
-                update_statement = con.prepareStatement(
-                        "update Point p, Vector vx, Vector vz "
-                        + " set p.hasPoint_X = ?, p.hasPoint_Y = ?, vx.hasVector_I = ?, vx.hasVector_J = ?"
-                        + ", vx.hasVector_K=0, vz.hasVector_I=0,vz.hasVector_J=0,vz.hasVector_K=1"
-                        + " where p._NAME = ("
-                        + " select hasPoseLocation_Point from PoseLocation"
-                        + " where _NAME =  ("
-                        + "  select hasSolidObject_PrimaryLocation from SolidObject"
-                        + " where _NAME = ? ) )"
-                        + " and "
-                        + "  vx._NAME = ("
-                        + " select hasPoseLocation_XAxis from PoseLocation "
-                        + " where _NAME =  ("
-                        + " select hasSolidObject_PrimaryLocation from SolidObject"
-                        + " where _NAME = ? ) )"
-                        + " and "
-                        + "  vz._NAME = ("
-                        + " select hasPoseLocation_ZAxis from PoseLocation "
-                        + " where _NAME =  ("
-                        + " select hasSolidObject_PrimaryLocation from SolidObject"
-                        + " where _NAME = ? ) )");
+                update_statement = con.prepareStatement(MYSQL_UPDATE_STRING);
 
                 query_all_statement = con.prepareStatement(
                         "select name,X,Y,VXX,VXY from DirectPose");
+
+                updateParamTypes = MYSQL_UPDATE_PARAM_TYPES;
+
                 break;
 
             case NEO4J:
@@ -138,15 +119,12 @@ class DatabasePoseUpdater implements AutoCloseable {
                 update_statement = con.prepareStatement(NEO4J_MERGE_STATEMENT_STRING);
 
 //                addnew_statement = con.prepareStatement(db);
-                query_all_statement = con.prepareStatement("MATCH pointpath=(source) -[r0]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
+                query_all_statement = con.prepareStatement("MATCH pointpath=(source) -[:hasPhysicalLocation_RefObject]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
                         + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
                         + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
                         + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy");
-                xindexes = new int[]{2};
-                yindexes = new int[]{3};
-                rotCosIndexes = new int[]{4};
-                rotSinIndexes = new int[]{5};
-                nameIndexes = new int[]{1};
+
+                updateParamTypes = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
                 break;
 
 //            case NEO4J_BOLT:
@@ -166,35 +144,84 @@ class DatabasePoseUpdater implements AutoCloseable {
         }
     }
 
-    private void setupConnection(String host, int port , String db, String username, String password) throws SQLException {
-         switch (dbtype) {
+    private void setupConnection(String host, int port, String db, String username, String password) throws SQLException {
+        switch (dbtype) {
             case MYSQL:
                 useBatch = true;
                 break;
-               
+
             case NEO4J:
                 useBatch = false;
                 break;
-         }
+        }
         con = DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password);
     }
-    
+
     public DatabasePoseUpdater(String host, int port, String db, String username, String password, DbType dbtype) throws SQLException {
         this.dbtype = dbtype;
         sharedConnection = false;
         setupConnection(host, port, db, username, password);
         setupStatements();
     }
+
+    private static final String MYSQL_UPDATE_STRING
+            = "update Point p, Vector vx, Vector vz "
+            + " set p.hasPoint_X = ?, p.hasPoint_Y = ?, vx.hasVector_I = ?, vx.hasVector_J = ?"
+            + ", vx.hasVector_K=0, vz.hasVector_I=0,vz.hasVector_J=0,vz.hasVector_K=1"
+            + " where p._NAME = ("
+            + " select hasPoseLocation_Point from PoseLocation"
+            + " where _NAME =  ("
+            + "  select hasSolidObject_PrimaryLocation from SolidObject"
+            + " where _NAME = ? ) )"
+            + " and "
+            + "  vx._NAME = ("
+            + " select hasPoseLocation_XAxis from PoseLocation "
+            + " where _NAME =  ("
+            + " select hasSolidObject_PrimaryLocation from SolidObject"
+            + " where _NAME = ? ) )"
+            + " and "
+            + "  vz._NAME = ("
+            + " select hasPoseLocation_ZAxis from PoseLocation "
+            + " where _NAME =  ("
+            + " select hasSolidObject_PrimaryLocation from SolidObject"
+            + " where _NAME = ? ) )";
     
-    public static final String NEO4J_MERGE_STATEMENT_STRING = "merge (source:SolidObject {name: {1} })\n"
+    private static final ParamTypeEnum MYSQL_UPDATE_PARAM_TYPES[] = {
+        ParamTypeEnum.X, // 1
+        ParamTypeEnum.Y, // 2
+        ParamTypeEnum.VXI, // 3
+        ParamTypeEnum.VXJ, // 4
+        ParamTypeEnum.NAME, // 5
+        ParamTypeEnum.NAME, // 6
+        ParamTypeEnum.NAME // 7
+    };
+
+    public static final String NEO4J_MERGE_STATEMENT_STRING = "merge (source:SolidObject { name:{2} })\n"
             + "merge (source) - [:hasPhysicalLocation_RefObject] -> (pl:PhysicalLocation)\n"
             + "merge (pl) - [:hasPoseLocation_Pose] -> (pose:PoseLocation)\n"
             + "merge (pose) - [:hasPose_Point] -> (pt:Point)\n"
             + "merge (pose) - [:hasPose_XAxis] -> (xaxis:Vector)\n"
             + "merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)\n"
-            + "on create set zaxis.hasVector_I=0.0,zaxis.hasVector_J=0.0,zaxis.hasVector_K=1.0\n"
-            + "set pt.hasPoint_X= {2},pt.hasPoint_Y= {3}\n"
-            + "set xaxis.hasVector_I={4}, xaxis.hasVector_J={5}, xaxis.hasVector_K=0.0";
+            + "set pt.hasPoint_X= {3},pt.hasPoint_Y= {4},pt.hasPoint_Z={5}\n"
+            + "set xaxis.hasVector_I={6}, xaxis.hasVector_J={7}, xaxis.hasVector_K={8}"
+            + "set zaxis.hasVector_I={9}, zaxis.hasVector_J={10},zaxis.hasVector_K={11}\n";
+
+    private static final ParamTypeEnum NEO4J_MERGE_STATEMENT_PARAM_TYPES[] = {
+        ParamTypeEnum.TYPE, // 1
+        ParamTypeEnum.NAME, // 2
+        ParamTypeEnum.X, // 3
+        ParamTypeEnum.Y, // 4
+        ParamTypeEnum.Z, // 5
+        ParamTypeEnum.VXI, // 6
+        ParamTypeEnum.VXJ, // 7
+        ParamTypeEnum.VXK, // 8
+        ParamTypeEnum.VZI, // 9
+        ParamTypeEnum.VZJ, // 10
+        ParamTypeEnum.VZI// 11
+
+    };
+
+    private ParamTypeEnum updateParamTypes[] = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
 
     private boolean debug;
 
@@ -292,9 +319,9 @@ class DatabasePoseUpdater implements AutoCloseable {
 
     @Override
     public void close() {
-        
+
         try {
-            if(null != update_statement) {
+            if (null != update_statement) {
                 update_statement.close();
                 update_statement = null;
             }
@@ -302,7 +329,7 @@ class DatabasePoseUpdater implements AutoCloseable {
             Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
-            if(null != query_all_statement) {
+            if (null != query_all_statement) {
                 query_all_statement.close();
                 query_all_statement = null;
             }
@@ -315,7 +342,7 @@ class DatabasePoseUpdater implements AutoCloseable {
                 con = null;
             }
         } catch (Exception exception) {
-            if(null != Main.getDisplayInterface()) {
+            if (null != Main.getDisplayInterface()) {
                 Main.getDisplayInterface().addLogMessage(exception);
             } else {
                 exception.printStackTrace();
@@ -338,7 +365,7 @@ class DatabasePoseUpdater implements AutoCloseable {
     public static volatile int poses_updated = 0;
     public static volatile List<PoseQueryElem> displayList = null;
 
-    public void updateVisionList(List<DetectedItem> list) {
+    public void updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
         try {
             if (null == update_statement) {
                 return;
@@ -359,7 +386,13 @@ class DatabasePoseUpdater implements AutoCloseable {
                 if (updates > 0 && useBatch) {
                     update_statement.addBatch();
                 }
-                List<Object> paramsList = poseParamsToStatement(ci.name + "_" + (ci.repeats + 1), ci.x, ci.y, ci.rotation);
+                if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
+                    ci.fullName = ci.name;
+                }
+                if (addRepeatCountsToName) {
+                    ci.fullName = ci.name + "_" + (ci.repeats + 1);
+                }
+                List<Object> paramsList = poseParamsToStatement(ci);
                 if (null != displayInterface && displayInterface.isDebug()) {
                     displayInterface.addLogMessage("update_statement = " + update_statement.toString() + "\n");
 
@@ -402,66 +435,187 @@ class DatabasePoseUpdater implements AutoCloseable {
         }
     }
 
-    int xindexes[] = {1};
-    int yindexes[] = {2};
-    int rotCosIndexes[] = {3};
-    int rotSinIndexes[] = {4};
-    int nameIndexes[] = {5, 6, 7};
+//    private static class IndexSet {
+//
+//        int xindexes[];
+//        int yindexes[];
+//        int zindexes[];
+//        int vxiIndexes[];
+//        int vxjIndexes[];
+//        int vxkIndexes[];
+//        int vziIndexes[];
+//        int vzjIndexes[];
+//        int vzkIndexes[];
+//        int nameIndexes[];
+//        int typeIndexes[];
+//    }
+//    private static final IndexSet MYSQL_INDEX_SET = new IndexSet();
+//    private static final IndexSet NEO4J_INDEX_SET = new IndexSet();
+//
+//    private IndexSet curIndexSet = MYSQL_INDEX_SET;
+//    
+//    static {
+//        MYSQL_INDEX_SET.xindexes = new int[]{1};
+//        MYSQL_INDEX_SET.yindexes = new int[]{2};
+//        MYSQL_INDEX_SET.zindexes = new int[]{};
+//        MYSQL_INDEX_SET.vxiIndexes = new int[]{3};
+//        MYSQL_INDEX_SET.vxjIndexes = new int[]{4};
+//        MYSQL_INDEX_SET.vxkIndexes = new int[]{};
+//        MYSQL_INDEX_SET.vziIndexes = new int[]{};
+//        MYSQL_INDEX_SET.vzjIndexes = new int[]{};
+//        MYSQL_INDEX_SET.vzkIndexes = new int[]{};
+//        MYSQL_INDEX_SET.nameIndexes = new int[]{5, 6, 7};
+//        MYSQL_INDEX_SET.typeIndexes = new int[]{};
+//        
+//        NEO4J_INDEX_SET.xindexes = new int[]{1};
+//        NEO4J_INDEX_SET.yindexes = new int[]{2};
+//        NEO4J_INDEX_SET.zindexes = new int[]{};
+//        NEO4J_INDEX_SET.vxiIndexes = new int[]{3};
+//        NEO4J_INDEX_SET.vxjIndexes = new int[]{4};
+//        NEO4J_INDEX_SET.vxkIndexes = new int[]{};
+//        NEO4J_INDEX_SET.vziIndexes = new int[]{};
+//        NEO4J_INDEX_SET.vzjIndexes = new int[]{};
+//        NEO4J_INDEX_SET.vzkIndexes = new int[]{};
+//        NEO4J_INDEX_SET.nameIndexes = new int[]{5, 6, 7};
+//        NEO4J_INDEX_SET.typeIndexes = new int[]{};
+//    }
+//    int xindexes[] = {1};
+//    int yindexes[] = {2};
+//    int zindexes[] = {};
+//    int vxiIndexes[] = {3};
+//    int vxjIndexes[] = {4};
+//    int vxkIndexes[] = {};
+//    int vziIndexes[] = {};
+//    int vzjIndexes[] = {};
+//    int vzkIndexes[] = {};
+//    int nameIndexes[] = {5, 6, 7};
+//    int typeIndexes[] = {};
+    private static enum ParamTypeEnum {
+        TYPE, NAME, X, Y, Z, VXI, VXJ, VXK, VZI, VZJ, VZK;
+    }
 
-    private List<Object> poseParamsToStatement(String name, double x, double y, double rotation) throws SQLException {
+    private List<Object> poseParamsToStatement(DetectedItem item) throws SQLException {
         ArrayList<Object> params = new ArrayList<>();
-        for (int i : xindexes) {
-            update_statement.setDouble(i, x);
-            while(params.size()< i+1) {
-                params.add(null);
+        for (int i = 0; i < updateParamTypes.length; i++) {
+            ParamTypeEnum paramTypeEnum = updateParamTypes[i];
+            int index = i+1;
+            switch (paramTypeEnum) {
+                case TYPE:
+                    params.add("SolidObject");
+                    update_statement.setString(index, "SolidObject");
+                    break;
+
+                case NAME:
+                    params.add(item.fullName);
+                    update_statement.setString(index, item.fullName);
+                    break;
+
+                case X:
+                    params.add(item.x);
+                    update_statement.setDouble(index, item.x);
+                    break;
+
+                case Y:
+                    params.add(item.y);
+                    update_statement.setDouble(index, item.x);
+                    break;
+
+                case Z:
+                    params.add(item.z);
+                    update_statement.setDouble(index, item.x);
+                    break;
+
+                case VXI:
+                    params.add(item.vxi);
+                    update_statement.setDouble(index, item.vxi);
+                    break;
+
+                case VXJ:
+                    params.add(item.vxj);
+                    update_statement.setDouble(index, item.vxj);
+                    break;
+
+                case VXK:
+                    params.add(item.vxk);
+                    update_statement.setDouble(index, item.vxk);
+                    break;
+
+                case VZI:
+                    params.add(item.vzi);
+                    update_statement.setDouble(index, item.vzi);
+                    break;
+
+                case VZJ:
+                    params.add(item.vzj);
+                    update_statement.setDouble(index, item.vzj);
+                    break;
+
+                case VZK:
+                    params.add(item.vzk);
+                    update_statement.setDouble(index, item.vzk);
+                    break;
+
+                default:
+                    params.add(null);
+                    break;
             }
-            params.set(i, x);
-        }
-        for (int i : yindexes) {
-            update_statement.setDouble(i, y);
-            while(params.size()< i+1) {
-                params.add(null);
-            }
-            params.set(i, y);
-        }
-        for (int i : rotCosIndexes) {
-            double crot = Math.cos(rotation);
-            update_statement.setDouble(i, crot);
-            while(params.size()< i+1) {
-                params.add(null);
-            }
-            params.set(i, crot);
-        }
-        for (int i : rotSinIndexes) {
-            double srot = Math.sin(rotation);
-            update_statement.setDouble(i, srot);
-            while(params.size()< i+1) {
-                params.add(null);
-            }
-            params.set(i, srot);
-        }
-        for (int i : nameIndexes) {
-            update_statement.setString(i, name);
-            while(params.size()< i+1) {
-                params.add(null);
-            }
-            params.set(i, name);
         }
         return params;
     }
 
-    public boolean updatePose(String name, double x, double y, double rotation) throws SQLException {
-        this.poseParamsToStatement(name, x, y, rotation);
-        VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
-        if (null != displayInterface && displayInterface.isDebug()) {
-            displayInterface.addLogMessage(update_statement.toString());
-        }
-        boolean ex_result = update_statement.execute();
-        if (null != displayInterface && displayInterface.isDebug()) {
-            displayInterface.addLogMessage("execute() returned   " + ex_result
-                    + ", update count = " + update_statement.getUpdateCount());
-        }
-        return ex_result;
-    }
-
+//    private List<Object> poseParamsToStatement(DetectedItem item) throws SQLException {
+//        ArrayList<Object> params = new ArrayList<>();
+//        for (int i : curIndexSet.xindexes) {
+//            update_statement.setDouble(i, item.x);
+//            while (params.size() < i + 1) {
+//                params.add(null);
+//            }
+//            params.set(i, item.x);
+//        }
+//        for (int i : curIndexSet.yindexes) {
+//            update_statement.setDouble(i, item.y);
+//            while (params.size() < i + 1) {
+//                params.add(null);
+//            }
+//            params.set(i, item.y);
+//        }
+//        for (int i : curIndexSet.vxiIndexes) {
+//
+//            double crot = Math.cos(item.rotation);
+//            update_statement.setDouble(i, crot);
+//            while (params.size() < i + 1) {
+//                params.add(null);
+//            }
+//            params.set(i, crot);
+//        }
+//        for (int i : curIndexSet.vxjIndexes) {
+//            double srot = Math.sin(item.rotation);
+//            update_statement.setDouble(i, srot);
+//            while (params.size() < i + 1) {
+//                params.add(null);
+//            }
+//            params.set(i, srot);
+//        }
+//        for (int i : curIndexSet.nameIndexes) {
+//            update_statement.setString(i, item.fullName);
+//            while (params.size() < i + 1) {
+//                params.add(null);
+//            }
+//            params.set(i, item.fullName);
+//        }
+//        return params;
+//    }
+//    public boolean updatePose(String name, double x, double y, double rotation) throws SQLException {
+//        this.poseParamsToStatement(name, x, y, rotation);
+//        VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
+//        if (null != displayInterface && displayInterface.isDebug()) {
+//            displayInterface.addLogMessage(update_statement.toString());
+//        }
+//        boolean ex_result = update_statement.execute();
+//        if (null != displayInterface && displayInterface.isDebug()) {
+//            displayInterface.addLogMessage("execute() returned   " + ex_result
+//                    + ", update count = " + update_statement.getUpdateCount());
+//        }
+//        return ex_result;
+//    }
 }

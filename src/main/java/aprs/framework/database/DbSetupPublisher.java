@@ -35,4 +35,6 @@ public interface DbSetupPublisher {
     public void addDbSetupListener(DbSetupListener listener);
 
     public void removeDbSetupListener(DbSetupListener listener);
+    
+    public void notifyAllDbSetupListeners();
 }

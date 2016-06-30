@@ -22,15 +22,17 @@
  */
 package aprs.framework.database;
 
-import java.util.List;
+import crcl.base.PoseType;
+import java.sql.SQLException;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface Object2DJFrameInterface extends CommonJFrameInterface {
+public interface QuerySetInterface extends AutoCloseable{
     
-    public List<DetectedItem> getItems();
+    PoseType getPose(String name) throws SQLException;
     
-    public void setItems(List<DetectedItem> items);
+    public void setPose(String name, PoseType pose) throws SQLException;
+    
 }

@@ -21,8 +21,13 @@
  * 
  */
 
-package aprs.framework.database;
+package aprs.framework.spvision;
 
+import aprs.framework.database.DbSetupPublisher;
+import aprs.framework.database.DbType;
+import aprs.framework.database.DetectedItem;
+import aprs.framework.database.Main;
+import aprs.framework.database.PoseQueryElem;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -58,7 +63,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        visionToDBJPanel = new aprs.framework.database.VisionToDBJPanel();
+        visionToDBJPanel = new aprs.framework.spvision.VisionToDBJPanel();
 
         setIconifiable(true);
         setMaximizable(true);
@@ -138,7 +143,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
      }
      
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private aprs.framework.database.VisionToDBJPanel visionToDBJPanel;
+    private aprs.framework.spvision.VisionToDBJPanel visionToDBJPanel;
     // End of variables declaration//GEN-END:variables
 
     @Override

@@ -108,7 +108,7 @@
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Component class="aprs.framework.database.VisionToDBJPanel" name="visionToDBJPanel">
+    <Component class="aprs.framework.spvision.VisionToDBJPanel" name="visionToDBJPanel">
     </Component>
   </SubComponents>
 </Form>

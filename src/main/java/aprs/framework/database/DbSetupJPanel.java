@@ -22,6 +22,7 @@
  */
 package aprs.framework.database;
 
+import aprs.framework.spvision.VisionToDBJPanel;
 import aprs.framework.DisplayInterface;
 import java.io.BufferedReader;
 import java.io.File;
@@ -394,7 +395,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 .build();
     }
 
-    private void notifyAllDbSetupListeners() {
+    public void notifyAllDbSetupListeners() {
         DbSetup thisDbSetup = this.getDbSetup();
         for (DbSetupListener listener : dbSetupListeners) {
             if (null != listener) {

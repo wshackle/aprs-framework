@@ -20,8 +20,12 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.database;
+package aprs.framework.simview;
 
+import aprs.framework.database.DetectedItem;
+import aprs.framework.database.Main;
+import aprs.framework.spvision.VisionSocketClient;
+import aprs.framework.spvision.VisionSocketServer;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -139,7 +143,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        object2DJPanel1 = new aprs.framework.database.Object2DJPanel();
+        object2DJPanel1 = new aprs.framework.simview.Object2DJPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jButtonAdd = new javax.swing.JButton();
@@ -396,7 +400,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JTable jTable1;
     private javax.swing.JTextField jTextFieldHost;
     private javax.swing.JTextField jTextFieldPort;
-    private aprs.framework.database.Object2DJPanel object2DJPanel1;
+    private aprs.framework.simview.Object2DJPanel object2DJPanel1;
     // End of variables declaration//GEN-END:variables
 
     @Override

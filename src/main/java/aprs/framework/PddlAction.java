@@ -150,4 +150,10 @@ public class PddlAction {
         return new PddlAction(label, type, args, cost);
     }
 
+    @Override
+    public String toString() {
+        return "PddlAction{" + "label=" + label + ", type=" + type + ", args=" + Arrays.toString(args) + ", cost=" + cost + '}';
+    }
+
+    
 }

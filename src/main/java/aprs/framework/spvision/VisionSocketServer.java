@@ -20,8 +20,9 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.database;
+package aprs.framework.spvision;
 
+import aprs.framework.database.DetectedItem;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;

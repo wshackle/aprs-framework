@@ -22,6 +22,8 @@
  */
 package aprs.framework.database;
 
+import aprs.framework.spvision.VisionToDBJFrameInterface;
+import aprs.framework.simview.Object2DJFrame;
 import java.awt.Color;
 import java.awt.Frame;
 import java.awt.event.WindowEvent;
@@ -81,7 +83,7 @@ public class MainJFrame extends javax.swing.JFrame implements VisionToDBJFrameIn
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        visionToDBJPanel = new aprs.framework.database.VisionToDBJPanel();
+        visionToDBJPanel = new aprs.framework.spvision.VisionToDBJPanel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
         jMenuItemFileExit = new javax.swing.JMenuItem();
@@ -275,7 +277,7 @@ public class MainJFrame extends javax.swing.JFrame implements VisionToDBJFrameIn
     private javax.swing.JMenuItem jMenuItemStartObject2D;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
-    private aprs.framework.database.VisionToDBJPanel visionToDBJPanel;
+    private aprs.framework.spvision.VisionToDBJPanel visionToDBJPanel;
     // End of variables declaration//GEN-END:variables
 
     @Override

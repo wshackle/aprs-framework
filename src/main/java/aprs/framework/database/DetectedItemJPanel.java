@@ -158,6 +158,7 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
         map.put("name", item.name);
         map.put("X", item.x);
         map.put("y", item.y);
+        map.put("z", item.z);
         map.put("rotation", item.rotation);
         return map;
     }
@@ -181,9 +182,39 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
             if (Y != null) {
                 item.y = Double.parseDouble(Y.toString());
             }
+            Object Z =  map.get("z");
+            if (Z != null) {
+                item.z = Double.parseDouble(Z.toString());
+            }
+            Object VXI =  map.get("vxi");
+            if (VXI != null) {
+                item.vxi = Double.parseDouble(VXI.toString());
+            }
+            Object VXJ =  map.get("vxj");
+            if (VXJ != null) {
+                item.vxj = Double.parseDouble(VXJ.toString());
+            }
+            Object VXK =  map.get("vxk");
+            if (VXK != null) {
+                item.vxk = Double.parseDouble(VXK.toString());
+            }
+            Object VZI =  map.get("vzi");
+            if (VZI != null) {
+                item.vzi = Double.parseDouble(VZI.toString());
+            }
+            Object VZJ =  map.get("vzj");
+            if (VZJ != null) {
+                item.vzj = Double.parseDouble(VZJ.toString());
+            }
+            Object VZK =  map.get("vzk");
+            if (VZK != null) {
+                item.vzk = Double.parseDouble(VZK.toString());
+            }
             Object Rot = map.get("rotation");
             if (Rot != null) {
                 item.rotation = Double.parseDouble(Rot.toString());
+                item.vxi = Math.cos(item.rotation);
+                item.vxj = Math.sin(item.rotation);
             }
         } else {
             throw new IllegalArgumentException("map may not be null");

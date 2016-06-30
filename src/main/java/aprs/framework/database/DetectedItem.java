@@ -30,11 +30,19 @@ package aprs.framework.database;
  */
 public class DetectedItem {
     public String name;
+    public String fullName;
     public int repeats;
     public int index;
     public double rotation;
     public double x;
     public double y;
+    public double z;
+    public double vxi=1;
+    public double vxj=0;
+    public double vxk=0;
+    public double vzi=0;
+    public double vzj=0;
+    public double vzk=1;
     public double score;
 
     public DetectedItem() {
@@ -50,11 +58,10 @@ public class DetectedItem {
         this.score = 100.0;
     }
 
-    
     @Override
     public String toString() {
-        return "DetectedItem{" + "name=" + name + ", repeats=" + repeats + ", index=" + index + ", rotation=" + rotation + ", x=" + x + ", y=" + y + ", score=" + score + '}';
+        return "DetectedItem{" + "name=" + name + ", fullName=" + fullName + ", repeats=" + repeats + ", index=" + index + ", rotation=" + rotation + ", x=" + x + ", y=" + y + ", z=" + z + ", vxi=" + vxi + ", vxj=" + vxj + ", vxk=" + vxk + ", vzi=" + vzi + ", vzj=" + vzj + ", vzk=" + vzk + ", score=" + score + '}';
     }
-    
+
     
 }

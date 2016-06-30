@@ -22,6 +22,8 @@
  */
 package aprs.framework.database;
 
+import aprs.framework.spvision.VisionToDBJFrameInterface;
+import aprs.framework.spvision.VisionSocketClient;
 import java.io.BufferedReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;

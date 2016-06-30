@@ -30,8 +30,8 @@ import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.pddl.planner.PddlPlannerJInternalFrame;
-import aprs.framework.database.Object2DViewJInternalFrame;
-import aprs.framework.database.VisionToDbJInternalFrame;
+import aprs.framework.simview.Object2DViewJInternalFrame;
+import aprs.framework.spvision.VisionToDbJInternalFrame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -83,8 +83,10 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             if (jCheckBoxMenuItemStartupObject2DView.isSelected()) {
                 startObject2DJinternalFrame();
             }
-            dbSetupJInternalFrame = new DbSetupJInternalFrame();
-            dbSetupJInternalFrame.pack();
+            if (null == dbSetupJInternalFrame) {
+                dbSetupJInternalFrame = new DbSetupJInternalFrame();
+                dbSetupJInternalFrame.pack();
+            }
             dbSetupJInternalFrame.setVisible(true);
             jDesktopPane1.add(dbSetupJInternalFrame);
             DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
@@ -140,6 +142,10 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private final Callable<DbSetupPublisher> dbSetupPublisherSupplier = new Callable<DbSetupPublisher>() {
         @Override
         public DbSetupPublisher call() throws Exception {
+            if (null == dbSetupJInternalFrame) {
+                dbSetupJInternalFrame = new DbSetupJInternalFrame();
+                dbSetupJInternalFrame.pack();
+            }
             dbSetupJInternalFrame.setVisible(true);
             jDesktopPane1.getDesktopManager().deiconifyFrame(dbSetupJInternalFrame);
             jDesktopPane1.getDesktopManager().activateFrame(dbSetupJInternalFrame);
@@ -174,9 +180,11 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             pddlExecutorJInternalFrame1.getDesktopPane().getDesktopManager().maximizeFrame(pddlExecutorJInternalFrame1);
             this.pddlExecutorJInternalFrame1.setPropertiesFile(new File(propertiesDirectory, "actionsToCrclProperties.txt"));
             this.pddlExecutorJInternalFrame1.loadProperties();
+             pddlExecutorJInternalFrame1.setDbSetupSupplier(dbSetupPublisherSupplier);
             if (null != pddlPlannerJInternalFrame) {
                 pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
             }
+            
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }

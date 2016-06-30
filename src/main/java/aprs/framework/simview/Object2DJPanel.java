@@ -20,8 +20,9 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.database;
+package aprs.framework.simview;
 
+import aprs.framework.database.DetectedItem;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;

@@ -20,8 +20,9 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.database;
+package aprs.framework.simview;
 
+import aprs.framework.database.DetectedItem;
 import java.util.Arrays;
 
 /**
@@ -50,7 +51,7 @@ public class Object2DJFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        object2DOuterJPanel1 = new aprs.framework.database.Object2DOuterJPanel();
+        object2DOuterJPanel1 = new aprs.framework.simview.Object2DOuterJPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Object Detection");
@@ -112,6 +113,6 @@ public class Object2DJFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private aprs.framework.database.Object2DOuterJPanel object2DOuterJPanel1;
+    private aprs.framework.simview.Object2DOuterJPanel object2DOuterJPanel1;
     // End of variables declaration//GEN-END:variables
 }

@@ -21,9 +21,14 @@
  * 
  */
 
-package aprs.framework.database;
+package aprs.framework.spvision;
 
 
+import aprs.framework.database.AcquireEnum;
+import aprs.framework.database.DatabasePoseUpdater;
+import aprs.framework.database.DetectedItem;
+import aprs.framework.database.Main;
+import aprs.framework.database.SocketLineReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -207,6 +212,27 @@ public class VisionSocketClient implements AutoCloseable {
         return listOut;
     }
     
+        private boolean addRepeatCountsToDatabaseNames;
+
+    /**
+     * Get the value of addRepeatCountsToDatabaseNames
+     *
+     * @return the value of addRepeatCountsToDatabaseNames
+     */
+    public boolean isAddRepeatCountsToDatabaseNames() {
+        return addRepeatCountsToDatabaseNames;
+    }
+
+    /**
+     * Set the value of addRepeatCountsToDatabaseNames
+     *
+     * @param addRepeatCountsToDatabaseNames new value of
+     * addRepeatCountsToDatabaseNames
+     */
+    public void setAddRepeatCountsToDatabaseNames(boolean addRepeatCountsToDatabaseNames) {
+        this.addRepeatCountsToDatabaseNames = addRepeatCountsToDatabaseNames;
+    }
+
     public void parseVisionLine(final String line) {
         this.line = line;
         final DatabasePoseUpdater dup = Main.getDatabasePoseUpdater();
@@ -220,7 +246,7 @@ public class VisionSocketClient implements AutoCloseable {
         poseUpdatesParsed += visionList.size();
         if (acquire != AcquireEnum.OFF) {
             if (null != dup) {
-                dup.updateVisionList(visionList);
+                dup.updateVisionList(visionList, this.addRepeatCountsToDatabaseNames);
             }
             if (acquire == AcquireEnum.ONCE) {
                 acquire = AcquireEnum.OFF;

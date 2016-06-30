@@ -23,9 +23,11 @@
 package aprs.framework.pddl.executor;
 
 import aprs.framework.PddlAction;
+import aprs.framework.database.DbSetupPublisher;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  *
@@ -140,5 +142,13 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
     public void close() throws Exception {
         actionsToCrclJPanel1.close();
         this.setVisible(false);
+    }
+    
+    public Callable<DbSetupPublisher> getDbSetupSupplier() {
+        return actionsToCrclJPanel1.getDbSetupSupplier();
+    }
+
+    public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {
+        actionsToCrclJPanel1.setDbSetupSupplier(dbSetupSupplier);
     }
 }

@@ -20,52 +20,19 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.database;
+package aprs.framework.simview;
 
-import java.io.File;
+import aprs.framework.database.CommonJFrameInterface;
+import aprs.framework.database.DetectedItem;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface VisionToDBJFrameInterface extends CommonJFrameInterface {
-
-    public void setAquiring(String s);
-
-    public void updateInfo(List<DetectedItem> _list, String line);
-
-    public void updataPoseQueryInfo(final List<PoseQueryElem> _list);
-
-    public boolean isDebug();
-
-    public void addLogMessage(String stmnt);
-
-    public void addLogMessage(Exception exception);
-
-    public void setVisionConnected(boolean _val);
-
-    public void setDBConnected(boolean _val);
-
-    public void setLastCommand(String c);
-
-    public void setCommandConnected(boolean _val);
-
-    public void updateFromArgs(Map<String, String> _argsMap);
-
-    public void setVisible(boolean v);
-
-    public Map<String, String> updateArgsMap();
+public interface Object2DJFrameInterface extends CommonJFrameInterface {
     
-    public java.sql.Connection getSqlConnection();
+    public List<DetectedItem> getItems();
     
-    public DbType getDbType();
-    
-    public void setSqlConnection(java.sql.Connection connection, DbType dbtype) throws java.sql.SQLException;
-    
-    public Callable<DbSetupPublisher> getDbSetupSupplier();
-
-    public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier);
+    public void setItems(List<DetectedItem> items);
 }

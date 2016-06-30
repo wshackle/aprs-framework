@@ -20,8 +20,19 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.database;
+package aprs.framework.spvision;
 
+import aprs.framework.database.AcquireEnum;
+import aprs.framework.database.DatabasePoseUpdater;
+import aprs.framework.database.DbSetup;
+import aprs.framework.database.DbSetupBuilder;
+import aprs.framework.database.DbSetupListener;
+import aprs.framework.database.DbSetupPublisher;
+import aprs.framework.database.DbType;
+import aprs.framework.database.DetectedItem;
+import aprs.framework.database.DetectedItemJPanel;
+import aprs.framework.database.Main;
+import aprs.framework.database.PoseQueryElem;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dialog;
@@ -94,6 +105,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jLabel18 = new javax.swing.JLabel();
         jTextFieldAcquire = new javax.swing.JTextField();
         jButtonDbSetup = new javax.swing.JButton();
+        jCheckBoxAddRepeatCountsToDatabaseNames = new javax.swing.JCheckBox();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextAreaLog = new javax.swing.JTextArea();
         jLabel11 = new javax.swing.JLabel();
@@ -194,6 +206,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
+        jCheckBoxAddRepeatCountsToDatabaseNames.setText("Add Repeat Counts To Database Names");
+        jCheckBoxAddRepeatCountsToDatabaseNames.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -230,7 +249,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                             .addComponent(jTextFieldPoseUpdatesParsed)
                             .addComponent(jButtonDisconnectVision, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jTextFieldCognexPort)
-                            .addComponent(jTextFieldCognexHost))))
+                            .addComponent(jTextFieldCognexHost)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jCheckBoxAddRepeatCountsToDatabaseNames)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -284,6 +306,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel18)
                     .addComponent(jTextFieldAcquire, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jCheckBoxAddRepeatCountsToDatabaseNames)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -591,7 +615,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //                builder = builder.port(port);
 //            }
 //            updateFromArgs(_argsMap, dbtype, host, port, curSetup);
-
+            String addRepeatCountsToDatabaseNamesString = _argsMap.get("addRepeatCountsToDatabaseNamesString");
+            if(addRepeatCountsToDatabaseNamesString != null) {
+                boolean b = Boolean.valueOf(addRepeatCountsToDatabaseNamesString);
+                if(jCheckBoxAddRepeatCountsToDatabaseNames.isSelected() != b) {
+                    jCheckBoxAddRepeatCountsToDatabaseNames.setSelected(b);
+                }
+            }
         } finally {
             updatingFromArgs = false;
         }
@@ -791,6 +821,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             argsMap.put("--visionhost", this.jTextFieldCognexHost.getText());
             argsMap.put("--visionport", this.jTextFieldCognexPort.getText());
             Main.startVision(argsMap);
+            VisionSocketClient visionClient = Main.getVisionSocketClient();
+            if (null != visionClient) {
+                visionClient.setAddRepeatCountsToDatabaseNames(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+            }
             saveProperties();
         } catch (Exception exception) {
             addLogMessage(exception);
@@ -849,7 +883,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (isDebug()) {
             addLogMessage("Detected item to add = " + item);
         }
-        Main.getDatabasePoseUpdater().updateVisionList(Collections.singletonList(item));
+        Main.getDatabasePoseUpdater().updateVisionList(Collections.singletonList(item), false);
     }//GEN-LAST:event_jButtonAddItemActionPerformed
 
     private Callable<DbSetupPublisher> dbSetupSupplier = null;
@@ -861,16 +895,20 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {
         this.dbSetupSupplier = dbSetupSupplier;
         try {
-            dbSetupPublisher = dbSetupSupplier.call();
-            dbSetupPublisher.addDbSetupListener(this);
+            if (null != dbSetupSupplier) {
+                dbSetupPublisher = dbSetupSupplier.call();
+                if (null != dbSetupPublisher) {
+                    dbSetupPublisher.addDbSetupListener(this);
+                }
+            }
         } catch (Exception ex) {
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    
+
+
     private void jButtonDbSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDbSetupActionPerformed
-        if(null != dbSetupSupplier) {
+        if (null != dbSetupSupplier) {
             try {
                 dbSetupPublisher = dbSetupSupplier.call();
                 dbSetupPublisher.addDbSetupListener(this);
@@ -879,6 +917,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         }
     }//GEN-LAST:event_jButtonDbSetupActionPerformed
+
+    private void jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed
+        VisionSocketClient visionClient = Main.getVisionSocketClient();
+        if (null != visionClient) {
+            visionClient.setAddRepeatCountsToDatabaseNames(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+        }
+    }//GEN-LAST:event_jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed
 
     private DbType oldDbType = null;
 
@@ -889,6 +934,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JButton jButtonConnectVision;
     private javax.swing.JButton jButtonDbSetup;
     private javax.swing.JButton jButtonDisconnectVision;
+    private javax.swing.JCheckBox jCheckBoxAddRepeatCountsToDatabaseNames;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -975,6 +1021,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             props.put(dbHostPort + ".name", setup.getDbName());
             props.put(dbHostPort + ".user", setup.getDbUser());
             props.put(dbHostPort + ".passwd", new String(setup.getDbPassword()));
+            props.put("AddRepeatCountsToDatabaseNames", this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
             try (FileWriter fw = new FileWriter(propertiesFile)) {
                 props.store(fw, "");
             } catch (IOException ex) {
