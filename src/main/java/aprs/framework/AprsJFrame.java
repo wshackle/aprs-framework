@@ -27,6 +27,7 @@ import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupJInternalFrame;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
+import aprs.framework.logdisplay.LogDisplayJInternalFrame;
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.pddl.planner.PddlPlannerJInternalFrame;
 import aprs.framework.simview.Object2DViewJInternalFrame;
@@ -51,6 +52,7 @@ import aprs.framework.pddl.executor.PddlExecutorDisplayInterface;
 import crcl.base.CRCLProgramType;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.ui.server.SimServerJInternalFrame;
+import java.io.PrintStream;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Callable;
 import javax.xml.bind.JAXBException;
@@ -78,11 +80,45 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private DbSetupJInternalFrame dbSetupJInternalFrame = null;
     private PendantClientJInternalFrame pendantClientJInternalFrame = null;
     private SimServerJInternalFrame simServerJInternalFrame = null;
-
+    private LogDisplayJInternalFrame logDisplayJInternalFrame = null;
+    
     public void setCRCLProgram(CRCLProgramType program) throws JAXBException {
         if(null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.setProgram(program);
         }
+    }
+    
+    private PrintStream origOut = null;
+    private PrintStream origErr = null;
+    
+    private class MyPrintStream  extends PrintStream {
+        
+        final private PrintStream ps;
+
+        public MyPrintStream(PrintStream ps) {
+            super(ps,true);
+            this.ps = ps;
+        }
+
+        @Override
+        public void write(byte[] buf, int off, int len) {
+            super.write(buf, off, len); 
+            if(null != logDisplayJInternalFrame) {
+                final String s = new String(buf, off, len);
+                if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+                    logDisplayJInternalFrame.appendText(s);
+                } else {
+                    
+                    javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            logDisplayJInternalFrame.appendText(s);
+                        }
+                    });
+                }
+            }
+        }
+        
     }
     
     /**
@@ -110,6 +146,15 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             if (jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected()) {
                 startSimServerJInternalFrame();
             }
+            if (null == logDisplayJInternalFrame) {
+                logDisplayJInternalFrame = new LogDisplayJInternalFrame();
+                logDisplayJInternalFrame.pack();
+            }
+            logDisplayJInternalFrame.setVisible(true);
+            jDesktopPane1.add(logDisplayJInternalFrame);
+            System.setOut(new MyPrintStream(System.out));
+            System.setErr(new MyPrintStream(System.err));
+            
             if (null == dbSetupJInternalFrame) {
                 dbSetupJInternalFrame = new DbSetupJInternalFrame();
                 dbSetupJInternalFrame.pack();
@@ -122,6 +167,8 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
                 pub.addDbSetupListener(toVisListener);
             }
             setupWindowsMenu();
+            System.err.println("error test");
+            System.out.println("out test");
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
