@@ -427,6 +427,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         DetectedItem closestItem = null;
         double minDist = Double.POSITIVE_INFINITY;
+        int minIndex = -1;
         for (int i = 0; i < items.size(); i++) {
             DetectedItem item = items.get(i);
             double rel_x = (item.x - minCorner.x) * scale+15;
@@ -437,7 +438,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if(dist < 35 && dist < minDist) {
                 minDist=dist;
                 closestItem = item;
+                minIndex = i;
             }
+        }
+        if(minIndex >= 0) {
+            jTable1.getSelectionModel().setSelectionInterval(minIndex, minIndex);
+            object2DJPanel1.setSelectedItemIndex(minIndex);
         }
         draggedItem = closestItem;
     }//GEN-LAST:event_object2DJPanel1MousePressed
