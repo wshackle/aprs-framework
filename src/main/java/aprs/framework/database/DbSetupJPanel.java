@@ -37,6 +37,9 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
@@ -255,22 +258,22 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     private void updateSettingsFileName() {
         String settingsFileStart = jComboBoxDbType.getSelectedItem().toString();
-        if(!propertiesFile.getName().startsWith(settingsFileStart)) {
-            if(Objects.toString(jComboBox1.getSelectedItem()).startsWith(settingsFileStart)) {
+        if (!propertiesFile.getName().startsWith(settingsFileStart)) {
+            if (Objects.toString(jComboBox1.getSelectedItem()).startsWith(settingsFileStart)) {
                 return;
             }
-            for(int i = 0; i < jComboBox1.getItemCount(); i++) {
+            for (int i = 0; i < jComboBox1.getItemCount(); i++) {
                 String fname = Objects.toString(jComboBox1.getItemAt(i));
-                if(fname.startsWith(settingsFileStart)) {
+                if (fname.startsWith(settingsFileStart)) {
                     jComboBox1.setSelectedIndex(i);
                     return;
                 }
             }
         }
-        setPropertiesFile(new File(propertiesFile.getParentFile(),settingsFileStart+".dbsettings.txt"));
+        setPropertiesFile(new File(propertiesFile.getParentFile(), settingsFileStart + ".dbsettings.txt"));
     }
-    
-    
+
+
     private void jComboBoxDbTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxDbTypeActionPerformed
 //        try {
 //            if (!savingProperties && !restoringProperties && !updatingFromArgs) {
@@ -395,24 +398,40 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 .build();
     }
 
+    private ExecutorService notifyService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r, "dbSetupNotifyThread");
+            thread.setDaemon(true);
+            return thread;
+        }
+    });
+
     public void notifyAllDbSetupListeners() {
-        DbSetup thisDbSetup = this.getDbSetup();
-        for (DbSetupListener listener : dbSetupListeners) {
-            if (null != listener) {
-                listener.accept(thisDbSetup);
-            }
+        if (notifyService != null) {
+            final DbSetup thisDbSetup = DbSetupJPanel.this.getDbSetup();
+            notifyService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    for (DbSetupListener listener : dbSetupListeners) {
+                        if (null != listener) {
+                            listener.accept(thisDbSetup);
+                        }
+                    }
+                }
+            });
         }
     }
 
     private void addComboItemUnique(String item) {
-        for(int i = 0; i < jComboBox1.getItemCount(); i++) {
-            if(Objects.equals(jComboBox1.getItemAt(i), item)) {
+        for (int i = 0; i < jComboBox1.getItemCount(); i++) {
+            if (Objects.equals(jComboBox1.getItemAt(i), item)) {
                 return;
             }
         }
         jComboBox1.addItem(item);
     }
-    
+
     private void loadRecent() throws IOException {
         if (null != recentSettingsFile && recentSettingsFile.exists()) {
             TreeSet<String> set = new TreeSet<>();
@@ -421,14 +440,14 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 while (null != (line = br.readLine())) {
                     set.add(line.trim());
                 }
-            } 
+            }
             jComboBox1.removeAllItems();
             try (PrintWriter pw = new PrintWriter(new FileWriter(recentSettingsFile))) {
                 for (String p : set) {
                     pw.println(p);
                     addComboItemUnique(p);
                 }
-            } 
+            }
         }
     }
     private File recentSettingsFile = new File(System.getProperty("user.home"), ".dbsetup_recent.txt");

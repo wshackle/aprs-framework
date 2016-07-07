@@ -26,6 +26,7 @@ import aprs.framework.database.DetectedItem;
 import aprs.framework.database.Main;
 import aprs.framework.spvision.VisionSocketClient;
 import aprs.framework.spvision.VisionSocketServer;
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -49,13 +50,13 @@ import javax.swing.table.DefaultTableModel;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener {
-    
+
     public List<DetectedItem> getItems() {
         return object2DJPanel1.getItems();
     }
-    
+
     private volatile boolean settingItems = false;
-    
+
     public void setItems(List<DetectedItem> items) {
         try {
             settingItems = true;
@@ -157,6 +158,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jLabel1 = new javax.swing.JLabel();
 
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseDragged(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseDragged(evt);
+            }
+        });
+        object2DJPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MousePressed(evt);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseReleased(evt);
+            }
+        });
 
         javax.swing.GroupLayout object2DJPanel1Layout = new javax.swing.GroupLayout(object2DJPanel1);
         object2DJPanel1.setLayout(object2DJPanel1Layout);
@@ -325,7 +339,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
 
     }//GEN-LAST:event_jCheckBoxSimulatedActionPerformed
-    
+
     private VisionSocketServer visionSocketServer = null;
     private VisionSocketClient visionSocketClient = null;
 
@@ -388,6 +402,51 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jButtonDeleteActionPerformed
 
 
+    private void object2DJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseDragged
+        double scale = object2DJPanel1.getScale();
+        Point2D.Double minCorner = object2DJPanel1.getMinCorner();
+        if (null == minCorner) {
+            return;
+        }
+        if(null != draggedItem) {
+            draggedItem.x = ((evt.getX()-15)/scale) + minCorner.x;
+            draggedItem.y = ((evt.getY()-20)/scale) + minCorner.y;
+            this.setItems(this.getItems());
+        }
+    }//GEN-LAST:event_object2DJPanel1MouseDragged
+
+    private DetectedItem draggedItem = null;
+
+    private void object2DJPanel1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MousePressed
+        List<DetectedItem> items = this.getItems();
+        double scale = object2DJPanel1.getScale();
+        Point2D.Double minCorner = object2DJPanel1.getMinCorner();
+        draggedItem = null;
+        if (null == minCorner) {
+            return;
+        }
+        DetectedItem closestItem = null;
+        double minDist = Double.POSITIVE_INFINITY;
+        for (int i = 0; i < items.size(); i++) {
+            DetectedItem item = items.get(i);
+            double rel_x = (item.x - minCorner.x) * scale+15;
+            double rel_y = (item.y - minCorner.y) * scale+20;
+            double diff_x = rel_x -evt.getX();
+            double diff_y = rel_y -evt.getY();
+            double dist = Math.sqrt(diff_x*diff_x+diff_y*diff_y);
+            if(dist < 35 && dist < minDist) {
+                minDist=dist;
+                closestItem = item;
+            }
+        }
+        draggedItem = closestItem;
+    }//GEN-LAST:event_object2DJPanel1MousePressed
+
+    private void object2DJPanel1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseReleased
+        draggedItem = null;
+    }//GEN-LAST:event_object2DJPanel1MouseReleased
+
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonAdd;
     private javax.swing.JButton jButtonDelete;
@@ -407,14 +466,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void dispose() {
         System.err.println("com.github.wshackle.visiontodb.Object2DOuterJPanel.dispose default implementation called.");
     }
-    
+
     private File propertiesFile;
-    
+
     @Override
     public void setPropertiesFile(File f) {
         this.propertiesFile = f;
     }
-    
+
     @Override
     public void saveProperties() throws IOException {
         if (null != propertiesFile) {
@@ -429,7 +488,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
     }
-    
+
     @Override
     public void restoreProperties() throws IOException {
         if (null != propertiesFile && propertiesFile.exists()) {
@@ -464,12 +523,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
     }
-    
+
     @Override
     public File getPropertiesFile() {
         return propertiesFile;
     }
-    
+
     @Override
     public void accept(VisionSocketClient client) {
         final List<DetectedItem> l = client.getVisionList();

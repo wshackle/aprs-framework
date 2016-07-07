@@ -185,7 +185,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
             + " where _NAME =  ("
             + " select hasSolidObject_PrimaryLocation from SolidObject"
             + " where _NAME = ? ) )";
-    
+
     private static final ParamTypeEnum MYSQL_UPDATE_PARAM_TYPES[] = {
         ParamTypeEnum.X, // 1
         ParamTypeEnum.Y, // 2
@@ -383,9 +383,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 if (null == ci || ci.name.compareTo("*") == 0) {
                     continue;
                 }
-                if (updates > 0 && useBatch) {
-                    update_statement.addBatch();
-                }
                 if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
                     ci.fullName = ci.name;
                 }
@@ -394,7 +391,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 }
                 List<Object> paramsList = poseParamsToStatement(ci);
                 if (null != displayInterface && displayInterface.isDebug()) {
-                    displayInterface.addLogMessage("update_statement = " + update_statement.toString() + "\n");
+                    displayInterface.addLogMessage("update_statement = \r\n" + update_statement.toString() + "\r\n");
 
                     if (debug && dbtype == DbType.NEO4J) {
                         String updateStringFilled
@@ -409,15 +406,23 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                 }
                 if (useBatch) {
+                    update_statement.addBatch();
                     updates++;
                 } else {
-                    update_statement.execute();
+                    boolean exec_result = update_statement.execute();
+                    if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage("update_statement.execute() returned = " + exec_result + "\r\n");
+                        displayInterface.addLogMessage("update_statement.getUpdateCount() returned = " + update_statement.getUpdateCount() + "\r\n");
+                    }
 //                    poses_updated += update_statement.getUpdateCount();
                     poses_updated++;
                 }
             }
             if (null != displayInterface && displayInterface.isDebug()) {
+                displayInterface.addLogMessage("poses_updated="+poses_updated);
                 displayInterface.addLogMessage("end updateVisionList");
+                displayInterface.addLogMessage("updates="+updates);
+                displayInterface.addLogMessage("useBatch="+useBatch);
             }
             if (updates > 0 && useBatch) {
                 int ia[] = update_statement.executeBatch();
@@ -498,7 +503,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         ArrayList<Object> params = new ArrayList<>();
         for (int i = 0; i < updateParamTypes.length; i++) {
             ParamTypeEnum paramTypeEnum = updateParamTypes[i];
-            int index = i+1;
+            int index = i + 1;
             switch (paramTypeEnum) {
                 case TYPE:
                     params.add("SolidObject");
@@ -517,12 +522,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                 case Y:
                     params.add(item.y);
-                    update_statement.setDouble(index, item.x);
+                    update_statement.setDouble(index, item.y);
                     break;
 
                 case Z:
                     params.add(item.z);
-                    update_statement.setDouble(index, item.x);
+                    update_statement.setDouble(index, item.z);
                     break;
 
                 case VXI:

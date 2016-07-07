@@ -34,6 +34,7 @@ import crcl.base.CRCLProgramType;
 import crcl.base.EndCanonType;
 import crcl.base.InitCanonType;
 import crcl.base.MiddleCommandType;
+import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLSocket;
 import java.awt.Component;
@@ -59,6 +60,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import javax.xml.bind.JAXBException;
 
 /**
  *
@@ -421,6 +423,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return crclProgram;
     }
 
+    
     /**
      * Set the value of crclProgram
      *
@@ -429,9 +432,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public void setCrclProgram(CRCLProgramType crclProgram) {
         try {
             this.crclProgram = crclProgram;
+            AprsJFrame aprsJframe = AprsJFrame.getCurrentAprsJFrame();
+            if(null != aprsJframe) {
+                aprsJframe.setCRCLProgram(crclProgram);
+            }
             String programText = CRCLSocket.getUtilSocket().programToPrettyString(crclProgram, true);
             jTextAreaCrcl.setText(programText);
-        } catch (CRCLException ex) {
+        } catch (CRCLException | JAXBException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

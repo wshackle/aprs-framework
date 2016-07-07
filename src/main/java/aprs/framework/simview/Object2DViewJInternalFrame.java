@@ -51,6 +51,9 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
 
         object2DOuterJPanel1 = new aprs.framework.simview.Object2DOuterJPanel();
 
+        setIconifiable(true);
+        setMaximizable(true);
+        setResizable(true);
         setTitle("[Cognex] Object2D View/Simulate");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());

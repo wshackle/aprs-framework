@@ -46,6 +46,7 @@ import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -68,6 +69,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      */
     public VisionToDBJPanel() {
         initComponents();
+        jSpinnerLogLines.setValue(100);
         restoreProperties();
         oldDbType = null;
     }
@@ -121,6 +123,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jScrollPaneTableFromCognex = new javax.swing.JScrollPane();
         jTableFromCognex = new javax.swing.JTable();
         jLabel19 = new javax.swing.JLabel();
+        jSpinnerLogLines = new javax.swing.JSpinner();
+        jLabel1 = new javax.swing.JLabel();
 
         jPanel1.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
@@ -388,7 +392,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jButtonCheck)
                     .addComponent(jButtonAddItem))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneTableFromMysql, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPaneTableFromMysql, javax.swing.GroupLayout.DEFAULT_SIZE, 182, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -434,8 +438,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             .addGroup(jPanelTableFromCognexLayout.createSequentialGroup()
                 .addComponent(jLabel19)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneTableFromCognex, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jScrollPaneTableFromCognex, javax.swing.GroupLayout.PREFERRED_SIZE, 151, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -455,9 +458,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addContainerGap()
                 .addComponent(jPanelTableFromMysql, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanelTableFromCognex, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jPanelTableFromCognex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
+
+        jLabel1.setText("Lines to Keep:");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -470,7 +475,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxDebug))
+                        .addComponent(jCheckBoxDebug)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jSpinnerLogLines, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -481,15 +490,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel11)
-                    .addComponent(jCheckBoxDebug))
+                    .addComponent(jCheckBoxDebug)
+                    .addComponent(jSpinnerLogLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 40, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 70, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -664,6 +675,34 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return this.jCheckBoxDebug.isSelected();
     }
 
+    private List<String> logLines = new LinkedList<>();
+    
+    private void appendLogDisplay(String txt) {
+        int maxLines = 100;
+        try {
+            maxLines = (int) jSpinnerLogLines.getValue();
+        } catch(Exception ex) {
+            
+        }
+        System.out.println("maxLines = " + maxLines);
+        System.out.println("logLines.size() = " + logLines.size());
+        System.out.println("jTextAreaLog.getText().length() = " + jTextAreaLog.getText().length());
+        if(logLines.size() < maxLines) {
+            logLines.add(txt);
+            jTextAreaLog.append(txt);
+        } else {
+            while(logLines.size() >= maxLines) {
+                logLines.remove(0);
+            }
+            logLines.add(txt);
+            StringBuilder sb = new StringBuilder();
+            for(String oldTxt : logLines) {
+                sb.append(oldTxt);
+            }
+            jTextAreaLog.setText(sb.toString());
+        }
+        jTextAreaLog.setCaretPosition(jTextAreaLog.getText().length());
+    }
     public void updateInfo(List<DetectedItem> _list, String line) {
         this.list = _list;
         DefaultTableModel tm = (DefaultTableModel) this.jTableFromCognex.getModel();
@@ -683,16 +722,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             tm.setValueAt(ci.score, i, 6);
         }
         if (this.jCheckBoxDebug.isSelected()) {
-            this.jTextAreaLog.append(line + "\r\n");
+            appendLogDisplay(line + "\r\n");
         }
         this.jTextFieldPoseUpdatesProcessed.setText(Integer.toString(DatabasePoseUpdater.poses_updated));
         this.jTextFieldPoseUpdatesParsed.setText(Integer.toString(Main.getPoseUpdatesParsed()));
         update_info_count++;
         if (this.jCheckBoxDebug.isSelected()) {
-            this.jTextAreaLog.append("\nupdateInfo(\n\t_list=" + _list + ",\n\tline =" + line + "\n\t)\r\n");
-        }
-        if (update_info_count % 5000 == 1) {
-            this.jTextAreaLog.setText("");
+            appendLogDisplay("\nupdateInfo(\n\t_list=" + _list + ",\n\tline =" + line + "\n\t)\r\n");
         }
     }
 
@@ -764,11 +800,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void addLogMessage(String stmnt) {
         log_count++;
         System.out.println(stmnt);
-        if (log_count % 5000 == 1) {
-            this.jTextAreaLog.setText(stmnt + "\r\n");
-        } else {
-            this.jTextAreaLog.append(stmnt + "\r\n");
-        }
+        appendLogDisplay(stmnt+"\r\n");
     }
 
     public void addLogMessage(Exception exception) {
@@ -778,7 +810,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public void setLastCommand(String c) {
-        this.jTextAreaLog.append(c + "\n");
+        appendLogDisplay(c + "\n");
         this.jTextFieldLastCommand.setText(c);
     }
 
@@ -936,6 +968,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JButton jButtonDisconnectVision;
     private javax.swing.JCheckBox jCheckBoxAddRepeatCountsToDatabaseNames;
     private javax.swing.JCheckBox jCheckBoxDebug;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
@@ -959,6 +992,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPaneTableFromCognex;
     private javax.swing.JScrollPane jScrollPaneTableFromMysql;
+    private javax.swing.JSpinner jSpinnerLogLines;
     private javax.swing.JTable jTableFromCognex;
     private javax.swing.JTable jTableFromMysql;
     private javax.swing.JTextArea jTextAreaLog;
@@ -1021,7 +1055,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             props.put(dbHostPort + ".name", setup.getDbName());
             props.put(dbHostPort + ".user", setup.getDbUser());
             props.put(dbHostPort + ".passwd", new String(setup.getDbPassword()));
-            props.put("AddRepeatCountsToDatabaseNames", this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+            props.put("AddRepeatCountsToDatabaseNames", 
+                    Boolean.toString(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected()));
             try (FileWriter fw = new FileWriter(propertiesFile)) {
                 props.store(fw, "");
             } catch (IOException ex) {

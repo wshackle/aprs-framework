@@ -27,6 +27,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +41,8 @@ public class Object2DJPanel extends JPanel {
 
     private List<DetectedItem> items = Arrays.asList(
             new DetectedItem("A", Math.toRadians(45.0), 10.0, 50.0),
-            new DetectedItem("B", Math.toRadians(0.0), 50.0, 150.0)
+            new DetectedItem("B", Math.toRadians(0.0), 50.0, 150.0),
+            new DetectedItem("C", Math.toRadians(0.0), 20.0, 70.0)
     );
 
     public void setItems(List<DetectedItem> items) {
@@ -76,6 +78,28 @@ public class Object2DJPanel extends JPanel {
      */
     public List<DetectedItem> getItems() {
         return items;
+    }
+
+        private double scale;
+
+    /**
+     * Get the value of scale
+     *
+     * @return the value of scale
+     */
+    public double getScale() {
+        return scale;
+    }
+
+        private Point2D.Double minCorner;
+
+    /**
+     * Get the value of minCorner
+     *
+     * @return the value of minCorner
+     */
+    public Point2D.Double getMinCorner() {
+        return minCorner;
     }
 
     @Override
@@ -126,7 +150,12 @@ public class Object2DJPanel extends JPanel {
         if (Double.isInfinite(scale_y) || Double.isNaN(scale_y)) {
             return;
         }
-        double scale = Math.min(scale_x, scale_y);
+         scale = Math.min(scale_x, scale_y);
+         if(null == minCorner) {
+             minCorner = new Point2D.Double();
+         }
+         minCorner.x = min_x;
+         minCorner.y = min_y;
 //        System.out.println("scale = " + scale);
         for (int i = 0; i < items.size(); i++) {
             DetectedItem item = items.get(i);
