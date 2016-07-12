@@ -22,6 +22,9 @@
  */
 package aprs.framework.database;
 
+import java.util.List;
+import java.util.concurrent.Future;
+
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -36,5 +39,5 @@ public interface DbSetupPublisher {
 
     public void removeDbSetupListener(DbSetupListener listener);
     
-    public void notifyAllDbSetupListeners();
+    public List<Future<?>> notifyAllDbSetupListeners();
 }

@@ -40,9 +40,19 @@ import javax.swing.JPanel;
 public class Object2DJPanel extends JPanel {
 
     private List<DetectedItem> items = Arrays.asList(
-            new DetectedItem("A", Math.toRadians(45.0), 10.0, 50.0),
-            new DetectedItem("B", Math.toRadians(0.0), 50.0, 150.0),
-            new DetectedItem("C", Math.toRadians(0.0), 20.0, 70.0)
+            new DetectedItem("topLeftCorner", Math.toRadians(45.0), 10.0, 10.0),
+            new DetectedItem("topRigthCorner", Math.toRadians(45.0), 200.0, 10.0),
+            new DetectedItem("bottomLeftCorner", Math.toRadians(45.0), 10.0, 200.0),
+            new DetectedItem("bottomRightCorner", Math.toRadians(45.0), 200.0, 200.0),
+            new DetectedItem("part_a_tray", Math.toRadians(0.0), 40.0, 50.0),
+            new DetectedItem("part_b_tray", Math.toRadians(0.0), 80.0, 50.0),
+            new DetectedItem("part_c_tray", Math.toRadians(0.0), 120.0, 50.0),
+            new DetectedItem("part_a_1", Math.toRadians(0.0), 40.0, 100.0),
+            new DetectedItem("part_b_1", Math.toRadians(0.0), 80.0, 100.0),
+            new DetectedItem("part_c_1", Math.toRadians(0.0), 120.0, 100.0),
+            new DetectedItem("part_a_2", Math.toRadians(0.0), 40.0, 150.0),
+            new DetectedItem("part_b_2", Math.toRadians(0.0), 80.0, 150.0),
+            new DetectedItem("part_c_2", Math.toRadians(0.0), 120.0, 150.0)
     );
 
     public void setItems(List<DetectedItem> items) {
@@ -80,7 +90,7 @@ public class Object2DJPanel extends JPanel {
         return items;
     }
 
-        private double scale;
+    private double scale;
 
     /**
      * Get the value of scale
@@ -91,7 +101,7 @@ public class Object2DJPanel extends JPanel {
         return scale;
     }
 
-        private Point2D.Double minCorner;
+    private Point2D.Double minCorner;
 
     /**
      * Get the value of minCorner
@@ -150,12 +160,12 @@ public class Object2DJPanel extends JPanel {
         if (Double.isInfinite(scale_y) || Double.isNaN(scale_y)) {
             return;
         }
-         scale = Math.min(scale_x, scale_y);
-         if(null == minCorner) {
-             minCorner = new Point2D.Double();
-         }
-         minCorner.x = min_x;
-         minCorner.y = min_y;
+        scale = Math.min(scale_x, scale_y);
+        if (null == minCorner) {
+            minCorner = new Point2D.Double();
+        }
+        minCorner.x = min_x;
+        minCorner.y = min_y;
 //        System.out.println("scale = " + scale);
         for (int i = 0; i < items.size(); i++) {
             DetectedItem item = items.get(i);
@@ -201,7 +211,7 @@ public class Object2DJPanel extends JPanel {
             g2d.translate((item.x - min_x) * scale + 15, (item.y - min_y) * scale + 20);
             g2d.rotate(item.rotation);
             g2d.setColor(Color.WHITE);
-            Rectangle2D.Double  rect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20);
+            Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20);
             g2d.fill(rect);
             g2d.setColor(Color.BLACK);
             g2d.draw(rect);

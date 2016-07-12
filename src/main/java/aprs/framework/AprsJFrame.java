@@ -63,15 +63,14 @@ import javax.xml.bind.JAXBException;
  */
 public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDisplayInterface {
 
-    
     private static WeakReference<AprsJFrame> aprsJFrameWeakRef = null;
-    
+
     public static AprsJFrame getCurrentAprsJFrame() {
-       if(aprsJFrameWeakRef != null) {
-           return aprsJFrameWeakRef.get();
-       } else {
-           return null;
-       }
+        if (aprsJFrameWeakRef != null) {
+            return aprsJFrameWeakRef.get();
+        } else {
+            return null;
+        }
     }
     private VisionToDbJInternalFrame visionToDbJInternalFrame = null;
     private PddlExecutorJInternalFrame pddlExecutorJInternalFrame1 = null;
@@ -81,34 +80,37 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private PendantClientJInternalFrame pendantClientJInternalFrame = null;
     private SimServerJInternalFrame simServerJInternalFrame = null;
     private LogDisplayJInternalFrame logDisplayJInternalFrame = null;
-    
-    public void setCRCLProgram(CRCLProgramType program) throws JAXBException {
-        if(null != pendantClientJInternalFrame) {
+
+    public void setCRCLProgram(CRCLProgramType program, boolean autoStart) throws JAXBException {
+        if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.setProgram(program);
+            if (autoStart) {
+                pendantClientJInternalFrame.runCurrentProgram();
+            }
         }
     }
-    
+
     private PrintStream origOut = null;
     private PrintStream origErr = null;
-    
-    private class MyPrintStream  extends PrintStream {
-        
+
+    private class MyPrintStream extends PrintStream {
+
         final private PrintStream ps;
 
         public MyPrintStream(PrintStream ps) {
-            super(ps,true);
+            super(ps, true);
             this.ps = ps;
         }
 
         @Override
         public void write(byte[] buf, int off, int len) {
-            super.write(buf, off, len); 
-            if(null != logDisplayJInternalFrame) {
+            super.write(buf, off, len);
+            if (null != logDisplayJInternalFrame) {
                 final String s = new String(buf, off, len);
-                if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+                if (javax.swing.SwingUtilities.isEventDispatchThread()) {
                     logDisplayJInternalFrame.appendText(s);
                 } else {
-                    
+
                     javax.swing.SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -118,9 +120,9 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
                 }
             }
         }
-        
+
     }
-    
+
     /**
      * Creates new form AprsPddlWrapperJFrame
      */
@@ -154,7 +156,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             jDesktopPane1.add(logDisplayJInternalFrame);
             System.setOut(new MyPrintStream(System.out));
             System.setErr(new MyPrintStream(System.err));
-            
+
             if (null == dbSetupJInternalFrame) {
                 dbSetupJInternalFrame = new DbSetupJInternalFrame();
                 dbSetupJInternalFrame.pack();
@@ -250,10 +252,10 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
                 dbSetupJInternalFrame = new DbSetupJInternalFrame();
                 dbSetupJInternalFrame.pack();
             }
-            dbSetupJInternalFrame.setVisible(true);
-            jDesktopPane1.getDesktopManager().deiconifyFrame(dbSetupJInternalFrame);
-            jDesktopPane1.getDesktopManager().activateFrame(dbSetupJInternalFrame);
-            dbSetupJInternalFrame.moveToFront();
+//            dbSetupJInternalFrame.setVisible(true);
+//            jDesktopPane1.getDesktopManager().deiconifyFrame(dbSetupJInternalFrame);
+//            jDesktopPane1.getDesktopManager().activateFrame(dbSetupJInternalFrame);
+//            dbSetupJInternalFrame.moveToFront();
             return dbSetupJInternalFrame.getDbSetupPublisher();
         }
     };

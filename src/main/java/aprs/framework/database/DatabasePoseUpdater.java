@@ -217,7 +217,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         ParamTypeEnum.VXK, // 8
         ParamTypeEnum.VZI, // 9
         ParamTypeEnum.VZJ, // 10
-        ParamTypeEnum.VZI// 11
+        ParamTypeEnum.VZK// 11
 
     };
 

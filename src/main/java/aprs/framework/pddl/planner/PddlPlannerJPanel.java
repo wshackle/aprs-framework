@@ -26,6 +26,7 @@ import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.AprsJFrame;
 import aprs.framework.DisplayInterface;
 import aprs.framework.PddlAction;
+import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -85,6 +86,8 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         jTextAreaOutput = new javax.swing.JTextArea();
         jButtonRunOnce = new javax.swing.JButton();
         jButtonStop = new javax.swing.JButton();
+        jButtonPddlDomainEdit = new javax.swing.JButton();
+        jButtonPddlProblemEdit = new javax.swing.JButton();
 
         jLabel1.setText("Planner Program Executable:");
 
@@ -148,6 +151,20 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
             }
         });
 
+        jButtonPddlDomainEdit.setText("View/Edit");
+        jButtonPddlDomainEdit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonPddlDomainEditActionPerformed(evt);
+            }
+        });
+
+        jButtonPddlProblemEdit.setText("View/Edit");
+        jButtonPddlProblemEdit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonPddlProblemEditActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -158,30 +175,35 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                     .addComponent(jScrollPane1)
                     .addComponent(jTextFieldAdditionalArgs, javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addComponent(jTextFieldPlannerProgramExecutable, javax.swing.GroupLayout.PREFERRED_SIZE, 508, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonPlannerProgramExecutableBrowse, javax.swing.GroupLayout.DEFAULT_SIZE, 179, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(jTextFieldPddlProblem, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 508, Short.MAX_VALUE)
-                            .addComponent(jTextFieldPddlDomainFile, javax.swing.GroupLayout.Alignment.LEADING))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButtonPddlDomainBrowse, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButtonPddlProblemBrowse, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel3)
-                            .addComponent(jLabel4))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jButtonStop)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonRunOnce)))
+                        .addComponent(jButtonRunOnce))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.LEADING))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jTextFieldPddlProblem, javax.swing.GroupLayout.DEFAULT_SIZE, 508, Short.MAX_VALUE)
+                            .addComponent(jTextFieldPddlDomainFile, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 508, Short.MAX_VALUE)
+                            .addComponent(jTextFieldPlannerProgramExecutable))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(layout.createSequentialGroup()
+                                    .addComponent(jButtonPddlProblemBrowse, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(jButtonPddlProblemEdit))
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                    .addComponent(jButtonPddlDomainBrowse, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(jButtonPddlDomainEdit)))
+                            .addComponent(jButtonPlannerProgramExecutableBrowse, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -198,13 +220,15 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jTextFieldPddlDomainFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonPddlDomainBrowse))
+                    .addComponent(jButtonPddlDomainBrowse)
+                    .addComponent(jButtonPddlDomainEdit))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jTextFieldPddlProblem, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonPddlProblemBrowse))
+                    .addComponent(jButtonPddlProblemBrowse)
+                    .addComponent(jButtonPddlProblemEdit))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -347,6 +371,22 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         this.closePddlProcess();
     }//GEN-LAST:event_jButtonStopActionPerformed
 
+    private void jButtonPddlProblemEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlProblemEditActionPerformed
+        try {
+            Desktop.getDesktop().open(new File(jTextFieldPddlProblem.getText()));
+        } catch (IOException ex) {
+            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonPddlProblemEditActionPerformed
+
+    private void jButtonPddlDomainEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlDomainEditActionPerformed
+       try {
+            Desktop.getDesktop().open(new File(jTextFieldPddlDomainFile.getText()));
+        } catch (IOException ex) {
+            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonPddlDomainEditActionPerformed
+
     private ExecutorService executor = Executors.newCachedThreadPool();
 
     /**
@@ -477,7 +517,9 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonPddlDomainBrowse;
+    private javax.swing.JButton jButtonPddlDomainEdit;
     private javax.swing.JButton jButtonPddlProblemBrowse;
+    private javax.swing.JButton jButtonPddlProblemEdit;
     private javax.swing.JButton jButtonPlannerProgramExecutableBrowse;
     private javax.swing.JButton jButtonRunOnce;
     private javax.swing.JButton jButtonStop;

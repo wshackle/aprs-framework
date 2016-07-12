@@ -503,9 +503,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 props.load(fr);
             }
             String itemsLine = props.getProperty("items");
-            if (null != itemsLine && itemsLine.length() > 0) {
-                setItems(VisionSocketClient.lineToList(itemsLine));
-            }
+//            if (null != itemsLine && itemsLine.length() > 0) {
+//                setItems(VisionSocketClient.lineToList(itemsLine));
+//            }
             String portString = props.getProperty("--visionport");
             try {
                 if (null != portString && portString.length() > 0) {

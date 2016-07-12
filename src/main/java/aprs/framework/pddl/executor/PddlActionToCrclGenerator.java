@@ -164,7 +164,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         for (int i = 0; i < actions.size(); i++) {
 
             actionToCrclIndexes[i] = out.size();
-            System.out.println("i = " + i);
             PddlAction action = actions.get(i);
             System.out.println("action = " + action);
             try {

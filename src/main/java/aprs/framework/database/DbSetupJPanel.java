@@ -30,8 +30,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -39,6 +41,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -407,10 +410,12 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     });
 
-    public void notifyAllDbSetupListeners() {
+    public List<Future<?>> notifyAllDbSetupListeners() {
+        List<Future<?>> futures = new ArrayList<>();
         if (notifyService != null) {
             final DbSetup thisDbSetup = DbSetupJPanel.this.getDbSetup();
-            notifyService.submit(new Runnable() {
+            Future<?> future =
+                    notifyService.submit(new Runnable() {
                 @Override
                 public void run() {
                     for (DbSetupListener listener : dbSetupListeners) {
@@ -420,7 +425,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     }
                 }
             });
+            futures.add(future);
         }
+        return futures;
     }
 
     private void addComboItemUnique(String item) {

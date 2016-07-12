@@ -29,15 +29,16 @@ import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.spvision.VisionToDBJPanel;
-import crcl.base.CRCLCommandType;
+import crcl.base.CRCLCommandInstanceType;
 import crcl.base.CRCLProgramType;
 import crcl.base.EndCanonType;
 import crcl.base.InitCanonType;
 import crcl.base.MiddleCommandType;
-import crcl.ui.client.PendantClientJInternalFrame;
-import crcl.utils.CRCLException;
 import crcl.utils.CRCLSocket;
 import java.awt.Component;
+import java.awt.Container;
+import java.awt.Desktop;
+import java.awt.Dimension;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -46,18 +47,25 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EventObject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.xml.bind.JAXBException;
@@ -86,8 +94,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        jTextAreaCrcl = new javax.swing.JTextArea();
         jScrollPane4 = new javax.swing.JScrollPane();
         jTablePddlOutput = new javax.swing.JTable();
         jButtonLoadPddlActionsFromFile = new javax.swing.JButton();
@@ -95,14 +101,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonLoad = new javax.swing.JButton();
         jButtonDbSetup = new javax.swing.JButton();
         jButtonGenerateCRCL = new javax.swing.JButton();
+        jButtonPddlOutputViewEdit = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTableCrclProgram = new javax.swing.JTable();
+        jCheckBoxAutoStartCrcl = new javax.swing.JCheckBox();
 
         jLabel6.setText("Pddl Output Actions");
 
         jLabel7.setText("CRCL");
-
-        jTextAreaCrcl.setColumns(20);
-        jTextAreaCrcl.setRows(5);
-        jScrollPane3.setViewportView(jTextAreaCrcl);
 
         jTablePddlOutput.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -167,29 +173,70 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         });
 
+        jButtonPddlOutputViewEdit.setText("View/Edit");
+        jButtonPddlOutputViewEdit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonPddlOutputViewEditActionPerformed(evt);
+            }
+        });
+
+        jTableCrclProgram.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                { new Integer(1), null},
+                { new Integer(2), null},
+                { new Integer(3), null},
+                { new Integer(4), null}
+            },
+            new String [] {
+                "ID", "Text"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, true
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(jTableCrclProgram);
+
+        jCheckBoxAutoStartCrcl.setText("Automatically Start CRCL programs");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane3)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 657, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxAutoStartCrcl)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonGenerateCRCL)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonDbSetup))
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 657, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                    .addComponent(jScrollPane4)
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldPddlOutputActions)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonLoad)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonLoadPddlActionsFromFile)))
+                        .addComponent(jButtonLoadPddlActionsFromFile)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonPddlOutputViewEdit)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -199,16 +246,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jLabel6)
                     .addComponent(jButtonLoadPddlActionsFromFile)
                     .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonLoad))
+                    .addComponent(jButtonLoad)
+                    .addComponent(jButtonPddlOutputViewEdit))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 201, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
                     .addComponent(jButtonDbSetup)
-                    .addComponent(jButtonGenerateCRCL))
+                    .addComponent(jButtonGenerateCRCL)
+                    .addComponent(jCheckBoxAutoStartCrcl))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 225, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 180, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -274,10 +323,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private static final String PDDLOUTPUT = "pddl.output";
+    private static final String PDDLCRCLAUTOSTART = "pddl.crcl.autostart";
 
     public void saveProperties() throws IOException {
         Map<String, String> propsMap = new HashMap<>();
         propsMap.put(PDDLOUTPUT, jTextFieldPddlOutputActions.getText());
+        propsMap.put(PDDLCRCLAUTOSTART, Boolean.toString(jCheckBoxAutoStartCrcl.isSelected()));
         Properties props = new Properties();
         props.putAll(propsMap);
         try (FileWriter fw = new FileWriter(propertiesFile)) {
@@ -286,8 +337,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public void autoResizeTableColWidths(JTable table) {
+
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
+        int fullsize = 0;
+        Container parent = table.getParent();
+        if (null != parent) {
+            fullsize = Math.max(parent.getPreferredSize().width, parent.getSize().width);
+        }
+        int sumWidths = 0;
         for (int i = 0; i < table.getColumnCount(); i++) {
             DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
             TableColumn col = colModel.getColumn(i);
@@ -306,7 +364,40 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         false, false, r, i);
                 width = Math.max(width, comp.getPreferredSize().width);
             }
+            if (i == table.getColumnCount() - 1) {
+                if (width < fullsize - sumWidths) {
+                    width = fullsize - sumWidths;
+                }
+            }
             col.setPreferredWidth(width + 2);
+            sumWidths += width + 2;
+        }
+    }
+
+    public void autoResizeTableRowHeights(JTable table) {
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+        for (int rowIndex = 0; rowIndex < table.getRowCount(); rowIndex++) {
+            int height = 0;
+            for (int colIndex = 0; colIndex < table.getColumnCount(); colIndex++) {
+                DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
+                TableColumn col = colModel.getColumn(colIndex);
+                TableCellRenderer renderer = table.getCellRenderer(rowIndex, colIndex);
+                Object value = table.getValueAt(rowIndex, colIndex);
+                Component comp = renderer.getTableCellRendererComponent(table, value,
+                        false, false, rowIndex, colIndex);
+                System.out.println("comp = " + comp);
+                Dimension compSize = comp.getPreferredSize();
+                System.out.println("compSize = " + compSize);
+                int thisCompHeight = compSize.height;
+//                if(value instanceof String) {
+//                    thisCompHeight *= ((String) value).split("\n").length;
+//                }
+                height = Math.max(height, thisCompHeight);
+            }
+            if (height > 0) {
+                table.setRowHeight(rowIndex, height);
+            }
         }
     }
 
@@ -341,24 +432,30 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             browseActionsFile();
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()));
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonLoadPddlActionsFromFileActionPerformed
 
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
         try {
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()));
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonLoadActionPerformed
 
     private void jTextFieldPddlOutputActionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPddlOutputActionsActionPerformed
         try {
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()));
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jTextFieldPddlOutputActionsActionPerformed
 
@@ -375,8 +472,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             dbSetupPublisher = dbSetupSupplier.call();
             dbSetupPublisher.addDbSetupListener(this);
+
         } catch (Exception ex) {
-            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VisionToDBJPanel.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -385,8 +484,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try {
                 dbSetupPublisher = dbSetupSupplier.call();
                 dbSetupPublisher.addDbSetupListener(this);
+
             } catch (Exception ex) {
-                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(VisionToDBJPanel.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_jButtonDbSetupActionPerformed
@@ -423,7 +524,139 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return crclProgram;
     }
 
-    
+    List<JTextArea> crclAreas = new ArrayList<>();
+    JTextArea editTableArea = new JTextArea();
+
+    private String trimXml(String in) {
+        int endHeaderIndex = in.indexOf("?>");
+        if (endHeaderIndex > 0) {
+            return in.substring(endHeaderIndex + 2).trim();
+        } else {
+            return in.trim();
+        }
+    }
+
+    private void loadProgramToTable(CRCLProgramType crclProgram) {
+        DefaultTableModel model = (DefaultTableModel) jTableCrclProgram.getModel();
+        jTableCrclProgram.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                while (crclAreas.size() <= row) {
+                    JTextArea area = new JTextArea();
+                    area.setOpaque(true);
+                    area.setVisible(true);
+                    crclAreas.add(area);
+                }
+                crclAreas.get(row).setText(value.toString());
+                return crclAreas.get(row);
+            }
+
+        });
+        jTableCrclProgram.getColumnModel().getColumn(1).setCellEditor(new TableCellEditor() {
+
+            private List<CellEditorListener> listeners = new ArrayList<>();
+
+            @Override
+            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                editTableArea.setOpaque(true);
+                editTableArea.setVisible(true);
+                editTableArea.setText(value.toString());
+                return editTableArea;
+            }
+
+            @Override
+            public Object getCellEditorValue() {
+                return editTableArea.getText();
+            }
+
+            @Override
+            public boolean isCellEditable(EventObject anEvent) {
+                return true;
+            }
+
+            @Override
+            public boolean shouldSelectCell(EventObject anEvent) {
+                return true;
+            }
+
+            @Override
+            public boolean stopCellEditing() {
+                for (int i = 0; i < listeners.size(); i++) {
+                    CellEditorListener l = listeners.get(i);
+                    if (null != l) {
+                        l.editingStopped(new ChangeEvent(jTableCrclProgram));
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public void cancelCellEditing() {
+                for (int i = 0; i < listeners.size(); i++) {
+                    CellEditorListener l = listeners.get(i);
+                    if (null != l) {
+                        l.editingCanceled(new ChangeEvent(jTableCrclProgram));
+                    }
+                }
+            }
+
+            @Override
+            public void addCellEditorListener(CellEditorListener l) {
+                listeners.add(l);
+            }
+
+            @Override
+            public void removeCellEditorListener(CellEditorListener l) {
+                listeners.remove(l);
+            }
+        });
+        model.setRowCount(0);
+        CRCLSocket crclSocket = CRCLSocket.getUtilSocket();
+        CRCLCommandInstanceType instance = new CRCLCommandInstanceType();
+        InitCanonType initCanon = crclProgram.getInitCanon();
+        if (null != initCanon) {
+            try {
+                instance.setCRCLCommand(initCanon);
+                model.addRow(new Object[]{initCanon.getCommandID().intValue(),
+                    trimXml(crclSocket.commandInstanceToPrettyString(instance, false))
+                });
+
+            } catch (JAXBException ex) {
+                Logger.getLogger(PddlExecutorJPanel.class
+                        .getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        for (MiddleCommandType midCmd : crclProgram.getMiddleCommand()) {
+            if (null != midCmd) {
+                try {
+                    instance.setCRCLCommand(midCmd);
+                    model.addRow(new Object[]{midCmd.getCommandID().intValue(),
+                        trimXml(crclSocket.commandInstanceToPrettyString(instance, false))
+                    });
+
+                } catch (JAXBException ex) {
+                    Logger.getLogger(PddlExecutorJPanel.class
+                            .getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        EndCanonType endCanon = crclProgram.getEndCanon();
+        if (null != endCanon) {
+            try {
+                instance.setCRCLCommand(endCanon);
+                model.addRow(new Object[]{endCanon.getCommandID().intValue(),
+                    trimXml(crclSocket.commandInstanceToPrettyString(instance, false))
+                });
+
+            } catch (JAXBException ex) {
+                Logger.getLogger(PddlExecutorJPanel.class
+                        .getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        autoResizeTableRowHeights(jTableCrclProgram);
+        autoResizeTableColWidths(jTableCrclProgram);
+    }
+
     /**
      * Set the value of crclProgram
      *
@@ -433,13 +666,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             this.crclProgram = crclProgram;
             AprsJFrame aprsJframe = AprsJFrame.getCurrentAprsJFrame();
-            if(null != aprsJframe) {
-                aprsJframe.setCRCLProgram(crclProgram);
+            if (null != aprsJframe) {
+                aprsJframe.setCRCLProgram(crclProgram, this.jCheckBoxAutoStartCrcl.isSelected());
             }
-            String programText = CRCLSocket.getUtilSocket().programToPrettyString(crclProgram, true);
-            jTextAreaCrcl.setText(programText);
-        } catch (CRCLException | JAXBException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            this.loadProgramToTable(crclProgram);
+//            String programText = CRCLSocket.getUtilSocket().programToPrettyString(crclProgram, true);
+//            jTextAreaCrcl.setText(programText);
+
+        } catch (Exception ex) {
+            Logger.getLogger(PddlExecutorJPanel.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -447,6 +683,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         generateCrcl();
     }//GEN-LAST:event_jButtonGenerateCRCLActionPerformed
+
+    private void jButtonPddlOutputViewEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlOutputViewEditActionPerformed
+        try {
+            Desktop.getDesktop().open(new File(jTextFieldPddlOutputActions.getText()));
+
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class
+                    .getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonPddlOutputViewEditActionPerformed
 
     public void setCrclIndexes(int indexes[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
@@ -477,12 +723,29 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try {
                 dbSetupPublisher = dbSetupSupplier.call();
                 dbSetupPublisher.addDbSetupListener(this);
+
             } catch (Exception ex) {
-                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(VisionToDBJPanel.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
         dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
-        dbSetupPublisher.notifyAllDbSetupListeners();
+        List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
+        for (Future<?> f : futures) {
+            if (!f.isDone() && !f.isCancelled()) {
+                try {
+                    f.get();
+
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(PddlExecutorJPanel.class
+                            .getName()).log(Level.SEVERE, null, ex);
+
+                } catch (ExecutionException ex) {
+                    Logger.getLogger(PddlExecutorJPanel.class
+                            .getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
         List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(actionsList);
         int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
         indexes = Arrays.copyOf(indexes, indexes.length);
@@ -501,12 +764,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonGenerateCRCL;
     private javax.swing.JButton jButtonLoad;
     private javax.swing.JButton jButtonLoadPddlActionsFromFile;
+    private javax.swing.JButton jButtonPddlOutputViewEdit;
+    private javax.swing.JCheckBox jCheckBoxAutoStartCrcl;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
-    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JTable jTableCrclProgram;
     private javax.swing.JTable jTablePddlOutput;
-    private javax.swing.JTextArea jTextAreaCrcl;
     private javax.swing.JTextField jTextFieldPddlOutputActions;
     // End of variables declaration//GEN-END:variables
 
@@ -525,6 +790,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     loadActionsFile(f);
                 }
             }
+            String autostart = props.getProperty(PDDLCRCLAUTOSTART);
+            if(null != autostart) {
+                this.jCheckBoxAutoStartCrcl.setSelected(Boolean.valueOf(autostart));
+            }
+
         }
     }
 
