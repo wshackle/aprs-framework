@@ -171,12 +171,12 @@ public class SocketLineReader {
             }
         } catch (Exception e) {
         }
-        try {
-            if (null != br) {
-                br.close();
-            }
-        } catch (Exception e) {
-        }
+//        try {
+//            if (null != br) {
+//                br.close();
+//            }
+//        } catch (Exception e) {
+//        }
         try {
             if (null != ps) {
                 ps.close();

@@ -39,21 +39,22 @@ import javax.swing.JPanel;
  */
 public class Object2DJPanel extends JPanel {
 
-    private List<DetectedItem> items = Arrays.asList(
-            new DetectedItem("topLeftCorner", Math.toRadians(45.0), 10.0, 10.0),
-            new DetectedItem("topRigthCorner", Math.toRadians(45.0), 200.0, 10.0),
-            new DetectedItem("bottomLeftCorner", Math.toRadians(45.0), 10.0, 200.0),
-            new DetectedItem("bottomRightCorner", Math.toRadians(45.0), 200.0, 200.0),
-            new DetectedItem("part_a_tray", Math.toRadians(0.0), 40.0, 50.0),
-            new DetectedItem("part_b_tray", Math.toRadians(0.0), 80.0, 50.0),
-            new DetectedItem("part_c_tray", Math.toRadians(0.0), 120.0, 50.0),
-            new DetectedItem("part_a_1", Math.toRadians(0.0), 40.0, 100.0),
-            new DetectedItem("part_b_1", Math.toRadians(0.0), 80.0, 100.0),
-            new DetectedItem("part_c_1", Math.toRadians(0.0), 120.0, 100.0),
-            new DetectedItem("part_a_2", Math.toRadians(0.0), 40.0, 150.0),
-            new DetectedItem("part_b_2", Math.toRadians(0.0), 80.0, 150.0),
-            new DetectedItem("part_c_2", Math.toRadians(0.0), 120.0, 150.0)
+    public static final List<DetectedItem> EXAMPLES_ITEMS_LIST = Arrays.asList(
+            new DetectedItem("topLeftCorner", Math.toRadians(-45.0), 10.0, -300.0),
+            new DetectedItem("topRigthCorner", Math.toRadians(45.0), 700.0, -300.0),
+            new DetectedItem("bottomLeftCorner", Math.toRadians(-45.0), 10.0, 300.0),
+            new DetectedItem("bottomRightCorner", Math.toRadians(45.0), 700.0, 300.0),
+            new DetectedItem("part_a_tray", Math.toRadians(0.0), 600, 125.0),
+            new DetectedItem("part_b_tray", Math.toRadians(0.0), 500, 125.0),
+            new DetectedItem("part_c_tray", Math.toRadians(0.0), 400, 125.0),
+            new DetectedItem("part_a_1", Math.toRadians(0.0), 636, -125.0),
+            new DetectedItem("part_b_1", Math.toRadians(0.0), 636, -125.0),
+            new DetectedItem("part_c_1", Math.toRadians(0.0), 636, -125.0),
+            new DetectedItem("part_a_2", Math.toRadians(0.0), 636, -125.0),
+            new DetectedItem("part_b_2", Math.toRadians(0.0), 636, -125.0),
+            new DetectedItem("part_c_2", Math.toRadians(0.0), 636, -125.0)
     );
+    private List<DetectedItem> items = EXAMPLES_ITEMS_LIST;
 
     public void setItems(List<DetectedItem> items) {
         this.items = items;
@@ -139,17 +140,18 @@ public class Object2DJPanel extends JPanel {
             if (Double.isInfinite(item.rotation) || Double.isNaN(item.rotation)) {
                 continue;
             }
-            if (max_x < item.x) {
-                max_x = item.x;
+            int extra = 10 * item.name.length();
+            if (max_x < item.x+extra) {
+                max_x = item.x+extra;
             }
-            if (min_x > item.x) {
-                min_x = item.x;
+            if (min_x > item.x-extra) {
+                min_x = item.x-extra;
             }
-            if (max_y < item.y) {
-                max_y = item.y;
+            if (max_y < item.y+extra) {
+                max_y = item.y+extra;
             }
-            if (min_y > item.y) {
-                min_y = item.y;
+            if (min_y > item.y-extra) {
+                min_y = item.y-extra;
             }
         }
         double scale_x = (this.getSize().width - 30) / (max_x - min_x);

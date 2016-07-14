@@ -190,7 +190,7 @@
       <SubComponents>
         <Component class="javax.swing.JButton" name="jButtonDisconnectVision">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Disconnect From Cognex"/>
+            <Property name="text" type="java.lang.String" value="Disconnect From Vision"/>
             <Property name="enabled" type="boolean" value="false"/>
           </Properties>
           <Events>

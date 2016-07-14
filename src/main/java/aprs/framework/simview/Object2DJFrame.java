@@ -36,21 +36,7 @@ public class Object2DJFrame extends javax.swing.JFrame {
      */
     public Object2DJFrame() {
         initComponents();
-        object2DOuterJPanel1.setItems(Arrays.asList(
-                new DetectedItem("topLeftCorner", Math.toRadians(45.0), 10.0, 10.0),
-                new DetectedItem("topRigthCorner", Math.toRadians(45.0), 200.0, 10.0),
-                new DetectedItem("bottomLeftCorner", Math.toRadians(45.0), 10.0, 200.0),
-                new DetectedItem("bottomRightCorner", Math.toRadians(45.0), 200.0, 200.0),
-                new DetectedItem("part_a_tray", Math.toRadians(0.0), 40.0, 50.0),
-                new DetectedItem("part_b_tray", Math.toRadians(0.0), 80.0, 50.0),
-                new DetectedItem("part_c_tray", Math.toRadians(0.0), 120.0, 50.0),
-                new DetectedItem("part_a_1", Math.toRadians(0.0), 40.0, 100.0),
-                new DetectedItem("part_b_1", Math.toRadians(0.0), 80.0, 100.0),
-                new DetectedItem("part_c_1", Math.toRadians(0.0), 120.0, 100.0),
-                new DetectedItem("part_a_2", Math.toRadians(0.0), 40.0, 150.0),
-                new DetectedItem("part_b_2", Math.toRadians(0.0), 80.0, 150.0),
-                new DetectedItem("part_c_2", Math.toRadians(0.0), 120.0, 150.0)
-        ));
+        object2DOuterJPanel1.setItems(Object2DJPanel.EXAMPLES_ITEMS_LIST);
     }
 
     /**

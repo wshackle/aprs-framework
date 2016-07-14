@@ -128,7 +128,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
         jPanel1.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
-        jButtonDisconnectVision.setText("Disconnect From Cognex");
+        jButtonDisconnectVision.setText("Disconnect From Vision");
         jButtonDisconnectVision.setEnabled(false);
         jButtonDisconnectVision.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

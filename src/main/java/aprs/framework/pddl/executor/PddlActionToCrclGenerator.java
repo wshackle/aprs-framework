@@ -33,6 +33,7 @@ import crcl.base.MoveToType;
 import crcl.base.PoseType;
 import crcl.base.SetEndEffectorType;
 import crcl.utils.CRCLPosemath;
+import static crcl.utils.CRCLPosemath.vector;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -193,6 +194,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("Database not setup and connected.");
         }
         PoseType pose = qs.getPose(action.getArgs()[1]);
+        pose.setZAxis(vector(0,0,-1.0));
         SetEndEffectorType openGripperCmd = new SetEndEffectorType();
         openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         openGripperCmd.setSetting(BigDecimal.ONE);
@@ -227,6 +229,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("Database not setup and connected.");
         }
         PoseType pose = qs.getPose(action.getArgs()[6]);
+        pose.setZAxis(vector(0,0,-1.0));
         
         PoseType poseAbove = CRCLPosemath.copy(pose);
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
