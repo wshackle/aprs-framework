@@ -20,15 +20,21 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-
-
 package aprs.framework.database;
+
+import crcl.base.PointType;
+import crcl.base.PoseType;
+import crcl.base.VectorType;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class DetectedItem {
+
     public String name;
     public String fullName;
     public int repeats;
@@ -37,25 +43,56 @@ public class DetectedItem {
     public double x;
     public double y;
     public double z;
-    public double vxi=1;
-    public double vxj=0;
-    public double vxk=0;
-    public double vzi=0;
-    public double vzj=0;
-    public double vzk=1;
+    public double vxi = 1;
+    public double vxj = 0;
+    public double vxk = 0;
+    public double vzi = 0;
+    public double vzj = 0;
+    public double vzk = 1;
     public double score;
 
     public DetectedItem() {
         score = 100.0;
     }
 
-    
     public DetectedItem(String name, double rotation, double x, double y) {
         this.name = name;
         this.rotation = rotation;
+        this.vxi = Math.cos(rotation);
+        this.vxj = Math.sin(rotation);
         this.x = x;
         this.y = y;
         this.score = 100.0;
+    }
+
+    public DetectedItem(String name, PoseType pose) {
+        this.name = name;
+        if (null != pose) {
+            VectorType xAxis = pose.getXAxis();
+            if (null != xAxis) {
+                this.rotation = Math.atan2(xAxis.getJ().doubleValue(), xAxis.getI().doubleValue());
+                this.vxi = xAxis.getI().doubleValue();
+                this.vxj = xAxis.getJ().doubleValue();
+                this.vxk = xAxis.getK().doubleValue();
+            }
+            VectorType zAxis = pose.getZAxis();
+            if (null != zAxis) {
+                this.vzi = zAxis.getI().doubleValue();
+                this.vzj = zAxis.getJ().doubleValue();
+                this.vzk = zAxis.getK().doubleValue();
+            }
+            PointType pt = pose.getPoint();
+            if (null != pt) {
+                this.x = pt.getX().doubleValue();
+                this.y = pt.getY().doubleValue();
+                this.z = pt.getZ().doubleValue();
+            }
+        }
+        this.score = 100.0;
+    }
+
+    public PoseType toCrclPose() {
+        return pose(point(x, y, z), vector(vxi, vxj, vxk), vector(vzi, vzj, vzk));
     }
 
     @Override
@@ -63,5 +100,4 @@ public class DetectedItem {
         return "DetectedItem{" + "name=" + name + ", fullName=" + fullName + ", repeats=" + repeats + ", index=" + index + ", rotation=" + rotation + ", x=" + x + ", y=" + y + ", z=" + z + ", vxi=" + vxi + ", vxj=" + vxj + ", vxk=" + vxk + ", vzi=" + vzi + ", vzj=" + vzj + ", vzk=" + vzk + ", score=" + score + '}';
     }
 
-    
 }

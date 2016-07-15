@@ -86,44 +86,49 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTable1.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
-                boolean changeFound = false;
-                if (!settingItems) {
-                    List<DetectedItem> l = new ArrayList<>();
-                    l.addAll(getItems());
-                    DetectedItem item = null;
-                    for (int i = 0; i < jTable1.getRowCount(); i++) {
-                        if (jTable1.getValueAt(i, 0) == null || jTable1.getValueAt(i, 0).toString().length() < 1) {
-                            continue;
+                try {
+                    boolean changeFound = false;
+
+                    if (!settingItems) {
+                        List<DetectedItem> l = new ArrayList<>();
+                        l.addAll(getItems());
+                        DetectedItem item = null;
+                        for (int i = 0; i < jTable1.getRowCount(); i++) {
+                            if (jTable1.getValueAt(i, 0) == null || jTable1.getValueAt(i, 0).toString().length() < 1) {
+                                continue;
+                            }
+                            if (i < l.size()) {
+                                item = l.get(i);
+                            } else {
+                                item = null;
+                            }
+                            if (item == null || item.name == null
+                                    || !Objects.equals(item.name, jTable1.getValueAt(i, 0))
+                                    || Math.abs(item.x - Double.parseDouble(jTable1.getValueAt(i, 1).toString())) > 0.001
+                                    || Math.abs(item.y - Double.parseDouble(jTable1.getValueAt(i, 2).toString())) > 0.001
+                                    || Math.abs(item.rotation - Double.parseDouble(jTable1.getValueAt(i, 3).toString())) > 0.001) {
+                                changeFound = true;
+                            } else {
+                                continue;
+                            }
+                            if (item == null) {
+                                item = new DetectedItem();
+                            }
+                            item.name = jTable1.getValueAt(i, 0).toString();
+                            item.x = Double.parseDouble(jTable1.getValueAt(i, 1).toString());
+                            item.y = Double.parseDouble(jTable1.getValueAt(i, 2).toString());
+                            item.rotation = Math.toRadians(Double.parseDouble(jTable1.getValueAt(i, 3).toString()));
+                            while (l.size() < i) {
+                                l.add(null);
+                            }
+                            l.set(i, item);
                         }
-                        if (i < l.size()) {
-                            item = l.get(i);
-                        } else {
-                            item = null;
+                        if (changeFound) {
+                            setItems(l);
                         }
-                        if (item == null || item.name == null
-                                || !Objects.equals(item.name, jTable1.getValueAt(i, i))
-                                || Math.abs(item.x - Double.parseDouble(jTable1.getValueAt(i, 1).toString())) > 0.001
-                                || Math.abs(item.y - Double.parseDouble(jTable1.getValueAt(i, 2).toString())) > 0.001
-                                || Math.abs(item.rotation - Double.parseDouble(jTable1.getValueAt(i, 3).toString())) > 0.001) {
-                            changeFound = true;
-                        } else {
-                            continue;
-                        }
-                        if (item == null) {
-                            item = new DetectedItem();
-                        }
-                        item.name = jTable1.getValueAt(i, 0).toString();
-                        item.x = Double.parseDouble(jTable1.getValueAt(i, 1).toString());
-                        item.y = Double.parseDouble(jTable1.getValueAt(i, 2).toString());
-                        item.rotation = Math.toRadians(Double.parseDouble(jTable1.getValueAt(i, 3).toString()));
-                        while (l.size() < i) {
-                            l.add(null);
-                        }
-                        l.set(i, item);
                     }
-                    if (changeFound) {
-                        setItems(l);
-                    }
+                } catch (Exception exception) {
+                    exception.printStackTrace();
                 }
             }
         });
@@ -408,9 +413,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null == minCorner) {
             return;
         }
-        if(null != draggedItem) {
-            draggedItem.x = ((evt.getX()-15)/scale) + minCorner.x;
-            draggedItem.y = ((evt.getY()-20)/scale) + minCorner.y;
+        if (null != draggedItem) {
+            draggedItem.x = ((evt.getX() - 15) / scale) + minCorner.x;
+            draggedItem.y = ((evt.getY() - 20) / scale) + minCorner.y;
             this.setItems(this.getItems());
         }
     }//GEN-LAST:event_object2DJPanel1MouseDragged
@@ -430,18 +435,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int minIndex = -1;
         for (int i = 0; i < items.size(); i++) {
             DetectedItem item = items.get(i);
-            double rel_x = (item.x - minCorner.x) * scale+15;
-            double rel_y = (item.y - minCorner.y) * scale+20;
-            double diff_x = rel_x -evt.getX();
-            double diff_y = rel_y -evt.getY();
-            double dist = Math.sqrt(diff_x*diff_x+diff_y*diff_y);
-            if(dist < 35 && dist < minDist) {
-                minDist=dist;
+            double rel_x = (item.x - minCorner.x) * scale + 15;
+            double rel_y = (item.y - minCorner.y) * scale + 20;
+            double diff_x = rel_x - evt.getX();
+            double diff_y = rel_y - evt.getY();
+            double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
+            if (dist < 35 && dist < minDist) {
+                minDist = dist;
                 closestItem = item;
                 minIndex = i;
             }
         }
-        if(minIndex >= 0) {
+        if (minIndex >= 0) {
             jTable1.getSelectionModel().setSelectionInterval(minIndex, minIndex);
             object2DJPanel1.setSelectedItemIndex(minIndex);
         }

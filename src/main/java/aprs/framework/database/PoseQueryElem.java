@@ -33,12 +33,14 @@ public class PoseQueryElem {
     private String name;
     private double x;
     private double y;
+    private double z;
     private double rot;
 
-    public PoseQueryElem(String name, double x, double y, double vxx, double vxy) {
+    public PoseQueryElem(String name, double x, double y, double z, double vxx, double vxy) {
         this.name = name;
         this.x = x;
         this.y = y;
+        this.z = z;
         this.rot = Math.atan2(vxy, vxx);
     }
 
@@ -96,6 +98,14 @@ public class PoseQueryElem {
      */
     public void setRot(double rot) {
         this.rot = rot;
+    }
+
+    public double getZ() {
+        return z;
+    }
+
+    public void setZ(double z) {
+        this.z = z;
     }
     
 }

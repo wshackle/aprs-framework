@@ -108,7 +108,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 update_statement = con.prepareStatement(MYSQL_UPDATE_STRING);
 
                 query_all_statement = con.prepareStatement(
-                        "select name,X,Y,VXX,VXY from DirectPose");
+                        "select name,X,Y,Z,VXX,VXY from DirectPose");
 
                 updateParamTypes = MYSQL_UPDATE_PARAM_TYPES;
 
@@ -122,7 +122,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 query_all_statement = con.prepareStatement("MATCH pointpath=(source) -[:hasPhysicalLocation_RefObject]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
                         + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
                         + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
-                        + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy");
+                        + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy");
 
                 updateParamTypes = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
                 break;
@@ -243,9 +243,19 @@ public class DatabasePoseUpdater implements AutoCloseable {
         this.debug = debug;
     }
 
-    private static double fix(String s) {
+    private static double fix(ResultSet rs, String colLabel) throws SQLException {
+        String s = rs.getString(colLabel);
+        if (null == s) {
+//            VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
+//            if (null != displayInterface) {
+//                displayInterface.addLogMessage("Null return to from rs.getString(\""+colLabel+"\")");
+//            } else {
+//                System.err.println("Null return to from rs.getString(\""+colLabel+"\")");
+//            }
+            return 0.0;
+        }
         String peices[] = s.trim().split("[^0-9E+-.]+");
-        String fixed = (peices[0].length() > 0 || peices.length < 2) ? peices[0] : peices[1];
+        String fixed = (peices[0].length() > 0 || peices.length < 2) ? s : peices[1];
         return Double.valueOf(fixed);
     }
 
@@ -304,10 +314,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         }
                     }
                     l.add(new PoseQueryElem(rs.getString("name"),
-                            fix(rs.getString("x")),
-                            fix(rs.getString("y")),
-                            fix(rs.getString("vxx")),
-                            fix(rs.getString("vxy"))
+                            fix(rs,"x"),
+                            fix(rs,"y"),
+                            fix(rs,"z"),
+                            fix(rs,"vxx"),
+                            fix(rs,"vxy")
                     ));
                 }
             }
@@ -419,10 +430,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 }
             }
             if (null != displayInterface && displayInterface.isDebug()) {
-                displayInterface.addLogMessage("poses_updated="+poses_updated);
+                displayInterface.addLogMessage("poses_updated=" + poses_updated);
                 displayInterface.addLogMessage("end updateVisionList");
-                displayInterface.addLogMessage("updates="+updates);
-                displayInterface.addLogMessage("useBatch="+useBatch);
+                displayInterface.addLogMessage("updates=" + updates);
+                displayInterface.addLogMessage("useBatch=" + useBatch);
             }
             if (updates > 0 && useBatch) {
                 int ia[] = update_statement.executeBatch();

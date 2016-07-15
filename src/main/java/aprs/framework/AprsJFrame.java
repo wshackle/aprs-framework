@@ -161,11 +161,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             System.setOut(new MyPrintStream(System.out));
             System.setErr(new MyPrintStream(System.err));
 
-            if (null == dbSetupJInternalFrame) {
-                dbSetupJInternalFrame = new DbSetupJInternalFrame();
-                dbSetupJInternalFrame.pack();
-                 jDesktopPane1.add(dbSetupJInternalFrame);
-            }
+            createDbSetupFrame();
             if (jCheckBoxMenuItemShowDatabaseSetup.isSelected()) {
                 showDatabaseSetupWindow();
             }
@@ -190,11 +186,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     }
 
     private void showDatabaseSetupWindow() {
-        if (null == dbSetupJInternalFrame) {
-            dbSetupJInternalFrame = new DbSetupJInternalFrame();
-            dbSetupJInternalFrame.pack();
-            jDesktopPane1.add(dbSetupJInternalFrame);
-        }
+        createDbSetupFrame();
         dbSetupJInternalFrame.setVisible(true);
         jDesktopPane1.getDesktopManager().deiconifyFrame(dbSetupJInternalFrame);
         jDesktopPane1.getDesktopManager().activateFrame(dbSetupJInternalFrame);
@@ -275,10 +267,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private final Callable<DbSetupPublisher> dbSetupPublisherSupplier = new Callable<DbSetupPublisher>() {
         @Override
         public DbSetupPublisher call() throws Exception {
-            if (null == dbSetupJInternalFrame) {
-                dbSetupJInternalFrame = new DbSetupJInternalFrame();
-                dbSetupJInternalFrame.pack();
-            }
+            createDbSetupFrame();
 //            dbSetupJInternalFrame.setVisible(true);
 //            jDesktopPane1.getDesktopManager().deiconifyFrame(dbSetupJInternalFrame);
 //            jDesktopPane1.getDesktopManager().activateFrame(dbSetupJInternalFrame);
@@ -286,6 +275,14 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             return dbSetupJInternalFrame.getDbSetupPublisher();
         }
     };
+
+    private void createDbSetupFrame() {
+        if (null == dbSetupJInternalFrame) {
+            dbSetupJInternalFrame = new DbSetupJInternalFrame();
+            dbSetupJInternalFrame.pack();
+            jDesktopPane1.add(dbSetupJInternalFrame);
+        }
+    }
 
     private void startVisionToDbJinternalFrame() {
         visionToDbJInternalFrame = new VisionToDbJInternalFrame();

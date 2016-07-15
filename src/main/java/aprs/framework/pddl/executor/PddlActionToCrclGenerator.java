@@ -144,7 +144,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    BigDecimal approachZOffset = BigDecimal.TEN;
+    BigDecimal approachZOffset = BigDecimal.valueOf(30.0);
 
     private int actionToCrclIndexes[] = null;
 
