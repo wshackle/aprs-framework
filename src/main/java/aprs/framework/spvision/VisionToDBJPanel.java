@@ -75,7 +75,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      */
     public VisionToDBJPanel() {
         initComponents();
-        jSpinnerLogLines.setValue(100);
+//        jSpinnerLogLines.setValue(100);
         restoreProperties();
         oldDbType = null;
         jTableTransform.getModel().addTableModelListener(new TableModelListener() {
@@ -533,6 +533,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addContainerGap())
         );
 
+        jSpinnerLogLines.setValue(200);
+
         jLabel1.setText("Lines to Keep:");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -697,60 +699,68 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //                builder = builder.port(port);
 //            }
 //            updateFromArgs(_argsMap, dbtype, host, port, curSetup);
-            String addRepeatCountsToDatabaseNamesString = _argsMap.get("addRepeatCountsToDatabaseNamesString");
+            String addRepeatCountsToDatabaseNamesString = _argsMap.get(ADD_REPEAT_COUNTS_TO_DATABASE_NAMES);
             if (addRepeatCountsToDatabaseNamesString != null) {
                 boolean b = Boolean.valueOf(addRepeatCountsToDatabaseNamesString);
                 if (jCheckBoxAddRepeatCountsToDatabaseNames.isSelected() != b) {
                     jCheckBoxAddRepeatCountsToDatabaseNames.setSelected(b);
                 }
             }
+            String visionPortString = _argsMap.get("--visionport");
+            if (visionPortString != null) {
+                jTextFieldCognexPort.setText(visionPortString);
+            }
+            String visionHostString = _argsMap.get("--visionhost");
+            if (visionHostString != null) {
+                jTextFieldCognexHost.setText(visionHostString);
+            }
             DefaultTableModel model = (DefaultTableModel) jTableTransform.getModel();
             String ptXString = _argsMap.get("transform.point.x");
-            if(null != ptXString) {
+            if (null != ptXString) {
                 double x = Double.valueOf(ptXString);
                 model.setValueAt(x, 0, 1);
             }
             String ptYString = _argsMap.get("transform.point.y");
-            if(null != ptYString) {
+            if (null != ptYString) {
                 double y = Double.valueOf(ptYString);
                 model.setValueAt(y, 0, 2);
             }
             String ptZString = _argsMap.get("transform.point.z");
-            if(null != ptZString) {
+            if (null != ptZString) {
                 double z = Double.valueOf(ptZString);
                 model.setValueAt(z, 0, 3);
             }
             String xAxisIStriing = _argsMap.get("transform.xaxis.i");
-            if(null != xAxisIStriing) {
+            if (null != xAxisIStriing) {
                 double xi = Double.valueOf(xAxisIStriing);
-                model.setValueAt(xi, 1,1);
+                model.setValueAt(xi, 1, 1);
             }
             String xAxisJStriing = _argsMap.get("transform.xaxis.j");
-            if(null != xAxisJStriing) {
+            if (null != xAxisJStriing) {
                 double xj = Double.valueOf(xAxisJStriing);
-                model.setValueAt(xj, 1,2);
+                model.setValueAt(xj, 1, 2);
             }
             String xAxisKStriing = _argsMap.get("transform.xaxis.k");
-            if(null != xAxisKStriing) {
+            if (null != xAxisKStriing) {
                 double xk = Double.valueOf(xAxisKStriing);
-                model.setValueAt(xk, 1,3);
+                model.setValueAt(xk, 1, 3);
             }
             String zAxisIStriing = _argsMap.get("transform.zaxis.i");
-            if(null != zAxisIStriing) {
+            if (null != zAxisIStriing) {
                 double zi = Double.valueOf(zAxisIStriing);
-                model.setValueAt(zi, 2,1);
+                model.setValueAt(zi, 2, 1);
             }
             String zAxisJStriing = _argsMap.get("transform.zaxis.j");
-            if(null != zAxisJStriing) {
+            if (null != zAxisJStriing) {
                 double zj = Double.valueOf(zAxisJStriing);
-                model.setValueAt(zj, 2,2);
+                model.setValueAt(zj, 2, 2);
             }
             String zAxisKStriing = _argsMap.get("transform.zaxis.k");
-            if(null != zAxisKStriing) {
+            if (null != zAxisKStriing) {
                 double zk = Double.valueOf(zAxisKStriing);
-                model.setValueAt(zk, 2,3);
+                model.setValueAt(zk, 2, 3);
             }
-        
+
         } finally {
             updatingFromArgs = false;
         }
@@ -779,7 +789,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         for (int i = 0; i < _list.size(); i++) {
             PoseQueryElem pqe = _list.get(i);
             if (tm.getRowCount() <= i) {
-                tm.addRow(new Object[]{pqe.getName(), pqe.getX(), pqe.getY(),pqe.getZ(), pqe.getRot()});
+                tm.addRow(new Object[]{pqe.getName(), pqe.getX(), pqe.getY(), pqe.getZ(), pqe.getRot()});
                 continue;
             }
             tm.setValueAt(pqe.getName(), i, 0);
@@ -963,25 +973,31 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public Map<String, String> updateArgsMap(DbType dbtype) {
         Map<String, String> argsMap = Main.getArgsMap();
         DbSetup curSetup = dbSetupPublisher.getDbSetup();
-        argsMap.put("--dbhost", curSetup.getHost());
-        argsMap.put("--dbport", Integer.toString(curSetup.getPort()));
-        argsMap.put("--dbname", curSetup.getDbName());
-        argsMap.put("--dbuser", curSetup.getDbUser());
-        argsMap.put("--dbpasswd",
-                new String(curSetup.getDbPassword()));
-        argsMap.put("--dbtype", curSetup.getDbType().toString());
-        argsMap.put("transform.point.x", Double.toString(transform(0,1)));
-        argsMap.put("transform.point.y", Double.toString(transform(0,2)));
-        argsMap.put("transform.point.z", Double.toString(transform(0,3)));
-        argsMap.put("transform.xaxis.i", Double.toString(transform(1,1)));
-        argsMap.put("transform.xaxis.j", Double.toString(transform(1,2)));
-        argsMap.put("transform.xaxis.k", Double.toString(transform(1,3)));
-        argsMap.put("transform.zaxis.i", Double.toString(transform(0,1)));
-        argsMap.put("transform.zaxis.j", Double.toString(transform(0,1)));
-        argsMap.put("transform.zaxis.k", Double.toString(transform(0,1)));
-        
+        if (null != curSetup) {
+            argsMap.put("--dbhost", curSetup.getHost());
+            argsMap.put("--dbport", Integer.toString(curSetup.getPort()));
+            argsMap.put("--dbname", curSetup.getDbName());
+            argsMap.put("--dbuser", curSetup.getDbUser());
+            argsMap.put("--dbpasswd",
+                    new String(curSetup.getDbPassword()));
+            argsMap.put("--dbtype", curSetup.getDbType().toString());
+        }
+        argsMap.put("transform.point.x", Double.toString(transform(0, 1)));
+        argsMap.put("transform.point.y", Double.toString(transform(0, 2)));
+        argsMap.put("transform.point.z", Double.toString(transform(0, 3)));
+        argsMap.put("transform.xaxis.i", Double.toString(transform(1, 1)));
+        argsMap.put("transform.xaxis.j", Double.toString(transform(1, 2)));
+        argsMap.put("transform.xaxis.k", Double.toString(transform(1, 3)));
+        argsMap.put("transform.zaxis.i", Double.toString(transform(2, 1)));
+        argsMap.put("transform.zaxis.j", Double.toString(transform(2, 2)));
+        argsMap.put("transform.zaxis.k", Double.toString(transform(2, 3)));
+        argsMap.put("--visionhost", this.jTextFieldCognexHost.getText());
+        argsMap.put("--visionport", this.jTextFieldCognexPort.getText());
+        argsMap.put(ADD_REPEAT_COUNTS_TO_DATABASE_NAMES,
+                Boolean.toString(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected()));
         return argsMap;
     }
+    public static final String ADD_REPEAT_COUNTS_TO_DATABASE_NAMES = "AddRepeatCountsToDatabaseNames";
 
     private void jButtonConnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectVisionActionPerformed
         try {
@@ -1195,8 +1211,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             props.put(dbHostPort + ".name", setup.getDbName());
             props.put(dbHostPort + ".user", setup.getDbUser());
             props.put(dbHostPort + ".passwd", new String(setup.getDbPassword()));
-            props.put("AddRepeatCountsToDatabaseNames",
+            props.put(ADD_REPEAT_COUNTS_TO_DATABASE_NAMES,
                     Boolean.toString(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected()));
+            props.put("--visionport", jTextFieldCognexPort.getText());
+            props.put("--visionhost", jTextFieldCognexHost.getText());
+
             try (FileWriter fw = new FileWriter(propertiesFile)) {
                 props.store(fw, "");
             } catch (IOException ex) {

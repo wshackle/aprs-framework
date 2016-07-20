@@ -51,6 +51,7 @@ import javax.swing.JMenuItem;
 import aprs.framework.pddl.executor.PddlExecutorDisplayInterface;
 import crcl.base.CRCLProgramType;
 import crcl.ui.client.PendantClientJInternalFrame;
+import crcl.ui.client.PendantClientJPanel;
 import crcl.ui.server.SimServerJInternalFrame;
 import java.io.PrintStream;
 import java.lang.ref.WeakReference;
@@ -81,6 +82,18 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private SimServerJInternalFrame simServerJInternalFrame = null;
     private LogDisplayJInternalFrame logDisplayJInternalFrame = null;
 
+    public void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) { 
+        if (null != pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.addProgramLineListener(l);
+        }
+    }
+    
+    public void removeProgramLineListener(PendantClientJPanel.ProgramLineListener l) { 
+       if (null != pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.removeProgramLineListener(l);
+        }
+    }
+    
     public void setCRCLProgram(CRCLProgramType program, boolean autoStart) throws JAXBException {
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.setProgram(program);

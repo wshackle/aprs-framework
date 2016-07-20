@@ -186,7 +186,7 @@ public class Object2DJPanel extends JPanel {
             if (Double.isInfinite(item.rotation) || Double.isNaN(item.rotation)) {
                 continue;
             }
-            g2d.translate((item.x - min_x) * scale + 15, (item.y - min_y) * scale + 20);
+            g2d.translate((item.x - min_x) * scale + 15, (max_y - item.y) * scale + 20);
             g2d.rotate(item.rotation);
             g2d.drawString(item.name, 0, 0);
             g2d.draw(new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20));
@@ -210,7 +210,7 @@ public class Object2DJPanel extends JPanel {
             if (Double.isInfinite(item.rotation) || Double.isNaN(item.rotation)) {
                 return;
             }
-            g2d.translate((item.x - min_x) * scale + 15, (item.y - min_y) * scale + 20);
+            g2d.translate((item.x - min_x) * scale + 15, (max_y-item.y) * scale + 20);
             g2d.rotate(item.rotation);
             g2d.setColor(Color.WHITE);
             Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20);

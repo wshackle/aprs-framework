@@ -119,6 +119,11 @@ public class VisionSocketClient implements AutoCloseable {
             DetectedItem inItem = in.get(i);
             PoseType newPose = CRCLPosemath.multiply(transform, inItem.toCrclPose());
             DetectedItem outItem = new DetectedItem(inItem.name, newPose);
+            outItem.repeats = inItem.repeats;
+            outItem.index = inItem.index;
+            outItem.fullName = inItem.fullName;
+            outItem.name = inItem.name;
+            outItem.score = inItem.score;
             out.add(outItem);
         }
         return out;
@@ -178,59 +183,85 @@ public class VisionSocketClient implements AutoCloseable {
 
     public static List<DetectedItem> lineToList(String line, List<DetectedItem> listIn, final VisionToDBJFrameInterface displayInterface) {
         List<DetectedItem> listOut = listIn;
-        if (null == listOut) {
-            listOut = new ArrayList<>();
-        }
-        String fa[] = line.split(",");
-        Map<String, Integer> repeatsMap = new HashMap<String, Integer>();
-        int index = 0;
-        for (int i = 0; i < fa.length - 4; i += 5) {
-            DetectedItem ci = (listOut.size() > index) ? listOut.get(index) : new DetectedItem();
+        try {
+            if (null == listOut) {
+                listOut = new ArrayList<>();
+            }
+            String fa[] = line.split(",");
+            Map<String, Integer> repeatsMap = new HashMap<String, Integer>();
+            int index = 0;
+            for (int i = 0; i < fa.length - 4; i += 5) {
+                DetectedItem ci = (listOut.size() > index) ? listOut.get(index) : new DetectedItem();
+                if (fa[i].length() < 1) {
+                    continue;
+                }
+                ci.name = fa[i];
+                if (ci.name == null || ci.name.length() < 1 || "*".equals(ci.name)) {
+                    if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage("Ignoring item with name=" + ci.name + " in field " + (i) + " in " + line + "\n");
+                    }
+                    continue;
+                }
+                if (fa[i + 1].length() < 1) {
+                    continue;
+                }
+                ci.rotation = Double.valueOf(fa[i + 1]);
+                if (Double.isInfinite(ci.rotation) || Double.isNaN(ci.rotation)) {
+                    if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage("Ignoring item with rotation=" + ci.rotation + " in field " + (i + 1) + " in " + line + "\n");
+                    }
+                    continue;
+                }
+                if (fa[i + 2].length() < 1) {
+                    continue;
+                }
+                ci.x = Double.valueOf(fa[i + 2]);
+                if (Double.isInfinite(ci.x) || Double.isNaN(ci.x)) {
+                    if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage("Ignoring item with x=" + ci.x + " in field " + (i + 2) + " in " + line + "\n");
+                    }
+                    continue;
+                }
+                if (fa[i + 3].length() < 1) {
+                    continue;
+                }
+                ci.y = Double.valueOf(fa[i + 3]);
+                if (Double.isInfinite(ci.y) || Double.isNaN(ci.y)) {
+                    if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage("Ignoring item with y=" + ci.y + " in field " + (i + 3) + " in " + line + "\n");
+                    }
+                    continue;
+                }
+                if (fa[i + 4].length() > 0) {
 
-            ci.name = fa[i];
-            if (ci.name == null || ci.name.length() < 1 || "*".equals(ci.name)) {
-                if (null != displayInterface && displayInterface.isDebug()) {
-                    displayInterface.addLogMessage("Ignoring item with name=" + ci.name + " in field " + (i) + " in " + line + "\n");
+                    ci.score = Double.valueOf(fa[i + 4]);
+                    if (ci.score < 0.01) {
+                        if (null != displayInterface && displayInterface.isDebug()) {
+                            displayInterface.addLogMessage("Ignoring item with score=" + ci.score + " in field " + (i + 4) + " in " + line + "\n");
+                        }
+                        continue;
+                    }
                 }
-                continue;
-            }
-            ci.rotation = Double.valueOf(fa[i + 1]);
-            if (Double.isInfinite(ci.rotation) || Double.isNaN(ci.rotation)) {
-                if (null != displayInterface && displayInterface.isDebug()) {
-                    displayInterface.addLogMessage("Ignoring item with rotation=" + ci.rotation + " in field " + (i + 1) + " in " + line + "\n");
+                ci.index = index;
+                ci.repeats = (repeatsMap.containsKey(ci.name)) ? repeatsMap.get(ci.name) : 0;
+                if (listOut.size() > index) {
+                    listOut.set(index, ci);
+                } else {
+                    listOut.add(ci);
                 }
-                continue;
+                index++;
+                repeatsMap.put(ci.name, ci.repeats + 1);
             }
-            ci.x = Double.valueOf(fa[i + 2]);
-            if (Double.isInfinite(ci.x) || Double.isNaN(ci.x)) {
-                if (null != displayInterface && displayInterface.isDebug()) {
-                    displayInterface.addLogMessage("Ignoring item with x=" + ci.x + " in field " + (i + 2) + " in " + line + "\n");
-                }
-                continue;
-            }
-            ci.y = Double.valueOf(fa[i + 3]);
-            if (Double.isInfinite(ci.y) || Double.isNaN(ci.y)) {
-                if (null != displayInterface && displayInterface.isDebug()) {
-                    displayInterface.addLogMessage("Ignoring item with y=" + ci.y + " in field " + (i + 3) + " in " + line + "\n");
-                }
-                continue;
-            }
-            ci.score = Double.valueOf(fa[i + 4]);
-            if (ci.score < 0.01) {
-                if (null != displayInterface && displayInterface.isDebug()) {
-                    displayInterface.addLogMessage("Ignoring item with score=" + ci.score + " in field " + (i + 4) + " in " + line + "\n");
-                }
-                continue;
-            }
-            ci.index = index;
-            ci.repeats = (repeatsMap.containsKey(ci.name)) ? repeatsMap.get(ci.name) : 0;
-            if (listOut.size() > index) {
-                listOut.set(index, ci);
+        } catch (Exception exception) {
+
+            String msg = "Failed to parse line \"" + line + "\" : " + exception.getMessage() + System.lineSeparator();
+            if (null != displayInterface) {
+                displayInterface.addLogMessage(msg);
+                displayInterface.addLogMessage(exception);
             } else {
-                listOut.add(ci);
+                System.err.println(msg);
+                exception.printStackTrace();
             }
-            index++;
-            repeatsMap.put(ci.name, ci.repeats + 1);
         }
         return listOut;
     }

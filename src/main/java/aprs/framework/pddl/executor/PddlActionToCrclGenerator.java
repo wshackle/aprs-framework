@@ -27,12 +27,14 @@ import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.QuerySet;
+import crcl.base.DwellType;
 import crcl.base.MessageType;
 import crcl.base.MiddleCommandType;
 import crcl.base.MoveToType;
 import crcl.base.PoseType;
 import crcl.base.SetEndEffectorType;
 import crcl.utils.CRCLPosemath;
+import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -151,26 +153,78 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public int[] getActionToCrclIndexes() {
         return actionToCrclIndexes;
     }
- 
+
     private String actionToCrclLabels[] = null;
 
     public String[] getActionToCrclLabels() {
         return actionToCrclLabels;
     }
-    
-    public List<MiddleCommandType> generate(List<PddlAction> actions) {
-        List<MiddleCommandType> out = new ArrayList<>();
-        actionToCrclIndexes = new int[actions.size()];
-        actionToCrclLabels = new String[actions.size()];
-        for (int i = 0; i < actions.size(); i++) {
 
-            actionToCrclIndexes[i] = out.size();
-            PddlAction action = actions.get(i);
+    private Map<String, String> options = null;
+
+        private boolean lookForDone = false;
+
+    /**
+     * Get the value of lookForDone
+     *
+     * @return the value of lookForDone
+     */
+    public boolean isLookForDone() {
+        return lookForDone;
+    }
+
+    /**
+     * Set the value of lookForDone
+     *
+     * @param lookForDone new value of lookForDone
+     */
+    public void setLookForDone(boolean lookForDone) {
+        this.lookForDone = lookForDone;
+    }
+
+        private int lastIndex;
+
+    /**
+     * Get the value of lastIndex
+     *
+     * @return the value of lastIndex
+     */
+    public int getLastIndex() {
+        return lastIndex;
+    }
+
+    /**
+     * Set the value of lastIndex
+     *
+     * @param lastIndex new value of lastIndex
+     */
+    public void setLastIndex(int lastIndex) {
+        this.lastIndex = lastIndex;
+    }
+
+    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex,  Map<String, String> options) {
+        this.options = options;
+        List<MiddleCommandType> out = new ArrayList<>();
+        if(null == actionToCrclIndexes || actionToCrclIndexes.length != actions.size()) {
+            actionToCrclIndexes = new int[actions.size()];
+        }
+        if(null == actionToCrclLabels || actionToCrclLabels.length != actions.size()) {
+            actionToCrclLabels = new String[actions.size()];
+        }
+        for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
+            actionToCrclIndexes[lastIndex] = out.size();
+            PddlAction action = actions.get(lastIndex);
             System.out.println("action = " + action);
             try {
                 switch (action.getType()) {
                     case "take-part":
                         takePart(action, out);
+                        break;
+                    case "look-for-part":
+                        if (!isLookForDone()) {
+                            lookForPart(action, out);
+                            return out;
+                        }
                         break;
 
                     case "place-part":
@@ -183,7 +237,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 message.setCommandID(BigInteger.valueOf(out.size() + 2));
                 message.setMessage(ex.toString());
                 out.add(message);
-                actionToCrclLabels[i] = "Error";
+                actionToCrclLabels[lastIndex] = "Error";
             }
         }
         return out;
@@ -194,66 +248,90 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("Database not setup and connected.");
         }
         PoseType pose = qs.getPose(action.getArgs()[1]);
-        pose.setZAxis(vector(0,0,-1.0));
+        pose.setZAxis(vector(0, 0, -1.0));
         SetEndEffectorType openGripperCmd = new SetEndEffectorType();
         openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         openGripperCmd.setSetting(BigDecimal.ONE);
         out.add(openGripperCmd);
-        
+
         PoseType poseAbove = CRCLPosemath.copy(pose);
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
         MoveToType moveAboveCmd = new MoveToType();
         moveAboveCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         moveAboveCmd.setEndPosition(poseAbove);
         out.add(moveAboveCmd);
-        
+
         MoveToType moveToCmd = new MoveToType();
         moveToCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         moveToCmd.setEndPosition(pose);
         out.add(moveToCmd);
-        
+
         SetEndEffectorType closeGrippeerCmd = new SetEndEffectorType();
         closeGrippeerCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         closeGrippeerCmd.setSetting(BigDecimal.ZERO);
         out.add(closeGrippeerCmd);
-        
+
         MoveToType moveAboveCmd2 = new MoveToType();
         moveAboveCmd2.setCommandID(BigInteger.valueOf(out.size() + 2));
         moveAboveCmd2.setEndPosition(poseAbove);
         out.add(moveAboveCmd2);
     }
 
-    
+    private void lookForPart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+        if (null == qs) {
+            throw new IllegalStateException("Database not setup and connected.");
+        }
+        PoseType pose = new PoseType();
+        String lookforXYZSring = options.get("lookForXYZ");
+        String lookForXYZFields[] = lookforXYZSring.split(",");
+
+        pose.setPoint(point(Double.valueOf(lookForXYZFields[0]), Double.valueOf(lookForXYZFields[1]), Double.valueOf(lookForXYZFields[2])));
+        pose.setXAxis(vector(1, 0, 0));
+        pose.setZAxis(vector(0, 0, -1));
+        SetEndEffectorType openGripperCmd = new SetEndEffectorType();
+        openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        openGripperCmd.setSetting(BigDecimal.ONE);
+        MoveToType moveToCmd = new MoveToType();
+        moveToCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        moveToCmd.setEndPosition(pose);
+        out.add(moveToCmd);
+
+        DwellType dwellCmd = new DwellType();
+        dwellCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        dwellCmd.setDwellTime(BigDecimal.ONE);
+        out.add(dwellCmd);
+    }
+
     private void placePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
         PoseType pose = qs.getPose(action.getArgs()[6]);
-        pose.setZAxis(vector(0,0,-1.0));
-        
+        pose.setZAxis(vector(0, 0, -1.0));
+
         PoseType poseAbove = CRCLPosemath.copy(pose);
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
         MoveToType moveAboveCmd = new MoveToType();
         moveAboveCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         moveAboveCmd.setEndPosition(poseAbove);
         out.add(moveAboveCmd);
-        
+
         MoveToType moveToCmd = new MoveToType();
         moveToCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         moveToCmd.setEndPosition(pose);
         out.add(moveToCmd);
-        
+
         SetEndEffectorType openGripperCmd = new SetEndEffectorType();
         openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         openGripperCmd.setSetting(BigDecimal.ONE);
         out.add(openGripperCmd);
-        
+
         MoveToType moveAboveCmd2 = new MoveToType();
         moveAboveCmd2.setCommandID(BigInteger.valueOf(out.size() + 2));
         moveAboveCmd2.setEndPosition(poseAbove);
         out.add(moveAboveCmd2);
     }
-    
+
     @Override
     public void accept(DbSetup setup) {
         this.setDbSetup(setup);

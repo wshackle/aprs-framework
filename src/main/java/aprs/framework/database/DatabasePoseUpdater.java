@@ -304,21 +304,23 @@ public class DatabasePoseUpdater implements AutoCloseable {
             if (null != rs) {
                 while (rs.next()) {
                     if (debug) {
+                        StringBuilder sb = new StringBuilder();
                         for (int j = 1; j <= rs.getMetaData().getColumnCount(); j++) {
                             String columnName = rs.getMetaData().getColumnName(j);
                             String val = rs.getString(columnName);
-                            String str = "(" + j + "/" + rs.getMetaData().getColumnCount() + ") columnName = " + columnName + ", val = " + val;
-                            if (null != displayInterface) {
-                                displayInterface.addLogMessage(str);
-                            }
+                            String str = "{ (" + j + "/" + rs.getMetaData().getColumnCount() + ") columnName = " + columnName + ", val = " + val+" }, ";
+                            sb.append(str);
+                        }
+                        if (null != displayInterface) {
+                            displayInterface.addLogMessage(sb.toString());
                         }
                     }
                     l.add(new PoseQueryElem(rs.getString("name"),
-                            fix(rs,"x"),
-                            fix(rs,"y"),
-                            fix(rs,"z"),
-                            fix(rs,"vxx"),
-                            fix(rs,"vxy")
+                            fix(rs, "x"),
+                            fix(rs, "y"),
+                            fix(rs, "z"),
+                            fix(rs, "vxx"),
+                            fix(rs, "vxy")
                     ));
                 }
             }
@@ -407,9 +409,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     if (debug && dbtype == DbType.NEO4J) {
                         String updateStringFilled
                                 = NEO4J_MERGE_STATEMENT_STRING;
-                        for (int paramIndex = 1; paramIndex < paramsList.size(); paramIndex++) {
+                        for (int paramIndex = 1; paramIndex < paramsList.size() + 1; paramIndex++) {
                             updateStringFilled
-                                    = updateStringFilled.replace("{" + paramIndex + "}", Objects.toString(paramsList.get(paramIndex)));
+                                    = updateStringFilled.replace("{" + paramIndex + "}", Objects.toString(paramsList.get(paramIndex - 1)));
                         }
                         displayInterface.addLogMessage("updateStringFilled = " + updateStringFilled + "\n");
                     }
