@@ -205,4 +205,9 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {
         visionToDBJPanel.setDbSetupSupplier(dbSetupSupplier);
     }
+
+    @Override
+    public void connectVision() {
+        visionToDBJPanel.connectVision();
+    }
 }

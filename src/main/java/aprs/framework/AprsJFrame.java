@@ -49,13 +49,20 @@ import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenuItem;
 import aprs.framework.pddl.executor.PddlExecutorDisplayInterface;
+import aprs.framework.pddl.executor.PddlExecutorJPanel;
+import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
+import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import crcl.base.CRCLProgramType;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.ui.server.SimServerJInternalFrame;
+import crcl.utils.CRCLException;
+import crcl.utils.CRCLSocket;
 import java.io.PrintStream;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import javax.xml.bind.JAXBException;
 
 /**
@@ -81,19 +88,21 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private PendantClientJInternalFrame pendantClientJInternalFrame = null;
     private SimServerJInternalFrame simServerJInternalFrame = null;
     private LogDisplayJInternalFrame logDisplayJInternalFrame = null;
+    private FanucCRCLMain fanucCRCLMain = null;
+    private FanucCRCLServerJInternalFrame fanucCRCLServerJInternalFrame = null;
 
-    public void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) { 
+    public void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.addProgramLineListener(l);
         }
     }
-    
-    public void removeProgramLineListener(PendantClientJPanel.ProgramLineListener l) { 
-       if (null != pendantClientJInternalFrame) {
+
+    public void removeProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
+        if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.removeProgramLineListener(l);
         }
     }
-    
+
     public void setCRCLProgram(CRCLProgramType program, boolean autoStart) throws JAXBException {
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.setProgram(program);
@@ -133,7 +142,57 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
                 }
             }
         }
+    }
 
+    private int fancuCrclPort = CRCLSocket.DEFAULT_PORT;
+    private String fanucNeighborhoodName = "AgilityLabLRMate200iD"; // FIXME hard-coded default
+    private boolean fanucPreferRNN = false;
+    private String fanucRobotHost = "129.6.78.111"; // FIXME hard-coded default
+
+    private void startFanucCrclServer() {
+        try {
+            fanucCRCLMain = new FanucCRCLMain();
+            if (null == fanucCRCLServerJInternalFrame) {
+                fanucCRCLServerJInternalFrame = new FanucCRCLServerJInternalFrame();
+                fanucCRCLServerJInternalFrame.pack();
+                fanucCRCLServerJInternalFrame.setVisible(true);
+                jDesktopPane1.add(fanucCRCLServerJInternalFrame);
+                fanucCRCLServerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(fanucCRCLServerJInternalFrame);
+                setupWindowsMenu();
+            }
+            fanucCRCLMain.setDisplayInterface(fanucCRCLServerJInternalFrame);
+            fanucCRCLMain.startDisplayInterface();
+            fanucCRCLMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fancuCrclPort);
+        } catch (CRCLException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void connectDatabase() {
+        DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
+        dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
+        List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
+        for (Future<?> f : futures) {
+            if (!f.isDone() && !f.isCancelled()) {
+                try {
+                    f.get();
+
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(AprsJFrame.class
+                            .getName()).log(Level.SEVERE, null, ex);
+
+                } catch (ExecutionException ex) {
+                    Logger.getLogger(AprsJFrame.class
+                            .getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
+
+    public void connectVision() {
+        if (null != visionToDbJInternalFrame) {
+            visionToDbJInternalFrame.connectVision();
+        }
     }
 
     /**
@@ -173,7 +232,15 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             jDesktopPane1.add(logDisplayJInternalFrame);
             System.setOut(new MyPrintStream(System.out));
             System.setErr(new MyPrintStream(System.err));
+            logDisplayJInternalFrame.getDesktopPane().getDesktopManager().deiconifyFrame(logDisplayJInternalFrame);
+            logDisplayJInternalFrame.getDesktopPane().getDesktopManager().activateFrame(logDisplayJInternalFrame);
+            logDisplayJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(logDisplayJInternalFrame);
+            logDisplayJInternalFrame.moveToFront();
 
+            setupWindowsMenu();
+            if (jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()) {
+                startFanucCrclServer();
+            }
             createDbSetupFrame();
             if (jCheckBoxMenuItemShowDatabaseSetup.isSelected()) {
                 showDatabaseSetupWindow();
@@ -184,8 +251,27 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
                 pub.addDbSetupListener(toVisListener);
             }
             setupWindowsMenu();
-            System.err.println("error test");
-            System.out.println("out test");
+            if (jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()) {
+                javax.swing.Timer tmr = new javax.swing.Timer(500, new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        connectDatabase();
+                    }
+                });
+                tmr.setRepeats(false);
+                tmr.start();
+            }
+            if (jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()) {
+                javax.swing.Timer tmr = new javax.swing.Timer(500, new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        connectVision();
+                    }
+                });
+                tmr.setRepeats(false);
+                tmr.start();
+            }
+            System.out.println("Constructor for AprsJframe complete.");
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -195,7 +281,13 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
+        logDisplayJInternalFrame.getDesktopPane().getDesktopManager().deiconifyFrame(logDisplayJInternalFrame);
+        logDisplayJInternalFrame.getDesktopPane().getDesktopManager().activateFrame(logDisplayJInternalFrame);
+        logDisplayJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(logDisplayJInternalFrame);
+        logDisplayJInternalFrame.moveToFront();
+        setupWindowsMenu();
         aprsJFrameWeakRef = new WeakReference<>(this);
+
     }
 
     private void showDatabaseSetupWindow() {
@@ -376,6 +468,9 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         jCheckBoxMenuItemStartupRobotCrclGUI = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupRobtCRCLSimServer = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemShowDatabaseSetup = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemStartupFanucCRCLServer = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemConnectToDatabaseOnStartup = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemConnectToVisionOnStartup = new javax.swing.JCheckBoxMenuItem();
         jMenuWindow = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -467,6 +562,11 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
 
         jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(true);
         jCheckBoxMenuItemStartupRobtCRCLSimServer.setText("Robot CRCL SimServer");
+        jCheckBoxMenuItemStartupRobtCRCLSimServer.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed(evt);
+            }
+        });
         jMenu3.add(jCheckBoxMenuItemStartupRobtCRCLSimServer);
 
         jCheckBoxMenuItemShowDatabaseSetup.setSelected(true);
@@ -477,6 +577,22 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             }
         });
         jMenu3.add(jCheckBoxMenuItemShowDatabaseSetup);
+
+        jCheckBoxMenuItemStartupFanucCRCLServer.setText("Fanuc CRCL Server");
+        jCheckBoxMenuItemStartupFanucCRCLServer.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemStartupFanucCRCLServerActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jCheckBoxMenuItemStartupFanucCRCLServer);
+
+        jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(true);
+        jCheckBoxMenuItemConnectToDatabaseOnStartup.setText("Connect To Database On Startup");
+        jMenu3.add(jCheckBoxMenuItemConnectToDatabaseOnStartup);
+
+        jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(true);
+        jCheckBoxMenuItemConnectToVisionOnStartup.setText("Connect To Vision On Startup");
+        jMenu3.add(jCheckBoxMenuItemConnectToVisionOnStartup);
 
         jMenuBar1.add(jMenu3);
 
@@ -626,6 +742,18 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         }
     }//GEN-LAST:event_jCheckBoxMenuItemShowDatabaseSetupActionPerformed
 
+    private void jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed
+        if (jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected()) {
+            startSimServerJInternalFrame();
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed
+
+    private void jCheckBoxMenuItemStartupFanucCRCLServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupFanucCRCLServerActionPerformed
+        if (jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()) {
+            startFanucCrclServer();
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemStartupFanucCRCLServerActionPerformed
+
     public void addAction(PddlAction action) {
         this.pddlExecutorJInternalFrame1.addAction(action);
     }
@@ -634,7 +762,12 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     static private File propertiesDirectory;
 
     static {
-        propertiesDirectory = new File(System.getProperty("user.home"), ".aprs");
+        String aprsPropsDir = System.getProperty("aprs.properties.dir");
+        if (null != aprsPropsDir) {
+            propertiesDirectory = new File(aprsPropsDir);
+        } else {
+            propertiesDirectory = new File(System.getProperty("user.home"), ".aprs");
+        }
         propertiesDirectory.mkdirs();
         propertiesFile = new File(propertiesDirectory, "aprs_pddl_wrapper_propeties.txt");
     }
@@ -701,7 +834,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     DbSetup dbSetup = null;
 
     @Override
-    public void loadProperties() throws IOException {
+    public final void loadProperties() throws IOException {
         Properties props = new Properties();
         try (FileReader fr = new FileReader(propertiesFile)) {
             props.load(fr);
@@ -730,6 +863,24 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         String startCRCLSimServerString = props.getProperty(STARTUPROBOTCRCLSIMSERVER);
         if (null != startCRCLSimServerString) {
             jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(Boolean.valueOf(startCRCLSimServerString));
+        }
+        String startCRCLFanucServerString = props.getProperty(STARTUPROBOTCRCLFANUCSERVER);
+        if (null != startCRCLFanucServerString) {
+            jCheckBoxMenuItemStartupFanucCRCLServer.setSelected(Boolean.valueOf(startCRCLFanucServerString));
+        }
+        String startConnectDBString = props.getProperty(STARTUPCONNECTDATABASE);
+        if (null != startConnectDBString) {
+            jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(Boolean.valueOf(startConnectDBString));
+            if (jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()) {
+                jCheckBoxMenuItemShowDatabaseSetup.setSelected(true);
+            }
+        }
+        String startConnectVisionString = props.getProperty(STARTUPCONNECTVISION);
+        if (null != startConnectVisionString) {
+            jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(Boolean.valueOf(startConnectVisionString));
+            if (jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()) {
+                jCheckBoxMenuItemStartupObjectSP.setSelected(true);
+            }
         }
 //        String executable = props.getProperty(PROGRAMEXECUTABLE);
 //        if (null != executable) {
@@ -791,6 +942,9 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         propsMap.put(STARTUPPDDLOBJECTVIEW, Boolean.toString(jCheckBoxMenuItemStartupObject2DView.isSelected()));
         propsMap.put(STARTUPROBOTCRCLCLIENT, Boolean.toString(jCheckBoxMenuItemStartupRobotCrclGUI.isSelected()));
         propsMap.put(STARTUPROBOTCRCLSIMSERVER, Boolean.toString(jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected()));
+        propsMap.put(STARTUPROBOTCRCLFANUCSERVER, Boolean.toString(jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()));
+        propsMap.put(STARTUPCONNECTDATABASE, Boolean.toString(jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()));
+        propsMap.put(STARTUPCONNECTVISION, Boolean.toString(jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()));
         Properties props = new Properties();
         props.putAll(propsMap);
         try (FileWriter fw = new FileWriter(propertiesFile)) {
@@ -819,6 +973,10 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private static final String STARTUPPDDLOBJECTVIEW = "startup.pddl.objectview";
     private static final String STARTUPROBOTCRCLCLIENT = "startup.robotcrclclient";
     private static final String STARTUPROBOTCRCLSIMSERVER = "startup.robotcrclsimserver";
+    private static final String STARTUPROBOTCRCLFANUCSERVER = "startup.robotcrclfanucserver";
+
+    private static final String STARTUPCONNECTDATABASE = "startup.connectdatabase";
+    private static final String STARTUPCONNECTVISION = "startup.connectvision";
 
     @Override
     public void browseActionsFile() throws IOException {
@@ -870,7 +1028,10 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToDatabaseOnStartup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToVisionOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupFanucCRCLServer;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObject2DView;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObjectSP;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupPDDLExecutor;

@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.security.ProtectionDomain;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -400,6 +401,14 @@ public class DbSetupBuilder {
 //                useBatch = true;
                 String mysql_url = "jdbc:mysql://" + host + ":" + port + "/" + db;
                 System.out.println("Connection url = " + mysql_url);
+                try {
+                    Class mySqlDriverClass = Class.forName("com.mysql.jdbc.Driver");
+                    System.out.println("neo4JDriverClass = " + mySqlDriverClass);
+                    ProtectionDomain mySqlDriverClassProdectionDomain = mySqlDriverClass.getProtectionDomain();
+                    System.out.println("mySqlDriverClassProdectionDomain = " + mySqlDriverClassProdectionDomain);
+                } catch (ClassNotFoundException classNotFoundException) {
+                    classNotFoundException.printStackTrace();
+                }
                 return DriverManager.getConnection(mysql_url, username, password);
                
             case NEO4J:
@@ -409,6 +418,14 @@ public class DbSetupBuilder {
                 properties.put("password", password);
                 String neo4j_url = "jdbc:neo4j://" + host + ":" + port;
                 System.out.println("Connection url = " + neo4j_url);
+                try {
+                    Class neo4JDriverClass = Class.forName("org.neo4j.jdbc.Driver");
+                    System.out.println("neo4JDriverClass = " + neo4JDriverClass);
+                    ProtectionDomain neo4jDriverClassProdectionDomain = neo4JDriverClass.getProtectionDomain();
+                    System.out.println("neo4jDriverClassProdectionDomain = " + neo4jDriverClassProdectionDomain);
+                } catch (ClassNotFoundException classNotFoundException) {
+                    classNotFoundException.printStackTrace();
+                }
                 return DriverManager.getConnection(neo4j_url, properties);
                 
 //            case NEO4J_BOLT:

@@ -73,4 +73,6 @@ public interface VisionToDBJFrameInterface extends CommonJFrameInterface {
     public Callable<DbSetupPublisher> getDbSetupSupplier();
 
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier);
+    
+    public void connectVision();
 }

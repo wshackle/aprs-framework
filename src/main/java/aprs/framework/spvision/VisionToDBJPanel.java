@@ -999,7 +999,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
     public static final String ADD_REPEAT_COUNTS_TO_DATABASE_NAMES = "AddRepeatCountsToDatabaseNames";
 
-    private void jButtonConnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectVisionActionPerformed
+    public void connectVision() {
         try {
             Map<String, String> argsMap = Main.getArgsMap();
             argsMap.put("--visionhost", this.jTextFieldCognexHost.getText());
@@ -1014,6 +1014,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         } catch (Exception exception) {
             addLogMessage(exception);
         }
+    }
+    
+    private void jButtonConnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectVisionActionPerformed
+        connectVision();
     }//GEN-LAST:event_jButtonConnectVisionActionPerformed
 
     public void closeDB() {

@@ -158,8 +158,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
     }
 
     private void addLogLine(String l) {
-        if (logLines.size() > 1) {
-            logLines.add(l);
+        if (logLines.size() > 0) {
             String lastLine = logLines.get(logLines.size() - 1);
             if (lastLine.endsWith("\n")) {
                 logLines.add(l);
@@ -172,15 +171,15 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
     }
 
     public void appendText(String text) {
-
-        String lines[] = text.split("\n");
+        String txt2 = text.replace("\r\n", "\n");
+        String lines[] = txt2.split("\n");
         if (lines.length <= 1 || (lines.length == 2) && lines[1].length() < 1) {
-            appendLine(text);
+            appendLine(txt2);
         } else {
             for (int i = 0; i < lines.length; i++) {
                 String line = lines[i];
-                if (i < lines.length - 1 || text.endsWith("\n")) {
-                    appendLine(line + '\n');
+                if (i < lines.length - 1 || txt2.endsWith("\n")) {
+                    appendLine(line + System.lineSeparator());
                 } else {
                     appendLine(line);
                 }

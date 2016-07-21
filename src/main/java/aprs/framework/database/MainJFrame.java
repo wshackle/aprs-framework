@@ -24,7 +24,6 @@ package aprs.framework.database;
 
 import aprs.framework.spvision.VisionToDBJFrameInterface;
 import aprs.framework.simview.Object2DJFrame;
-import java.awt.Color;
 import java.awt.Frame;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -36,7 +35,6 @@ import java.util.concurrent.Callable;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JTextField;
-import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -54,6 +52,11 @@ public class MainJFrame extends javax.swing.JFrame implements VisionToDBJFrameIn
         Main.setDisplayInterface(this);
     }
 
+    @Override
+    public void connectVision() {
+        visionToDBJPanel.connectVision();
+    }
+    
     private void setText(Map<String, String> argsMap, JTextField fld, String key) {
         if (argsMap.containsKey(key)) {
             fld.setText(argsMap.get(key));
