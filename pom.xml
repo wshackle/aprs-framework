@@ -49,6 +49,11 @@
             <artifactId>fanucCRCLServer</artifactId>
             <version>1.4-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.53</version>
+        </dependency>
     </dependencies>
     <repositories>
         <repository>
@@ -58,6 +63,18 @@
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
             </releases>
+        </repository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>daily</updatePolicy>
+            </snapshots>
         </repository>
     </repositories>
     <build>

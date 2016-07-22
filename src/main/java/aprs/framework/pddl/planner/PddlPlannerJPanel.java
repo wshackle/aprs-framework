@@ -26,20 +26,31 @@ import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.AprsJFrame;
 import aprs.framework.DisplayInterface;
 import aprs.framework.PddlAction;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.UserInfo;
+import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -47,6 +58,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -88,6 +100,13 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         jButtonStop = new javax.swing.JButton();
         jButtonPddlDomainEdit = new javax.swing.JButton();
         jButtonPddlProblemEdit = new javax.swing.JButton();
+        jCheckBoxSsh = new javax.swing.JCheckBox();
+        jLabel6 = new javax.swing.JLabel();
+        jTextFieldSshUser = new javax.swing.JTextField();
+        jLabel7 = new javax.swing.JLabel();
+        jPasswordFieldSshPass = new javax.swing.JPasswordField();
+        jLabel8 = new javax.swing.JLabel();
+        jTextFieldHost = new javax.swing.JTextField();
 
         jLabel1.setText("Planner Program Executable:");
 
@@ -165,32 +184,44 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
             }
         });
 
+        jCheckBoxSsh.setText("SSH");
+        jCheckBoxSsh.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxSshActionPerformed(evt);
+            }
+        });
+
+        jLabel6.setText("User:");
+
+        jTextFieldSshUser.setEditable(false);
+        jTextFieldSshUser.setText("user ");
+        jTextFieldSshUser.setEnabled(false);
+
+        jLabel7.setText("Password:");
+
+        jPasswordFieldSshPass.setEditable(false);
+        jPasswordFieldSshPass.setText("jPasswordField1");
+        jPasswordFieldSshPass.setEnabled(false);
+
+        jLabel8.setText("Host:");
+
+        jTextFieldHost.setEditable(false);
+        jTextFieldHost.setText("localhost");
+        jTextFieldHost.setEnabled(false);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane1)
-                    .addComponent(jTextFieldAdditionalArgs, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jButtonStop)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonRunOnce))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jTextFieldAdditionalArgs)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.LEADING))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jTextFieldPddlProblem, javax.swing.GroupLayout.DEFAULT_SIZE, 508, Short.MAX_VALUE)
-                            .addComponent(jTextFieldPddlDomainFile, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 508, Short.MAX_VALUE)
+                            .addComponent(jTextFieldPddlProblem)
+                            .addComponent(jTextFieldPddlDomainFile, javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jTextFieldPlannerProgramExecutable))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -203,7 +234,31 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                                     .addComponent(jButtonPddlDomainBrowse, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                     .addComponent(jButtonPddlDomainEdit)))
-                            .addComponent(jButtonPlannerProgramExecutableBrowse, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(jButtonPlannerProgramExecutableBrowse, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonStop)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonRunOnce))
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel3)
+                    .addComponent(jLabel4)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jCheckBoxSsh)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldSshUser, javax.swing.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPasswordFieldSshPass)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldHost, javax.swing.GroupLayout.DEFAULT_SIZE, 184, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -233,13 +288,22 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextFieldAdditionalArgs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5)
-                    .addComponent(jButtonRunOnce)
-                    .addComponent(jButtonStop))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 194, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jCheckBoxSsh)
+                    .addComponent(jLabel6)
+                    .addComponent(jTextFieldSshUser, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel7)
+                    .addComponent(jPasswordFieldSshPass, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel8)
+                    .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonRunOnce)
+                    .addComponent(jButtonStop)
+                    .addComponent(jLabel5))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 147, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -300,33 +364,51 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
-            String executable = props.getProperty(PROGRAMEXECUTABLE);
+            String executable = props.getProperty(PROGRAM_EXECUTABLE);
             if (null != executable) {
                 jTextFieldPlannerProgramExecutable.setText(executable);
             }
-            String domain = props.getProperty(PDDLDOMAIN);
+            String domain = props.getProperty(PDDL_DOMAIN);
             if (null != domain) {
                 jTextFieldPddlDomainFile.setText(domain);
             }
-            String problem = props.getProperty(PDDLPROBLEM);
+            String problem = props.getProperty(PDDL_PROBLEM);
             if (null != problem) {
                 jTextFieldPddlProblem.setText(problem);
+            }
+            String useSsh = props.getProperty(PDDL_PLANNER_SSH);
+            if (null != useSsh) {
+                jCheckBoxSsh.setSelected(Boolean.valueOf(useSsh));
+                boolean b = jCheckBoxSsh.isSelected();
+                jTextFieldSshUser.setEditable(b);
+                jTextFieldSshUser.setEnabled(b);
+                jPasswordFieldSshPass.setEditable(b);
+                jPasswordFieldSshPass.setEnabled(b);
+                jTextFieldHost.setEditable(b);
+                jTextFieldHost.setEnabled(b);
+            }
+            String host = props.getProperty(PDDL_PLANNER_HOST);
+            if (null != host) {
+                jTextFieldHost.setText(host);
             }
 //        String output = props.getProperty(PDDLOUTPUT);
 //        if (null != output) {
 //            jTextFieldPddlOutputActions.setText(output);
 //        }
-            String addargs = props.getProperty(PDDLADDARGS);
+            String addargs = props.getProperty(PDDL_ADD_ARGS);
             if (null != addargs) {
                 jTextFieldAdditionalArgs.setText(addargs);
             }
         }
     }
 
-    private static final String PROGRAMEXECUTABLE = "program.executable";
-    private static final String PDDLADDARGS = "pddl.addargs";
-    private static final String PDDLPROBLEM = "pddl.problem";
-    private static final String PDDLDOMAIN = "pddl.domain";
+    private static final String PROGRAM_EXECUTABLE = "program.executable";
+    private static final String PDDL_ADD_ARGS = "pddl.addargs";
+    private static final String PDDL_PROBLEM = "pddl.problem";
+    private static final String PDDL_DOMAIN = "pddl.domain";
+    private static final String PDDL_PLANNER_SSH = "pddl.planner.ssh";
+    private static final String PDDL_PLANNER_HOST = "pddl.planner.host";
+
 
     private void jButtonPlannerProgramExecutableBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPlannerProgramExecutableBrowseActionPerformed
         try {
@@ -359,7 +441,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     private void jButtonRunOnceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRunOnceActionPerformed
         try {
             runPddlPlannerOnce();
-            if(null != actionsToCrclJInternalFrame1) {
+            if (null != actionsToCrclJInternalFrame1) {
                 actionsToCrclJInternalFrame1.setLoadEnabled(false);
             }
         } catch (IOException ex) {
@@ -380,12 +462,22 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     }//GEN-LAST:event_jButtonPddlProblemEditActionPerformed
 
     private void jButtonPddlDomainEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlDomainEditActionPerformed
-       try {
+        try {
             Desktop.getDesktop().open(new File(jTextFieldPddlDomainFile.getText()));
         } catch (IOException ex) {
             Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonPddlDomainEditActionPerformed
+
+    private void jCheckBoxSshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxSshActionPerformed
+        boolean useSsh = jCheckBoxSsh.isSelected();
+        jTextFieldSshUser.setEditable(useSsh);
+        jTextFieldSshUser.setEnabled(useSsh);
+        jPasswordFieldSshPass.setEditable(useSsh);
+        jPasswordFieldSshPass.setEnabled(useSsh);
+        jTextFieldHost.setEditable(useSsh);
+        jTextFieldHost.setEnabled(useSsh);
+    }//GEN-LAST:event_jCheckBoxSshActionPerformed
 
     private ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -427,13 +519,13 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     public void setActionsList(List<PddlAction> actionsList) {
         if (null != actionsToCrclJInternalFrame1) {
             actionsToCrclJInternalFrame1.setActionsList(actionsList);
-        } 
+        }
     }
 
     private void addAction(PddlAction action) {
         if (null != actionsToCrclJInternalFrame1) {
             this.actionsToCrclJInternalFrame1.addAction(action);
-        } 
+        }
     }
 
     private Process pddlProcess = null;
@@ -442,14 +534,367 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     private Future<?> ppdlInputStreamFuture = null;
     private Future<?> ppdlErrorStreamFuture = null;
 
+//    public static void main(String[] arg) {
+//        if (arg.length != 2) {
+//            System.err.println("usage: java ScpTo file1 user@remotehost:file2");
+//            System.exit(-1);
+//        }
+//
+//        try {
+//
+//            String lfile = arg[0];
+//            String user = arg[1].substring(0, arg[1].indexOf('@'));
+//            arg[1] = arg[1].substring(arg[1].indexOf('@') + 1);
+//            String host = arg[1].substring(0, arg[1].indexOf(':'));
+//            String rfile = arg[1].substring(arg[1].indexOf(':') + 1);
+//
+//            JSch jsch = new JSch();
+//            scp(jsch, user, host, rfile, lfile);
+//
+//            System.exit(0);
+//        } catch (Exception e) {
+//            System.out.println(e);
+//            try {
+//                if (fis != null) {
+//                    fis.close();
+//                }
+//            } catch (Exception ee) {
+//            }
+//        }
+//    }
+    private UserInfo sshUserInfo = new UserInfo() {
+        @Override
+        public String getPassphrase() {
+            return null;
+        }
+
+        @Override
+        public String getPassword() {
+            String p = new String(jPasswordFieldSshPass.getPassword());
+            return p;
+        }
+
+        @Override
+        public boolean promptPassword(String string) {
+            return true;
+//                System.out.println(string);
+//                return JOptionPane.showConfirmDialog(PddlPlannerJPanel.this, string) == JOptionPane.YES_OPTION;
+        }
+
+        @Override
+        public boolean promptPassphrase(String string) {
+            return false;
+//                System.out.println(string);
+//                return JOptionPane.showConfirmDialog(PddlPlannerJPanel.this, string) == JOptionPane.YES_OPTION;
+        }
+
+        @Override
+        public boolean promptYesNo(String string) {
+            System.out.println(string);
+            return JOptionPane.showConfirmDialog(PddlPlannerJPanel.this, string) == JOptionPane.YES_OPTION;
+        }
+
+        @Override
+        public void showMessage(String string) {
+            System.out.println(string);
+//                JOptionPane.showMessageDialog(PddlPlannerJPanel.this, string);
+            MultiLineStringJPanel.showText(string);
+        }
+    };
+
+    private void sshExec(Session session, String command) throws JSchException, IOException, InterruptedException, ExecutionException {
+        printMessage("Excuting remote command \"" + command + "\" ...");
+        Channel channel = session.openChannel("exec");
+        ((ChannelExec) channel).setCommand(command);
+
+        // X Forwarding
+        // channel.setXForwarding(true);
+        //channel.setInputStream(System.in);
+        channel.setInputStream(null);
+
+        //channel.setOutputStream(System.out);
+        //FileOutputStream fos=new FileOutputStream("/tmp/stderr");
+        //((ChannelExec)channel).setErrStream(fos);
+        ((ChannelExec) channel).setErrStream(System.err);
+
+        InputStream in = channel.getInputStream();
+
+        channel.connect();
+
+        pddlInputStream = in;
+        pddlErrorStream = null;
+        setupOutputHandlers();
+        ppdlInputStreamFuture.get();
+        channel.disconnect();
+//        byte[] tmp = new byte[1024];
+//        while (true) {
+//            while (in.available() > 0) {
+//                int i = in.read(tmp, 0, 1024);
+//                if (i < 0) {
+//                    break;
+//                }
+//                System.out.print(new String(tmp, 0, i));
+//            }
+//            if (channel.isClosed()) {
+//                if (in.available() > 0) {
+//                    continue;
+//                }
+//                System.out.println("exit-status: " + channel.getExitStatus());
+//                break;
+//            }
+//            try {
+//                Thread.sleep(1000);
+//            } catch (Exception ee) {
+//            }
+//        }
+        printMessage("Finished remote command \"" + command + "\".");
+    }
+
+    private void printMessage(String msg) {
+        System.out.println(msg);
+        jTextAreaOutput.append(msg + System.lineSeparator());
+    }
+
+    private void scp(Session session, String host, String rfile, String lfile) throws FileNotFoundException, JSchException, IOException, Exception {
+        FileInputStream fis = null;
+        printMessage("Copying local file \"" + lfile + "\" to remote host " + host + " as remote file \"" + rfile + "\" ...");
+        boolean ptimestamp = false;
+        // exec 'scp -t rfile' remotely
+        String command = "scp " + (ptimestamp ? "-p" : "") + " -t " + rfile;
+        Channel channel = session.openChannel("exec");
+        ((ChannelExec) channel).setCommand(command);
+        // get I/O streams for remote scp
+        OutputStream out = channel.getOutputStream();
+        InputStream in = channel.getInputStream();
+        channel.connect();
+        if (checkAck(in) != 0) {
+            System.exit(0);
+        }
+        File _lfile = new File(lfile);
+        if (ptimestamp) {
+            command = "T " + (_lfile.lastModified() / 1000) + " 0";
+            // The access time should be sent here,
+            // but it is not accessible with JavaAPI ;-<
+            command += (" " + (_lfile.lastModified() / 1000) + " 0\n");
+            out.write(command.getBytes());
+            out.flush();
+            if (checkAck(in) != 0) {
+                System.exit(0);
+            }
+        }
+        // send "C0644 filesize filename", where filename should not include '/'
+        long filesize = _lfile.length();
+        command = "C0644 " + filesize + " ";
+        if (lfile.lastIndexOf('/') > 0) {
+            command += lfile.substring(lfile.lastIndexOf('/') + 1);
+        } else {
+            command += lfile;
+        }
+        command += "\n";
+        out.write(command.getBytes());
+        out.flush();
+        if (checkAck(in) != 0) {
+            System.exit(0);
+        }
+        // send a content of lfile
+        fis = new FileInputStream(lfile);
+        byte[] buf = new byte[1024];
+        while (true) {
+            int len = fis.read(buf, 0, buf.length);
+            if (len <= 0) {
+                break;
+            }
+            out.write(buf, 0, len); //out.flush();
+        }
+        fis.close();
+        fis = null;
+        // send '\0'
+        buf[0] = 0;
+        out.write(buf, 0, 1);
+        out.flush();
+        if (checkAck(in) != 0) {
+            System.exit(0);
+        }
+        out.close();
+        channel.disconnect();
+        printMessage("Finished copy of local file \"" + lfile + "\" to remote host " + host + " as remote file \"" + rfile + "\".");
+    }
+
+    static int checkAck(InputStream in) throws IOException, Exception {
+        int b = in.read();
+        // b may be 0 for success,
+        //          1 for error,
+        //          2 for fatal error,
+        //          -1
+        if (b == 0) {
+            return b;
+        }
+        if (b == -1) {
+            throw new Exception("Ssh checkAck() returned: " + b);
+        }
+
+        if (b == 1 || b == 2) {
+            StringBuffer sb = new StringBuffer();
+            int c;
+            do {
+                c = in.read();
+                sb.append((char) c);
+            } while (c != '\n');
+            if (b == 1) { // error
+                System.out.print(sb.toString());
+                throw new Exception("Ssh checkAck() returned  error code. b=" + b);
+            }
+            if (b == 2) { // fatal error
+                System.out.print(sb.toString());
+                throw new Exception("Ssh checkAck() returned fatal error code. b=" + b);
+            }
+        }
+        return b;
+    }
+
+//    public static class MyUserInfo implements UserInfo, UIKeyboardInteractive {
+//
+//        public String getPassword() {
+//            return passwd;
+//        }
+//
+//        public boolean promptYesNo(String str) {
+//            Object[] options = {"yes", "no"};
+//            int foo = JOptionPane.showOptionDialog(null,
+//                    str,
+//                    "Warning",
+//                    JOptionPane.DEFAULT_OPTION,
+//                    JOptionPane.WARNING_MESSAGE,
+//                    null, options, options[0]);
+//            return foo == 0;
+//        }
+//
+//        String passwd;
+//        JTextField passwordField = (JTextField) new JPasswordField(20);
+//
+//        public String getPassphrase() {
+//            return null;
+//        }
+//
+//        public boolean promptPassphrase(String message) {
+//            return true;
+//        }
+//
+//        public boolean promptPassword(String message) {
+//            Object[] ob = {passwordField};
+//            int result
+//                    = JOptionPane.showConfirmDialog(null, ob, message,
+//                            JOptionPane.OK_CANCEL_OPTION);
+//            if (result == JOptionPane.OK_OPTION) {
+//                passwd = passwordField.getText();
+//                return true;
+//            } else {
+//                return false;
+//            }
+//        }
+//
+//        public void showMessage(String message) {
+//            JOptionPane.showMessageDialog(null, message);
+//        }
+//        final GridBagConstraints gbc
+//                = new GridBagConstraints(0, 0, 1, 1, 1, 1,
+//                        GridBagConstraints.NORTHWEST,
+//                        GridBagConstraints.NONE,
+//                        new Insets(0, 0, 0, 0), 0, 0);
+//        private Container panel;
+//
+//        public String[] promptKeyboardInteractive(String destination,
+//                String name,
+//                String instruction,
+//                String[] prompt,
+//                boolean[] echo) {
+//            panel = new JPanel();
+//            panel.setLayout(new GridBagLayout());
+//
+//            gbc.weightx = 1.0;
+//            gbc.gridwidth = GridBagConstraints.REMAINDER;
+//            gbc.gridx = 0;
+//            panel.add(new JLabel(instruction), gbc);
+//            gbc.gridy++;
+//
+//            gbc.gridwidth = GridBagConstraints.RELATIVE;
+//
+//            JTextField[] texts = new JTextField[prompt.length];
+//            for (int i = 0; i < prompt.length; i++) {
+//                gbc.fill = GridBagConstraints.NONE;
+//                gbc.gridx = 0;
+//                gbc.weightx = 1;
+//                panel.add(new JLabel(prompt[i]), gbc);
+//
+//                gbc.gridx = 1;
+//                gbc.fill = GridBagConstraints.HORIZONTAL;
+//                gbc.weighty = 1;
+//                if (echo[i]) {
+//                    texts[i] = new JTextField(20);
+//                } else {
+//                    texts[i] = new JPasswordField(20);
+//                }
+//                panel.add(texts[i], gbc);
+//                gbc.gridy++;
+//            }
+//
+//            if (JOptionPane.showConfirmDialog(null, panel,
+//                    destination + ": " + name,
+//                    JOptionPane.OK_CANCEL_OPTION,
+//                    JOptionPane.QUESTION_MESSAGE)
+//                    == JOptionPane.OK_OPTION) {
+//                String[] response = new String[prompt.length];
+//                for (int i = 0; i < prompt.length; i++) {
+//                    response[i] = texts[i].getText();
+//                }
+//                return response;
+//            } else {
+//                return null;  // cancel
+//            }
+//        }
+//    }
+    private JSch jsch = null;
+    private Session session = null;
+
+    private void runPddlPlannerOnceSsh() {
+        try {
+            if (null == jsch) {
+                jsch = new JSch();
+            }
+            if (null == session) {
+                session = jsch.getSession(jTextFieldSshUser.getText(), jTextFieldHost.getText(), 22);
+                // username and password will be given via UserInfo interface.
+//        UserInfo ui = new MyUserInfo();
+                session.setUserInfo(sshUserInfo);
+                session.connect();
+            }
+            long t = System.currentTimeMillis();
+            String remoteDomainFile = "/tmp/domain_" + t + ".pddl";
+            String remoteProblemFile = "/tmp/problem_" + t + ".pddl";
+            scp(session, jTextFieldHost.getText(), remoteDomainFile, jTextFieldPddlDomainFile.getText());
+            scp(session, jTextFieldHost.getText(), remoteProblemFile, jTextFieldPddlProblem.getText());
+            sshExec(session, jTextFieldPlannerProgramExecutable.getText() + " " + jTextFieldAdditionalArgs.getText() + " " + remoteDomainFile + " " + remoteProblemFile);
+        } catch (JSchException ex) {
+            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void runPddlPlannerOnce() throws IOException {
+        this.setActionsList(new ArrayList<>());
+        if (this.jCheckBoxSsh.isSelected()) {
+            runPddlPlannerOnceSsh();
+            return;
+        }
         try {
             closePddlProcess();
         } catch (Exception ex) {
             Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
         List<String> commandList = new ArrayList<>();
-        this.setActionsList(new ArrayList<>());
         commandList.add(new File(jTextFieldPlannerProgramExecutable.getText()).getCanonicalPath());
         commandList.addAll(Arrays.asList(jTextFieldAdditionalArgs.getText().split("[ \t]+")));
         commandList.add(jTextFieldPddlDomainFile.getText());
@@ -459,29 +904,35 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         pddlInputStream = pddlProcess.getInputStream();
         pddlErrorStream = pddlProcess.getErrorStream();
         jTextAreaOutput.append(commandList.toString() + System.lineSeparator());
-        if(null == executor) {
+        setupOutputHandlers();
+    }
+
+    private void setupOutputHandlers() {
+        if (null == executor) {
             executor = Executors.newCachedThreadPool();
         }
-        ppdlErrorStreamFuture = executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    BufferedReader br = new BufferedReader(new InputStreamReader(pddlErrorStream));
-                    String line = null;
-                    while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
-                        final String lineToAppend = line;
-                        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                jTextAreaOutput.append(lineToAppend + System.lineSeparator());
-                            }
-                        });
+        if (null != pddlErrorStream) {
+            ppdlErrorStreamFuture = executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        BufferedReader br = new BufferedReader(new InputStreamReader(pddlErrorStream));
+                        String line = null;
+                        while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
+                            final String lineToAppend = line;
+                            javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    jTextAreaOutput.append(lineToAppend + System.lineSeparator());
+                                }
+                            });
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                } catch (IOException ex) {
-                    Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }
-        });
+            });
+        }
         ppdlInputStreamFuture = executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -512,7 +963,6 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                 }
             }
         });
-
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -523,17 +973,24 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     private javax.swing.JButton jButtonPlannerProgramExecutableBrowse;
     private javax.swing.JButton jButtonRunOnce;
     private javax.swing.JButton jButtonStop;
+    private javax.swing.JCheckBox jCheckBoxSsh;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JPasswordField jPasswordFieldSshPass;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea jTextAreaOutput;
     private javax.swing.JTextField jTextFieldAdditionalArgs;
+    private javax.swing.JTextField jTextFieldHost;
     private javax.swing.JTextField jTextFieldPddlDomainFile;
     private javax.swing.JTextField jTextFieldPddlProblem;
     private javax.swing.JTextField jTextFieldPlannerProgramExecutable;
+    private javax.swing.JTextField jTextFieldSshUser;
     // End of variables declaration//GEN-END:variables
 
     @Override
@@ -543,11 +1000,13 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         }
         propertiesFile.getParentFile().mkdirs();
         Map<String, String> propsMap = new HashMap<>();
-        propsMap.put(PROGRAMEXECUTABLE, jTextFieldPlannerProgramExecutable.getText());
-        propsMap.put(PDDLDOMAIN, jTextFieldPddlDomainFile.getText());
-        propsMap.put(PDDLPROBLEM, jTextFieldPddlProblem.getText());
+        propsMap.put(PROGRAM_EXECUTABLE, jTextFieldPlannerProgramExecutable.getText());
+        propsMap.put(PDDL_DOMAIN, jTextFieldPddlDomainFile.getText());
+        propsMap.put(PDDL_PROBLEM, jTextFieldPddlProblem.getText());
 //        propsMap.put(PDDLOUTPUT, jTextFieldPddlOutputActions.getText());
-        propsMap.put(PDDLADDARGS, jTextFieldAdditionalArgs.getText());
+        propsMap.put(PDDL_ADD_ARGS, jTextFieldAdditionalArgs.getText());
+        propsMap.put(PDDL_PLANNER_SSH, Boolean.toString(jCheckBoxSsh.isSelected()));
+        propsMap.put(PDDL_PLANNER_HOST, jTextFieldHost.getText());
         Properties props = new Properties();
         props.putAll(propsMap);
         try (FileWriter fw = new FileWriter(propertiesFile)) {
@@ -559,7 +1018,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
 
     private void closePddlProcess() {
         boolean orig_closing = closing;
-        closing=true;
+        closing = true;
         try {
             if (null != pddlProcess) {
                 pddlProcess.destroyForcibly().waitFor(100, TimeUnit.MILLISECONDS);
@@ -602,15 +1061,21 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         }
         closing = orig_closing;
     }
+
     @Override
     public void close() throws Exception {
         closing = true;
         this.closePddlProcess();
-        closing=true;
+        closing = true;
         if (null != this.executor) {
             this.executor.shutdownNow();
             this.executor.awaitTermination(100, TimeUnit.MILLISECONDS);
             this.executor = null;
         }
+        if (null != session) {
+            session.disconnect();
+            session = null;
+        }
+        jsch = null;
     }
 }
