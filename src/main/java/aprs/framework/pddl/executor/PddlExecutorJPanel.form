@@ -258,7 +258,7 @@
     </Component>
     <Component class="javax.swing.JCheckBox" name="jCheckBoxReplan">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Replan"/>
+        <Property name="text" type="java.lang.String" value="Continue"/>
       </Properties>
     </Component>
   </SubComponents>

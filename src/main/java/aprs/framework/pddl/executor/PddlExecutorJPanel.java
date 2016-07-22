@@ -262,7 +262,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         jLabel2.setText("Index");
 
-        jCheckBoxReplan.setText("Replan");
+        jCheckBoxReplan.setText("Continue");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
