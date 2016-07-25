@@ -757,6 +757,10 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     public void addAction(PddlAction action) {
         this.pddlExecutorJInternalFrame1.addAction(action);
     }
+    
+    public void processActions() {
+        this.pddlExecutorJInternalFrame1.processActions();
+    }
 
     static private File propertiesFile;
     static private File propertiesDirectory;

@@ -483,7 +483,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
             model.addRow(new Object[]{-1, action.getLabel(), action.getType(), Arrays.toString(action.getArgs()), action.getCost()});
         }
+    }
 
+    public void processActions() {
+        generateCrcl();
     }
 
     public void loadActionsFile(File f) throws IOException {
@@ -811,7 +814,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         this.autoResizeTableColWidths(jTablePddlOutput);
     }
 
-    
     private void generateCrcl() {
         if (null != dbSetupSupplier) {
             try {
@@ -823,22 +825,26 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-        dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
-        List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
-        for (Future<?> f : futures) {
-            if (!f.isDone() && !f.isCancelled()) {
-                try {
-                    f.get();
+        if (null != dbSetupPublisher) {
+            dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
+            List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
+            for (Future<?> f : futures) {
+                if (!f.isDone() && !f.isCancelled()) {
+                    try {
+                        f.get();
 
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(PddlExecutorJPanel.class
-                            .getName()).log(Level.SEVERE, null, ex);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(PddlExecutorJPanel.class
+                                .getName()).log(Level.SEVERE, null, ex);
 
-                } catch (ExecutionException ex) {
-                    Logger.getLogger(PddlExecutorJPanel.class
-                            .getName()).log(Level.SEVERE, null, ex);
+                    } catch (ExecutionException ex) {
+                        Logger.getLogger(PddlExecutorJPanel.class
+                                .getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
             }
+        } else {
+            System.err.println("dbSetupPublisher == null");
         }
         Map<String, String> options = getTableOptions();
         if (replanFromIndex < 0 || replanFromIndex > actionsList.size()) {
@@ -969,6 +975,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private boolean needReplan = false;
     private int replanFromIndex = -1;
     private boolean replanStarted = false;
+
     @Override
     public void accept(PendantClientJPanel panel, int line) {
         CRCLStatusType status = panel.getStatus();
@@ -977,13 +984,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 && jCheckBoxReplan.isSelected()
                 && !replanStarted) {
             replanStarted = true;
-            javax.swing.Timer tmr =
-                    new javax.swing.Timer(200, new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    generateCrcl();
-                }
-            });
+            javax.swing.Timer tmr
+                    = new javax.swing.Timer(200, new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            generateCrcl();
+                        }
+                    });
             tmr.setRepeats(false);
             tmr.start();
         }

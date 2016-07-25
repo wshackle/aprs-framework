@@ -99,6 +99,11 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
     }
 
     @Override
+    public void processActions() {
+        this.actionsToCrclJPanel1.processActions();
+    }
+    
+    @Override
     public File getPropertiesFile() {
         return this.actionsToCrclJPanel1.getPropertiesFile();
     }

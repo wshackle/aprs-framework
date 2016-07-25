@@ -528,6 +528,11 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         }
     }
 
+    private void processActions() {
+        if (null != actionsToCrclJInternalFrame1) {
+            this.actionsToCrclJInternalFrame1.processActions();
+        }
+    }
     private Process pddlProcess = null;
     private InputStream pddlInputStream = null;
     private InputStream pddlErrorStream = null;
@@ -958,6 +963,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                         }
                     }
                     actionsToCrclJInternalFrame1.autoResizeTableColWidthsPddlOutput();
+                    processActions();
                 } catch (IOException ex) {
                     Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }

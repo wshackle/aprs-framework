@@ -41,6 +41,8 @@ public interface PddlExecutorDisplayInterface extends DisplayInterface {
 
     public void addAction(PddlAction action);
 
+    public void processActions();
+    
     public void autoResizeTableColWidthsPddlOutput();
 
     public boolean isLoadEnabled();
