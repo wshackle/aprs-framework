@@ -247,6 +247,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
+        MessageType msg = new MessageType();
+        msg.setMessage("take-part "+action.getArgs()[1]);
+        msg.setCommandID(BigInteger.valueOf(out.size() + 2));
+        out.add(msg);
+        
         PoseType pose = qs.getPose(action.getArgs()[1]);
         pose.setZAxis(vector(0, 0, -1.0));
         SetEndEffectorType openGripperCmd = new SetEndEffectorType();

@@ -112,6 +112,11 @@ public class Object2DJPanel extends JPanel {
     public Point2D.Double getMinCorner() {
         return minCorner;
     }
+    
+    private double maxX = Double.NEGATIVE_INFINITY;
+    private double minX = Double.POSITIVE_INFINITY;
+    private double maxY = Double.NEGATIVE_INFINITY;
+    private double minY = Double.POSITIVE_INFINITY;
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -119,10 +124,10 @@ public class Object2DJPanel extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
 
         AffineTransform origTransform = g2d.getTransform();
-        double min_x = Double.POSITIVE_INFINITY;
-        double min_y = Double.POSITIVE_INFINITY;
-        double max_x = Double.NEGATIVE_INFINITY;
-        double max_y = Double.NEGATIVE_INFINITY;
+        double min_x = minX;
+        double min_y = minY;
+        double max_x = maxX;
+        double max_y = maxY;
         for (int i = 0; i < items.size(); i++) {
             DetectedItem item = items.get(i);
             if (null == item) {
@@ -220,5 +225,41 @@ public class Object2DJPanel extends JPanel {
             g2d.drawString(item.name, 0, 0);
             g2d.setTransform(origTransform);
         }
+    }
+
+    public double getMaxX() {
+        return maxX;
+    }
+
+    public void setMaxX(double maxX) {
+        this.maxX = maxX;
+        this.repaint();
+    }
+
+    public double getMinX() {
+        return minX;
+    }
+
+    public void setMinX(double minX) {
+        this.minX = minX;
+        this.repaint();
+    }
+
+    public double getMaxY() {
+        return maxY;
+    }
+
+    public void setMaxY(double maxY) {
+        this.maxY = maxY;
+        this.repaint();
+    }
+
+    public double getMinY() {
+        return minY;
+    }
+
+    public void setMinY(double minY) {
+        this.minY = minY;
+        this.repaint();
     }
 }

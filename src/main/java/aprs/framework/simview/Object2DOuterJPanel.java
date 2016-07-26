@@ -161,6 +161,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxConnected = new javax.swing.JCheckBox();
         jLabelHost = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jTextFieldMinXMinY = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        jTextFieldMaxXMaxY = new javax.swing.JTextField();
 
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
@@ -181,7 +185,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setLayout(object2DJPanel1Layout);
         object2DJPanel1Layout.setHorizontalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 459, Short.MAX_VALUE)
+            .addGap(0, 226, Short.MAX_VALUE)
         );
         object2DJPanel1Layout.setVerticalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -284,6 +288,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
+        jLabel2.setText("Xmin,Ymin : ");
+
+        jTextFieldMinXMinY.setText("200.0, -315.0");
+        jTextFieldMinXMinY.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldMinXMinYActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setText("Xmax,Ymax");
+
+        jTextFieldMaxXMaxY.setText("700.0, 315.0");
+        jTextFieldMaxXMaxY.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldMaxXMaxYActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -292,14 +314,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jButtonDelete)
-                        .addGap(10, 10, 10)
-                        .addComponent(jButtonAdd)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldMinXMinY))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldMaxXMaxY))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                            .addComponent(jButtonDelete)
+                            .addGap(10, 10, 10)
+                            .addComponent(jButtonAdd))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -309,8 +340,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE)
-                        .addGap(9, 9, 9)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 137, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel3)
+                            .addComponent(jTextFieldMaxXMaxY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel2)
+                            .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jButtonDelete)
                             .addComponent(jButtonAdd))
@@ -457,6 +496,40 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         draggedItem = null;
     }//GEN-LAST:event_object2DJPanel1MouseReleased
 
+    private void jTextFieldMaxXMaxYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldMaxXMaxYActionPerformed
+        String txt = jTextFieldMaxXMaxY.getText();
+        setMaxXMaxYText(txt);
+    }//GEN-LAST:event_jTextFieldMaxXMaxYActionPerformed
+
+    public void setMaxXMaxYText(String txt) throws NumberFormatException {
+        String vals[] = txt.split(",");
+        if (vals.length == 2) {
+            double newMaxX = Double.valueOf(vals[0]);
+            double newMaxY = Double.valueOf(vals[1]);
+            object2DJPanel1.setMaxX(newMaxX);
+            object2DJPanel1.setMaxY(newMaxY);
+        } else {
+            System.err.println("Bad xmax,ymax = " + txt);
+        }
+    }
+
+    private void jTextFieldMinXMinYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldMinXMinYActionPerformed
+        String txt = jTextFieldMinXMinY.getText();
+        setMinXMinYText(txt);
+    }//GEN-LAST:event_jTextFieldMinXMinYActionPerformed
+
+    public void setMinXMinYText(String txt) throws NumberFormatException {
+        String vals[] = txt.split(",");
+        if (vals.length == 2) {
+            double newMinX = Double.valueOf(vals[0]);
+            double newMinY = Double.valueOf(vals[1]);
+            object2DJPanel1.setMinX(newMinX);
+            object2DJPanel1.setMinY(newMinY);
+        } else {
+            System.err.println("Bad MinX,MinY = " + txt);
+        }
+    }
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonAdd;
@@ -464,11 +537,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxConnected;
     private javax.swing.JCheckBox jCheckBoxSimulated;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabelHost;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextField jTextFieldHost;
+    private javax.swing.JTextField jTextFieldMaxXMaxY;
+    private javax.swing.JTextField jTextFieldMinXMinY;
     private javax.swing.JTextField jTextFieldPort;
     private aprs.framework.simview.Object2DJPanel object2DJPanel1;
     // End of variables declaration//GEN-END:variables
@@ -494,6 +571,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("--visionport", jTextFieldPort.getText());
             props.put("--visionhost", jTextFieldHost.getText());
             props.put("simulated", Boolean.toString(jCheckBoxSimulated.isSelected()));
+            props.put("xmaxymax", jTextFieldMaxXMaxY.getText());
+            props.put("xminymin",jTextFieldMinXMinY.getText());
             try (FileWriter fw = new FileWriter(propertiesFile)) {
                 props.store(fw, "");
             }
@@ -531,6 +610,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             String simulatedString = props.getProperty("simulated");
             if (null != simulatedString && simulatedString.length() > 0) {
                 jCheckBoxSimulated.setSelected(Boolean.valueOf(simulatedString));
+            }
+            String xmaxymaxString = props.getProperty("xmaxymax");
+            if(null != xmaxymaxString) {
+                setMaxXMaxYText(xmaxymaxString);
+                jTextFieldMaxXMaxY.setText(xmaxymaxString);
+            }
+            String xminyminString = props.getProperty("xminymin");
+            if(null != xminyminString) {
+                setMinXMinYText(xminyminString);
+                jTextFieldMinXMinY.setText(xminyminString);
             }
         }
     }

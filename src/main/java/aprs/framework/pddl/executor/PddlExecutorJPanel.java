@@ -462,13 +462,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 Object value = table.getValueAt(rowIndex, colIndex);
                 Component comp = renderer.getTableCellRendererComponent(table, value,
                         false, false, rowIndex, colIndex);
-                System.out.println("comp = " + comp);
                 Dimension compSize = comp.getPreferredSize();
-                System.out.println("compSize = " + compSize);
                 int thisCompHeight = compSize.height;
-//                if(value instanceof String) {
-//                    thisCompHeight *= ((String) value).split("\n").length;
-//                }
                 height = Math.max(height, thisCompHeight);
             }
             if (height > 0) {
@@ -500,6 +495,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             autoResizeTableColWidthsPddlOutput();
             setLoadEnabled(true);
+            jCheckBoxReplan.setSelected(false);
+            setReplanFromIndex(0);
+            jTextFieldIndex.setText("0");
         }
     }
 
