@@ -266,6 +266,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         moveAboveCmd.setEndPosition(poseAbove);
         out.add(moveAboveCmd);
 
+        DwellType dwellCmd = new DwellType();
+        dwellCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        dwellCmd.setDwellTime(BigDecimal.valueOf(3.0));
+        out.add(dwellCmd);
+        
         MoveToType moveToCmd = new MoveToType();
         moveToCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         moveToCmd.setEndPosition(pose);
@@ -303,8 +308,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         DwellType dwellCmd = new DwellType();
         dwellCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
-        dwellCmd.setDwellTime(BigDecimal.ONE);
+        dwellCmd.setDwellTime(BigDecimal.valueOf(3.0));
         out.add(dwellCmd);
+        
+        MessageType msg = new MessageType();
+        msg.setMessage("look-for "+action.getArgs()[1] + " from "+lookforXYZSring);
+        msg.setCommandID(BigInteger.valueOf(out.size() + 2));
+        out.add(msg);
+        
     }
 
     private void placePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
@@ -321,6 +332,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         moveAboveCmd.setEndPosition(poseAbove);
         out.add(moveAboveCmd);
 
+        DwellType dwellCmd = new DwellType();
+        dwellCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        dwellCmd.setDwellTime(BigDecimal.valueOf(3.0));
+        out.add(dwellCmd);
+        
         MoveToType moveToCmd = new MoveToType();
         moveToCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         moveToCmd.setEndPosition(pose);
