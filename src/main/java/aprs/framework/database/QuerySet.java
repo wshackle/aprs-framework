@@ -25,16 +25,10 @@ package aprs.framework.database;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.VectorType;
-import crcl.utils.CRCLPosemath;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.vector;
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -43,14 +37,14 @@ import java.util.Map;
  */
 public class QuerySet implements QuerySetInterface {
 
-    public QuerySet(DbType dbtype, java.sql.Connection con, Map<String, String> queriesMap) throws SQLException {
+    public QuerySet(DbType dbtype, java.sql.Connection con, Map<DbQueryEnum, String> queriesMap) throws SQLException {
         this.dbtype = dbtype;
-        getPoseQueryString = queriesMap.get("getPose");
+        getPoseQueryString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE);
         if (null == getPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain getPose");
         }
         getPoseStatement = con.prepareStatement(getPoseQueryString);
-        setPoseQueryString = queriesMap.get("setPose");
+        setPoseQueryString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE);
         if (null == setPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain setPose");
         }

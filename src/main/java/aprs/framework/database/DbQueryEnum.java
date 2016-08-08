@@ -22,28 +22,11 @@
  */
 package aprs.framework.database;
 
-import java.util.Map;
-
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface DbSetup {
-
-    DbType getDbType();
-
-    String getHost();
-
-    int getPort();
-
-    String getDbName();
-
-    String getDbUser();
-
-    char[] getDbPassword();
-
-    boolean isConnected();
-    
-    Map<DbQueryEnum,String> getQueriesMap();
-
+public enum DbQueryEnum {
+    GET_SINGLE_POSE,
+    SET_SINGLE_POSE;
 }

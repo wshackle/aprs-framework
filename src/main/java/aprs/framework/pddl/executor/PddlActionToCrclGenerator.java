@@ -23,6 +23,7 @@
 package aprs.framework.pddl.executor;
 
 import aprs.framework.PddlAction;
+import aprs.framework.database.DbQueryEnum;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
@@ -41,7 +42,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -79,26 +80,26 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return dbConnection;
     }
 
-    private Map<String, String> queriesMap;
-
-    {
-        queriesMap = new HashMap<String, String>();
-        queriesMap.put("getPose", "MATCH pointpath=(source { name:{1} } ) -[:hasPhysicalLocation_RefObject]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
-                + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
-                + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
-                + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z, xaxis.hasVector_I as vxi,xaxis.hasVector_J as vxj,xaxis.hasVector_K as vxk, zaxis.hasVector_I as vzi,zaxis.hasVector_J as vzj,zaxis.hasVector_K as vzk");
-        queriesMap.put("setPose",
-                "MERGE (thing:SolidObject { name:{1} } )\n"
-                + "merge (thing) - [:hasPhysicalLocation_RefObject] -> (pl:PhysicalLocation)\n"
-                + "merge (pl) - [:hasPoseLocation_Pose] -> (pose:PoseLocation)\n"
-                + "merge (pose) - [:hasPose_Point] -> (pt:Point)\n"
-                + "merge (pose) - [:hasPose_XAxis] -> (xaxis:Vector)\n"
-                + "merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)\n"
-                + "set pt.hasPoint_X= {2},pt.hasPoint_Y= {3},pt.hasPoint_Z= {4}\n"
-                + "set xaxis.hasVector_I={5}, xaxis.hasVector_J={6}, xaxis.hasVector_K={7}\n"
-                + "set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}"
-        );
-    }
+//    private Map<DbQueryEnum, String> queriesMap;
+//
+//    {
+//        queriesMap = new EnumMap<DbQueryEnum, String>(DbQueryEnum.class);
+//        queriesMap.put(DbQueryEnum.GET_SINGLE_POSE, "MATCH pointpath=(source { name:{1} } ) -[:hasPhysicalLocation_RefObject]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
+//                + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
+//                + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
+//                + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z, xaxis.hasVector_I as vxi,xaxis.hasVector_J as vxj,xaxis.hasVector_K as vxk, zaxis.hasVector_I as vzi,zaxis.hasVector_J as vzj,zaxis.hasVector_K as vzk");
+//        queriesMap.put(DbQueryEnum.SET_SINGLE_POSE,
+//                "MERGE (thing:SolidObject { name:{1} } )\n"
+//                + "merge (thing) - [:hasPhysicalLocation_RefObject] -> (pl:PhysicalLocation)\n"
+//                + "merge (pl) - [:hasPoseLocation_Pose] -> (pose:PoseLocation)\n"
+//                + "merge (pose) - [:hasPose_Point] -> (pt:Point)\n"
+//                + "merge (pose) - [:hasPose_XAxis] -> (xaxis:Vector)\n"
+//                + "merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)\n"
+//                + "set pt.hasPoint_X= {2},pt.hasPoint_Y= {3},pt.hasPoint_Z= {4}\n"
+//                + "set xaxis.hasVector_I={5}, xaxis.hasVector_J={6}, xaxis.hasVector_K={7}\n"
+//                + "set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}"
+//        );
+//    }
 
     public void setDbConnection(Connection dbConnection) {
         try {
@@ -113,7 +114,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
             this.dbConnection = dbConnection;
             if (null != dbConnection && null != dbSetup) {
-                qs = new QuerySet(dbSetup.getDbType(), dbConnection, queriesMap);
+                qs = new QuerySet(dbSetup.getDbType(), dbConnection, dbSetup.getQueriesMap());
             } else if (qs != null) {
                 qs.close();
                 qs = null;

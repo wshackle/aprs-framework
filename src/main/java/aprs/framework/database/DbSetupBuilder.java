@@ -23,14 +23,17 @@
 package aprs.framework.database;
 
 import aprs.framework.spvision.VisionToDBJPanel;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.security.ProtectionDomain;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -49,7 +52,51 @@ public class DbSetupBuilder {
     private String user = "neo4j";
     private String dbname = "";
     private boolean connected = false;
+    private Map<DbQueryEnum, String> queriesMap= new EnumMap<DbQueryEnum, String>(DbQueryEnum.class);;
 
+    {
+        try {
+            queriesMap.put(DbQueryEnum.GET_SINGLE_POSE, 
+                    getStringResource("aprs/framework/database/neo4j/get_single_pose.txt"));
+            queriesMap.put(DbQueryEnum.SET_SINGLE_POSE, 
+                    getStringResource("aprs/framework/database/neo4j/set_single_pose.txt"));
+        } catch (IOException ex) {
+            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+//    {
+////        queriesMap = new EnumMap<DbQueryEnum, String>(DbQueryEnum.class);
+//        queriesMap.put(DbQueryEnum.GET_SINGLE_POSE, "MATCH pointpath=(source { name:{1} } ) -[:hasPhysicalLocation_RefObject]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
+//                + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
+//                + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
+//                + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z, xaxis.hasVector_I as vxi,xaxis.hasVector_J as vxj,xaxis.hasVector_K as vxk, zaxis.hasVector_I as vzi,zaxis.hasVector_J as vzj,zaxis.hasVector_K as vzk");
+//        queriesMap.put(DbQueryEnum.SET_SINGLE_POSE,
+//                "MERGE (thing:SolidObject { name:{1} } )\n"
+//                + "merge (thing) - [:hasPhysicalLocation_RefObject] -> (pl:PhysicalLocation)\n"
+//                + "merge (pl) - [:hasPoseLocation_Pose] -> (pose:PoseLocation)\n"
+//                + "merge (pose) - [:hasPose_Point] -> (pt:Point)\n"
+//                + "merge (pose) - [:hasPose_XAxis] -> (xaxis:Vector)\n"
+//                + "merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)\n"
+//                + "set pt.hasPoint_X= {2},pt.hasPoint_Y= {3},pt.hasPoint_Z= {4}\n"
+//                + "set xaxis.hasVector_I={5}, xaxis.hasVector_J={6}, xaxis.hasVector_K={7}\n"
+//                + "set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}"
+//        );
+//    }
+    
+    private static String getStringResource(String name) throws IOException {
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+        StringBuilder sb = new StringBuilder();
+        try(BufferedReader br = new BufferedReader(new InputStreamReader(cl.getResourceAsStream(name),"UTF-8"))){
+           String line=null;
+           while(null != (line = br.readLine())) {
+                sb.append(line);
+                sb.append(System.lineSeparator());
+            }
+        }
+        return sb.toString();
+    }
+    
     private static class DbSetupInternal implements DbSetup {
 
         final DbType type;
@@ -59,8 +106,18 @@ public class DbSetupBuilder {
         final String user;
         final String dbname;
         final boolean connected;
+        final Map<DbQueryEnum,String> queriesMap;
 
-        private DbSetupInternal(DbType type, String host, int port, char[] passwd, String user, String dbname, boolean connected) {
+        private DbSetupInternal(
+                DbType type, 
+                String host, 
+                int port, 
+                char[] passwd, 
+                String user, 
+                String dbname, 
+                boolean connected,
+                Map<DbQueryEnum,String> queriesMap
+                ) {
             this.type = type;
             this.host = host;
             this.port = port;
@@ -68,6 +125,7 @@ public class DbSetupBuilder {
             this.user = user;
             this.dbname = dbname;
             this.connected = connected;
+            this.queriesMap = queriesMap;
         }
 
         @Override
@@ -105,6 +163,11 @@ public class DbSetupBuilder {
             return connected;
         }
 
+        @Override
+        public Map<DbQueryEnum, String> getQueriesMap() {
+            return queriesMap;
+        }
+        
     }
 
     public DbSetupBuilder setup(DbSetup setup) {
@@ -119,7 +182,7 @@ public class DbSetupBuilder {
     }
 
     public DbSetup build() {
-        return new DbSetupInternal(type, host, port, passwd, user, dbname, connected);
+        return new DbSetupInternal(type, host, port, passwd, user, dbname, connected,queriesMap);
     }
 
     public DbSetupBuilder type(DbType type) {
@@ -167,6 +230,11 @@ public class DbSetupBuilder {
         return this;
     }
 
+    public DbSetupBuilder queriesMap(Map<DbQueryEnum,String> queriesMap) {
+        this.queriesMap = queriesMap;
+        return this;
+    }
+    
     private DbSetupBuilder updateFromArgs(Map<String, String> _argsMap) {
 
         DbSetupBuilder builder = this;

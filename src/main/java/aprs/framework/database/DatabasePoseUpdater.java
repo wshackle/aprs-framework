@@ -86,6 +86,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
         setupStatements();
     }
 
+    private String queryAllString;
+    private String mergeStatementString;
+    
     private void setupStatements() throws SQLException {
         switch (dbtype) {
             case MYSQL:
@@ -105,10 +108,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                + " where _NAME =  ("
 //                + " select hasSolidObject_PrimaryLocation from SolidObject"
 //                + " where _NAME = ? ) )");
-                update_statement = con.prepareStatement(MYSQL_UPDATE_STRING);
-
-                query_all_statement = con.prepareStatement(
-                        "select name,X,Y,Z,VXX,VXY from DirectPose");
+                mergeStatementString = MYSQL_UPDATE_STRING;
+                update_statement = con.prepareStatement(mergeStatementString);
+                queryAllString = MYSQL_QUERY_ALL_STRING;
+                query_all_statement = con.prepareStatement(queryAllString);
 
                 updateParamTypes = MYSQL_UPDATE_PARAM_TYPES;
 
@@ -116,13 +119,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
             case NEO4J:
                 useBatch = false;
-                update_statement = con.prepareStatement(NEO4J_MERGE_STATEMENT_STRING);
+                mergeStatementString = NEO4J_MERGE_STATEMENT_STRING;
+                update_statement = con.prepareStatement(mergeStatementString);
 
 //                addnew_statement = con.prepareStatement(db);
-                query_all_statement = con.prepareStatement("MATCH pointpath=(source) -[:hasPhysicalLocation_RefObject]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
-                        + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
-                        + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
-                        + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy");
+                queryAllString = NEO4J_QUERY_ALL_POSES_QUERY_STRING;
+                query_all_statement = con.prepareStatement(queryAllString);
 
                 updateParamTypes = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
                 break;
@@ -141,8 +143,27 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                
 //                neo4jSession = neo4jJavaDriver.session();
 //                break;
+//            case NEO4J_BOLT:
+//                neo4jJavaDriver = GraphDatabase.driver("bolt://" + host,
+//                        AuthTokens.basic(username, password),
+//                        Config.build().withEncryptionLevel(Config.EncryptionLevel.NONE).toConfig());
+//                
+//                neo4jSession = neo4jJavaDriver.session();
+//                break;
+//            case NEO4J_BOLT:
+//                neo4jJavaDriver = GraphDatabase.driver("bolt://" + host,
+//                        AuthTokens.basic(username, password),
+//                        Config.build().withEncryptionLevel(Config.EncryptionLevel.NONE).toConfig());
+//                
+//                neo4jSession = neo4jJavaDriver.session();
+//                break;
         }
     }
+    private static final String MYSQL_QUERY_ALL_STRING = "select name,X,Y,Z,VXX,VXY from DirectPose";
+    private static final String NEO4J_QUERY_ALL_POSES_QUERY_STRING = "MATCH pointpath=(source) -[:hasPhysicalLocation_RefObject]-> (n) -[r2] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
+            + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
+            + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
+            + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy";
 
     private void setupConnection(String host, int port, String db, String username, String password) throws SQLException {
         switch (dbtype) {
@@ -299,6 +320,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
         VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
         if (null != displayInterface) {
             debug = displayInterface.isDebug();
+        }
+        if(debug) {
+            displayInterface.addLogMessage("Sending query:"+System.lineSeparator());
+            displayInterface.addLogMessage(queryAllString);
+            displayInterface.addLogMessage(""+System.lineSeparator());
         }
         try (ResultSet rs = query_all_statement.executeQuery()) {
             if (null != rs) {
