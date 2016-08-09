@@ -222,12 +222,14 @@ public class Main {
     public static void connectDB(Map<String, String> argsMap) {
         try {
             closeDB();
+            DbType type =  DbType.valueOf(argsMap.get("--dbtype"));
             dup = new DatabasePoseUpdater(argsMap.get("--dbhost"),
                     Short.valueOf(argsMap.get("--dbport")),
                     argsMap.get("--dbname"),
                     argsMap.get("--dbuser"),
                     argsMap.get("--dbpasswd"),
-                    DbType.valueOf(argsMap.get("--dbtype"))
+                    type, 
+                    DbSetupBuilder.getDefaultQueriesMap(type)
             );
             if (null != displayInterface) {
                 displayInterface.setDBConnected(true);

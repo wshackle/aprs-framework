@@ -112,7 +112,7 @@ public class Object2DJPanel extends JPanel {
     public Point2D.Double getMinCorner() {
         return minCorner;
     }
-    
+
     private double maxX = Double.NEGATIVE_INFINITY;
     private double minX = Double.POSITIVE_INFINITY;
     private double maxY = Double.NEGATIVE_INFINITY;
@@ -128,36 +128,44 @@ public class Object2DJPanel extends JPanel {
         double min_y = minY;
         double max_x = maxX;
         double max_y = maxY;
-        for (int i = 0; i < items.size(); i++) {
-            DetectedItem item = items.get(i);
-            if (null == item) {
-                continue;
-            }
-            if (item.name == null || item.name.length() < 1) {
-                continue;
-            }
-            if (Double.isInfinite(item.x) || Double.isNaN(item.x)) {
-                continue;
-            }
-            if (Double.isInfinite(item.y) || Double.isNaN(item.y)) {
-                continue;
-            }
-            if (Double.isInfinite(item.rotation) || Double.isNaN(item.rotation)) {
-                continue;
-            }
-            int extra = 10 * item.name.length();
-            if (max_x < item.x+extra) {
-                max_x = item.x+extra;
-            }
-            if (min_x > item.x-extra) {
-                min_x = item.x-extra;
-            }
-            if (max_y < item.y+extra) {
-                max_y = item.y+extra;
-            }
-            if (min_y > item.y-extra) {
-                min_y = item.y-extra;
-            }
+        if (!Double.isFinite(maxX) || !Double.isFinite(minX) || !Double.isFinite(minY) || !Double.isFinite(maxY)) {
+//            for (int i = 0; i < items.size(); i++) {
+//                DetectedItem item = items.get(i);
+//                if (null == item) {
+//                    continue;
+//                }
+//                if (item.name == null || item.name.length() < 1) {
+//                    continue;
+//                }
+//                if (Double.isInfinite(item.x) || Double.isNaN(item.x)) {
+//                    continue;
+//                }
+//                if (Double.isInfinite(item.y) || Double.isNaN(item.y)) {
+//                    continue;
+//                }
+//                if (Double.isInfinite(item.rotation) || Double.isNaN(item.rotation)) {
+//                    continue;
+//                }
+//                int extra = 10 * item.name.length();
+//                if (max_x < item.x + extra) {
+//                    max_x = item.x + extra;
+//                }
+//                if (min_x > item.x - extra) {
+//                    min_x = item.x - extra;
+//                }
+//                if (max_y < item.y + extra) {
+//                    max_y = item.y + extra;
+//                }
+//                if (min_y > item.y - extra) {
+//                    min_y = item.y - extra;
+//                }
+//            }
+//            maxX = max_x;
+//            minX = min_x;
+//            maxY = max_y;
+//            minY = min_y;
+            g2d.drawString("Limits not set",0,0);
+            return;
         }
         double scale_x = (this.getSize().width - 30) / (max_x - min_x);
         double scale_y = (this.getSize().height - 50) / (max_y - min_y);
@@ -215,7 +223,7 @@ public class Object2DJPanel extends JPanel {
             if (Double.isInfinite(item.rotation) || Double.isNaN(item.rotation)) {
                 return;
             }
-            g2d.translate((item.x - min_x) * scale + 15, (max_y-item.y) * scale + 20);
+            g2d.translate((item.x - min_x) * scale + 15, (max_y - item.y) * scale + 20);
             g2d.rotate(item.rotation);
             g2d.setColor(Color.WHITE);
             Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20);

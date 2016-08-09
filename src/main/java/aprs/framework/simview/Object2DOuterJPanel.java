@@ -138,6 +138,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 object2DJPanel1.setSelectedItemIndex(jTable1.getSelectedRow());
             }
         });
+        setMaxXMaxYText(jTextFieldMaxXMaxY.getText());
+        setMinXMinYText(jTextFieldMinXMinY.getText());
     }
 
     /**
@@ -448,13 +450,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void object2DJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseDragged
         double scale = object2DJPanel1.getScale();
-        Point2D.Double minCorner = object2DJPanel1.getMinCorner();
-        if (null == minCorner) {
-            return;
-        }
+        double min_x = object2DJPanel1.getMinX();
+        double max_y = object2DJPanel1.getMaxY();
         if (null != draggedItem) {
-            draggedItem.x = ((evt.getX() - 15) / scale) + minCorner.x;
-            draggedItem.y = ((evt.getY() - 20) / scale) + minCorner.y;
+            draggedItem.x = ((evt.getX() - 15) / scale) + min_x;
+            draggedItem.y = max_y - ((evt.getY() - 20) / scale);
             this.setItems(this.getItems());
         }
     }//GEN-LAST:event_object2DJPanel1MouseDragged
@@ -464,18 +464,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void object2DJPanel1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MousePressed
         List<DetectedItem> items = this.getItems();
         double scale = object2DJPanel1.getScale();
-        Point2D.Double minCorner = object2DJPanel1.getMinCorner();
+        double min_x = object2DJPanel1.getMinX();
+        double max_y = object2DJPanel1.getMaxY();
         draggedItem = null;
-        if (null == minCorner) {
-            return;
-        }
         DetectedItem closestItem = null;
         double minDist = Double.POSITIVE_INFINITY;
         int minIndex = -1;
         for (int i = 0; i < items.size(); i++) {
             DetectedItem item = items.get(i);
-            double rel_x = (item.x - minCorner.x) * scale + 15;
-            double rel_y = (item.y - minCorner.y) * scale + 20;
+            double rel_x = (item.x - min_x) * scale + 15;
+            double rel_y = (max_y-item.y) * scale + 20;
             double diff_x = rel_x - evt.getX();
             double diff_y = rel_y - evt.getY();
             double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);

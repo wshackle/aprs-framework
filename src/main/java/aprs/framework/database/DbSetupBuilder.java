@@ -33,6 +33,7 @@ import java.security.ProtectionDomain;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Properties;
@@ -40,7 +41,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * 
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class DbSetupBuilder {
@@ -52,19 +53,42 @@ public class DbSetupBuilder {
     private String user = "neo4j";
     private String dbname = "";
     private boolean connected = false;
-    private Map<DbQueryEnum, String> queriesMap= new EnumMap<DbQueryEnum, String>(DbQueryEnum.class);;
 
-    {
+    public static Map<DbQueryEnum, String> getDefaultQueriesMap(DbType type) {
+        switch (type) {
+            case NEO4J:
+                return NEO4J_DEFAULT_QUERIES_MAP;
+
+            case MYSQL:
+                return MYSQL_DEFAULT_QUERIES_MAP;
+        }
+        throw new IllegalArgumentException("No default queries map for " + type);
+    }
+
+    private static Map<DbQueryEnum, String> NEO4J_DEFAULT_QUERIES_MAP;
+    private static Map<DbQueryEnum, String> MYSQL_DEFAULT_QUERIES_MAP;
+
+    static {
         try {
-            queriesMap.put(DbQueryEnum.GET_SINGLE_POSE, 
-                    getStringResource("aprs/framework/database/neo4j/get_single_pose.txt"));
-            queriesMap.put(DbQueryEnum.SET_SINGLE_POSE, 
-                    getStringResource("aprs/framework/database/neo4j/set_single_pose.txt"));
+            Map<DbQueryEnum, String> map = new EnumMap<DbQueryEnum, String>(DbQueryEnum.class);
+            for(DbQueryEnum q : DbQueryEnum.values()) {
+                map.put(q, getStringResource("aprs/framework/database/neo4j/"+q.toString().toLowerCase()+".txt"));
+            }
+            NEO4J_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
+        } catch (IOException ex) {
+            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            Map<DbQueryEnum, String> map = new EnumMap<DbQueryEnum, String>(DbQueryEnum.class);
+            for(DbQueryEnum q : DbQueryEnum.values()) {
+                map.put(q, getStringResource("aprs/framework/database/neo4j/"+q.toString().toLowerCase()+".txt"));
+            }
+            MYSQL_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
         } catch (IOException ex) {
             Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
 //    {
 ////        queriesMap = new EnumMap<DbQueryEnum, String>(DbQueryEnum.class);
 //        queriesMap.put(DbQueryEnum.GET_SINGLE_POSE, "MATCH pointpath=(source { name:{1} } ) -[:hasPhysicalLocation_RefObject]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
@@ -83,20 +107,19 @@ public class DbSetupBuilder {
 //                + "set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}"
 //        );
 //    }
-    
     private static String getStringResource(String name) throws IOException {
         ClassLoader cl = ClassLoader.getSystemClassLoader();
         StringBuilder sb = new StringBuilder();
-        try(BufferedReader br = new BufferedReader(new InputStreamReader(cl.getResourceAsStream(name),"UTF-8"))){
-           String line=null;
-           while(null != (line = br.readLine())) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(cl.getResourceAsStream(name), "UTF-8"))) {
+            String line = null;
+            while (null != (line = br.readLine())) {
                 sb.append(line);
                 sb.append(System.lineSeparator());
             }
         }
         return sb.toString();
     }
-    
+
     private static class DbSetupInternal implements DbSetup {
 
         final DbType type;
@@ -106,18 +129,18 @@ public class DbSetupBuilder {
         final String user;
         final String dbname;
         final boolean connected;
-        final Map<DbQueryEnum,String> queriesMap;
+        final Map<DbQueryEnum, String> queriesMap;
 
         private DbSetupInternal(
-                DbType type, 
-                String host, 
-                int port, 
-                char[] passwd, 
-                String user, 
-                String dbname, 
+                DbType type,
+                String host,
+                int port,
+                char[] passwd,
+                String user,
+                String dbname,
                 boolean connected,
-                Map<DbQueryEnum,String> queriesMap
-                ) {
+                Map<DbQueryEnum, String> queriesMap
+        ) {
             this.type = type;
             this.host = host;
             this.port = port;
@@ -167,7 +190,7 @@ public class DbSetupBuilder {
         public Map<DbQueryEnum, String> getQueriesMap() {
             return queriesMap;
         }
-        
+
     }
 
     public DbSetupBuilder setup(DbSetup setup) {
@@ -182,7 +205,8 @@ public class DbSetupBuilder {
     }
 
     public DbSetup build() {
-        return new DbSetupInternal(type, host, port, passwd, user, dbname, connected,queriesMap);
+        return new DbSetupInternal(type, host, port, passwd, user, dbname, connected,
+                Collections.unmodifiableMap(NEO4J_DEFAULT_QUERIES_MAP));
     }
 
     public DbSetupBuilder type(DbType type) {
@@ -230,11 +254,11 @@ public class DbSetupBuilder {
         return this;
     }
 
-    public DbSetupBuilder queriesMap(Map<DbQueryEnum,String> queriesMap) {
-        this.queriesMap = queriesMap;
+    public DbSetupBuilder queriesMap(Map<DbQueryEnum, String> queriesMap) {
+        this.NEO4J_DEFAULT_QUERIES_MAP = queriesMap;
         return this;
     }
-    
+
     private DbSetupBuilder updateFromArgs(Map<String, String> _argsMap) {
 
         DbSetupBuilder builder = this;
@@ -407,6 +431,7 @@ public class DbSetupBuilder {
 
     /**
      * Save the given setup to a properties file.
+     *
      * @param propertiesFile
      * @param setup
      */
@@ -417,6 +442,7 @@ public class DbSetupBuilder {
     /**
      * Save the given setup to a properties file, possibly replacing some setup
      * values with the passed arguments.
+     *
      * @param propertiesFile
      * @param setup
      * @param dbtype
@@ -454,16 +480,16 @@ public class DbSetupBuilder {
             }
         }
     }
-    
+
     public Connection connect() throws SQLException {
         return connect(this.build());
     }
-    
-    public static  Connection connect(DbSetup setup) throws SQLException {
-        return setupConnection(setup.getDbType(),setup.getHost(), setup.getPort(), setup.getDbName(), setup.getDbUser(), new String(setup.getDbPassword()));
+
+    public static Connection connect(DbSetup setup) throws SQLException {
+        return setupConnection(setup.getDbType(), setup.getHost(), setup.getPort(), setup.getDbName(), setup.getDbUser(), new String(setup.getDbPassword()));
     }
-    
-    public static  Connection setupConnection(DbType dbtype, String host, int port, String db, String username, String password) throws SQLException {
+
+    public static Connection setupConnection(DbType dbtype, String host, int port, String db, String username, String password) throws SQLException {
         switch (dbtype) {
             case MYSQL:
 //                useBatch = true;
@@ -478,7 +504,7 @@ public class DbSetupBuilder {
                     classNotFoundException.printStackTrace();
                 }
                 return DriverManager.getConnection(mysql_url, username, password);
-               
+
             case NEO4J:
 //                useBatch = false;
                 Properties properties = new Properties();
@@ -495,7 +521,7 @@ public class DbSetupBuilder {
                     classNotFoundException.printStackTrace();
                 }
                 return DriverManager.getConnection(neo4j_url, properties);
-                
+
 //            case NEO4J_BOLT:
 //                neo4jJavaDriver = GraphDatabase.driver("bolt://" + host,
 //                        AuthTokens.basic(username, password),
@@ -511,6 +537,6 @@ public class DbSetupBuilder {
 //                neo4jSession = neo4jJavaDriver.session();
 //                break;
         }
-        throw new IllegalArgumentException("Unsuppored dbtype ="+dbtype);
+        throw new IllegalArgumentException("Unsuppored dbtype =" + dbtype);
     }
 }

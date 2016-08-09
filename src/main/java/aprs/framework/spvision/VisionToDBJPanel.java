@@ -1291,7 +1291,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     @Override
     public void setSqlConnection(Connection connection, DbType dbtype) throws SQLException {
         Main.closeDatabasePoseUpdater();
-        Main.setDatabasePoseUpdater(new DatabasePoseUpdater(connection, dbtype, true));
+        Main.setDatabasePoseUpdater(new DatabasePoseUpdater(connection, dbtype, true,dbSetupPublisher.getDbSetup().getQueriesMap()));
         dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).type(dbtype).build());
     }
 

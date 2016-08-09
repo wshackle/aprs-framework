@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -79,10 +80,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private final boolean sharedConnection;
 
-    public DatabasePoseUpdater(Connection con, DbType dbtype, boolean sharedConnection) throws SQLException {
+    public DatabasePoseUpdater(Connection con, DbType dbtype, boolean sharedConnection,Map<DbQueryEnum,String> queriesMap) throws SQLException {
         this.dbtype = dbtype;
         this.con = con;
         this.sharedConnection = sharedConnection;
+        this.queriesMap = queriesMap;
         setupStatements();
     }
 
@@ -177,10 +179,13 @@ public class DatabasePoseUpdater implements AutoCloseable {
         }
         con = DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password);
     }
+    
+    final private Map<DbQueryEnum,String> queriesMap;
 
-    public DatabasePoseUpdater(String host, int port, String db, String username, String password, DbType dbtype) throws SQLException {
+    public DatabasePoseUpdater(String host, int port, String db, String username, String password, DbType dbtype, Map<DbQueryEnum,String> queriesMap) throws SQLException {
         this.dbtype = dbtype;
         sharedConnection = false;
+        this.queriesMap = queriesMap;
         setupConnection(host, port, db, username, password);
         setupStatements();
     }
