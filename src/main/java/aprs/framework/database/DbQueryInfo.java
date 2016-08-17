@@ -158,7 +158,7 @@ public class DbQueryInfo {
             DbParamTypeEnum type = DbParamTypeEnum.valueOf(name);
             results.put(type, value);
         }
-        System.out.println("results = " + results);
+//        System.out.println("results = " + results);
         return results;
     }
 }
