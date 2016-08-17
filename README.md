@@ -59,3 +59,12 @@ For Windows:
 
     run.bat
 
+
+Views
+=====
+
+Log/Error Display View
+----------------------
+
+![Screenshot of GUI with Error/Info Log Window](/Screenshots/Screenshot_Error_Info_Log.png?raw=true)
+
