@@ -55,7 +55,7 @@ public class DbSetupBuilder {
     private String dbname = "";
     private boolean connected = false;
     private Map<DbQueryEnum, DbQueryInfo> queriesMap;
-    private boolean internalQueriesResourceDir;
+    private boolean internalQueriesResourceDir=true;
     private String queriesDir;
 
     public static Map<DbQueryEnum, DbQueryInfo> getDefaultQueriesMap(DbType type) {
