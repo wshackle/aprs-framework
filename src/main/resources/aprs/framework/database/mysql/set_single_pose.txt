@@ -1,3 +1,5 @@
+#params=NAME(1), X(2), Y(3), Z(4), VXI(5),VXJ(6),VXK(7),VZI(8),VZJ(9),VZK(10)
+#results=
 update Point p, Vector vx, Vector vz 
 set p.hasPoint_X = ?, p.hasPoint_Y = ?, vx.hasVector_I = ?, vx.hasVector_J = ?,
  vx.hasVector_K=0, vz.hasVector_I=0,vz.hasVector_J=0,vz.hasVector_K=1

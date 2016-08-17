@@ -133,6 +133,14 @@
                 <Property name="text" type="java.lang.String" value="Connect To Vision On Startup"/>
               </Properties>
             </MenuItem>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemExploreGraphDbStartup">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Explore Graph Database"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemExploreGraphDbStartupActionPerformed"/>
+              </Events>
+            </MenuItem>
           </SubComponents>
         </Menu>
         <Menu class="javax.swing.JMenu" name="jMenuWindow">

@@ -20,18 +20,24 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.database;
+package aprs.framework.database.explore;
+
+import aprs.framework.database.DbSetup;
+import aprs.framework.database.DbSetupListener;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
+public class ExploreGraphDbJInternalFrame extends javax.swing.JInternalFrame implements DbSetupListener{
 
     /**
-     * Creates new form DbSetupJInternalFrame
+     * Creates new form ExploreGraphDbJInternalFrame
      */
-    public DbSetupJInternalFrame() {
+    public ExploreGraphDbJInternalFrame() {
         initComponents();
     }
 
@@ -44,12 +50,29 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        dbSetupJPanel1 = new aprs.framework.database.DbSetupJPanel();
+        exploreGraphDbJPanel1 = new aprs.framework.database.explore.ExploreGraphDbJPanel();
 
         setIconifiable(true);
         setMaximizable(true);
         setResizable(true);
-        setTitle("Database Setup");
+        setTitle("Explore Graph Database");
+        addInternalFrameListener(new javax.swing.event.InternalFrameListener() {
+            public void internalFrameOpened(javax.swing.event.InternalFrameEvent evt) {
+            }
+            public void internalFrameClosing(javax.swing.event.InternalFrameEvent evt) {
+            }
+            public void internalFrameClosed(javax.swing.event.InternalFrameEvent evt) {
+                formInternalFrameClosed(evt);
+            }
+            public void internalFrameIconified(javax.swing.event.InternalFrameEvent evt) {
+            }
+            public void internalFrameDeiconified(javax.swing.event.InternalFrameEvent evt) {
+            }
+            public void internalFrameActivated(javax.swing.event.InternalFrameEvent evt) {
+            }
+            public void internalFrameDeactivated(javax.swing.event.InternalFrameEvent evt) {
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -57,27 +80,37 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(dbSetupJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(exploreGraphDbJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(dbSetupJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(exploreGraphDbJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    
-    public DbSetupPublisher getDbSetupPublisher() {
-        return this.dbSetupJPanel1;
-    }
-    
+    private void formInternalFrameClosed(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameClosed
+        try {
+            this.exploreGraphDbJPanel1.closeConnection();
+        } catch (SQLException ex) {
+            Logger.getLogger(ExploreGraphDbJInternalFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_formInternalFrameClosed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private aprs.framework.database.DbSetupJPanel dbSetupJPanel1;
+    private aprs.framework.database.explore.ExploreGraphDbJPanel exploreGraphDbJPanel1;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void accept(DbSetup setup) {
+        this.exploreGraphDbJPanel1.accept(setup);
+    }
+    
+    
 }

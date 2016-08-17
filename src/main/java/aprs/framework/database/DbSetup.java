@@ -30,20 +30,25 @@ import java.util.Map;
  */
 public interface DbSetup {
 
-    DbType getDbType();
+    public DbType getDbType();
 
-    String getHost();
+    public String getHost();
 
-    int getPort();
+    public int getPort();
 
-    String getDbName();
+    public String getDbName();
 
-    String getDbUser();
+    public String getDbUser();
 
-    char[] getDbPassword();
+    public char[] getDbPassword();
 
-    boolean isConnected();
+    public boolean isConnected();
     
-    Map<DbQueryEnum,String> getQueriesMap();
+    public Map<DbQueryEnum,DbQueryInfo> getQueriesMap();
+    
+    public boolean isInternalQueriesResourceDir();
+    
+    public String getQueriesDir();
+    
 
 }

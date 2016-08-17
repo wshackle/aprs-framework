@@ -27,9 +27,11 @@ import aprs.framework.spvision.VisionToDBJFrameInterface;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -80,7 +82,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private final boolean sharedConnection;
 
-    public DatabasePoseUpdater(Connection con, DbType dbtype, boolean sharedConnection,Map<DbQueryEnum,String> queriesMap) throws SQLException {
+    public DatabasePoseUpdater(
+            Connection con,
+            DbType dbtype,
+            boolean sharedConnection,
+            Map<DbQueryEnum, DbQueryInfo> queriesMap) throws SQLException {
         this.dbtype = dbtype;
         this.con = con;
         this.sharedConnection = sharedConnection;
@@ -90,7 +96,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private String queryAllString;
     private String mergeStatementString;
-    
+
     private void setupStatements() throws SQLException {
         switch (dbtype) {
             case MYSQL:
@@ -110,25 +116,29 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                + " where _NAME =  ("
 //                + " select hasSolidObject_PrimaryLocation from SolidObject"
 //                + " where _NAME = ? ) )");
-                mergeStatementString = MYSQL_UPDATE_STRING;
+//                mergeStatementString = MYSQL_UPDATE_STRING;
+//                queryAllString = MYSQL_QUERY_ALL_STRING;
+                mergeStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
+                queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
                 update_statement = con.prepareStatement(mergeStatementString);
-                queryAllString = MYSQL_QUERY_ALL_STRING;
                 query_all_statement = con.prepareStatement(queryAllString);
-
-                updateParamTypes = MYSQL_UPDATE_PARAM_TYPES;
+                updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
+//                updateParamTypes = MYSQL_UPDATE_PARAM_TYPES;
 
                 break;
 
             case NEO4J:
                 useBatch = false;
-                mergeStatementString = NEO4J_MERGE_STATEMENT_STRING;
+//                mergeStatementString = NEO4J_MERGE_STATEMENT_STRING;
+//                queryAllString = NEO4J_QUERY_ALL_POSES_QUERY_STRING;
+                mergeStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
+                queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
                 update_statement = con.prepareStatement(mergeStatementString);
 
 //                addnew_statement = con.prepareStatement(db);
-                queryAllString = NEO4J_QUERY_ALL_POSES_QUERY_STRING;
                 query_all_statement = con.prepareStatement(queryAllString);
-
-                updateParamTypes = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
+                updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
+//                updateParamTypes = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
                 break;
 
 //            case NEO4J_BOLT:
@@ -161,11 +171,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                break;
         }
     }
-    private static final String MYSQL_QUERY_ALL_STRING = "select name,X,Y,Z,VXX,VXY from DirectPose";
-    private static final String NEO4J_QUERY_ALL_POSES_QUERY_STRING = "MATCH pointpath=(source) -[:hasPhysicalLocation_RefObject]-> (n) -[r2] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
-            + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
-            + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
-            + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy";
+//    private static final String MYSQL_QUERY_ALL_STRING = "select name,X,Y,Z,VXX,VXY from DirectPose";
+//    private static final String NEO4J_QUERY_ALL_POSES_QUERY_STRING = "MATCH pointpath=(source) -[:hasPhysicalLocation_RefObject]-> (n) -[r2] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
+//            + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
+//            + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
+//            + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy";
 
     private void setupConnection(String host, int port, String db, String username, String password) throws SQLException {
         switch (dbtype) {
@@ -179,10 +189,17 @@ public class DatabasePoseUpdater implements AutoCloseable {
         }
         con = DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password);
     }
-    
-    final private Map<DbQueryEnum,String> queriesMap;
 
-    public DatabasePoseUpdater(String host, int port, String db, String username, String password, DbType dbtype, Map<DbQueryEnum,String> queriesMap) throws SQLException {
+    final private Map<DbQueryEnum, DbQueryInfo> queriesMap;
+
+    public DatabasePoseUpdater(
+            String host,
+            int port,
+            String db,
+            String username,
+            String password,
+            DbType dbtype,
+            Map<DbQueryEnum, DbQueryInfo> queriesMap) throws SQLException {
         this.dbtype = dbtype;
         sharedConnection = false;
         this.queriesMap = queriesMap;
@@ -190,64 +207,62 @@ public class DatabasePoseUpdater implements AutoCloseable {
         setupStatements();
     }
 
-    private static final String MYSQL_UPDATE_STRING
-            = "update Point p, Vector vx, Vector vz "
-            + " set p.hasPoint_X = ?, p.hasPoint_Y = ?, vx.hasVector_I = ?, vx.hasVector_J = ?"
-            + ", vx.hasVector_K=0, vz.hasVector_I=0,vz.hasVector_J=0,vz.hasVector_K=1"
-            + " where p._NAME = ("
-            + " select hasPoseLocation_Point from PoseLocation"
-            + " where _NAME =  ("
-            + "  select hasSolidObject_PrimaryLocation from SolidObject"
-            + " where _NAME = ? ) )"
-            + " and "
-            + "  vx._NAME = ("
-            + " select hasPoseLocation_XAxis from PoseLocation "
-            + " where _NAME =  ("
-            + " select hasSolidObject_PrimaryLocation from SolidObject"
-            + " where _NAME = ? ) )"
-            + " and "
-            + "  vz._NAME = ("
-            + " select hasPoseLocation_ZAxis from PoseLocation "
-            + " where _NAME =  ("
-            + " select hasSolidObject_PrimaryLocation from SolidObject"
-            + " where _NAME = ? ) )";
-
-    private static final ParamTypeEnum MYSQL_UPDATE_PARAM_TYPES[] = {
-        ParamTypeEnum.X, // 1
-        ParamTypeEnum.Y, // 2
-        ParamTypeEnum.VXI, // 3
-        ParamTypeEnum.VXJ, // 4
-        ParamTypeEnum.NAME, // 5
-        ParamTypeEnum.NAME, // 6
-        ParamTypeEnum.NAME // 7
+//    private static final String MYSQL_UPDATE_STRING
+//            = "update Point p, Vector vx, Vector vz "
+//            + " set p.hasPoint_X = ?, p.hasPoint_Y = ?, vx.hasVector_I = ?, vx.hasVector_J = ?"
+//            + ", vx.hasVector_K=0, vz.hasVector_I=0,vz.hasVector_J=0,vz.hasVector_K=1"
+//            + " where p._NAME = ("
+//            + " select hasPoseLocation_Point from PoseLocation"
+//            + " where _NAME =  ("
+//            + "  select hasSolidObject_PrimaryLocation from SolidObject"
+//            + " where _NAME = ? ) )"
+//            + " and "
+//            + "  vx._NAME = ("
+//            + " select hasPoseLocation_XAxis from PoseLocation "
+//            + " where _NAME =  ("
+//            + " select hasSolidObject_PrimaryLocation from SolidObject"
+//            + " where _NAME = ? ) )"
+//            + " and "
+//            + "  vz._NAME = ("
+//            + " select hasPoseLocation_ZAxis from PoseLocation "
+//            + " where _NAME =  ("
+//            + " select hasSolidObject_PrimaryLocation from SolidObject"
+//            + " where _NAME = ? ) )";
+    private static final DbParamTypeEnum MYSQL_UPDATE_PARAM_TYPES[] = {
+        DbParamTypeEnum.X, // 1
+        DbParamTypeEnum.Y, // 2
+        DbParamTypeEnum.VXI, // 3
+        DbParamTypeEnum.VXJ, // 4
+        DbParamTypeEnum.NAME, // 5
+        DbParamTypeEnum.NAME, // 6
+        DbParamTypeEnum.NAME // 7
     };
 
-    public static final String NEO4J_MERGE_STATEMENT_STRING = "merge (source:SolidObject { name:{2} })\n"
-            + "merge (source) - [:hasPhysicalLocation_RefObject] -> (pl:PhysicalLocation)\n"
-            + "merge (pl) - [:hasPoseLocation_Pose] -> (pose:PoseLocation)\n"
-            + "merge (pose) - [:hasPose_Point] -> (pt:Point)\n"
-            + "merge (pose) - [:hasPose_XAxis] -> (xaxis:Vector)\n"
-            + "merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)\n"
-            + "set pt.hasPoint_X= {3},pt.hasPoint_Y= {4},pt.hasPoint_Z={5}\n"
-            + "set xaxis.hasVector_I={6}, xaxis.hasVector_J={7}, xaxis.hasVector_K={8}"
-            + "set zaxis.hasVector_I={9}, zaxis.hasVector_J={10},zaxis.hasVector_K={11}\n";
-
-    private static final ParamTypeEnum NEO4J_MERGE_STATEMENT_PARAM_TYPES[] = {
-        ParamTypeEnum.TYPE, // 1
-        ParamTypeEnum.NAME, // 2
-        ParamTypeEnum.X, // 3
-        ParamTypeEnum.Y, // 4
-        ParamTypeEnum.Z, // 5
-        ParamTypeEnum.VXI, // 6
-        ParamTypeEnum.VXJ, // 7
-        ParamTypeEnum.VXK, // 8
-        ParamTypeEnum.VZI, // 9
-        ParamTypeEnum.VZJ, // 10
-        ParamTypeEnum.VZK// 11
+//    public static final String NEO4J_MERGE_STATEMENT_STRING = "merge (source:SolidObject { name:{2} })\n"
+//            + "merge (source) - [:hasPhysicalLocation_RefObject] -> (pl:PhysicalLocation)\n"
+//            + "merge (pl) - [:hasPoseLocation_Pose] -> (pose:PoseLocation)\n"
+//            + "merge (pose) - [:hasPose_Point] -> (pt:Point)\n"
+//            + "merge (pose) - [:hasPose_XAxis] -> (xaxis:Vector)\n"
+//            + "merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)\n"
+//            + "set pt.hasPoint_X= {3},pt.hasPoint_Y= {4},pt.hasPoint_Z={5}\n"
+//            + "set xaxis.hasVector_I={6}, xaxis.hasVector_J={7}, xaxis.hasVector_K={8}"
+//            + "set zaxis.hasVector_I={9}, zaxis.hasVector_J={10},zaxis.hasVector_K={11}\n";
+    private static final DbParamTypeEnum NEO4J_MERGE_STATEMENT_PARAM_TYPES[] = {
+        //        DbParamTypeEnum.TYPE, // 1
+        DbParamTypeEnum.NAME, // 1
+        DbParamTypeEnum.X, // 2
+        DbParamTypeEnum.Y, // 3
+        DbParamTypeEnum.Z, // 4
+        DbParamTypeEnum.VXI, // 5
+        DbParamTypeEnum.VXJ, // 6
+        DbParamTypeEnum.VXK, // 7
+        DbParamTypeEnum.VZI, // 8
+        DbParamTypeEnum.VZJ, // 9
+        DbParamTypeEnum.VZK// 10
 
     };
 
-    private ParamTypeEnum updateParamTypes[] = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
+    private DbParamTypeEnum updateParamTypes[] = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
 
     private boolean debug;
 
@@ -326,20 +341,26 @@ public class DatabasePoseUpdater implements AutoCloseable {
         if (null != displayInterface) {
             debug = displayInterface.isDebug();
         }
-        if(debug) {
-            displayInterface.addLogMessage("Sending query:"+System.lineSeparator());
+        if (debug) {
+            displayInterface.addLogMessage("Sending query:" + System.lineSeparator());
             displayInterface.addLogMessage(queryAllString);
-            displayInterface.addLogMessage(""+System.lineSeparator());
+            displayInterface.addLogMessage("" + System.lineSeparator());
         }
+        List<String> colNames = null;
         try (ResultSet rs = query_all_statement.executeQuery()) {
             if (null != rs) {
+                ResultSetMetaData meta = rs.getMetaData();
+                colNames = new ArrayList<>();
+                for (int colIndex = 1; colIndex < meta.getColumnCount(); colIndex++) {
+                    colNames.add(meta.getColumnName(colIndex));
+                }
                 while (rs.next()) {
                     if (debug) {
                         StringBuilder sb = new StringBuilder();
                         for (int j = 1; j <= rs.getMetaData().getColumnCount(); j++) {
                             String columnName = rs.getMetaData().getColumnName(j);
                             String val = rs.getString(columnName);
-                            String str = "{ (" + j + "/" + rs.getMetaData().getColumnCount() + ") columnName = " + columnName + ", val = " + val+" }, ";
+                            String str = "{ (" + j + "/" + rs.getMetaData().getColumnCount() + ") columnName = " + columnName + ", val = " + val + " }, ";
                             sb.append(str);
                         }
                         if (null != displayInterface) {
@@ -350,13 +371,19 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             fix(rs, "x"),
                             fix(rs, "y"),
                             fix(rs, "z"),
-                            fix(rs, "vxx"),
-                            fix(rs, "vxy")
+                            fix(rs, "vxi"),
+                            fix(rs, "vxj")
                     ));
                 }
             }
         } catch (SQLException sQLException) {
             sQLException.printStackTrace();
+            if (null != displayInterface) {
+                displayInterface.addLogMessage(sQLException.getMessage() + System.lineSeparator());
+                displayInterface.addLogMessage("colNames = " + colNames + System.lineSeparator());
+            } else {
+                System.err.println("colNames = " + colNames);
+            }
         }
         return l;
     }
@@ -435,11 +462,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 }
                 List<Object> paramsList = poseParamsToStatement(ci);
                 if (null != displayInterface && displayInterface.isDebug()) {
-                    displayInterface.addLogMessage("update_statement = \r\n" + update_statement.toString() + "\r\n");
+//                    displayInterface.addLogMessage("update_statement = \r\n" + update_statement.toString() + "\r\n");
 
                     if (debug && dbtype == DbType.NEO4J) {
                         String updateStringFilled
-                                = NEO4J_MERGE_STATEMENT_STRING;
+                                = mergeStatementString;
                         for (int paramIndex = 1; paramIndex < paramsList.size() + 1; paramIndex++) {
                             updateStringFilled
                                     = updateStringFilled.replace("{" + paramIndex + "}", Objects.toString(paramsList.get(paramIndex - 1)));
@@ -454,6 +481,28 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     updates++;
                 } else {
                     boolean exec_result = update_statement.execute();
+                    if (exec_result) {
+                        ResultSet rs = update_statement.getResultSet();
+                        ResultSetMetaData meta = rs.getMetaData();
+                        Map<String, String> resultMap = new LinkedHashMap<>();
+                        for (int j = 1; j <= meta.getColumnCount(); j++) {
+                            String name = meta.getColumnName(j);
+                            String value = rs.getObject(name, Object.class).toString();
+                            resultMap.put(name, value);
+                        }
+                        if (null != displayInterface) {
+                            displayInterface.addLogMessage(resultMap.toString() + System.lineSeparator());
+                        } else {
+                            System.err.println(resultMap.toString());
+                        }
+                        String updateStringFilled
+                                = mergeStatementString;
+                        for (int paramIndex = 1; paramIndex < paramsList.size() + 1; paramIndex++) {
+                            updateStringFilled
+                                    = updateStringFilled.replace("{" + paramIndex + "}", Objects.toString(paramsList.get(paramIndex - 1)));
+                        }
+
+                    }
                     if (null != displayInterface && displayInterface.isDebug()) {
                         displayInterface.addLogMessage("update_statement.execute() returned = " + exec_result + "\r\n");
                         displayInterface.addLogMessage("update_statement.getUpdateCount() returned = " + update_statement.getUpdateCount() + "\r\n");
@@ -539,14 +588,13 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //    int vzkIndexes[] = {};
 //    int nameIndexes[] = {5, 6, 7};
 //    int typeIndexes[] = {};
-    private static enum ParamTypeEnum {
-        TYPE, NAME, X, Y, Z, VXI, VXJ, VXK, VZI, VZJ, VZK;
-    }
-
+//    private static enum DbParamTypeEnum {
+//        TYPE, NAME, X, Y, Z, VXI, VXJ, VXK, VZI, VZJ, VZK;
+//    }
     private List<Object> poseParamsToStatement(DetectedItem item) throws SQLException {
         ArrayList<Object> params = new ArrayList<>();
         for (int i = 0; i < updateParamTypes.length; i++) {
-            ParamTypeEnum paramTypeEnum = updateParamTypes[i];
+            DbParamTypeEnum paramTypeEnum = updateParamTypes[i];
             int index = i + 1;
             switch (paramTypeEnum) {
                 case TYPE:

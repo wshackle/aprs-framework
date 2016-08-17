@@ -26,8 +26,6 @@ package aprs.framework.database;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public enum DbQueryEnum {
-    GET_SINGLE_POSE,
-    SET_SINGLE_POSE,
-    GET_ALL_POSE;
+public enum DbParamTypeEnum {
+    TYPE, NAME, X, Y, Z, VXI, VXJ, VXK, VZI, VZJ, VZK;
 }

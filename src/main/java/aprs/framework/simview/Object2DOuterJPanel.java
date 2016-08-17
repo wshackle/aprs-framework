@@ -163,6 +163,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxConnected = new javax.swing.JCheckBox();
         jLabelHost = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
+        jCheckBoxDebug = new javax.swing.JCheckBox();
         jLabel2 = new javax.swing.JLabel();
         jTextFieldMinXMinY = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
@@ -187,7 +188,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setLayout(object2DJPanel1Layout);
         object2DJPanel1Layout.setHorizontalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 226, Short.MAX_VALUE)
+            .addGap(0, 220, Short.MAX_VALUE)
         );
         object2DJPanel1Layout.setVerticalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -253,6 +254,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         jLabel1.setText("Port:");
 
+        jCheckBoxDebug.setText("Debug");
+        jCheckBoxDebug.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxDebugActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -263,7 +271,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jCheckBoxSimulated)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxConnected))
+                        .addComponent(jCheckBoxConnected)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxDebug))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -280,7 +290,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxSimulated)
-                    .addComponent(jCheckBoxConnected))
+                    .addComponent(jCheckBoxConnected)
+                    .addComponent(jCheckBoxDebug))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
@@ -394,6 +405,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (this.jCheckBoxSimulated.isSelected()) {
                 try {
                     visionSocketServer = new VisionSocketServer(Integer.parseInt(this.jTextFieldPort.getText()));
+                    visionSocketServer.setDebug(this.jCheckBoxDebug.isSelected());
                     visionSocketServer.publishList(getItems());
                 } catch (IOException ex) {
                     Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -516,6 +528,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setMinXMinYText(txt);
     }//GEN-LAST:event_jTextFieldMinXMinYActionPerformed
 
+    private void jCheckBoxDebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxDebugActionPerformed
+       if(null != visionSocketServer) {
+           visionSocketServer.setDebug(this.jCheckBoxDebug.isSelected());
+       }
+    }//GEN-LAST:event_jCheckBoxDebugActionPerformed
+
     public void setMinXMinYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
@@ -533,6 +551,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JButton jButtonAdd;
     private javax.swing.JButton jButtonDelete;
     private javax.swing.JCheckBox jCheckBoxConnected;
+    private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxSimulated;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

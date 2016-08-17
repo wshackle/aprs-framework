@@ -24,6 +24,8 @@ package aprs.framework.spvision;
 
 import aprs.framework.database.AcquireEnum;
 import aprs.framework.database.DatabasePoseUpdater;
+import aprs.framework.database.DbQueryEnum;
+import aprs.framework.database.DbQueryInfo;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
@@ -38,6 +40,7 @@ import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.vector;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dialog;
 import java.awt.Window;
@@ -57,10 +60,14 @@ import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 
 /**
  *
@@ -798,6 +805,45 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             tm.setValueAt(pqe.getZ(), i, 3);
             tm.setValueAt(pqe.getRot(), i, 4);
         }
+        this.autoResizeTableColWidths(jTableFromDatabase);
+    }
+    
+    public void autoResizeTableColWidths(JTable table) {
+
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+        int fullsize = 0;
+        Container parent = table.getParent();
+        if (null != parent) {
+            fullsize = Math.max(parent.getPreferredSize().width, parent.getSize().width);
+        }
+        int sumWidths = 0;
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
+            TableColumn col = colModel.getColumn(i);
+            int width = 0;
+
+            TableCellRenderer renderer = col.getHeaderRenderer();
+            if (renderer == null) {
+                renderer = table.getTableHeader().getDefaultRenderer();
+            }
+            Component headerComp = renderer.getTableCellRendererComponent(table, col.getHeaderValue(),
+                    false, false, 0, i);
+            width = Math.max(width, headerComp.getPreferredSize().width);
+            for (int r = 0; r < table.getRowCount(); r++) {
+                renderer = table.getCellRenderer(r, i);
+                Component comp = renderer.getTableCellRendererComponent(table, table.getValueAt(r, i),
+                        false, false, r, i);
+                width = Math.max(width, comp.getPreferredSize().width);
+            }
+            if (i == table.getColumnCount() - 1) {
+                if (width < fullsize - sumWidths) {
+                    width = fullsize - sumWidths;
+                }
+            }
+            col.setPreferredWidth(width + 2);
+            sumWidths += width + 2;
+        }
     }
 
     public boolean isDebug() {
@@ -813,9 +859,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         } catch (Exception ex) {
 
         }
-        System.out.println("maxLines = " + maxLines);
-        System.out.println("logLines.size() = " + logLines.size());
-        System.out.println("jTextAreaLog.getText().length() = " + jTextAreaLog.getText().length());
+//        System.out.println("maxLines = " + maxLines);
+//        System.out.println("logLines.size() = " + logLines.size());
+//        System.out.println("jTextAreaLog.getText().length() = " + jTextAreaLog.getText().length());
         if (logLines.size() < maxLines) {
             logLines.add(txt);
             jTextAreaLog.append(txt);
@@ -860,6 +906,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (this.jCheckBoxDebug.isSelected()) {
             appendLogDisplay("\nupdateInfo(\n\t_list=" + _list + ",\n\tline =" + line + "\n\t)\r\n");
         }
+        this.autoResizeTableColWidths(jTableFromCognex);
     }
 
 //    private final TableModelListener tableModelListener;
@@ -876,16 +923,22 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public void setDBConnected(boolean _val) {
-//        this.jButtonConnectDB.setEnabled(!_val);
+        try {
+            //        this.jButtonConnectDB.setEnabled(!_val);
 //        this.jButtonDisconnectDB.setEnabled(_val);
-        dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(_val).build());
-        this.jLabelDatabaseStatus.setText(_val ? "CONNECTED" : "DISCONNECTED");
-        this.jLabelDatabaseStatus.setBackground(_val ? Color.GREEN : Color.RED);
-        if (_val) {
-            VisionSocketClient visionClient = Main.getVisionSocketClient();
-            if (null != visionClient) {
-                visionClient.publishVisionList(Main.getDatabasePoseUpdater(), this);
+            dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(_val).build());
+            this.jLabelDatabaseStatus.setText(_val ? "CONNECTED" : "DISCONNECTED");
+            this.jLabelDatabaseStatus.setBackground(_val ? Color.GREEN : Color.RED);
+            if (_val) {
+                VisionSocketClient visionClient = Main.getVisionSocketClient();
+                if (null != visionClient) {
+                    visionClient.publishVisionList(Main.getDatabasePoseUpdater(), this);
+                }
             }
+        } catch (IOException ex) {
+            this.jLabelDatabaseStatus.setText( "DISCONNECTED");
+            this.jLabelDatabaseStatus.setBackground( Color.RED);
+            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -954,10 +1007,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.jTextFieldAcquire.setText(s);
     }
 
-    public void connectDB() {
+    public void connectDB(Map<DbQueryEnum,DbQueryInfo> queriesMap) {
         try {
             Map<String, String> argsMap = updateArgsMap();
-            Main.connectDB(argsMap);
+            Main.connectDB(argsMap,queriesMap);
 //            DbSetup curSetup = dbSetupPublisher.getDbSetup();
 //            saveProperties(curSetup.getDbType(), curSetup.getHost(), curSetup.getPort());
         } catch (Exception exception) {
@@ -1015,7 +1068,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             addLogMessage(exception);
         }
     }
-    
+
     private void jButtonConnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectVisionActionPerformed
         connectVision();
     }//GEN-LAST:event_jButtonConnectVisionActionPerformed
@@ -1290,9 +1343,15 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     @Override
     public void setSqlConnection(Connection connection, DbType dbtype) throws SQLException {
-        Main.closeDatabasePoseUpdater();
-        Main.setDatabasePoseUpdater(new DatabasePoseUpdater(connection, dbtype, true,dbSetupPublisher.getDbSetup().getQueriesMap()));
-        dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).type(dbtype).build());
+        try {
+            Main.closeDatabasePoseUpdater();
+            Main.setDatabasePoseUpdater(new DatabasePoseUpdater(connection, dbtype, true,
+                    dbSetupPublisher.getDbSetup().getQueriesMap()));
+            dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).type(dbtype).build());
+        } catch (IOException ex) {
+            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Main.closeDatabasePoseUpdater();
+        }
     }
 
     @Override
@@ -1302,9 +1361,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             DbType dupDbType = dup.getDbType();
             DbSetup curSetup = dbSetupPublisher.getDbSetup();
             if (dupDbType != curSetup.getDbType()) {
-                this.oldDbType = null;
-                dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(curSetup).type(dupDbType).build());
+                try {
+                    this.oldDbType = null;
+                    dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(curSetup).type(dupDbType).build());
 //                this.jComboBoxDbType.setSelectedItem(dupDbType);
+                } catch (IOException ex) {
+                    Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
             return dupDbType;
         }
@@ -1317,7 +1380,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void accept(DbSetup setup) {
         if (setup.isConnected()) {
             if (lastSetup == null || !lastSetup.isConnected()) {
-                connectDB();
+                connectDB(setup.getQueriesMap());
                 lastSetup = setup;
                 oldDbType = setup.getDbType();
                 return;
@@ -1345,7 +1408,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         } catch (Exception exception) {
             addLogMessage(exception);
         }
-        ;
     }
 
 }

@@ -219,7 +219,8 @@ public class Main {
         }
     }
 
-    public static void connectDB(Map<String, String> argsMap) {
+    public static void connectDB(Map<String, String> argsMap,
+                                 Map<DbQueryEnum,DbQueryInfo> queriesMap) {
         try {
             closeDB();
             DbType type =  DbType.valueOf(argsMap.get("--dbtype"));
@@ -229,7 +230,7 @@ public class Main {
                     argsMap.get("--dbuser"),
                     argsMap.get("--dbpasswd"),
                     type, 
-                    DbSetupBuilder.getDefaultQueriesMap(type)
+                    queriesMap
             );
             if (null != displayInterface) {
                 displayInterface.setDBConnected(true);
@@ -372,7 +373,8 @@ public class Main {
             if (Boolean.valueOf(argsMap.get("--showgui"))) {
                 guiShow();
             }
-            connectDB(argsMap);
+            DbType type =  DbType.valueOf(argsMap.get("--dbtype"));
+            connectDB(argsMap,DbSetupBuilder.getDefaultQueriesMap(type));
             startVision(argsMap);
         } catch (Exception exception) {
             exception.printStackTrace();

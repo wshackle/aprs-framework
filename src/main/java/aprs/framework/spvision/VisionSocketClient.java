@@ -145,6 +145,7 @@ public class VisionSocketClient implements AutoCloseable {
                     Short.valueOf(argsMap.get("--visionport")),
                     "visionReader", new SocketLineReader.CallBack() {
 
+                private String lastSkippedLine = null;
                 @Override
                 public void call(final String line, PrintStream os) {
                     if (!parsing_line) {
@@ -154,9 +155,16 @@ public class VisionSocketClient implements AutoCloseable {
                             @Override
                             public void run() {
                                 parseVisionLine(line);
+                                if(null != lastSkippedLine) {
+                                    String skippedLine = lastSkippedLine;
+                                    lastSkippedLine = null;
+                                    parseVisionLine(skippedLine);
+                                }
                                 parsing_line = false;
                             }
                         });
+                    } else {
+                        lastSkippedLine = line;
                     }
                 }
             });

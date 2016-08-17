@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.ProtectionDomain;
 import java.sql.Connection;
@@ -53,8 +54,11 @@ public class DbSetupBuilder {
     private String user = "neo4j";
     private String dbname = "";
     private boolean connected = false;
+    private Map<DbQueryEnum, DbQueryInfo> queriesMap;
+    private boolean internalQueriesResourceDir;
+    private String queriesDir;
 
-    public static Map<DbQueryEnum, String> getDefaultQueriesMap(DbType type) {
+    public static Map<DbQueryEnum, DbQueryInfo> getDefaultQueriesMap(DbType type) {
         switch (type) {
             case NEO4J:
                 return NEO4J_DEFAULT_QUERIES_MAP;
@@ -65,28 +69,59 @@ public class DbSetupBuilder {
         throw new IllegalArgumentException("No default queries map for " + type);
     }
 
-    private static Map<DbQueryEnum, String> NEO4J_DEFAULT_QUERIES_MAP;
-    private static Map<DbQueryEnum, String> MYSQL_DEFAULT_QUERIES_MAP;
-
+    private static Map<DbQueryEnum, DbQueryInfo> NEO4J_DEFAULT_QUERIES_MAP;
+    private static Map<DbQueryEnum, DbQueryInfo> MYSQL_DEFAULT_QUERIES_MAP;
+    private static final String  BASE_RESOURCE_DIR="aprs/framework/database/";
     static {
         try {
-            Map<DbQueryEnum, String> map = new EnumMap<DbQueryEnum, String>(DbQueryEnum.class);
-            for(DbQueryEnum q : DbQueryEnum.values()) {
-                map.put(q, getStringResource("aprs/framework/database/neo4j/"+q.toString().toLowerCase()+".txt"));
-            }
+            String resDir = "neo4j/v1/";
+            Map<DbQueryEnum, DbQueryInfo> map = readRelResourceQueriesDirectory(resDir);
             NEO4J_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
         } catch (IOException ex) {
             Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
-            Map<DbQueryEnum, String> map = new EnumMap<DbQueryEnum, String>(DbQueryEnum.class);
-            for(DbQueryEnum q : DbQueryEnum.values()) {
-                map.put(q, getStringResource("aprs/framework/database/neo4j/"+q.toString().toLowerCase()+".txt"));
-            }
+            String resDir = "mysql/";
+            Map<DbQueryEnum, DbQueryInfo> map = readRelResourceQueriesDirectory(resDir);
             MYSQL_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
         } catch (IOException ex) {
             Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public static Map<DbQueryEnum, DbQueryInfo> readRelResourceQueriesDirectory(String resDir) throws IOException {
+        if(BASE_RESOURCE_DIR.endsWith("/") && resDir.startsWith("/")) {
+            resDir = resDir.substring(1);
+        }
+        if(!BASE_RESOURCE_DIR.endsWith("/") && !resDir.startsWith("/")) {
+            resDir = "/"+resDir;
+        }
+        if(!resDir.endsWith("/")) {
+            resDir = resDir +"/";
+        }
+        return readResourceQueriesDirectory(BASE_RESOURCE_DIR+resDir);
+    }
+
+    public static Map<DbQueryEnum, DbQueryInfo> readResourceQueriesDirectory(String resDir) throws IOException {
+        Map<DbQueryEnum, DbQueryInfo> map = new EnumMap<>(DbQueryEnum.class);
+        for (DbQueryEnum q : DbQueryEnum.values()) {
+            String resName = resDir + q.toString().toLowerCase() + ".txt";
+            String txt = getStringResource(resName);
+            DbQueryInfo info = DbQueryInfo.parse(txt);
+            map.put(q, info);
+        }
+        return map;
+    }
+
+    public static Map<DbQueryEnum, DbQueryInfo> readQueriesDirectory(String resDir) throws IOException {
+        Map<DbQueryEnum, DbQueryInfo> map = new EnumMap<>(DbQueryEnum.class);
+        for (DbQueryEnum q : DbQueryEnum.values()) {
+            String resName = resDir + File.separator + q.toString().toLowerCase() + ".txt";
+            String txt = getStringFromFile(resName);
+            DbQueryInfo info = DbQueryInfo.parse(txt);
+            map.put(q, info);
+        }
+        return map;
     }
 
 //    {
@@ -110,7 +145,25 @@ public class DbSetupBuilder {
     private static String getStringResource(String name) throws IOException {
         ClassLoader cl = ClassLoader.getSystemClassLoader();
         StringBuilder sb = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(cl.getResourceAsStream(name), "UTF-8"))) {
+        try (InputStream stream = cl.getResourceAsStream(name)) {
+            if(null == stream) {
+                throw new IllegalArgumentException("No resource found for name="+name);
+            }
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"))) {
+                String line = null;
+                while (null != (line = br.readLine())) {
+                    sb.append(line);
+                    sb.append(System.lineSeparator());
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String getStringFromFile(String name) throws IOException {
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new FileReader(name))) {
             String line = null;
             while (null != (line = br.readLine())) {
                 sb.append(line);
@@ -122,14 +175,16 @@ public class DbSetupBuilder {
 
     private static class DbSetupInternal implements DbSetup {
 
-        final DbType type;
-        final String host;
-        final int port;
-        final char[] passwd;
-        final String user;
-        final String dbname;
-        final boolean connected;
-        final Map<DbQueryEnum, String> queriesMap;
+        private final DbType type;
+        private final String host;
+        private final int port;
+        private final char[] passwd;
+        private final String user;
+        private final String dbname;
+        private final boolean connected;
+        private final Map<DbQueryEnum, DbQueryInfo> queriesMap;
+        private final boolean internalQueriesResourceDir;
+        private final String queriesDir;
 
         private DbSetupInternal(
                 DbType type,
@@ -139,8 +194,9 @@ public class DbSetupBuilder {
                 String user,
                 String dbname,
                 boolean connected,
-                Map<DbQueryEnum, String> queriesMap
-        ) {
+                Map<DbQueryEnum, DbQueryInfo> queriesMap,
+                boolean internalQueriesResourceDir,
+                String queriesDir) {
             this.type = type;
             this.host = host;
             this.port = port;
@@ -149,6 +205,8 @@ public class DbSetupBuilder {
             this.dbname = dbname;
             this.connected = connected;
             this.queriesMap = queriesMap;
+            this.internalQueriesResourceDir = internalQueriesResourceDir;
+            this.queriesDir = queriesDir;
         }
 
         @Override
@@ -187,13 +245,23 @@ public class DbSetupBuilder {
         }
 
         @Override
-        public Map<DbQueryEnum, String> getQueriesMap() {
+        public Map<DbQueryEnum, DbQueryInfo> getQueriesMap() {
             return queriesMap;
+        }
+
+        @Override
+        public boolean isInternalQueriesResourceDir() {
+            return internalQueriesResourceDir;
+        }
+
+        @Override
+        public String getQueriesDir() {
+            return queriesDir;
         }
 
     }
 
-    public DbSetupBuilder setup(DbSetup setup) {
+    public DbSetupBuilder setup(DbSetup setup) throws IOException {
         type = setup.getDbType();
         host = setup.getHost();
         dbname = setup.getDbName();
@@ -201,12 +269,31 @@ public class DbSetupBuilder {
         connected = setup.isConnected();
         port = setup.getPort();
         passwd = setup.getDbPassword();
+        internalQueriesResourceDir = setup.isInternalQueriesResourceDir();
+        queriesDir = setup.getQueriesDir();
+        queriesMap = setup.getQueriesMap();
+        if (null == queriesMap) {
+            if (internalQueriesResourceDir) {
+                queriesMap = readRelResourceQueriesDirectory(queriesDir);
+            } else {
+                queriesMap = readQueriesDirectory(queriesDir);
+            }
+        }
         return this;
     }
 
     public DbSetup build() {
-        return new DbSetupInternal(type, host, port, passwd, user, dbname, connected,
-                Collections.unmodifiableMap(NEO4J_DEFAULT_QUERIES_MAP));
+        return new DbSetupInternal(
+                type,
+                host,
+                port,
+                passwd,
+                user,
+                dbname,
+                connected,
+                ((queriesMap != null) ? Collections.unmodifiableMap(queriesMap) : null),
+                internalQueriesResourceDir,
+                queriesDir);
     }
 
     public DbSetupBuilder type(DbType type) {
@@ -242,6 +329,18 @@ public class DbSetupBuilder {
         return this;
     }
 
+    public DbSetupBuilder queriesDir(String queriesDir) {
+        if (null != queriesDir) {
+            this.queriesDir = queriesDir;
+        }
+        return this;
+    }
+
+    public DbSetupBuilder internalQueriesResourceDir(boolean internalQueriesResourceDir) {
+        this.internalQueriesResourceDir = internalQueriesResourceDir;
+        return this;
+    }
+
     public DbSetupBuilder dbname(String dbname) {
         if (null != dbname) {
             this.dbname = dbname;
@@ -254,8 +353,8 @@ public class DbSetupBuilder {
         return this;
     }
 
-    public DbSetupBuilder queriesMap(Map<DbQueryEnum, String> queriesMap) {
-        this.NEO4J_DEFAULT_QUERIES_MAP = queriesMap;
+    public DbSetupBuilder queriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
+        this.queriesMap = queriesMap;
         return this;
     }
 
@@ -300,7 +399,10 @@ public class DbSetupBuilder {
         return updateFromArgs(_argsMap, dbtype, host, port);
     }
 
-    private DbSetupBuilder updateFromArgs(Map<String, String> _argsMap, DbType dbtype, String host, int port) {
+    private DbSetupBuilder updateFromArgs(Map<String, String> _argsMap,
+                                          DbType dbtype,
+                                          String host,
+                                          int port) {
         DbSetupBuilder builder = this;
         String dbHostPort = String.format("%s.%s_%d", dbtype.toString(), host, port);
         String dbSpecificName = _argsMap.get(dbHostPort + ".name");
@@ -329,6 +431,26 @@ public class DbSetupBuilder {
             String dbPasswd = _argsMap.get("--dbpasswd");
             if (null != dbPasswd) {
                 builder = builder.passwd(dbPasswd.toCharArray());
+            }
+        }
+        String dbSpecificQueriesDir = _argsMap.get(dbHostPort + ".queriesDir");
+        if (null != dbSpecificQueriesDir) {
+            builder = builder.queriesDir(dbSpecificQueriesDir);
+        } else {
+            String queriesDir = _argsMap.get("--queriesDir");
+            if (null != queriesDir) {
+                builder = builder.queriesDir(queriesDir);
+            }
+        }
+        String dbSpecificInternalQueriesResourceDirString
+                = _argsMap.get(dbHostPort + ".internalQueriesResourceDir");
+        if (null != dbSpecificQueriesDir) {
+            builder = builder.internalQueriesResourceDir(Boolean.valueOf(dbSpecificInternalQueriesResourceDirString));
+        } else {
+            String internalQueriesResourceDiriesDirString
+                    = _argsMap.get("--internalQueriesResourceDir");
+            if (null != internalQueriesResourceDiriesDirString) {
+                builder = builder.internalQueriesResourceDir(Boolean.valueOf(internalQueriesResourceDiriesDirString));
             }
         }
         return builder;
@@ -473,6 +595,12 @@ public class DbSetupBuilder {
             props.put(dbHostPort + ".name", setup.getDbName());
             props.put(dbHostPort + ".user", setup.getDbUser());
             props.put(dbHostPort + ".passwd", new String(setup.getDbPassword()));
+            props.put(dbHostPort + ".internalQueriesResourceDir",
+                    Boolean.toString(setup.isInternalQueriesResourceDir()));
+            String queriesDir = setup.getQueriesDir();
+            if (null != queriesDir) {
+                props.put(dbHostPort + ".queriesDir", setup.getQueriesDir());
+            }
             try (FileWriter fw = new FileWriter(propertiesFile)) {
                 props.store(fw, "");
             } catch (IOException ex) {

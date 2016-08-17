@@ -29,7 +29,9 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  *
@@ -37,26 +39,53 @@ import java.util.Map;
  */
 public class QuerySet implements QuerySetInterface {
 
-    public QuerySet(DbType dbtype, java.sql.Connection con, Map<DbQueryEnum, String> queriesMap) throws SQLException {
+    public QuerySet(
+            DbType dbtype,
+            java.sql.Connection con,
+            Map<DbQueryEnum, DbQueryInfo> queriesMap) throws SQLException {
         this.dbtype = dbtype;
-        getPoseQueryString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE);
+        if(null == queriesMap) {
+            throw new IllegalArgumentException("queriesMap is null");
+        }
+        this.setQueryInfo = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE);
+        if(null == setQueryInfo) {
+            throw new IllegalArgumentException("queriesMap has no entry for "+DbQueryEnum.SET_SINGLE_POSE);
+        }
+        this.getQueryInfo = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE);
+        if(null == getQueryInfo) {
+            throw new IllegalArgumentException("queriesMap has no entry for "+DbQueryEnum.GET_SINGLE_POSE);
+        }
+        String getPoseQueryString = getQueryInfo.getQuery();
         if (null == getPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain getPose");
         }
         getPoseStatement = con.prepareStatement(getPoseQueryString);
-        setPoseQueryString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE);
+        String setPoseQueryString = setQueryInfo.getQuery();
         if (null == setPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain setPose");
         }
         setPoseStatement = con.prepareStatement(setPoseQueryString);
+        this.queriesMap = queriesMap;
+        
     }
 
     private final DbType dbtype;
+    private final Map<DbQueryEnum, DbQueryInfo> queriesMap;
     java.sql.PreparedStatement getPoseStatement;
-    private final String getPoseQueryString;
     java.sql.PreparedStatement setPoseStatement;
-    private final String setPoseQueryString;
+
     private boolean closed = false;
+
+    private String getQueryFormat() {
+        switch (dbtype) {
+            case MYSQL:
+                return "?";
+
+            case NEO4J:
+                return "{%d}";
+        }
+        throw new IllegalStateException("no query format for dbtype=" + dbtype);
+    }
 
     private static String trimQuotes(String s) {
         if (s != null && s.startsWith("\"") && s.endsWith("\"")) {
@@ -66,16 +95,76 @@ public class QuerySet implements QuerySetInterface {
         }
     }
 
+    private void setQueryStringParam(java.sql.PreparedStatement stmnt,
+                                     DbQueryInfo queryInfo,
+                                     DbParamTypeEnum type,
+                                     String value,
+                                     Map<Integer, Object> map) throws SQLException {
+
+        if (!queryInfo.getParamPosMap().containsKey(type)) {
+            throw new IllegalArgumentException("No entry for type=" + type + " in params=" + Arrays.toString(queryInfo.getParams()));
+        }
+        int index = queryInfo.getParamPosMap().get(type);
+        if (null != map) {
+            map.put(index, value);
+        }
+        stmnt.setString(index, value);
+
+    }
+
+    private void setQueryDoubleParam(java.sql.PreparedStatement stmnt,
+                                     DbQueryInfo queryInfo,
+                                     DbParamTypeEnum type,
+                                     double value,
+                                     Map<Integer, Object> map) throws SQLException {
+
+        if (!queryInfo.getParamPosMap().containsKey(type)) {
+            throw new IllegalArgumentException("No entry for type=" + type + " in params=" + Arrays.toString(queryInfo.getParams()));
+        }
+        int index = queryInfo.getParamPosMap().get(type);
+        if (null != map) {
+            map.put(index, value);
+        }
+        stmnt.setDouble(index, value);
+    }
+
+    private String createExpectedQueryString(
+            DbQueryInfo queryInfo,
+            Map<Integer, Object> map
+    ) throws SQLException {
+        String queryFormat = getQueryFormat();
+        DbParamTypeEnum paramTypes[] = queryInfo.getParams();
+        String qString = queryInfo.getQuery();
+        for (int i = 0; i < paramTypes.length; i++) {
+            qString = qString.replace(String.format(queryFormat, i), map.get(i).toString());
+        }
+        return qString;
+    }
+
+    private String getQueryResultString(ResultSet rs, DbQueryInfo queryInfo, DbParamTypeEnum type) throws SQLException {
+        String qname = queryInfo.getResults().get(type);
+        if (Character.isDigit(qname.charAt(0))) {
+            int index = Integer.valueOf(qname);
+            return rs.getString(index);
+        }
+        return rs.getString(qname);
+    }
+
+    private String getPoseQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+        return getQueryResultString(rs, getQueryInfo, type);
+    }
+
     @Override
     public PoseType getPose(String name) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
         PoseType pose = new PoseType();
-
-        getPoseStatement.setString(1, name);
-        String simQuery = getPoseQueryString
-                .replace("{1}", name);
+        Map<Integer, Object> map = new TreeMap<>();
+        DbQueryInfo getPoseQueryInfo = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE);
+        setQueryStringParam(getPoseStatement, getPoseQueryInfo, DbParamTypeEnum.NAME, name, map);
+//        getPoseStatement.setString(1, name);
+        String simQuery = createExpectedQueryString(getPoseQueryInfo, map);
         System.out.println("simQuery = " + simQuery);
         try (ResultSet rs = getPoseStatement.executeQuery()) {
             if (rs.next()) {
@@ -89,45 +178,45 @@ public class QuerySet implements QuerySetInterface {
                     Object o = rs.getObject(j);
                     System.out.println("o = " + o);
                 }
-                String nameCheckString = rs.getString(1);
+                String nameCheckString = getPoseQueryResultString(rs, DbParamTypeEnum.NAME);
                 System.out.println("nameCheckString = " + nameCheckString);
                 if (!nameCheckString.equals(name)) {
                     throw new IllegalStateException("returned name " + nameCheckString + " does not match requested name " + name);
                 }
-                String xString = trimQuotes(rs.getString(2));
+                String xString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.X));
                 System.out.println("xString = " + xString);
                 PointType point = new PointType();
                 point.setX(new BigDecimal(xString));
-                String yString = trimQuotes(rs.getString(3));
+                String yString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Y));
                 System.out.println("yString = " + yString);
                 point.setY(new BigDecimal(yString));
-                String zString = trimQuotes(rs.getString(4));
+                String zString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Z));
                 System.out.println("zString = " + zString);
-                if(null != zString) {
+                if (null != zString) {
                     point.setZ(new BigDecimal(zString));
                 } else {
                     point.setZ(BigDecimal.ZERO);
                 }
                 pose.setPoint(point);
                 VectorType xAxis = new VectorType();
-                String vxiString = trimQuotes(rs.getString(5));
+                String vxiString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXI));
                 System.out.println("vxiString = " + vxiString);
                 xAxis.setI(new BigDecimal(vxiString));
-                String vxjString = trimQuotes(rs.getString(6));
+                String vxjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXJ));
                 System.out.println("vxiString = " + vxjString);
                 xAxis.setJ(new BigDecimal(vxjString));
-                String vxkString = trimQuotes(rs.getString(7));
+                String vxkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXK));
                 System.out.println("vxkString = " + vxkString);
                 xAxis.setK(new BigDecimal(vxkString));
                 pose.setXAxis(xAxis);
                 VectorType zAxis = new VectorType();
-                String vziString = trimQuotes(rs.getString(8));
+                String vziString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZI));
                 System.out.println("vziString = " + vziString);
                 zAxis.setI(new BigDecimal(vziString));
-                String vzjString = trimQuotes(rs.getString(9));
+                String vzjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZJ));
                 System.out.println("vziString = " + vzjString);
                 zAxis.setJ(new BigDecimal(vzjString));
-                String vzkString = trimQuotes(rs.getString(10));
+                String vzkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZK));
                 System.out.println("vzkString = " + vzkString);
                 zAxis.setK(new BigDecimal(vzkString));
                 pose.setZAxis(zAxis);
@@ -168,6 +257,20 @@ public class QuerySet implements QuerySetInterface {
         super.finalize(); //To change body of generated methods, choose Tools | Templates.
     }
 
+    private final DbQueryInfo setQueryInfo;
+    private final DbQueryInfo getQueryInfo;
+
+    private void setPoseQueryStringParam(DbParamTypeEnum type, String value, Map<Integer, Object> map) throws SQLException {
+        setQueryStringParam(setPoseStatement, setQueryInfo, type, value, map);
+    }
+
+//    private void setPoseQueryDoubleParam(DbParamTypeEnum type, double value, Map<Integer, Object> map) throws SQLException {
+//        setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value, map);
+//    }
+    private void setPoseQueryDoubleParam(DbParamTypeEnum type, BigDecimal value, Map<Integer, Object> map) throws SQLException {
+        setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value.doubleValue(), map);
+    }
+
     @Override
     public void setPose(String name, PoseType pose) throws SQLException {
         if (closed) {
@@ -177,26 +280,33 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("pose must not be null and must not have null point,xaxis or zaxis");
         }
         setPoseStatement.setString(1, name);
-        setPoseStatement.setDouble(2, pose.getPoint().getX().doubleValue());
-        setPoseStatement.setDouble(3, pose.getPoint().getY().doubleValue());
-        setPoseStatement.setDouble(4, pose.getPoint().getZ().doubleValue());
-        setPoseStatement.setDouble(5, pose.getXAxis().getI().doubleValue());
-        setPoseStatement.setDouble(6, pose.getXAxis().getJ().doubleValue());
-        setPoseStatement.setDouble(7, pose.getXAxis().getK().doubleValue());
-        setPoseStatement.setDouble(8, pose.getZAxis().getI().doubleValue());
-        setPoseStatement.setDouble(9, pose.getZAxis().getJ().doubleValue());
-        setPoseStatement.setDouble(10, pose.getZAxis().getK().doubleValue());
-        String simQuery = setPoseQueryString
-                .replace("{1}", name)
-                .replace("{2}", pose.getPoint().getX().toString())
-                .replace("{3}", pose.getPoint().getY().toString())
-                .replace("{4}", pose.getPoint().getZ().toString())
-                .replace("{5}", pose.getXAxis().getI().toString())
-                .replace("{6}", pose.getXAxis().getJ().toString())
-                .replace("{7}", pose.getXAxis().getK().toString())
-                .replace("{8}", pose.getZAxis().getI().toString())
-                .replace("{9}", pose.getZAxis().getJ().toString())
-                .replace("{10}", pose.getZAxis().getK().toString());
+
+        Map<Integer, Object> map = new TreeMap<>();
+        setPoseQueryStringParam(DbParamTypeEnum.NAME, name, map);
+        PointType point = pose.getPoint();
+        setPoseQueryDoubleParam(DbParamTypeEnum.X, point.getX(), map);
+        setPoseQueryDoubleParam(DbParamTypeEnum.Y, point.getY(), map);
+        setPoseQueryDoubleParam(DbParamTypeEnum.Z, point.getZ(), map);
+        VectorType xAxis = pose.getXAxis();
+        setPoseQueryDoubleParam(DbParamTypeEnum.VXI, xAxis.getI(), map);
+        setPoseQueryDoubleParam(DbParamTypeEnum.VXJ, xAxis.getJ(), map);
+        setPoseQueryDoubleParam(DbParamTypeEnum.VXK, xAxis.getK(), map);
+        VectorType zAxis = pose.getZAxis();
+        setPoseQueryDoubleParam(DbParamTypeEnum.VZI, zAxis.getI(), map);
+        setPoseQueryDoubleParam(DbParamTypeEnum.VZJ, zAxis.getJ(), map);
+        setPoseQueryDoubleParam(DbParamTypeEnum.VZK, zAxis.getK(), map);
+//        String simQuery = setPoseQueryString
+//                .replace("{1}", name)
+//                .replace("{2}", pose.getPoint().getX().toString())
+//                .replace("{3}", pose.getPoint().getY().toString())
+//                .replace("{4}", pose.getPoint().getZ().toString())
+//                .replace("{5}", pose.getXAxis().getI().toString())
+//                .replace("{6}", pose.getXAxis().getJ().toString())
+//                .replace("{7}", pose.getXAxis().getK().toString())
+//                .replace("{8}", pose.getZAxis().getI().toString())
+//                .replace("{9}", pose.getZAxis().getJ().toString())
+//                .replace("{10}", pose.getZAxis().getK().toString());
+        String simQuery = createExpectedQueryString(setQueryInfo, map);
         System.out.println("simQuery = " + simQuery);
         int update_count = setPoseStatement.executeUpdate();
         System.out.println("update_count = " + update_count);
@@ -235,5 +345,4 @@ public class QuerySet implements QuerySetInterface {
 //        PoseType poseOut = qs.getPose("robot_1");
 //        System.out.println("poseOut = " + CRCLPosemath.toString(poseOut));
 //    }
-
 }

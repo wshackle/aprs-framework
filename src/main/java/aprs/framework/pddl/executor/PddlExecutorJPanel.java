@@ -481,7 +481,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public void processActions() {
-        generateCrcl();
+        try {
+            generateCrcl();
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void loadActionsFile(File f) throws IOException {
@@ -760,7 +764,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void jButtonGenerateCRCLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGenerateCRCLActionPerformed
 
-        generateCrcl();
+        try {
+            generateCrcl();
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jButtonGenerateCRCLActionPerformed
 
     private void jButtonPddlOutputViewEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlOutputViewEditActionPerformed
@@ -812,7 +820,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         this.autoResizeTableColWidths(jTablePddlOutput);
     }
 
-    private void generateCrcl() {
+    private void generateCrcl() throws IOException {
         if (null != dbSetupSupplier) {
             try {
                 dbSetupPublisher = dbSetupSupplier.call();
@@ -986,7 +994,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     = new javax.swing.Timer(200, new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            generateCrcl();
+                            try {
+                                generateCrcl();
+                            } catch (IOException ex) {
+                                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         }
                     });
             tmr.setRepeats(false);

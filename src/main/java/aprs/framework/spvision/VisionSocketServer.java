@@ -25,6 +25,7 @@ package aprs.framework.spvision;
 import aprs.framework.database.DetectedItem;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -130,6 +131,26 @@ public class VisionSocketServer implements AutoCloseable {
         return sb.toString();
     }
     
+        private boolean debug = false;
+
+    /**
+     * Get the value of debug
+     *
+     * @return the value of debug
+     */
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /**
+     * Set the value of debug
+     *
+     * @param debug new value of debug
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
     public void publishList(List<DetectedItem> list) {
         bytesToSend = listToLine(list).getBytes();
         publishService.submit(new Runnable() {
@@ -140,6 +161,13 @@ public class VisionSocketServer implements AutoCloseable {
                         Socket client = clients.get(i);
                         if (null != client) {
                             try {
+                                if(debug) {
+                                    System.out.println(String.format("Sending %d bytes to %s:%d : %s",
+                                            bytesToSend.length,
+                                            ((InetSocketAddress)client.getRemoteSocketAddress()).getHostString(),
+                                            ((InetSocketAddress)client.getRemoteSocketAddress()).getPort(),
+                                            new String(bytesToSend)));
+                                }
                                 client.getOutputStream().write(bytesToSend);
                             } catch (IOException ex) {
                                 Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
