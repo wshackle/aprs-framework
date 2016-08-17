@@ -59,6 +59,10 @@ For Windows:
 
     run.bat
 
+Menu
+====
+
+
 
 Views
 =====
@@ -67,4 +71,28 @@ Log/Error Display View
 ----------------------
 
 ![Screenshot of GUI with Error/Info Log Window](/Screenshots/Screenshot_Error_Info_Log.png?raw=true)
+
+The default starting screen shows the log of text. Some messages may be useful 
+in determining what activities have started, completed or have failed. Depending
+ on what options were saved the last time the application was run the  application
+may need to connect to an external database server, vision system or robot. Messages
+here can help determine if those systems could be connected to as expected.
+
+Database Setup View
+-------------------
+
+![Screenshot of GUI with Database Setup Log Window](/Screenshots/Screenshot_Database_Setup.png?raw=true)
+
+Several other modules need to connect to a database to store/retrieve information
+on the state of the robot, part designs, part locations etc.  Two database drivers
+are currently built-in Neo4J and MySQL. An option to add custom drivers may be 
+added in the future.  Data to connect to one of these databases may be entered here 
+and saved locally to be reused on subsequent startups using the menu option File->Save Properties.. 
+Even databases from the same vendor may have the same information stored in tables
+ or graphs organized differently. To allow different schemas to be used the queries 
+are stored in separate text files and can be edited here for testing. The queries
+that are built into the application are in internal resource directories. Changes
+here will not be preserved over a restart without recompiling the application.
+
+
 

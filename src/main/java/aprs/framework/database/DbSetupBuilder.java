@@ -55,7 +55,7 @@ public class DbSetupBuilder {
     private String dbname = "";
     private boolean connected = false;
     private Map<DbQueryEnum, DbQueryInfo> queriesMap;
-    private boolean internalQueriesResourceDir=true;
+    private boolean internalQueriesResourceDir = true;
     private String queriesDir;
 
     public static Map<DbQueryEnum, DbQueryInfo> getDefaultQueriesMap(DbType type) {
@@ -71,7 +71,8 @@ public class DbSetupBuilder {
 
     private static Map<DbQueryEnum, DbQueryInfo> NEO4J_DEFAULT_QUERIES_MAP;
     private static Map<DbQueryEnum, DbQueryInfo> MYSQL_DEFAULT_QUERIES_MAP;
-    private static final String  BASE_RESOURCE_DIR="aprs/framework/database/";
+    private static final String BASE_RESOURCE_DIR = "aprs/framework/database/";
+
     static {
         try {
             String resDir = "neo4j/v1/";
@@ -88,18 +89,18 @@ public class DbSetupBuilder {
             Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public static Map<DbQueryEnum, DbQueryInfo> readRelResourceQueriesDirectory(String resDir) throws IOException {
-        if(BASE_RESOURCE_DIR.endsWith("/") && resDir.startsWith("/")) {
+        if (BASE_RESOURCE_DIR.endsWith("/") && resDir.startsWith("/")) {
             resDir = resDir.substring(1);
         }
-        if(!BASE_RESOURCE_DIR.endsWith("/") && !resDir.startsWith("/")) {
-            resDir = "/"+resDir;
+        if (!BASE_RESOURCE_DIR.endsWith("/") && !resDir.startsWith("/")) {
+            resDir = "/" + resDir;
         }
-        if(!resDir.endsWith("/")) {
-            resDir = resDir +"/";
+        if (!resDir.endsWith("/")) {
+            resDir = resDir + "/";
         }
-        return readResourceQueriesDirectory(BASE_RESOURCE_DIR+resDir);
+        return readResourceQueriesDirectory(BASE_RESOURCE_DIR + resDir);
     }
 
     public static Map<DbQueryEnum, DbQueryInfo> readResourceQueriesDirectory(String resDir) throws IOException {
@@ -146,8 +147,8 @@ public class DbSetupBuilder {
         ClassLoader cl = ClassLoader.getSystemClassLoader();
         StringBuilder sb = new StringBuilder();
         try (InputStream stream = cl.getResourceAsStream(name)) {
-            if(null == stream) {
-                throw new IllegalArgumentException("No resource found for name="+name);
+            if (null == stream) {
+                throw new IllegalArgumentException("No resource found for name=" + name);
             }
             try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"))) {
                 String line = null;
