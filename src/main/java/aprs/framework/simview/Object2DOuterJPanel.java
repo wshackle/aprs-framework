@@ -26,7 +26,6 @@ import aprs.framework.database.DetectedItem;
 import aprs.framework.database.Main;
 import aprs.framework.spvision.VisionSocketClient;
 import aprs.framework.spvision.VisionSocketServer;
-import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
