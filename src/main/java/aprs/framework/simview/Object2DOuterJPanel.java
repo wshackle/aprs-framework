@@ -584,17 +584,21 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != propertiesFile) {
             propertiesFile.getParentFile().mkdirs();
             Properties props = new Properties();
-            props.put("items", VisionSocketServer.listToLine(getItems()));
             props.put("--visionport", jTextFieldPort.getText());
             props.put("--visionhost", jTextFieldHost.getText());
             props.put("simulated", Boolean.toString(jCheckBoxSimulated.isSelected()));
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText());
             props.put("xminymin",jTextFieldMinXMinY.getText());
+            List<DetectedItem> l = getItems();
+            if(null != l && l.size() > 0) {
+                props.put(ITEMS_PROPERTY_NAME, VisionSocketServer.listToLine(l));
+            }
             try (FileWriter fw = new FileWriter(propertiesFile)) {
                 props.store(fw, "");
             }
         }
     }
+    private static final String ITEMS_PROPERTY_NAME = "items";
 
     @Override
     public void restoreProperties() throws IOException {
@@ -603,10 +607,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
-            String itemsLine = props.getProperty("items");
-//            if (null != itemsLine && itemsLine.length() > 0) {
-//                setItems(VisionSocketClient.lineToList(itemsLine));
-//            }
+            String itemsLine = props.getProperty(ITEMS_PROPERTY_NAME);
+            if (null != itemsLine && itemsLine.length() > 0) {
+                List<DetectedItem> l = VisionSocketClient.lineToList(itemsLine);
+                if(null != l && l.size() > 0) {
+                    setItems(l);
+                }
+            }
             String portString = props.getProperty("--visionport");
             try {
                 if (null != portString && portString.length() > 0) {
@@ -641,6 +648,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
+    
     @Override
     public File getPropertiesFile() {
         return propertiesFile;
