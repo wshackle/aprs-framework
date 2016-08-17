@@ -136,13 +136,17 @@ public class QuerySet implements QuerySetInterface {
         DbParamTypeEnum paramTypes[] = queryInfo.getParams();
         String qString = queryInfo.getQuery();
         for (int i = 0; i < paramTypes.length; i++) {
-            qString = qString.replace(String.format(queryFormat, i), map.get(i).toString());
+            qString = qString.replace(String.format(queryFormat, i), map.get(i+1).toString());
         }
         return qString;
     }
 
     private String getQueryResultString(ResultSet rs, DbQueryInfo queryInfo, DbParamTypeEnum type) throws SQLException {
-        String qname = queryInfo.getResults().get(type);
+        Map<DbParamTypeEnum,String> map = queryInfo.getResults();
+        String qname = map.get(type);
+        if(null == qname) {
+            throw new IllegalArgumentException("No entry for type "+type +" in map ="+map);
+        }
         if (Character.isDigit(qname.charAt(0))) {
             int index = Integer.valueOf(qname);
             return rs.getString(index);

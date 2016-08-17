@@ -49,7 +49,7 @@ public class DbQueryInfo {
         if (null == paramPosMap && null != params) {
             paramPosMap = new EnumMap<>(DbParamTypeEnum.class);
             for (int i = 0; i < params.length; i++) {
-                paramPosMap.put(params[i], i);
+                paramPosMap.put(params[i], i+1);
             }
         }
         return paramPosMap;

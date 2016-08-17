@@ -1,5 +1,5 @@
 #params=NAME,
-#results={NAME=name,X=x,Y=y,Z=z,VXI=vxi,VXJ=vxj,VZK=vxk,VXI=vxi,VXJ=vxj,VZK=vxk,}
+#results={NAME=name,X=x,Y=y,Z=z,VXI=vxi,VXJ=vxj,VXK=vxk,VZI=vxi,VZJ=vxj,VZK=vxk,}
 MATCH pointpath=(source { name:{1} } ) -[:hasPhysicalLocation_RefObject]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),
 xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),
 zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)
