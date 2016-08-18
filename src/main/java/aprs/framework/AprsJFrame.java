@@ -309,17 +309,36 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private void showDatabaseSetupWindow() {
         createDbSetupFrame();
         dbSetupJInternalFrame.setVisible(true);
-        jDesktopPane1.getDesktopManager().deiconifyFrame(dbSetupJInternalFrame);
-        jDesktopPane1.getDesktopManager().activateFrame(dbSetupJInternalFrame);
+        if (checkInternalFrame(dbSetupJInternalFrame)) {
+            jDesktopPane1.getDesktopManager().deiconifyFrame(dbSetupJInternalFrame);
+            jDesktopPane1.getDesktopManager().activateFrame(dbSetupJInternalFrame);
+        }
         setupWindowsMenu();
+    }
+
+    private boolean checkInternalFrame(JInternalFrame frm) {
+        try {
+            if (frm == null) {
+                return false;
+            }
+            for (JInternalFrame f : jDesktopPane1.getAllFrames()) {
+                if (f == frm) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private void hideDatabaseSetupWindow() {
         if (null != dbSetupJInternalFrame) {
             dbSetupJInternalFrame.setVisible(false);
-            jDesktopPane1.getDesktopManager().iconifyFrame(dbSetupJInternalFrame);
-            jDesktopPane1.getDesktopManager().deactivateFrame(dbSetupJInternalFrame);
-            jDesktopPane1.add(dbSetupJInternalFrame);
+            if (checkInternalFrame(dbSetupJInternalFrame)) {
+                jDesktopPane1.getDesktopManager().iconifyFrame(dbSetupJInternalFrame);
+                jDesktopPane1.getDesktopManager().deactivateFrame(dbSetupJInternalFrame);
+            }
         }
     }
 
@@ -333,9 +352,13 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     frameToShow.setVisible(true);
-                    jDesktopPane1.getDesktopManager().deiconifyFrame(frameToShow);
-                    jDesktopPane1.getDesktopManager().activateFrame(frameToShow);
-                    frameToShow.moveToFront();
+                    if (checkInternalFrame(frameToShow)) {
+                        jDesktopPane1.getDesktopManager().deiconifyFrame(frameToShow);
+                        jDesktopPane1.getDesktopManager().activateFrame(frameToShow);
+                        frameToShow.moveToFront();
+                    } else {
+                        setupWindowsMenu();
+                    }
                 }
             });
             jMenuWindow.add(menuItem);
