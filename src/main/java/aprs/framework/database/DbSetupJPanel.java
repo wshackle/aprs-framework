@@ -33,6 +33,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -123,6 +124,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jRadioButtonExternDir = new javax.swing.JRadioButton();
         jTextFieldQueriesDirectory = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTextAreaConnectErrors = new javax.swing.JTextArea();
 
         jTextFieldDBPort.setText("7486");
         jTextFieldDBPort.addActionListener(new java.awt.event.ActionListener() {
@@ -287,6 +290,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 .addContainerGap())
         );
 
+        jTextAreaConnectErrors.setColumns(20);
+        jTextAreaConnectErrors.setRows(5);
+        jScrollPane2.setViewportView(jTextAreaConnectErrors);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -294,6 +301,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jComboBoxPropertiesFiles, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
@@ -365,6 +373,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     .addComponent(jButtonBrowse)
                     .addComponent(jButtonLoad)
                     .addComponent(jButtonSave))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -415,15 +425,26 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }//GEN-LAST:event_jComboBoxDbTypeActionPerformed
 
     private void jButtonConnectDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectDBActionPerformed
-//        connectDB();
-        connected = true;
-        notifyAllDbSetupListeners();
+        try {
+            //        connectDB();
+            connected = true;
+            DbSetup setup = this.getDbSetup();
+            DbSetupBuilder.connect(setup);
+            notifyAllDbSetupListeners();
+            jTextAreaConnectErrors.setText("Connected to database of type "+setup.getDbType()+ "\n as user "+setup.getDbUser()+" on host "+setup.getHost()+"\n with port "+setup.getPort()+"\n using queries from "+setup.getQueriesDir());
+        } catch (Exception ex) {
+            jTextAreaConnectErrors.setText(ex +"\nCaused by :\n"+ex.getCause());
+            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            connected = false;
+        }
     }//GEN-LAST:event_jButtonConnectDBActionPerformed
 
     private void jButtonDisconnectDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDisconnectDBActionPerformed
 //        this.closeDB();
         connected = false;
         notifyAllDbSetupListeners();
+        System.out.println("Disconnected from database.");
+        jTextAreaConnectErrors.setText("Disconnected from database.");
     }//GEN-LAST:event_jButtonDisconnectDBActionPerformed
 
     private void jTextFieldDBNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDBNameActionPerformed
@@ -485,6 +506,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     public void setDbSetup(DbSetup setup) {
         try {
+            if(null == setup) {
+                return;
+            }
             updatingFromDbSetup = true;
             DbType dbtype = setup.getDbType();
             if (!Objects.equals(dbtype, this.jComboBoxDbType.getSelectedItem())) {
@@ -1173,7 +1197,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private javax.swing.JRadioButton jRadioButtonExternDir;
     private javax.swing.JRadioButton jRadioButtonResourceDir;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTableQueries;
+    private javax.swing.JTextArea jTextAreaConnectErrors;
     private javax.swing.JTextField jTextFieldDBHost;
     private javax.swing.JTextField jTextFieldDBName;
     private javax.swing.JTextField jTextFieldDBPort;

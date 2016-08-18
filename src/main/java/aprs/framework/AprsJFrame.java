@@ -206,8 +206,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     public AprsJFrame() {
         try {
             initComponents();
-            loadProperties();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
@@ -220,6 +219,15 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             System.setOut(new MyPrintStream(System.out));
             System.setErr(new MyPrintStream(System.err));
             activateInternalFrame(logDisplayJInternalFrame);
+        } catch (Exception ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            initPropertiesFile();
+        } catch (IOException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
             if (jCheckBoxMenuItemStartupPDDLPlanner.isSelected()) {
                 startPddlPlanner();
             }
@@ -742,17 +750,26 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 setPropertiesFile(chooser.getSelectedFile());
-                propertiesDirectory = propertiesFile.getParentFile();
-                if (propertiesFile.exists()) {
-                    loadProperties();
-                } else {
-                    saveProperties();
-                }
+                initPropertiesFile();
             } catch (IOException ex) {
                 Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_jMenuItemSetProperiesFileActionPerformed
+
+    private void initPropertiesFile() throws IOException {
+        propertiesDirectory = propertiesFile.getParentFile();
+        if (propertiesFile.exists()) {
+            loadProperties();
+        } else {
+            if (!propertiesDirectory.exists()) {
+                System.out.println("The directory " + propertiesDirectory + " does not exist, it will be created now.");
+            }
+            System.out.println("Properties file " + propertiesFile + " does not exist.");
+            System.out.println("It will be created with the current properties.");
+            saveProperties();
+        }
+    }
 
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
         try {

@@ -42,7 +42,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
      */
     public LogDisplayJPanel() {
         initComponents();
-        jSpinnerMaxLines.setValue(100);
+        jSpinnerMaxLines.setValue(250);
     }
 
     /**
