@@ -188,6 +188,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 break;
         }
         con = DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password);
+        System.out.println("DatabasePoseUpdater connected to database of type "+dbtype+" on host "+host+" with port "+port);
     }
 
     final private Map<DbQueryEnum, DbQueryInfo> queriesMap;

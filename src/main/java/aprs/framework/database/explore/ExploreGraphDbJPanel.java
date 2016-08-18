@@ -670,11 +670,12 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     public void accept(DbSetup setup) {
         try {
             if (setup.isConnected()) {
-                if(setup.getDbType() == DbType.NEO4J) {
+                if (setup.getDbType() == DbType.NEO4J) {
                     setConnection(DbSetupBuilder.connect(setup));
+                    System.out.println("ExploreGraph connected to database of on host " + setup.getHost() + " with port " + setup.getPort());
                 } else {
                     closeConnection();
-                    String msg = "The ExploreGraphDb frame only works with "+DbType.NEO4J +" but "+setup.getDbType() +" was selected.";
+                    String msg = "The ExploreGraphDb frame only works with " + DbType.NEO4J + " but " + setup.getDbType() + " was selected.";
                     this.jTextAreaErrors.setText(msg);
                     System.err.println(msg);
                 }

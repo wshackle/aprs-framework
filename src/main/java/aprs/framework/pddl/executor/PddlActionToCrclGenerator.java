@@ -138,6 +138,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             if (dbConnection == null) {
                 try {
                     setDbConnection(DbSetupBuilder.connect(dbSetup));
+                    System.out.println("PddlActionToCrclGenerator connected to database of on host " + dbSetup.getHost() + " with port " + dbSetup.getPort());
                 } catch (SQLException ex) {
                     Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }

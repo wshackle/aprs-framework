@@ -29,6 +29,7 @@ import aprs.framework.database.Main;
 import aprs.framework.database.SocketLineReader;
 import crcl.base.PoseType;
 import crcl.utils.CRCLPosemath;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -138,11 +139,15 @@ public class VisionSocketClient implements AutoCloseable {
     }
 
     public void start(Map<String, String> argsMap) {
+        String host="HOSTNOTSET";
+        short port = -99;
         try {
             acquire = AcquireEnum.valueOf(argsMap.get("--aquirestate"));
+            host = argsMap.get("--visionhost");
+            port = Short.valueOf(argsMap.get("--visionport"));
             visionSlr = SocketLineReader.start(true,
-                    argsMap.get("--visionhost"),
-                    Short.valueOf(argsMap.get("--visionport")),
+                    host,
+                    port,
                     "visionReader", new SocketLineReader.CallBack() {
 
                 private String lastSkippedLine = null;
@@ -173,9 +178,12 @@ public class VisionSocketClient implements AutoCloseable {
                 displayInterface.setVisionConnected(true);
             }
             updateListeners();
-        } catch (Exception exception) {
-            System.err.println(exception.getLocalizedMessage());
-            System.err.println("Connect to vision failed.");
+        } catch (IOException exception) {
+            System.err.println("Connect to vision on host "+host +" with port "+ port + " failed with message "+exception);
+            Throwable cause = exception.getCause();
+            if(null != cause ) {
+                System.err.println("Caused by "+exception.getCause());
+            }
         }
     }
 
