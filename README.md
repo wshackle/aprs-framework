@@ -94,5 +94,10 @@ are stored in separate text files and can be edited here for testing. The querie
 that are built into the application are in internal resource directories. Changes
 here will not be preserved over a restart without recompiling the application.
 
+One could have multiple databases setup to connect to. Each can be associated
+with a different text file. Near the bottom of the page on can specify the text 
+file to save or load from for easy switching.
+
+
 
 
