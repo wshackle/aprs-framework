@@ -149,7 +149,27 @@ system.
 
   1. Check the simuated checkbox.
   2. Choose a TCP port for the simulator to bind to and provide data from. (This
-should match the port in the 
+should match the port in the [Object SP] Vision to Database view for the 
+Vision Port field).
+  3. Set the port text field.
+  4. Check the connected checkbox to bind the port and start the server.
+
+The data being produced can be changed by editing the table or by dragging 
+objects in the display panel. When entering changes in the table be sure to press
+enter to make changes take effect. When dragging objects in the display panel,
+press the mouse while over the center of the first letter in the name of the 
+object to start dragging it.
+
+To view data coming from an external vision system:
+
+  1. Uncheck the simuated checkbox and the connected checkbox.
+  2. Set the TCP port and host name to match the location of the vision 
+system.
+  3. Check the connected checkbox to connect the port and begin updating the 
+display.
+
+
+
 
 
 
