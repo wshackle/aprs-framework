@@ -126,8 +126,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         jButtonConnectVision = new javax.swing.JButton();
-        jTextFieldCognexHost = new javax.swing.JTextField();
-        jTextFieldCognexPort = new javax.swing.JTextField();
+        jTextFieldVisionHost = new javax.swing.JTextField();
+        jTextFieldVisionPort = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
         jTextFieldPoseUpdatesParsed = new javax.swing.JTextField();
@@ -160,9 +160,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jLabel20 = new javax.swing.JLabel();
         jButtonCheck = new javax.swing.JButton();
         jButtonAddItem = new javax.swing.JButton();
-        jPanelTableFromCognex = new javax.swing.JPanel();
-        jScrollPaneTableFromCognex = new javax.swing.JScrollPane();
-        jTableFromCognex = new javax.swing.JTable();
+        jPanelTableFromVision = new javax.swing.JPanel();
+        jScrollPaneTableFromVision = new javax.swing.JScrollPane();
+        jTableFromVision = new javax.swing.JTable();
         jLabel19 = new javax.swing.JLabel();
         jSpinnerLogLines = new javax.swing.JSpinner();
         jLabel1 = new javax.swing.JLabel();
@@ -177,9 +177,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
-        jLabel6.setText("Cognex Host:");
+        jLabel6.setText("Vision Host:");
 
-        jLabel7.setText("Cognex Port: ");
+        jLabel7.setText("Vision Port: ");
 
         jButtonConnectVision.setText("Connect to Vision");
         jButtonConnectVision.addActionListener(new java.awt.event.ActionListener() {
@@ -188,14 +188,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
-        jTextFieldCognexHost.setText("localhost");
-        jTextFieldCognexHost.addActionListener(new java.awt.event.ActionListener() {
+        jTextFieldVisionHost.setText("localhost");
+        jTextFieldVisionHost.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldCognexHostActionPerformed(evt);
+                jTextFieldVisionHostActionPerformed(evt);
             }
         });
 
-        jTextFieldCognexPort.setText("4000");
+        jTextFieldVisionPort.setText("4000");
 
         jLabel8.setText("Poses Received from Vision:");
 
@@ -323,8 +323,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                             .addComponent(jTextFieldPoseUpdatesProcessed)
                             .addComponent(jTextFieldPoseUpdatesParsed)
                             .addComponent(jButtonDisconnectVision, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jTextFieldCognexPort)
-                            .addComponent(jTextFieldCognexHost)))
+                            .addComponent(jTextFieldVisionPort)
+                            .addComponent(jTextFieldVisionHost)))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jCheckBoxAddRepeatCountsToDatabaseNames)
@@ -333,7 +333,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addContainerGap())
         );
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jButtonDisconnectVision, jLabelCommnandStatus, jLabelDatabaseStatus, jLabelVisionStatus, jTextFieldAcquire, jTextFieldCmdPort, jTextFieldCognexHost, jTextFieldCognexPort, jTextFieldLastCommand, jTextFieldPoseUpdatesParsed, jTextFieldPoseUpdatesProcessed});
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jButtonDisconnectVision, jLabelCommnandStatus, jLabelDatabaseStatus, jLabelVisionStatus, jTextFieldAcquire, jTextFieldCmdPort, jTextFieldLastCommand, jTextFieldPoseUpdatesParsed, jTextFieldPoseUpdatesProcessed, jTextFieldVisionHost, jTextFieldVisionPort});
 
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -343,11 +343,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
-                    .addComponent(jTextFieldCognexHost, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTextFieldVisionHost, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(0, 0, 0)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
-                    .addComponent(jTextFieldCognexPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTextFieldVisionPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonConnectVision)
                     .addComponent(jButtonDisconnectVision))
@@ -473,11 +473,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addContainerGap())
         );
 
-        jScrollPaneTableFromCognex.setMinimumSize(new java.awt.Dimension(200, 200));
-        jScrollPaneTableFromCognex.setPreferredSize(new java.awt.Dimension(200, 200));
+        jScrollPaneTableFromVision.setMinimumSize(new java.awt.Dimension(200, 200));
+        jScrollPaneTableFromVision.setPreferredSize(new java.awt.Dimension(200, 200));
 
-        jTableFromCognex.setAutoCreateRowSorter(true);
-        jTableFromCognex.setModel(new javax.swing.table.DefaultTableModel(
+        jTableFromVision.setAutoCreateRowSorter(true);
+        jTableFromVision.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
@@ -493,29 +493,29 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 return types [columnIndex];
             }
         });
-        jScrollPaneTableFromCognex.setViewportView(jTableFromCognex);
+        jScrollPaneTableFromVision.setViewportView(jTableFromVision);
 
         jLabel19.setText("From Vision:");
 
-        javax.swing.GroupLayout jPanelTableFromCognexLayout = new javax.swing.GroupLayout(jPanelTableFromCognex);
-        jPanelTableFromCognex.setLayout(jPanelTableFromCognexLayout);
-        jPanelTableFromCognexLayout.setHorizontalGroup(
-            jPanelTableFromCognexLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelTableFromCognexLayout.createSequentialGroup()
+        javax.swing.GroupLayout jPanelTableFromVisionLayout = new javax.swing.GroupLayout(jPanelTableFromVision);
+        jPanelTableFromVision.setLayout(jPanelTableFromVisionLayout);
+        jPanelTableFromVisionLayout.setHorizontalGroup(
+            jPanelTableFromVisionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTableFromVisionLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanelTableFromCognexLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneTableFromCognex, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanelTableFromCognexLayout.createSequentialGroup()
+                .addGroup(jPanelTableFromVisionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPaneTableFromVision, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanelTableFromVisionLayout.createSequentialGroup()
                         .addComponent(jLabel19)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
-        jPanelTableFromCognexLayout.setVerticalGroup(
-            jPanelTableFromCognexLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelTableFromCognexLayout.createSequentialGroup()
+        jPanelTableFromVisionLayout.setVerticalGroup(
+            jPanelTableFromVisionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTableFromVisionLayout.createSequentialGroup()
                 .addComponent(jLabel19)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneTableFromCognex, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addComponent(jScrollPaneTableFromVision, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -526,7 +526,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jPanelTableFromCognex, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanelTableFromVision, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanelTableFromDatabase, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -536,7 +536,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addContainerGap()
                 .addComponent(jPanelTableFromDatabase, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanelTableFromCognex, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanelTableFromVision, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -715,11 +715,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
             String visionPortString = _argsMap.get("--visionport");
             if (visionPortString != null) {
-                jTextFieldCognexPort.setText(visionPortString);
+                jTextFieldVisionPort.setText(visionPortString);
             }
             String visionHostString = _argsMap.get("--visionhost");
             if (visionHostString != null) {
-                jTextFieldCognexHost.setText(visionHostString);
+                jTextFieldVisionHost.setText(visionHostString);
             }
             DefaultTableModel model = (DefaultTableModel) jTableTransform.getModel();
             String ptXString = _argsMap.get("transform.point.x");
@@ -881,7 +881,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     public void updateInfo(List<DetectedItem> _list, String line) {
         this.list = _list;
-        DefaultTableModel tm = (DefaultTableModel) this.jTableFromCognex.getModel();
+        DefaultTableModel tm = (DefaultTableModel) this.jTableFromVision.getModel();
 //        TableColumnModel tcm = this.jTableFromCognex.getColumnModel();
         for (int i = 0; i < list.size(); i++) {
             DetectedItem ci = list.get(i);
@@ -906,7 +906,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (this.jCheckBoxDebug.isSelected()) {
             appendLogDisplay("\nupdateInfo(\n\t_list=" + _list + ",\n\tline =" + line + "\n\t)\r\n");
         }
-        this.autoResizeTableColWidths(jTableFromCognex);
+        this.autoResizeTableColWidths(jTableFromVision);
     }
 
 //    private final TableModelListener tableModelListener;
@@ -1044,8 +1044,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         argsMap.put("transform.zaxis.i", Double.toString(transform(2, 1)));
         argsMap.put("transform.zaxis.j", Double.toString(transform(2, 2)));
         argsMap.put("transform.zaxis.k", Double.toString(transform(2, 3)));
-        argsMap.put("--visionhost", this.jTextFieldCognexHost.getText());
-        argsMap.put("--visionport", this.jTextFieldCognexPort.getText());
+        argsMap.put("--visionhost", this.jTextFieldVisionHost.getText());
+        argsMap.put("--visionport", this.jTextFieldVisionPort.getText());
         argsMap.put(ADD_REPEAT_COUNTS_TO_DATABASE_NAMES,
                 Boolean.toString(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected()));
         return argsMap;
@@ -1055,8 +1055,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void connectVision() {
         try {
             Map<String, String> argsMap = Main.getArgsMap();
-            argsMap.put("--visionhost", this.jTextFieldCognexHost.getText());
-            argsMap.put("--visionport", this.jTextFieldCognexPort.getText());
+            argsMap.put("--visionhost", this.jTextFieldVisionHost.getText());
+            argsMap.put("--visionport", this.jTextFieldVisionPort.getText());
             Main.startVision(argsMap);
             VisionSocketClient visionClient = Main.getVisionSocketClient();
             if (null != visionClient) {
@@ -1081,9 +1081,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    private void jTextFieldCognexHostActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldCognexHostActionPerformed
+    private void jTextFieldVisionHostActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldVisionHostActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jTextFieldCognexHostActionPerformed
+    }//GEN-LAST:event_jTextFieldVisionHostActionPerformed
 
     private void jTextFieldCmdPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldCmdPortActionPerformed
         try {
@@ -1198,24 +1198,24 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JLabel jLabelVisionStatus;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanelTableFromCognex;
     private javax.swing.JPanel jPanelTableFromDatabase;
+    private javax.swing.JPanel jPanelTableFromVision;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPaneTableFromCognex;
     private javax.swing.JScrollPane jScrollPaneTableFromDatabase;
+    private javax.swing.JScrollPane jScrollPaneTableFromVision;
     private javax.swing.JSpinner jSpinnerLogLines;
-    private javax.swing.JTable jTableFromCognex;
     private javax.swing.JTable jTableFromDatabase;
+    private javax.swing.JTable jTableFromVision;
     private javax.swing.JTable jTableTransform;
     private javax.swing.JTextArea jTextAreaLog;
     private javax.swing.JTextField jTextFieldAcquire;
     private javax.swing.JTextField jTextFieldCmdPort;
-    private javax.swing.JTextField jTextFieldCognexHost;
-    private javax.swing.JTextField jTextFieldCognexPort;
     private javax.swing.JTextField jTextFieldLastCommand;
     private javax.swing.JTextField jTextFieldPoseUpdatesParsed;
     private javax.swing.JTextField jTextFieldPoseUpdatesProcessed;
+    private javax.swing.JTextField jTextFieldVisionHost;
+    private javax.swing.JTextField jTextFieldVisionPort;
     // End of variables declaration//GEN-END:variables
 
     @Override
@@ -1270,8 +1270,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             props.put(dbHostPort + ".passwd", new String(setup.getDbPassword()));
             props.put(ADD_REPEAT_COUNTS_TO_DATABASE_NAMES,
                     Boolean.toString(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected()));
-            props.put("--visionport", jTextFieldCognexPort.getText());
-            props.put("--visionhost", jTextFieldCognexHost.getText());
+            props.put("--visionport", jTextFieldVisionPort.getText());
+            props.put("--visionhost", jTextFieldVisionHost.getText());
 
             try (FileWriter fw = new FileWriter(propertiesFile)) {
                 props.store(fw, "");

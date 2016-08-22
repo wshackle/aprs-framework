@@ -109,8 +109,8 @@
                               <Component id="jTextFieldPoseUpdatesProcessed" linkSize="1" alignment="0" max="32767" attributes="0"/>
                               <Component id="jTextFieldPoseUpdatesParsed" linkSize="1" alignment="0" max="32767" attributes="0"/>
                               <Component id="jButtonDisconnectVision" linkSize="1" alignment="0" max="32767" attributes="0"/>
-                              <Component id="jTextFieldCognexPort" linkSize="1" alignment="0" max="32767" attributes="0"/>
-                              <Component id="jTextFieldCognexHost" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="jTextFieldVisionPort" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="jTextFieldVisionHost" linkSize="1" alignment="0" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                       <Group type="102" attributes="0">
@@ -133,12 +133,12 @@
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="jLabel6" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="jTextFieldCognexHost" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldVisionHost" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="jTextFieldCognexPort" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldVisionPort" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="jButtonConnectVision" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -207,12 +207,12 @@
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel6">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Cognex Host:"/>
+            <Property name="text" type="java.lang.String" value="Vision Host:"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel7">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Cognex Port: "/>
+            <Property name="text" type="java.lang.String" value="Vision Port: "/>
           </Properties>
         </Component>
         <Component class="javax.swing.JButton" name="jButtonConnectVision">
@@ -223,15 +223,15 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonConnectVisionActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JTextField" name="jTextFieldCognexHost">
+        <Component class="javax.swing.JTextField" name="jTextFieldVisionHost">
           <Properties>
             <Property name="text" type="java.lang.String" value="localhost"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldCognexHostActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldVisionHostActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JTextField" name="jTextFieldCognexPort">
+        <Component class="javax.swing.JTextField" name="jTextFieldVisionPort">
           <Properties>
             <Property name="text" type="java.lang.String" value="4000"/>
           </Properties>
@@ -434,7 +434,7 @@
               <Group type="102" alignment="1" attributes="0">
                   <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="1" attributes="0">
-                      <Component id="jPanelTableFromCognex" max="32767" attributes="0"/>
+                      <Component id="jPanelTableFromVision" max="32767" attributes="0"/>
                       <Component id="jPanelTableFromDatabase" max="32767" attributes="0"/>
                   </Group>
                   <EmptySpace min="-2" max="-2" attributes="0"/>
@@ -447,7 +447,7 @@
                   <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Component id="jPanelTableFromDatabase" max="32767" attributes="0"/>
                   <EmptySpace min="-2" max="-2" attributes="0"/>
-                  <Component id="jPanelTableFromCognex" max="32767" attributes="0"/>
+                  <Component id="jPanelTableFromVision" max="32767" attributes="0"/>
                   <EmptySpace min="-2" max="-2" attributes="0"/>
               </Group>
           </Group>
@@ -534,7 +534,7 @@
             </Component>
           </SubComponents>
         </Container>
-        <Container class="javax.swing.JPanel" name="jPanelTableFromCognex">
+        <Container class="javax.swing.JPanel" name="jPanelTableFromVision">
 
           <Layout>
             <DimensionLayout dim="0">
@@ -542,7 +542,7 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPaneTableFromCognex" max="32767" attributes="0"/>
+                          <Component id="jScrollPaneTableFromVision" max="32767" attributes="0"/>
                           <Group type="102" attributes="0">
                               <Component id="jLabel19" min="-2" max="-2" attributes="0"/>
                               <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
@@ -557,14 +557,14 @@
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jLabel19" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
-                      <Component id="jScrollPaneTableFromCognex" pref="0" max="32767" attributes="0"/>
+                      <Component id="jScrollPaneTableFromVision" pref="0" max="32767" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
           </Layout>
           <SubComponents>
-            <Container class="javax.swing.JScrollPane" name="jScrollPaneTableFromCognex">
+            <Container class="javax.swing.JScrollPane" name="jScrollPaneTableFromVision">
               <Properties>
                 <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                   <Dimension value="[200, 200]"/>
@@ -576,7 +576,7 @@
 
               <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
               <SubComponents>
-                <Component class="javax.swing.JTable" name="jTableFromCognex">
+                <Component class="javax.swing.JTable" name="jTableFromVision">
                   <Properties>
                     <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">

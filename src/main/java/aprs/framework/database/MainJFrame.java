@@ -45,7 +45,7 @@ public class MainJFrame extends javax.swing.JFrame implements VisionToDBJFrameIn
     private JTextField cellField = new JTextField();
 
     /**
-     * Creates new form CognexJFrame
+     * Creates new form MainJFrame
      */
     public MainJFrame() {
         initComponents();
@@ -65,16 +65,6 @@ public class MainJFrame extends javax.swing.JFrame implements VisionToDBJFrameIn
 
     public void updateFromArgs(Map<String, String> _argsMap) {
         this.visionToDBJPanel.updateFromArgs(_argsMap);
-//        this.argsMap = _argsMap;
-//        setText(argsMap, this.jTextFieldDBHost, "--dbhost");
-//        setText(argsMap, this.jTextFieldDBPort, "--dbport");
-//        setText(argsMap, this.jTextFieldDBName, "--dbname");
-//        setText(argsMap, this.jTextFieldDBUser, "--dbuser");
-//        setText(argsMap, this.jPasswordFieldDBPassword, "--dbpasswd");
-//        setText(argsMap, this.jTextFieldCognexHost, "--visionhost");
-//        setText(argsMap, this.jTextFieldCognexPort, "--visionport");
-//        setText(argsMap, this.jTextFieldCmdPort, "--commandport");
-//        setText(argsMap, this.jTextFieldAcquire, "--aquirestate");
     }
 
     /**

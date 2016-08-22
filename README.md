@@ -130,6 +130,27 @@ clicking the corresponding "Go To" button selects the other node in the relation
 and updates all three tables. In this way one can go from node to node to node following
 any relationship into for from any other node.
 
+ Object 2D/View Simulate
+------------------------
+
+![Screenshot of GUI with Object 2D View/Simulate Window](/Screenshots/Screenshot_Object_2D_View_Simulate.png?raw=true)
+
+To get to this view:
+
+  1. Check the box in the menu for Startup -> Object 2D View/Simulate (if not already checked).
+  2. Select Object 2D View/Simulate from the Window menu.
+
+
+This view allows one to simulate an Object Identification and Localization system
+or to visualize the data coming from an external real vision system. 
+
+To simulate an object identification and localization
+system.
+
+  1. Check the simuated checkbox.
+  2. Choose a TCP port for the simulator to bind to and provide data from. (This
+should match the port in the 
+
 
 
 
