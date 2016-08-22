@@ -83,6 +83,12 @@ Database Setup View
 
 ![Screenshot of GUI with Database Setup Log Window](/Screenshots/Screenshot_Database_Setup.png?raw=true)
 
+To get to this view:
+
+  1. Check the box in the menu for Startup -> Database Setup (if not already checked).
+  2. Select Database Seup from the Window menu.
+
+
 Several other modules need to connect to a database to store/retrieve information
 on the state of the robot, part designs, part locations etc.  Two database drivers
 are currently built-in Neo4J and MySQL. An option to add custom drivers may be 
