@@ -86,7 +86,7 @@ Database Setup View
 To get to this view:
 
   1. Check the box in the menu for Startup -> Database Setup (if not already checked).
-  2. Select Database Seup from the Window menu.
+  2. Select Database Setup from the Window menu.
 
 
 Several other modules need to connect to a database to store/retrieve information
@@ -103,6 +103,36 @@ here will not be preserved over a restart without recompiling the application.
 One could have multiple databases setup to connect to. Each can be associated
 with a different text file. Near the bottom of the page on can specify the text 
 file to save or load from for easy switching.
+
+Explore Graph Database View
+---------------------------
+
+![Screenshot of GUI with Explore Graph Database Window](/Screenshots/Screenshot_Explore_Graph_Database.png?raw=true)
+
+To get to this view:
+
+  1. Check the box in the menu for Startup -> Explore Graph Database (if not already checked).
+  2. Select Explore Graph Database from the Window menu.
+
+NOTE: This window does not currently work with MySQL. The connection to the 
+graph database needs to be setup from the Database Setup view previously discussed.
+
+This view allows one to interactively explore the Graph Database. The entire set of
+available node labels can be retrieved with the "Get Node Labels" button at the 
+bottom left. These will be displayed on the list at the left. Selecting one will 
+perform the query to return all nodes with that label.  Queries are shown in the text 
+field at the top. Custom queries can be entered in the same text field. The results
+of the query are shown in top table. Selecting a row in the table will select the node
+that is the first query result. The selected node will then show  all relationships
+from any other node to that node in the middle table and from that node to any other node
+in the bottom table. Selecting any relationship in the middle or bottom table and
+clicking the corresponding "Go To" button selects the other node in the relationship
+and updates all three tables. In this way one can go from node to node to node following
+any relationship into for from any other node.
+
+
+
+
 
 
 
