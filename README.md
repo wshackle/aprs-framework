@@ -246,6 +246,22 @@ To get to this view:
   1. Check the box in the menu for Startup -> PDDL Planner (if not already checked).
   2. Select PDDL Planner from the Window menu.
 
+Planning Domain Definition Language(PDDL) is a way of defining both a class of problems in the 
+domain file as well as a particular initial and goal state in the problem file. The actual planning
+code is part of a different project. (See  https://github.com/usnistgov/crac , the 
+example domain used here came from https://github.com/usnistgov/iora. )  This module is 
+only replonsible for allowing the input domain and problem files to be selected and passing them to 
+an external program, retrieving and displaying the result and passing the output to
+the PDDL Executor that will send commands to move the robot. If the planner can not
+be installed locally it can be run remotely through SSH. 
+
+
+Code for this should be in following subdirectory:
+
+     aprs-framework/src/main/java/aprs/framework/pddl/planner/  
+
+
+
 
 
 
