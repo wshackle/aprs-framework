@@ -71,7 +71,11 @@ module.
  * Window -- Allows access to any window that has been created by moving that window
 to the front.
 
-   
+Code for this should be in following subdirectory:
+
+    aprs-framework/src/main/java/aprs/framework/
+
+
 
 Views
 =====
@@ -86,6 +90,12 @@ in determining what activities have started, completed or have failed. Depending
  on what options were saved the last time the application was run the  application
 may need to connect to an external database server, vision system or robot. Messages
 here can help determine if those systems could be connected to as expected.
+
+Code for this should be in following subdirectory:
+
+    aprs-framework/src/main/java/aprs/framework/logdisplay/  
+
+
 
 Database Setup View
 -------------------
@@ -113,6 +123,12 @@ One could have multiple databases setup to connect to. Each can be associated
 with a different text file. Near the bottom of the page on can specify the text 
 file to save or load from for easy switching.
 
+Code for this should be in following subdirectory:
+
+    aprs-framework/src/main/java/aprs/framework/database/  
+
+
+
 Explore Graph Database View
 ---------------------------
 
@@ -138,6 +154,12 @@ in the bottom table. Selecting any relationship in the middle or bottom table an
 clicking the corresponding "Go To" button selects the other node in the relationship
 and updates all three tables. In this way one can go from node to node to node following
 any relationship into for from any other node.
+
+Code for this should be in following subdirectory:
+
+    aprs-framework/src/main/java/aprs/framework/database/explore/  
+
+
 
  Object 2D/View Simulate
 ------------------------
@@ -178,6 +200,11 @@ system.
 display.
 
 
+Code for this should be in following subdirectory:
+
+    aprs-framework/src/main/java/aprs/framework/simview/  
+
+
 [Object SP] Vision To Database
 ------------------------------
 
@@ -203,6 +230,11 @@ in the screenshot two large_gear objects were reported in the same frame. The po
 for the second large gear was used to update the position of "large_gear_2" in the
 database. Work is being done on a more sophisticated way of mapping vision names to 
 database entries.
+
+Code for this should be in following subdirectory:
+
+    aprs-framework/src/main/java/aprs/framework/spvision/
+
 
 PDDL Planner
 ------------
