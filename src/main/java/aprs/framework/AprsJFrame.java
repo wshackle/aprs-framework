@@ -337,6 +337,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         } catch (Exception e) {
             e.printStackTrace();
         }
+        System.err.println("checkInteralFrame("+frm+") failed.");
         return false;
     }
 

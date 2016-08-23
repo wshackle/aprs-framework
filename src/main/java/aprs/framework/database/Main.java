@@ -149,6 +149,8 @@ public class Main {
                     updating_pose_query = false;
                 }
             });
+        } else {
+            throw new IllegalStateException("PoseDatabaseUpdater: "+dup+" getAquire()="+getAquire());
         }
     }
 

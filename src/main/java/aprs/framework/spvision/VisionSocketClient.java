@@ -282,7 +282,7 @@ public class VisionSocketClient implements AutoCloseable {
         return listOut;
     }
 
-    private boolean addRepeatCountsToDatabaseNames;
+    private boolean addRepeatCountsToDatabaseNames=true;
 
     /**
      * Get the value of addRepeatCountsToDatabaseNames

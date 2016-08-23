@@ -169,6 +169,16 @@ system.
 display.
 
 
+[Object SP] Vision To Database
+------------------------------
+
+![Screenshot of GUI with Object 2D View/Simulate Window](/Screenshots/Screenshot_Object_2D_View_Simulate.png?raw=true)
+
+To get to this view:
+
+  1. Check the box in the menu for Startup -> Object 2D View/Simulate (if not already checked).
+  2. Select Object 2D View/Simulate from the Window menu.
+
 
 
 

@@ -26,6 +26,7 @@ import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbType;
+import com.google.gwt.thirdparty.guava.common.base.Objects;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Rectangle;
@@ -116,12 +117,19 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 return;
             }
             String s = this.jTableNodes.getValueAt(index, 0).toString();
-            if (!jTextFieldSelectedNodeName.getText().equals(s)) {
-                jTextFieldSelectedNodeName.setText(s);
+            if (!jTextFieldSelectedNodeId.getText().equals(s)) {
+                jTextFieldSelectedNodeId.setText(s);
             }
-            PreparedStatement outStatement
-                    = connection.prepareStatement("MATCH (n {name:{1} }) - [relationship] -> (to) RETURN type(relationship),relationship,labels(to),to");
-            outStatement.setString(1, s);
+            String col0Head = this.jTableNodes.getColumnName(0);
+            PreparedStatement outStatement = null;
+            if (col0Head.endsWith(".name")) {
+                outStatement
+                        = connection.prepareStatement("MATCH (n {name:{1} }) - [relationship] -> (to) RETURN type(relationship),relationship,id(to),labels(to),to");
+                outStatement.setString(1, s);
+            } else {
+                outStatement
+                        = connection.prepareStatement("MATCH (n) - [relationship] -> (to) WHERE ID(n) = " + s + " RETURN type(relationship),relationship,id(to),labels(to),to");
+            }
             DefaultTableModel model = new DefaultTableModel();
             try (ResultSet rs = outStatement.executeQuery()) {
                 ResultSetMetaData meta = rs.getMetaData();
@@ -161,9 +169,14 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             }
             jTableRelationshipsOut.setModel(model);
             this.autoResizeTableColWidths(jTableRelationshipsOut);
-            PreparedStatement inStatement
-                    = connection.prepareStatement("MATCH (from) - [relationship] -> (n {name:{1} })  RETURN type(relationship),relationship,labels(from),from");
-            inStatement.setString(1, s);
+            PreparedStatement inStatement = null;
+            if (col0Head.endsWith(".name")) {
+                inStatement = connection.prepareStatement("MATCH (from) - [relationship] -> (n {name:{1} })  RETURN type(relationship),relationship,id(from),labels(from),from");
+                inStatement.setString(1, s);
+            } else {
+                inStatement = connection.prepareStatement("MATCH (from) - [relationship] -> (n) WHERE ID(n) = " + s + " RETURN type(relationship),relationship,id(from),labels(from),from");
+            }
+
             model = new DefaultTableModel();
             try (ResultSet rs = inStatement.executeQuery()) {
                 ResultSetMetaData meta = rs.getMetaData();
@@ -280,7 +293,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         jTableNodes = new javax.swing.JTable();
         jScrollPane3 = new javax.swing.JScrollPane();
         jTableRelationshipsIn = new javax.swing.JTable();
-        jButton1 = new javax.swing.JButton();
+        jButtonGetNodeLabels = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
         jButtonGotoNext = new javax.swing.JButton();
@@ -291,7 +304,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         jTextFieldQuery = new javax.swing.JTextField();
         jScrollPane4 = new javax.swing.JScrollPane();
         jTextAreaErrors = new javax.swing.JTextArea();
-        jTextFieldSelectedNodeName = new javax.swing.JTextField();
+        jTextFieldSelectedNodeId = new javax.swing.JTextField();
 
         jListNodeLabels.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -336,10 +349,10 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         ));
         jScrollPane3.setViewportView(jTableRelationshipsIn);
 
-        jButton1.setText("Get Node Labels:");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        jButtonGetNodeLabels.setText("Get Node Labels");
+        jButtonGetNodeLabels.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                jButtonGetNodeLabelsActionPerformed(evt);
             }
         });
 
@@ -387,9 +400,9 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         jTextAreaErrors.setRows(5);
         jScrollPane4.setViewportView(jTextAreaErrors);
 
-        jTextFieldSelectedNodeName.addActionListener(new java.awt.event.ActionListener() {
+        jTextFieldSelectedNodeId.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldSelectedNodeNameActionPerformed(evt);
+                jTextFieldSelectedNodeIdActionPerformed(evt);
             }
         });
 
@@ -415,13 +428,13 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                                 .addGap(0, 0, Short.MAX_VALUE))
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 660, Short.MAX_VALUE)
-                                    .addComponent(jScrollPane5, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 660, Short.MAX_VALUE)
+                                    .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 663, Short.MAX_VALUE)
+                                    .addComponent(jScrollPane5, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 663, Short.MAX_VALUE)
                                     .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                         .addComponent(jLabel4)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jTextFieldSelectedNodeName, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jTextFieldSelectedNodeId, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                         .addComponent(jButtonGotoFrom))
                                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
@@ -430,13 +443,13 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                                         .addComponent(jButtonGotoNext)))
                                 .addGap(18, 18, 18))))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButton1)
+                        .addComponent(jButtonGetNodeLabels)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jScrollPane4)))
                 .addContainerGap())
         );
 
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jButton1, jScrollPane1});
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jButtonGetNodeLabels, jScrollPane1});
 
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -455,7 +468,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel4)
-                            .addComponent(jTextFieldSelectedNodeName, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldSelectedNodeId, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jButtonGotoFrom))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
@@ -468,13 +481,13 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 428, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton1)
+                    .addComponent(jButtonGetNodeLabels)
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jButtonGetNodeLabelsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGetNodeLabelsActionPerformed
         try {
             if (null == connection) {
                 throw new IllegalStateException("connection is null");
@@ -504,11 +517,11 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             logException(ex);
         }
 
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_jButtonGetNodeLabelsActionPerformed
 
     private void jListNodeLabelsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jListNodeLabelsValueChanged
         String s = this.jListNodeLabels.getSelectedValue();
-        String query = "MATCH (n:" + s + ") RETURN n";
+        String query = "MATCH (n:" + s + ") RETURN ID(n),n";
         jTextFieldQuery.setText(query);
         try {
             runQuery(query);
@@ -532,34 +545,42 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
 
     private void followTableEntry(JTable jTable) {
         int row = jTable.getSelectedRow();
-        String label = ((List<String>) jTable.getValueAt(row, 2)).get(0);
-        String query = "MATCH (n:" + label + ") RETURN n";
-        jTextFieldQuery.setText(query);
-        Map map = (Map) jTable.getValueAt(row, 3);
-        String name = (String) map.get("name");
-        try {
-            runQuery(query);
-        } catch (SQLException ex) {
-            logException(ex);
+        if (row >= 0) {
+            Object tableObject = jTable.getValueAt(row, 3);
+            String label = null;
+            if (tableObject instanceof List) {
+                label = ((List) tableObject).get(0).toString();
+            } else {
+                label = tableObject.toString();
+            }
+            String query = "MATCH (n:" + label + ") RETURN ID(n),n";
+            jTextFieldQuery.setText(query);
+//        Map map = (Map) jTable.getValueAt(row, 2);
+            String id = (String) jTable.getValueAt(row, 2).toString();
+            try {
+                runQuery(query);
+            } catch (SQLException ex) {
+                logException(ex);
+            }
+            selectById(id);
         }
-        selectName(name);
     }
 
     private void jButtonGotoNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGotoNextActionPerformed
         followTableEntry(this.jTableRelationshipsOut);
     }//GEN-LAST:event_jButtonGotoNextActionPerformed
 
-    private void jTextFieldSelectedNodeNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldSelectedNodeNameActionPerformed
-        selectName(jTextFieldSelectedNodeName.getText());
-    }//GEN-LAST:event_jTextFieldSelectedNodeNameActionPerformed
+    private void jTextFieldSelectedNodeIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldSelectedNodeIdActionPerformed
+        selectById(jTextFieldSelectedNodeId.getText());
+    }//GEN-LAST:event_jTextFieldSelectedNodeIdActionPerformed
 
-    private void selectName(String name) {
-        if (!jTextFieldSelectedNodeName.getText().equals(name)) {
-            jTextFieldSelectedNodeName.setText(name);
+    private void selectById(String idString) {
+        if (!jTextFieldSelectedNodeId.getText().equals(idString)) {
+            jTextFieldSelectedNodeId.setText(idString);
         }
         for (int i = 0; i < this.jTableNodes.getRowCount(); i++) {
-            String n = (String) this.jTableNodes.getValueAt(i, 0);
-            if (n.equals(name)) {
+            String col0string = (String) this.jTableNodes.getValueAt(i, 0);
+            if (Objects.equal(col0string, idString)) {
                 this.jTableNodes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
                 this.jTableNodes.getSelectionModel().setSelectionInterval(i, i);
                 this.jTableNodes.scrollRectToVisible(new Rectangle(this.jTableNodes.getCellRect(i, 0, true)));
@@ -594,7 +615,13 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 List<Map> thisRowListMap = listOfListOfMaps.get(row);
 
                 for (int rsIndex = 1; rsIndex <= metaColCount; rsIndex++) {
-                    Map map = rs.getObject(rsIndex, Map.class);
+                    Object rsObject = rs.getObject(rsIndex, Object.class);
+                    Map map = null;
+                    if (rsObject instanceof Map) {
+                        map = (Map) rsObject;
+                    } else {
+                        map = Collections.singletonMap("", rsObject);
+                    }
                     thisRowListMap.add(map);
                     if (row == 0) {
                         listOfLabelsLists.add(new ArrayList<>());
@@ -644,7 +671,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButtonGetNodeLabels;
     private javax.swing.JButton jButtonGotoFrom;
     private javax.swing.JButton jButtonGotoNext;
     private javax.swing.JLabel jLabel1;
@@ -663,7 +690,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     private javax.swing.JTable jTableRelationshipsOut;
     private javax.swing.JTextArea jTextAreaErrors;
     private javax.swing.JTextField jTextFieldQuery;
-    private javax.swing.JTextField jTextFieldSelectedNodeName;
+    private javax.swing.JTextField jTextFieldSelectedNodeId;
     // End of variables declaration//GEN-END:variables
 
     @Override

@@ -37,13 +37,13 @@
                           </Group>
                           <Group type="102" alignment="1" attributes="0">
                               <Group type="103" groupAlignment="1" attributes="0">
-                                  <Component id="jScrollPane3" alignment="0" pref="660" max="32767" attributes="0"/>
-                                  <Component id="jScrollPane5" alignment="0" pref="660" max="32767" attributes="0"/>
+                                  <Component id="jScrollPane3" alignment="0" pref="663" max="32767" attributes="0"/>
+                                  <Component id="jScrollPane5" alignment="0" pref="663" max="32767" attributes="0"/>
                                   <Component id="jScrollPane2" alignment="0" max="32767" attributes="0"/>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="jTextFieldSelectedNodeName" min="-2" pref="304" max="-2" attributes="0"/>
+                                      <Component id="jTextFieldSelectedNodeId" min="-2" pref="304" max="-2" attributes="0"/>
                                       <EmptySpace max="32767" attributes="0"/>
                                       <Component id="jButtonGotoFrom" min="-2" max="-2" attributes="0"/>
                                   </Group>
@@ -58,7 +58,7 @@
                       </Group>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
-                      <Component id="jButton1" linkSize="1" min="-2" max="-2" attributes="0"/>
+                      <Component id="jButtonGetNodeLabels" linkSize="1" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="jScrollPane4" max="32767" attributes="0"/>
                   </Group>
@@ -85,7 +85,7 @@
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="jTextFieldSelectedNodeName" alignment="3" min="-2" pref="30" max="-2" attributes="0"/>
+                          <Component id="jTextFieldSelectedNodeId" alignment="3" min="-2" pref="30" max="-2" attributes="0"/>
                           <Component id="jButtonGotoFrom" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
@@ -102,7 +102,7 @@
               </Group>
               <EmptySpace min="-2" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jButton1" min="-2" max="-2" attributes="0"/>
+                  <Component id="jButtonGetNodeLabels" min="-2" max="-2" attributes="0"/>
                   <Component id="jScrollPane4" min="-2" pref="60" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" max="-2" attributes="0"/>
@@ -192,12 +192,12 @@
         </Component>
       </SubComponents>
     </Container>
-    <Component class="javax.swing.JButton" name="jButton1">
+    <Component class="javax.swing.JButton" name="jButtonGetNodeLabels">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Get Node Labels:"/>
+        <Property name="text" type="java.lang.String" value="Get Node Labels"/>
       </Properties>
       <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton1ActionPerformed"/>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonGetNodeLabelsActionPerformed"/>
       </Events>
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel4">
@@ -275,9 +275,9 @@
         </Component>
       </SubComponents>
     </Container>
-    <Component class="javax.swing.JTextField" name="jTextFieldSelectedNodeName">
+    <Component class="javax.swing.JTextField" name="jTextFieldSelectedNodeId">
       <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldSelectedNodeNameActionPerformed"/>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldSelectedNodeIdActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>
