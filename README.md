@@ -73,7 +73,7 @@ to the front.
 
 Code for this should be in following subdirectory:
 
-    aprs-framework/src/main/java/aprs/framework/
+    src/main/java/aprs/framework/
 
 
 
@@ -93,7 +93,7 @@ here can help determine if those systems could be connected to as expected.
 
 Code for this should be in following subdirectory:
 
-    aprs-framework/src/main/java/aprs/framework/logdisplay/  
+    src/main/java/aprs/framework/logdisplay/  
 
 
 
@@ -125,7 +125,7 @@ file to save or load from for easy switching.
 
 Code for this should be in following subdirectory:
 
-    aprs-framework/src/main/java/aprs/framework/database/  
+    src/main/java/aprs/framework/database/  
 
 
 
@@ -157,7 +157,7 @@ any relationship into for from any other node.
 
 Code for this should be in following subdirectory:
 
-    aprs-framework/src/main/java/aprs/framework/database/explore/  
+    src/main/java/aprs/framework/database/explore/  
 
 
 
@@ -202,7 +202,7 @@ display.
 
 Code for this should be in following subdirectory:
 
-    aprs-framework/src/main/java/aprs/framework/simview/  
+    src/main/java/aprs/framework/simview/  
 
 
 [Object SP] Vision To Database
@@ -233,7 +233,7 @@ database entries.
 
 Code for this should be in following subdirectory:
 
-    aprs-framework/src/main/java/aprs/framework/spvision/
+    src/main/java/aprs/framework/spvision/
 
 
 PDDL Planner
@@ -258,7 +258,19 @@ be installed locally it can be run remotely through SSH.
 
 Code for this should be in following subdirectory:
 
-     aprs-framework/src/main/java/aprs/framework/pddl/planner/  
+     src/main/java/aprs/framework/pddl/planner/  
+
+
+PDDL Executor
+------------
+
+![Screenshot of GUI with  PDDL Planner Window](/Screenshots/Screenshot_PDDL_Executor.png?raw=true)
+
+To get to this view:
+
+  1. Check the box in the menu for Startup -> PDDL Executor (if not already checked).
+  2. Select PDDL Actions to CRCL (Executor) from the Window menu.
+
 
 
 
