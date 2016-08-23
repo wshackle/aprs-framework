@@ -62,7 +62,16 @@ For Windows:
 Menu
 ====
 
+There are three main menus on the main frame.
 
+ * File -- Allows the properties files to be saved/loaded or exiting the program.
+ * Startup -- Includes checkboxes to specify which modules should be started at
+startup. Checking the box for any module that is not already started will start that
+module.
+ * Window -- Allows access to any window that has been created by moving that window
+to the front.
+
+   
 
 Views
 =====
@@ -172,12 +181,41 @@ display.
 [Object SP] Vision To Database
 ------------------------------
 
-![Screenshot of GUI with Object 2D View/Simulate Window](/Screenshots/Screenshot_Vision_To_Database.png?raw=true)
+![Screenshot of GUI with  Vision To Database Window](/Screenshots/Screenshot_Vision_To_Database.png?raw=true)
 
 To get to this view:
 
   1. Check the box in the menu for Startup -> Object SP (if not already checked).
   2. Select [Object SP] Vision To Database from the Window menu.
+
+This view monitors and controls the transfer of information from the vision system into
+the database. The host name or address and port number of the vision system can 
+be set. Data coming directly from the vision system is displayed in the bottom
+right table. This can be compared with data currently in the database displayed in
+the table in the top right. Currently both the positions from the database and 
+from the vision system are expected to be in the robot's coordinate system except that
+the vision system is not providing a z value as objects are expected to be in a 
+common plane just above the table. However a transform from vision to robot coordinates
+can be edited in the table in the lower left. The vision system may see multiple parts of the
+same type and then assign them the same name. This is noted in the repeats column of
+the table. If the checkbox labeled add repeat counts to database names. As highlighted
+in the screenshot two large_gear objects were reported in the same frame. The position
+for the second large gear was used to update the position of "large_gear_2" in the
+database. Work is being done on a more sophisticated way of mapping vision names to 
+database entries.
+
+PDDL Planner
+------------
+
+![Screenshot of GUI with  PDDL Planner Window](/Screenshots/Screenshot_PDDL_PLanner.png?raw=true)
+
+To get to this view:
+
+  1. Check the box in the menu for Startup -> PDDL Planner (if not already checked).
+  2. Select PDDL Planner from the Window menu.
+
+
+
 
 
 
