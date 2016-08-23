@@ -239,7 +239,7 @@ Code for this should be in following subdirectory:
 PDDL Planner
 ------------
 
-![Screenshot of GUI with  PDDL Planner Window](/Screenshots/Screenshot_PDDL_PLanner.png?raw=true)
+![Screenshot of GUI with  PDDL Planner Window](/Screenshots/Screenshot_PDDL_Planner.png?raw=true)
 
 To get to this view:
 
