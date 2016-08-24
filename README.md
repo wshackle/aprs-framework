@@ -5,6 +5,11 @@ project.
 
 It is currently hosted on GitHub at https://github.com/wshackle/aprs-framework
 
+Overview
+========
+
+![Overview of Project Modules](/Diagrams/overview.png?raw=true)
+
 
 It is composed of the following modules each with its own directory and .JInternalFrame.
 
@@ -58,11 +63,6 @@ For linux:
 For Windows:
 
     run.bat
-
-Overview
-========
-
-![Overview of Project Modules](/Diagrams/overview.png?raw=true)
 
 
 Menu
