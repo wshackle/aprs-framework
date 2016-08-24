@@ -59,6 +59,12 @@ For Windows:
 
     run.bat
 
+Overview
+========
+
+![Overview of Project Modules](/Diagrams/overview.png?raw=true)
+
+
 Menu
 ====
 
@@ -295,6 +301,40 @@ Code for this should be in following subdirectory:
 
      src/main/java/aprs/framework/pddl/executor/  
 
+
+CRCL Client
+-----------
+
+![Screenshot of GUI with  CRCL Client Window](/Screenshots/Screenshot_PDDL_Executor.png?raw=true)
+
+To get to this view:
+
+  1. Check the box in the menu for Startup -> PDDL Executor (if not already checked).
+  2. Select PDDL Actions to CRCL (Executor) from the Window menu.
+
+The PDDL Planner previously discussed outputs a list of actions in a text file. This is
+parsed by the executor and displayed in the top table. PDDL actions are converted into
+CRCL. The Canonical Robot Control Language is an XML based format with commands more
+directly executable by the robot. Some PDDL actions will result in multiple CRCL commands
+while others will not be directly linked to any CRCL command but rather change the 
+executors state indirectly affecting the CRCL generated related to future actions.
+When possible the CRCL commands from multiple PDDL actions are combined into a single 
+CRCL program. The information stored in the PDDL action is typically not enough to
+generate the CRCL commands. For example the take_part action includes the name of the
+part to take but not its current position. In order to generate the CRCL MoveTo command to move 
+the robot to a position where the part can be grabbed the executor consults the database
+to obtain a position associated with that part. The CRCL generated is displayed in the
+bottom table. The continue index marks the PDDL action where CRCL generation will
+continue after the robot has successfully executed the most recently generated CRCL program.
+Some options can be set from within the executor to control how some CRCL is generated.
+For example when the robot needs to look for a part, the arm needs to be moved to a
+position where it will not occlude the vision system.  This is specified in the
+lookForXYZ option in the options table in the middle.
+
+
+Code for this should be in following subdirectory:
+
+     src/main/java/aprs/framework/pddl/executor/  
 
 
 
