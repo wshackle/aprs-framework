@@ -320,6 +320,25 @@ the goto the connection tab to set hostname and port of the CRCL server to conne
 and click the connect button to complete the connection. The program tab displays each 
 line of the program as it is run. 
 
+CRCL Simulation Server
+----------------------
+
+![Screenshot of GUI with  CRCL Simulation Server Window](/Screenshots/Screenshot_CRCL_Simulation_Server.png?raw=true)
+
+To get to this view:
+
+  1. Check the box in the menu for Startup -> Robot CRCL SimServer (if not already checked).
+  2. Select CRCL Simulation Server from the Window menu. 
+ 
+The CRCL simulation server is the same application  which can be run stand-alone from the project on 
+https://github.com/usnistgov/crcl   under the tools/java/crcl4java/ directory. It provides
+a simulated system that accepts commands and produces status that allows testing of 
+the CRCL client and indirectly any higher level modules. The port should be the same
+as set on the connection tab of the client.
+
+
+
+
 
 
 
