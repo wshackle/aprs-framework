@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
@@ -493,23 +494,23 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 throw new IllegalStateException("connection is null");
             }
             PreparedStatement stmtn
-                    = connection.prepareStatement("START n=node(*) RETURN distinct labels(n)");
+                    = connection.prepareStatement("MATCH (n) RETURN distinct labels(n)");
             DefaultListModel model = new DefaultListModel();
 
             model.removeAllElements();
-            List<String> l = new ArrayList<>();
+            Set<String> set = new TreeSet<>();
             try (ResultSet rs = stmtn.executeQuery()) {
                 while (rs.next()) {
                     Object o = rs.getObject(1);
                     if (o instanceof List) {
-                        o = ((List) o).get(0);
-                    }
+                        set.addAll((List)o);
+                    } else {
 //                    model.addElement(o);
-                    l.add(o.toString());
+                        set.add(o.toString());
+                    }
                 }
             }
-            Collections.sort(l);
-            for (String s : l) {
+            for (String s : set) {
                 model.addElement(s);
             }
             jListNodeLabels.setModel(model);
