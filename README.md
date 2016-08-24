@@ -305,36 +305,20 @@ Code for this should be in following subdirectory:
 CRCL Client
 -----------
 
-![Screenshot of GUI with  CRCL Client Window](/Screenshots/Screenshot_PDDL_Executor.png?raw=true)
+![Screenshot of GUI with  CRCL Client Window](/Screenshots/Screenshot_CRCL_Client.png?raw=true)
 
 To get to this view:
 
-  1. Check the box in the menu for Startup -> PDDL Executor (if not already checked).
-  2. Select PDDL Actions to CRCL (Executor) from the Window menu.
-
-The PDDL Planner previously discussed outputs a list of actions in a text file. This is
-parsed by the executor and displayed in the top table. PDDL actions are converted into
-CRCL. The Canonical Robot Control Language is an XML based format with commands more
-directly executable by the robot. Some PDDL actions will result in multiple CRCL commands
-while others will not be directly linked to any CRCL command but rather change the 
-executors state indirectly affecting the CRCL generated related to future actions.
-When possible the CRCL commands from multiple PDDL actions are combined into a single 
-CRCL program. The information stored in the PDDL action is typically not enough to
-generate the CRCL commands. For example the take_part action includes the name of the
-part to take but not its current position. In order to generate the CRCL MoveTo command to move 
-the robot to a position where the part can be grabbed the executor consults the database
-to obtain a position associated with that part. The CRCL generated is displayed in the
-bottom table. The continue index marks the PDDL action where CRCL generation will
-continue after the robot has successfully executed the most recently generated CRCL program.
-Some options can be set from within the executor to control how some CRCL is generated.
-For example when the robot needs to look for a part, the arm needs to be moved to a
-position where it will not occlude the vision system.  This is specified in the
-lookForXYZ option in the options table in the middle.
-
-
-Code for this should be in following subdirectory:
-
-     src/main/java/aprs/framework/pddl/executor/  
+  1. Check the box in the menu for Startup -> Robot CRCL Client Gui (if not already checked).
+  2. Select the entry starting with "CRCL Client" from the Window menu. (The menu also shows the status of the client and
+will therefore vary as the system state varies) 
+ 
+The CRCL client is the same client which can be run stand-alone from the project on 
+https://github.com/usnistgov/crcl   under the tools/java/crcl4java/ directory. It
+can be used to control and monitor a robot with a CRCL interface. It maybe necessary
+the goto the connection tab to set hostname and port of the CRCL server to connect to
+and click the connect button to complete the connection. The program tab displays each 
+line of the program as it is run. 
 
 
 
