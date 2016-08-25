@@ -50,7 +50,7 @@ public class VisionSocketClient implements AutoCloseable {
     private List<DetectedItem> transformedVisionList = null;
     private SocketLineReader visionSlr = null;
     private ExecutorService visionExecServ = Executors.newFixedThreadPool(1);
-    private volatile boolean parsing_line = false;
+    private volatile String parsing_line = null;
 
     private PrintStream replyPs;
 
@@ -139,7 +139,7 @@ public class VisionSocketClient implements AutoCloseable {
     }
 
     public void start(Map<String, String> argsMap) {
-        String host="HOSTNOTSET";
+        String host = "HOSTNOTSET";
         short port = -99;
         try {
             acquire = AcquireEnum.valueOf(argsMap.get("--aquirestate"));
@@ -151,21 +151,23 @@ public class VisionSocketClient implements AutoCloseable {
                     "visionReader", new SocketLineReader.CallBack() {
 
                 private String lastSkippedLine = null;
+
                 @Override
                 public void call(final String line, PrintStream os) {
-                    if (!parsing_line) {
-                        parsing_line = true;
+//                    System.out.println("line = " + line+", parsing_line="+parsing_line);
+                    if (null == parsing_line) {
+                        parsing_line = line;
                         visionExecServ.execute(new Runnable() {
 
                             @Override
                             public void run() {
                                 parseVisionLine(line);
-                                if(null != lastSkippedLine) {
+                                if (null != lastSkippedLine) {
                                     String skippedLine = lastSkippedLine;
                                     lastSkippedLine = null;
                                     parseVisionLine(skippedLine);
                                 }
-                                parsing_line = false;
+                                parsing_line = null;
                             }
                         });
                     } else {
@@ -179,10 +181,10 @@ public class VisionSocketClient implements AutoCloseable {
             }
             updateListeners();
         } catch (IOException exception) {
-            System.err.println("Connect to vision on host "+host +" with port "+ port + " failed with message "+exception);
+            System.err.println("Connect to vision on host " + host + " with port " + port + " failed with message " + exception);
             Throwable cause = exception.getCause();
-            if(null != cause ) {
-                System.err.println("Caused by "+exception.getCause());
+            if (null != cause) {
+                System.err.println("Caused by " + exception.getCause());
             }
         }
     }
@@ -282,7 +284,7 @@ public class VisionSocketClient implements AutoCloseable {
         return listOut;
     }
 
-    private boolean addRepeatCountsToDatabaseNames=true;
+    private boolean addRepeatCountsToDatabaseNames = true;
 
     /**
      * Get the value of addRepeatCountsToDatabaseNames
@@ -304,6 +306,7 @@ public class VisionSocketClient implements AutoCloseable {
     }
 
     public void parseVisionLine(final String line) {
+        long t0 = System.nanoTime();
         this.line = line;
         final DatabasePoseUpdater dup = Main.getDatabasePoseUpdater();
         final VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
@@ -315,6 +318,31 @@ public class VisionSocketClient implements AutoCloseable {
         visionList = lineToList(line, visionList, displayInterface);
         poseUpdatesParsed += visionList.size();
         publishVisionList(dup, displayInterface);
+        if (debug) {
+            long t1 = System.nanoTime();
+            long time_diff = t1 - t0;
+            System.out.printf("parseVisionLine time_diff = %.3f\n", (time_diff * 1e-9));
+        }
+    }
+
+    private boolean debug;
+
+    /**
+     * Get the value of debug
+     *
+     * @return the value of debug
+     */
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /**
+     * Set the value of debug
+     *
+     * @param debug new value of debug
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 
     public void publishVisionList(final DatabasePoseUpdater dup, final VisionToDBJFrameInterface displayInterface) {

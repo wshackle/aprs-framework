@@ -106,6 +106,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (null != visionClient) {
                 visionClient.setTransform(pose);
                 visionClient.publishVisionList(Main.getDatabasePoseUpdater(), this);
+                visionClient.setDebug(this.jCheckBoxDebug.isSelected());
             }
         } catch (Exception e) {
             addLogMessage(e);
@@ -401,6 +402,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jLabel11.setText("Log: ");
 
         jCheckBoxDebug.setText("Debug");
+        jCheckBoxDebug.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxDebugActionPerformed(evt);
+            }
+        });
 
         jPanel2.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
@@ -808,7 +814,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         this.autoResizeTableColWidths(jTableFromDatabase);
     }
-    
+
     public void autoResizeTableColWidths(JTable table) {
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -933,12 +939,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (_val) {
                 VisionSocketClient visionClient = Main.getVisionSocketClient();
                 if (null != visionClient) {
+                    visionClient.setDebug(this.jCheckBoxDebug.isSelected());
                     visionClient.publishVisionList(Main.getDatabasePoseUpdater(), this);
                 }
             }
         } catch (IOException ex) {
-            this.jLabelDatabaseStatus.setText( "DISCONNECTED");
-            this.jLabelDatabaseStatus.setBackground( Color.RED);
+            this.jLabelDatabaseStatus.setText("DISCONNECTED");
+            this.jLabelDatabaseStatus.setBackground(Color.RED);
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -1008,10 +1015,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.jTextFieldAcquire.setText(s);
     }
 
-    public void connectDB(Map<DbQueryEnum,DbQueryInfo> queriesMap) {
+    public void connectDB(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
         try {
             Map<String, String> argsMap = updateArgsMap();
-            Main.connectDB(argsMap,queriesMap);
+            Main.connectDB(argsMap, queriesMap);
 //            DbSetup curSetup = dbSetupPublisher.getDbSetup();
 //            saveProperties(curSetup.getDbType(), curSetup.getHost(), curSetup.getPort());
         } catch (Exception exception) {
@@ -1061,6 +1068,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             Main.startVision(argsMap);
             VisionSocketClient visionClient = Main.getVisionSocketClient();
             if (null != visionClient) {
+                visionClient.setDebug(this.jCheckBoxDebug.isSelected());
                 visionClient.setAddRepeatCountsToDatabaseNames(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
             }
             saveProperties();
@@ -1164,9 +1172,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private void jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed
         VisionSocketClient visionClient = Main.getVisionSocketClient();
         if (null != visionClient) {
+            visionClient.setDebug(this.jCheckBoxDebug.isSelected());
             visionClient.setAddRepeatCountsToDatabaseNames(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
         }
     }//GEN-LAST:event_jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed
+
+    private void jCheckBoxDebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxDebugActionPerformed
+        VisionSocketClient visionClient = Main.getVisionSocketClient();
+        if (null != visionClient) {
+            visionClient.setDebug(this.jCheckBoxDebug.isSelected());
+        }
+    }//GEN-LAST:event_jCheckBoxDebugActionPerformed
 
     private DbType oldDbType = null;
 

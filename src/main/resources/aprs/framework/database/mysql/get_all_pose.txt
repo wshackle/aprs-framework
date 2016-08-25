@@ -1,3 +1,3 @@
 #params=
-#results={NAME=name,X=x,Y=y,Z=z,VXI=vxi,VXJ=vxj,VZK=vxk,VXI=vxi,VXJ=vxj,VZK=vxk}
-select name,X,Y,Z,VXX,VXY from DirectPose
+#results={NAME=name,X=X,Y=Y,Z=Z,VXI=VXX,VXJ=VXY,VXK=VXZ,VZI=VZX,VZJ=VZY,VZK=VZZ}
+select name,X,Y,Z,VXX,VXY,VXZ,VZX,VZY,VZZ from DirectPose

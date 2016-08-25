@@ -188,7 +188,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 break;
         }
         con = DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password);
-        System.out.println("DatabasePoseUpdater connected to database of type "+dbtype+" on host "+host+" with port "+port);
+        System.out.println("DatabasePoseUpdater connected to database of type " + dbtype + " on host " + host + " with port " + port);
     }
 
     final private Map<DbQueryEnum, DbQueryInfo> queriesMap;
@@ -368,12 +368,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             displayInterface.addLogMessage(sb.toString());
                         }
                     }
+                    Map<DbParamTypeEnum, String> resultMap
+                            = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getResults();
                     l.add(new PoseQueryElem(rs.getString("name"),
-                            fix(rs, "x"),
-                            fix(rs, "y"),
-                            fix(rs, "z"),
-                            fix(rs, "vxi"),
-                            fix(rs, "vxj")
+                            fix(rs, resultMap.get(DbParamTypeEnum.X)),
+                            fix(rs, resultMap.get(DbParamTypeEnum.Y)),
+                            fix(rs, resultMap.get(DbParamTypeEnum.Z)),
+                            fix(rs, resultMap.get(DbParamTypeEnum.VXI)),
+                            fix(rs, resultMap.get(DbParamTypeEnum.VXJ))
                     ));
                 }
             }
@@ -442,6 +444,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
             if (null == update_statement) {
                 return;
             }
+            long t0 = System.nanoTime();
             int updates = 0;
             VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
             if (null != displayInterface && displayInterface.isDebug()) {
@@ -512,12 +515,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     poses_updated++;
                 }
             }
-            if (null != displayInterface && displayInterface.isDebug()) {
-                displayInterface.addLogMessage("poses_updated=" + poses_updated);
-                displayInterface.addLogMessage("end updateVisionList");
-                displayInterface.addLogMessage("updates=" + updates);
-                displayInterface.addLogMessage("useBatch=" + useBatch);
-            }
+            
             if (updates > 0 && useBatch) {
                 int ia[] = update_statement.executeBatch();
                 if (null != displayInterface && displayInterface.isDebug()) {
@@ -528,6 +526,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     updates += i;
                 }
                 poses_updated += updates;
+            }
+
+            if (null != displayInterface && displayInterface.isDebug()) {
+                long t1 = System.nanoTime();
+                displayInterface.addLogMessage("poses_updated=" + poses_updated);
+                displayInterface.addLogMessage("end updateVisionList");
+                displayInterface.addLogMessage("updates=" + updates);
+                displayInterface.addLogMessage("useBatch=" + useBatch);
+                displayInterface.addLogMessage(String.format("updateVisionList took %.3f seconds\n", (1e-9 * (t1 - t0))));
             }
         } catch (Exception exception) {
             exception.printStackTrace();

@@ -118,8 +118,8 @@ public class DbQueryInfo {
         if (endindex < startindex) {
             endindex = paramLine.length();
         }
-        String parmString = paramLine.substring(startindex, endindex);
-        if (parmString.trim().length() < 1) {
+        String parmString = paramLine.substring(startindex, endindex).trim();
+        if (parmString.length() < 1) {
             return null;
         }
         parmString = parmString.replaceAll("[(][0-9]*[)]", "");

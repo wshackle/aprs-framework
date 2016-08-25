@@ -92,7 +92,9 @@ public class VisionSocketServer implements AutoCloseable {
                 try {
                     while (!closing && !Thread.currentThread().isInterrupted()) {
                         Socket clientSocket = serverSocket.accept();
-                        System.out.println("clientSocket = " + clientSocket);
+                        if(debug) {
+                            System.out.println("clientSocket = " + clientSocket);
+                        }
                         if(null != bytesToSend) {
                             clientSocket.getOutputStream().write(bytesToSend);
                         }

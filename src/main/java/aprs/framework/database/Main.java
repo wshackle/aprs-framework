@@ -150,7 +150,9 @@ public class Main {
                 }
             });
         } else {
-            throw new IllegalStateException("PoseDatabaseUpdater: "+dup+" getAquire()="+getAquire());
+            if(!updating_pose_query) {
+                throw new IllegalStateException("PoseDatabaseUpdater: "+dup+" getAquire()="+getAquire());
+            }
         }
     }
 
@@ -400,6 +402,9 @@ public class Main {
         Main.closeVision();
         if(null == visionSocketClient) {
             visionSocketClient = new VisionSocketClient();
+        }
+        if(null != displayInterface) {
+            visionSocketClient.setDebug(displayInterface.isDebug());
         }
         visionSocketClient.setReplyPs(replyPs);
         visionSocketClient.start(argsMap);
