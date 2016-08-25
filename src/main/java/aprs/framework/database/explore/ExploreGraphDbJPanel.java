@@ -123,6 +123,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             }
             String col0Head = this.jTableNodes.getColumnName(0);
             PreparedStatement outStatement = null;
+            String name = jTextFieldSelectedNodeName.getText();
             if (col0Head.endsWith(".name")) {
                 outStatement
                         = connection.prepareStatement("MATCH (n {name:{1} }) - [relationship] -> (to) RETURN type(relationship),relationship,id(to),labels(to),to");
@@ -130,6 +131,15 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             } else {
                 outStatement
                         = connection.prepareStatement("MATCH (n) - [relationship] -> (to) WHERE ID(n) = " + s + " RETURN type(relationship),relationship,id(to),labels(to),to");
+                if (jTableNodes.getColumnCount() > 1) {
+                    String col1Head = this.jTableNodes.getColumnName(1);
+                    if (col1Head.endsWith(".name")) {
+                        name = this.jTableNodes.getValueAt(index, 1).toString();
+                        if (!jTextFieldSelectedNodeName.getText().equals(name)) {
+                            jTextFieldSelectedNodeName.setText(name);
+                        }
+                    }
+                }
             }
             DefaultTableModel model = new DefaultTableModel();
             try (ResultSet rs = outStatement.executeQuery()) {
@@ -306,6 +316,8 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         jScrollPane4 = new javax.swing.JScrollPane();
         jTextAreaErrors = new javax.swing.JTextArea();
         jTextFieldSelectedNodeId = new javax.swing.JTextField();
+        jLabel6 = new javax.swing.JLabel();
+        jTextFieldSelectedNodeName = new javax.swing.JTextField();
 
         jListNodeLabels.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -357,7 +369,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             }
         });
 
-        jLabel4.setText("In Relationships of Selected Node:");
+        jLabel4.setText("In Relationships of Selected Node with ID= ");
 
         jLabel5.setText("Out Relationships of Selected Node");
 
@@ -407,6 +419,15 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             }
         });
 
+        jLabel6.setText("Name:");
+
+        jTextFieldSelectedNodeName.setText(" ");
+        jTextFieldSelectedNodeName.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldSelectedNodeNameActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -435,8 +456,12 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                         .addComponent(jLabel4)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jTextFieldSelectedNodeId, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jTextFieldSelectedNodeId, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel6)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jTextFieldSelectedNodeName)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jButtonGotoFrom))
                                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                         .addComponent(jLabel5)
@@ -470,7 +495,9 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel4)
                             .addComponent(jTextFieldSelectedNodeId, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButtonGotoFrom))
+                            .addComponent(jButtonGotoFrom)
+                            .addComponent(jLabel6)
+                            .addComponent(jTextFieldSelectedNodeName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -503,7 +530,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 while (rs.next()) {
                     Object o = rs.getObject(1);
                     if (o instanceof List) {
-                        set.addAll((List)o);
+                        set.addAll((List) o);
                     } else {
 //                    model.addElement(o);
                         set.add(o.toString());
@@ -575,23 +602,57 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         selectById(jTextFieldSelectedNodeId.getText());
     }//GEN-LAST:event_jTextFieldSelectedNodeIdActionPerformed
 
+    private void jTextFieldSelectedNodeNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldSelectedNodeNameActionPerformed
+        selectByName(jTextFieldSelectedNodeName.getText());
+    }//GEN-LAST:event_jTextFieldSelectedNodeNameActionPerformed
+
+     private void selectByName(String name) {
+         try {
+             if (!jTextFieldSelectedNodeName.getText().equals(name)) {
+                 jTextFieldSelectedNodeName.setText(name);
+             }
+             for (int i = 0; i < this.jTableNodes.getRowCount(); i++) {
+                 String col1string = (String) this.jTableNodes.getValueAt(i, 1);
+                 if (Objects.equal(col1string, name)) {
+                     this.jTableNodes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                     this.jTableNodes.getSelectionModel().setSelectionInterval(i, i);
+                     this.jTableNodes.scrollRectToVisible(new Rectangle(this.jTableNodes.getCellRect(i, 0, true)));
+                     this.updatePropsRels();
+                     return;
+                 }
+             }
+             String msg = "name not found :" + name;
+             this.jTextAreaErrors.setText(msg);
+             System.err.println(msg);
+         } catch (Exception e) {
+             logException(e);
+         }
+    }
+     
     private void selectById(String idString) {
-        if (!jTextFieldSelectedNodeId.getText().equals(idString)) {
-            jTextFieldSelectedNodeId.setText(idString);
-        }
-        for (int i = 0; i < this.jTableNodes.getRowCount(); i++) {
-            String col0string = (String) this.jTableNodes.getValueAt(i, 0);
-            if (Objects.equal(col0string, idString)) {
-                this.jTableNodes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-                this.jTableNodes.getSelectionModel().setSelectionInterval(i, i);
-                this.jTableNodes.scrollRectToVisible(new Rectangle(this.jTableNodes.getCellRect(i, 0, true)));
-                this.updatePropsRels();
-                break;
+        try {
+            if (!jTextFieldSelectedNodeId.getText().equals(idString)) {
+                jTextFieldSelectedNodeId.setText(idString);
             }
+            for (int i = 0; i < this.jTableNodes.getRowCount(); i++) {
+                String col0string = (String) this.jTableNodes.getValueAt(i, 0).toString();
+                if (Objects.equal(col0string, idString)) {
+                    this.jTableNodes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                    this.jTableNodes.getSelectionModel().setSelectionInterval(i, i);
+                    this.jTableNodes.scrollRectToVisible(new Rectangle(this.jTableNodes.getCellRect(i, 0, true)));
+                    this.updatePropsRels();
+                    return;
+                }
+            }
+            String msg = "id not found :" + idString;
+            this.jTextAreaErrors.setText(msg);
+            System.err.println(msg);
+        } catch (Exception e) {
+            logException(e);
         }
     }
 
-    private void logException(SQLException ex) {
+    private void logException(Exception ex) {
         Logger.getLogger(ExploreGraphDbJPanel.class.getName()).log(Level.SEVERE, null, ex);
         jTextAreaErrors.setText(ex.toString());
         jTextAreaErrors.append("\nCaused by: \n" + ex.getCause());
@@ -667,7 +728,15 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         }
 
         jTableNodes.setModel(model);
+        jTableNodes.getSelectionModel().setSelectionInterval(-1, -1);
+        jTableNodes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         this.autoResizeTableColWidths(jTableNodes);
+        DefaultTableModel inModel = (DefaultTableModel) jTableRelationshipsIn.getModel();
+        inModel.setRowCount(0);
+        DefaultTableModel outModel = (DefaultTableModel) jTableRelationshipsOut.getModel();
+        outModel.setRowCount(0);
+        jTextFieldSelectedNodeId.setText("");
+        jTextFieldSelectedNodeName.setText("");
     }
 
 
@@ -680,6 +749,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JList<String> jListNodeLabels;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
@@ -692,6 +762,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     private javax.swing.JTextArea jTextAreaErrors;
     private javax.swing.JTextField jTextFieldQuery;
     private javax.swing.JTextField jTextFieldSelectedNodeId;
+    private javax.swing.JTextField jTextFieldSelectedNodeName;
     // End of variables declaration//GEN-END:variables
 
     @Override
