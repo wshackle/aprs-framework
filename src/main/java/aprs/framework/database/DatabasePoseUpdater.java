@@ -494,11 +494,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             String value = rs.getObject(name, Object.class).toString();
                             resultMap.put(name, value);
                         }
-                        if (null != displayInterface) {
-                            displayInterface.addLogMessage(resultMap.toString() + System.lineSeparator());
-                        } else {
-                            System.err.println(resultMap.toString());
-                        }
+                        if (null != displayInterface
+                                && displayInterface.isDebug()
+                                && resultMap.keySet().size() > 0) {
+                            displayInterface.addLogMessage("resultMap="+resultMap.toString() + System.lineSeparator());
+                        } 
                         String updateStringFilled
                                 = mergeStatementString;
                         for (int paramIndex = 1; paramIndex < paramsList.size() + 1; paramIndex++) {
