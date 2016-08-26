@@ -12,6 +12,16 @@
         <main.class>aprs.framework.AprsJFrame</main.class>
     </properties>
     <name>aprs-framework</name>
+    
+    <scm>
+        <connection>scm:git:https://github.com/wshackle/aprs-framework.git</connection>
+        <developerConnection>scm:git:https://github.com/wshackle/aprs-framework.git</developerConnection>
+        <!-- <developerConnection>scm:git:git@github.com:usnistgov/crcl.git</developerConnection> -->
+        <url>https://github.com/wshackle/aprs-framework</url>
+        <tag>HEAD</tag>
+    </scm>
+    
+    
     <dependencies>
         <dependency>
             <groupId>mysql</groupId>
@@ -78,6 +88,27 @@
         </repository>
     </repositories>
     <build>
+        
+        <!-- SKIP SETTING UP FILTERING LIKE THIS IF YOU USE THE GENERATE FILE MODE :-) -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                    <include>**/*.txt</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>**/*.png</include>
+                </includes>
+            </resource>
+        </resources>
+        
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -102,7 +133,43 @@
                     </execution>
                 </executions>
             </plugin>
+            
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            
+            
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>create-metadata</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <attach>true</attach>
+                    <!--make it available for jar/war classpath resource -->
+                    <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
+                </configuration>
+            </plugin>
         </plugins>
+        
     </build>
     <profiles>
         <profile> 

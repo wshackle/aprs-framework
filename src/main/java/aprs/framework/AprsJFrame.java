@@ -58,6 +58,7 @@ import crcl.ui.client.PendantClientJPanel;
 import crcl.ui.server.SimServerJInternalFrame;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLSocket;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Callable;
@@ -219,6 +220,17 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             System.setOut(new MyPrintStream(System.out));
             System.setErr(new MyPrintStream(System.err));
             activateInternalFrame(logDisplayJInternalFrame);
+
+            Properties buildProperties = new Properties();
+            try (InputStream inputStream = AprsJFrame.class.getResourceAsStream("/build.properties")) {
+                buildProperties.load(inputStream);
+            }
+            String revision = buildProperties.getProperty("revision");
+            System.out.println("Build revision = " + revision);
+            String version = buildProperties.getProperty("version");
+            System.out.println("Build version = " + version);
+            String timestamp = buildProperties.getProperty("timestamp");
+            System.out.println("Build timestamp = " + timestamp);
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -337,7 +349,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.err.println("checkInteralFrame("+frm+") failed.");
+        System.err.println("checkInteralFrame(" + frm + ") failed.");
         return false;
     }
 
