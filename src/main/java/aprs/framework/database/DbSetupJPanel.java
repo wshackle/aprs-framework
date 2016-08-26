@@ -213,10 +213,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
         jTableQueries.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
+
             },
             new String [] {
                 "Type", "Text"
