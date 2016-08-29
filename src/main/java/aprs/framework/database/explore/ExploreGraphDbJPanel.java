@@ -36,6 +36,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -142,9 +143,12 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 }
             }
             DefaultTableModel model = new DefaultTableModel();
+            List<Object[]> resultList = new ArrayList<>();
+            int colCount = -1;
             try (ResultSet rs = outStatement.executeQuery()) {
                 ResultSetMetaData meta = rs.getMetaData();
-                for (int i = 1; i <= meta.getColumnCount(); i++) {
+                colCount = meta.getColumnCount();
+                for (int i = 1; i < meta.getColumnCount(); i++) {
                     String colName = meta.getColumnName(i);
 //                    System.out.println("colName = " + colName);
 //                    String columnClassName = meta.getColumnClassName(i);
@@ -156,6 +160,13 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 int row = 0;
                 List<String> l = new ArrayList<>();
                 while (rs.next()) {
+                    Object ao[] = new Object[meta.getColumnCount()];
+                    for (int i = 0; i < ao.length; i++) {
+                        ao[i] = rs.getObject(i + 1);
+                    }
+                    resultList.add(ao);
+                }
+            }
 //                    for (int i = 1; i <= meta.getColumnCount(); i++) {
 //                        String colName = meta.getColumnName(i);
 //                        System.out.println("colName = " + colName);
@@ -171,12 +182,33 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
 //                            model.addColumn(l.get(i));
 //                        }
 //                    }
-                    model.addRow(new Object[meta.getColumnCount()]);
-                    for (int i = 1; i <= meta.getColumnCount(); i++) {
-                        model.setValueAt(rs.getObject(i), row, i - 1);
-                    }
-                    row++;
+            TreeSet<String> toKeys = new TreeSet<>();
+            for (Object[] ao : resultList) {
+                Object lastObject = ao[ao.length - 1];
+                if (lastObject instanceof Map) {
+                    toKeys.addAll(((Map<String, ?>) lastObject).keySet());
                 }
+            }
+            List<String> keyList = new ArrayList<>();
+            keyList.addAll(toKeys);
+            if (keyList.contains("name")) {
+                keyList.remove("name");
+            }
+            Collections.sort(keyList);
+            keyList.add(0, "name");
+            for (String key : keyList) {
+                model.addColumn("to." + key);
+            }
+            final int outTableWidth = colCount - 1 + keyList.size();
+            for (int rowIndex = 0; rowIndex < resultList.size(); rowIndex++) {
+                Object ao[] = resultList.get(rowIndex);
+                Object newArray[] = new Object[outTableWidth];
+                System.arraycopy(ao, 0, newArray, 0, ao.length - 1);
+                for (int i = ao.length - 1; i < outTableWidth; i++) {
+                    Map<String, Object> map = (Map) ao[ao.length - 1];
+                    newArray[i] = map.get(keyList.get(i - (ao.length - 1)));
+                }
+                model.addRow(newArray);
             }
             jTableRelationshipsOut.setModel(model);
             this.autoResizeTableColWidths(jTableRelationshipsOut);
@@ -189,9 +221,12 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             }
 
             model = new DefaultTableModel();
+            resultList = new ArrayList<>();
+            colCount = -1;
             try (ResultSet rs = inStatement.executeQuery()) {
                 ResultSetMetaData meta = rs.getMetaData();
-                for (int i = 1; i <= meta.getColumnCount(); i++) {
+                colCount = meta.getColumnCount();
+                for (int i = 1; i <= meta.getColumnCount()-1; i++) {
                     String colName = meta.getColumnName(i);
 //                    System.out.println("colName = " + colName);
 //                    String columnClassName = meta.getColumnClassName(i);
@@ -203,27 +238,40 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 int row = 0;
                 List<String> l = new ArrayList<>();
                 while (rs.next()) {
-//                    for (int i = 1; i <= meta.getColumnCount(); i++) {
-//                        String colName = meta.getColumnName(i);
-//                        System.out.println("colName = " + colName);
-//                        Object o = rs.getObject(i);
-//                        System.out.println("o = " + o);
-//                        System.out.println("o.getCLass() = " + o.getClass());
-////                        model.addColumn(colName);
-//                    }
-//                    Map map = rs.getObject(1, Map.class);
-//                    if (row == 0) {
-//                        l.addAll(map.keySet());
-//                        for (int i = 0; i < l.size(); i++) {
-//                            model.addColumn(l.get(i));
-//                        }
-//                    }
-                    model.addRow(new Object[meta.getColumnCount()]);
-                    for (int i = 1; i <= meta.getColumnCount(); i++) {
-                        model.setValueAt(rs.getObject(i), row, i - 1);
+                    Object ao[] = new Object[meta.getColumnCount()];
+                    for (int i = 0; i < ao.length; i++) {
+                        ao[i] = rs.getObject(i + 1);
                     }
-                    row++;
+                    resultList.add(ao);
                 }
+            }
+            TreeSet<String> fromKeys = new TreeSet<>();
+            for (Object[] ao : resultList) {
+                Object lastObject = ao[ao.length - 1];
+                if (lastObject instanceof Map) {
+                    fromKeys.addAll(((Map<String, ?>) lastObject).keySet());
+                }
+            }
+            keyList = new ArrayList<>();
+            keyList.addAll(fromKeys);
+            if (keyList.contains("name")) {
+                keyList.remove("name");
+            }
+            Collections.sort(keyList);
+            keyList.add(0, "name");
+            for (String key : keyList) {
+                model.addColumn("from." + key);
+            }
+            final int inTableWidth = colCount - 1 + keyList.size();
+            for (int rowIndex = 0; rowIndex < resultList.size(); rowIndex++) {
+                Object ao[] = resultList.get(rowIndex);
+                Object newArray[] = new Object[inTableWidth];
+                System.arraycopy(ao, 0, newArray, 0, ao.length - 1);
+                for (int i = ao.length - 1; i < inTableWidth; i++) {
+                    Map<String, Object> map = (Map) ao[ao.length - 1];
+                    newArray[i] = map.get(keyList.get(i - (ao.length - 1)));
+                }
+                model.addRow(newArray);
             }
             jTableRelationshipsIn.setModel(model);
             this.autoResizeTableColWidths(jTableRelationshipsIn);
@@ -608,29 +656,29 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         selectByName(jTextFieldSelectedNodeName.getText());
     }//GEN-LAST:event_jTextFieldSelectedNodeNameActionPerformed
 
-     private void selectByName(String name) {
-         try {
-             if (!jTextFieldSelectedNodeName.getText().equals(name)) {
-                 jTextFieldSelectedNodeName.setText(name);
-             }
-             for (int i = 0; i < this.jTableNodes.getRowCount(); i++) {
-                 String col1string = (String) this.jTableNodes.getValueAt(i, 1);
-                 if (Objects.equal(col1string, name)) {
-                     this.jTableNodes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-                     this.jTableNodes.getSelectionModel().setSelectionInterval(i, i);
-                     this.jTableNodes.scrollRectToVisible(new Rectangle(this.jTableNodes.getCellRect(i, 0, true)));
-                     this.updatePropsRels();
-                     return;
-                 }
-             }
-             String msg = "name not found :" + name;
-             this.jTextAreaErrors.setText(msg);
-             System.err.println(msg);
-         } catch (Exception e) {
-             logException(e);
-         }
+    private void selectByName(String name) {
+        try {
+            if (!jTextFieldSelectedNodeName.getText().equals(name)) {
+                jTextFieldSelectedNodeName.setText(name);
+            }
+            for (int i = 0; i < this.jTableNodes.getRowCount(); i++) {
+                String col1string = (String) this.jTableNodes.getValueAt(i, 1);
+                if (Objects.equal(col1string, name)) {
+                    this.jTableNodes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                    this.jTableNodes.getSelectionModel().setSelectionInterval(i, i);
+                    this.jTableNodes.scrollRectToVisible(new Rectangle(this.jTableNodes.getCellRect(i, 0, true)));
+                    this.updatePropsRels();
+                    return;
+                }
+            }
+            String msg = "name not found :" + name;
+            this.jTextAreaErrors.setText(msg);
+            System.err.println(msg);
+        } catch (Exception e) {
+            logException(e);
+        }
     }
-     
+
     private void selectById(String idString) {
         try {
             if (!jTextFieldSelectedNodeId.getText().equals(idString)) {
