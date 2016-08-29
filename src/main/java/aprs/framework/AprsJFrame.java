@@ -61,6 +61,7 @@ import crcl.utils.CRCLSocket;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.ref.WeakReference;
+import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -230,7 +231,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             String version = buildProperties.getProperty("version");
             System.out.println("Build version = " + version);
             String timestamp = buildProperties.getProperty("timestamp");
-            System.out.println("Build timestamp = " + timestamp);
+            System.out.println("Build timestamp = " + timestamp + "\n Build timestamp as Date = " + new Date(Long.valueOf(timestamp)));
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }

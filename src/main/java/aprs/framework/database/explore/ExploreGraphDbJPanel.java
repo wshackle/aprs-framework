@@ -349,6 +349,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         ));
         jScrollPane2.setViewportView(jTableNodes);
 
+        jTableRelationshipsIn.setAutoCreateRowSorter(true);
         jTableRelationshipsIn.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
@@ -387,6 +388,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             }
         });
 
+        jTableRelationshipsOut.setAutoCreateRowSorter(true);
         jTableRelationshipsOut.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
