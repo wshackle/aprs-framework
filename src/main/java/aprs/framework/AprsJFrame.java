@@ -891,11 +891,16 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     }
 
     private void jCheckBoxMenuItemStartupCRCLWebAppActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupCRCLWebAppActionPerformed
-        stopCrclWebApp();
-        if (jCheckBoxMenuItemStartupCRCLWebApp.isSelected()) {
-            String portString = JOptionPane.showInputDialog("Http Port?", crclWebServerHttpPort);
-            crclWebServerHttpPort = Integer.valueOf(portString);
-            startCrclWebApp();
+        try {
+            stopCrclWebApp();
+            if (jCheckBoxMenuItemStartupCRCLWebApp.isSelected()) {
+                String portString = JOptionPane.showInputDialog("Http Port?", crclWebServerHttpPort);
+                crclWebServerHttpPort = Integer.valueOf(portString);
+                startCrclWebApp();
+            }
+            saveProperties();
+        } catch (IOException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupCRCLWebAppActionPerformed
 
