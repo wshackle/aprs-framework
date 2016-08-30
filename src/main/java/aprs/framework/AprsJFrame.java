@@ -50,6 +50,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenuItem;
 import aprs.framework.pddl.executor.PddlExecutorDisplayInterface;
+import aprs.framework.tomcat.CRCLWebAppRunner;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import crcl.base.CRCLProgramType;
@@ -65,6 +66,7 @@ import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import javax.swing.JOptionPane;
 import javax.xml.bind.JAXBException;
 
 /**
@@ -275,6 +277,9 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             if (null != pub) {
                 pub.setDbSetup(dbSetup);
                 pub.addDbSetupListener(toVisListener);
+            }
+            if (this.jCheckBoxMenuItemStartupCRCLWebApp.isSelected()) {
+                startCrclWebApp();
             }
             setupWindowsMenu();
             if (jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()) {
@@ -533,6 +538,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         jCheckBoxMenuItemConnectToDatabaseOnStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemConnectToVisionOnStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemExploreGraphDbStartup = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemStartupCRCLWebApp = new javax.swing.JCheckBoxMenuItem();
         jMenuWindow = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -663,6 +669,14 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             }
         });
         jMenu3.add(jCheckBoxMenuItemExploreGraphDbStartup);
+
+        jCheckBoxMenuItemStartupCRCLWebApp.setText("CRCL Web App");
+        jCheckBoxMenuItemStartupCRCLWebApp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemStartupCRCLWebAppActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jCheckBoxMenuItemStartupCRCLWebApp);
 
         jMenuBar1.add(jMenu3);
 
@@ -841,6 +855,50 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         }
     }//GEN-LAST:event_jCheckBoxMenuItemExploreGraphDbStartupActionPerformed
 
+    CRCLWebAppRunner crclWebAppRunner = null;
+
+    public void stopCrclWebApp() {
+        if (null != crclWebAppRunner) {
+            crclWebAppRunner.stop();
+            crclWebAppRunner = null;
+        }
+    }
+
+    public void startCrclWebApp() {
+        crclWebAppRunner = new CRCLWebAppRunner();
+        crclWebAppRunner.setHttpPort(crclWebServerHttpPort);
+        crclWebAppRunner.start();
+    }
+
+    private int crclWebServerHttpPort = 8081;
+
+    /**
+     * Get the value of crclWebServerHttpPort
+     *
+     * @return the value of crclWebServerHttpPort
+     */
+    public int getCrclWebServerHttpPort() {
+        return crclWebServerHttpPort;
+    }
+
+    /**
+     * Set the value of crclWebServerHttpPort
+     *
+     * @param crclWebServerHttpPort new value of crclWebServerHttpPort
+     */
+    public void setCrclWebServerHttpPort(int crclWebServerHttpPort) {
+        this.crclWebServerHttpPort = crclWebServerHttpPort;
+    }
+
+    private void jCheckBoxMenuItemStartupCRCLWebAppActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupCRCLWebAppActionPerformed
+        stopCrclWebApp();
+        if (jCheckBoxMenuItemStartupCRCLWebApp.isSelected()) {
+            String portString = JOptionPane.showInputDialog("Http Port?", crclWebServerHttpPort);
+            crclWebServerHttpPort = Integer.valueOf(portString);
+            startCrclWebApp();
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemStartupCRCLWebAppActionPerformed
+
     public void startExploreGraphDb() {
         try {
             if (null == this.exploreGraphDbJInternalFrame) {
@@ -1003,6 +1061,14 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         if (null != startExploreGraphDbString) {
             jCheckBoxMenuItemExploreGraphDbStartup.setSelected(Boolean.valueOf(startExploreGraphDbString));
         }
+        String crclWebAppPortString = props.getProperty(CRCLWEBAPPPORT);
+        if (null != crclWebAppPortString) {
+            crclWebServerHttpPort = Integer.valueOf(crclWebAppPortString);
+        }
+         String startCrclWebAppString = props.getProperty(STARTUPCRCLWEBAPP);
+        if (null != startCrclWebAppString) {
+            jCheckBoxMenuItemStartupCRCLWebApp.setSelected(Boolean.valueOf(startCrclWebAppString));
+        }
 //        String executable = props.getProperty(PROGRAMEXECUTABLE);
 //        if (null != executable) {
 //            jTextFieldPlannerProgramExecutable.setText(executable);
@@ -1067,6 +1133,8 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         propsMap.put(STARTUPCONNECTDATABASE, Boolean.toString(jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()));
         propsMap.put(STARTUPCONNECTVISION, Boolean.toString(jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()));
         propsMap.put(STARTUPEXPLOREGRAPHDB, Boolean.toString(jCheckBoxMenuItemExploreGraphDbStartup.isSelected()));
+        propsMap.put(STARTUPCRCLWEBAPP, Boolean.toString(jCheckBoxMenuItemStartupCRCLWebApp.isSelected()));
+        propsMap.put(CRCLWEBAPPPORT, Integer.toString(crclWebServerHttpPort));
         Properties props = new Properties();
         props.putAll(propsMap);
         try (FileWriter fw = new FileWriter(propertiesFile)) {
@@ -1100,6 +1168,8 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private static final String STARTUPCONNECTDATABASE = "startup.connectdatabase";
     private static final String STARTUPCONNECTVISION = "startup.connectvision";
     private static final String STARTUPEXPLOREGRAPHDB = "startup.exploreGraphDb";
+    private static final String STARTUPCRCLWEBAPP = "startup.crclWebApp";
+    private static final String CRCLWEBAPPPORT = "crclWebApp.httpPort";
 
     @Override
     public void browseActionsFile() throws IOException {
@@ -1155,6 +1225,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToVisionOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupCRCLWebApp;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupFanucCRCLServer;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObject2DView;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObjectSP;
@@ -1221,6 +1292,12 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         try {
             closeActionsToCrclJInternalFrame();
 
+        } catch (Exception exception) {
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, exception);
+        }
+        try {
+            stopCrclWebApp();
         } catch (Exception exception) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, exception);

@@ -22,15 +22,18 @@
  */
 package aprs.framework.tomcat;
 
-//import com.bsb.common.vaadin.embed.support.EmbedVaadin;
+import com.bsb.common.vaadin.embed.EmbedVaadinServer;
+import com.bsb.common.vaadin.embed.support.EmbedVaadin;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
- * This was an experimental effort to embed launch the vaadin webapp
- * from within aprs-framework. Currently on-hold.
- * 
+ * This was an experimental effort to embed launch the vaadin webapp from within
+ * aprs-framework. Currently on-hold.
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class Runner {
+public class CRCLWebAppRunner implements Runnable {
 
 //    public static void main(String[] args) throws LifecycleException {
 //        Tomcat tomcat = new Tomcat();
@@ -54,11 +57,60 @@ public class Runner {
 //        tomcat.start();
 //        tomcat.getServer().await();
 //    }
+    public static void main(String[] args) {
+        new CRCLWebAppRunner().run();
+    }
+
+    public void stop() {
+        if (null != svr) {
+            svr.stop();
+            svr = null;
+        }
+        if(null != crclWebServerThread) {
+            crclWebServerThread.interrupt();
+            crclWebServerThread = null;
+        }
+    }
+
+    private int httpPort = 8081;
+
+    /**
+     * Get the value of httpPort
+     *
+     * @return the value of httpPort
+     */
+    public int getHttpPort() {
+        return httpPort;
+    }
+
+    /**
+     * Set the value of httpPort
+     *
+     * @param httpPort new value of httpPort
+     */
+    public void setHttpPort(int httpPort) {
+        this.httpPort = httpPort;
+    }
+
+    private EmbedVaadinServer svr = null;
     
-//    public static void main(String[] args) {
-//        EmbedVaadin.forUI(crcl.vaadin.webapp.CrclClientUI.class)
-//                .openBrowser(true)
-//                .start();
-//    }
+    private Thread crclWebServerThread=null;
+    
+    public void start() {
+        stop();
+        crclWebServerThread = new Thread(this,"crclWebServerThread");
+        crclWebServerThread.start();
+    }
+    
+    @Override
+    public void run() {
+        System.out.println("Creating instance of rcl.vaadin.webapp.CrclClientUI and starting it with EmbedVaadin.");
+        svr = EmbedVaadin.forComponent((new crcl.vaadin.webapp.CrclClientUI()).getUI())
+                .withTheme("default_theme")
+                .withHttpPort(httpPort)
+                .openBrowser(true)
+                .start();
+        System.out.println("EmbedVaadin svr created :"+svr);
+    }
 
 }

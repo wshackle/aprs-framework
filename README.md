@@ -336,6 +336,21 @@ a simulated system that accepts commands and produces status that allows testing
 the CRCL client and indirectly any higher level modules. The port should be the same
 as set on the connection tab of the client.
 
+CRCL WebApp
+-----------
+
+![Screenshot of Browser with CRCL WebApp](/Screenshots/Screenshot_CRCL_WebApp.png?raw=true)
+
+To get to this view:
+
+  1. Check the box in the menu for Startup -> CRCL Web App (if not already checked).
+ 
+The CRCL Web App provides a CRCL client through a a web application. It is the same
+application that can be started from the project on 
+https://github.com/usnistgov/crcl   under the tools/java/crcl4java/crcl-vaadin-webapp directory.
+Once it is running one can connect to it using other devices such as mobile devices that
+can not run the swing application.
+
 
 
 

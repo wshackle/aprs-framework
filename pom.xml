@@ -64,6 +64,11 @@
             <artifactId>jsch</artifactId>
             <version>0.1.53</version>
         </dependency>
+        <dependency>
+            <groupId>com.bsb.common.vaadin</groupId>
+            <artifactId>com.bsb.common.vaadin7.embed</artifactId>
+            <version>0.6</version>
+        </dependency>
     </dependencies>
     <repositories>
         <repository>
@@ -104,7 +109,10 @@
                 <directory>src/main/resources</directory>
                 <filtering>false</filtering>
                 <includes>
+                    <include>**/*.scss</include>
+                    <include>**/*.jpg</include>
                     <include>**/*.png</include>
+                    <include>**/*.ico</include>
                 </includes>
             </resource>
         </resources>
@@ -147,8 +155,6 @@
                     </execution>
                 </executions>
             </plugin>
-            
-            
             
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
