@@ -879,13 +879,10 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
             scp(session, jTextFieldHost.getText(), remoteDomainFile, jTextFieldPddlDomainFile.getText());
             scp(session, jTextFieldHost.getText(), remoteProblemFile, jTextFieldPddlProblem.getText());
             sshExec(session, jTextFieldPlannerProgramExecutable.getText() + " " + jTextFieldAdditionalArgs.getText() + " " + remoteDomainFile + " " + remoteProblemFile);
-        } catch (JSchException ex) {
-            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
+            printMessage("runPddlPlannerOnceSsh failed with "+ex);
             Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        } 
     }
 
     public void runPddlPlannerOnce() throws IOException {
@@ -925,6 +922,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                         String line = null;
                         while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
                             final String lineToAppend = line;
+                            System.out.println("Line from remote error source:"+line);
                             javax.swing.SwingUtilities.invokeLater(new Runnable() {
                                 @Override
                                 public void run() {
@@ -947,6 +945,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                     boolean planFoundFound = false;
                     while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
                         final String lineToAppend = line;
+                        System.out.println("Line from remote out source:"+line);
                         javax.swing.SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {

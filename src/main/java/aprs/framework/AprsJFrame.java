@@ -224,16 +224,21 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             System.setErr(new MyPrintStream(System.err));
             activateInternalFrame(logDisplayJInternalFrame);
 
-            Properties buildProperties = new Properties();
+            Properties buildProperties = null;
             try (InputStream inputStream = AprsJFrame.class.getResourceAsStream("/build.properties")) {
-                buildProperties.load(inputStream);
+                if (null != inputStream) {
+                    buildProperties = new Properties();
+                    buildProperties.load(inputStream);
+                }
             }
-            String revision = buildProperties.getProperty("revision");
-            System.out.println("Build revision = " + revision);
-            String version = buildProperties.getProperty("version");
-            System.out.println("Build version = " + version);
-            String timestamp = buildProperties.getProperty("timestamp");
-            System.out.println("Build timestamp = " + timestamp + "\n Build timestamp as Date = " + new Date(Long.valueOf(timestamp)));
+            if (null != buildProperties) {
+                String revision = buildProperties.getProperty("revision");
+                System.out.println("Build revision = " + revision);
+                String version = buildProperties.getProperty("version");
+                System.out.println("Build version = " + version);
+                String timestamp = buildProperties.getProperty("timestamp");
+                System.out.println("Build timestamp = " + timestamp + "\n Build timestamp as Date = " + new Date(Long.valueOf(timestamp)));
+            }
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1070,7 +1075,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         if (null != crclWebAppPortString) {
             crclWebServerHttpPort = Integer.valueOf(crclWebAppPortString);
         }
-         String startCrclWebAppString = props.getProperty(STARTUPCRCLWEBAPP);
+        String startCrclWebAppString = props.getProperty(STARTUPCRCLWEBAPP);
         if (null != startCrclWebAppString) {
             jCheckBoxMenuItemStartupCRCLWebApp.setSelected(Boolean.valueOf(startCrclWebAppString));
         }
