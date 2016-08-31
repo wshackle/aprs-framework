@@ -59,7 +59,9 @@ import crcl.ui.client.PendantClientJPanel;
 import crcl.ui.server.SimServerJInternalFrame;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLSocket;
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.ref.WeakReference;
 import java.util.Date;
@@ -224,21 +226,40 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             System.setErr(new MyPrintStream(System.err));
             activateInternalFrame(logDisplayJInternalFrame);
 
-            Properties buildProperties = null;
-            try (InputStream inputStream = AprsJFrame.class.getResourceAsStream("/build.properties")) {
-                if (null != inputStream) {
-                    buildProperties = new Properties();
-                    buildProperties.load(inputStream);
-                }
-            }
-            if (null != buildProperties) {
-                String revision = buildProperties.getProperty("revision");
-                System.out.println("Build revision = " + revision);
-                String version = buildProperties.getProperty("version");
-                System.out.println("Build version = " + version);
-                String timestamp = buildProperties.getProperty("timestamp");
-                System.out.println("Build timestamp = " + timestamp + "\n Build timestamp as Date = " + new Date(Long.valueOf(timestamp)));
-            }
+//            Properties buildProperties = null;
+//            try (InputStream inputStream = AprsJFrame.class.getResourceAsStream("/build.properties")) {
+//                if (null != inputStream) {
+//                    buildProperties = new Properties();
+//                    buildProperties.load(inputStream);
+//                }
+//            }
+//            if (null != buildProperties) {
+//                String revision = buildProperties.getProperty("revision");
+//                System.out.println("Build revision = " + revision);
+//                String version = buildProperties.getProperty("version");
+//                System.out.println("Build version = " + version);
+//                String timestamp = buildProperties.getProperty("timestamp");
+//                System.out.println("Build timestamp = " + timestamp + "\n Build timestamp as Date = " + new Date(Long.valueOf(timestamp)));
+//            }
+//            Properties gitProperties = null;
+//            try (InputStream inputStream = AprsJFrame.class.getResourceAsStream("git.properties")) {
+//                if (null != inputStream) {
+//                    gitProperties = new Properties();
+//                    gitProperties.load(inputStream);
+//                }
+//            }
+//            try (BufferedReader br = new BufferedReader(new InputStreamReader(AprsJFrame.class.getResourceAsStream("git.properties")))) {
+//                String line = null;
+//                while(null != (line = br.readLine())) {
+//                    System.out.println(line);
+//                }   
+//            }
+//            if (null != gitProperties) {
+//                String tag = gitProperties.getProperty("git.tag");
+//                System.out.println("git.tag = " + tag);
+//                String revision = gitProperties.getProperty("git.revision");
+//                System.out.println("git.revision = " + revision);
+//            }
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
