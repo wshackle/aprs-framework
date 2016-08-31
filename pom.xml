@@ -142,38 +142,8 @@
                 </executions>
             </plugin>
             
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>create</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>create-metadata</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <attach>true</attach>
-                    <!--make it available for jar/war classpath resource -->
-                    <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
-                </configuration>
-            </plugin>
+            
         </plugins>
         
     </build>
@@ -286,6 +256,33 @@
                             <executable>
                                 gpg2.exe
                             </executable>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>update_revision</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>buildnumber-maven-plugin</artifactId>
+                        <version>1.4</version>
+                        <executions>
+                            <execution>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>create-metadata</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <attach>true</attach>
+                            <!--make it available for jar/war classpath resource -->
+                            <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
+                            <doCheck>false</doCheck>
+                            <doUpdate>false</doUpdate>
                         </configuration>
                     </plugin>
                 </plugins>
