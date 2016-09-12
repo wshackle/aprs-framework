@@ -23,11 +23,10 @@
 
 package aprs.framework.spvision;
 
-import aprs.framework.database.DatabasePoseUpdater;
+import aprs.framework.database.Main;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
-import aprs.framework.database.Main;
 import aprs.framework.database.PoseQueryElem;
 import java.io.File;
 import java.sql.Connection;

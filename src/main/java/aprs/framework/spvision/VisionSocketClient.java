@@ -22,10 +22,9 @@
  */
 package aprs.framework.spvision;
 
-import aprs.framework.database.AcquireEnum;
-import aprs.framework.database.DatabasePoseUpdater;
-import aprs.framework.database.DetectedItem;
 import aprs.framework.database.Main;
+import aprs.framework.database.AcquireEnum;
+import aprs.framework.database.DetectedItem;
 import aprs.framework.database.SocketLineReader;
 import crcl.base.PoseType;
 import crcl.utils.CRCLPosemath;

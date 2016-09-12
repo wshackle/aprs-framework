@@ -23,7 +23,6 @@
 package aprs.framework.spvision;
 
 import aprs.framework.database.CommonJFrameInterface;
-import aprs.framework.database.DatabasePoseUpdater;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;

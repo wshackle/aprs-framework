@@ -22,8 +22,8 @@
  */
 package aprs.framework.spvision;
 
+import aprs.framework.database.Main;
 import aprs.framework.database.AcquireEnum;
-import aprs.framework.database.DatabasePoseUpdater;
 import aprs.framework.database.DbQueryEnum;
 import aprs.framework.database.DbQueryInfo;
 import aprs.framework.database.DbSetup;
@@ -33,7 +33,6 @@ import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.DetectedItemJPanel;
-import aprs.framework.database.Main;
 import aprs.framework.database.PoseQueryElem;
 import crcl.base.PoseType;
 import crcl.ui.misc.MultiLineStringJPanel;
@@ -74,6 +73,12 @@ import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  *

@@ -21,8 +21,16 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.database;
+package aprs.framework.spvision;
 
+import aprs.framework.database.Main;
+import aprs.framework.database.DbParamTypeEnum;
+import aprs.framework.database.DbQueryEnum;
+import aprs.framework.database.DbQueryInfo;
+import aprs.framework.database.DbSetupBuilder;
+import aprs.framework.database.DbType;
+import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PoseQueryElem;
 import aprs.framework.spvision.VisionToDBJFrameInterface;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -424,6 +432,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 exception.printStackTrace();
             }
         }
+//        if (null != neo4jJavaDriver) {
+//            neo4jJavaDriver.close();
+//            neo4jJavaDriver = null;
+//        }
+//        if (null != neo4jSession) {
+//            neo4jSession.close();
+//            neo4jSession = null;
+//        }
 //        if (null != neo4jJavaDriver) {
 //            neo4jJavaDriver.close();
 //            neo4jJavaDriver = null;

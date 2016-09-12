@@ -22,8 +22,10 @@
  */
 package aprs.framework.database;
 
-import aprs.framework.spvision.VisionToDBJFrameInterface;
+import aprs.framework.spvision.DatabasePoseUpdater;
 import aprs.framework.spvision.VisionSocketClient;
+import aprs.framework.spvision.VisionToDBJFrameInterface;
+import aprs.framework.spvision.VisionToDbMainJFrame;
 import java.io.BufferedReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -258,7 +260,7 @@ public class Main {
                 @Override
                 public void run() {
                     try {
-                        displayInterface = new MainJFrame();
+                        displayInterface = new VisionToDbMainJFrame();
                         try {
                             displayInterface.updateFromArgs(argsMap);
                         } catch (Exception e) {

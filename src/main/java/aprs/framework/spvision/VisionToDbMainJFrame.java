@@ -20,10 +20,16 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.database;
+package aprs.framework.spvision;
 
+import aprs.framework.database.Main;
+import aprs.framework.database.DbSetupPublisher;
+import aprs.framework.database.DbType;
+import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PoseQueryElem;
 import aprs.framework.spvision.VisionToDBJFrameInterface;
 import aprs.framework.simview.Object2DJFrame;
+import aprs.framework.spvision.DatabasePoseUpdater;
 import java.awt.Frame;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -40,14 +46,14 @@ import javax.swing.JTextField;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class MainJFrame extends javax.swing.JFrame implements VisionToDBJFrameInterface {
+public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFrameInterface {
 
     private JTextField cellField = new JTextField();
 
     /**
      * Creates new form MainJFrame
      */
-    public MainJFrame() {
+    public VisionToDbMainJFrame() {
         initComponents();
         Main.setDisplayInterface(this);
     }
