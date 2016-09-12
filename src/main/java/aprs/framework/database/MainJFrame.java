@@ -301,4 +301,11 @@ public class MainJFrame extends javax.swing.JFrame implements VisionToDBJFrameIn
     @Override
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {
     }
+
+    @Override
+    public void updateResultsMap(Map<String, DatabasePoseUpdater.UpdateResults> _map) {
+        if(null != this.visionToDBJPanel) {
+            this.visionToDBJPanel.updateResultsMap(_map);
+        }
+    }
 }

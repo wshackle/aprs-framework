@@ -9,3 +9,4 @@ merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)
 set pt.hasPoint_X= {2},pt.hasPoint_Y= {3},pt.hasPoint_Z= {4}
 set xaxis.hasVector_I={5}, xaxis.hasVector_J={6}, xaxis.hasVector_K={7}
 set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}
+return count(pt) + count(xaxis) + count(zaxis)

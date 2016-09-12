@@ -120,7 +120,8 @@ public class ExploreGraphDbJFrame extends javax.swing.JFrame {
                             "localhost",
                             7482, "",
                             "neo4j",
-                            "password"));
+                            "password",
+                            true));
                     frm.setVisible(true);
                 } catch (SQLException ex) {
                     Logger.getLogger(ExploreGraphDbJFrame.class.getName()).log(Level.SEVERE, null, ex);

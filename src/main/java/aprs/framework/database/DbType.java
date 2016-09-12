@@ -30,6 +30,6 @@ package aprs.framework.database;
  */
 public enum DbType {
     MYSQL, NEO4J
-//    , NEO4J_BOLT
+    , NEO4J_BOLT
     ;
 }

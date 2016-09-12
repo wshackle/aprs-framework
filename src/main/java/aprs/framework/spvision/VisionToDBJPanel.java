@@ -36,6 +36,7 @@ import aprs.framework.database.DetectedItemJPanel;
 import aprs.framework.database.Main;
 import aprs.framework.database.PoseQueryElem;
 import crcl.base.PoseType;
+import crcl.ui.misc.MultiLineStringJPanel;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.vector;
@@ -43,6 +44,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dialog;
+import java.awt.Toolkit;
 import java.awt.Window;
 import java.io.File;
 import java.io.FileReader;
@@ -56,12 +58,16 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.TransferHandler;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableColumnModel;
@@ -165,6 +171,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jScrollPaneTableFromVision = new javax.swing.JScrollPane();
         jTableFromVision = new javax.swing.JTable();
         jLabel19 = new javax.swing.JLabel();
+        jPanelTableUpdateResults = new javax.swing.JPanel();
+        jScrollPaneTableUpdateResults = new javax.swing.JScrollPane();
+        jTableUpdateResults = new javax.swing.JTable();
+        jLabel21 = new javax.swing.JLabel();
+        jButtonUpdateResultDetails = new javax.swing.JButton();
         jSpinnerLogLines = new javax.swing.JSpinner();
         jLabel1 = new javax.swing.JLabel();
 
@@ -391,12 +402,23 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(14, Short.MAX_VALUE))
+                .addContainerGap(62, Short.MAX_VALUE))
         );
 
         jTextAreaLog.setEditable(false);
         jTextAreaLog.setColumns(20);
         jTextAreaLog.setRows(5);
+        jTextAreaLog.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                jTextAreaLogMousePressed(evt);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                jTextAreaLogMouseReleased(evt);
+            }
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTextAreaLogMouseClicked(evt);
+            }
+        });
         jScrollPane2.setViewportView(jTextAreaLog);
 
         jLabel11.setText("Log: ");
@@ -462,7 +484,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jScrollPaneTableFromDatabase, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(jPanelTableFromDatabaseLayout.createSequentialGroup()
                         .addComponent(jLabel20)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 14, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 78, Short.MAX_VALUE)
                         .addComponent(jButtonAddItem)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonCheck)))
@@ -476,7 +498,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jButtonCheck)
                     .addComponent(jButtonAddItem))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneTableFromDatabase, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addComponent(jScrollPaneTableFromDatabase, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -526,6 +548,66 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addContainerGap())
         );
 
+        jTableUpdateResults.setAutoCreateRowSorter(true);
+        jTableUpdateResults.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Name", "Statement Count", "Last Update Count", "Total Update Count"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPaneTableUpdateResults.setViewportView(jTableUpdateResults);
+
+        jLabel21.setText("Update Results: ");
+
+        jButtonUpdateResultDetails.setText("Details");
+        jButtonUpdateResultDetails.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonUpdateResultDetailsActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanelTableUpdateResultsLayout = new javax.swing.GroupLayout(jPanelTableUpdateResults);
+        jPanelTableUpdateResults.setLayout(jPanelTableUpdateResultsLayout);
+        jPanelTableUpdateResultsLayout.setHorizontalGroup(
+            jPanelTableUpdateResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTableUpdateResultsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelTableUpdateResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPaneTableUpdateResults, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addGroup(jPanelTableUpdateResultsLayout.createSequentialGroup()
+                        .addComponent(jLabel21)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonUpdateResultDetails)))
+                .addContainerGap())
+        );
+        jPanelTableUpdateResultsLayout.setVerticalGroup(
+            jPanelTableUpdateResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTableUpdateResultsLayout.createSequentialGroup()
+                .addGroup(jPanelTableUpdateResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel21)
+                    .addComponent(jButtonUpdateResultDetails))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPaneTableUpdateResults, javax.swing.GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -533,15 +615,18 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jPanelTableFromVision, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanelTableFromDatabase, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jPanelTableFromDatabase, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanelTableUpdateResults, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanelTableFromVision, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanelTableFromDatabase, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanelTableFromDatabase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanelTableUpdateResults, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanelTableFromVision, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
@@ -587,7 +672,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jSpinnerLogLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 42, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 45, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -878,6 +963,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
             logLines.add(txt);
             StringBuilder sb = new StringBuilder();
+
             for (String oldTxt : logLines) {
                 sb.append(oldTxt);
             }
@@ -997,7 +1083,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void addLogMessage(String stmnt) {
         log_count++;
         System.out.println(stmnt);
-        appendLogDisplay(stmnt + "\r\n");
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+            appendLogDisplay(stmnt + "\r\n");
+        } else {
+            javax.swing.SwingUtilities.invokeLater(() -> appendLogDisplay(stmnt + "\r\n"));
+        }
     }
 
     public void addLogMessage(Exception exception) {
@@ -1184,6 +1274,51 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }//GEN-LAST:event_jCheckBoxDebugActionPerformed
 
+    private void jButtonUpdateResultDetailsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpdateResultDetailsActionPerformed
+        int index = jTableUpdateResults.getSelectedRow();
+        if(index >= 0) {
+            String name = (String) jTableUpdateResults.getValueAt(index,0);
+            String value = resultsMap.get(name).toString();
+            MultiLineStringJPanel.showText("Latest update attempt for "+name+":\r\n"+value);
+        }
+    }//GEN-LAST:event_jButtonUpdateResultDetailsActionPerformed
+
+    private JPopupMenu popMenu = new JPopupMenu();
+
+    private void copyText() {
+        this.jTextAreaLog.getTransferHandler().exportToClipboard(this.jTextAreaLog,
+                Toolkit.getDefaultToolkit().getSystemClipboard(),
+                TransferHandler.COPY);
+        popMenu.setVisible(false);
+    }
+
+    public void showPopup(int x, int y) {
+        JMenuItem copyMenuItem = new JMenuItem("Copy");
+        copyMenuItem.addActionListener(e -> copyText());
+        popMenu.add(copyMenuItem);
+        popMenu.setLocation(x, y);
+        popMenu.setVisible(true);
+    }
+    
+    private void jTextAreaLogMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextAreaLogMouseClicked
+        if(evt.isPopupTrigger()) {
+            showPopup(evt.getX(),evt.getY());
+        }
+    }//GEN-LAST:event_jTextAreaLogMouseClicked
+
+    private void jTextAreaLogMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextAreaLogMousePressed
+        if(evt.isPopupTrigger()) {
+            showPopup(evt.getX(),evt.getY());
+        }
+    }//GEN-LAST:event_jTextAreaLogMousePressed
+
+    private void jTextAreaLogMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextAreaLogMouseReleased
+        if(evt.isPopupTrigger()) {
+            showPopup(evt.getX(),evt.getY());
+        }
+    }//GEN-LAST:event_jTextAreaLogMouseReleased
+
+    
     private DbType oldDbType = null;
 
 
@@ -1193,6 +1328,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JButton jButtonConnectVision;
     private javax.swing.JButton jButtonDbSetup;
     private javax.swing.JButton jButtonDisconnectVision;
+    private javax.swing.JButton jButtonUpdateResultDetails;
     private javax.swing.JCheckBox jCheckBoxAddRepeatCountsToDatabaseNames;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JLabel jLabel1;
@@ -1206,6 +1342,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
@@ -1217,14 +1354,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanelTableFromDatabase;
     private javax.swing.JPanel jPanelTableFromVision;
+    private javax.swing.JPanel jPanelTableUpdateResults;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPaneTableFromDatabase;
     private javax.swing.JScrollPane jScrollPaneTableFromVision;
+    private javax.swing.JScrollPane jScrollPaneTableUpdateResults;
     private javax.swing.JSpinner jSpinnerLogLines;
     private javax.swing.JTable jTableFromDatabase;
     private javax.swing.JTable jTableFromVision;
     private javax.swing.JTable jTableTransform;
+    private javax.swing.JTable jTableUpdateResults;
     private javax.swing.JTextArea jTextAreaLog;
     private javax.swing.JTextField jTextFieldAcquire;
     private javax.swing.JTextField jTextFieldCmdPort;
@@ -1425,6 +1565,22 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         } catch (Exception exception) {
             addLogMessage(exception);
         }
+    }
+    private Map<String, DatabasePoseUpdater.UpdateResults> resultsMap;
+
+    @Override
+    public void updateResultsMap(Map<String, DatabasePoseUpdater.UpdateResults> _map) {
+        DefaultTableModel model = (DefaultTableModel) jTableUpdateResults.getModel();
+        model.setRowCount(0);
+        for (Entry<String, DatabasePoseUpdater.UpdateResults> entry : _map.entrySet()) {
+            model.addRow(new Object[]{
+                entry.getKey(),
+                entry.getValue().getStatementExecutionCount(),
+                entry.getValue().getUpdateCount(),
+                entry.getValue().getTotalUpdateCount()
+            });
+        }
+        resultsMap = _map;
     }
 
 }

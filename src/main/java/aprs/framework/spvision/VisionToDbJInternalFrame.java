@@ -23,6 +23,7 @@
 
 package aprs.framework.spvision;
 
+import aprs.framework.database.DatabasePoseUpdater;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
@@ -209,5 +210,10 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     @Override
     public void connectVision() {
         visionToDBJPanel.connectVision();
+    }
+
+    @Override
+    public void updateResultsMap(Map<String, DatabasePoseUpdater.UpdateResults> _map) {
+        visionToDBJPanel.updateResultsMap(_map);
     }
 }

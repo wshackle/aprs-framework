@@ -67,7 +67,10 @@ import java.lang.ref.WeakReference;
 import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import javax.swing.JOptionPane;
 import javax.xml.bind.JAXBException;
 
@@ -179,25 +182,43 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         setupWindowsMenu();
     }
 
-    public void connectDatabase() throws IOException {
-        DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
-        dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
-        List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
-        for (Future<?> f : futures) {
-            if (!f.isDone() && !f.isCancelled()) {
-                try {
+    private ExecutorService connectService = Executors.newSingleThreadExecutor();
+    private Future connectDatabaseFuture = null;
+
+    public void startConnectDatabase() {
+        System.out.println("Starting connect to database ...");
+        jCheckBoxMenuItemConnectDatabase.setSelected(true);
+        jCheckBoxMenuItemConnectDatabase.setEnabled(true);
+        connectDatabaseFuture = connectService.submit(this::connectDatabase);
+    }
+
+    public void connectDatabase() {
+        List<Future<?>> futures = null;
+        try {
+            DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
+            dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
+            futures = dbSetupPublisher.notifyAllDbSetupListeners();
+            for (Future<?> f : futures) {
+                if (!jCheckBoxMenuItemConnectDatabase.isSelected()) {
+                    return;
+                }
+                if (!f.isDone() && !f.isCancelled()) {
                     f.get();
-
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(AprsJFrame.class
-                            .getName()).log(Level.SEVERE, null, ex);
-
-                } catch (ExecutionException ex) {
-                    Logger.getLogger(AprsJFrame.class
-                            .getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            System.out.println("Finished connect to database.");
+        } catch (IOException | InterruptedException | ExecutionException iOException) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, iOException);
+            if (null != futures) {
+                for (Future<?> f : futures) {
+                    f.cancel(true);
                 }
             }
         }
+    }
+
+    public void startConnectVision() {
+        connectService.submit(this::connectVision);
     }
 
     public void connectVision() {
@@ -312,11 +333,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
                 javax.swing.Timer tmr = new javax.swing.Timer(500, new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        try {
-                            connectDatabase();
-                        } catch (IOException ex) {
-                            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        startConnectDatabase();
                     }
                 });
                 tmr.setRepeats(false);
@@ -566,6 +583,9 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         jCheckBoxMenuItemExploreGraphDbStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupCRCLWebApp = new javax.swing.JCheckBoxMenuItem();
         jMenuWindow = new javax.swing.JMenu();
+        jMenu2 = new javax.swing.JMenu();
+        jCheckBoxMenuItemConnectDatabase = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemConnectVision = new javax.swing.JCheckBoxMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS Coordinator");
@@ -682,6 +702,11 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
 
         jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(true);
         jCheckBoxMenuItemConnectToDatabaseOnStartup.setText("Connect To Database On Startup");
+        jCheckBoxMenuItemConnectToDatabaseOnStartup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed(evt);
+            }
+        });
         jMenu3.add(jCheckBoxMenuItemConnectToDatabaseOnStartup);
 
         jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(true);
@@ -709,6 +734,23 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         jMenuWindow.setText("Window");
         jMenuBar1.add(jMenuWindow);
 
+        jMenu2.setText("Connections");
+
+        jCheckBoxMenuItemConnectDatabase.setText("Database");
+        jCheckBoxMenuItemConnectDatabase.setEnabled(false);
+        jCheckBoxMenuItemConnectDatabase.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemConnectDatabaseActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jCheckBoxMenuItemConnectDatabase);
+
+        jCheckBoxMenuItemConnectVision.setText("Vision");
+        jCheckBoxMenuItemConnectVision.setEnabled(false);
+        jMenu2.add(jCheckBoxMenuItemConnectVision);
+
+        jMenuBar1.add(jMenu2);
+
         setJMenuBar(jMenuBar1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -724,7 +766,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jDesktopPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 721, Short.MAX_VALUE)
+                .addComponent(jDesktopPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 725, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -929,6 +971,20 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupCRCLWebAppActionPerformed
+
+    private void jCheckBoxMenuItemConnectDatabaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectDatabaseActionPerformed
+        if (!this.jCheckBoxMenuItemConnectDatabase.isSelected()) {
+            startDisconnectDatabase();
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemConnectDatabaseActionPerformed
+
+    private void jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed
+        try {
+            saveProperties();
+        } catch (IOException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed
 
     public void startExploreGraphDb() {
         try {
@@ -1252,8 +1308,10 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectDatabase;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToDatabaseOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToVisionOnStartup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVision;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupCRCLWebApp;
@@ -1266,6 +1324,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobtCRCLSimServer;
     private javax.swing.JDesktopPane jDesktopPane1;
     private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItemExit;
@@ -1311,6 +1370,49 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         pddlExecutorJInternalFrame1.setLoadEnabled(enable);
     }
 
+    Future disconnectDatabaseFuture = null;
+
+    private void startDisconnectDatabase() {
+        jCheckBoxMenuItemConnectDatabase.setSelected(false);
+        jCheckBoxMenuItemConnectDatabase.setEnabled(false);
+        if (null != connectDatabaseFuture) {
+            connectDatabaseFuture.cancel(true);
+            connectDatabaseFuture = null;
+        }
+        disconnectDatabaseFuture = connectService.submit(this::disconnectDatabase);
+    }
+
+    private void disconnectDatabase() {
+
+        try {
+            if (null != connectDatabaseFuture) {
+                connectDatabaseFuture.cancel(true);
+                connectDatabaseFuture = null;
+            }
+            DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
+            dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(false).build());
+            List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
+            for (Future<?> f : futures) {
+                if (!f.isDone() && !f.isCancelled()) {
+                    try {
+                        f.get();
+
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(AprsJFrame.class
+                                .getName()).log(Level.SEVERE, null, ex);
+
+                    } catch (ExecutionException ex) {
+                        Logger.getLogger(AprsJFrame.class
+                                .getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+            System.out.println("Finished disconnect from database.");
+        } catch (IOException iOException) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, iOException);
+        }
+    }
+
     @Override
     public void close() throws Exception {
         try {
@@ -1333,6 +1435,17 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, exception);
         }
+        if (null != connectDatabaseFuture) {
+            connectDatabaseFuture.cancel(true);
+            connectDatabaseFuture = null;
+        }
+        if (null != disconnectDatabaseFuture) {
+            disconnectDatabaseFuture.cancel(true);
+            disconnectDatabaseFuture = null;
+        }
+        disconnectDatabase();
+        connectService.shutdownNow();
+        connectService.awaitTermination(100, TimeUnit.MILLISECONDS);
     }
 
     private void closeActionsToCrclJInternalFrame() throws Exception {

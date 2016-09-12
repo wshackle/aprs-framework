@@ -50,5 +50,6 @@ public interface DbSetup {
     
     public String getQueriesDir();
     
+    public boolean isDebug();
 
 }

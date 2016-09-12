@@ -71,6 +71,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
      */
     public PddlPlannerJPanel() {
         initComponents();
+        jSpinnerMaxLines.setValue(250);
     }
 
     /**
@@ -107,6 +108,8 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         jPasswordFieldSshPass = new javax.swing.JPasswordField();
         jLabel8 = new javax.swing.JLabel();
         jTextFieldHost = new javax.swing.JTextField();
+        jSpinnerMaxLines = new javax.swing.JSpinner();
+        jCheckBoxPauseOutput = new javax.swing.JCheckBox();
 
         jLabel1.setText("Planner Program Executable:");
 
@@ -209,6 +212,8 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         jTextFieldHost.setText("localhost");
         jTextFieldHost.setEnabled(false);
 
+        jCheckBoxPauseOutput.setText("Pause");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -237,28 +242,35 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                             .addComponent(jButtonPlannerProgramExecutableBrowse, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jSpinnerMaxLines, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxPauseOutput)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jButtonStop)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonRunOnce))
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel3)
-                    .addComponent(jLabel4)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jCheckBoxSsh)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldSshUser, javax.swing.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
+                        .addComponent(jTextFieldSshUser, javax.swing.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPasswordFieldSshPass)
+                        .addGap(109, 109, 109)
+                        .addComponent(jPasswordFieldSshPass, javax.swing.GroupLayout.DEFAULT_SIZE, 83, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel8)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldHost, javax.swing.GroupLayout.DEFAULT_SIZE, 184, Short.MAX_VALUE)))
+                        .addComponent(jTextFieldHost, javax.swing.GroupLayout.DEFAULT_SIZE, 151, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel4))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -301,7 +313,9 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonRunOnce)
                     .addComponent(jButtonStop)
-                    .addComponent(jLabel5))
+                    .addComponent(jLabel5)
+                    .addComponent(jSpinnerMaxLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jCheckBoxPauseOutput))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 147, Short.MAX_VALUE)
                 .addContainerGap())
@@ -655,9 +669,79 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         printMessage("Finished remote command \"" + command + "\".");
     }
 
+    private boolean lastMessageBlank = false;
+    
+    List<String> logLines = new ArrayList<>();
+
+    private void appendLine(String l) {
+        int maxLines = 100;
+        try {
+            maxLines = (int) jSpinnerMaxLines.getValue();
+            if(maxLines < 1) {
+                jSpinnerMaxLines.setValue(1);
+                maxLines = 1;
+            }
+        } catch (Exception e) {
+        }
+        if (logLines.size() < maxLines) {
+            addLogLine(l);
+            if (!jCheckBoxPauseOutput.isSelected()) {
+                jTextAreaOutput.append(l);
+            }
+        } else {
+            while (logLines.size() >= maxLines) {
+                logLines.remove(0);
+            }
+            addLogLine(l);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < logLines.size(); i++) {
+                sb.append(logLines.get(i));
+            }
+            if (!jCheckBoxPauseOutput.isSelected()) {
+                jTextAreaOutput.setText(sb.toString());
+            }
+        }
+        if (!jCheckBoxPauseOutput.isSelected()) {
+            jTextAreaOutput.setCaretPosition(jTextAreaOutput.getText().length() - 1);
+        }
+    }
+
+    private void addLogLine(String l) {
+        if (logLines.size() > 0) {
+            String lastLine = logLines.get(logLines.size() - 1);
+            if (lastLine.endsWith("\n")) {
+                logLines.add(l);
+            } else {
+                logLines.set(logLines.size() - 1, lastLine + l);
+            }
+        } else {
+            logLines.add(l);
+        }
+    }
+
+    public void appendText(String text) {
+        String txt2 = text.replace("\r\n", "\n");
+        String lines[] = txt2.split("\n");
+        if (lines.length <= 1 || (lines.length == 2) && lines[1].length() < 1) {
+            appendLine(txt2);
+        } else {
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i];
+                if (i < lines.length - 1 || txt2.endsWith("\n")) {
+                    appendLine(line + System.lineSeparator());
+                } else {
+                    appendLine(line);
+                }
+            }
+        }
+    }
     private void printMessage(String msg) {
-        System.out.println(msg);
-        jTextAreaOutput.append(msg + System.lineSeparator());
+        boolean msgIsBlank = msg.trim().length()<1;
+        if(!msgIsBlank || !lastMessageBlank) {
+            System.out.println(msg);
+            appendText(msg);
+        }
+        lastMessageBlank = msgIsBlank;
     }
 
     private void scp(Session session, String host, String rfile, String lfile) throws FileNotFoundException, JSchException, IOException, Exception {
@@ -926,7 +1010,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                             javax.swing.SwingUtilities.invokeLater(new Runnable() {
                                 @Override
                                 public void run() {
-                                    jTextAreaOutput.append(lineToAppend + System.lineSeparator());
+                                    printMessage(lineToAppend + System.lineSeparator());
                                 }
                             });
                         }
@@ -949,8 +1033,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                         javax.swing.SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {
-                                jTextAreaOutput.append(lineToAppend + System.lineSeparator());
-
+                                printMessage(lineToAppend + System.lineSeparator());
                             }
                         });
 
@@ -978,6 +1061,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     private javax.swing.JButton jButtonPlannerProgramExecutableBrowse;
     private javax.swing.JButton jButtonRunOnce;
     private javax.swing.JButton jButtonStop;
+    private javax.swing.JCheckBox jCheckBoxPauseOutput;
     private javax.swing.JCheckBox jCheckBoxSsh;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -989,6 +1073,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPasswordField jPasswordFieldSshPass;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JSpinner jSpinnerMaxLines;
     private javax.swing.JTextArea jTextAreaOutput;
     private javax.swing.JTextField jTextFieldAdditionalArgs;
     private javax.swing.JTextField jTextFieldHost;

@@ -23,6 +23,7 @@
 package aprs.framework.logdisplay;
 
 import java.awt.Desktop;
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -30,6 +31,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.TransferHandler;
 
 /**
  *
@@ -74,6 +78,17 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
+        jTextArea1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                jTextArea1MousePressed(evt);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                jTextArea1MouseReleased(evt);
+            }
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTextArea1MouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(jTextArea1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -111,16 +126,51 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonToExternalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonToExternalActionPerformed
-        try{                                                
-            File f =File.createTempFile("log", ".txt");
-            try(FileWriter fw = new FileWriter(f)) {
+        try {
+            File f = File.createTempFile("log", ".txt");
+            try (FileWriter fw = new FileWriter(f)) {
                 fw.write(jTextArea1.getText());
-            } 
+            }
             Desktop.getDesktop().open(f);
         } catch (IOException ex) {
             Logger.getLogger(LogDisplayJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonToExternalActionPerformed
+
+    private JPopupMenu popMenu = new JPopupMenu();
+
+    private void copyText() {
+        this.jTextArea1.getTransferHandler().exportToClipboard(this.jTextArea1,
+                Toolkit.getDefaultToolkit().getSystemClipboard(),
+                TransferHandler.COPY);
+        popMenu.setVisible(false);
+    }
+
+    public void showPopup(int x, int y) {
+        JMenuItem copyMenuItem = new JMenuItem("Copy");
+        copyMenuItem.addActionListener(e -> copyText());
+        popMenu.add(copyMenuItem);
+        popMenu.setLocation(x, y);
+        popMenu.setVisible(true);
+    }
+
+    private void jTextArea1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextArea1MousePressed
+        if (evt.isPopupTrigger()) {
+            showPopup(evt.getX(), evt.getY());
+        }
+    }//GEN-LAST:event_jTextArea1MousePressed
+
+    private void jTextArea1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextArea1MouseReleased
+        if (evt.isPopupTrigger()) {
+            showPopup(evt.getX(), evt.getY());
+        }
+    }//GEN-LAST:event_jTextArea1MouseReleased
+
+    private void jTextArea1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextArea1MouseClicked
+        if (evt.isPopupTrigger()) {
+            showPopup(evt.getX(), evt.getY());
+        }
+    }//GEN-LAST:event_jTextArea1MouseClicked
 
     List<String> logLines = new ArrayList<>();
 
@@ -128,7 +178,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         int maxLines = 100;
         try {
             maxLines = (int) jSpinnerMaxLines.getValue();
-            if(maxLines < 1) {
+            if (maxLines < 1) {
                 jSpinnerMaxLines.setValue(1);
                 maxLines = 1;
             }

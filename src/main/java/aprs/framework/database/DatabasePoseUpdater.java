@@ -31,6 +31,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -177,7 +178,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //            + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
 //            + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy";
 
-    private void setupConnection(String host, int port, String db, String username, String password) throws SQLException {
+    private void setupConnection(String host, int port, String db, String username, String password,boolean debug) throws SQLException {
         switch (dbtype) {
             case MYSQL:
                 useBatch = true;
@@ -187,7 +188,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 useBatch = false;
                 break;
         }
-        con = DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password);
+        con = DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password,debug);
         System.out.println("DatabasePoseUpdater connected to database of type " + dbtype + " on host " + host + " with port " + port);
     }
 
@@ -200,11 +201,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
             String username,
             String password,
             DbType dbtype,
-            Map<DbQueryEnum, DbQueryInfo> queriesMap) throws SQLException {
+            Map<DbQueryEnum, DbQueryInfo> queriesMap,
+            boolean debug) throws SQLException {
         this.dbtype = dbtype;
         sharedConnection = false;
         this.queriesMap = queriesMap;
-        setupConnection(host, port, db, username, password);
+        setupConnection(host, port, db, username, password,debug);
         setupStatements();
     }
 
@@ -439,20 +441,199 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public static volatile int poses_updated = 0;
     public static volatile List<PoseQueryElem> displayList = null;
 
+    public class UpdateResults {
+
+        private final String name;
+        private String updateStringFilled;
+        private int updateCount;
+        private int totalUpdateCount;
+        private int statementExecutionCount;
+        private DetectedItem lastDetectedItem;
+        private double x, y, rotation;
+        private List<Map<String, String>> lastResultSetMapList;
+        private Exception exception;
+        private boolean returnedResultSet;
+
+        public UpdateResults(String name) {
+            this.name = name;
+        }
+
+        public double getX() {
+            return x;
+        }
+
+        public double getY() {
+            return y;
+        }
+
+        public double getRotation() {
+            return rotation;
+        }
+
+        /**
+         * @return the updateStringFilled
+         */
+        public String getUpdateStringFilled() {
+            return updateStringFilled;
+        }
+
+        /**
+         * @param updateStringFilled the updateStringFilled to set
+         */
+        public void setUpdateStringFilled(String updateStringFilled) {
+            this.updateStringFilled = updateStringFilled;
+        }
+
+        /**
+         * @return the updateCount
+         */
+        public int getUpdateCount() {
+            return updateCount;
+        }
+
+        /**
+         * @param updateCount the updateCount to set
+         */
+        public void setUpdateCount(int updateCount) {
+            this.updateCount = updateCount;
+        }
+
+        /**
+         * @return the totalUpdateCount
+         */
+        public int getTotalUpdateCount() {
+            return totalUpdateCount;
+        }
+
+        /**
+         * @param totalUpdateCount the totalUpdateCount to set
+         */
+        public void setTotalUpdateCount(int totalUpdateCount) {
+            this.totalUpdateCount = totalUpdateCount;
+        }
+
+        /**
+         * @return the statementExecutionCount
+         */
+        public int getStatementExecutionCount() {
+            return statementExecutionCount;
+        }
+
+        /**
+         * @param statementExecutionCount the statementExecutionCount to set
+         */
+        public void setStatementExecutionCount(int statementExecutionCount) {
+            this.statementExecutionCount = statementExecutionCount;
+        }
+
+        /**
+         * @return the lastDetectedItem
+         */
+        public DetectedItem getLastDetectedItem() {
+            return lastDetectedItem;
+        }
+
+        /**
+         * @param lastDetectedItem the lastDetectedItem to set
+         */
+        public void setLastDetectedItem(DetectedItem lastDetectedItem) {
+            this.lastDetectedItem = lastDetectedItem;
+            x = lastDetectedItem.x;
+            y = lastDetectedItem.y;
+            rotation = lastDetectedItem.rotation;
+        }
+
+        /**
+         * @return the lastResultSetMapList
+         */
+        public List<Map<String, String>> getLastResultSetMapList() {
+            return lastResultSetMapList;
+        }
+
+        /**
+         * @param lastResultSetMapList the lastResultSetMapList to set
+         */
+        public void setLastResultSetMapList(List<Map<String, String>> lastResultSetMapList) {
+            this.lastResultSetMapList = lastResultSetMapList;
+        }
+
+        @Override
+        public String toString() {
+            return "UpdateResults{"
+                    + "name= " + name
+                    + ",\n    updateStringFilled=\n" + updateStringFilled
+                    + "\n\nupdateCount=" + updateCount
+                    + ",\n    totalUpdateCount=" + totalUpdateCount
+                    + ",\n    statementExecutionCount=" + statementExecutionCount
+                    + ",\n    lastDetectedItem=" + lastDetectedItem
+                    + ",\n    x=" + x
+                    + ",\n    y=" + y
+                    + ",\n    rotation=" + rotation
+                    + ",\n    lastResultSetMapList=" + lastResultSetMapList
+                    + ",\n    exception=" + exception
+                    + ((null != exception && null != exception.getCause())?"\n caused by \n"+exception.getCause()+"\n":"")
+                    + ",\n    returnedResultSet=" + returnedResultSet
+                    + "\n}";
+        }
+
+        /**
+         * @return the exception
+         */
+        public Exception getException() {
+            return exception;
+        }
+
+        /**
+         * @param exception the exception to set
+         */
+        public void setException(Exception exception) {
+            this.exception = exception;
+        }
+
+        /**
+         * @return the returnedResultSet
+         */
+        public boolean isReturnedResultSet() {
+            return returnedResultSet;
+        }
+
+        /**
+         * @param returnedResultSet the returnedResultSet to set
+         */
+        public void setReturnedResultSet(boolean returnedResultSet) {
+            this.returnedResultSet = returnedResultSet;
+        }
+
+    }
+
+    private final Map<String, UpdateResults> updateResultsMap = new HashMap<>();
+
+    /**
+     * Get the value of updateResultsMap
+     *
+     * @return the value of updateResultsMap
+     */
+    public Map<String, UpdateResults> getUpdateResultsMap() {
+        return updateResultsMap;
+    }
+
     public void updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
+        VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
         try {
             if (null == update_statement) {
                 return;
             }
             long t0 = System.nanoTime();
             int updates = 0;
-            VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
+            
+            List<UpdateResults> batchUrs = new ArrayList<>();
             if (null != displayInterface && displayInterface.isDebug()) {
                 debug = true;
                 displayInterface.addLogMessage("Begin updateVisionList");
             } else {
                 debug = false;
             }
+            int updatedCount = -1;
             for (int i = 0; i < list.size(); i++) {
                 DetectedItem ci = list.get(i);
                 if (null == ci || ci.name.compareTo("*") == 0) {
@@ -465,65 +646,121 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     ci.fullName = ci.name + "_" + (ci.repeats + 1);
                 }
                 List<Object> paramsList = poseParamsToStatement(ci);
-                if (null != displayInterface && displayInterface.isDebug()) {
-//                    displayInterface.addLogMessage("update_statement = \r\n" + update_statement.toString() + "\r\n");
-
-                    if (debug && dbtype == DbType.NEO4J) {
-                        String updateStringFilled
-                                = mergeStatementString;
-                        for (int paramIndex = 1; paramIndex < paramsList.size() + 1; paramIndex++) {
-                            updateStringFilled
-                                    = updateStringFilled.replace("{" + paramIndex + "}", Objects.toString(paramsList.get(paramIndex - 1)));
-                        }
-                        displayInterface.addLogMessage("updateStringFilled = " + updateStringFilled + "\n");
+                UpdateResults ur = updateResultsMap.get(ci.fullName);
+                String updateStringFilled
+                        = mergeStatementString;
+                for (int paramIndex = 1; paramIndex < paramsList.size() + 1; paramIndex++) {
+                    if (updateStringFilled.indexOf("{" + paramIndex + "}") >= 0) {
+                        updateStringFilled
+                                = updateStringFilled.replace("{" + paramIndex + "}", Objects.toString(paramsList.get(paramIndex - 1)));
+                    } else if (updateStringFilled.indexOf("?") >= 0) {
+                        updateStringFilled
+                                = updateStringFilled.replace("?", Objects.toString(paramsList.get(paramIndex - 1)));
                     }
-//                    displayInterface.addLogMessage("update_statement.query = "+update_statement.+"\n");
-
                 }
-                if (useBatch) {
-                    update_statement.addBatch();
-                    updates++;
+                if (null != ur) {
+                    if (Math.abs(ur.x - ci.x) < 1e-6
+                            && Math.abs(ur.y - ci.y) < 1e-6
+                            && Math.abs(ur.rotation - ci.rotation) < 1e-6) {
+                        continue;
+                    }
                 } else {
-                    boolean exec_result = update_statement.execute();
-                    if (exec_result) {
-                        ResultSet rs = update_statement.getResultSet();
-                        ResultSetMetaData meta = rs.getMetaData();
-                        Map<String, String> resultMap = new LinkedHashMap<>();
-                        for (int j = 1; j <= meta.getColumnCount(); j++) {
-                            String name = meta.getColumnName(j);
-                            String value = rs.getObject(name, Object.class).toString();
-                            resultMap.put(name, value);
-                        }
-                        if (null != displayInterface
-                                && displayInterface.isDebug()
-                                && resultMap.keySet().size() > 0) {
-                            displayInterface.addLogMessage("resultMap="+resultMap.toString() + System.lineSeparator());
-                        } 
-                        String updateStringFilled
-                                = mergeStatementString;
-                        for (int paramIndex = 1; paramIndex < paramsList.size() + 1; paramIndex++) {
-                            updateStringFilled
-                                    = updateStringFilled.replace("{" + paramIndex + "}", Objects.toString(paramsList.get(paramIndex - 1)));
-                        }
+                    ur = new UpdateResults(ci.fullName);
+                }
+                ur.setException(null);
 
-                    }
+                try {
+
+                    ur.setLastDetectedItem(ci);
+
                     if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("update_statement.execute() returned = " + exec_result + "\r\n");
-                        displayInterface.addLogMessage("update_statement.getUpdateCount() returned = " + update_statement.getUpdateCount() + "\r\n");
+                        displayInterface.addLogMessage("updateStringFilled = \r\n" + updateStringFilled + "\r\n");
                     }
+                    if (useBatch) {
+                        update_statement.addBatch();
+                        batchUrs.add(ur);
+                        updates++;
+                    } else {
+                        boolean exec_result = update_statement.execute();
+                         if (null != displayInterface && displayInterface.isDebug()) {
+                             displayInterface.addLogMessage(" update_statement.execute() returned  " + exec_result + "\r\n");
+                         }
+                        if (exec_result) {
+                            try (ResultSet rs = update_statement.getResultSet()) {
+                                if (null != displayInterface && displayInterface.isDebug()) {
+                                    displayInterface.addLogMessage("update_statement.getResultSet() = " + rs + "\r\n");
+                                }
+                                List<Map<String, String>> resultSetMapList = new ArrayList<>();
+                                while (rs.next()) {
+                                    ResultSetMetaData meta = rs.getMetaData();
+                                    Map<String, String> resultMap = new LinkedHashMap<>();
+                                    if (null != displayInterface && displayInterface.isDebug()) {
+                                        displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
+                                    }
+                                    for (int j = 1; j <= meta.getColumnCount(); j++) {
+                                        String name = meta.getColumnName(j);
+                                        String value = rs.getObject(name, Object.class).toString();
+                                        if (j == 1 && updatedCount < 0 && name.startsWith("count")) {
+                                            try {
+                                                updatedCount = Integer.valueOf(value);
+                                            } catch (NumberFormatException nfe) {
+                                            }
+                                        }
+                                        resultMap.put(name, value);
+                                    }
+                                    resultSetMapList.add(resultMap);
+                                    if (null != displayInterface
+                                            && displayInterface.isDebug()
+                                            && resultMap.keySet().size() > 0) {
+                                        displayInterface.addLogMessage("resultMap=" + resultMap.toString() + System.lineSeparator());
+                                    }
+                                }
+                                ur.setLastResultSetMapList(resultSetMapList);
+                            }
+                        } else {
+                            updatedCount = update_statement.getUpdateCount();
+                        }
+                        if (null != displayInterface && displayInterface.isDebug()) {
+                            displayInterface.addLogMessage("update_statement.execute() returned = " + exec_result + "\r\n");
+                            displayInterface.addLogMessage("update_statement.getUpdateCount() returned = " + updatedCount + "\r\n");
+                        }
+                        if (updatedCount > 1) {
+                            updatedCount = 1;
+                        }
+                        ur.setUpdateCount(updatedCount);
+                        ur.setTotalUpdateCount(updatedCount + ur.getTotalUpdateCount());
+                        ur.setReturnedResultSet(exec_result);
 //                    poses_updated += update_statement.getUpdateCount();
-                    poses_updated++;
+                        poses_updated++;
+                    }
+                } catch (Exception exception) {
+                    ur.setException(exception);
+                }
+                ur.setUpdateStringFilled(updateStringFilled);
+                ur.setStatementExecutionCount(ur.getStatementExecutionCount() + 1);
+                updateResultsMap.put(ci.fullName, ur);
+                if (null != ur.getException()) {
+                    throw new RuntimeException("ur=" + ur, ur.exception);
                 }
             }
-            
+
             if (updates > 0 && useBatch) {
-                int ia[] = update_statement.executeBatch();
+                int batchReturn[] = update_statement.executeBatch();
                 if (null != displayInterface && displayInterface.isDebug()) {
-                    displayInterface.addLogMessage("Batch returns : " + Arrays.toString(ia));
+                    displayInterface.addLogMessage("Batch returns : " + Arrays.toString(batchReturn));
                 }
                 updates = 0;
-                for (int i : ia) {
-                    updates += i;
+                for (int batchIndex = 0; batchIndex < batchReturn.length; batchIndex++) {
+                    int br = batchReturn[batchIndex];
+                    updates += br;
+                    UpdateResults ur = batchUrs.get(batchIndex);
+                    updatedCount = br;
+                    if (updatedCount > 1) {
+                        updatedCount = 1;
+                    }
+                    ur.setUpdateCount(updatedCount);
+                    ur.setTotalUpdateCount(ur.getUpdateCount() + ur.getTotalUpdateCount());
+                    updateResultsMap.put(ur.name, ur);
                 }
                 poses_updated += updates;
             }
@@ -536,69 +773,75 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 displayInterface.addLogMessage("useBatch=" + useBatch);
                 displayInterface.addLogMessage(String.format("updateVisionList took %.3f seconds\n", (1e-9 * (t1 - t0))));
             }
+            if (null != displayInterface) {
+                displayInterface.updateResultsMap(updateResultsMap);
+            }
         } catch (Exception exception) {
             exception.printStackTrace();
+            if (null != displayInterface) {
+                displayInterface.updateResultsMap(updateResultsMap);
+            }
         }
     }
+    //    private static class IndexSet {
+    //
+    //        int xindexes[];
+    //        int yindexes[];
+    //        int zindexes[];
+    //        int vxiIndexes[];
+    //        int vxjIndexes[];
+    //        int vxkIndexes[];
+    //        int vziIndexes[];
+    //        int vzjIndexes[];
+    //        int vzkIndexes[];
+    //        int nameIndexes[];
+    //        int typeIndexes[];
+    //    }
+    //    private static final IndexSet MYSQL_INDEX_SET = new IndexSet();
+    //    private static final IndexSet NEO4J_INDEX_SET = new IndexSet();
+    //
+    //    private IndexSet curIndexSet = MYSQL_INDEX_SET;
+    //    
+    //    static {
+    //        MYSQL_INDEX_SET.xindexes = new int[]{1};
+    //        MYSQL_INDEX_SET.yindexes = new int[]{2};
+    //        MYSQL_INDEX_SET.zindexes = new int[]{};
+    //        MYSQL_INDEX_SET.vxiIndexes = new int[]{3};
+    //        MYSQL_INDEX_SET.vxjIndexes = new int[]{4};
+    //        MYSQL_INDEX_SET.vxkIndexes = new int[]{};
+    //        MYSQL_INDEX_SET.vziIndexes = new int[]{};
+    //        MYSQL_INDEX_SET.vzjIndexes = new int[]{};
+    //        MYSQL_INDEX_SET.vzkIndexes = new int[]{};
+    //        MYSQL_INDEX_SET.nameIndexes = new int[]{5, 6, 7};
+    //        MYSQL_INDEX_SET.typeIndexes = new int[]{};
+    //        
+    //        NEO4J_INDEX_SET.xindexes = new int[]{1};
+    //        NEO4J_INDEX_SET.yindexes = new int[]{2};
+    //        NEO4J_INDEX_SET.zindexes = new int[]{};
+    //        NEO4J_INDEX_SET.vxiIndexes = new int[]{3};
+    //        NEO4J_INDEX_SET.vxjIndexes = new int[]{4};
+    //        NEO4J_INDEX_SET.vxkIndexes = new int[]{};
+    //        NEO4J_INDEX_SET.vziIndexes = new int[]{};
+    //        NEO4J_INDEX_SET.vzjIndexes = new int[]{};
+    //        NEO4J_INDEX_SET.vzkIndexes = new int[]{};
+    //        NEO4J_INDEX_SET.nameIndexes = new int[]{5, 6, 7};
+    //        NEO4J_INDEX_SET.typeIndexes = new int[]{};
+    //    }
+    //    int xindexes[] = {1};
+    //    int yindexes[] = {2};
+    //    int zindexes[] = {};
+    //    int vxiIndexes[] = {3};
+    //    int vxjIndexes[] = {4};
+    //    int vxkIndexes[] = {};
+    //    int vziIndexes[] = {};
+    //    int vzjIndexes[] = {};
+    //    int vzkIndexes[] = {};
+    //    int nameIndexes[] = {5, 6, 7};
+    //    int typeIndexes[] = {};
+    //    private static enum DbParamTypeEnum {
+    //        TYPE, NAME, X, Y, Z, VXI, VXJ, VXK, VZI, VZJ, VZK;
+    //    }
 
-//    private static class IndexSet {
-//
-//        int xindexes[];
-//        int yindexes[];
-//        int zindexes[];
-//        int vxiIndexes[];
-//        int vxjIndexes[];
-//        int vxkIndexes[];
-//        int vziIndexes[];
-//        int vzjIndexes[];
-//        int vzkIndexes[];
-//        int nameIndexes[];
-//        int typeIndexes[];
-//    }
-//    private static final IndexSet MYSQL_INDEX_SET = new IndexSet();
-//    private static final IndexSet NEO4J_INDEX_SET = new IndexSet();
-//
-//    private IndexSet curIndexSet = MYSQL_INDEX_SET;
-//    
-//    static {
-//        MYSQL_INDEX_SET.xindexes = new int[]{1};
-//        MYSQL_INDEX_SET.yindexes = new int[]{2};
-//        MYSQL_INDEX_SET.zindexes = new int[]{};
-//        MYSQL_INDEX_SET.vxiIndexes = new int[]{3};
-//        MYSQL_INDEX_SET.vxjIndexes = new int[]{4};
-//        MYSQL_INDEX_SET.vxkIndexes = new int[]{};
-//        MYSQL_INDEX_SET.vziIndexes = new int[]{};
-//        MYSQL_INDEX_SET.vzjIndexes = new int[]{};
-//        MYSQL_INDEX_SET.vzkIndexes = new int[]{};
-//        MYSQL_INDEX_SET.nameIndexes = new int[]{5, 6, 7};
-//        MYSQL_INDEX_SET.typeIndexes = new int[]{};
-//        
-//        NEO4J_INDEX_SET.xindexes = new int[]{1};
-//        NEO4J_INDEX_SET.yindexes = new int[]{2};
-//        NEO4J_INDEX_SET.zindexes = new int[]{};
-//        NEO4J_INDEX_SET.vxiIndexes = new int[]{3};
-//        NEO4J_INDEX_SET.vxjIndexes = new int[]{4};
-//        NEO4J_INDEX_SET.vxkIndexes = new int[]{};
-//        NEO4J_INDEX_SET.vziIndexes = new int[]{};
-//        NEO4J_INDEX_SET.vzjIndexes = new int[]{};
-//        NEO4J_INDEX_SET.vzkIndexes = new int[]{};
-//        NEO4J_INDEX_SET.nameIndexes = new int[]{5, 6, 7};
-//        NEO4J_INDEX_SET.typeIndexes = new int[]{};
-//    }
-//    int xindexes[] = {1};
-//    int yindexes[] = {2};
-//    int zindexes[] = {};
-//    int vxiIndexes[] = {3};
-//    int vxjIndexes[] = {4};
-//    int vxkIndexes[] = {};
-//    int vziIndexes[] = {};
-//    int vzjIndexes[] = {};
-//    int vzkIndexes[] = {};
-//    int nameIndexes[] = {5, 6, 7};
-//    int typeIndexes[] = {};
-//    private static enum DbParamTypeEnum {
-//        TYPE, NAME, X, Y, Z, VXI, VXJ, VXK, VZI, VZJ, VZK;
-//    }
     private List<Object> poseParamsToStatement(DetectedItem item) throws SQLException {
         ArrayList<Object> params = new ArrayList<>();
         for (int i = 0; i < updateParamTypes.length; i++) {
@@ -611,7 +854,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     break;
 
                 case NAME:
-                    params.add(item.fullName);
+                    String quotedName = "\""+item.fullName+"\"";
+                    params.add(quotedName);
                     update_statement.setString(index, item.fullName);
                     break;
 

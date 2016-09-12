@@ -234,7 +234,8 @@ public class Main {
                     argsMap.get("--dbuser"),
                     argsMap.get("--dbpasswd"),
                     type, 
-                    queriesMap
+                    queriesMap,
+                    (null != displayInterface && displayInterface.isDebug())
             );
             if (null != displayInterface) {
                 displayInterface.setDBConnected(true);

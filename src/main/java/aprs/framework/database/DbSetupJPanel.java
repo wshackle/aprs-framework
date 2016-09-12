@@ -126,13 +126,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jButton1 = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextAreaConnectErrors = new javax.swing.JTextArea();
+        jCheckBoxDebug = new javax.swing.JCheckBox();
 
         jTextFieldDBPort.setText("7486");
-        jTextFieldDBPort.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldDBPortActionPerformed(evt);
-            }
-        });
 
         jComboBoxDbType.setModel(getDbTypeComboModel());
         jComboBoxDbType.addActionListener(new java.awt.event.ActionListener() {
@@ -291,6 +287,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jTextAreaConnectErrors.setRows(5);
         jScrollPane2.setViewportView(jTextAreaConnectErrors);
 
+        jCheckBoxDebug.setText("Debug");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -327,7 +325,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                         .addComponent(jButtonLoad)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonSave)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxDebug)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -369,16 +368,13 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonBrowse)
                     .addComponent(jButtonLoad)
-                    .addComponent(jButtonSave))
+                    .addComponent(jButtonSave)
+                    .addComponent(jCheckBoxDebug))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
-
-    private void jTextFieldDBPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDBPortActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextFieldDBPortActionPerformed
 
     private void updateSettingsFileName() {
         String settingsFileStart = jComboBoxDbType.getSelectedItem().toString();
@@ -498,6 +494,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }//GEN-LAST:event_jComboBoxResourceDirActionPerformed
 
+    private boolean debug = false;
+    
     private boolean connected = false;
     private volatile boolean updatingFromDbSetup = false;
 
@@ -506,6 +504,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             if(null == setup) {
                 return;
             }
+            jCheckBoxDebug.setSelected(setup.isDebug());
             updatingFromDbSetup = true;
             DbType dbtype = setup.getDbType();
             if (!Objects.equals(dbtype, this.jComboBoxDbType.getSelectedItem())) {
@@ -707,6 +706,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 .queriesMap(getQueriesMap())
                 .internalQueriesResourceDir(jRadioButtonResourceDir.isSelected())
                 .queriesDir(getQueriesDir())
+                .debug(jCheckBoxDebug.isSelected())
                 .build();
     }
 
@@ -719,8 +719,14 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     });
 
+    private List<Future<?>> futures = null;
     public List<Future<?>> notifyAllDbSetupListeners() {
-        List<Future<?>> futures = new ArrayList<>();
+        if(null != futures) {
+            for(Future f : futures) {
+                f.cancel(false);
+            }
+        }
+        futures = new ArrayList<>();
         if (notifyService != null) {
             final DbSetup thisDbSetup = DbSetupJPanel.this.getDbSetup();
             Future<?> future
@@ -1180,6 +1186,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private javax.swing.JButton jButtonDisconnectDB;
     private javax.swing.JButton jButtonLoad;
     private javax.swing.JButton jButtonSave;
+    private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JComboBox<aprs.framework.database.DbType> jComboBoxDbType;
     private javax.swing.JComboBox<String> jComboBoxPropertiesFiles;
     private javax.swing.JComboBox<String> jComboBoxResourceDir;
