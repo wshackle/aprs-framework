@@ -309,7 +309,7 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
     }
 
     @Override
-    public void updateResultsMap(Map<String, DatabasePoseUpdater.UpdateResults> _map) {
+    public void updateResultsMap(Map<String, UpdateResults> _map) {
         if(null != this.visionToDBJPanel) {
             this.visionToDBJPanel.updateResultsMap(_map);
         }

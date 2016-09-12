@@ -181,6 +181,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jTableUpdateResults = new javax.swing.JTable();
         jLabel21 = new javax.swing.JLabel();
         jButtonUpdateResultDetails = new javax.swing.JButton();
+        jCheckBoxVerifyUpdates = new javax.swing.JCheckBox();
         jSpinnerLogLines = new javax.swing.JSpinner();
         jLabel1 = new javax.swing.JLabel();
 
@@ -559,14 +560,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
             },
             new String [] {
-                "Name", "Statement Count", "Last Update Count", "Total Update Count"
+                "Name", "Verified", "Statement Count", "Last Update Count", "Total Update Count"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class
+                java.lang.String.class, java.lang.Boolean.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false
+                false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -588,6 +589,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
+        jCheckBoxVerifyUpdates.setText("Verify Updates");
+        jCheckBoxVerifyUpdates.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxVerifyUpdatesActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelTableUpdateResultsLayout = new javax.swing.GroupLayout(jPanelTableUpdateResults);
         jPanelTableUpdateResults.setLayout(jPanelTableUpdateResultsLayout);
         jPanelTableUpdateResultsLayout.setHorizontalGroup(
@@ -599,6 +607,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addGroup(jPanelTableUpdateResultsLayout.createSequentialGroup()
                         .addComponent(jLabel21)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxVerifyUpdates)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonUpdateResultDetails)))
                 .addContainerGap())
         );
@@ -607,7 +617,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             .addGroup(jPanelTableUpdateResultsLayout.createSequentialGroup()
                 .addGroup(jPanelTableUpdateResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel21)
-                    .addComponent(jButtonUpdateResultDetails))
+                    .addComponent(jButtonUpdateResultDetails)
+                    .addComponent(jCheckBoxVerifyUpdates))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPaneTableUpdateResults, javax.swing.GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
                 .addContainerGap())
@@ -1281,10 +1292,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void jButtonUpdateResultDetailsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpdateResultDetailsActionPerformed
         int index = jTableUpdateResults.getSelectedRow();
-        if(index >= 0) {
-            String name = (String) jTableUpdateResults.getValueAt(index,0);
+        if (index >= 0) {
+            String name = (String) jTableUpdateResults.getValueAt(index, 0);
             String value = resultsMap.get(name).toString();
-            MultiLineStringJPanel.showText("Latest update attempt for "+name+":\r\n"+value);
+            MultiLineStringJPanel.showText("Latest update attempt for " + name + ":\r\n" + value);
         }
     }//GEN-LAST:event_jButtonUpdateResultDetailsActionPerformed
 
@@ -1304,26 +1315,32 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         popMenu.setLocation(x, y);
         popMenu.setVisible(true);
     }
-    
+
     private void jTextAreaLogMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextAreaLogMouseClicked
-        if(evt.isPopupTrigger()) {
-            showPopup(evt.getX(),evt.getY());
+        if (evt.isPopupTrigger()) {
+            showPopup(evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTextAreaLogMouseClicked
 
     private void jTextAreaLogMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextAreaLogMousePressed
-        if(evt.isPopupTrigger()) {
-            showPopup(evt.getX(),evt.getY());
+        if (evt.isPopupTrigger()) {
+            showPopup(evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTextAreaLogMousePressed
 
     private void jTextAreaLogMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextAreaLogMouseReleased
-        if(evt.isPopupTrigger()) {
-            showPopup(evt.getX(),evt.getY());
+        if (evt.isPopupTrigger()) {
+            showPopup(evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTextAreaLogMouseReleased
 
-    
+    private void jCheckBoxVerifyUpdatesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxVerifyUpdatesActionPerformed
+        DatabasePoseUpdater dup = Main.getDatabasePoseUpdater();
+        if (null != dup) {
+            dup.setVerify(jCheckBoxVerifyUpdates.isSelected());
+        }
+    }//GEN-LAST:event_jCheckBoxVerifyUpdatesActionPerformed
+
     private DbType oldDbType = null;
 
 
@@ -1336,6 +1353,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JButton jButtonUpdateResultDetails;
     private javax.swing.JCheckBox jCheckBoxAddRepeatCountsToDatabaseNames;
     private javax.swing.JCheckBox jCheckBoxDebug;
+    private javax.swing.JCheckBox jCheckBoxVerifyUpdates;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -1507,8 +1525,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void setSqlConnection(Connection connection, DbType dbtype) throws SQLException {
         try {
             Main.closeDatabasePoseUpdater();
-            Main.setDatabasePoseUpdater(new DatabasePoseUpdater(connection, dbtype, true,
-                    dbSetupPublisher.getDbSetup().getQueriesMap()));
+            DatabasePoseUpdater dup = new DatabasePoseUpdater(connection, dbtype, true,
+                    dbSetupPublisher.getDbSetup().getQueriesMap());
+            dup.setVerify(this.jCheckBoxVerifyUpdates.isSelected());
+            Main.setDatabasePoseUpdater(dup);
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).type(dbtype).build());
         } catch (IOException ex) {
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -1571,21 +1591,30 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             addLogMessage(exception);
         }
     }
-    private Map<String, DatabasePoseUpdater.UpdateResults> resultsMap;
+    private Map<String, UpdateResults> resultsMap;
 
-    @Override
-    public void updateResultsMap(Map<String, DatabasePoseUpdater.UpdateResults> _map) {
+    private void updateResultsMapInternal(Map<String, UpdateResults> _map) {
         DefaultTableModel model = (DefaultTableModel) jTableUpdateResults.getModel();
         model.setRowCount(0);
-        for (Entry<String, DatabasePoseUpdater.UpdateResults> entry : _map.entrySet()) {
+        for (Entry<String, UpdateResults> entry : _map.entrySet()) {
             model.addRow(new Object[]{
                 entry.getKey(),
+                entry.getValue().isVerified(),
                 entry.getValue().getStatementExecutionCount(),
                 entry.getValue().getUpdateCount(),
-                entry.getValue().getTotalUpdateCount()
+                entry.getValue().getTotalUpdateCount(),
             });
         }
         resultsMap = _map;
+    }
+    
+    @Override
+    public void updateResultsMap(Map<String, UpdateResults> _map) {
+        if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+            this.updateResultsMapInternal(_map);
+        } else {
+            javax.swing.SwingUtilities.invokeLater(() -> this.updateResultsMapInternal(_map));
+        }
     }
 
 }

@@ -44,7 +44,7 @@ public interface VisionToDBJFrameInterface extends CommonJFrameInterface {
 
     public void updataPoseQueryInfo(final List<PoseQueryElem> _list);
     
-    public void updateResultsMap(final Map<String,DatabasePoseUpdater.UpdateResults> _map);
+    public void updateResultsMap(final Map<String, UpdateResults> _map);
 
     public boolean isDebug();
 

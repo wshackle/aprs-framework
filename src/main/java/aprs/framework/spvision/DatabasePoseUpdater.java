@@ -57,11 +57,32 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private PreparedStatement update_statement;
 //    private PreparedStatement addnew_statement;
     private PreparedStatement query_all_statement;
+    private PreparedStatement get_single_statement;
+
 //    private org.neo4j.driver.v1.Driver neo4jJavaDriver;
 //    private Session neo4jSession;
-
     private final DbType dbtype;
     private boolean useBatch;
+
+    private boolean verify = false;
+
+    /**
+     * Get the value of verify
+     *
+     * @return the value of verify
+     */
+    public boolean isVerify() {
+        return verify;
+    }
+
+    /**
+     * Set the value of verify
+     *
+     * @param verify new value of verify
+     */
+    public void setVerify(boolean verify) {
+        this.verify = verify;
+    }
 
     public DbType getDbType() {
         return dbtype;
@@ -104,6 +125,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     private String queryAllString;
+    private String querySingleString;
     private String mergeStatementString;
 
     private void setupStatements() throws SQLException {
@@ -130,10 +152,13 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 mergeStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
                 queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
                 update_statement = con.prepareStatement(mergeStatementString);
-                query_all_statement = con.prepareStatement(queryAllString);
                 updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
-//                updateParamTypes = MYSQL_UPDATE_PARAM_TYPES;
+                query_all_statement = con.prepareStatement(queryAllString);
+                querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
+                get_single_statement = con.prepareStatement(queryAllString);
+                getSingleParamTypes = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getParams();
 
+//                updateParamTypes = MYSQL_UPDATE_PARAM_TYPES;
                 break;
 
             case NEO4J:
@@ -147,6 +172,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                addnew_statement = con.prepareStatement(db);
                 query_all_statement = con.prepareStatement(queryAllString);
                 updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
+                querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
+                get_single_statement = con.prepareStatement(queryAllString);
+                getSingleParamTypes = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getParams();
 //                updateParamTypes = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
                 break;
 
@@ -186,7 +214,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //            + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
 //            + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy";
 
-    private void setupConnection(String host, int port, String db, String username, String password,boolean debug) throws SQLException {
+    private void setupConnection(String host, int port, String db, String username, String password, boolean debug) throws SQLException {
         switch (dbtype) {
             case MYSQL:
                 useBatch = true;
@@ -196,7 +224,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 useBatch = false;
                 break;
         }
-        con = DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password,debug);
+        con = DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password, debug);
         System.out.println("DatabasePoseUpdater connected to database of type " + dbtype + " on host " + host + " with port " + port);
     }
 
@@ -214,7 +242,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         this.dbtype = dbtype;
         sharedConnection = false;
         this.queriesMap = queriesMap;
-        setupConnection(host, port, db, username, password,debug);
+        setupConnection(host, port, db, username, password, debug);
         setupStatements();
     }
 
@@ -239,16 +267,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //            + " where _NAME =  ("
 //            + " select hasSolidObject_PrimaryLocation from SolidObject"
 //            + " where _NAME = ? ) )";
-    private static final DbParamTypeEnum MYSQL_UPDATE_PARAM_TYPES[] = {
-        DbParamTypeEnum.X, // 1
-        DbParamTypeEnum.Y, // 2
-        DbParamTypeEnum.VXI, // 3
-        DbParamTypeEnum.VXJ, // 4
-        DbParamTypeEnum.NAME, // 5
-        DbParamTypeEnum.NAME, // 6
-        DbParamTypeEnum.NAME // 7
-    };
-
+//    private static final DbParamTypeEnum MYSQL_UPDATE_PARAM_TYPES[] = {
+//        DbParamTypeEnum.X, // 1
+//        DbParamTypeEnum.Y, // 2
+//        DbParamTypeEnum.VXI, // 3
+//        DbParamTypeEnum.VXJ, // 4
+//        DbParamTypeEnum.NAME, // 5
+//        DbParamTypeEnum.NAME, // 6
+//        DbParamTypeEnum.NAME // 7
+//    };
 //    public static final String NEO4J_MERGE_STATEMENT_STRING = "merge (source:SolidObject { name:{2} })\n"
 //            + "merge (source) - [:hasPhysicalLocation_RefObject] -> (pl:PhysicalLocation)\n"
 //            + "merge (pl) - [:hasPoseLocation_Pose] -> (pose:PoseLocation)\n"
@@ -258,22 +285,22 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //            + "set pt.hasPoint_X= {3},pt.hasPoint_Y= {4},pt.hasPoint_Z={5}\n"
 //            + "set xaxis.hasVector_I={6}, xaxis.hasVector_J={7}, xaxis.hasVector_K={8}"
 //            + "set zaxis.hasVector_I={9}, zaxis.hasVector_J={10},zaxis.hasVector_K={11}\n";
-    private static final DbParamTypeEnum NEO4J_MERGE_STATEMENT_PARAM_TYPES[] = {
-        //        DbParamTypeEnum.TYPE, // 1
-        DbParamTypeEnum.NAME, // 1
-        DbParamTypeEnum.X, // 2
-        DbParamTypeEnum.Y, // 3
-        DbParamTypeEnum.Z, // 4
-        DbParamTypeEnum.VXI, // 5
-        DbParamTypeEnum.VXJ, // 6
-        DbParamTypeEnum.VXK, // 7
-        DbParamTypeEnum.VZI, // 8
-        DbParamTypeEnum.VZJ, // 9
-        DbParamTypeEnum.VZK// 10
-
-    };
-
-    private DbParamTypeEnum updateParamTypes[] = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
+//    private static final DbParamTypeEnum NEO4J_MERGE_STATEMENT_PARAM_TYPES[] = {
+//        //        DbParamTypeEnum.TYPE, // 1
+//        DbParamTypeEnum.NAME, // 1
+//        DbParamTypeEnum.X, // 2
+//        DbParamTypeEnum.Y, // 3
+//        DbParamTypeEnum.Z, // 4
+//        DbParamTypeEnum.VXI, // 5
+//        DbParamTypeEnum.VXJ, // 6
+//        DbParamTypeEnum.VXK, // 7
+//        DbParamTypeEnum.VZI, // 8
+//        DbParamTypeEnum.VZJ, // 9
+//        DbParamTypeEnum.VZK// 10
+//
+//    };
+    private DbParamTypeEnum updateParamTypes[] = null;// NEO4J_MERGE_STATEMENT_PARAM_TYPES;
+    private DbParamTypeEnum getSingleParamTypes[] = null;//NEO4J_MERGE_STATEMENT_PARAM_TYPES;
 
     private boolean debug;
 
@@ -421,6 +448,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
             Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
+            if (null != get_single_statement) {
+                get_single_statement.close();
+                get_single_statement = null;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
             if (null != con && !sharedConnection) {
                 con.close();
                 con = null;
@@ -457,171 +492,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public static volatile int poses_updated = 0;
     public static volatile List<PoseQueryElem> displayList = null;
 
-    public class UpdateResults {
-
-        private final String name;
-        private String updateStringFilled;
-        private int updateCount;
-        private int totalUpdateCount;
-        private int statementExecutionCount;
-        private DetectedItem lastDetectedItem;
-        private double x, y, rotation;
-        private List<Map<String, String>> lastResultSetMapList;
-        private Exception exception;
-        private boolean returnedResultSet;
-
-        public UpdateResults(String name) {
-            this.name = name;
-        }
-
-        public double getX() {
-            return x;
-        }
-
-        public double getY() {
-            return y;
-        }
-
-        public double getRotation() {
-            return rotation;
-        }
-
-        /**
-         * @return the updateStringFilled
-         */
-        public String getUpdateStringFilled() {
-            return updateStringFilled;
-        }
-
-        /**
-         * @param updateStringFilled the updateStringFilled to set
-         */
-        public void setUpdateStringFilled(String updateStringFilled) {
-            this.updateStringFilled = updateStringFilled;
-        }
-
-        /**
-         * @return the updateCount
-         */
-        public int getUpdateCount() {
-            return updateCount;
-        }
-
-        /**
-         * @param updateCount the updateCount to set
-         */
-        public void setUpdateCount(int updateCount) {
-            this.updateCount = updateCount;
-        }
-
-        /**
-         * @return the totalUpdateCount
-         */
-        public int getTotalUpdateCount() {
-            return totalUpdateCount;
-        }
-
-        /**
-         * @param totalUpdateCount the totalUpdateCount to set
-         */
-        public void setTotalUpdateCount(int totalUpdateCount) {
-            this.totalUpdateCount = totalUpdateCount;
-        }
-
-        /**
-         * @return the statementExecutionCount
-         */
-        public int getStatementExecutionCount() {
-            return statementExecutionCount;
-        }
-
-        /**
-         * @param statementExecutionCount the statementExecutionCount to set
-         */
-        public void setStatementExecutionCount(int statementExecutionCount) {
-            this.statementExecutionCount = statementExecutionCount;
-        }
-
-        /**
-         * @return the lastDetectedItem
-         */
-        public DetectedItem getLastDetectedItem() {
-            return lastDetectedItem;
-        }
-
-        /**
-         * @param lastDetectedItem the lastDetectedItem to set
-         */
-        public void setLastDetectedItem(DetectedItem lastDetectedItem) {
-            this.lastDetectedItem = lastDetectedItem;
-            x = lastDetectedItem.x;
-            y = lastDetectedItem.y;
-            rotation = lastDetectedItem.rotation;
-        }
-
-        /**
-         * @return the lastResultSetMapList
-         */
-        public List<Map<String, String>> getLastResultSetMapList() {
-            return lastResultSetMapList;
-        }
-
-        /**
-         * @param lastResultSetMapList the lastResultSetMapList to set
-         */
-        public void setLastResultSetMapList(List<Map<String, String>> lastResultSetMapList) {
-            this.lastResultSetMapList = lastResultSetMapList;
-        }
-
-        @Override
-        public String toString() {
-            return "UpdateResults{"
-                    + "name= " + name
-                    + ",\n    updateStringFilled=\n" + updateStringFilled
-                    + "\n\nupdateCount=" + updateCount
-                    + ",\n    totalUpdateCount=" + totalUpdateCount
-                    + ",\n    statementExecutionCount=" + statementExecutionCount
-                    + ",\n    lastDetectedItem=" + lastDetectedItem
-                    + ",\n    x=" + x
-                    + ",\n    y=" + y
-                    + ",\n    rotation=" + rotation
-                    + ",\n    lastResultSetMapList=" + lastResultSetMapList
-                    + ",\n    exception=" + exception
-                    + ((null != exception && null != exception.getCause())?"\n caused by \n"+exception.getCause()+"\n":"")
-                    + ",\n    returnedResultSet=" + returnedResultSet
-                    + "\n}";
-        }
-
-        /**
-         * @return the exception
-         */
-        public Exception getException() {
-            return exception;
-        }
-
-        /**
-         * @param exception the exception to set
-         */
-        public void setException(Exception exception) {
-            this.exception = exception;
-        }
-
-        /**
-         * @return the returnedResultSet
-         */
-        public boolean isReturnedResultSet() {
-            return returnedResultSet;
-        }
-
-        /**
-         * @param returnedResultSet the returnedResultSet to set
-         */
-        public void setReturnedResultSet(boolean returnedResultSet) {
-            this.returnedResultSet = returnedResultSet;
-        }
-
-    }
-
     private final Map<String, UpdateResults> updateResultsMap = new HashMap<>();
 
     /**
@@ -635,13 +505,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     public void updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
         VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
+        List<DetectedItem> itemsToVerify = new ArrayList<>();
         try {
             if (null == update_statement) {
                 return;
             }
             long t0 = System.nanoTime();
             int updates = 0;
-            
+
             List<UpdateResults> batchUrs = new ArrayList<>();
             if (null != displayInterface && displayInterface.isDebug()) {
                 debug = true;
@@ -661,29 +532,21 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 if (addRepeatCountsToName) {
                     ci.fullName = ci.name + "_" + (ci.repeats + 1);
                 }
-                List<Object> paramsList = poseParamsToStatement(ci);
+                List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, update_statement);
                 UpdateResults ur = updateResultsMap.get(ci.fullName);
-                String updateStringFilled
-                        = mergeStatementString;
-                for (int paramIndex = 1; paramIndex < paramsList.size() + 1; paramIndex++) {
-                    if (updateStringFilled.indexOf("{" + paramIndex + "}") >= 0) {
-                        updateStringFilled
-                                = updateStringFilled.replace("{" + paramIndex + "}", Objects.toString(paramsList.get(paramIndex - 1)));
-                    } else if (updateStringFilled.indexOf("?") >= 0) {
-                        updateStringFilled
-                                = updateStringFilled.replace("?", Objects.toString(paramsList.get(paramIndex - 1)));
-                    }
-                }
+                String updateStringFilled = fillQueryString(mergeStatementString, paramsList);
                 if (null != ur) {
-                    if (Math.abs(ur.x - ci.x) < 1e-6
-                            && Math.abs(ur.y - ci.y) < 1e-6
-                            && Math.abs(ur.rotation - ci.rotation) < 1e-6) {
+                    if (Math.abs(ur.getX() - ci.x) < 1e-6
+                            && Math.abs(ur.getY() - ci.y) < 1e-6
+                            && Math.abs(ur.getRotation() - ci.rotation) < 1e-6) {
                         continue;
                     }
                 } else {
                     ur = new UpdateResults(ci.fullName);
                 }
+                itemsToVerify.add(ci);
                 ur.setException(null);
+                ur.setVerified(false);
 
                 try {
 
@@ -698,9 +561,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         updates++;
                     } else {
                         boolean exec_result = update_statement.execute();
-                         if (null != displayInterface && displayInterface.isDebug()) {
-                             displayInterface.addLogMessage(" update_statement.execute() returned  " + exec_result + "\r\n");
-                         }
+                        if (null != displayInterface && displayInterface.isDebug()) {
+                            displayInterface.addLogMessage(" update_statement.execute() returned  " + exec_result + "\r\n");
+                        }
                         if (exec_result) {
                             try (ResultSet rs = update_statement.getResultSet()) {
                                 if (null != displayInterface && displayInterface.isDebug()) {
@@ -792,6 +655,129 @@ public class DatabasePoseUpdater implements AutoCloseable {
             if (null != displayInterface) {
                 displayInterface.updateResultsMap(updateResultsMap);
             }
+            if (verify) {
+                this.verifyVisionList(itemsToVerify, addRepeatCountsToName);
+            }
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            if (null != displayInterface) {
+                displayInterface.updateResultsMap(updateResultsMap);
+            }
+        }
+    }
+
+    public void verifyVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
+        VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
+        try {
+            if (null == get_single_statement) {
+                return;
+            }
+            long t0 = System.nanoTime();
+            int updates = 0;
+
+            List<UpdateResults> batchUrs = new ArrayList<>();
+            if (null != displayInterface && displayInterface.isDebug()) {
+                debug = true;
+                displayInterface.addLogMessage("Begin updateVisionList");
+            } else {
+                debug = false;
+            }
+            int verifiedCount = -1;
+            for (int i = 0; i < list.size(); i++) {
+                DetectedItem ci = list.get(i);
+                if (null == ci || ci.name.compareTo("*") == 0) {
+                    continue;
+                }
+                if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
+                    ci.fullName = ci.name;
+                }
+                if (addRepeatCountsToName) {
+                    ci.fullName = ci.name + "_" + (ci.repeats + 1);
+                }
+                List<Object> paramsList = poseParamsToStatement(ci, getSingleParamTypes, get_single_statement);
+                UpdateResults ur = updateResultsMap.get(ci.fullName);
+                String verifyQueryStringFilled = fillQueryString(querySingleString, paramsList);
+                if (null == ur) {
+                    ur = new UpdateResults(ci.fullName);
+                }
+                ur.setVerifyException(null);
+                ur.setVerified(false);
+
+                try {
+                    if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage("verifyQueryStringFilled = \r\n" + verifyQueryStringFilled + "\r\n");
+                    }
+
+                    boolean exec_result = get_single_statement.execute();
+                    if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage(" get_single_statement.execute() returned  " + exec_result + "\r\n");
+                    }
+                    if (exec_result) {
+                        try (ResultSet rs = get_single_statement.getResultSet()) {
+                            if (null != displayInterface && displayInterface.isDebug()) {
+                                displayInterface.addLogMessage("get_single_statement.getResultSet() = " + rs + "\r\n");
+                            }
+                            List<Map<String, String>> resultSetMapList = new ArrayList<>();
+                            Map<DbParamTypeEnum, String> resultParamMap
+                            = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getResults();
+                            if (rs.next()) {
+                                double x = fix(rs, resultParamMap.get(DbParamTypeEnum.X));
+                                double y = fix(rs, resultParamMap.get(DbParamTypeEnum.Y));
+                                double vxi =  fix(rs, resultParamMap.get(DbParamTypeEnum.VXI));
+                                double vxj =  fix(rs, resultParamMap.get(DbParamTypeEnum.VXJ));
+                                if(Math.abs(x - ci.x) < 1e-6 &&
+                                        Math.abs(y - ci.y) < 1e-6 &&
+                                        Math.abs(Math.cos(ci.rotation) - vxi) < 1e-6 &&
+                                        Math.abs(Math.sin(ci.rotation) - vxj) < 1e-6
+                                        ) {
+                                    ur.setVerified(true);
+                                }
+                                ResultSetMetaData meta = rs.getMetaData();
+                                Map<String, String> resultMap = new LinkedHashMap<>();
+                                if (null != displayInterface && displayInterface.isDebug()) {
+                                    displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
+                                }
+                                for (int j = 1; j <= meta.getColumnCount(); j++) {
+                                    String name = meta.getColumnName(j);
+                                    String value = rs.getObject(name, Object.class).toString();
+                                    if (j == 1 && verifiedCount < 0 && name.startsWith("count")) {
+                                        try {
+                                            verifiedCount = Integer.valueOf(value);
+                                        } catch (NumberFormatException nfe) {
+                                        }
+                                    }
+                                    resultMap.put(name, value);
+                                }
+                                resultSetMapList.add(resultMap);
+                                if (null != displayInterface
+                                        && displayInterface.isDebug()
+                                        && resultMap.keySet().size() > 0) {
+                                    displayInterface.addLogMessage("resultMap=" + resultMap.toString() + System.lineSeparator());
+                                }
+                            }
+                            ur.setLastVerificationResultSetListMap(resultSetMapList);
+                        }
+                    } else {
+                        verifiedCount = 0;
+                    }
+
+                } catch (Exception exception) {
+                    ur.setVerifyException(exception);
+                }
+                ur.setVerificationQueryStringFilled(verifyQueryStringFilled);
+                updateResultsMap.put(ci.fullName, ur);
+                if (null != ur.getException()) {
+                    throw new RuntimeException("ur=" + ur, ur.exception);
+                }
+            }
+
+            if (null != displayInterface && displayInterface.isDebug()) {
+                long t1 = System.nanoTime();
+                displayInterface.addLogMessage(String.format("verifyVisionList took %.3f seconds\n", (1e-9 * (t1 - t0))));
+            }
+            if (null != displayInterface) {
+                displayInterface.updateResultsMap(updateResultsMap);
+            }
         } catch (Exception exception) {
             exception.printStackTrace();
             if (null != displayInterface) {
@@ -858,46 +844,61 @@ public class DatabasePoseUpdater implements AutoCloseable {
     //        TYPE, NAME, X, Y, Z, VXI, VXJ, VXK, VZI, VZJ, VZK;
     //    }
 
-    private List<Object> poseParamsToStatement(DetectedItem item) throws SQLException {
+    private String fillQueryString(String parameterizedQueryString, List<Object> paramsList) {
+        String queryStringFilled
+                = parameterizedQueryString;
+        for (int paramIndex = 1; paramIndex < paramsList.size() + 1; paramIndex++) {
+            if (queryStringFilled.indexOf("{" + paramIndex + "}") >= 0) {
+                queryStringFilled
+                        = queryStringFilled.replace("{" + paramIndex + "}", Objects.toString(paramsList.get(paramIndex - 1)));
+            } else if (queryStringFilled.indexOf("?") >= 0) {
+                queryStringFilled
+                        = queryStringFilled.replace("?", Objects.toString(paramsList.get(paramIndex - 1)));
+            }
+        }
+        return queryStringFilled;
+    }
+
+    private List<Object> poseParamsToStatement(DetectedItem item, DbParamTypeEnum paramTypes[], PreparedStatement stmnt) throws SQLException {
         ArrayList<Object> params = new ArrayList<>();
-        for (int i = 0; i < updateParamTypes.length; i++) {
-            DbParamTypeEnum paramTypeEnum = updateParamTypes[i];
+        for (int i = 0; i < paramTypes.length; i++) {
+            DbParamTypeEnum paramTypeEnum = paramTypes[i];
             int index = i + 1;
             switch (paramTypeEnum) {
                 case TYPE:
                     params.add("SolidObject");
-                    update_statement.setString(index, "SolidObject");
+                    stmnt.setString(index, "SolidObject");
                     break;
 
                 case NAME:
-                    String quotedName = "\""+item.fullName+"\"";
+                    String quotedName = "\"" + item.fullName + "\"";
                     params.add(quotedName);
-                    update_statement.setString(index, item.fullName);
+                    stmnt.setString(index, item.fullName);
                     break;
 
                 case X:
                     params.add(item.x);
-                    update_statement.setDouble(index, item.x);
+                    stmnt.setDouble(index, item.x);
                     break;
 
                 case Y:
                     params.add(item.y);
-                    update_statement.setDouble(index, item.y);
+                    stmnt.setDouble(index, item.y);
                     break;
 
                 case Z:
                     params.add(item.z);
-                    update_statement.setDouble(index, item.z);
+                    stmnt.setDouble(index, item.z);
                     break;
 
                 case VXI:
                     params.add(item.vxi);
-                    update_statement.setDouble(index, item.vxi);
+                    stmnt.setDouble(index, item.vxi);
                     break;
 
                 case VXJ:
                     params.add(item.vxj);
-                    update_statement.setDouble(index, item.vxj);
+                    stmnt.setDouble(index, item.vxj);
                     break;
 
                 case VXK:
@@ -907,17 +908,17 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                 case VZI:
                     params.add(item.vzi);
-                    update_statement.setDouble(index, item.vzi);
+                    stmnt.setDouble(index, item.vzi);
                     break;
 
                 case VZJ:
                     params.add(item.vzj);
-                    update_statement.setDouble(index, item.vzj);
+                    stmnt.setDouble(index, item.vzj);
                     break;
 
                 case VZK:
                     params.add(item.vzk);
-                    update_statement.setDouble(index, item.vzk);
+                    stmnt.setDouble(index, item.vzk);
                     break;
 
                 default:

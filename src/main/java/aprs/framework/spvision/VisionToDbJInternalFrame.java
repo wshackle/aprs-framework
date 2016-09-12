@@ -212,7 +212,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     }
 
     @Override
-    public void updateResultsMap(Map<String, DatabasePoseUpdater.UpdateResults> _map) {
+    public void updateResultsMap(Map<String, UpdateResults> _map) {
         visionToDBJPanel.updateResultsMap(_map);
     }
 }
