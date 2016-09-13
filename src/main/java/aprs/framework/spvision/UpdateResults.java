@@ -32,23 +32,23 @@ import java.util.Map;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class UpdateResults {
-    
+
     final String name;
     private String updateStringFilled;
     private int updateCount;
     private int totalUpdateCount;
     private int statementExecutionCount;
     private DetectedItem lastDetectedItem;
-    double x;
+    private double x;
     private double y;
     private double rotation;
     private List<Map<String, String>> lastResultSetMapList;
-    Exception exception;
+    private Exception exception;
     private boolean returnedResultSet;
-    
-        private List<Map<String, String>> lastVerificationResultSetListMap;
 
-            private String verificationQueryStringFilled;
+    private List<Map<String, String>> lastVerificationResultSetListMap;
+
+    private String verificationQueryStringFilled;
 
     /**
      * Get the value of verificationQueryStringFilled
@@ -88,9 +88,7 @@ public class UpdateResults {
         this.lastVerificationResultSetListMap = lastVerificationResultSetListMap;
     }
 
-    
-
-        private boolean verified;
+    private boolean verified;
 
     /**
      * Get the value of verified
@@ -215,7 +213,24 @@ public class UpdateResults {
 
     @Override
     public String toString() {
-        return "UpdateResults{" + "name= " + name + ",\n    updateStringFilled=\n" + updateStringFilled + "\n\nupdateCount=" + updateCount + ",\n    totalUpdateCount=" + totalUpdateCount + ",\n    statementExecutionCount=" + statementExecutionCount + ",\n    lastDetectedItem=" + lastDetectedItem + ",\n    x=" + x + ",\n    y=" + y + ",\n    rotation=" + rotation + ",\n    lastResultSetMapList=" + lastResultSetMapList + ",\n    exception=" + exception + ((null != exception && null != exception.getCause()) ? "\n caused by \n" + exception.getCause() + "\n" : "") + ",\n    returnedResultSet=" + returnedResultSet + "\n}";
+        return "UpdateResults{" 
+                + "name= " + name 
+                + ",\n    updateStringFilled=\n" + updateStringFilled 
+                + "\n\nupdateCount=" + updateCount 
+                + ",\n    totalUpdateCount=" + totalUpdateCount 
+                + ",\n    statementExecutionCount=" + statementExecutionCount 
+                + ",\n    lastDetectedItem=" + lastDetectedItem 
+                + ",\n    x=" + x 
+                + ",\n    y=" + y 
+                + ",\n    rotation=" + rotation 
+                + ",\n    lastResultSetMapList=" + lastResultSetMapList 
+                + ",\n    exception=" + exception + ((null != exception && null != exception.getCause()) ? "\n caused by \n" + exception.getCause() + "\n" : "") 
+                + ",\n    returnedResultSet=" + returnedResultSet 
+                + ",\n    verificationQueryStringFilled=\n" + verificationQueryStringFilled 
+                + "\n\n    verifyException=" + verifyException + ((null != verifyException && null != verifyException.getCause()) ? "\n caused by \n" + exception.getCause() + "\n" : "") 
+                + ",\n    verified=" + verified 
+                + ",\n    lastVerificationResultSetListMap=" + lastVerificationResultSetListMap 
+                + "\n}";
     }
     private Exception verifyException = null;
 
@@ -264,5 +279,5 @@ public class UpdateResults {
     public void setReturnedResultSet(boolean returnedResultSet) {
         this.returnedResultSet = returnedResultSet;
     }
-    
+
 }

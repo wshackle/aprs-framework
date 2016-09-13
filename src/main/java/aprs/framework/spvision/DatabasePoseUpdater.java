@@ -155,7 +155,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
                 query_all_statement = con.prepareStatement(queryAllString);
                 querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
-                get_single_statement = con.prepareStatement(queryAllString);
+                get_single_statement = con.prepareStatement(querySingleString);
                 getSingleParamTypes = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getParams();
 
 //                updateParamTypes = MYSQL_UPDATE_PARAM_TYPES;
@@ -173,7 +173,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 query_all_statement = con.prepareStatement(queryAllString);
                 updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
                 querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
-                get_single_statement = con.prepareStatement(queryAllString);
+                get_single_statement = con.prepareStatement(querySingleString);
                 getSingleParamTypes = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getParams();
 //                updateParamTypes = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
                 break;
@@ -619,7 +619,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 ur.setStatementExecutionCount(ur.getStatementExecutionCount() + 1);
                 updateResultsMap.put(ci.fullName, ur);
                 if (null != ur.getException()) {
-                    throw new RuntimeException("ur=" + ur, ur.exception);
+                    throw new RuntimeException("ur=" + ur, ur.getException());
                 }
             }
 
@@ -652,11 +652,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 displayInterface.addLogMessage("useBatch=" + useBatch);
                 displayInterface.addLogMessage(String.format("updateVisionList took %.3f seconds\n", (1e-9 * (t1 - t0))));
             }
-            if (null != displayInterface) {
-                displayInterface.updateResultsMap(updateResultsMap);
-            }
+            
             if (verify) {
                 this.verifyVisionList(itemsToVerify, addRepeatCountsToName);
+            } else if (null != displayInterface) {
+                displayInterface.updateResultsMap(updateResultsMap);
             }
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -720,7 +720,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             List<Map<String, String>> resultSetMapList = new ArrayList<>();
                             Map<DbParamTypeEnum, String> resultParamMap
                             = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getResults();
-                            if (rs.next()) {
+                            while (rs.next()) {
                                 double x = fix(rs, resultParamMap.get(DbParamTypeEnum.X));
                                 double y = fix(rs, resultParamMap.get(DbParamTypeEnum.Y));
                                 double vxi =  fix(rs, resultParamMap.get(DbParamTypeEnum.VXI));
@@ -766,8 +766,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 }
                 ur.setVerificationQueryStringFilled(verifyQueryStringFilled);
                 updateResultsMap.put(ci.fullName, ur);
-                if (null != ur.getException()) {
-                    throw new RuntimeException("ur=" + ur, ur.exception);
+                if (null != ur.getVerifyException()) {
+                    throw new RuntimeException("ur=" + ur, ur.getVerifyException());
                 }
             }
 
@@ -784,6 +784,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 displayInterface.updateResultsMap(updateResultsMap);
             }
         }
+        
     }
     //    private static class IndexSet {
     //

@@ -401,29 +401,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void jCheckBoxConnectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxConnectedActionPerformed
         if (this.jCheckBoxConnected.isSelected()) {
-            if (this.jCheckBoxSimulated.isSelected()) {
-                try {
-                    visionSocketServer = new VisionSocketServer(Integer.parseInt(this.jTextFieldPort.getText()));
-                    visionSocketServer.setDebug(this.jCheckBoxDebug.isSelected());
-                    visionSocketServer.publishList(getItems());
-                } catch (IOException ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            } else {
-                if (null != Main.getVisionSocketClient()) {
-                    visionSocketClient = Main.getVisionSocketClient();
-                } else {
-                    visionSocketClient = new VisionSocketClient();
-                    Map<String, String> argsMap = new HashMap<>();
-                    for (Map.Entry<String, String> e : Main.getArgsMap().entrySet()) {
-                        argsMap.put(e.getKey(), e.getValue());
-                    }
-                    argsMap.put("--visionport", jTextFieldPort.getText());
-                    argsMap.put("--visionhost", jTextFieldHost.getText());
-                    visionSocketClient.start(argsMap);
-                }
-                visionSocketClient.addListener(this);
-            }
+            connect();
         } else {
             if (null != visionSocketClient) {
                 if (visionSocketClient != Main.getVisionSocketClient()) {
@@ -443,6 +421,32 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
     }//GEN-LAST:event_jCheckBoxConnectedActionPerformed
+
+    private void connect() throws NumberFormatException {
+        if (this.jCheckBoxSimulated.isSelected()) {
+            try {
+                visionSocketServer = new VisionSocketServer(Integer.parseInt(this.jTextFieldPort.getText()));
+                visionSocketServer.setDebug(this.jCheckBoxDebug.isSelected());
+                visionSocketServer.publishList(getItems());
+            } catch (IOException ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            if (null != Main.getVisionSocketClient()) {
+                visionSocketClient = Main.getVisionSocketClient();
+            } else {
+                visionSocketClient = new VisionSocketClient();
+                Map<String, String> argsMap = new HashMap<>();
+                for (Map.Entry<String, String> e : Main.getArgsMap().entrySet()) {
+                    argsMap.put(e.getKey(), e.getValue());
+                }
+                argsMap.put("--visionport", jTextFieldPort.getText());
+                argsMap.put("--visionhost", jTextFieldHost.getText());
+                visionSocketClient.start(argsMap);
+            }
+            visionSocketClient.addListener(this);
+        }
+    }
 
     private void jButtonAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddActionPerformed
         List<DetectedItem> l = new ArrayList<>();
@@ -586,6 +590,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("--visionport", jTextFieldPort.getText());
             props.put("--visionhost", jTextFieldHost.getText());
             props.put("simulated", Boolean.toString(jCheckBoxSimulated.isSelected()));
+            props.put("connected", Boolean.toString(jCheckBoxConnected.isSelected()));
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText());
             props.put("xminymin",jTextFieldMinXMinY.getText());
             List<DetectedItem> l = getItems();
@@ -643,6 +648,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if(null != xminyminString) {
                 setMinXMinYText(xminyminString);
                 jTextFieldMinXMinY.setText(xminyminString);
+            }
+            String connectedString = props.getProperty("connected");
+            if (null != connectedString && connectedString.length() > 0) {
+                boolean connected = Boolean.valueOf(connectedString);
+                jCheckBoxConnected.setSelected(connected);
+                if(connected) {
+                    connect();
+                }
             }
         }
     }

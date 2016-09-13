@@ -373,7 +373,9 @@ public class VisionSocketClient implements AutoCloseable {
                         displayInterface.updateInfo(visionList, line);
                     }
                 });
-                Main.queryDatabase();
+                if (null != Main.getDatabasePoseUpdater()) {
+                    Main.queryDatabase();
+                }
             }
             updateListeners();
         }
