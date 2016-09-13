@@ -568,7 +568,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }
 
-    private void loadQueriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
+    private void loadQueriesMapInternal(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
         DefaultTableModel model = (DefaultTableModel) jTableQueries.getModel();
         model.setRowCount(0);
         for (Map.Entry<DbQueryEnum, DbQueryInfo> entry : queriesMap.entrySet()) {
@@ -576,6 +576,14 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
         autoResizeTableColWidths(jTableQueries);
         autoResizeTableRowHeights(jTableQueries);
+    }
+    
+    private void loadQueriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
+        if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+            loadQueriesMapInternal(queriesMap);
+        } else {
+            javax.swing.SwingUtilities.invokeLater(() -> loadQueriesMapInternal(queriesMap));
+        }
     }
 
     public void setupMultiLineTable(JTable jTable,

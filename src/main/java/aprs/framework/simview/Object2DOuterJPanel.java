@@ -59,21 +59,29 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void setItems(List<DetectedItem> items) {
         try {
             settingItems = true;
-            object2DJPanel1.setItems(items);
-            DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-            model.setRowCount(items.size());
-            for (int i = 0; i < items.size(); i++) {
-                DetectedItem item = items.get(i);
-                model.setValueAt(item.name, i, 0);
-                model.setValueAt(item.x, i, 1);
-                model.setValueAt(item.y, i, 2);
-                model.setValueAt(Math.toDegrees(item.rotation), i, 3);
+            if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+                setItemsInternal(items);
+            } else {
+                javax.swing.SwingUtilities.invokeLater(() -> setItemsInternal(items));
             }
             if (null != visionSocketServer) {
                 visionSocketServer.publishList(items);
             }
         } finally {
             settingItems = false;
+        }
+    }
+
+    private void setItemsInternal(List<DetectedItem> items) {
+        object2DJPanel1.setItems(items);
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        model.setRowCount(items.size());
+        for (int i = 0; i < items.size(); i++) {
+            DetectedItem item = items.get(i);
+            model.setValueAt(item.name, i, 0);
+            model.setValueAt(item.x, i, 1);
+            model.setValueAt(item.y, i, 2);
+            model.setValueAt(Math.toDegrees(item.rotation), i, 3);
         }
     }
 

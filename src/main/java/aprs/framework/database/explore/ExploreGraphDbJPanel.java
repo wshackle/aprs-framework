@@ -1075,7 +1075,14 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 tableOffset += listOfLabelsLists.get(rsIndex - 1).size();
             }
         }
+        if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+            updateNodes(model);
+        } else {
+            javax.swing.SwingUtilities.invokeLater(() -> updateNodes(model));
+        }
+    }
 
+    private void updateNodes(DefaultTableModel model) {
         jTableNodes.setModel(model);
         jTableNodes.getSelectionModel().setSelectionInterval(-1, -1);
         jTableNodes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
