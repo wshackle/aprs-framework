@@ -123,7 +123,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jComboBoxResourceDir = new javax.swing.JComboBox<>();
         jRadioButtonExternDir = new javax.swing.JRadioButton();
         jTextFieldQueriesDirectory = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
+        jButtonBrowseExternalDirectory = new javax.swing.JButton();
+        jButtonLoadExternalDirectory = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextAreaConnectErrors = new javax.swing.JTextArea();
         jCheckBoxDebug = new javax.swing.JCheckBox();
@@ -246,7 +247,25 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         buttonGroupQueryDirType.add(jRadioButtonExternDir);
         jRadioButtonExternDir.setText("External Directory: ");
 
-        jButton1.setText("Browse");
+        jTextFieldQueriesDirectory.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldQueriesDirectoryActionPerformed(evt);
+            }
+        });
+
+        jButtonBrowseExternalDirectory.setText("Browse");
+        jButtonBrowseExternalDirectory.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonBrowseExternalDirectoryActionPerformed(evt);
+            }
+        });
+
+        jButtonLoadExternalDirectory.setText("Load");
+        jButtonLoadExternalDirectory.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLoadExternalDirectoryActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -263,9 +282,11 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jRadioButtonExternDir)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldQueriesDirectory, javax.swing.GroupLayout.DEFAULT_SIZE, 263, Short.MAX_VALUE)
+                        .addComponent(jTextFieldQueriesDirectory, javax.swing.GroupLayout.DEFAULT_SIZE, 220, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton1)))
+                        .addComponent(jButtonLoadExternalDirectory)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonBrowseExternalDirectory)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -279,7 +300,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     .addComponent(jComboBoxResourceDir, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jRadioButtonExternDir)
                     .addComponent(jTextFieldQueriesDirectory, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton1))
+                    .addComponent(jButtonBrowseExternalDirectory)
+                    .addComponent(jButtonLoadExternalDirectory))
                 .addContainerGap())
         );
 
@@ -424,9 +446,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             DbSetup setup = this.getDbSetup();
             DbSetupBuilder.connect(setup);
             notifyAllDbSetupListeners();
-            jTextAreaConnectErrors.setText("Connected to database of type "+setup.getDbType()+ "\n as user "+setup.getDbUser()+" on host "+setup.getHost()+"\n with port "+setup.getPort()+"\n using queries from "+setup.getQueriesDir());
+            jTextAreaConnectErrors.setText("Connected to database of type " + setup.getDbType() + "\n as user " + setup.getDbUser() + " on host " + setup.getHost() + "\n with port " + setup.getPort() + "\n using queries from " + setup.getQueriesDir());
         } catch (Exception ex) {
-            jTextAreaConnectErrors.setText(ex +"\nCaused by :\n"+ex.getCause());
+            jTextAreaConnectErrors.setText(ex + "\nCaused by :\n" + ex.getCause());
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
             connected = false;
         }
@@ -494,14 +516,45 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }//GEN-LAST:event_jComboBoxResourceDirActionPerformed
 
+    private void jButtonBrowseExternalDirectoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBrowseExternalDirectoryActionPerformed
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File f = chooser.getSelectedFile();
+            loadExternalQueriesDirectory(f);
+        }
+    }//GEN-LAST:event_jButtonBrowseExternalDirectoryActionPerformed
+
+    private void jButtonLoadExternalDirectoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadExternalDirectoryActionPerformed
+        loadExternalQueriesDirectory(new File(jTextFieldQueriesDirectory.getText()));
+    }//GEN-LAST:event_jButtonLoadExternalDirectoryActionPerformed
+
+    private void jTextFieldQueriesDirectoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldQueriesDirectoryActionPerformed
+        loadExternalQueriesDirectory(new File(jTextFieldQueriesDirectory.getText()));
+    }//GEN-LAST:event_jTextFieldQueriesDirectoryActionPerformed
+
+    private void loadExternalQueriesDirectory(File f) {
+        try {
+            if (!jTextFieldQueriesDirectory.getText().equals(f.getCanonicalPath())) {
+                jTextFieldQueriesDirectory.setText(f.getCanonicalPath());
+            }
+            jRadioButtonExternDir.setSelected(true);
+            Map<DbQueryEnum, DbQueryInfo> queriesMap
+                    = DbSetupBuilder.readQueriesDirectory(f.getAbsolutePath());
+            loadQueriesMap(queriesMap);
+        } catch (IOException ex) {
+            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     private boolean debug = false;
-    
+
     private boolean connected = false;
     private volatile boolean updatingFromDbSetup = false;
 
     public void setDbSetup(DbSetup setup) {
         try {
-            if(null == setup) {
+            if (null == setup) {
                 return;
             }
             jCheckBoxDebug.setSelected(setup.isDebug());
@@ -552,16 +605,20 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 jRadioButtonExternDir.setSelected(!internal);
             }
             String queryDir = setup.getQueriesDir();
+            boolean queriesMapReloaded = false;
             if (null != queryDir) {
                 if (internal) {
                     jComboBoxResourceDir.setSelectedItem(queryDir);
-                } else {
-                    jTextFieldQueriesDirectory.setText(queryDir);
+                } else if (!Objects.equals(queryDir, jTextFieldQueriesDirectory.getText())) {
+                    loadExternalQueriesDirectory(new File(queryDir));
+                    queriesMapReloaded=true;
                 }
-            }
-            Map<DbQueryEnum, DbQueryInfo> queriesMap = setup.getQueriesMap();
-            if (null != queriesMap) {
-                loadQueriesMap(queriesMap);
+            } 
+            if(!queriesMapReloaded) {
+                Map<DbQueryEnum, DbQueryInfo> queriesMap = setup.getQueriesMap();
+                if (null != queriesMap) {
+                    loadQueriesMap(queriesMap);
+                }
             }
         } finally {
             updatingFromDbSetup = false;
@@ -577,9 +634,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         autoResizeTableColWidths(jTableQueries);
         autoResizeTableRowHeights(jTableQueries);
     }
-    
+
     private void loadQueriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
-        if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             loadQueriesMapInternal(queriesMap);
         } else {
             javax.swing.SwingUtilities.invokeLater(() -> loadQueriesMapInternal(queriesMap));
@@ -587,9 +644,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
 
     public void setupMultiLineTable(JTable jTable,
-                                    int multiLineColumnIndex,
-                                    JTextArea editTableArea,
-                                    List<JTextArea> viewAreas) {
+            int multiLineColumnIndex,
+            JTextArea editTableArea,
+            List<JTextArea> viewAreas) {
         jTable.getColumnModel().getColumn(multiLineColumnIndex).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -676,17 +733,17 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         Map<DbQueryEnum, DbQueryInfo> map = new EnumMap<>(DbQueryEnum.class);
         for (int i = 0; i < model.getRowCount(); i++) {
             Object keyObject = model.getValueAt(i, 0);
-            if(null == keyObject) {
-                System.err.println("Null keyObject in table on row "+i);
+            if (null == keyObject) {
+                System.err.println("Null keyObject in table on row " + i);
                 return null;
             }
-            if(!(keyObject instanceof DbQueryEnum)) {
-                System.err.println("Bad keyObject in table on row "+i);
+            if (!(keyObject instanceof DbQueryEnum)) {
+                System.err.println("Bad keyObject in table on row " + i);
                 return null;
             }
             Object queryObject = model.getValueAt(i, 1);
-            if(null == queryObject) {
-                System.err.println("Null queryObject in table on row "+i);
+            if (null == queryObject) {
+                System.err.println("Null queryObject in table on row " + i);
                 return null;
             }
             map.put((DbQueryEnum) keyObject,
@@ -728,9 +785,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     });
 
     private List<Future<?>> futures = null;
+
     public List<Future<?>> notifyAllDbSetupListeners() {
-        if(null != futures) {
-            for(Future f : futures) {
+        if (null != futures) {
+            for (Future f : futures) {
                 f.cancel(false);
             }
         }
@@ -1188,11 +1246,12 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroupQueryDirType;
-    private javax.swing.JButton jButton1;
     private javax.swing.JButton jButtonBrowse;
+    private javax.swing.JButton jButtonBrowseExternalDirectory;
     private javax.swing.JButton jButtonConnectDB;
     private javax.swing.JButton jButtonDisconnectDB;
     private javax.swing.JButton jButtonLoad;
+    private javax.swing.JButton jButtonLoadExternalDirectory;
     private javax.swing.JButton jButtonSave;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JComboBox<aprs.framework.database.DbType> jComboBoxDbType;

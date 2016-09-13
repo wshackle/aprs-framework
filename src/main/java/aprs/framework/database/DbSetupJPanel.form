@@ -270,9 +270,11 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="jRadioButtonExternDir" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jTextFieldQueriesDirectory" pref="263" max="32767" attributes="0"/>
+                          <Component id="jTextFieldQueriesDirectory" pref="220" max="32767" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jButton1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonLoadExternalDirectory" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="jButtonBrowseExternalDirectory" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
@@ -290,7 +292,8 @@
                       <Component id="jComboBoxResourceDir" alignment="2" min="-2" pref="36" max="-2" attributes="0"/>
                       <Component id="jRadioButtonExternDir" alignment="2" min="-2" max="-2" attributes="0"/>
                       <Component id="jTextFieldQueriesDirectory" alignment="2" min="-2" max="-2" attributes="0"/>
-                      <Component id="jButton1" alignment="2" min="-2" max="-2" attributes="0"/>
+                      <Component id="jButtonBrowseExternalDirectory" alignment="2" min="-2" max="-2" attributes="0"/>
+                      <Component id="jButtonLoadExternalDirectory" alignment="2" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
@@ -353,11 +356,25 @@
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="jTextFieldQueriesDirectory">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldQueriesDirectoryActionPerformed"/>
+          </Events>
         </Component>
-        <Component class="javax.swing.JButton" name="jButton1">
+        <Component class="javax.swing.JButton" name="jButtonBrowseExternalDirectory">
           <Properties>
             <Property name="text" type="java.lang.String" value="Browse"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonBrowseExternalDirectoryActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JButton" name="jButtonLoadExternalDirectory">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Load"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonLoadExternalDirectoryActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
