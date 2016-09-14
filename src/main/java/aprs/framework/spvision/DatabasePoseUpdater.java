@@ -739,7 +739,19 @@ public class DatabasePoseUpdater implements AutoCloseable {
                                 }
                                 for (int j = 1; j <= meta.getColumnCount(); j++) {
                                     String name = meta.getColumnName(j);
-                                    String value = rs.getObject(name, Object.class).toString();
+                                    String value = null;
+                                    try{ 
+                                        if(null == value) {
+                                            value = rs.getString(name);
+                                        }
+                                    } catch(Exception exception) {
+                                    }
+                                    try{ 
+                                        if(null == value) {
+                                            value = Objects.toString(rs.getObject(name,Object.class));
+                                        }
+                                    } catch(Exception exception) {
+                                    }
                                     if (j == 1 && verifiedCount < 0 && name.startsWith("count")) {
                                         try {
                                             verifiedCount = Integer.valueOf(value);

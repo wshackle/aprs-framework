@@ -32,8 +32,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
-import java.sql.SQLException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -51,6 +52,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
 import javax.swing.JTable;
@@ -84,6 +86,24 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         viewAreas = new ArrayList<>();
         setupMultiLineTable(jTableQueries, 1, editTableArea, viewAreas);
     }
+
+//    private static List<String> getClasspathEntriesByPath(String path) throws IOException {
+//        InputStream is = Main.class.getClassLoader().getResourceAsStream(path);
+//        if(null == is) {
+//            return null;
+//        }
+//        StringBuilder sb = new StringBuilder();
+//        while (is.available() > 0) {
+//            byte[] buffer = new byte[1024];
+//            sb.append(new String(buffer, Charset.defaultCharset()));
+//        }
+//
+//        return Arrays
+//                .asList(sb.toString().split("\n")) // Convert StringBuilder to individual lines
+//                .stream() // Stream the list
+//                .filter(line -> line.trim().length() > 0) // Filter out empty lines
+//                .collect(Collectors.toList());              // Collect remaining lines into a List again
+//    }
 
     JTextArea editTableArea = null;
     List<JTextArea> viewAreas = null;
@@ -237,7 +257,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jRadioButtonResourceDir.setSelected(true);
         jRadioButtonResourceDir.setText("Resource Directory: ");
 
-        jComboBoxResourceDir.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "mysql", "neo4j/v1", "neo4j/v2", " " }));
+        jComboBoxResourceDir.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "mysql", "mysql_simple", "neo4j/v1", "neo4j/v2", " " }));
         jComboBoxResourceDir.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBoxResourceDirActionPerformed(evt);
@@ -611,10 +631,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     jComboBoxResourceDir.setSelectedItem(queryDir);
                 } else if (!Objects.equals(queryDir, jTextFieldQueriesDirectory.getText())) {
                     loadExternalQueriesDirectory(new File(queryDir));
-                    queriesMapReloaded=true;
+                    queriesMapReloaded = true;
                 }
-            } 
-            if(!queriesMapReloaded) {
+            }
+            if (!queriesMapReloaded) {
                 Map<DbQueryEnum, DbQueryInfo> queriesMap = setup.getQueriesMap();
                 if (null != queriesMap) {
                     loadQueriesMap(queriesMap);

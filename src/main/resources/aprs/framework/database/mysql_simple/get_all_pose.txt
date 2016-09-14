@@ -1,0 +1,3 @@
+#params=
+#results={NAME=name,X=X,Y=Y,Z=Z,VXI=VXI,VXJ=VXJ,VXK=VXK,VZI=VZI,VZJ=VZJ,VZK=VZK}
+select name,X,Y,Z,VXI,VXJ,VXK,VZI,VZJ,VZK from Poses
