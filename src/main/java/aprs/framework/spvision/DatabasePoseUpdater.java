@@ -31,7 +31,6 @@ import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.PoseQueryElem;
-import aprs.framework.spvision.VisionToDBJFrameInterface;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -65,6 +64,127 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private boolean useBatch;
 
     private boolean verify = false;
+
+    private long totalUpdateTimeMillis;
+
+    /**
+     * Get the value of totalUpdateTimeMillis
+     *
+     * @return the value of totalUpdateTimeMillis
+     */
+    public long getTotalUpdateTimeMillis() {
+        return totalUpdateTimeMillis;
+    }
+
+    /**
+     * Set the value of totalUpdateTimeMillis
+     *
+     * @param totalUpdateTimeMillis new value of totalUpdateTimeMillis
+     */
+    public void setTotalUpdateTimeMillis(long totalUpdateTimeMillis) {
+        this.totalUpdateTimeMillis = totalUpdateTimeMillis;
+    }
+
+    private long maxUpdateTimeMillis;
+
+    /**
+     * Get the value of maxUpdateTimeMillis
+     *
+     * @return the value of maxUpdateTimeMillis
+     */
+    public long getMaxUpdateTimeMillis() {
+        return maxUpdateTimeMillis;
+    }
+
+    /**
+     * Set the value of maxUpdateTimeMillis
+     *
+     * @param maxUpdateTimeMillis new value of maxUpdateTimeMillis
+     */
+    public void setMaxUpdateTimeMillis(long maxUpdateTimeMillis) {
+        this.maxUpdateTimeMillis = maxUpdateTimeMillis;
+    }
+    
+        private long totalUpdateTimeNanos;
+
+    /**
+     * Get the value of totalUpdateTimeNanos
+     *
+     * @return the value of totalUpdateTimeNanos
+     */
+    public long getTotalUpdateTimeNanos() {
+        return totalUpdateTimeNanos;
+    }
+
+    /**
+     * Set the value of totalUpdateTimeNanos
+     *
+     * @param totalUpdateTimeNanos new value of totalUpdateTimeNanos
+     */
+    public void setTotalUpdateTimeNanos(long totalUpdateTimeNanos) {
+        this.totalUpdateTimeNanos = totalUpdateTimeNanos;
+    }
+
+        private long maxUpdateTimeNanos;
+
+    /**
+     * Get the value of maxUpdateTimeNanos
+     *
+     * @return the value of maxUpdateTimeNanos
+     */
+    public long getMaxUpdateTimeNanos() {
+        return maxUpdateTimeNanos;
+    }
+
+    /**
+     * Set the value of maxUpdateTimeNanos
+     *
+     * @param maxUpdateTimeNanos new value of maxUpdateTimeNanos
+     */
+    public void setMaxUpdateTimeNanos(long maxUpdateTimeNanos) {
+        this.maxUpdateTimeNanos = maxUpdateTimeNanos;
+    }
+
+
+    private int totalUpdates;
+
+    /**
+     * Get the value of totalUpdates
+     *
+     * @return the value of totalUpdates
+     */
+    public int getTotalUpdates() {
+        return totalUpdates;
+    }
+
+    /**
+     * Set the value of totalUpdates
+     *
+     * @param totalUpdates new value of totalUpdates
+     */
+    public void setTotalUpdates(int totalUpdates) {
+        this.totalUpdates = totalUpdates;
+    }
+
+    private int totalListUpdates;
+
+    /**
+     * Get the value of totalListUpdates
+     *
+     * @return the value of totalListUpdates
+     */
+    public int getTotalListUpdates() {
+        return totalListUpdates;
+    }
+
+    /**
+     * Set the value of totalListUpdates
+     *
+     * @param totalListUpdates new value of totalListUpdates
+     */
+    public void setTotalListUpdates(int totalListUpdates) {
+        this.totalListUpdates = totalListUpdates;
+    }
 
     /**
      * Get the value of verify
@@ -429,8 +549,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     @Override
+    public String toString() {
+        return "DatabasePoseUpdater{" + "con=" + con +", dbtype=" + dbtype + ", useBatch=" + useBatch + ", verify=" + verify + ", totalUpdateTimeMillis=" + totalUpdateTimeMillis + ", maxUpdateTimeMillis=" + maxUpdateTimeMillis + ", totalUpdateTimeNanos=" + totalUpdateTimeNanos + ", maxUpdateTimeNanos=" + maxUpdateTimeNanos + ", totalUpdates=" + totalUpdates + ", totalListUpdates=" + totalListUpdates + ", sharedConnection=" + sharedConnection + ", queryAllString=" + queryAllString + ", querySingleString=" + querySingleString + ", mergeStatementString=" + mergeStatementString + ", updateParamTypes=" + updateParamTypes + ", getSingleParamTypes=" + getSingleParamTypes + ", debug=" + debug + '}';
+    }
+
+    
+    @Override
     public void close() {
 
+        System.out.println("Closing "+ this);
+        
         try {
             if (null != update_statement) {
                 update_statement.close();
@@ -510,7 +638,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
             if (null == update_statement) {
                 return;
             }
-            long t0 = System.nanoTime();
+            long t0_nanos = System.nanoTime();
+            long t0_millis = System.currentTimeMillis();
             int updates = 0;
 
             List<UpdateResults> batchUrs = new ArrayList<>();
@@ -547,7 +676,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 itemsToVerify.add(ci);
                 ur.setException(null);
                 ur.setVerified(false);
-
+                
                 try {
 
                     ur.setLastDetectedItem(ci);
@@ -644,15 +773,33 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 poses_updated += updates;
             }
 
+            long t1_nanos = System.nanoTime();
+            long t1_millis = System.currentTimeMillis();
+            long millis_diff = t1_millis - t0_millis;
+            if(millis_diff > 0) {
+                totalUpdateTimeMillis += millis_diff;
+            }
+            long nanos_diff = t1_nanos - t0_nanos;
+            if(nanos_diff > 0) {
+                totalUpdateTimeNanos += nanos_diff;
+            }
+            if(nanos_diff > maxUpdateTimeNanos) {
+                maxUpdateTimeNanos = nanos_diff;
+            }
+            if(millis_diff > maxUpdateTimeMillis) {
+                maxUpdateTimeMillis = millis_diff;
+            }
+            totalListUpdates++;
+            totalUpdates = poses_updated;
             if (null != displayInterface && displayInterface.isDebug()) {
-                long t1 = System.nanoTime();
+                
                 displayInterface.addLogMessage("poses_updated=" + poses_updated);
                 displayInterface.addLogMessage("end updateVisionList");
                 displayInterface.addLogMessage("updates=" + updates);
                 displayInterface.addLogMessage("useBatch=" + useBatch);
-                displayInterface.addLogMessage(String.format("updateVisionList took %.3f seconds\n", (1e-9 * (t1 - t0))));
+                displayInterface.addLogMessage(String.format("updateVisionList took %.3f seconds\n", (1e-9 * nanos_diff)));
             }
-            
+
             if (verify) {
                 this.verifyVisionList(itemsToVerify, addRepeatCountsToName);
             } else if (null != displayInterface) {
@@ -719,17 +866,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             }
                             List<Map<String, String>> resultSetMapList = new ArrayList<>();
                             Map<DbParamTypeEnum, String> resultParamMap
-                            = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getResults();
+                                    = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getResults();
                             while (rs.next()) {
                                 double x = fix(rs, resultParamMap.get(DbParamTypeEnum.X));
                                 double y = fix(rs, resultParamMap.get(DbParamTypeEnum.Y));
-                                double vxi =  fix(rs, resultParamMap.get(DbParamTypeEnum.VXI));
-                                double vxj =  fix(rs, resultParamMap.get(DbParamTypeEnum.VXJ));
-                                if(Math.abs(x - ci.x) < 1e-6 &&
-                                        Math.abs(y - ci.y) < 1e-6 &&
-                                        Math.abs(Math.cos(ci.rotation) - vxi) < 1e-6 &&
-                                        Math.abs(Math.sin(ci.rotation) - vxj) < 1e-6
-                                        ) {
+                                double vxi = fix(rs, resultParamMap.get(DbParamTypeEnum.VXI));
+                                double vxj = fix(rs, resultParamMap.get(DbParamTypeEnum.VXJ));
+                                if (Math.abs(x - ci.x) < 1e-6
+                                        && Math.abs(y - ci.y) < 1e-6
+                                        && Math.abs(Math.cos(ci.rotation) - vxi) < 1e-6
+                                        && Math.abs(Math.sin(ci.rotation) - vxj) < 1e-6) {
                                     ur.setVerified(true);
                                 }
                                 ResultSetMetaData meta = rs.getMetaData();
@@ -740,17 +886,17 @@ public class DatabasePoseUpdater implements AutoCloseable {
                                 for (int j = 1; j <= meta.getColumnCount(); j++) {
                                     String name = meta.getColumnName(j);
                                     String value = null;
-                                    try{ 
-                                        if(null == value) {
+                                    try {
+                                        if (null == value) {
                                             value = rs.getString(name);
                                         }
-                                    } catch(Exception exception) {
+                                    } catch (Exception exception) {
                                     }
-                                    try{ 
-                                        if(null == value) {
-                                            value = Objects.toString(rs.getObject(name,Object.class));
+                                    try {
+                                        if (null == value) {
+                                            value = Objects.toString(rs.getObject(name, Object.class));
                                         }
-                                    } catch(Exception exception) {
+                                    } catch (Exception exception) {
                                     }
                                     if (j == 1 && verifiedCount < 0 && name.startsWith("count")) {
                                         try {
@@ -796,7 +942,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 displayInterface.updateResultsMap(updateResultsMap);
             }
         }
-        
+
     }
     //    private static class IndexSet {
     //

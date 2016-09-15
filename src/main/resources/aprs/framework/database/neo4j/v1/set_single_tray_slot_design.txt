@@ -1,0 +1,5 @@
+#params= SLOT_DESIGN_ID(1),PART_DESIGN_NAME(2), TRAY_DESIGN_NAME(2),X_SLOT_OFFSET(4),Y_SLOT_OFFSET(5)
+#results=
+This is a stub which will not work.
+
+

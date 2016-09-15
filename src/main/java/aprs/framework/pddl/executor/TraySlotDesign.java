@@ -20,17 +20,59 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.database;
+package aprs.framework.pddl.executor;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public enum DbQueryEnum {
-    GET_SINGLE_POSE,
-    SET_SINGLE_POSE,
-    GET_ALL_POSE,
-    GET_SINGLE_TRAY_SLOT_DESIGN,
-    SET_SINGLE_TRAY_SLOT_DESIGN,
-    GET_ALL_TRAY_SLOT_DESIGNS;
+public class TraySlotDesign {
+    
+    private final int ID;
+    private  String TrayDesignName;
+    private  String PartDesignName;
+    private  double X_OFFSET;
+    private  double Y_OFFSET;
+
+    public TraySlotDesign(int ID) {
+        this.ID = ID;
+    }
+
+    public int getID() {
+        return ID;
+    }
+
+    public String getTrayDesignName() {
+        return TrayDesignName;
+    }
+
+    public void setTrayDesignName(String TrayDesignName) {
+        this.TrayDesignName = TrayDesignName;
+    }
+
+    public String getPartDesignName() {
+        return PartDesignName;
+    }
+
+    public void setPartDesignName(String PartDesignName) {
+        this.PartDesignName = PartDesignName;
+    }
+
+    public double getX_OFFSET() {
+        return X_OFFSET;
+    }
+
+    public void setX_OFFSET(double X_OFFSET) {
+        this.X_OFFSET = X_OFFSET;
+    }
+
+    public double getY_OFFSET() {
+        return Y_OFFSET;
+    }
+
+    public void setY_OFFSET(double Y_OFFSET) {
+        this.Y_OFFSET = Y_OFFSET;
+    }
+    
+    
 }

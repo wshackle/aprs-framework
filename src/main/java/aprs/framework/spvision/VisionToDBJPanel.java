@@ -155,6 +155,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jLabel2 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTableTransform = new javax.swing.JTable();
+        jLabel3 = new javax.swing.JLabel();
+        jTextFieldPerformance = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextAreaLog = new javax.swing.JTextArea();
         jLabel11 = new javax.swing.JLabel();
@@ -300,6 +302,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         });
         jScrollPane1.setViewportView(jTableTransform);
 
+        jLabel3.setText("Performance:");
+
+        jTextFieldPerformance.setEditable(false);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -341,8 +347,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jCheckBoxAddRepeatCountsToDatabaseNames)
-                            .addComponent(jLabel2))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel3))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jTextFieldPerformance))
                 .addContainerGap())
         );
 
@@ -402,7 +410,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(62, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jTextFieldPerformance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         jTextAreaLog.setEditable(false);
@@ -682,7 +694,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jSpinnerLogLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 45, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 39, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -1294,7 +1306,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }//GEN-LAST:event_jButtonUpdateResultDetailsActionPerformed
 
     private JPopupMenu popMenu = new JPopupMenu();
-
+    {
+        JMenuItem copyMenuItem = new JMenuItem("Copy");
+        copyMenuItem.addActionListener(e -> copyText());
+    }
     private void copyText() {
         this.jTextAreaLog.getTransferHandler().exportToClipboard(this.jTextAreaLog,
                 Toolkit.getDefaultToolkit().getSystemClipboard(),
@@ -1302,29 +1317,25 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         popMenu.setVisible(false);
     }
 
-    public void showPopup(int x, int y) {
-        JMenuItem copyMenuItem = new JMenuItem("Copy");
-        copyMenuItem.addActionListener(e -> copyText());
-        popMenu.add(copyMenuItem);
-        popMenu.setLocation(x, y);
-        popMenu.setVisible(true);
+    public void showPopup(Component comp, int x, int y) {
+        popMenu.show(comp, x, y);
     }
 
     private void jTextAreaLogMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextAreaLogMouseClicked
         if (evt.isPopupTrigger()) {
-            showPopup(evt.getX(), evt.getY());
+            showPopup(evt.getComponent(), evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTextAreaLogMouseClicked
 
     private void jTextAreaLogMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextAreaLogMousePressed
         if (evt.isPopupTrigger()) {
-            showPopup(evt.getX(), evt.getY());
+            showPopup(evt.getComponent(),evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTextAreaLogMousePressed
 
     private void jTextAreaLogMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextAreaLogMouseReleased
         if (evt.isPopupTrigger()) {
-            showPopup(evt.getX(), evt.getY());
+            showPopup(evt.getComponent(),evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTextAreaLogMouseReleased
 
@@ -1360,6 +1371,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
@@ -1386,6 +1398,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JTextField jTextFieldAcquire;
     private javax.swing.JTextField jTextFieldCmdPort;
     private javax.swing.JTextField jTextFieldLastCommand;
+    private javax.swing.JTextField jTextFieldPerformance;
     private javax.swing.JTextField jTextFieldPoseUpdatesParsed;
     private javax.swing.JTextField jTextFieldPoseUpdatesProcessed;
     private javax.swing.JTextField jTextFieldVisionHost;
@@ -1595,15 +1608,20 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 entry.getKey(),
                 entry.getValue().isVerified(),
                 ((entry.getValue().getException() != null) || (entry.getValue().getVerifyException() != null)),
-                entry.getValue().getTotalUpdateCount(),
-            });
+                entry.getValue().getTotalUpdateCount(),});
         }
         resultsMap = _map;
+        DatabasePoseUpdater dpu = Main.getDatabasePoseUpdater();
+        if (null != dpu && dpu.getTotalListUpdates() > 0) {
+            this.jTextFieldPerformance.setText("Avg update time:"
+                    + (dpu.getTotalUpdateTimeMillis() / dpu.getTotalListUpdates())
+                    + " ms, worst=" + dpu.getMaxUpdateTimeMillis() + " ms");
+        }
     }
-    
+
     @Override
     public void updateResultsMap(Map<String, UpdateResults> _map) {
-        if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             this.updateResultsMapInternal(_map);
         } else {
             javax.swing.SwingUtilities.invokeLater(() -> this.updateResultsMapInternal(_map));

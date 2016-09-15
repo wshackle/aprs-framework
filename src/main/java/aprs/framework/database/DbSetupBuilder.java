@@ -79,14 +79,14 @@ public class DbSetupBuilder {
             String resDir = "neo4j/v1/";
             Map<DbQueryEnum, DbQueryInfo> map = readRelResourceQueriesDirectory(resDir);
             NEO4J_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
             String resDir = "mysql/";
             Map<DbQueryEnum, DbQueryInfo> map = readRelResourceQueriesDirectory(resDir);
             MYSQL_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

@@ -27,5 +27,10 @@ package aprs.framework.database;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public enum DbParamTypeEnum {
-    TYPE, NAME, X, Y, Z, VXI, VXJ, VXK, VZI, VZJ, VZK;
+    TYPE, NAME, X, Y, Z, VXI, VXJ, VXK, VZI, VZJ, VZK,
+    SLOT_DESIGN_ID,
+    PART_DESIGN_NAME,
+    TRAY_DESIGN_NAME,
+    X_SLOT_OFFSET,
+    Y_SLOT_OFFSET;
 }

@@ -22,6 +22,7 @@
  */
 package aprs.framework.database;
 
+import aprs.framework.pddl.executor.TraySlotDesign;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.VectorType;
@@ -29,7 +30,9 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -44,16 +47,16 @@ public class QuerySet implements QuerySetInterface {
             java.sql.Connection con,
             Map<DbQueryEnum, DbQueryInfo> queriesMap) throws SQLException {
         this.dbtype = dbtype;
-        if(null == queriesMap) {
+        if (null == queriesMap) {
             throw new IllegalArgumentException("queriesMap is null");
         }
         this.setQueryInfo = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE);
-        if(null == setQueryInfo) {
-            throw new IllegalArgumentException("queriesMap has no entry for "+DbQueryEnum.SET_SINGLE_POSE);
+        if (null == setQueryInfo) {
+            throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.SET_SINGLE_POSE);
         }
         this.getQueryInfo = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE);
-        if(null == getQueryInfo) {
-            throw new IllegalArgumentException("queriesMap has no entry for "+DbQueryEnum.GET_SINGLE_POSE);
+        if (null == getQueryInfo) {
+            throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_SINGLE_POSE);
         }
         String getPoseQueryString = getQueryInfo.getQuery();
         if (null == getPoseQueryString) {
@@ -65,14 +68,22 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("queriesMap does not contain setPose");
         }
         setPoseStatement = con.prepareStatement(setPoseQueryString);
+        DbQueryInfo getAllTraySlogDesignsQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_TRAY_SLOT_DESIGNS);
+        if (null != getAllTraySlogDesignsQueryInfo) {
+            String getAllTrayDesignsQueryString = getAllTraySlogDesignsQueryInfo.getQuery();
+            if (null != getAllTrayDesignsQueryString) {
+                this.getAllTrayDesignsStatement = con.prepareStatement(getAllTrayDesignsQueryString);
+            }
+        }
         this.queriesMap = queriesMap;
-        
+
     }
 
     private final DbType dbtype;
     private final Map<DbQueryEnum, DbQueryInfo> queriesMap;
     java.sql.PreparedStatement getPoseStatement;
     java.sql.PreparedStatement setPoseStatement;
+    java.sql.PreparedStatement getAllTrayDesignsStatement;
 
     private boolean closed = false;
 
@@ -96,10 +107,10 @@ public class QuerySet implements QuerySetInterface {
     }
 
     private void setQueryStringParam(java.sql.PreparedStatement stmnt,
-                                     DbQueryInfo queryInfo,
-                                     DbParamTypeEnum type,
-                                     String value,
-                                     Map<Integer, Object> map) throws SQLException {
+            DbQueryInfo queryInfo,
+            DbParamTypeEnum type,
+            String value,
+            Map<Integer, Object> map) throws SQLException {
 
         if (!queryInfo.getParamPosMap().containsKey(type)) {
             throw new IllegalArgumentException("No entry for type=" + type + " in params=" + Arrays.toString(queryInfo.getParams()));
@@ -113,10 +124,10 @@ public class QuerySet implements QuerySetInterface {
     }
 
     private void setQueryDoubleParam(java.sql.PreparedStatement stmnt,
-                                     DbQueryInfo queryInfo,
-                                     DbParamTypeEnum type,
-                                     double value,
-                                     Map<Integer, Object> map) throws SQLException {
+            DbQueryInfo queryInfo,
+            DbParamTypeEnum type,
+            double value,
+            Map<Integer, Object> map) throws SQLException {
 
         if (!queryInfo.getParamPosMap().containsKey(type)) {
             throw new IllegalArgumentException("No entry for type=" + type + " in params=" + Arrays.toString(queryInfo.getParams()));
@@ -135,23 +146,51 @@ public class QuerySet implements QuerySetInterface {
         String queryFormat = getQueryFormat();
         DbParamTypeEnum paramTypes[] = queryInfo.getParams();
         String qString = queryInfo.getQuery();
-        for (int i = 0; i < paramTypes.length; i++) {
-            qString = qString.replace(String.format(queryFormat, i), map.get(i+1).toString());
+        if (null != paramTypes) {
+            for (int i = 0; i < paramTypes.length; i++) {
+                qString = qString.replace(String.format(queryFormat, i), map.get(i + 1).toString());
+            }
         }
         return qString;
     }
 
     private String getQueryResultString(ResultSet rs, DbQueryInfo queryInfo, DbParamTypeEnum type) throws SQLException {
-        Map<DbParamTypeEnum,String> map = queryInfo.getResults();
+        Map<DbParamTypeEnum, String> map = queryInfo.getResults();
         String qname = map.get(type);
-        if(null == qname) {
-            throw new IllegalArgumentException("No entry for type "+type +" in map ="+map);
+        if (null == qname) {
+            throw new IllegalArgumentException("No entry for type " + type + " in map =" + map);
         }
         if (Character.isDigit(qname.charAt(0))) {
             int index = Integer.valueOf(qname);
             return rs.getString(index);
         }
         return rs.getString(qname);
+    }
+
+    private int getQueryResultInt(ResultSet rs, DbQueryInfo queryInfo, DbParamTypeEnum type) throws SQLException {
+        Map<DbParamTypeEnum, String> map = queryInfo.getResults();
+        String qname = map.get(type);
+        if (null == qname) {
+            throw new IllegalArgumentException("No entry for type " + type + " in map =" + map);
+        }
+        if (Character.isDigit(qname.charAt(0))) {
+            int index = Integer.valueOf(qname);
+            return rs.getInt(index);
+        }
+        return rs.getInt(qname);
+    }
+
+    private double getQueryResultDouble(ResultSet rs, DbQueryInfo queryInfo, DbParamTypeEnum type) throws SQLException {
+        Map<DbParamTypeEnum, String> map = queryInfo.getResults();
+        String qname = map.get(type);
+        if (null == qname) {
+            throw new IllegalArgumentException("No entry for type " + type + " in map =" + map);
+        }
+        if (Character.isDigit(qname.charAt(0))) {
+            int index = Integer.valueOf(qname);
+            return rs.getDouble(index);
+        }
+        return rs.getDouble(qname);
     }
 
     private String getPoseQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
@@ -242,12 +281,72 @@ public class QuerySet implements QuerySetInterface {
         return pose;
     }
 
+    public List<TraySlotDesign> getAllTraySlotDesigns() throws SQLException {
+        if (closed) {
+            throw new IllegalStateException("QuerySet already closed.");
+        }
+        if(null == getAllTrayDesignsStatement) {
+            throw new IllegalStateException("null == getAllTrayDesignsStatement");
+        }
+        List<TraySlotDesign> list = new ArrayList<>();
+        DbQueryInfo getAllTraySlogDesignsQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_TRAY_SLOT_DESIGNS);
+//        setQueryStringParam(getPoseStatement, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.NAME, name, map);
+//        getPoseStatement.setString(1, name);
+//        String simQuery = createExpectedQueryString(getAllTraySlogDesignsQueryInfo, map);
+//        System.out.println("simQuery = " + simQuery);
+        try (ResultSet rs = getAllTrayDesignsStatement.executeQuery()) {
+            while (rs.next()) {
+                ResultSetMetaData meta = rs.getMetaData();
+                for (int j = 1; j <= meta.getColumnCount(); j++) {
+                    System.out.println("j = " + j);
+                    String cname = meta.getColumnName(j);
+                    System.out.println("cname = " + cname);
+                    String type = meta.getColumnTypeName(j);
+                    System.out.println("type = " + type);
+                    Object o = rs.getObject(j);
+                    System.out.println("o = " + o);
+                }
+                int id = getQueryResultInt(rs, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.SLOT_DESIGN_ID);
+                TraySlotDesign traySlotDesign = new TraySlotDesign(id);
+                String partDesignName = getQueryResultString(rs, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.PART_DESIGN_NAME);
+                traySlotDesign.setPartDesignName(partDesignName);
+                String trayDesignName = getQueryResultString(rs, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.TRAY_DESIGN_NAME);
+                traySlotDesign.setTrayDesignName(trayDesignName);
+                double x_offset = getQueryResultDouble(rs, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.X_SLOT_OFFSET);
+                traySlotDesign.setX_OFFSET(x_offset);
+                double y_offset = getQueryResultDouble(rs, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.Y_SLOT_OFFSET);
+                traySlotDesign.setY_OFFSET(y_offset);
+                list.add(traySlotDesign);
+            }
+//            if (rs.next()) {
+//                String nameCheckString = rs.getString(1);
+//                System.out.println("nameCheckString = " + nameCheckString);
+//                int count =1;
+//                while(rs.next()) {
+//                    System.out.println("rs.getString(1) = " + rs.getString(1));
+//                    count++;
+//                    System.out.println("count = " + count);
+//                }
+//                throw new IllegalStateException("More than one result for name=" + name);
+//            }
+        }
+        return list;
+    }
+
     @Override
     public void close() throws Exception {
         closed = true;
         if (null != getPoseStatement) {
             getPoseStatement.close();
             getPoseStatement = null;
+        }
+        if(null != setPoseStatement) {
+            setPoseStatement.close();
+            setPoseStatement = null;
+        }
+        if(null != getAllTrayDesignsStatement) {
+            getAllTrayDesignsStatement.close();
+            getAllTrayDesignsStatement = null;
         }
     }
 

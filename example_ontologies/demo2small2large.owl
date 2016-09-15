@@ -1,0 +1,3931 @@
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(:=</http://www.nist.gov/el/ontologies//usr/local/zeid/github/usnistgov/iora/_build/xml/demo/xmlInstanceFiles/demo2small2large.owl#>)
+Prefix(:=</http://www.nist.gov/el/ontologies//usr/local/zeid/github/usnistgov/iora/_build/xml/demo/xmlSchemas/demo2small2largeClasses.owl#>)
+Ontology(</http://www.nist.gov/el/ontologies//usr/local/zeid/github/usnistgov/iora/_build/xml/demo/xmlInstanceFiles/demo2small2large.owl>
+Import(<file:demo2small2largeClasses.owl>)
+
+//*****************************************
+// 1 start :KittingWorkstation kitting_workstation_1
+Declaration(NamedIndividual(:kitting_workstation_1))
+ClassAssertion(:KittingWorkstation :kitting_workstation_1)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :kitting_workstation_1 :world_frame)
+
+//*****************************************
+// 2 start :PoseOnlyLocation world_frame
+Declaration(NamedIndividual(:world_frame))
+ClassAssertion(:PoseOnlyLocation :world_frame)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :world_frame :kitting_workstation_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :world_frame :world_frame_pose)
+
+//*****************************************
+// 3 start :Pose world_frame_pose
+Declaration(NamedIndividual(:world_frame_pose))
+ClassAssertion(:Pose :world_frame_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :world_frame_pose :world_frame_origin)
+
+//*****************************************
+// 4 start :Point world_frame_origin
+Declaration(NamedIndividual(:world_frame_origin))
+ClassAssertion(:Point :world_frame_origin)
+DataPropertyAssertion(:hasPoint_X :world_frame_origin
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :world_frame_origin
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :world_frame_origin
+                      "0.000000"^^xsd:decimal)
+// 4 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :world_frame_pose :world_frame_x_axis)
+
+//*****************************************
+// 4 start :Vector world_frame_x_axis
+Declaration(NamedIndividual(:world_frame_x_axis))
+ClassAssertion(:Vector :world_frame_x_axis)
+DataPropertyAssertion(:hasVector_I :world_frame_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :world_frame_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :world_frame_x_axis
+                      "0.000000"^^xsd:decimal)
+// 4 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :world_frame_pose :world_frame_z_axis)
+
+//*****************************************
+// 4 start :Vector world_frame_z_axis
+Declaration(NamedIndividual(:world_frame_z_axis))
+ClassAssertion(:Vector :world_frame_z_axis)
+DataPropertyAssertion(:hasVector_I :world_frame_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :world_frame_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :world_frame_z_axis
+                      "1.000000"^^xsd:decimal)
+// 4 end :Vector
+//*****************************************
+
+// 3 end :Pose
+//*****************************************
+
+// 2 end :PoseOnlyLocation
+//*****************************************
+
+DataPropertyAssertion(:hasKittingWorkstation_AngleUnit :kitting_workstation_1
+                      "degree"^^xsd:NMTOKEN)
+ObjectPropertyAssertion(:hasKittingWorkstation_ChangingStation
+                        :kitting_workstation_1 :changing_station_1)
+
+//*****************************************
+// 2 start :EndEffectorChangingStation changing_station_1
+Declaration(NamedIndividual(:changing_station_1))
+ClassAssertion(:EndEffectorChangingStation :changing_station_1)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :changing_station_1 :changing_station_location)
+
+//*****************************************
+// 3 start :PoseOnlyLocation changing_station_location
+Declaration(NamedIndividual(:changing_station_location))
+ClassAssertion(:PoseOnlyLocation :changing_station_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :changing_station_location :kitting_workstation_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :changing_station_location :changing_station_pose)
+
+//*****************************************
+// 4 start :Pose changing_station_pose
+Declaration(NamedIndividual(:changing_station_pose))
+ClassAssertion(:Pose :changing_station_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :changing_station_pose :changing_station_point)
+
+//*****************************************
+// 5 start :Point changing_station_point
+Declaration(NamedIndividual(:changing_station_point))
+ClassAssertion(:Point :changing_station_point)
+DataPropertyAssertion(:hasPoint_X :changing_station_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :changing_station_point
+                      "0.609600"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :changing_station_point
+                      "0.000000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :changing_station_pose :changing_station_x_axis)
+
+//*****************************************
+// 5 start :Vector changing_station_x_axis
+Declaration(NamedIndividual(:changing_station_x_axis))
+ClassAssertion(:Vector :changing_station_x_axis)
+DataPropertyAssertion(:hasVector_I :changing_station_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :changing_station_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :changing_station_x_axis
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :changing_station_pose :changing_station_z_axis)
+
+//*****************************************
+// 5 start :Vector changing_station_z_axis
+Declaration(NamedIndividual(:changing_station_z_axis))
+ClassAssertion(:Vector :changing_station_z_axis)
+DataPropertyAssertion(:hasVector_I :changing_station_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :changing_station_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :changing_station_z_axis
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PoseOnlyLocation
+//*****************************************
+
+ObjectPropertyAssertion(:hasEndEffectorChangingStation_Base
+                        :changing_station_1 :changing_station_base)
+
+//*****************************************
+// 3 start :MechanicalComponent changing_station_base
+Declaration(NamedIndividual(:changing_station_base))
+ClassAssertion(:MechanicalComponent :changing_station_base)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :changing_station_base :changing_station_base_location)
+
+//*****************************************
+// 4 start :PoseOnlyLocation changing_station_base_location
+Declaration(NamedIndividual(:changing_station_base_location))
+ClassAssertion(:PoseOnlyLocation :changing_station_base_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :changing_station_base_location :changing_station_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :changing_station_base_location :changing_station_base_pose)
+
+//*****************************************
+// 5 start :Pose changing_station_base_pose
+Declaration(NamedIndividual(:changing_station_base_pose))
+ClassAssertion(:Pose :changing_station_base_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :changing_station_base_pose :changing_station_base_point)
+
+//*****************************************
+// 6 start :Point changing_station_base_point
+Declaration(NamedIndividual(:changing_station_base_point))
+ClassAssertion(:Point :changing_station_base_point)
+DataPropertyAssertion(:hasPoint_X :changing_station_base_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :changing_station_base_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :changing_station_base_point
+                      "0.000000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :changing_station_base_pose :changing_station_base_x_axis)
+
+//*****************************************
+// 6 start :Vector changing_station_base_x_axis
+Declaration(NamedIndividual(:changing_station_base_x_axis))
+ClassAssertion(:Vector :changing_station_base_x_axis)
+DataPropertyAssertion(:hasVector_I :changing_station_base_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :changing_station_base_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :changing_station_base_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :changing_station_base_pose :changing_station_base_z_axis)
+
+//*****************************************
+// 6 start :Vector changing_station_base_z_axis
+Declaration(NamedIndividual(:changing_station_base_z_axis))
+ClassAssertion(:Vector :changing_station_base_z_axis)
+DataPropertyAssertion(:hasVector_I :changing_station_base_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :changing_station_base_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :changing_station_base_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseOnlyLocation
+//*****************************************
+
+ObjectPropertyAssertion(:hasNoSkuObject_ExternalShape
+                        :changing_station_base :shape_changing_station_base)
+
+//*****************************************
+// 4 start :ExternalShape shape_changing_station_base
+Declaration(NamedIndividual(:shape_changing_station_base))
+ClassAssertion(:ExternalShape :shape_changing_station_base)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_changing_station_base
+                      "Changing Station base unit model file"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_changing_station_base
+                      "STL"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_changing_station_base
+                      "package://iora_interface/workcell_models/ToolChangerRack.stl"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_changing_station_base
+                      "ToolChangerRack"^^xsd:string)
+// 4 end :ExternalShape
+//*****************************************
+
+// 3 end :MechanicalComponent
+//*****************************************
+
+ObjectPropertyAssertion(:hasEndEffectorChangingStation_EndEffectorHolder
+                        :changing_station_1 :tray_gripper_holder)
+
+//*****************************************
+// 3 start :EndEffectorHolder tray_gripper_holder
+Declaration(NamedIndividual(:tray_gripper_holder))
+ClassAssertion(:EndEffectorHolder :tray_gripper_holder)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :tray_gripper_holder :tray_gripper_holder_location)
+
+//*****************************************
+// 4 start :PoseOnlyLocation tray_gripper_holder_location
+Declaration(NamedIndividual(:tray_gripper_holder_location))
+ClassAssertion(:PoseOnlyLocation :tray_gripper_holder_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :tray_gripper_holder_location :changing_station_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :tray_gripper_holder_location :tray_gripper_holder_pose)
+
+//*****************************************
+// 5 start :Pose tray_gripper_holder_pose
+Declaration(NamedIndividual(:tray_gripper_holder_pose))
+ClassAssertion(:Pose :tray_gripper_holder_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :tray_gripper_holder_pose :tray_gripper_holder_point)
+
+//*****************************************
+// 6 start :Point tray_gripper_holder_point
+Declaration(NamedIndividual(:tray_gripper_holder_point))
+ClassAssertion(:Point :tray_gripper_holder_point)
+DataPropertyAssertion(:hasPoint_X :tray_gripper_holder_point
+                      "0.459107"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :tray_gripper_holder_point
+                      "-0.478160"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :tray_gripper_holder_point
+                      "0.070249"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :tray_gripper_holder_pose :tray_gripper_holder_x_axis)
+
+//*****************************************
+// 6 start :Vector tray_gripper_holder_x_axis
+Declaration(NamedIndividual(:tray_gripper_holder_x_axis))
+ClassAssertion(:Vector :tray_gripper_holder_x_axis)
+DataPropertyAssertion(:hasVector_I :tray_gripper_holder_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :tray_gripper_holder_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :tray_gripper_holder_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :tray_gripper_holder_pose :tray_gripper_holder_z_axis)
+
+//*****************************************
+// 6 start :Vector tray_gripper_holder_z_axis
+Declaration(NamedIndividual(:tray_gripper_holder_z_axis))
+ClassAssertion(:Vector :tray_gripper_holder_z_axis)
+DataPropertyAssertion(:hasVector_I :tray_gripper_holder_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :tray_gripper_holder_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :tray_gripper_holder_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseOnlyLocation
+//*****************************************
+
+ObjectPropertyAssertion(:hasNoSkuObject_ExternalShape
+                        :tray_gripper_holder :shape_changing_station_holder_1)
+
+//*****************************************
+// 4 start :ExternalShape shape_changing_station_holder_1
+Declaration(NamedIndividual(:shape_changing_station_holder_1))
+ClassAssertion(:ExternalShape :shape_changing_station_holder_1)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_changing_station_holder_1
+                      "Changing Station holder unit model file"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_changing_station_holder_1
+                      "STL"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_changing_station_holder_1
+                      "package://iora_interface/workcell_models/ToolChangerHolder.stl"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_changing_station_holder_1
+                      "ToolChangerHolder"^^xsd:string)
+// 4 end :ExternalShape
+//*****************************************
+
+DataPropertyAssertion(:hasEndEffectorHolder_EndEffectorSlot :tray_gripper_holder
+                      "tray_gripper"^^xsd:string)
+ObjectPropertyAssertion(:hasEndEffectorHolder_EndEffector
+                        :tray_gripper_holder :tray_gripper)
+
+//*****************************************
+// 4 start :VacuumEffectorSingleCup tray_gripper
+Declaration(NamedIndividual(:tray_gripper))
+ClassAssertion(:VacuumEffectorSingleCup :tray_gripper)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :tray_gripper :tray_gripper_location)
+
+//*****************************************
+// 5 start :PoseOnlyLocation tray_gripper_location
+Declaration(NamedIndividual(:tray_gripper_location))
+ClassAssertion(:PoseOnlyLocation :tray_gripper_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :tray_gripper_location :tray_gripper_holder)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :tray_gripper_location :tray_gripper_pose)
+
+//*****************************************
+// 6 start :Pose tray_gripper_pose
+Declaration(NamedIndividual(:tray_gripper_pose))
+ClassAssertion(:Pose :tray_gripper_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :tray_gripper_pose :vacuum1cup_gripper_point)
+
+//*****************************************
+// 7 start :Point vacuum1cup_gripper_point
+Declaration(NamedIndividual(:vacuum1cup_gripper_point))
+ClassAssertion(:Point :vacuum1cup_gripper_point)
+DataPropertyAssertion(:hasPoint_X :vacuum1cup_gripper_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :vacuum1cup_gripper_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :vacuum1cup_gripper_point
+                      "0.000000"^^xsd:decimal)
+// 7 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :tray_gripper_pose :vacuum1cup_gripper_x_axis)
+
+//*****************************************
+// 7 start :Vector vacuum1cup_gripper_x_axis
+Declaration(NamedIndividual(:vacuum1cup_gripper_x_axis))
+ClassAssertion(:Vector :vacuum1cup_gripper_x_axis)
+DataPropertyAssertion(:hasVector_I :vacuum1cup_gripper_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :vacuum1cup_gripper_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :vacuum1cup_gripper_x_axis
+                      "0.000000"^^xsd:decimal)
+// 7 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :tray_gripper_pose :vacuum1cup_gripper_z_axis)
+
+//*****************************************
+// 7 start :Vector vacuum1cup_gripper_z_axis
+Declaration(NamedIndividual(:vacuum1cup_gripper_z_axis))
+ClassAssertion(:Vector :vacuum1cup_gripper_z_axis)
+DataPropertyAssertion(:hasVector_I :vacuum1cup_gripper_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :vacuum1cup_gripper_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :vacuum1cup_gripper_z_axis
+                      "1.000000"^^xsd:decimal)
+// 7 end :Vector
+//*****************************************
+
+// 6 end :Pose
+//*****************************************
+
+// 5 end :PoseOnlyLocation
+//*****************************************
+
+DataPropertyAssertion(:hasNoSkuObject_Weight :tray_gripper
+                      "0.010000"^^xsd:decimal)
+DataPropertyAssertion(:hasEndEffector_Description :tray_gripper
+                      "small single cup vacuum effector"^^xsd:string)
+DataPropertyAssertion(:hasEndEffector_MaximumLoadWeight :tray_gripper
+                      "0.400000"^^xsd:decimal)
+ObjectPropertyAssertion(:hasEndEffector_HeldObjectOffset
+                        :tray_gripper :tray_gripper_offset)
+
+//*****************************************
+// 5 start :PoseOnlyLocation tray_gripper_offset
+Declaration(NamedIndividual(:tray_gripper_offset))
+ClassAssertion(:PoseOnlyLocation :tray_gripper_offset)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :tray_gripper_offset :tray_gripper_holder)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :tray_gripper_offset :tray_gripper_offset_pose)
+
+//*****************************************
+// 6 start :Pose tray_gripper_offset_pose
+Declaration(NamedIndividual(:tray_gripper_offset_pose))
+ClassAssertion(:Pose :tray_gripper_offset_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :tray_gripper_offset_pose :tray_gripper_offset_point)
+
+//*****************************************
+// 7 start :Point tray_gripper_offset_point
+Declaration(NamedIndividual(:tray_gripper_offset_point))
+ClassAssertion(:Point :tray_gripper_offset_point)
+DataPropertyAssertion(:hasPoint_X :tray_gripper_offset_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :tray_gripper_offset_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :tray_gripper_offset_point
+                      "0.000000"^^xsd:decimal)
+// 7 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :tray_gripper_offset_pose :tray_gripper_offset_x_axis)
+
+//*****************************************
+// 7 start :Vector tray_gripper_offset_x_axis
+Declaration(NamedIndividual(:tray_gripper_offset_x_axis))
+ClassAssertion(:Vector :tray_gripper_offset_x_axis)
+DataPropertyAssertion(:hasVector_I :tray_gripper_offset_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :tray_gripper_offset_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :tray_gripper_offset_x_axis
+                      "0.000000"^^xsd:decimal)
+// 7 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :tray_gripper_offset_pose :tray_gripper_offset_z_axis)
+
+//*****************************************
+// 7 start :Vector tray_gripper_offset_z_axis
+Declaration(NamedIndividual(:tray_gripper_offset_z_axis))
+ClassAssertion(:Vector :tray_gripper_offset_z_axis)
+DataPropertyAssertion(:hasVector_I :tray_gripper_offset_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :tray_gripper_offset_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :tray_gripper_offset_z_axis
+                      "1.000000"^^xsd:decimal)
+// 7 end :Vector
+//*****************************************
+
+// 6 end :Pose
+//*****************************************
+
+// 5 end :PoseOnlyLocation
+//*****************************************
+
+DataPropertyAssertion(:hasVacuumEffector_CupDiameter :tray_gripper
+                      "0.020000"^^xsd:decimal)
+DataPropertyAssertion(:hasVacuumEffector_Length :tray_gripper
+                      "0.025000"^^xsd:decimal)
+// 4 end :VacuumEffectorSingleCup
+//*****************************************
+
+// 3 end :EndEffectorHolder
+//*****************************************
+
+ObjectPropertyAssertion(:hasEndEffectorChangingStation_EndEffectorHolder
+                        :changing_station_1 :part_gripper_holder)
+
+//*****************************************
+// 3 start :EndEffectorHolder part_gripper_holder
+Declaration(NamedIndividual(:part_gripper_holder))
+ClassAssertion(:EndEffectorHolder :part_gripper_holder)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :part_gripper_holder :gear_gripper_holder_location)
+
+//*****************************************
+// 4 start :PoseOnlyLocation gear_gripper_holder_location
+Declaration(NamedIndividual(:gear_gripper_holder_location))
+ClassAssertion(:PoseOnlyLocation :gear_gripper_holder_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :gear_gripper_holder_location :changing_station_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :gear_gripper_holder_location :gear_gripper_holder_pose)
+
+//*****************************************
+// 5 start :Pose gear_gripper_holder_pose
+Declaration(NamedIndividual(:gear_gripper_holder_pose))
+ClassAssertion(:Pose :gear_gripper_holder_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :gear_gripper_holder_pose :gear_gripper_holder_point)
+
+//*****************************************
+// 6 start :Point gear_gripper_holder_point
+Declaration(NamedIndividual(:gear_gripper_holder_point))
+ClassAssertion(:Point :gear_gripper_holder_point)
+DataPropertyAssertion(:hasPoint_X :gear_gripper_holder_point
+                      "0.347012"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :gear_gripper_holder_point
+                      "-0.478391"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :gear_gripper_holder_point
+                      "0.068048"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :gear_gripper_holder_pose :gear_gripper_holder_x_axis)
+
+//*****************************************
+// 6 start :Vector gear_gripper_holder_x_axis
+Declaration(NamedIndividual(:gear_gripper_holder_x_axis))
+ClassAssertion(:Vector :gear_gripper_holder_x_axis)
+DataPropertyAssertion(:hasVector_I :gear_gripper_holder_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :gear_gripper_holder_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :gear_gripper_holder_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :gear_gripper_holder_pose :gear_gripper_holder_z_axis)
+
+//*****************************************
+// 6 start :Vector gear_gripper_holder_z_axis
+Declaration(NamedIndividual(:gear_gripper_holder_z_axis))
+ClassAssertion(:Vector :gear_gripper_holder_z_axis)
+DataPropertyAssertion(:hasVector_I :gear_gripper_holder_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :gear_gripper_holder_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :gear_gripper_holder_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseOnlyLocation
+//*****************************************
+
+ObjectPropertyAssertion(:hasNoSkuObject_ExternalShape
+                        :part_gripper_holder :shape_changing_station_holder_2)
+
+//*****************************************
+// 4 start :ExternalShape shape_changing_station_holder_2
+Declaration(NamedIndividual(:shape_changing_station_holder_2))
+ClassAssertion(:ExternalShape :shape_changing_station_holder_2)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_changing_station_holder_2
+                      "Changing Station holder unit model file"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_changing_station_holder_2
+                      "STL"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_changing_station_holder_2
+                      "package://iora_interface/workcell_models/ToolChangerHolder.stl"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_changing_station_holder_2
+                      "ToolChangerHolder"^^xsd:string)
+// 4 end :ExternalShape
+//*****************************************
+
+DataPropertyAssertion(:hasEndEffectorHolder_EndEffectorSlot :part_gripper_holder
+                      "part_gripper"^^xsd:string)
+// 3 end :EndEffectorHolder
+//*****************************************
+
+// 2 end :EndEffectorChangingStation
+//*****************************************
+
+DataPropertyAssertion(:hasKittingWorkstation_LengthUnit :kitting_workstation_1
+                      "meter"^^xsd:NMTOKEN)
+ObjectPropertyAssertion(:hasKittingWorkstation_Object
+                        :kitting_workstation_1 :kits2l2)
+
+//*****************************************
+// 2 start :PartsTray kits2l2
+Declaration(NamedIndividual(:kits2l2))
+ClassAssertion(:PartsTray :kits2l2)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :kits2l2 :kits2l2_location)
+
+//*****************************************
+// 3 start :PoseLocationOn kits2l2_location
+Declaration(NamedIndividual(:kits2l2_location))
+ClassAssertion(:PoseLocationOn :kits2l2_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :kits2l2_location :work_table_1)
+ObjectPropertyAssertion(:hasPoseLocationOn_Pose
+                        :kits2l2_location :kits2l2_pose)
+
+//*****************************************
+// 4 start :Pose kits2l2_pose
+Declaration(NamedIndividual(:kits2l2_pose))
+ClassAssertion(:Pose :kits2l2_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :kits2l2_pose :kits2l2_point)
+
+//*****************************************
+// 5 start :Point kits2l2_point
+Declaration(NamedIndividual(:kits2l2_point))
+ClassAssertion(:Point :kits2l2_point)
+DataPropertyAssertion(:hasPoint_X :kits2l2_point
+                      "0.497970"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :kits2l2_point
+                      "-0.156421"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :kits2l2_point
+                      "0.043000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :kits2l2_pose :kits2l2_x_axis)
+
+//*****************************************
+// 5 start :Vector kits2l2_x_axis
+Declaration(NamedIndividual(:kits2l2_x_axis))
+ClassAssertion(:Vector :kits2l2_x_axis)
+DataPropertyAssertion(:hasVector_I :kits2l2_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :kits2l2_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :kits2l2_x_axis
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :kits2l2_pose :kits2l2_z_axis)
+
+//*****************************************
+// 5 start :Vector kits2l2_z_axis
+Declaration(NamedIndividual(:kits2l2_z_axis))
+ClassAssertion(:Vector :kits2l2_z_axis)
+DataPropertyAssertion(:hasVector_I :kits2l2_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :kits2l2_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :kits2l2_z_axis
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PoseLocationOn
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :kits2l2 :sku_kits2l2_vessel)
+DataPropertyAssertion(:hasPartsVessel_SerialNumber :kits2l2
+                      "10"^^xsd:NMTOKEN)
+ObjectPropertyAssertion(:hasPartsTray_Design
+                        :kits2l2 :kits2l2_design)
+DataPropertyAssertion(:hasPartsTray_Complete :kits2l2
+                      "false"^^xsd:boolean)
+ObjectPropertyAssertion(:hasPartsTray_Slot
+                        :kits2l2 :kits2l2_slot_small_gear_1)
+
+//*****************************************
+// 3 start :Slot kits2l2_slot_small_gear_1
+Declaration(NamedIndividual(:kits2l2_slot_small_gear_1))
+ClassAssertion(:Slot :kits2l2_slot_small_gear_1)
+ObjectPropertyAssertion(:hasSlot_PartRefAndPose
+                        :kits2l2_slot_small_gear_1 :part_ref_and_pose_kits2l2_small_gear_1)
+// 3 end :Slot
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsTray_Slot
+                        :kits2l2 :kits2l2_slot_small_gear_2)
+
+//*****************************************
+// 3 start :Slot kits2l2_slot_small_gear_2
+Declaration(NamedIndividual(:kits2l2_slot_small_gear_2))
+ClassAssertion(:Slot :kits2l2_slot_small_gear_2)
+ObjectPropertyAssertion(:hasSlot_PartRefAndPose
+                        :kits2l2_slot_small_gear_2 :part_ref_and_pose_kits2l2_small_gear_2)
+// 3 end :Slot
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsTray_Slot
+                        :kits2l2 :kits2l2_slot_large_gear_1)
+
+//*****************************************
+// 3 start :Slot kits2l2_slot_large_gear_1
+Declaration(NamedIndividual(:kits2l2_slot_large_gear_1))
+ClassAssertion(:Slot :kits2l2_slot_large_gear_1)
+ObjectPropertyAssertion(:hasSlot_PartRefAndPose
+                        :kits2l2_slot_large_gear_1 :part_ref_and_pose_kits2l2_large_gear_1)
+// 3 end :Slot
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsTray_Slot
+                        :kits2l2 :kits2l2_slot_large_gear_2)
+
+//*****************************************
+// 3 start :Slot kits2l2_slot_large_gear_2
+Declaration(NamedIndividual(:kits2l2_slot_large_gear_2))
+ClassAssertion(:Slot :kits2l2_slot_large_gear_2)
+ObjectPropertyAssertion(:hasSlot_PartRefAndPose
+                        :kits2l2_slot_large_gear_2 :part_ref_and_pose_kits2l2_large_gear_2)
+// 3 end :Slot
+//*****************************************
+
+// 2 end :PartsTray
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Object
+                        :kitting_workstation_1 :part_small_gear_parts_tray)
+
+//*****************************************
+// 2 start :PartsTray part_small_gear_parts_tray
+Declaration(NamedIndividual(:part_small_gear_parts_tray))
+ClassAssertion(:PartsTray :part_small_gear_parts_tray)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :part_small_gear_parts_tray :parts_tray_small_gear_location)
+
+//*****************************************
+// 3 start :PoseOnlyLocation parts_tray_small_gear_location
+Declaration(NamedIndividual(:parts_tray_small_gear_location))
+ClassAssertion(:PoseOnlyLocation :parts_tray_small_gear_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :parts_tray_small_gear_location :work_table_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :parts_tray_small_gear_location :parts_tray_small_gear_pose)
+
+//*****************************************
+// 4 start :Pose parts_tray_small_gear_pose
+Declaration(NamedIndividual(:parts_tray_small_gear_pose))
+ClassAssertion(:Pose :parts_tray_small_gear_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :parts_tray_small_gear_pose :parts_tray_small_gear_point)
+
+//*****************************************
+// 5 start :Point parts_tray_small_gear_point
+Declaration(NamedIndividual(:parts_tray_small_gear_point))
+ClassAssertion(:Point :parts_tray_small_gear_point)
+DataPropertyAssertion(:hasPoint_X :parts_tray_small_gear_point
+                      "0.293627"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :parts_tray_small_gear_point
+                      "-0.304000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :parts_tray_small_gear_point
+                      "0.043000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :parts_tray_small_gear_pose :parts_tray_small_gear_x_axis)
+
+//*****************************************
+// 5 start :Vector parts_tray_small_gear_x_axis
+Declaration(NamedIndividual(:parts_tray_small_gear_x_axis))
+ClassAssertion(:Vector :parts_tray_small_gear_x_axis)
+DataPropertyAssertion(:hasVector_I :parts_tray_small_gear_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :parts_tray_small_gear_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :parts_tray_small_gear_x_axis
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :parts_tray_small_gear_pose :parts_tray_small_gear_z_axis)
+
+//*****************************************
+// 5 start :Vector parts_tray_small_gear_z_axis
+Declaration(NamedIndividual(:parts_tray_small_gear_z_axis))
+ClassAssertion(:Vector :parts_tray_small_gear_z_axis)
+DataPropertyAssertion(:hasVector_I :parts_tray_small_gear_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :parts_tray_small_gear_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :parts_tray_small_gear_z_axis
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PoseOnlyLocation
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :part_small_gear_parts_tray :sku_small_gear_vessel)
+ObjectPropertyAssertion(:hasPartsVessel_Part
+                        :part_small_gear_parts_tray :small_gear_1)
+
+//*****************************************
+// 3 start :Part small_gear_1
+Declaration(NamedIndividual(:small_gear_1))
+ClassAssertion(:Part :small_gear_1)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :small_gear_1 :part_small_gear_1_location)
+
+//*****************************************
+// 4 start :PoseLocationIn part_small_gear_1_location
+Declaration(NamedIndividual(:part_small_gear_1_location))
+ClassAssertion(:PoseLocationIn :part_small_gear_1_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :part_small_gear_1_location :part_small_gear_parts_tray)
+ObjectPropertyAssertion(:hasPoseLocationIn_Pose
+                        :part_small_gear_1_location :part_small_gear_1_pose)
+
+//*****************************************
+// 5 start :Pose part_small_gear_1_pose
+Declaration(NamedIndividual(:part_small_gear_1_pose))
+ClassAssertion(:Pose :part_small_gear_1_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :part_small_gear_1_pose :part_small_gear_1_point)
+
+//*****************************************
+// 6 start :Point part_small_gear_1_point
+Declaration(NamedIndividual(:part_small_gear_1_point))
+ClassAssertion(:Point :part_small_gear_1_point)
+DataPropertyAssertion(:hasPoint_X :part_small_gear_1_point
+                      "0.027500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :part_small_gear_1_point
+                      "0.027500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :part_small_gear_1_point
+                      "-0.005000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :part_small_gear_1_pose :part_small_gear_1_x_axis)
+
+//*****************************************
+// 6 start :Vector part_small_gear_1_x_axis
+Declaration(NamedIndividual(:part_small_gear_1_x_axis))
+ClassAssertion(:Vector :part_small_gear_1_x_axis)
+DataPropertyAssertion(:hasVector_I :part_small_gear_1_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_small_gear_1_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_small_gear_1_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :part_small_gear_1_pose :part_small_gear_1_z_axis)
+
+//*****************************************
+// 6 start :Vector part_small_gear_1_z_axis
+Declaration(NamedIndividual(:part_small_gear_1_z_axis))
+ClassAssertion(:Vector :part_small_gear_1_z_axis)
+DataPropertyAssertion(:hasVector_I :part_small_gear_1_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_small_gear_1_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_small_gear_1_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseLocationIn
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :small_gear_1 :sku_part_small_gear)
+DataPropertyAssertion(:hasPart_SerialNumber :small_gear_1
+                      "sg1"^^xsd:NMTOKEN)
+// 3 end :Part
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsVessel_Part
+                        :part_small_gear_parts_tray :small_gear_2)
+
+//*****************************************
+// 3 start :Part small_gear_2
+Declaration(NamedIndividual(:small_gear_2))
+ClassAssertion(:Part :small_gear_2)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :small_gear_2 :part_small_gear_2_location)
+
+//*****************************************
+// 4 start :PoseLocationIn part_small_gear_2_location
+Declaration(NamedIndividual(:part_small_gear_2_location))
+ClassAssertion(:PoseLocationIn :part_small_gear_2_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :part_small_gear_2_location :part_small_gear_parts_tray)
+ObjectPropertyAssertion(:hasPoseLocationIn_Pose
+                        :part_small_gear_2_location :part_small_gear_2_pose)
+
+//*****************************************
+// 5 start :Pose part_small_gear_2_pose
+Declaration(NamedIndividual(:part_small_gear_2_pose))
+ClassAssertion(:Pose :part_small_gear_2_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :part_small_gear_2_pose :part_small_gear_2_point)
+
+//*****************************************
+// 6 start :Point part_small_gear_2_point
+Declaration(NamedIndividual(:part_small_gear_2_point))
+ClassAssertion(:Point :part_small_gear_2_point)
+DataPropertyAssertion(:hasPoint_X :part_small_gear_2_point
+                      "0.577500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :part_small_gear_2_point
+                      "0.027500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :part_small_gear_2_point
+                      "-0.005000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :part_small_gear_2_pose :part_small_gear_2_x_axis)
+
+//*****************************************
+// 6 start :Vector part_small_gear_2_x_axis
+Declaration(NamedIndividual(:part_small_gear_2_x_axis))
+ClassAssertion(:Vector :part_small_gear_2_x_axis)
+DataPropertyAssertion(:hasVector_I :part_small_gear_2_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_small_gear_2_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_small_gear_2_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :part_small_gear_2_pose :part_small_gear_2_z_axis)
+
+//*****************************************
+// 6 start :Vector part_small_gear_2_z_axis
+Declaration(NamedIndividual(:part_small_gear_2_z_axis))
+ClassAssertion(:Vector :part_small_gear_2_z_axis)
+DataPropertyAssertion(:hasVector_I :part_small_gear_2_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_small_gear_2_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_small_gear_2_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseLocationIn
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :small_gear_2 :sku_part_small_gear)
+DataPropertyAssertion(:hasPart_SerialNumber :small_gear_2
+                      "sg2"^^xsd:NMTOKEN)
+// 3 end :Part
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsVessel_Part
+                        :part_small_gear_parts_tray :small_gear_3)
+
+//*****************************************
+// 3 start :Part small_gear_3
+Declaration(NamedIndividual(:small_gear_3))
+ClassAssertion(:Part :small_gear_3)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :small_gear_3 :part_small_gear_3_location)
+
+//*****************************************
+// 4 start :PoseLocationIn part_small_gear_3_location
+Declaration(NamedIndividual(:part_small_gear_3_location))
+ClassAssertion(:PoseLocationIn :part_small_gear_3_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :part_small_gear_3_location :part_small_gear_parts_tray)
+ObjectPropertyAssertion(:hasPoseLocationIn_Pose
+                        :part_small_gear_3_location :part_small_gear_3_pose)
+
+//*****************************************
+// 5 start :Pose part_small_gear_3_pose
+Declaration(NamedIndividual(:part_small_gear_3_pose))
+ClassAssertion(:Pose :part_small_gear_3_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :part_small_gear_3_pose :part_small_gear_3_point)
+
+//*****************************************
+// 6 start :Point part_small_gear_3_point
+Declaration(NamedIndividual(:part_small_gear_3_point))
+ClassAssertion(:Point :part_small_gear_3_point)
+DataPropertyAssertion(:hasPoint_X :part_small_gear_3_point
+                      "0.027500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :part_small_gear_3_point
+                      "0.577500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :part_small_gear_3_point
+                      "-0.005000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :part_small_gear_3_pose :part_small_gear_3_x_axis)
+
+//*****************************************
+// 6 start :Vector part_small_gear_3_x_axis
+Declaration(NamedIndividual(:part_small_gear_3_x_axis))
+ClassAssertion(:Vector :part_small_gear_3_x_axis)
+DataPropertyAssertion(:hasVector_I :part_small_gear_3_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_small_gear_3_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_small_gear_3_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :part_small_gear_3_pose :part_small_gear_3_z_axis)
+
+//*****************************************
+// 6 start :Vector part_small_gear_3_z_axis
+Declaration(NamedIndividual(:part_small_gear_3_z_axis))
+ClassAssertion(:Vector :part_small_gear_3_z_axis)
+DataPropertyAssertion(:hasVector_I :part_small_gear_3_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_small_gear_3_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_small_gear_3_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseLocationIn
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :small_gear_3 :sku_part_small_gear)
+DataPropertyAssertion(:hasPart_SerialNumber :small_gear_3
+                      "sg3"^^xsd:NMTOKEN)
+// 3 end :Part
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsVessel_Part
+                        :part_small_gear_parts_tray :small_gear_4)
+
+//*****************************************
+// 3 start :Part small_gear_4
+Declaration(NamedIndividual(:small_gear_4))
+ClassAssertion(:Part :small_gear_4)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :small_gear_4 :part_small_gear_4_location)
+
+//*****************************************
+// 4 start :PoseLocationIn part_small_gear_4_location
+Declaration(NamedIndividual(:part_small_gear_4_location))
+ClassAssertion(:PoseLocationIn :part_small_gear_4_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :part_small_gear_4_location :part_small_gear_parts_tray)
+ObjectPropertyAssertion(:hasPoseLocationIn_Pose
+                        :part_small_gear_4_location :part_small_gear_4_pose)
+
+//*****************************************
+// 5 start :Pose part_small_gear_4_pose
+Declaration(NamedIndividual(:part_small_gear_4_pose))
+ClassAssertion(:Pose :part_small_gear_4_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :part_small_gear_4_pose :part_small_gear_4_point)
+
+//*****************************************
+// 6 start :Point part_small_gear_4_point
+Declaration(NamedIndividual(:part_small_gear_4_point))
+ClassAssertion(:Point :part_small_gear_4_point)
+DataPropertyAssertion(:hasPoint_X :part_small_gear_4_point
+                      "0.577500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :part_small_gear_4_point
+                      "0.577500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :part_small_gear_4_point
+                      "-0.005000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :part_small_gear_4_pose :part_small_gear_4_x_axis)
+
+//*****************************************
+// 6 start :Vector part_small_gear_4_x_axis
+Declaration(NamedIndividual(:part_small_gear_4_x_axis))
+ClassAssertion(:Vector :part_small_gear_4_x_axis)
+DataPropertyAssertion(:hasVector_I :part_small_gear_4_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_small_gear_4_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_small_gear_4_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :part_small_gear_4_pose :part_small_gear_4_z_axis)
+
+//*****************************************
+// 6 start :Vector part_small_gear_4_z_axis
+Declaration(NamedIndividual(:part_small_gear_4_z_axis))
+ClassAssertion(:Vector :part_small_gear_4_z_axis)
+DataPropertyAssertion(:hasVector_I :part_small_gear_4_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_small_gear_4_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_small_gear_4_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseLocationIn
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :small_gear_4 :sku_part_small_gear)
+DataPropertyAssertion(:hasPart_SerialNumber :small_gear_4
+                      "sg4"^^xsd:NMTOKEN)
+// 3 end :Part
+//*****************************************
+
+DataPropertyAssertion(:hasPartsVessel_SerialNumber :part_small_gear_parts_tray
+                      "8"^^xsd:NMTOKEN)
+ObjectPropertyAssertion(:hasPartsTray_Design
+                        :part_small_gear_parts_tray :small_gear_parts_tray_design)
+DataPropertyAssertion(:hasPartsTray_Complete :part_small_gear_parts_tray
+                      "true"^^xsd:boolean)
+// 2 end :PartsTray
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Object
+                        :kitting_workstation_1 :part_medium_gear_parts_tray)
+
+//*****************************************
+// 2 start :PartsTray part_medium_gear_parts_tray
+Declaration(NamedIndividual(:part_medium_gear_parts_tray))
+ClassAssertion(:PartsTray :part_medium_gear_parts_tray)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :part_medium_gear_parts_tray :parts_tray_medium_gear_location)
+
+//*****************************************
+// 3 start :PoseOnlyLocation parts_tray_medium_gear_location
+Declaration(NamedIndividual(:parts_tray_medium_gear_location))
+ClassAssertion(:PoseOnlyLocation :parts_tray_medium_gear_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :parts_tray_medium_gear_location :work_table_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :parts_tray_medium_gear_location :parts_tray_medium_gear_pose)
+
+//*****************************************
+// 4 start :Pose parts_tray_medium_gear_pose
+Declaration(NamedIndividual(:parts_tray_medium_gear_pose))
+ClassAssertion(:Pose :parts_tray_medium_gear_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :parts_tray_medium_gear_pose :parts_tray_medium_gear_point)
+
+//*****************************************
+// 5 start :Point parts_tray_medium_gear_point
+Declaration(NamedIndividual(:parts_tray_medium_gear_point))
+ClassAssertion(:Point :parts_tray_medium_gear_point)
+DataPropertyAssertion(:hasPoint_X :parts_tray_medium_gear_point
+                      "0.293627"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :parts_tray_medium_gear_point
+                      "-0.156421"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :parts_tray_medium_gear_point
+                      "0.043000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :parts_tray_medium_gear_pose :parts_tray_medium_gear_x_axis)
+
+//*****************************************
+// 5 start :Vector parts_tray_medium_gear_x_axis
+Declaration(NamedIndividual(:parts_tray_medium_gear_x_axis))
+ClassAssertion(:Vector :parts_tray_medium_gear_x_axis)
+DataPropertyAssertion(:hasVector_I :parts_tray_medium_gear_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :parts_tray_medium_gear_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :parts_tray_medium_gear_x_axis
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :parts_tray_medium_gear_pose :parts_tray_medium_gear_z_axis)
+
+//*****************************************
+// 5 start :Vector parts_tray_medium_gear_z_axis
+Declaration(NamedIndividual(:parts_tray_medium_gear_z_axis))
+ClassAssertion(:Vector :parts_tray_medium_gear_z_axis)
+DataPropertyAssertion(:hasVector_I :parts_tray_medium_gear_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :parts_tray_medium_gear_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :parts_tray_medium_gear_z_axis
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PoseOnlyLocation
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :part_medium_gear_parts_tray :sku_medium_gear_vessel)
+ObjectPropertyAssertion(:hasPartsVessel_Part
+                        :part_medium_gear_parts_tray :medium_gear_1)
+
+//*****************************************
+// 3 start :Part medium_gear_1
+Declaration(NamedIndividual(:medium_gear_1))
+ClassAssertion(:Part :medium_gear_1)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :medium_gear_1 :part_medium_gear_1_location)
+
+//*****************************************
+// 4 start :PoseLocationIn part_medium_gear_1_location
+Declaration(NamedIndividual(:part_medium_gear_1_location))
+ClassAssertion(:PoseLocationIn :part_medium_gear_1_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :part_medium_gear_1_location :part_medium_gear_parts_tray)
+ObjectPropertyAssertion(:hasPoseLocationIn_Pose
+                        :part_medium_gear_1_location :part_medium_gear_1_pose)
+
+//*****************************************
+// 5 start :Pose part_medium_gear_1_pose
+Declaration(NamedIndividual(:part_medium_gear_1_pose))
+ClassAssertion(:Pose :part_medium_gear_1_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :part_medium_gear_1_pose :part_medium_gear_1_point)
+
+//*****************************************
+// 6 start :Point part_medium_gear_1_point
+Declaration(NamedIndividual(:part_medium_gear_1_point))
+ClassAssertion(:Point :part_medium_gear_1_point)
+DataPropertyAssertion(:hasPoint_X :part_medium_gear_1_point
+                      "0.040000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :part_medium_gear_1_point
+                      "0.040000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :part_medium_gear_1_point
+                      "-0.005000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :part_medium_gear_1_pose :part_medium_gear_1_x_axis)
+
+//*****************************************
+// 6 start :Vector part_medium_gear_1_x_axis
+Declaration(NamedIndividual(:part_medium_gear_1_x_axis))
+ClassAssertion(:Vector :part_medium_gear_1_x_axis)
+DataPropertyAssertion(:hasVector_I :part_medium_gear_1_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_medium_gear_1_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_medium_gear_1_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :part_medium_gear_1_pose :part_medium_gear_1_z_axis)
+
+//*****************************************
+// 6 start :Vector part_medium_gear_1_z_axis
+Declaration(NamedIndividual(:part_medium_gear_1_z_axis))
+ClassAssertion(:Vector :part_medium_gear_1_z_axis)
+DataPropertyAssertion(:hasVector_I :part_medium_gear_1_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_medium_gear_1_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_medium_gear_1_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseLocationIn
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :medium_gear_1 :sku_part_medium_gear)
+DataPropertyAssertion(:hasPart_SerialNumber :medium_gear_1
+                      "mg1"^^xsd:NMTOKEN)
+// 3 end :Part
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsVessel_Part
+                        :part_medium_gear_parts_tray :medium_gear_2)
+
+//*****************************************
+// 3 start :Part medium_gear_2
+Declaration(NamedIndividual(:medium_gear_2))
+ClassAssertion(:Part :medium_gear_2)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :medium_gear_2 :part_medium_gear_2_location)
+
+//*****************************************
+// 4 start :PoseLocationIn part_medium_gear_2_location
+Declaration(NamedIndividual(:part_medium_gear_2_location))
+ClassAssertion(:PoseLocationIn :part_medium_gear_2_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :part_medium_gear_2_location :part_medium_gear_parts_tray)
+ObjectPropertyAssertion(:hasPoseLocationIn_Pose
+                        :part_medium_gear_2_location :part_medium_gear_2_pose)
+
+//*****************************************
+// 5 start :Pose part_medium_gear_2_pose
+Declaration(NamedIndividual(:part_medium_gear_2_pose))
+ClassAssertion(:Pose :part_medium_gear_2_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :part_medium_gear_2_pose :part_medium_gear_2_point)
+
+//*****************************************
+// 6 start :Point part_medium_gear_2_point
+Declaration(NamedIndividual(:part_medium_gear_2_point))
+ClassAssertion(:Point :part_medium_gear_2_point)
+DataPropertyAssertion(:hasPoint_X :part_medium_gear_2_point
+                      "0.120000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :part_medium_gear_2_point
+                      "0.040000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :part_medium_gear_2_point
+                      "-0.005000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :part_medium_gear_2_pose :part_medium_gear_2_x_axis)
+
+//*****************************************
+// 6 start :Vector part_medium_gear_2_x_axis
+Declaration(NamedIndividual(:part_medium_gear_2_x_axis))
+ClassAssertion(:Vector :part_medium_gear_2_x_axis)
+DataPropertyAssertion(:hasVector_I :part_medium_gear_2_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_medium_gear_2_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_medium_gear_2_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :part_medium_gear_2_pose :part_medium_gear_2_z_axis)
+
+//*****************************************
+// 6 start :Vector part_medium_gear_2_z_axis
+Declaration(NamedIndividual(:part_medium_gear_2_z_axis))
+ClassAssertion(:Vector :part_medium_gear_2_z_axis)
+DataPropertyAssertion(:hasVector_I :part_medium_gear_2_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_medium_gear_2_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_medium_gear_2_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseLocationIn
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :medium_gear_2 :sku_part_medium_gear)
+DataPropertyAssertion(:hasPart_SerialNumber :medium_gear_2
+                      "mg2"^^xsd:NMTOKEN)
+// 3 end :Part
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsVessel_Part
+                        :part_medium_gear_parts_tray :medium_gear_3)
+
+//*****************************************
+// 3 start :Part medium_gear_3
+Declaration(NamedIndividual(:medium_gear_3))
+ClassAssertion(:Part :medium_gear_3)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :medium_gear_3 :part_medium_gear_3_location)
+
+//*****************************************
+// 4 start :PoseLocationIn part_medium_gear_3_location
+Declaration(NamedIndividual(:part_medium_gear_3_location))
+ClassAssertion(:PoseLocationIn :part_medium_gear_3_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :part_medium_gear_3_location :part_medium_gear_parts_tray)
+ObjectPropertyAssertion(:hasPoseLocationIn_Pose
+                        :part_medium_gear_3_location :part_medium_gear_3_pose)
+
+//*****************************************
+// 5 start :Pose part_medium_gear_3_pose
+Declaration(NamedIndividual(:part_medium_gear_3_pose))
+ClassAssertion(:Pose :part_medium_gear_3_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :part_medium_gear_3_pose :part_medium_gear_3_point)
+
+//*****************************************
+// 6 start :Point part_medium_gear_3_point
+Declaration(NamedIndividual(:part_medium_gear_3_point))
+ClassAssertion(:Point :part_medium_gear_3_point)
+DataPropertyAssertion(:hasPoint_X :part_medium_gear_3_point
+                      "0.040000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :part_medium_gear_3_point
+                      "0.120000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :part_medium_gear_3_point
+                      "-0.005000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :part_medium_gear_3_pose :part_medium_gear_3_x_axis)
+
+//*****************************************
+// 6 start :Vector part_medium_gear_3_x_axis
+Declaration(NamedIndividual(:part_medium_gear_3_x_axis))
+ClassAssertion(:Vector :part_medium_gear_3_x_axis)
+DataPropertyAssertion(:hasVector_I :part_medium_gear_3_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_medium_gear_3_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_medium_gear_3_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :part_medium_gear_3_pose :part_medium_gear_3_z_axis)
+
+//*****************************************
+// 6 start :Vector part_medium_gear_3_z_axis
+Declaration(NamedIndividual(:part_medium_gear_3_z_axis))
+ClassAssertion(:Vector :part_medium_gear_3_z_axis)
+DataPropertyAssertion(:hasVector_I :part_medium_gear_3_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_medium_gear_3_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_medium_gear_3_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseLocationIn
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :medium_gear_3 :sku_part_medium_gear)
+DataPropertyAssertion(:hasPart_SerialNumber :medium_gear_3
+                      "mg3"^^xsd:NMTOKEN)
+// 3 end :Part
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsVessel_Part
+                        :part_medium_gear_parts_tray :medium_gear_4)
+
+//*****************************************
+// 3 start :Part medium_gear_4
+Declaration(NamedIndividual(:medium_gear_4))
+ClassAssertion(:Part :medium_gear_4)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :medium_gear_4 :part_medium_gear_4_location)
+
+//*****************************************
+// 4 start :PoseLocationIn part_medium_gear_4_location
+Declaration(NamedIndividual(:part_medium_gear_4_location))
+ClassAssertion(:PoseLocationIn :part_medium_gear_4_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :part_medium_gear_4_location :part_medium_gear_parts_tray)
+ObjectPropertyAssertion(:hasPoseLocationIn_Pose
+                        :part_medium_gear_4_location :part_medium_gear_4_pose)
+
+//*****************************************
+// 5 start :Pose part_medium_gear_4_pose
+Declaration(NamedIndividual(:part_medium_gear_4_pose))
+ClassAssertion(:Pose :part_medium_gear_4_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :part_medium_gear_4_pose :part_medium_gear_4_point)
+
+//*****************************************
+// 6 start :Point part_medium_gear_4_point
+Declaration(NamedIndividual(:part_medium_gear_4_point))
+ClassAssertion(:Point :part_medium_gear_4_point)
+DataPropertyAssertion(:hasPoint_X :part_medium_gear_4_point
+                      "0.120000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :part_medium_gear_4_point
+                      "0.120000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :part_medium_gear_4_point
+                      "-0.005000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :part_medium_gear_4_pose :part_medium_gear_4_x_axis)
+
+//*****************************************
+// 6 start :Vector part_medium_gear_4_x_axis
+Declaration(NamedIndividual(:part_medium_gear_4_x_axis))
+ClassAssertion(:Vector :part_medium_gear_4_x_axis)
+DataPropertyAssertion(:hasVector_I :part_medium_gear_4_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_medium_gear_4_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_medium_gear_4_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :part_medium_gear_4_pose :part_medium_gear_4_z_axis)
+
+//*****************************************
+// 6 start :Vector part_medium_gear_4_z_axis
+Declaration(NamedIndividual(:part_medium_gear_4_z_axis))
+ClassAssertion(:Vector :part_medium_gear_4_z_axis)
+DataPropertyAssertion(:hasVector_I :part_medium_gear_4_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_medium_gear_4_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_medium_gear_4_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseLocationIn
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :medium_gear_4 :sku_part_medium_gear)
+DataPropertyAssertion(:hasPart_SerialNumber :medium_gear_4
+                      "mg4"^^xsd:NMTOKEN)
+// 3 end :Part
+//*****************************************
+
+DataPropertyAssertion(:hasPartsVessel_SerialNumber :part_medium_gear_parts_tray
+                      "6"^^xsd:NMTOKEN)
+ObjectPropertyAssertion(:hasPartsTray_Design
+                        :part_medium_gear_parts_tray :medium_gear_parts_tray_design)
+DataPropertyAssertion(:hasPartsTray_Complete :part_medium_gear_parts_tray
+                      "true"^^xsd:boolean)
+// 2 end :PartsTray
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Object
+                        :kitting_workstation_1 :part_large_gear_parts_tray)
+
+//*****************************************
+// 2 start :PartsTray part_large_gear_parts_tray
+Declaration(NamedIndividual(:part_large_gear_parts_tray))
+ClassAssertion(:PartsTray :part_large_gear_parts_tray)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :part_large_gear_parts_tray :parts_tray_large_gear_location)
+
+//*****************************************
+// 3 start :PoseOnlyLocation parts_tray_large_gear_location
+Declaration(NamedIndividual(:parts_tray_large_gear_location))
+ClassAssertion(:PoseOnlyLocation :parts_tray_large_gear_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :parts_tray_large_gear_location :work_table_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :parts_tray_large_gear_location :parts_tray_large_gear_pose)
+
+//*****************************************
+// 4 start :Pose parts_tray_large_gear_pose
+Declaration(NamedIndividual(:parts_tray_large_gear_pose))
+ClassAssertion(:Pose :parts_tray_large_gear_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :parts_tray_large_gear_pose :parts_tray_large_gear_point)
+
+//*****************************************
+// 5 start :Point parts_tray_large_gear_point
+Declaration(NamedIndividual(:parts_tray_large_gear_point))
+ClassAssertion(:Point :parts_tray_large_gear_point)
+DataPropertyAssertion(:hasPoint_X :parts_tray_large_gear_point
+                      "0.497970"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :parts_tray_large_gear_point
+                      "-0.304000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :parts_tray_large_gear_point
+                      "0.043000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :parts_tray_large_gear_pose :parts_tray_large_gear_x_axis)
+
+//*****************************************
+// 5 start :Vector parts_tray_large_gear_x_axis
+Declaration(NamedIndividual(:parts_tray_large_gear_x_axis))
+ClassAssertion(:Vector :parts_tray_large_gear_x_axis)
+DataPropertyAssertion(:hasVector_I :parts_tray_large_gear_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :parts_tray_large_gear_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :parts_tray_large_gear_x_axis
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :parts_tray_large_gear_pose :parts_tray_large_gear_z_axis)
+
+//*****************************************
+// 5 start :Vector parts_tray_large_gear_z_axis
+Declaration(NamedIndividual(:parts_tray_large_gear_z_axis))
+ClassAssertion(:Vector :parts_tray_large_gear_z_axis)
+DataPropertyAssertion(:hasVector_I :parts_tray_large_gear_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :parts_tray_large_gear_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :parts_tray_large_gear_z_axis
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PoseOnlyLocation
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :part_large_gear_parts_tray :sku_large_gear_vessel)
+ObjectPropertyAssertion(:hasPartsVessel_Part
+                        :part_large_gear_parts_tray :large_gear_1)
+
+//*****************************************
+// 3 start :Part large_gear_1
+Declaration(NamedIndividual(:large_gear_1))
+ClassAssertion(:Part :large_gear_1)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :large_gear_1 :part_large_gear_1_location)
+
+//*****************************************
+// 4 start :PoseLocationIn part_large_gear_1_location
+Declaration(NamedIndividual(:part_large_gear_1_location))
+ClassAssertion(:PoseLocationIn :part_large_gear_1_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :part_large_gear_1_location :part_large_gear_parts_tray)
+ObjectPropertyAssertion(:hasPoseLocationIn_Pose
+                        :part_large_gear_1_location :part_large_gear_1_pose)
+
+//*****************************************
+// 5 start :Pose part_large_gear_1_pose
+Declaration(NamedIndividual(:part_large_gear_1_pose))
+ClassAssertion(:Pose :part_large_gear_1_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :part_large_gear_1_pose :part_large_gear_1_point)
+
+//*****************************************
+// 6 start :Point part_large_gear_1_point
+Declaration(NamedIndividual(:part_large_gear_1_point))
+ClassAssertion(:Point :part_large_gear_1_point)
+DataPropertyAssertion(:hasPoint_X :part_large_gear_1_point
+                      "0.055000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :part_large_gear_1_point
+                      "0.055000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :part_large_gear_1_point
+                      "-0.005000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :part_large_gear_1_pose :part_large_gear_1_x_axis)
+
+//*****************************************
+// 6 start :Vector part_large_gear_1_x_axis
+Declaration(NamedIndividual(:part_large_gear_1_x_axis))
+ClassAssertion(:Vector :part_large_gear_1_x_axis)
+DataPropertyAssertion(:hasVector_I :part_large_gear_1_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_large_gear_1_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_large_gear_1_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :part_large_gear_1_pose :part_large_gear_1_z_axis)
+
+//*****************************************
+// 6 start :Vector part_large_gear_1_z_axis
+Declaration(NamedIndividual(:part_large_gear_1_z_axis))
+ClassAssertion(:Vector :part_large_gear_1_z_axis)
+DataPropertyAssertion(:hasVector_I :part_large_gear_1_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_large_gear_1_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_large_gear_1_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseLocationIn
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :large_gear_1 :sku_part_large_gear)
+DataPropertyAssertion(:hasPart_SerialNumber :large_gear_1
+                      "lg1"^^xsd:NMTOKEN)
+// 3 end :Part
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsVessel_Part
+                        :part_large_gear_parts_tray :large_gear_2)
+
+//*****************************************
+// 3 start :Part large_gear_2
+Declaration(NamedIndividual(:large_gear_2))
+ClassAssertion(:Part :large_gear_2)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :large_gear_2 :part_large_gear_2_location)
+
+//*****************************************
+// 4 start :PoseLocationIn part_large_gear_2_location
+Declaration(NamedIndividual(:part_large_gear_2_location))
+ClassAssertion(:PoseLocationIn :part_large_gear_2_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :part_large_gear_2_location :part_large_gear_parts_tray)
+ObjectPropertyAssertion(:hasPoseLocationIn_Pose
+                        :part_large_gear_2_location :part_large_gear_2_pose)
+
+//*****************************************
+// 5 start :Pose part_large_gear_2_pose
+Declaration(NamedIndividual(:part_large_gear_2_pose))
+ClassAssertion(:Pose :part_large_gear_2_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :part_large_gear_2_pose :part_large_gear_2_point)
+
+//*****************************************
+// 6 start :Point part_large_gear_2_point
+Declaration(NamedIndividual(:part_large_gear_2_point))
+ClassAssertion(:Point :part_large_gear_2_point)
+DataPropertyAssertion(:hasPoint_X :part_large_gear_2_point
+                      "0.165000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :part_large_gear_2_point
+                      "0.055000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :part_large_gear_2_point
+                      "-0.005000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :part_large_gear_2_pose :part_large_gear_2_x_axis)
+
+//*****************************************
+// 6 start :Vector part_large_gear_2_x_axis
+Declaration(NamedIndividual(:part_large_gear_2_x_axis))
+ClassAssertion(:Vector :part_large_gear_2_x_axis)
+DataPropertyAssertion(:hasVector_I :part_large_gear_2_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_large_gear_2_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_large_gear_2_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :part_large_gear_2_pose :part_large_gear_2_z_axis)
+
+//*****************************************
+// 6 start :Vector part_large_gear_2_z_axis
+Declaration(NamedIndividual(:part_large_gear_2_z_axis))
+ClassAssertion(:Vector :part_large_gear_2_z_axis)
+DataPropertyAssertion(:hasVector_I :part_large_gear_2_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :part_large_gear_2_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :part_large_gear_2_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseLocationIn
+//*****************************************
+
+ObjectPropertyAssertion(:hasSkuObject_Sku
+                        :large_gear_2 :sku_part_large_gear)
+DataPropertyAssertion(:hasPart_SerialNumber :large_gear_2
+                      "lg2"^^xsd:NMTOKEN)
+// 3 end :Part
+//*****************************************
+
+DataPropertyAssertion(:hasPartsVessel_SerialNumber :part_large_gear_parts_tray
+                      "7"^^xsd:NMTOKEN)
+ObjectPropertyAssertion(:hasPartsTray_Design
+                        :part_large_gear_parts_tray :large_gear_parts_tray_design)
+DataPropertyAssertion(:hasPartsTray_Complete :part_large_gear_parts_tray
+                      "true"^^xsd:boolean)
+// 2 end :PartsTray
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Object
+                        :kitting_workstation_1 :work_table_1)
+
+//*****************************************
+// 2 start :WorkTable work_table_1
+Declaration(NamedIndividual(:work_table_1))
+ClassAssertion(:WorkTable :work_table_1)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :work_table_1 :work_table_location)
+
+//*****************************************
+// 3 start :PoseOnlyLocation work_table_location
+Declaration(NamedIndividual(:work_table_location))
+ClassAssertion(:PoseOnlyLocation :work_table_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :work_table_location :kitting_workstation_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :work_table_location :work_table_pose)
+
+//*****************************************
+// 4 start :Pose work_table_pose
+Declaration(NamedIndividual(:work_table_pose))
+ClassAssertion(:Pose :work_table_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :work_table_pose :work_table_point)
+
+//*****************************************
+// 5 start :Point work_table_point
+Declaration(NamedIndividual(:work_table_point))
+ClassAssertion(:Point :work_table_point)
+DataPropertyAssertion(:hasPoint_X :work_table_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :work_table_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :work_table_point
+                      "0.000000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :work_table_pose :work_table_x_axis)
+
+//*****************************************
+// 5 start :Vector work_table_x_axis
+Declaration(NamedIndividual(:work_table_x_axis))
+ClassAssertion(:Vector :work_table_x_axis)
+DataPropertyAssertion(:hasVector_I :work_table_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :work_table_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :work_table_x_axis
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :work_table_pose :work_table_z_axis)
+
+//*****************************************
+// 5 start :Vector work_table_z_axis
+Declaration(NamedIndividual(:work_table_z_axis))
+ClassAssertion(:Vector :work_table_z_axis)
+DataPropertyAssertion(:hasVector_I :work_table_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :work_table_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :work_table_z_axis
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PoseOnlyLocation
+//*****************************************
+
+ObjectPropertyAssertion(:hasNoSkuObject_ExternalShape
+                        :work_table_1 :shape_work_table)
+
+//*****************************************
+// 3 start :ExternalShape shape_work_table
+Declaration(NamedIndividual(:shape_work_table))
+ClassAssertion(:ExternalShape :shape_work_table)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_work_table
+                      "Work table model file"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_work_table
+                      "STL"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_work_table
+                      "package://iora_interface/workcell_models/FanucWorkTable.stl"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_work_table
+                      "FanucWorkTable"^^xsd:string)
+// 3 end :ExternalShape
+//*****************************************
+
+// 2 end :WorkTable
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_PartsTrayDesign
+                        :kitting_workstation_1 :kits2l2_design)
+
+//*****************************************
+// 2 start :PartsTrayDesign kits2l2_design
+Declaration(NamedIndividual(:kits2l2_design))
+ClassAssertion(:PartsTrayDesign :kits2l2_design)
+ObjectPropertyAssertion(:hasPartsTrayDesign_VesselSku
+                        :kits2l2_design :sku_kits2l2_vessel)
+ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
+                        :kits2l2_design :part_ref_and_pose_kits2l2_large_gear_1)
+
+//*****************************************
+// 3 start :PartRefAndPose part_ref_and_pose_kits2l2_large_gear_1
+Declaration(NamedIndividual(:part_ref_and_pose_kits2l2_large_gear_1))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_kits2l2_large_gear_1)
+ObjectPropertyAssertion(:hasPartRefAndPose_Sku
+                        :part_ref_and_pose_kits2l2_large_gear_1 :sku_part_large_gear)
+ObjectPropertyAssertion(:hasPartRefAndPose_Pose
+                        :part_ref_and_pose_kits2l2_large_gear_1 :pose_kits2l2_large_gear_1)
+
+//*****************************************
+// 4 start :Pose pose_kits2l2_large_gear_1
+Declaration(NamedIndividual(:pose_kits2l2_large_gear_1))
+ClassAssertion(:Pose :pose_kits2l2_large_gear_1)
+ObjectPropertyAssertion(:hasPose_Point
+                        :pose_kits2l2_large_gear_1 :point_kits2l2_large_gear_1)
+
+//*****************************************
+// 5 start :Point point_kits2l2_large_gear_1
+Declaration(NamedIndividual(:point_kits2l2_large_gear_1))
+ClassAssertion(:Point :point_kits2l2_large_gear_1)
+DataPropertyAssertion(:hasPoint_X :point_kits2l2_large_gear_1
+                      "0.055000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :point_kits2l2_large_gear_1
+                      "0.127500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :point_kits2l2_large_gear_1
+                      "-0.005000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :pose_kits2l2_large_gear_1 :x_axis_kits2l2_large_gear_1)
+
+//*****************************************
+// 5 start :Vector x_axis_kits2l2_large_gear_1
+Declaration(NamedIndividual(:x_axis_kits2l2_large_gear_1))
+ClassAssertion(:Vector :x_axis_kits2l2_large_gear_1)
+DataPropertyAssertion(:hasVector_I :x_axis_kits2l2_large_gear_1
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :x_axis_kits2l2_large_gear_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :x_axis_kits2l2_large_gear_1
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :pose_kits2l2_large_gear_1 :z_axis_kits2l2_large_gear_1)
+
+//*****************************************
+// 5 start :Vector z_axis_kits2l2_large_gear_1
+Declaration(NamedIndividual(:z_axis_kits2l2_large_gear_1))
+ClassAssertion(:Vector :z_axis_kits2l2_large_gear_1)
+DataPropertyAssertion(:hasVector_I :z_axis_kits2l2_large_gear_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :z_axis_kits2l2_large_gear_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :z_axis_kits2l2_large_gear_1
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PartRefAndPose
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
+                        :kits2l2_design :part_ref_and_pose_kits2l2_large_gear_2)
+
+//*****************************************
+// 3 start :PartRefAndPose part_ref_and_pose_kits2l2_large_gear_2
+Declaration(NamedIndividual(:part_ref_and_pose_kits2l2_large_gear_2))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_kits2l2_large_gear_2)
+ObjectPropertyAssertion(:hasPartRefAndPose_Sku
+                        :part_ref_and_pose_kits2l2_large_gear_2 :sku_part_large_gear)
+ObjectPropertyAssertion(:hasPartRefAndPose_Pose
+                        :part_ref_and_pose_kits2l2_large_gear_2 :pose_kits2l2_large_gear_2)
+
+//*****************************************
+// 4 start :Pose pose_kits2l2_large_gear_2
+Declaration(NamedIndividual(:pose_kits2l2_large_gear_2))
+ClassAssertion(:Pose :pose_kits2l2_large_gear_2)
+ObjectPropertyAssertion(:hasPose_Point
+                        :pose_kits2l2_large_gear_2 :point_kits2l2_large_gear_2)
+
+//*****************************************
+// 5 start :Point point_kits2l2_large_gear_2
+Declaration(NamedIndividual(:point_kits2l2_large_gear_2))
+ClassAssertion(:Point :point_kits2l2_large_gear_2)
+DataPropertyAssertion(:hasPoint_X :point_kits2l2_large_gear_2
+                      "0.165000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :point_kits2l2_large_gear_2
+                      "0.127500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :point_kits2l2_large_gear_2
+                      "-0.005000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :pose_kits2l2_large_gear_2 :x_axis_kits2l2_large_gear_2)
+
+//*****************************************
+// 5 start :Vector x_axis_kits2l2_large_gear_2
+Declaration(NamedIndividual(:x_axis_kits2l2_large_gear_2))
+ClassAssertion(:Vector :x_axis_kits2l2_large_gear_2)
+DataPropertyAssertion(:hasVector_I :x_axis_kits2l2_large_gear_2
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :x_axis_kits2l2_large_gear_2
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :x_axis_kits2l2_large_gear_2
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :pose_kits2l2_large_gear_2 :z_axis_kits2l2_large_gear_2)
+
+//*****************************************
+// 5 start :Vector z_axis_kits2l2_large_gear_2
+Declaration(NamedIndividual(:z_axis_kits2l2_large_gear_2))
+ClassAssertion(:Vector :z_axis_kits2l2_large_gear_2)
+DataPropertyAssertion(:hasVector_I :z_axis_kits2l2_large_gear_2
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :z_axis_kits2l2_large_gear_2
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :z_axis_kits2l2_large_gear_2
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PartRefAndPose
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
+                        :kits2l2_design :part_ref_and_pose_kits2l2_small_gear_1)
+
+//*****************************************
+// 3 start :PartRefAndPose part_ref_and_pose_kits2l2_small_gear_1
+Declaration(NamedIndividual(:part_ref_and_pose_kits2l2_small_gear_1))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_kits2l2_small_gear_1)
+ObjectPropertyAssertion(:hasPartRefAndPose_Sku
+                        :part_ref_and_pose_kits2l2_small_gear_1 :sku_part_small_gear)
+ObjectPropertyAssertion(:hasPartRefAndPose_Pose
+                        :part_ref_and_pose_kits2l2_small_gear_1 :pose_kits2l2_small_gear_1)
+
+//*****************************************
+// 4 start :Pose pose_kits2l2_small_gear_1
+Declaration(NamedIndividual(:pose_kits2l2_small_gear_1))
+ClassAssertion(:Pose :pose_kits2l2_small_gear_1)
+ObjectPropertyAssertion(:hasPose_Point
+                        :pose_kits2l2_small_gear_1 :point_kits2l2_small_gear_1)
+
+//*****************************************
+// 5 start :Point point_kits2l2_small_gear_1
+Declaration(NamedIndividual(:point_kits2l2_small_gear_1))
+ClassAssertion(:Point :point_kits2l2_small_gear_1)
+DataPropertyAssertion(:hasPoint_X :point_kits2l2_small_gear_1
+                      "0.055000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :point_kits2l2_small_gear_1
+                      "0.042500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :point_kits2l2_small_gear_1
+                      "-0.005000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :pose_kits2l2_small_gear_1 :x_axis_kits2l2_small_gear_1)
+
+//*****************************************
+// 5 start :Vector x_axis_kits2l2_small_gear_1
+Declaration(NamedIndividual(:x_axis_kits2l2_small_gear_1))
+ClassAssertion(:Vector :x_axis_kits2l2_small_gear_1)
+DataPropertyAssertion(:hasVector_I :x_axis_kits2l2_small_gear_1
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :x_axis_kits2l2_small_gear_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :x_axis_kits2l2_small_gear_1
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :pose_kits2l2_small_gear_1 :z_axis_kits2l2_small_gear_1)
+
+//*****************************************
+// 5 start :Vector z_axis_kits2l2_small_gear_1
+Declaration(NamedIndividual(:z_axis_kits2l2_small_gear_1))
+ClassAssertion(:Vector :z_axis_kits2l2_small_gear_1)
+DataPropertyAssertion(:hasVector_I :z_axis_kits2l2_small_gear_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :z_axis_kits2l2_small_gear_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :z_axis_kits2l2_small_gear_1
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PartRefAndPose
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
+                        :kits2l2_design :part_ref_and_pose_kits2l2_small_gear_2)
+
+//*****************************************
+// 3 start :PartRefAndPose part_ref_and_pose_kits2l2_small_gear_2
+Declaration(NamedIndividual(:part_ref_and_pose_kits2l2_small_gear_2))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_kits2l2_small_gear_2)
+ObjectPropertyAssertion(:hasPartRefAndPose_Sku
+                        :part_ref_and_pose_kits2l2_small_gear_2 :sku_part_small_gear)
+ObjectPropertyAssertion(:hasPartRefAndPose_Pose
+                        :part_ref_and_pose_kits2l2_small_gear_2 :pose_kits2l2_small_gear_2)
+
+//*****************************************
+// 4 start :Pose pose_kits2l2_small_gear_2
+Declaration(NamedIndividual(:pose_kits2l2_small_gear_2))
+ClassAssertion(:Pose :pose_kits2l2_small_gear_2)
+ObjectPropertyAssertion(:hasPose_Point
+                        :pose_kits2l2_small_gear_2 :point_kits2l2_small_gear_2)
+
+//*****************************************
+// 5 start :Point point_kits2l2_small_gear_2
+Declaration(NamedIndividual(:point_kits2l2_small_gear_2))
+ClassAssertion(:Point :point_kits2l2_small_gear_2)
+DataPropertyAssertion(:hasPoint_X :point_kits2l2_small_gear_2
+                      "0.165000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :point_kits2l2_small_gear_2
+                      "0.042500"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :point_kits2l2_small_gear_2
+                      "-0.005000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :pose_kits2l2_small_gear_2 :x_axis_kits2l2_small_gear_2)
+
+//*****************************************
+// 5 start :Vector x_axis_kits2l2_small_gear_2
+Declaration(NamedIndividual(:x_axis_kits2l2_small_gear_2))
+ClassAssertion(:Vector :x_axis_kits2l2_small_gear_2)
+DataPropertyAssertion(:hasVector_I :x_axis_kits2l2_small_gear_2
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :x_axis_kits2l2_small_gear_2
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :x_axis_kits2l2_small_gear_2
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :pose_kits2l2_small_gear_2 :z_axis_kits2l2_small_gear_2)
+
+//*****************************************
+// 5 start :Vector z_axis_kits2l2_small_gear_2
+Declaration(NamedIndividual(:z_axis_kits2l2_small_gear_2))
+ClassAssertion(:Vector :z_axis_kits2l2_small_gear_2)
+DataPropertyAssertion(:hasVector_I :z_axis_kits2l2_small_gear_2
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :z_axis_kits2l2_small_gear_2
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :z_axis_kits2l2_small_gear_2
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PartRefAndPose
+//*****************************************
+
+// 2 end :PartsTrayDesign
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_PartsTrayDesign
+                        :kitting_workstation_1 :small_gear_parts_tray_design)
+
+//*****************************************
+// 2 start :PartsTrayDesign small_gear_parts_tray_design
+Declaration(NamedIndividual(:small_gear_parts_tray_design))
+ClassAssertion(:PartsTrayDesign :small_gear_parts_tray_design)
+ObjectPropertyAssertion(:hasPartsTrayDesign_VesselSku
+                        :small_gear_parts_tray_design :sku_kits2l2_vessel)
+ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
+                        :small_gear_parts_tray_design :part_ref_and_pose_small_gear_1)
+
+//*****************************************
+// 3 start :PartRefAndPose part_ref_and_pose_small_gear_1
+Declaration(NamedIndividual(:part_ref_and_pose_small_gear_1))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_small_gear_1)
+ObjectPropertyAssertion(:hasPartRefAndPose_Sku
+                        :part_ref_and_pose_small_gear_1 :sku_part_small_gear)
+ObjectPropertyAssertion(:hasPartRefAndPose_Pose
+                        :part_ref_and_pose_small_gear_1 :pose_small_gear_parts_tray_design_1)
+
+//*****************************************
+// 4 start :Pose pose_small_gear_parts_tray_design_1
+Declaration(NamedIndividual(:pose_small_gear_parts_tray_design_1))
+ClassAssertion(:Pose :pose_small_gear_parts_tray_design_1)
+ObjectPropertyAssertion(:hasPose_Point
+                        :pose_small_gear_parts_tray_design_1 :point_small_gear_parts_tray_design_1)
+
+//*****************************************
+// 5 start :Point point_small_gear_parts_tray_design_1
+Declaration(NamedIndividual(:point_small_gear_parts_tray_design_1))
+ClassAssertion(:Point :point_small_gear_parts_tray_design_1)
+DataPropertyAssertion(:hasPoint_X :point_small_gear_parts_tray_design_1
+                      "0.040000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :point_small_gear_parts_tray_design_1
+                      "0.122400"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :point_small_gear_parts_tray_design_1
+                      "-0.009000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :pose_small_gear_parts_tray_design_1 :x_axis_small_gear_parts_tray_design_1)
+
+//*****************************************
+// 5 start :Vector x_axis_small_gear_parts_tray_design_1
+Declaration(NamedIndividual(:x_axis_small_gear_parts_tray_design_1))
+ClassAssertion(:Vector :x_axis_small_gear_parts_tray_design_1)
+DataPropertyAssertion(:hasVector_I :x_axis_small_gear_parts_tray_design_1
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :x_axis_small_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :x_axis_small_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :pose_small_gear_parts_tray_design_1 :z_axis_small_gear_parts_tray_design_1)
+
+//*****************************************
+// 5 start :Vector z_axis_small_gear_parts_tray_design_1
+Declaration(NamedIndividual(:z_axis_small_gear_parts_tray_design_1))
+ClassAssertion(:Vector :z_axis_small_gear_parts_tray_design_1)
+DataPropertyAssertion(:hasVector_I :z_axis_small_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :z_axis_small_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :z_axis_small_gear_parts_tray_design_1
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PartRefAndPose
+//*****************************************
+
+// 2 end :PartsTrayDesign
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_PartsTrayDesign
+                        :kitting_workstation_1 :medium_gear_parts_tray_design)
+
+//*****************************************
+// 2 start :PartsTrayDesign medium_gear_parts_tray_design
+Declaration(NamedIndividual(:medium_gear_parts_tray_design))
+ClassAssertion(:PartsTrayDesign :medium_gear_parts_tray_design)
+ObjectPropertyAssertion(:hasPartsTrayDesign_VesselSku
+                        :medium_gear_parts_tray_design :sku_kits2l2_vessel)
+ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
+                        :medium_gear_parts_tray_design :part_ref_and_pose_medium_gear_1)
+
+//*****************************************
+// 3 start :PartRefAndPose part_ref_and_pose_medium_gear_1
+Declaration(NamedIndividual(:part_ref_and_pose_medium_gear_1))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_medium_gear_1)
+ObjectPropertyAssertion(:hasPartRefAndPose_Sku
+                        :part_ref_and_pose_medium_gear_1 :sku_part_medium_gear)
+ObjectPropertyAssertion(:hasPartRefAndPose_Pose
+                        :part_ref_and_pose_medium_gear_1 :pose_medium_gear_parts_tray_design_1)
+
+//*****************************************
+// 4 start :Pose pose_medium_gear_parts_tray_design_1
+Declaration(NamedIndividual(:pose_medium_gear_parts_tray_design_1))
+ClassAssertion(:Pose :pose_medium_gear_parts_tray_design_1)
+ObjectPropertyAssertion(:hasPose_Point
+                        :pose_medium_gear_parts_tray_design_1 :point_medium_gear_parts_tray_design_1)
+
+//*****************************************
+// 5 start :Point point_medium_gear_parts_tray_design_1
+Declaration(NamedIndividual(:point_medium_gear_parts_tray_design_1))
+ClassAssertion(:Point :point_medium_gear_parts_tray_design_1)
+DataPropertyAssertion(:hasPoint_X :point_medium_gear_parts_tray_design_1
+                      "0.040000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :point_medium_gear_parts_tray_design_1
+                      "0.122400"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :point_medium_gear_parts_tray_design_1
+                      "-0.009000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :pose_medium_gear_parts_tray_design_1 :x_axis_medium_gear_parts_tray_design_1)
+
+//*****************************************
+// 5 start :Vector x_axis_medium_gear_parts_tray_design_1
+Declaration(NamedIndividual(:x_axis_medium_gear_parts_tray_design_1))
+ClassAssertion(:Vector :x_axis_medium_gear_parts_tray_design_1)
+DataPropertyAssertion(:hasVector_I :x_axis_medium_gear_parts_tray_design_1
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :x_axis_medium_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :x_axis_medium_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :pose_medium_gear_parts_tray_design_1 :z_axis_medium_gear_parts_tray_design_1)
+
+//*****************************************
+// 5 start :Vector z_axis_medium_gear_parts_tray_design_1
+Declaration(NamedIndividual(:z_axis_medium_gear_parts_tray_design_1))
+ClassAssertion(:Vector :z_axis_medium_gear_parts_tray_design_1)
+DataPropertyAssertion(:hasVector_I :z_axis_medium_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :z_axis_medium_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :z_axis_medium_gear_parts_tray_design_1
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PartRefAndPose
+//*****************************************
+
+// 2 end :PartsTrayDesign
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_PartsTrayDesign
+                        :kitting_workstation_1 :large_gear_parts_tray_design)
+
+//*****************************************
+// 2 start :PartsTrayDesign large_gear_parts_tray_design
+Declaration(NamedIndividual(:large_gear_parts_tray_design))
+ClassAssertion(:PartsTrayDesign :large_gear_parts_tray_design)
+ObjectPropertyAssertion(:hasPartsTrayDesign_VesselSku
+                        :large_gear_parts_tray_design :sku_kits2l2_vessel)
+ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
+                        :large_gear_parts_tray_design :part_ref_and_pose_large_gear_1)
+
+//*****************************************
+// 3 start :PartRefAndPose part_ref_and_pose_large_gear_1
+Declaration(NamedIndividual(:part_ref_and_pose_large_gear_1))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_large_gear_1)
+ObjectPropertyAssertion(:hasPartRefAndPose_Sku
+                        :part_ref_and_pose_large_gear_1 :sku_part_large_gear)
+ObjectPropertyAssertion(:hasPartRefAndPose_Pose
+                        :part_ref_and_pose_large_gear_1 :pose_large_gear_parts_tray_design_1)
+
+//*****************************************
+// 4 start :Pose pose_large_gear_parts_tray_design_1
+Declaration(NamedIndividual(:pose_large_gear_parts_tray_design_1))
+ClassAssertion(:Pose :pose_large_gear_parts_tray_design_1)
+ObjectPropertyAssertion(:hasPose_Point
+                        :pose_large_gear_parts_tray_design_1 :point_large_gear_parts_tray_design_1)
+
+//*****************************************
+// 5 start :Point point_large_gear_parts_tray_design_1
+Declaration(NamedIndividual(:point_large_gear_parts_tray_design_1))
+ClassAssertion(:Point :point_large_gear_parts_tray_design_1)
+DataPropertyAssertion(:hasPoint_X :point_large_gear_parts_tray_design_1
+                      "0.040000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :point_large_gear_parts_tray_design_1
+                      "0.122400"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :point_large_gear_parts_tray_design_1
+                      "-0.009000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :pose_large_gear_parts_tray_design_1 :x_axis_large_gear_parts_tray_design_1)
+
+//*****************************************
+// 5 start :Vector x_axis_large_gear_parts_tray_design_1
+Declaration(NamedIndividual(:x_axis_large_gear_parts_tray_design_1))
+ClassAssertion(:Vector :x_axis_large_gear_parts_tray_design_1)
+DataPropertyAssertion(:hasVector_I :x_axis_large_gear_parts_tray_design_1
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :x_axis_large_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :x_axis_large_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :pose_large_gear_parts_tray_design_1 :z_axis_large_gear_parts_tray_design_1)
+
+//*****************************************
+// 5 start :Vector z_axis_large_gear_parts_tray_design_1
+Declaration(NamedIndividual(:z_axis_large_gear_parts_tray_design_1))
+ClassAssertion(:Vector :z_axis_large_gear_parts_tray_design_1)
+DataPropertyAssertion(:hasVector_I :z_axis_large_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :z_axis_large_gear_parts_tray_design_1
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :z_axis_large_gear_parts_tray_design_1
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PartRefAndPose
+//*****************************************
+
+// 2 end :PartsTrayDesign
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Robot
+                        :kitting_workstation_1 :robot_1)
+
+//*****************************************
+// 2 start :Robot robot_1
+Declaration(NamedIndividual(:robot_1))
+ClassAssertion(:Robot :robot_1)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :robot_1 :robot_location)
+
+//*****************************************
+// 3 start :PoseOnlyLocation robot_location
+Declaration(NamedIndividual(:robot_location))
+ClassAssertion(:PoseOnlyLocation :robot_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :robot_location :kitting_workstation_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :robot_location :robot_pose)
+
+//*****************************************
+// 4 start :Pose robot_pose
+Declaration(NamedIndividual(:robot_pose))
+ClassAssertion(:Pose :robot_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :robot_pose :robot_point)
+
+//*****************************************
+// 5 start :Point robot_point
+Declaration(NamedIndividual(:robot_point))
+ClassAssertion(:Point :robot_point)
+DataPropertyAssertion(:hasPoint_X :robot_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :robot_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :robot_point
+                      "0.449000"^^xsd:decimal)
+// 5 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :robot_pose :robot_x_axis)
+
+//*****************************************
+// 5 start :Vector robot_x_axis
+Declaration(NamedIndividual(:robot_x_axis))
+ClassAssertion(:Vector :robot_x_axis)
+DataPropertyAssertion(:hasVector_I :robot_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :robot_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :robot_x_axis
+                      "0.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :robot_pose :robot_z_axis)
+
+//*****************************************
+// 5 start :Vector robot_z_axis
+Declaration(NamedIndividual(:robot_z_axis))
+ClassAssertion(:Vector :robot_z_axis)
+DataPropertyAssertion(:hasVector_I :robot_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :robot_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :robot_z_axis
+                      "1.000000"^^xsd:decimal)
+// 5 end :Vector
+//*****************************************
+
+// 4 end :Pose
+//*****************************************
+
+// 3 end :PoseOnlyLocation
+//*****************************************
+
+ObjectPropertyAssertion(:hasNoSkuObject_ExternalShape
+                        :robot_1 :shape_robot_1)
+
+//*****************************************
+// 3 start :ExternalShape shape_robot_1
+Declaration(NamedIndividual(:shape_robot_1))
+ClassAssertion(:ExternalShape :shape_robot_1)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_robot_1
+                      "Kinematic definition for robot_1"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_robot_1
+                      "URDF"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_robot_1
+                      "package://LRMate200iC_description/robots/LRMate200iC_description.URDF"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_robot_1
+                      "LRMate200iC_description"^^xsd:string)
+// 3 end :ExternalShape
+//*****************************************
+
+DataPropertyAssertion(:hasRobot_Description :robot_1
+                      "this is the robot"^^xsd:string)
+ObjectPropertyAssertion(:hasRobot_EndEffector
+                        :robot_1 :part_gripper)
+
+//*****************************************
+// 3 start :GripperParallel part_gripper
+Declaration(NamedIndividual(:part_gripper))
+ClassAssertion(:GripperParallel :part_gripper)
+ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
+                        :part_gripper :gripper_on_robot_location)
+
+//*****************************************
+// 4 start :PoseLocationOn gripper_on_robot_location
+Declaration(NamedIndividual(:gripper_on_robot_location))
+ClassAssertion(:PoseLocationOn :gripper_on_robot_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :gripper_on_robot_location :robot_1)
+ObjectPropertyAssertion(:hasPoseLocationOn_Pose
+                        :gripper_on_robot_location :gripper_on_robot_pose)
+
+//*****************************************
+// 5 start :Pose gripper_on_robot_pose
+Declaration(NamedIndividual(:gripper_on_robot_pose))
+ClassAssertion(:Pose :gripper_on_robot_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :gripper_on_robot_pose :gripper_on_robot_point)
+
+//*****************************************
+// 6 start :Point gripper_on_robot_point
+Declaration(NamedIndividual(:gripper_on_robot_point))
+ClassAssertion(:Point :gripper_on_robot_point)
+DataPropertyAssertion(:hasPoint_X :gripper_on_robot_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :gripper_on_robot_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :gripper_on_robot_point
+                      "0.123000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :gripper_on_robot_pose :gripper_on_robot_x_axis)
+
+//*****************************************
+// 6 start :Vector gripper_on_robot_x_axis
+Declaration(NamedIndividual(:gripper_on_robot_x_axis))
+ClassAssertion(:Vector :gripper_on_robot_x_axis)
+DataPropertyAssertion(:hasVector_I :gripper_on_robot_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :gripper_on_robot_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :gripper_on_robot_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :gripper_on_robot_pose :gripper_on_robot_z_axis)
+
+//*****************************************
+// 6 start :Vector gripper_on_robot_z_axis
+Declaration(NamedIndividual(:gripper_on_robot_z_axis))
+ClassAssertion(:Vector :gripper_on_robot_z_axis)
+DataPropertyAssertion(:hasVector_I :gripper_on_robot_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :gripper_on_robot_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :gripper_on_robot_z_axis
+                      "-1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseLocationOn
+//*****************************************
+
+DataPropertyAssertion(:hasEndEffector_Description :part_gripper
+                      "Parallel Plate Gripper"^^xsd:string)
+DataPropertyAssertion(:hasEndEffector_MaximumLoadWeight :part_gripper
+                      "1.000000"^^xsd:decimal)
+ObjectPropertyAssertion(:hasEndEffector_HeldObjectOffset
+                        :part_gripper :robot_gripper_offset)
+
+//*****************************************
+// 4 start :PoseOnlyLocation robot_gripper_offset
+Declaration(NamedIndividual(:robot_gripper_offset))
+ClassAssertion(:PoseOnlyLocation :robot_gripper_offset)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :robot_gripper_offset :robot_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :robot_gripper_offset :robot_gripper_offset_pose)
+
+//*****************************************
+// 5 start :Pose robot_gripper_offset_pose
+Declaration(NamedIndividual(:robot_gripper_offset_pose))
+ClassAssertion(:Pose :robot_gripper_offset_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :robot_gripper_offset_pose :robot_gripper_offset_point)
+
+//*****************************************
+// 6 start :Point robot_gripper_offset_point
+Declaration(NamedIndividual(:robot_gripper_offset_point))
+ClassAssertion(:Point :robot_gripper_offset_point)
+DataPropertyAssertion(:hasPoint_X :robot_gripper_offset_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :robot_gripper_offset_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :robot_gripper_offset_point
+                      "0.000000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :robot_gripper_offset_pose :robot_gripper_offset_x_axis)
+
+//*****************************************
+// 6 start :Vector robot_gripper_offset_x_axis
+Declaration(NamedIndividual(:robot_gripper_offset_x_axis))
+ClassAssertion(:Vector :robot_gripper_offset_x_axis)
+DataPropertyAssertion(:hasVector_I :robot_gripper_offset_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :robot_gripper_offset_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :robot_gripper_offset_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :robot_gripper_offset_pose :robot_gripper_offset_z_axis)
+
+//*****************************************
+// 6 start :Vector robot_gripper_offset_z_axis
+Declaration(NamedIndividual(:robot_gripper_offset_z_axis))
+ClassAssertion(:Vector :robot_gripper_offset_z_axis)
+DataPropertyAssertion(:hasVector_I :robot_gripper_offset_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :robot_gripper_offset_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :robot_gripper_offset_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseOnlyLocation
+//*****************************************
+
+DataPropertyAssertion(:hasGripperEffector_MaxGripWidth :part_gripper
+                      "60.000000"^^xsd:decimal)
+// 3 end :GripperParallel
+//*****************************************
+
+DataPropertyAssertion(:hasRobot_MaximumLoadWeight :robot_1
+                      "7.000000"^^xsd:decimal)
+ObjectPropertyAssertion(:hasRobot_WorkVolume
+                        :robot_1 :box_volume_1)
+
+//*****************************************
+// 3 start :BoxVolume box_volume_1
+Declaration(NamedIndividual(:box_volume_1))
+ClassAssertion(:BoxVolume :box_volume_1)
+ObjectPropertyAssertion(:hasBoxVolume_MaximumPoint
+                        :box_volume_1 :point_max)
+
+//*****************************************
+// 4 start :Point point_max
+Declaration(NamedIndividual(:point_max))
+ClassAssertion(:Point :point_max)
+DataPropertyAssertion(:hasPoint_X :point_max
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :point_max
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :point_max
+                      "2.000000"^^xsd:decimal)
+// 4 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasBoxVolume_MinimumPoint
+                        :box_volume_1 :point_min)
+
+//*****************************************
+// 4 start :Point point_min
+Declaration(NamedIndividual(:point_min))
+ClassAssertion(:Point :point_min)
+DataPropertyAssertion(:hasPoint_X :point_min
+                      "-1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :point_min
+                      "-1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :point_min
+                      "0.000000"^^xsd:decimal)
+// 4 end :Point
+//*****************************************
+
+// 3 end :BoxVolume
+//*****************************************
+
+// 2 end :Robot
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Sku
+                        :kitting_workstation_1 :sku_part_small_gear)
+
+//*****************************************
+// 2 start :StockKeepingUnit sku_part_small_gear
+Declaration(NamedIndividual(:sku_part_small_gear))
+ClassAssertion(:StockKeepingUnit :sku_part_small_gear)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_part_small_gear
+                      "SKU for small gears"^^xsd:string)
+ObjectPropertyAssertion(:hasStockKeepingUnit_ExternalShape
+                        :sku_part_small_gear :shape_part_small_gear)
+
+//*****************************************
+// 3 start :ExternalShape shape_part_small_gear
+Declaration(NamedIndividual(:shape_part_small_gear))
+ClassAssertion(:ExternalShape :shape_part_small_gear)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_part_small_gear
+                      "Shape of small gear tooth"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_part_small_gear
+                      "SKP"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_part_small_gear
+                      "package://iora_interface/workcell_models/SmallToothGear.skp"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_part_small_gear
+                      "SmallToothGear"^^xsd:string)
+// 3 end :ExternalShape
+//*****************************************
+
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_part_small_gear
+                      "0.180000"^^xsd:decimal)
+ObjectPropertyAssertion(:hasStockKeepingUnit_EffectorAndGrasp
+                        :sku_part_small_gear :small_tooth_gear_grasp)
+
+//*****************************************
+// 3 start :ParallelGripperGrasp small_tooth_gear_grasp
+Declaration(NamedIndividual(:small_tooth_gear_grasp))
+ClassAssertion(:ParallelGripperGrasp :small_tooth_gear_grasp)
+ObjectPropertyAssertion(:hasParallelGripperGrasp_ParallelGripper
+                        :small_tooth_gear_grasp :part_gripper)
+ObjectPropertyAssertion(:hasParallelGripperGrasp_GraspPose
+                        :small_tooth_gear_grasp :small_tooth_gear_grasp_location)
+
+//*****************************************
+// 4 start :PoseOnlyLocation small_tooth_gear_grasp_location
+Declaration(NamedIndividual(:small_tooth_gear_grasp_location))
+ClassAssertion(:PoseOnlyLocation :small_tooth_gear_grasp_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :small_tooth_gear_grasp_location :kitting_workstation_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :small_tooth_gear_grasp_location :small_tooth_gear_grasp_pose)
+
+//*****************************************
+// 5 start :Pose small_tooth_gear_grasp_pose
+Declaration(NamedIndividual(:small_tooth_gear_grasp_pose))
+ClassAssertion(:Pose :small_tooth_gear_grasp_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :small_tooth_gear_grasp_pose :small_tooth_gear_grasp_pose_point)
+
+//*****************************************
+// 6 start :Point small_tooth_gear_grasp_pose_point
+Declaration(NamedIndividual(:small_tooth_gear_grasp_pose_point))
+ClassAssertion(:Point :small_tooth_gear_grasp_pose_point)
+DataPropertyAssertion(:hasPoint_X :small_tooth_gear_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :small_tooth_gear_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :small_tooth_gear_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :small_tooth_gear_grasp_pose :small_tooth_gear_grasp_pose_x_axis)
+
+//*****************************************
+// 6 start :Vector small_tooth_gear_grasp_pose_x_axis
+Declaration(NamedIndividual(:small_tooth_gear_grasp_pose_x_axis))
+ClassAssertion(:Vector :small_tooth_gear_grasp_pose_x_axis)
+DataPropertyAssertion(:hasVector_I :small_tooth_gear_grasp_pose_x_axis
+                      "-0.947210"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :small_tooth_gear_grasp_pose_x_axis
+                      "0.320613"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :small_tooth_gear_grasp_pose_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :small_tooth_gear_grasp_pose :small_tooth_gear_grasp_pose_z_axis)
+
+//*****************************************
+// 6 start :Vector small_tooth_gear_grasp_pose_z_axis
+Declaration(NamedIndividual(:small_tooth_gear_grasp_pose_z_axis))
+ClassAssertion(:Vector :small_tooth_gear_grasp_pose_z_axis)
+DataPropertyAssertion(:hasVector_I :small_tooth_gear_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :small_tooth_gear_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :small_tooth_gear_grasp_pose_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseOnlyLocation
+//*****************************************
+
+DataPropertyAssertion(:hasParallelGripperGrasp_ApproachSeparation :small_tooth_gear_grasp
+                      "0.020000"^^xsd:decimal)
+DataPropertyAssertion(:hasParallelGripperGrasp_GraspSeparation :small_tooth_gear_grasp
+                      "0.014000"^^xsd:decimal)
+// 3 end :ParallelGripperGrasp
+//*****************************************
+
+// 2 end :StockKeepingUnit
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Sku
+                        :kitting_workstation_1 :sku_part_medium_gear)
+
+//*****************************************
+// 2 start :StockKeepingUnit sku_part_medium_gear
+Declaration(NamedIndividual(:sku_part_medium_gear))
+ClassAssertion(:StockKeepingUnit :sku_part_medium_gear)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_part_medium_gear
+                      "SKU for medium gears"^^xsd:string)
+ObjectPropertyAssertion(:hasStockKeepingUnit_ExternalShape
+                        :sku_part_medium_gear :shape_part_medium_gear)
+
+//*****************************************
+// 3 start :ExternalShape shape_part_medium_gear
+Declaration(NamedIndividual(:shape_part_medium_gear))
+ClassAssertion(:ExternalShape :shape_part_medium_gear)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_part_medium_gear
+                      "Shape of medium gear tooth"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_part_medium_gear
+                      "SKP"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_part_medium_gear
+                      "package://iora_interface/workcell_models/MediumToothGear.skp"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_part_medium_gear
+                      "MediumToothGear"^^xsd:string)
+// 3 end :ExternalShape
+//*****************************************
+
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_part_medium_gear
+                      "0.180000"^^xsd:decimal)
+ObjectPropertyAssertion(:hasStockKeepingUnit_EffectorAndGrasp
+                        :sku_part_medium_gear :medium_tooth_gear_grasp)
+
+//*****************************************
+// 3 start :ParallelGripperGrasp medium_tooth_gear_grasp
+Declaration(NamedIndividual(:medium_tooth_gear_grasp))
+ClassAssertion(:ParallelGripperGrasp :medium_tooth_gear_grasp)
+ObjectPropertyAssertion(:hasParallelGripperGrasp_ParallelGripper
+                        :medium_tooth_gear_grasp :part_gripper)
+ObjectPropertyAssertion(:hasParallelGripperGrasp_GraspPose
+                        :medium_tooth_gear_grasp :medium_tooth_gear_grasp_location)
+
+//*****************************************
+// 4 start :PoseOnlyLocation medium_tooth_gear_grasp_location
+Declaration(NamedIndividual(:medium_tooth_gear_grasp_location))
+ClassAssertion(:PoseOnlyLocation :medium_tooth_gear_grasp_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :medium_tooth_gear_grasp_location :kitting_workstation_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :medium_tooth_gear_grasp_location :medium_tooth_gear_grasp_pose)
+
+//*****************************************
+// 5 start :Pose medium_tooth_gear_grasp_pose
+Declaration(NamedIndividual(:medium_tooth_gear_grasp_pose))
+ClassAssertion(:Pose :medium_tooth_gear_grasp_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :medium_tooth_gear_grasp_pose :medium_tooth_gear_grasp_pose_point)
+
+//*****************************************
+// 6 start :Point medium_tooth_gear_grasp_pose_point
+Declaration(NamedIndividual(:medium_tooth_gear_grasp_pose_point))
+ClassAssertion(:Point :medium_tooth_gear_grasp_pose_point)
+DataPropertyAssertion(:hasPoint_X :medium_tooth_gear_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :medium_tooth_gear_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :medium_tooth_gear_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :medium_tooth_gear_grasp_pose :medium_tooth_gear_grasp_pose_x_axis)
+
+//*****************************************
+// 6 start :Vector medium_tooth_gear_grasp_pose_x_axis
+Declaration(NamedIndividual(:medium_tooth_gear_grasp_pose_x_axis))
+ClassAssertion(:Vector :medium_tooth_gear_grasp_pose_x_axis)
+DataPropertyAssertion(:hasVector_I :medium_tooth_gear_grasp_pose_x_axis
+                      "-0.947210"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :medium_tooth_gear_grasp_pose_x_axis
+                      "0.320613"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :medium_tooth_gear_grasp_pose_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :medium_tooth_gear_grasp_pose :medium_tooth_gear_grasp_pose_z_axis)
+
+//*****************************************
+// 6 start :Vector medium_tooth_gear_grasp_pose_z_axis
+Declaration(NamedIndividual(:medium_tooth_gear_grasp_pose_z_axis))
+ClassAssertion(:Vector :medium_tooth_gear_grasp_pose_z_axis)
+DataPropertyAssertion(:hasVector_I :medium_tooth_gear_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :medium_tooth_gear_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :medium_tooth_gear_grasp_pose_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseOnlyLocation
+//*****************************************
+
+DataPropertyAssertion(:hasParallelGripperGrasp_ApproachSeparation :medium_tooth_gear_grasp
+                      "0.020000"^^xsd:decimal)
+DataPropertyAssertion(:hasParallelGripperGrasp_GraspSeparation :medium_tooth_gear_grasp
+                      "0.014000"^^xsd:decimal)
+// 3 end :ParallelGripperGrasp
+//*****************************************
+
+// 2 end :StockKeepingUnit
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Sku
+                        :kitting_workstation_1 :sku_part_large_gear)
+
+//*****************************************
+// 2 start :StockKeepingUnit sku_part_large_gear
+Declaration(NamedIndividual(:sku_part_large_gear))
+ClassAssertion(:StockKeepingUnit :sku_part_large_gear)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_part_large_gear
+                      "SKU for big gears"^^xsd:string)
+ObjectPropertyAssertion(:hasStockKeepingUnit_ExternalShape
+                        :sku_part_large_gear :shape_part_large_gear)
+
+//*****************************************
+// 3 start :ExternalShape shape_part_large_gear
+Declaration(NamedIndividual(:shape_part_large_gear))
+ClassAssertion(:ExternalShape :shape_part_large_gear)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_part_large_gear
+                      "Shape of large gear tooth"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_part_large_gear
+                      "SKP"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_part_large_gear
+                      "package://iora_interface/workcell_models/LargeToothGear.skp"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_part_large_gear
+                      "LargeToothGear"^^xsd:string)
+// 3 end :ExternalShape
+//*****************************************
+
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_part_large_gear
+                      "0.180000"^^xsd:decimal)
+ObjectPropertyAssertion(:hasStockKeepingUnit_EffectorAndGrasp
+                        :sku_part_large_gear :large_tooth_gear_grasp)
+
+//*****************************************
+// 3 start :ParallelGripperGrasp large_tooth_gear_grasp
+Declaration(NamedIndividual(:large_tooth_gear_grasp))
+ClassAssertion(:ParallelGripperGrasp :large_tooth_gear_grasp)
+ObjectPropertyAssertion(:hasParallelGripperGrasp_ParallelGripper
+                        :large_tooth_gear_grasp :part_gripper)
+ObjectPropertyAssertion(:hasParallelGripperGrasp_GraspPose
+                        :large_tooth_gear_grasp :large_tooth_gear_grasp_location)
+
+//*****************************************
+// 4 start :PoseOnlyLocation large_tooth_gear_grasp_location
+Declaration(NamedIndividual(:large_tooth_gear_grasp_location))
+ClassAssertion(:PoseOnlyLocation :large_tooth_gear_grasp_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :large_tooth_gear_grasp_location :kitting_workstation_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :large_tooth_gear_grasp_location :large_tooth_gear_grasp_pose)
+
+//*****************************************
+// 5 start :Pose large_tooth_gear_grasp_pose
+Declaration(NamedIndividual(:large_tooth_gear_grasp_pose))
+ClassAssertion(:Pose :large_tooth_gear_grasp_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :large_tooth_gear_grasp_pose :large_tooth_gear_grasp_pose_point)
+
+//*****************************************
+// 6 start :Point large_tooth_gear_grasp_pose_point
+Declaration(NamedIndividual(:large_tooth_gear_grasp_pose_point))
+ClassAssertion(:Point :large_tooth_gear_grasp_pose_point)
+DataPropertyAssertion(:hasPoint_X :large_tooth_gear_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :large_tooth_gear_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :large_tooth_gear_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :large_tooth_gear_grasp_pose :large_tooth_gear_grasp_pose_x_axis)
+
+//*****************************************
+// 6 start :Vector large_tooth_gear_grasp_pose_x_axis
+Declaration(NamedIndividual(:large_tooth_gear_grasp_pose_x_axis))
+ClassAssertion(:Vector :large_tooth_gear_grasp_pose_x_axis)
+DataPropertyAssertion(:hasVector_I :large_tooth_gear_grasp_pose_x_axis
+                      "-0.947210"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :large_tooth_gear_grasp_pose_x_axis
+                      "0.320613"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :large_tooth_gear_grasp_pose_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :large_tooth_gear_grasp_pose :large_tooth_gear_grasp_pose_z_axis)
+
+//*****************************************
+// 6 start :Vector large_tooth_gear_grasp_pose_z_axis
+Declaration(NamedIndividual(:large_tooth_gear_grasp_pose_z_axis))
+ClassAssertion(:Vector :large_tooth_gear_grasp_pose_z_axis)
+DataPropertyAssertion(:hasVector_I :large_tooth_gear_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :large_tooth_gear_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :large_tooth_gear_grasp_pose_z_axis
+                      "1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseOnlyLocation
+//*****************************************
+
+DataPropertyAssertion(:hasParallelGripperGrasp_ApproachSeparation :large_tooth_gear_grasp
+                      "0.020000"^^xsd:decimal)
+DataPropertyAssertion(:hasParallelGripperGrasp_GraspSeparation :large_tooth_gear_grasp
+                      "0.014000"^^xsd:decimal)
+// 3 end :ParallelGripperGrasp
+//*****************************************
+
+// 2 end :StockKeepingUnit
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Sku
+                        :kitting_workstation_1 :sku_kits2l2_vessel)
+
+//*****************************************
+// 2 start :StockKeepingUnit sku_kits2l2_vessel
+Declaration(NamedIndividual(:sku_kits2l2_vessel))
+ClassAssertion(:StockKeepingUnit :sku_kits2l2_vessel)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_kits2l2_vessel
+                      "SKU for PartsTrays"^^xsd:string)
+ObjectPropertyAssertion(:hasStockKeepingUnit_ExternalShape
+                        :sku_kits2l2_vessel :shape_s2l2_tray)
+
+//*****************************************
+// 3 start :ExternalShape shape_s2l2_tray
+Declaration(NamedIndividual(:shape_s2l2_tray))
+ClassAssertion(:ExternalShape :shape_s2l2_tray)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_s2l2_tray
+                      "Model for a kit tray that can hold 2 small gears and 2 large gears"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_s2l2_tray
+                      "SKP"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_s2l2_tray
+                      "
+         package://iora_interface/workcell_models/KitTray2Small2Large.skp
+      "^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_s2l2_tray
+                      "KitTray2Small2Large"^^xsd:string)
+// 3 end :ExternalShape
+//*****************************************
+
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_kits2l2_vessel
+                      "0.200000"^^xsd:decimal)
+ObjectPropertyAssertion(:hasStockKeepingUnit_EffectorAndGrasp
+                        :sku_kits2l2_vessel :kits2l2_Tray_Grasp)
+
+//*****************************************
+// 3 start :VacuumEffectorSingleGrasp kits2l2_Tray_Grasp
+Declaration(NamedIndividual(:kits2l2_Tray_Grasp))
+ClassAssertion(:VacuumEffectorSingleGrasp :kits2l2_Tray_Grasp)
+ObjectPropertyAssertion(:hasVacuumEffectorSingleGrasp_VacuumEffectorSingle
+                        :kits2l2_Tray_Grasp :tray_gripper)
+ObjectPropertyAssertion(:hasVacuumEffectorSingleGrasp_GraspPose
+                        :kits2l2_Tray_Grasp :kits2l2_tray_grasp_location)
+
+//*****************************************
+// 4 start :PoseOnlyLocation kits2l2_tray_grasp_location
+Declaration(NamedIndividual(:kits2l2_tray_grasp_location))
+ClassAssertion(:PoseOnlyLocation :kits2l2_tray_grasp_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :kits2l2_tray_grasp_location :kitting_workstation_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :kits2l2_tray_grasp_location :kits2l2_tray_grasp_pose)
+
+//*****************************************
+// 5 start :Pose kits2l2_tray_grasp_pose
+Declaration(NamedIndividual(:kits2l2_tray_grasp_pose))
+ClassAssertion(:Pose :kits2l2_tray_grasp_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :kits2l2_tray_grasp_pose :kits2l2_tray_grasp_pose_point)
+
+//*****************************************
+// 6 start :Point kits2l2_tray_grasp_pose_point
+Declaration(NamedIndividual(:kits2l2_tray_grasp_pose_point))
+ClassAssertion(:Point :kits2l2_tray_grasp_pose_point)
+DataPropertyAssertion(:hasPoint_X :kits2l2_tray_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :kits2l2_tray_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :kits2l2_tray_grasp_pose_point
+                      "0.116000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :kits2l2_tray_grasp_pose :kits2l2_tray_grasp_pose_x_axis)
+
+//*****************************************
+// 6 start :Vector kits2l2_tray_grasp_pose_x_axis
+Declaration(NamedIndividual(:kits2l2_tray_grasp_pose_x_axis))
+ClassAssertion(:Vector :kits2l2_tray_grasp_pose_x_axis)
+DataPropertyAssertion(:hasVector_I :kits2l2_tray_grasp_pose_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :kits2l2_tray_grasp_pose_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :kits2l2_tray_grasp_pose_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :kits2l2_tray_grasp_pose :kits2l2_tray_grasp_pose_z_axis)
+
+//*****************************************
+// 6 start :Vector kits2l2_tray_grasp_pose_z_axis
+Declaration(NamedIndividual(:kits2l2_tray_grasp_pose_z_axis))
+ClassAssertion(:Vector :kits2l2_tray_grasp_pose_z_axis)
+DataPropertyAssertion(:hasVector_I :kits2l2_tray_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :kits2l2_tray_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :kits2l2_tray_grasp_pose_z_axis
+                      "-1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseOnlyLocation
+//*****************************************
+
+// 3 end :VacuumEffectorSingleGrasp
+//*****************************************
+
+// 2 end :StockKeepingUnit
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Sku
+                        :kitting_workstation_1 :sku_small_gear_vessel)
+
+//*****************************************
+// 2 start :StockKeepingUnit sku_small_gear_vessel
+Declaration(NamedIndividual(:sku_small_gear_vessel))
+ClassAssertion(:StockKeepingUnit :sku_small_gear_vessel)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_small_gear_vessel
+                      "SKU for small gear trays"^^xsd:string)
+ObjectPropertyAssertion(:hasStockKeepingUnit_ExternalShape
+                        :sku_small_gear_vessel :shape_small_gear_tray)
+
+//*****************************************
+// 3 start :ExternalShape shape_small_gear_tray
+Declaration(NamedIndividual(:shape_small_gear_tray))
+ClassAssertion(:ExternalShape :shape_small_gear_tray)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_small_gear_tray
+                      "Model for small gear tooth tray"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_small_gear_tray
+                      "SKP"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_small_gear_tray
+                      "package://iora_interface/workcell_models/SmallToothGearTray.skp"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_small_gear_tray
+                      "SmallToothGearTray"^^xsd:string)
+// 3 end :ExternalShape
+//*****************************************
+
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_small_gear_vessel
+                      "0.200000"^^xsd:decimal)
+ObjectPropertyAssertion(:hasStockKeepingUnit_EffectorAndGrasp
+                        :sku_small_gear_vessel :small_tooth_gear_tray_grasp)
+
+//*****************************************
+// 3 start :VacuumEffectorSingleGrasp small_tooth_gear_tray_grasp
+Declaration(NamedIndividual(:small_tooth_gear_tray_grasp))
+ClassAssertion(:VacuumEffectorSingleGrasp :small_tooth_gear_tray_grasp)
+ObjectPropertyAssertion(:hasVacuumEffectorSingleGrasp_VacuumEffectorSingle
+                        :small_tooth_gear_tray_grasp :tray_gripper)
+ObjectPropertyAssertion(:hasVacuumEffectorSingleGrasp_GraspPose
+                        :small_tooth_gear_tray_grasp :small_tooth_gear_tray_grasp_location)
+
+//*****************************************
+// 4 start :PoseOnlyLocation small_tooth_gear_tray_grasp_location
+Declaration(NamedIndividual(:small_tooth_gear_tray_grasp_location))
+ClassAssertion(:PoseOnlyLocation :small_tooth_gear_tray_grasp_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :small_tooth_gear_tray_grasp_location :kitting_workstation_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :small_tooth_gear_tray_grasp_location :small_tooth_gear_tray_grasp_pose)
+
+//*****************************************
+// 5 start :Pose small_tooth_gear_tray_grasp_pose
+Declaration(NamedIndividual(:small_tooth_gear_tray_grasp_pose))
+ClassAssertion(:Pose :small_tooth_gear_tray_grasp_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :small_tooth_gear_tray_grasp_pose :small_tooth_gear_tray_grasp_pose_point)
+
+//*****************************************
+// 6 start :Point small_tooth_gear_tray_grasp_pose_point
+Declaration(NamedIndividual(:small_tooth_gear_tray_grasp_pose_point))
+ClassAssertion(:Point :small_tooth_gear_tray_grasp_pose_point)
+DataPropertyAssertion(:hasPoint_X :small_tooth_gear_tray_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :small_tooth_gear_tray_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :small_tooth_gear_tray_grasp_pose_point
+                      "0.116000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :small_tooth_gear_tray_grasp_pose :small_tooth_gear_tray_grasp_pose_x_axis)
+
+//*****************************************
+// 6 start :Vector small_tooth_gear_tray_grasp_pose_x_axis
+Declaration(NamedIndividual(:small_tooth_gear_tray_grasp_pose_x_axis))
+ClassAssertion(:Vector :small_tooth_gear_tray_grasp_pose_x_axis)
+DataPropertyAssertion(:hasVector_I :small_tooth_gear_tray_grasp_pose_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :small_tooth_gear_tray_grasp_pose_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :small_tooth_gear_tray_grasp_pose_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :small_tooth_gear_tray_grasp_pose :small_tooth_gear_tray_grasp_pose_z_axis)
+
+//*****************************************
+// 6 start :Vector small_tooth_gear_tray_grasp_pose_z_axis
+Declaration(NamedIndividual(:small_tooth_gear_tray_grasp_pose_z_axis))
+ClassAssertion(:Vector :small_tooth_gear_tray_grasp_pose_z_axis)
+DataPropertyAssertion(:hasVector_I :small_tooth_gear_tray_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :small_tooth_gear_tray_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :small_tooth_gear_tray_grasp_pose_z_axis
+                      "-1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseOnlyLocation
+//*****************************************
+
+// 3 end :VacuumEffectorSingleGrasp
+//*****************************************
+
+// 2 end :StockKeepingUnit
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Sku
+                        :kitting_workstation_1 :sku_medium_gear_vessel)
+
+//*****************************************
+// 2 start :StockKeepingUnit sku_medium_gear_vessel
+Declaration(NamedIndividual(:sku_medium_gear_vessel))
+ClassAssertion(:StockKeepingUnit :sku_medium_gear_vessel)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_medium_gear_vessel
+                      "SKU for medium gear trays"^^xsd:string)
+ObjectPropertyAssertion(:hasStockKeepingUnit_ExternalShape
+                        :sku_medium_gear_vessel :shape_medium_gear_tray)
+
+//*****************************************
+// 3 start :ExternalShape shape_medium_gear_tray
+Declaration(NamedIndividual(:shape_medium_gear_tray))
+ClassAssertion(:ExternalShape :shape_medium_gear_tray)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_medium_gear_tray
+                      "Model for medium tooth gear tray"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_medium_gear_tray
+                      "SKP"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_medium_gear_tray
+                      "package://iora_interface/workcell_models/MediumToothGearTray.skp"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_medium_gear_tray
+                      "MediumToothGearTray"^^xsd:string)
+// 3 end :ExternalShape
+//*****************************************
+
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_medium_gear_vessel
+                      "0.200000"^^xsd:decimal)
+ObjectPropertyAssertion(:hasStockKeepingUnit_EffectorAndGrasp
+                        :sku_medium_gear_vessel :medium_tooth_gear_tray_grasp)
+
+//*****************************************
+// 3 start :VacuumEffectorSingleGrasp medium_tooth_gear_tray_grasp
+Declaration(NamedIndividual(:medium_tooth_gear_tray_grasp))
+ClassAssertion(:VacuumEffectorSingleGrasp :medium_tooth_gear_tray_grasp)
+ObjectPropertyAssertion(:hasVacuumEffectorSingleGrasp_VacuumEffectorSingle
+                        :medium_tooth_gear_tray_grasp :tray_gripper)
+ObjectPropertyAssertion(:hasVacuumEffectorSingleGrasp_GraspPose
+                        :medium_tooth_gear_tray_grasp :medium_tooth_gear_tray_grasp_location)
+
+//*****************************************
+// 4 start :PoseOnlyLocation medium_tooth_gear_tray_grasp_location
+Declaration(NamedIndividual(:medium_tooth_gear_tray_grasp_location))
+ClassAssertion(:PoseOnlyLocation :medium_tooth_gear_tray_grasp_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :medium_tooth_gear_tray_grasp_location :kitting_workstation_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :medium_tooth_gear_tray_grasp_location :medium_tooth_gear_tray_grasp_pose)
+
+//*****************************************
+// 5 start :Pose medium_tooth_gear_tray_grasp_pose
+Declaration(NamedIndividual(:medium_tooth_gear_tray_grasp_pose))
+ClassAssertion(:Pose :medium_tooth_gear_tray_grasp_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :medium_tooth_gear_tray_grasp_pose :medium_tooth_gear_tray_grasp_pose_point)
+
+//*****************************************
+// 6 start :Point medium_tooth_gear_tray_grasp_pose_point
+Declaration(NamedIndividual(:medium_tooth_gear_tray_grasp_pose_point))
+ClassAssertion(:Point :medium_tooth_gear_tray_grasp_pose_point)
+DataPropertyAssertion(:hasPoint_X :medium_tooth_gear_tray_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :medium_tooth_gear_tray_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :medium_tooth_gear_tray_grasp_pose_point
+                      "0.116000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :medium_tooth_gear_tray_grasp_pose :medium_tooth_gear_tray_grasp_pose_x_axis)
+
+//*****************************************
+// 6 start :Vector medium_tooth_gear_tray_grasp_pose_x_axis
+Declaration(NamedIndividual(:medium_tooth_gear_tray_grasp_pose_x_axis))
+ClassAssertion(:Vector :medium_tooth_gear_tray_grasp_pose_x_axis)
+DataPropertyAssertion(:hasVector_I :medium_tooth_gear_tray_grasp_pose_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :medium_tooth_gear_tray_grasp_pose_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :medium_tooth_gear_tray_grasp_pose_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :medium_tooth_gear_tray_grasp_pose :medium_tooth_gear_tray_grasp_pose_z_axis)
+
+//*****************************************
+// 6 start :Vector medium_tooth_gear_tray_grasp_pose_z_axis
+Declaration(NamedIndividual(:medium_tooth_gear_tray_grasp_pose_z_axis))
+ClassAssertion(:Vector :medium_tooth_gear_tray_grasp_pose_z_axis)
+DataPropertyAssertion(:hasVector_I :medium_tooth_gear_tray_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :medium_tooth_gear_tray_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :medium_tooth_gear_tray_grasp_pose_z_axis
+                      "-1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseOnlyLocation
+//*****************************************
+
+// 3 end :VacuumEffectorSingleGrasp
+//*****************************************
+
+// 2 end :StockKeepingUnit
+//*****************************************
+
+ObjectPropertyAssertion(:hasKittingWorkstation_Sku
+                        :kitting_workstation_1 :sku_large_gear_vessel)
+
+//*****************************************
+// 2 start :StockKeepingUnit sku_large_gear_vessel
+Declaration(NamedIndividual(:sku_large_gear_vessel))
+ClassAssertion(:StockKeepingUnit :sku_large_gear_vessel)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_large_gear_vessel
+                      "SKU for large tooth gear trays"^^xsd:string)
+ObjectPropertyAssertion(:hasStockKeepingUnit_ExternalShape
+                        :sku_large_gear_vessel :shape_large_gear_tray)
+
+//*****************************************
+// 3 start :ExternalShape shape_large_gear_tray
+Declaration(NamedIndividual(:shape_large_gear_tray))
+ClassAssertion(:ExternalShape :shape_large_gear_tray)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_large_gear_tray
+                      "Model for large tooth gear tray"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFormatName :shape_large_gear_tray
+                      "SKP"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelFileName :shape_large_gear_tray
+                      "package://iora_interface/workcell_models/LargeToothGearTray.skp"^^xsd:string)
+DataPropertyAssertion(:hasExternalShape_ModelName :shape_large_gear_tray
+                      "LargeToothGearTray"^^xsd:string)
+// 3 end :ExternalShape
+//*****************************************
+
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_large_gear_vessel
+                      "0.200000"^^xsd:decimal)
+ObjectPropertyAssertion(:hasStockKeepingUnit_EffectorAndGrasp
+                        :sku_large_gear_vessel :large_tooth_gear_tray_grasp)
+
+//*****************************************
+// 3 start :VacuumEffectorSingleGrasp large_tooth_gear_tray_grasp
+Declaration(NamedIndividual(:large_tooth_gear_tray_grasp))
+ClassAssertion(:VacuumEffectorSingleGrasp :large_tooth_gear_tray_grasp)
+ObjectPropertyAssertion(:hasVacuumEffectorSingleGrasp_VacuumEffectorSingle
+                        :large_tooth_gear_tray_grasp :tray_gripper)
+ObjectPropertyAssertion(:hasVacuumEffectorSingleGrasp_GraspPose
+                        :large_tooth_gear_tray_grasp :large_tooth_gear_tray_grasp_location)
+
+//*****************************************
+// 4 start :PoseOnlyLocation large_tooth_gear_tray_grasp_location
+Declaration(NamedIndividual(:large_tooth_gear_tray_grasp_location))
+ClassAssertion(:PoseOnlyLocation :large_tooth_gear_tray_grasp_location)
+ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
+                        :large_tooth_gear_tray_grasp_location :kitting_workstation_1)
+ObjectPropertyAssertion(:hasPoseOnlyLocation_Pose
+                        :large_tooth_gear_tray_grasp_location :large_tooth_gear_tray_grasp_pose)
+
+//*****************************************
+// 5 start :Pose large_tooth_gear_tray_grasp_pose
+Declaration(NamedIndividual(:large_tooth_gear_tray_grasp_pose))
+ClassAssertion(:Pose :large_tooth_gear_tray_grasp_pose)
+ObjectPropertyAssertion(:hasPose_Point
+                        :large_tooth_gear_tray_grasp_pose :large_tooth_gear_tray_grasp_pose_point)
+
+//*****************************************
+// 6 start :Point large_tooth_gear_tray_grasp_pose_point
+Declaration(NamedIndividual(:large_tooth_gear_tray_grasp_pose_point))
+ClassAssertion(:Point :large_tooth_gear_tray_grasp_pose_point)
+DataPropertyAssertion(:hasPoint_X :large_tooth_gear_tray_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Y :large_tooth_gear_tray_grasp_pose_point
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasPoint_Z :large_tooth_gear_tray_grasp_pose_point
+                      "0.116000"^^xsd:decimal)
+// 6 end :Point
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_XAxis
+                        :large_tooth_gear_tray_grasp_pose :large_tooth_gear_tray_grasp_pose_x_axis)
+
+//*****************************************
+// 6 start :Vector large_tooth_gear_tray_grasp_pose_x_axis
+Declaration(NamedIndividual(:large_tooth_gear_tray_grasp_pose_x_axis))
+ClassAssertion(:Vector :large_tooth_gear_tray_grasp_pose_x_axis)
+DataPropertyAssertion(:hasVector_I :large_tooth_gear_tray_grasp_pose_x_axis
+                      "1.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :large_tooth_gear_tray_grasp_pose_x_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :large_tooth_gear_tray_grasp_pose_x_axis
+                      "0.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+ObjectPropertyAssertion(:hasPose_ZAxis
+                        :large_tooth_gear_tray_grasp_pose :large_tooth_gear_tray_grasp_pose_z_axis)
+
+//*****************************************
+// 6 start :Vector large_tooth_gear_tray_grasp_pose_z_axis
+Declaration(NamedIndividual(:large_tooth_gear_tray_grasp_pose_z_axis))
+ClassAssertion(:Vector :large_tooth_gear_tray_grasp_pose_z_axis)
+DataPropertyAssertion(:hasVector_I :large_tooth_gear_tray_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_J :large_tooth_gear_tray_grasp_pose_z_axis
+                      "0.000000"^^xsd:decimal)
+DataPropertyAssertion(:hasVector_K :large_tooth_gear_tray_grasp_pose_z_axis
+                      "-1.000000"^^xsd:decimal)
+// 6 end :Vector
+//*****************************************
+
+// 5 end :Pose
+//*****************************************
+
+// 4 end :PoseOnlyLocation
+//*****************************************
+
+// 3 end :VacuumEffectorSingleGrasp
+//*****************************************
+
+// 2 end :StockKeepingUnit
+//*****************************************
+
+DataPropertyAssertion(:hasKittingWorkstation_WeightUnit :kitting_workstation_1
+                      "kilogram"^^xsd:NMTOKEN)
+// 1 end :KittingWorkstation
+//*****************************************
+
+
+//*****************************************
+// :EndEffectorHolder individuals 
+DifferentIndividuals(
+ :part_gripper_holder
+ :tray_gripper_holder)
+
+//*****************************************
+// :ExternalShape individuals 
+DifferentIndividuals(
+ :shape_changing_station_base
+ :shape_changing_station_holder_1
+ :shape_changing_station_holder_2
+ :shape_large_gear_tray
+ :shape_medium_gear_tray
+ :shape_part_large_gear
+ :shape_part_medium_gear
+ :shape_part_small_gear
+ :shape_robot_1
+ :shape_s2l2_tray
+ :shape_small_gear_tray
+ :shape_work_table)
+
+//*****************************************
+// :ParallelGripperGrasp individuals 
+DifferentIndividuals(
+ :large_tooth_gear_grasp
+ :medium_tooth_gear_grasp
+ :small_tooth_gear_grasp)
+
+//*****************************************
+// :PartRefAndPose individuals 
+DifferentIndividuals(
+ :part_ref_and_pose_kits2l2_large_gear_1
+ :part_ref_and_pose_kits2l2_large_gear_2
+ :part_ref_and_pose_kits2l2_small_gear_1
+ :part_ref_and_pose_kits2l2_small_gear_2
+ :part_ref_and_pose_large_gear_1
+ :part_ref_and_pose_medium_gear_1
+ :part_ref_and_pose_small_gear_1)
+
+//*****************************************
+// :Part individuals 
+DifferentIndividuals(
+ :large_gear_1
+ :large_gear_2
+ :medium_gear_1
+ :medium_gear_2
+ :medium_gear_3
+ :medium_gear_4
+ :small_gear_1
+ :small_gear_2
+ :small_gear_3
+ :small_gear_4)
+
+//*****************************************
+// :PartsTrayDesign individuals 
+DifferentIndividuals(
+ :kits2l2_design
+ :large_gear_parts_tray_design
+ :medium_gear_parts_tray_design
+ :small_gear_parts_tray_design)
+
+//*****************************************
+// :PartsTray individuals 
+DifferentIndividuals(
+ :kits2l2
+ :part_large_gear_parts_tray
+ :part_medium_gear_parts_tray
+ :part_small_gear_parts_tray)
+
+//*****************************************
+// :Point individuals 
+DifferentIndividuals(
+ :changing_station_base_point
+ :changing_station_point
+ :gear_gripper_holder_point
+ :gripper_on_robot_point
+ :kits2l2_point
+ :kits2l2_tray_grasp_pose_point
+ :large_tooth_gear_grasp_pose_point
+ :large_tooth_gear_tray_grasp_pose_point
+ :medium_tooth_gear_grasp_pose_point
+ :medium_tooth_gear_tray_grasp_pose_point
+ :part_large_gear_1_point
+ :part_large_gear_2_point
+ :part_medium_gear_1_point
+ :part_medium_gear_2_point
+ :part_medium_gear_3_point
+ :part_medium_gear_4_point
+ :part_small_gear_1_point
+ :part_small_gear_2_point
+ :part_small_gear_3_point
+ :part_small_gear_4_point
+ :parts_tray_large_gear_point
+ :parts_tray_medium_gear_point
+ :parts_tray_small_gear_point
+ :point_kits2l2_large_gear_1
+ :point_kits2l2_large_gear_2
+ :point_kits2l2_small_gear_1
+ :point_kits2l2_small_gear_2
+ :point_large_gear_parts_tray_design_1
+ :point_max
+ :point_medium_gear_parts_tray_design_1
+ :point_min
+ :point_small_gear_parts_tray_design_1
+ :robot_gripper_offset_point
+ :robot_point
+ :small_tooth_gear_grasp_pose_point
+ :small_tooth_gear_tray_grasp_pose_point
+ :tray_gripper_holder_point
+ :tray_gripper_offset_point
+ :vacuum1cup_gripper_point
+ :work_table_point
+ :world_frame_origin)
+
+//*****************************************
+// :PoseLocationIn individuals 
+DifferentIndividuals(
+ :part_large_gear_1_location
+ :part_large_gear_2_location
+ :part_medium_gear_1_location
+ :part_medium_gear_2_location
+ :part_medium_gear_3_location
+ :part_medium_gear_4_location
+ :part_small_gear_1_location
+ :part_small_gear_2_location
+ :part_small_gear_3_location
+ :part_small_gear_4_location)
+
+//*****************************************
+// :PoseLocationOn individuals 
+DifferentIndividuals(
+ :gripper_on_robot_location
+ :kits2l2_location)
+
+//*****************************************
+// :PoseOnlyLocation individuals 
+DifferentIndividuals(
+ :changing_station_base_location
+ :changing_station_location
+ :gear_gripper_holder_location
+ :kits2l2_tray_grasp_location
+ :large_tooth_gear_grasp_location
+ :large_tooth_gear_tray_grasp_location
+ :medium_tooth_gear_grasp_location
+ :medium_tooth_gear_tray_grasp_location
+ :parts_tray_large_gear_location
+ :parts_tray_medium_gear_location
+ :parts_tray_small_gear_location
+ :robot_gripper_offset
+ :robot_location
+ :small_tooth_gear_grasp_location
+ :small_tooth_gear_tray_grasp_location
+ :tray_gripper_holder_location
+ :tray_gripper_location
+ :tray_gripper_offset
+ :work_table_location
+ :world_frame)
+
+//*****************************************
+// :Pose individuals 
+DifferentIndividuals(
+ :changing_station_base_pose
+ :changing_station_pose
+ :gear_gripper_holder_pose
+ :gripper_on_robot_pose
+ :kits2l2_pose
+ :kits2l2_tray_grasp_pose
+ :large_tooth_gear_grasp_pose
+ :large_tooth_gear_tray_grasp_pose
+ :medium_tooth_gear_grasp_pose
+ :medium_tooth_gear_tray_grasp_pose
+ :part_large_gear_1_pose
+ :part_large_gear_2_pose
+ :part_medium_gear_1_pose
+ :part_medium_gear_2_pose
+ :part_medium_gear_3_pose
+ :part_medium_gear_4_pose
+ :part_small_gear_1_pose
+ :part_small_gear_2_pose
+ :part_small_gear_3_pose
+ :part_small_gear_4_pose
+ :parts_tray_large_gear_pose
+ :parts_tray_medium_gear_pose
+ :parts_tray_small_gear_pose
+ :pose_kits2l2_large_gear_1
+ :pose_kits2l2_large_gear_2
+ :pose_kits2l2_small_gear_1
+ :pose_kits2l2_small_gear_2
+ :pose_large_gear_parts_tray_design_1
+ :pose_medium_gear_parts_tray_design_1
+ :pose_small_gear_parts_tray_design_1
+ :robot_gripper_offset_pose
+ :robot_pose
+ :small_tooth_gear_grasp_pose
+ :small_tooth_gear_tray_grasp_pose
+ :tray_gripper_holder_pose
+ :tray_gripper_offset_pose
+ :tray_gripper_pose
+ :work_table_pose
+ :world_frame_pose)
+
+//*****************************************
+// :Slot individuals 
+DifferentIndividuals(
+ :kits2l2_slot_large_gear_1
+ :kits2l2_slot_large_gear_2
+ :kits2l2_slot_small_gear_1
+ :kits2l2_slot_small_gear_2)
+
+//*****************************************
+// :StockKeepingUnit individuals 
+DifferentIndividuals(
+ :sku_kits2l2_vessel
+ :sku_large_gear_vessel
+ :sku_medium_gear_vessel
+ :sku_part_large_gear
+ :sku_part_medium_gear
+ :sku_part_small_gear
+ :sku_small_gear_vessel)
+
+//*****************************************
+// :VacuumEffectorSingleGrasp individuals 
+DifferentIndividuals(
+ :kits2l2_Tray_Grasp
+ :large_tooth_gear_tray_grasp
+ :medium_tooth_gear_tray_grasp
+ :small_tooth_gear_tray_grasp)
+
+//*****************************************
+// :Vector individuals 
+DifferentIndividuals(
+ :changing_station_base_x_axis
+ :changing_station_base_z_axis
+ :changing_station_x_axis
+ :changing_station_z_axis
+ :gear_gripper_holder_x_axis
+ :gear_gripper_holder_z_axis
+ :gripper_on_robot_x_axis
+ :gripper_on_robot_z_axis
+ :kits2l2_tray_grasp_pose_x_axis
+ :kits2l2_tray_grasp_pose_z_axis
+ :kits2l2_x_axis
+ :kits2l2_z_axis
+ :large_tooth_gear_grasp_pose_x_axis
+ :large_tooth_gear_grasp_pose_z_axis
+ :large_tooth_gear_tray_grasp_pose_x_axis
+ :large_tooth_gear_tray_grasp_pose_z_axis
+ :medium_tooth_gear_grasp_pose_x_axis
+ :medium_tooth_gear_grasp_pose_z_axis
+ :medium_tooth_gear_tray_grasp_pose_x_axis
+ :medium_tooth_gear_tray_grasp_pose_z_axis
+ :part_large_gear_1_x_axis
+ :part_large_gear_1_z_axis
+ :part_large_gear_2_x_axis
+ :part_large_gear_2_z_axis
+ :part_medium_gear_1_x_axis
+ :part_medium_gear_1_z_axis
+ :part_medium_gear_2_x_axis
+ :part_medium_gear_2_z_axis
+ :part_medium_gear_3_x_axis
+ :part_medium_gear_3_z_axis
+ :part_medium_gear_4_x_axis
+ :part_medium_gear_4_z_axis
+ :part_small_gear_1_x_axis
+ :part_small_gear_1_z_axis
+ :part_small_gear_2_x_axis
+ :part_small_gear_2_z_axis
+ :part_small_gear_3_x_axis
+ :part_small_gear_3_z_axis
+ :part_small_gear_4_x_axis
+ :part_small_gear_4_z_axis
+ :parts_tray_large_gear_x_axis
+ :parts_tray_large_gear_z_axis
+ :parts_tray_medium_gear_x_axis
+ :parts_tray_medium_gear_z_axis
+ :parts_tray_small_gear_x_axis
+ :parts_tray_small_gear_z_axis
+ :robot_gripper_offset_x_axis
+ :robot_gripper_offset_z_axis
+ :robot_x_axis
+ :robot_z_axis
+ :small_tooth_gear_grasp_pose_x_axis
+ :small_tooth_gear_grasp_pose_z_axis
+ :small_tooth_gear_tray_grasp_pose_x_axis
+ :small_tooth_gear_tray_grasp_pose_z_axis
+ :tray_gripper_holder_x_axis
+ :tray_gripper_holder_z_axis
+ :tray_gripper_offset_x_axis
+ :tray_gripper_offset_z_axis
+ :vacuum1cup_gripper_x_axis
+ :vacuum1cup_gripper_z_axis
+ :work_table_x_axis
+ :work_table_z_axis
+ :world_frame_x_axis
+ :world_frame_z_axis
+ :x_axis_kits2l2_large_gear_1
+ :x_axis_kits2l2_large_gear_2
+ :x_axis_kits2l2_small_gear_1
+ :x_axis_kits2l2_small_gear_2
+ :x_axis_large_gear_parts_tray_design_1
+ :x_axis_medium_gear_parts_tray_design_1
+ :x_axis_small_gear_parts_tray_design_1
+ :z_axis_kits2l2_large_gear_1
+ :z_axis_kits2l2_large_gear_2
+ :z_axis_kits2l2_small_gear_1
+ :z_axis_kits2l2_small_gear_2
+ :z_axis_large_gear_parts_tray_design_1
+ :z_axis_medium_gear_parts_tray_design_1
+ :z_axis_small_gear_parts_tray_design_1)
+)
