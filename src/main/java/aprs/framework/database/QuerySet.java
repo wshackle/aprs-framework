@@ -75,7 +75,7 @@ public class QuerySet implements QuerySetInterface {
                 this.getAllTrayDesignsStatement = con.prepareStatement(getAllTrayDesignsQueryString);
             }
         }
-        DbQueryInfo getSingleTraySlogDesignQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_TRAY_SLOT_DESIGNS);
+        DbQueryInfo getSingleTraySlogDesignQueryInfo = queriesMap.get(DbQueryEnum.GET_SINGLE_TRAY_SLOT_DESIGN);
         if (null != getSingleTraySlogDesignQueryInfo) {
             String getSingleTrayDesignQueryString = getSingleTraySlogDesignQueryInfo.getQuery();
             if (null != getSingleTrayDesignQueryString) {

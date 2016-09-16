@@ -61,11 +61,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public List<TraySlotDesign> getAllTraySlotDesigns() throws SQLException {
         return qs.getAllTraySlotDesigns();
     }
-    
-    public List<TraySlotDesign> getSingleTraySlotDesign(String partDesignName,String trayDesignName) throws SQLException {
-        return qs.getSingleTraySlotDesign(partDesignName,trayDesignName);
+
+    public List<TraySlotDesign> getSingleTraySlotDesign(String partDesignName, String trayDesignName) throws SQLException {
+        return qs.getSingleTraySlotDesign(partDesignName, trayDesignName);
     }
-    
+
     public boolean isConnected() {
         try {
             return null != dbConnection && null != qs && !dbConnection.isClosed();
@@ -107,7 +107,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //                + "set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}"
 //        );
 //    }
-
     public void setDbConnection(Connection dbConnection) {
         try {
             if (null != this.dbConnection && dbConnection != this.dbConnection && closeDbConnection) {
@@ -144,7 +143,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             if (dbConnection == null) {
                 try {
                     setDbConnection(DbSetupBuilder.connect(dbSetup));
-                    System.out.println("PddlActionToCrclGenerator connected to database of type "+dbSetup.getDbType()+" on host " + dbSetup.getHost() + " with port " + dbSetup.getPort());
+                    System.out.println("PddlActionToCrclGenerator connected to database of type " + dbSetup.getDbType() + " on host " + dbSetup.getHost() + " with port " + dbSetup.getPort());
                 } catch (SQLException ex) {
                     Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -170,7 +169,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private Map<String, String> options = null;
 
-        private boolean lookForDone = false;
+    private boolean lookForDone = false;
 
     /**
      * Get the value of lookForDone
@@ -190,7 +189,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.lookForDone = lookForDone;
     }
 
-        private int lastIndex;
+    private int lastIndex;
 
     /**
      * Get the value of lastIndex
@@ -210,13 +209,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.lastIndex = lastIndex;
     }
 
-    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex,  Map<String, String> options) {
+    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options) {
         this.options = options;
         List<MiddleCommandType> out = new ArrayList<>();
-        if(null == actionToCrclIndexes || actionToCrclIndexes.length != actions.size()) {
+        if (null == actionToCrclIndexes || actionToCrclIndexes.length != actions.size()) {
             actionToCrclIndexes = new int[actions.size()];
         }
-        if(null == actionToCrclLabels || actionToCrclLabels.length != actions.size()) {
+        if (null == actionToCrclLabels || actionToCrclLabels.length != actions.size()) {
             actionToCrclLabels = new String[actions.size()];
         }
         for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
@@ -256,10 +255,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("Database not setup and connected.");
         }
         MessageType msg = new MessageType();
-        msg.setMessage("take-part "+action.getArgs()[1]);
+        msg.setMessage("take-part " + action.getArgs()[1]);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
-        
+
         PoseType pose = qs.getPose(action.getArgs()[1]);
         pose.setZAxis(vector(0, 0, -1.0));
         SetEndEffectorType openGripperCmd = new SetEndEffectorType();
@@ -278,7 +277,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         dwellCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         dwellCmd.setDwellTime(BigDecimal.valueOf(3.0));
         out.add(dwellCmd);
-        
+
         MoveToType moveToCmd = new MoveToType();
         moveToCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         moveToCmd.setEndPosition(pose);
@@ -318,12 +317,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         dwellCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         dwellCmd.setDwellTime(BigDecimal.valueOf(3.0));
         out.add(dwellCmd);
-        
+
         MessageType msg = new MessageType();
-        msg.setMessage("look-for "+action.getArgs()[1] + " from "+lookforXYZSring);
+        msg.setMessage("look-for " + action.getArgs()[1] + " from " + lookforXYZSring);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
-        
+
     }
 
     private void placePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
@@ -333,9 +332,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pose = qs.getPose(action.getArgs()[6]);
         pose.setZAxis(vector(0, 0, -1.0));
 
-        List<TraySlotDesign> l = this.getSingleTraySlotDesign(action.getArgs()[3], action.getArgs()[6]);
+        List<TraySlotDesign> l = this.getSingleTraySlotDesign(action.getArgs()[2], action.getArgs()[6]);
         TraySlotDesign tsd = l.get(0);
-        PoseType poseOffset = pose(point(tsd.getX_OFFSET(),tsd.getY_OFFSET(),0.),vector(1.,0.,0.),vector(0.,0.,1.));
+        PoseType poseOffset = pose(point(tsd.getX_OFFSET(), tsd.getY_OFFSET(), 0.), vector(1., 0., 0.), vector(0., 0., 1.));
         PoseType poseWithOffset = CRCLPosemath.multiply(pose, poseOffset);
         PoseType poseAbove = CRCLPosemath.copy(poseWithOffset);
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
@@ -348,7 +347,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         dwellCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         dwellCmd.setDwellTime(BigDecimal.valueOf(3.0));
         out.add(dwellCmd);
-        
+
         MoveToType moveToCmd = new MoveToType();
         moveToCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
         moveToCmd.setEndPosition(pose);
