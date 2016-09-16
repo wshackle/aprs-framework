@@ -23,7 +23,6 @@
 package aprs.framework.pddl.executor;
 
 import aprs.framework.PddlAction;
-import aprs.framework.database.DbQueryEnum;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
@@ -42,7 +41,6 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -123,7 +121,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 qs.close();
                 qs = null;
             }
-            System.out.println("qs = " + qs);
         } catch (SQLException ex) {
             Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
