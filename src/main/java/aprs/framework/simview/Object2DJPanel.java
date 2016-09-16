@@ -40,15 +40,15 @@ import javax.swing.JPanel;
 public class Object2DJPanel extends JPanel {
 
     public static final List<DetectedItem> EXAMPLES_ITEMS_LIST = Arrays.asList(
-            new DetectedItem("part_tray_a", Math.toRadians(45.0), 250, -250.0),
-            new DetectedItem("part_tray_b", Math.toRadians(0.0), 300, -125.0),
-            new DetectedItem("part_tray_c", Math.toRadians(-45.0), 400, 125.0),
-            new DetectedItem("large_gear", Math.toRadians(0.0), 275, -200.0),
-            new DetectedItem("large_gear", Math.toRadians(0.0), 350, 60.0),
-            new DetectedItem("medium_gear", Math.toRadians(0.0), 275, -100.0),
-            new DetectedItem("medium_gear", Math.toRadians(0.0), 375, 85.0),
-            new DetectedItem("small_gear", Math.toRadians(0.0), 275, -75.0),
-            new DetectedItem("small_gear", Math.toRadians(0.0), 380, 115.0),
+            new DetectedItem("part_medium_gear_tray", Math.toRadians(45.0), 250, -250.0),
+            new DetectedItem("part_large_gear_tray", Math.toRadians(0.0), 300, -125.0),
+            new DetectedItem("part_small_gear_tray", Math.toRadians(-45.0), 400, 125.0),
+            new DetectedItem("large_gear_1", Math.toRadians(0.0), 275, -200.0),
+            new DetectedItem("large_gear_2", Math.toRadians(0.0), 350, 60.0),
+            new DetectedItem("medium_gear_1", Math.toRadians(0.0), 275, -100.0),
+            new DetectedItem("medium_gear_2", Math.toRadians(0.0), 375, 85.0),
+            new DetectedItem("small_gear_1", Math.toRadians(0.0), 275, -75.0),
+            new DetectedItem("small_gear_2", Math.toRadians(0.0), 380, 115.0),
             new DetectedItem("kit_tray_a", Math.toRadians(-45.0), 600, 125.0),
             new DetectedItem("kit_tray_b", Math.toRadians(0.0), 600, 0.0),
             new DetectedItem("kit_tray_c", Math.toRadians(45.0), 650, -200.0)

@@ -1,3 +1,3 @@
-#params=NAME,
-#results={NAME=name,X=x,Y=y,Z=z,VXI=vxi,VXJ=vxj,VZK=vxk,VXI=vxi,VXJ=vxj,VZK=vxk,}
-select name,X,Y,Z,VXI,VXJ from Poses where name=?
+#params=PART_DESIGN_NAME(1),TRAY_DESIGN_NAME(1),
+#results={SLOT_DESIGN_ID=ID,X_SLOT_OFFSET=X_OFFSET,Y_SLOT_OFFSET=Y_OFFSET}
+select ID,X_OFFSET,Y_OFFSET from SlotDesigns where PartDesignName=? and TrayDesignName=?

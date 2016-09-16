@@ -265,7 +265,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
-        jCheckBoxAddRepeatCountsToDatabaseNames.setSelected(true);
         jCheckBoxAddRepeatCountsToDatabaseNames.setText("Add Repeat Counts To Database Names");
         jCheckBoxAddRepeatCountsToDatabaseNames.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

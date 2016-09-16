@@ -75,16 +75,25 @@ public class QuerySet implements QuerySetInterface {
                 this.getAllTrayDesignsStatement = con.prepareStatement(getAllTrayDesignsQueryString);
             }
         }
+        DbQueryInfo getSingleTraySlogDesignQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_TRAY_SLOT_DESIGNS);
+        if (null != getSingleTraySlogDesignQueryInfo) {
+            String getSingleTrayDesignQueryString = getSingleTraySlogDesignQueryInfo.getQuery();
+            if (null != getSingleTrayDesignQueryString) {
+                this.getSingleTrayDesignStatement = con.prepareStatement(getSingleTrayDesignQueryString);
+            }
+        }
         this.queriesMap = queriesMap;
 
     }
 
     private final DbType dbtype;
     private final Map<DbQueryEnum, DbQueryInfo> queriesMap;
-    java.sql.PreparedStatement getPoseStatement;
-    java.sql.PreparedStatement setPoseStatement;
-    java.sql.PreparedStatement getAllTrayDesignsStatement;
-
+    private java.sql.PreparedStatement getPoseStatement;
+    private java.sql.PreparedStatement setPoseStatement;
+    private java.sql.PreparedStatement getAllTrayDesignsStatement;
+    private java.sql.PreparedStatement getSingleTrayDesignStatement;
+    
+    
     private boolean closed = false;
 
     private String getQueryFormat() {
@@ -281,6 +290,59 @@ public class QuerySet implements QuerySetInterface {
         return pose;
     }
 
+    public List<TraySlotDesign> getSingleTraySlotDesign(String partDesignName, String trayDesignName) throws SQLException {
+        if (closed) {
+            throw new IllegalStateException("QuerySet already closed.");
+        }
+        if(null == getSingleTrayDesignStatement) {
+            throw new IllegalStateException("null == getAllTrayDesignsStatement");
+        }
+        List<TraySlotDesign> list = new ArrayList<>();
+        Map<Integer, Object> map = new TreeMap<>();
+        DbQueryInfo getSingleTraySlotDesignQueryInfo = queriesMap.get(DbQueryEnum.GET_SINGLE_TRAY_SLOT_DESIGN);
+        setQueryStringParam(getSingleTrayDesignStatement, getSingleTraySlotDesignQueryInfo, DbParamTypeEnum.PART_DESIGN_NAME, partDesignName, map);
+        setQueryStringParam(getSingleTrayDesignStatement, getSingleTraySlotDesignQueryInfo, DbParamTypeEnum.TRAY_DESIGN_NAME, trayDesignName, map);
+//        getPoseStatement.setString(1, name);
+//        String simQuery = createExpectedQueryString(getAllTraySlogDesignsQueryInfo, map);
+//        System.out.println("simQuery = " + simQuery);
+        try (ResultSet rs = getSingleTrayDesignStatement.executeQuery()) {
+            while (rs.next()) {
+                ResultSetMetaData meta = rs.getMetaData();
+                for (int j = 1; j <= meta.getColumnCount(); j++) {
+                    System.out.println("j = " + j);
+                    String cname = meta.getColumnName(j);
+                    System.out.println("cname = " + cname);
+                    String type = meta.getColumnTypeName(j);
+                    System.out.println("type = " + type);
+                    Object o = rs.getObject(j);
+                    System.out.println("o = " + o);
+                }
+                int id = getQueryResultInt(rs, getSingleTraySlotDesignQueryInfo, DbParamTypeEnum.SLOT_DESIGN_ID);
+                TraySlotDesign traySlotDesign = new TraySlotDesign(id);
+                traySlotDesign.setPartDesignName(partDesignName);
+                traySlotDesign.setTrayDesignName(trayDesignName);
+                double x_offset = getQueryResultDouble(rs, getSingleTraySlotDesignQueryInfo, DbParamTypeEnum.X_SLOT_OFFSET);
+                traySlotDesign.setX_OFFSET(x_offset);
+                double y_offset = getQueryResultDouble(rs, getSingleTraySlotDesignQueryInfo, DbParamTypeEnum.Y_SLOT_OFFSET);
+                traySlotDesign.setY_OFFSET(y_offset);
+                list.add(traySlotDesign);
+            }
+//            if (rs.next()) {
+//                String nameCheckString = rs.getString(1);
+//                System.out.println("nameCheckString = " + nameCheckString);
+//                int count =1;
+//                while(rs.next()) {
+//                    System.out.println("rs.getString(1) = " + rs.getString(1));
+//                    count++;
+//                    System.out.println("count = " + count);
+//                }
+//                throw new IllegalStateException("More than one result for name=" + name);
+//            }
+        }
+        return list;
+    }
+
+    
     public List<TraySlotDesign> getAllTraySlotDesigns() throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
@@ -289,8 +351,10 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalStateException("null == getAllTrayDesignsStatement");
         }
         List<TraySlotDesign> list = new ArrayList<>();
-        DbQueryInfo getAllTraySlogDesignsQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_TRAY_SLOT_DESIGNS);
-//        setQueryStringParam(getPoseStatement, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.NAME, name, map);
+//        Map<Integer, Object> map = new TreeMap<>();
+        DbQueryInfo getAllTraySlotDesignsQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_TRAY_SLOT_DESIGNS);
+//        setQueryStringParam(getSingleTrayDesignStatement, getSIngleTraySlogDesignQueryInfo, DbParamTypeEnum.PART_DESIGN_NAME, partDesignName, map);
+//        setQueryStringParam(getSingleTrayDesignStatement, getSIngleTraySlogDesignQueryInfo, DbParamTypeEnum.TRAY_DESIGN_NAME, trayDesignName, map);
 //        getPoseStatement.setString(1, name);
 //        String simQuery = createExpectedQueryString(getAllTraySlogDesignsQueryInfo, map);
 //        System.out.println("simQuery = " + simQuery);
@@ -306,15 +370,15 @@ public class QuerySet implements QuerySetInterface {
                     Object o = rs.getObject(j);
                     System.out.println("o = " + o);
                 }
-                int id = getQueryResultInt(rs, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.SLOT_DESIGN_ID);
+                int id = getQueryResultInt(rs, getAllTraySlotDesignsQueryInfo, DbParamTypeEnum.SLOT_DESIGN_ID);
                 TraySlotDesign traySlotDesign = new TraySlotDesign(id);
-                String partDesignName = getQueryResultString(rs, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.PART_DESIGN_NAME);
+                String partDesignName = getQueryResultString(rs, getAllTraySlotDesignsQueryInfo, DbParamTypeEnum.PART_DESIGN_NAME);
                 traySlotDesign.setPartDesignName(partDesignName);
-                String trayDesignName = getQueryResultString(rs, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.TRAY_DESIGN_NAME);
+                String trayDesignName = getQueryResultString(rs, getAllTraySlotDesignsQueryInfo, DbParamTypeEnum.TRAY_DESIGN_NAME);
                 traySlotDesign.setTrayDesignName(trayDesignName);
-                double x_offset = getQueryResultDouble(rs, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.X_SLOT_OFFSET);
+                double x_offset = getQueryResultDouble(rs, getAllTraySlotDesignsQueryInfo, DbParamTypeEnum.X_SLOT_OFFSET);
                 traySlotDesign.setX_OFFSET(x_offset);
-                double y_offset = getQueryResultDouble(rs, getAllTraySlogDesignsQueryInfo, DbParamTypeEnum.Y_SLOT_OFFSET);
+                double y_offset = getQueryResultDouble(rs, getAllTraySlotDesignsQueryInfo, DbParamTypeEnum.Y_SLOT_OFFSET);
                 traySlotDesign.setY_OFFSET(y_offset);
                 list.add(traySlotDesign);
             }

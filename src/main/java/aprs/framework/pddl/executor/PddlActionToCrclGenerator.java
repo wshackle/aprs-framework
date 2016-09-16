@@ -35,6 +35,7 @@ import crcl.base.PoseType;
 import crcl.base.SetEndEffectorType;
 import crcl.utils.CRCLPosemath;
 import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.vector;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -59,6 +60,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     public List<TraySlotDesign> getAllTraySlotDesigns() throws SQLException {
         return qs.getAllTraySlotDesigns();
+    }
+    
+    public List<TraySlotDesign> getSingleTraySlotDesign(String partDesignName,String trayDesignName) throws SQLException {
+        return qs.getSingleTraySlotDesign(partDesignName,trayDesignName);
     }
     
     public boolean isConnected() {
@@ -328,7 +333,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pose = qs.getPose(action.getArgs()[6]);
         pose.setZAxis(vector(0, 0, -1.0));
 
-        PoseType poseAbove = CRCLPosemath.copy(pose);
+        List<TraySlotDesign> l = this.getSingleTraySlotDesign(action.getArgs()[3], action.getArgs()[6]);
+        TraySlotDesign tsd = l.get(0);
+        PoseType poseOffset = pose(point(tsd.getX_OFFSET(),tsd.getY_OFFSET(),0.),vector(1.,0.,0.),vector(0.,0.,1.));
+        PoseType poseWithOffset = CRCLPosemath.multiply(pose, poseOffset);
+        PoseType poseAbove = CRCLPosemath.copy(poseWithOffset);
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
         MoveToType moveAboveCmd = new MoveToType();
         moveAboveCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
