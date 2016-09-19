@@ -82,6 +82,13 @@ public class QuerySet implements QuerySetInterface {
                 this.getSingleTrayDesignStatement = con.prepareStatement(getSingleTrayDesignQueryString);
             }
         }
+        DbQueryInfo setSingleTraySlogDesignQueryInfo = queriesMap.get(DbQueryEnum.SET_SINGLE_TRAY_SLOT_DESIGN);
+        if (null != setSingleTraySlogDesignQueryInfo) {
+            String setSingleTrayDesignQueryString = setSingleTraySlogDesignQueryInfo.getQuery();
+            if (null != setSingleTrayDesignQueryString) {
+                this.setSingleTrayDesignStatement = con.prepareStatement(setSingleTrayDesignQueryString);
+            }
+        }
         this.queriesMap = queriesMap;
 
     }
@@ -92,6 +99,7 @@ public class QuerySet implements QuerySetInterface {
     private java.sql.PreparedStatement setPoseStatement;
     private java.sql.PreparedStatement getAllTrayDesignsStatement;
     private java.sql.PreparedStatement getSingleTrayDesignStatement;
+    private java.sql.PreparedStatement setSingleTrayDesignStatement;
     
     
     private boolean closed = false;
@@ -132,6 +140,22 @@ public class QuerySet implements QuerySetInterface {
 
     }
 
+    private void setQueryIntParam(java.sql.PreparedStatement stmnt,
+            DbQueryInfo queryInfo,
+            DbParamTypeEnum type,
+            int value,
+            Map<Integer, Object> map) throws SQLException {
+
+        if (!queryInfo.getParamPosMap().containsKey(type)) {
+            throw new IllegalArgumentException("No entry for type=" + type + " in params=" + Arrays.toString(queryInfo.getParams()));
+        }
+        int index = queryInfo.getParamPosMap().get(type);
+        if (null != map) {
+            map.put(index, value);
+        }
+        stmnt.setInt(index, value);
+
+    }
     private void setQueryDoubleParam(java.sql.PreparedStatement stmnt,
             DbQueryInfo queryInfo,
             DbParamTypeEnum type,
@@ -290,6 +314,24 @@ public class QuerySet implements QuerySetInterface {
         return pose;
     }
 
+    public void setSingleTraySlotDesign(TraySlotDesign tsd) throws SQLException {
+        if (closed) {
+            throw new IllegalStateException("QuerySet already closed.");
+        }
+        if(null == setSingleTrayDesignStatement) {
+            throw new IllegalStateException("null == getAllTrayDesignsStatement");
+        }
+        List<TraySlotDesign> list = new ArrayList<>();
+        Map<Integer, Object> map = new TreeMap<>();
+        DbQueryInfo setSingleTraySlotDesignQueryInfo = queriesMap.get(DbQueryEnum.SET_SINGLE_TRAY_SLOT_DESIGN);
+        setQueryStringParam(setSingleTrayDesignStatement, setSingleTraySlotDesignQueryInfo, DbParamTypeEnum.PART_DESIGN_NAME, tsd.getPartDesignName(), map);
+        setQueryStringParam(setSingleTrayDesignStatement, setSingleTraySlotDesignQueryInfo, DbParamTypeEnum.TRAY_DESIGN_NAME, tsd.getTrayDesignName(), map);
+        setQueryIntParam(setSingleTrayDesignStatement, setSingleTraySlotDesignQueryInfo, DbParamTypeEnum.SLOT_DESIGN_ID, tsd.getID(), map);
+        setQueryDoubleParam(setSingleTrayDesignStatement, setSingleTraySlotDesignQueryInfo, DbParamTypeEnum.X_SLOT_OFFSET, tsd.getX_OFFSET(), map);
+        setQueryDoubleParam(setSingleTrayDesignStatement, setSingleTraySlotDesignQueryInfo, DbParamTypeEnum.Y_SLOT_OFFSET, tsd.getY_OFFSET(), map);
+        setSingleTrayDesignStatement.execute();
+    }
+    
     public List<TraySlotDesign> getSingleTraySlotDesign(String partDesignName, String trayDesignName) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");

@@ -70,6 +70,8 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
@@ -90,6 +92,45 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      */
     public PddlExecutorJPanel() {
         initComponents();
+        jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
+    }
+
+    private static Object[] getTableRow(JTable table, int row) {
+        final int colCount = table.getModel().getColumnCount();
+        if (colCount < 1) {
+            return null;
+        }
+        Object out[] = new Object[table.getModel().getColumnCount()];
+        for (int i = 0; i < colCount; i++) {
+            out[i] = table.getModel().getValueAt(row, i);
+        }
+        return out;
+    }
+
+    private final TableModelListener traySlotModelListener = new TableModelListener() {
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            System.out.println("tableChanged : e = " + e);
+            for (int i = e.getFirstRow(); i <= e.getLastRow(); i++) {
+                if (updatingTraySlotTable) {
+                    return;
+                }
+                commitTraySlotDesign(getTableRow(jTableTraySlotDesign, i));
+            }
+        }
+    };
+
+    private void commitTraySlotDesign(Object[] data) {
+        try {
+            TraySlotDesign tsd = new TraySlotDesign((int) data[0]);
+            tsd.setTrayDesignName((String) data[1]);
+            tsd.setPartDesignName((String) data[2]);
+            tsd.setX_OFFSET((double) data[3]);
+            tsd.setY_OFFSET((double) data[4]);
+            pddlActionToCrclGenerator.setSingleTraySlotDesign(tsd);
+        } catch (SQLException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -386,9 +427,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             saveProperties();
         }
     }
-    
+
     private final PddlActionToCrclGenerator pddlActionToCrclGenerator = new PddlActionToCrclGenerator();
-    
+
     public PddlActionToCrclGenerator getPddlActionToCrclGenerator() {
         return pddlActionToCrclGenerator;
     }
@@ -417,7 +458,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         model.setNumRows(0);
     }
-    
+
     private File propertiesFile;
 
     /**
@@ -437,10 +478,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
     }
-    
+
     private static final String PDDLOUTPUT = "pddl.output";
     private static final String PDDLCRCLAUTOSTART = "pddl.crcl.autostart";
-    
+
     public void saveProperties() throws IOException {
         Map<String, String> propsMap = new HashMap<>();
         propsMap.put(PDDLOUTPUT, jTextFieldPddlOutputActions.getText());
@@ -452,11 +493,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             props.store(fw, "");
         }
     }
-    
+
     public void autoResizeTableColWidths(JTable table) {
-        
+
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        
+
         int fullsize = 0;
         Container parent = table.getParent();
         if (null != parent) {
@@ -467,7 +508,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
             TableColumn col = colModel.getColumn(i);
             int width = 0;
-            
+
             TableCellRenderer renderer = col.getHeaderRenderer();
             if (renderer == null) {
                 renderer = table.getTableHeader().getDefaultRenderer();
@@ -490,10 +531,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             sumWidths += width + 2;
         }
     }
-    
+
     public void autoResizeTableRowHeights(JTable table) {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        
+
         for (int rowIndex = 0; rowIndex < table.getRowCount(); rowIndex++) {
             int height = 0;
             for (int colIndex = 0; colIndex < table.getColumnCount(); colIndex++) {
@@ -512,7 +553,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         }
     }
-    
+
     public void addAction(PddlAction action) {
         if (null != action) {
             this.getActionsList().add(action);
@@ -520,7 +561,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             model.addRow(new Object[]{-1, action.getLabel(), action.getType(), Arrays.toString(action.getArgs()), action.getCost()});
         }
     }
-    
+
     public void processActions() {
         try {
             generateCrcl();
@@ -528,7 +569,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void loadActionsFile(File f) throws IOException {
         if (null != f && f.canRead()) {
             this.setActionsList(new ArrayList<>());
@@ -545,7 +586,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jTextFieldIndex.setText("0");
         }
     }
-    
+
     public void autoResizeTableColWidthsPddlOutput() {
         autoResizeTableColWidths(jTablePddlOutput);
     }
@@ -554,7 +595,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             browseActionsFile();
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()));
-            
+
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -564,7 +605,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
         try {
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()));
-            
+
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -574,27 +615,27 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void jTextFieldPddlOutputActionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPddlOutputActionsActionPerformed
         try {
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()));
-            
+
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jTextFieldPddlOutputActionsActionPerformed
-    
+
     private DbSetupPublisher dbSetupPublisher;
-    
+
     private Callable<DbSetupPublisher> dbSetupSupplier = null;
-    
+
     public Callable<DbSetupPublisher> getDbSetupSupplier() {
         return dbSetupSupplier;
     }
-    
+
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {
         this.dbSetupSupplier = dbSetupSupplier;
         try {
             dbSetupPublisher = dbSetupSupplier.call();
             dbSetupPublisher.addDbSetupListener(this);
-            
+
         } catch (Exception ex) {
             Logger.getLogger(VisionToDBJPanel.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -606,14 +647,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try {
                 dbSetupPublisher = dbSetupSupplier.call();
                 dbSetupPublisher.addDbSetupListener(this);
-                
+
             } catch (Exception ex) {
                 Logger.getLogger(VisionToDBJPanel.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_jButtonDbSetupActionPerformed
-    
+
     private CRCLProgramType createEmptyProgram() {
         CRCLProgramType program = new CRCLProgramType();
         InitCanonType initCmd = program.getInitCanon();
@@ -634,7 +675,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.setEndCanon(endCmd);
         return program;
     }
-    
+
     private CRCLProgramType crclProgram;
 
     /**
@@ -645,10 +686,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public CRCLProgramType getCrclProgram() {
         return crclProgram;
     }
-    
+
     List<JTextArea> crclAreas = new ArrayList<>();
     JTextArea editTableArea = new JTextArea();
-    
+
     private String trimXml(String in) {
         int endHeaderIndex = in.indexOf("?>");
         if (endHeaderIndex > 0) {
@@ -657,7 +698,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return in.trim();
         }
     }
-    
+
     private void loadProgramToTable(CRCLProgramType crclProgram) {
         DefaultTableModel model = (DefaultTableModel) jTableCrclProgram.getModel();
         jTableCrclProgram.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
@@ -672,12 +713,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 crclAreas.get(row).setText(value.toString());
                 return crclAreas.get(row);
             }
-            
+
         });
         jTableCrclProgram.getColumnModel().getColumn(1).setCellEditor(new TableCellEditor() {
-            
+
             private List<CellEditorListener> listeners = new ArrayList<>();
-            
+
             @Override
             public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
                 editTableArea.setOpaque(true);
@@ -685,22 +726,22 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 editTableArea.setText(value.toString());
                 return editTableArea;
             }
-            
+
             @Override
             public Object getCellEditorValue() {
                 return editTableArea.getText();
             }
-            
+
             @Override
             public boolean isCellEditable(EventObject anEvent) {
                 return true;
             }
-            
+
             @Override
             public boolean shouldSelectCell(EventObject anEvent) {
                 return true;
             }
-            
+
             @Override
             public boolean stopCellEditing() {
                 for (int i = 0; i < listeners.size(); i++) {
@@ -711,7 +752,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 }
                 return true;
             }
-            
+
             @Override
             public void cancelCellEditing() {
                 for (int i = 0; i < listeners.size(); i++) {
@@ -721,12 +762,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     }
                 }
             }
-            
+
             @Override
             public void addCellEditorListener(CellEditorListener l) {
                 listeners.add(l);
             }
-            
+
             @Override
             public void removeCellEditorListener(CellEditorListener l) {
                 listeners.remove(l);
@@ -742,7 +783,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 model.addRow(new Object[]{initCanon.getCommandID().intValue(),
                     trimXml(crclSocket.commandInstanceToPrettyString(instance, false))
                 });
-                
+
             } catch (JAXBException ex) {
                 Logger.getLogger(PddlExecutorJPanel.class
                         .getName()).log(Level.SEVERE, null, ex);
@@ -755,7 +796,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     model.addRow(new Object[]{midCmd.getCommandID().intValue(),
                         trimXml(crclSocket.commandInstanceToPrettyString(instance, false))
                     });
-                    
+
                 } catch (JAXBException ex) {
                     Logger.getLogger(PddlExecutorJPanel.class
                             .getName()).log(Level.SEVERE, null, ex);
@@ -769,7 +810,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 model.addRow(new Object[]{endCanon.getCommandID().intValue(),
                     trimXml(crclSocket.commandInstanceToPrettyString(instance, false))
                 });
-                
+
             } catch (JAXBException ex) {
                 Logger.getLogger(PddlExecutorJPanel.class
                         .getName()).log(Level.SEVERE, null, ex);
@@ -789,7 +830,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             this.crclProgram = crclProgram;
             AprsJFrame aprsJframe = AprsJFrame.getCurrentAprsJFrame();
             if (null != aprsJframe) {
-                
+
                 aprsJframe.setCRCLProgram(crclProgram, this.jCheckBoxAutoStartCrcl.isSelected());
                 aprsJframe.addProgramLineListener(this);
             }
@@ -808,7 +849,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private void jButtonGenerateCRCLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGenerateCRCLActionPerformed
-        
+
         try {
             generateCrcl();
         } catch (IOException ex) {
@@ -819,70 +860,79 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void jButtonPddlOutputViewEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlOutputViewEditActionPerformed
         try {
             Desktop.getDesktop().open(new File(jTextFieldPddlOutputActions.getText()));
-            
+
         } catch (IOException ex) {
             Logger.getLogger(PddlExecutorJPanel.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonPddlOutputViewEditActionPerformed
-    
+
     public int getReplanFromIndex() {
         return replanFromIndex;
     }
-    
+
     public void setReplanFromIndex(int replanFromIndex) {
         this.replanFromIndex = replanFromIndex;
         jTablePddlOutput.getSelectionModel().setSelectionInterval(replanFromIndex, replanFromIndex);
         jTablePddlOutput.scrollRectToVisible(new Rectangle(jTablePddlOutput.getCellRect(replanFromIndex, 0, true)));
     }
-    
+
 
     private void jTextFieldIndexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldIndexActionPerformed
         setReplanFromIndex(Integer.valueOf(jTextFieldIndex.getText()));
     }//GEN-LAST:event_jTextFieldIndexActionPerformed
 
+    private boolean updatingTraySlotTable = false;
+
     private void updateTraySlotTable() {
         try {
+            updatingTraySlotTable = true;
+            jTableTraySlotDesign.getModel().removeTableModelListener(traySlotModelListener);
             checkDbSupplierPublisher();
             List<TraySlotDesign> designs = pddlActionToCrclGenerator.getAllTraySlotDesigns();
             DefaultTableModel model = (DefaultTableModel) jTableTraySlotDesign.getModel();
             model.setRowCount(0);
-            for(TraySlotDesign d : designs) {
-                model.addRow(new Object[]{d.getID(),d.getPartDesignName(),d.getTrayDesignName(),d.getX_OFFSET(),d.getY_OFFSET()});
+            for (TraySlotDesign d : designs) {
+                model.addRow(new Object[]{d.getID(), d.getPartDesignName(), d.getTrayDesignName(), d.getX_OFFSET(), d.getY_OFFSET()});
             }
         } catch (SQLException | IOException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
+        jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
+        updatingTraySlotTable = false;
     }
     private JPopupMenu traySlotPopup = new JPopupMenu();
-    
+
     {
         JMenuItem updateMenuItem = new JMenuItem("Update");
-        updateMenuItem.addActionListener(e -> { traySlotPopup.setVisible(false); updateTraySlotTable(); });
+        updateMenuItem.addActionListener(e -> {
+            traySlotPopup.setVisible(false);
+            updateTraySlotTable();
+        });
         traySlotPopup.add(updateMenuItem);
     }
-    
+
     private void showTraySlotPopup(Component comp, int x, int y) {
         traySlotPopup.show(comp, x, y);
     }
     private void jTableTraySlotDesignMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableTraySlotDesignMouseClicked
-        if(evt.isPopupTrigger()) {
+        if (evt.isPopupTrigger()) {
             showTraySlotPopup(evt.getComponent(), evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTableTraySlotDesignMouseClicked
 
     private void jTableTraySlotDesignMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableTraySlotDesignMousePressed
-       if(evt.isPopupTrigger()) {
-            showTraySlotPopup(evt.getComponent(),evt.getX(), evt.getY());
+        if (evt.isPopupTrigger()) {
+            showTraySlotPopup(evt.getComponent(), evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTableTraySlotDesignMousePressed
 
     private void jTableTraySlotDesignMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableTraySlotDesignMouseReleased
-        if(evt.isPopupTrigger()) {
-            showTraySlotPopup(evt.getComponent(),evt.getX(), evt.getY());
+        if (evt.isPopupTrigger()) {
+            showTraySlotPopup(evt.getComponent(), evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTableTraySlotDesignMouseReleased
-    
+
     public void setCrclIndexes(int indexes[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < indexes.length; i++) {
@@ -893,7 +943,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         this.autoResizeTableColWidths(jTablePddlOutput);
     }
-    
+
     public void setPddlLabelss(String labels[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < labels.length; i++) {
@@ -906,7 +956,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         this.autoResizeTableColWidths(jTablePddlOutput);
     }
-    
+
     private void generateCrcl() throws IOException {
         checkDbSupplierPublisher();
         Map<String, String> options = getTableOptions();
@@ -939,7 +989,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try {
                 dbSetupPublisher = dbSetupSupplier.call();
                 dbSetupPublisher.addDbSetupListener(this);
-                
+
             } catch (Exception ex) {
                 Logger.getLogger(VisionToDBJPanel.class
                         .getName()).log(Level.SEVERE, null, ex);
@@ -952,11 +1002,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 if (!f.isDone() && !f.isCancelled()) {
                     try {
                         f.get();
-                        
+
                     } catch (InterruptedException ex) {
                         Logger.getLogger(PddlExecutorJPanel.class
                                 .getName()).log(Level.SEVERE, null, ex);
-                        
+
                     } catch (ExecutionException ex) {
                         Logger.getLogger(PddlExecutorJPanel.class
                                 .getName()).log(Level.SEVERE, null, ex);
@@ -967,7 +1017,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             System.err.println("dbSetupPublisher == null");
         }
     }
-    
+
     public Map<String, String> getTableOptions() {
         Map<String, String> options = new HashMap<>();
         TableModel model = jTableOptions.getModel();
@@ -1045,36 +1095,36 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         }
     }
-    
+
     private boolean loadEnabled = false;
-    
+
     @Override
     public boolean isLoadEnabled() {
         return loadEnabled;
     }
-    
+
     @Override
     public void setLoadEnabled(boolean enable) {
         this.jTextFieldPddlOutputActions.setEnabled(enable);
         this.jButtonLoad.setEnabled(enable);
         loadEnabled = enable;
     }
-    
+
     @Override
     public void close() throws Exception {
     }
-    
+
     @Override
     public void accept(DbSetup setup) {
         if (null != pddlActionToCrclGenerator) {
             pddlActionToCrclGenerator.accept(setup);
         }
     }
-    
+
     private boolean needReplan = false;
     private int replanFromIndex = -1;
     private boolean replanStarted = false;
-    
+
     @Override
     public void accept(PendantClientJPanel panel, int line) {
         CRCLStatusType status = panel.getStatus();

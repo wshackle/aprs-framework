@@ -66,6 +66,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return qs.getSingleTraySlotDesign(partDesignName, trayDesignName);
     }
 
+    public void setSingleTraySlotDesign(TraySlotDesign tsd) throws SQLException  {
+        qs.setSingleTraySlotDesign(tsd);
+    }
     public boolean isConnected() {
         try {
             return null != dbConnection && null != qs && !dbConnection.isClosed();
