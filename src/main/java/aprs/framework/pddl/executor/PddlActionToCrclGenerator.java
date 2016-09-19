@@ -332,11 +332,21 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pose = qs.getPose(action.getArgs()[6]);
         pose.setZAxis(vector(0, 0, -1.0));
 
-        List<TraySlotDesign> l = this.getSingleTraySlotDesign(action.getArgs()[2], action.getArgs()[6]);
-        TraySlotDesign tsd = l.get(0);
-        PoseType poseOffset = pose(point(tsd.getX_OFFSET(), tsd.getY_OFFSET(), 0.), vector(1., 0., 0.), vector(0., 0., 1.));
-        PoseType poseWithOffset = CRCLPosemath.multiply(pose, poseOffset);
-        PoseType poseAbove = CRCLPosemath.copy(poseWithOffset);
+        PoseType poseAbove = null;
+        List < TraySlotDesign > l =null;
+        TraySlotDesign tsd  = null;
+        // If the tray has a slot for the appropriate type of part then
+        // get the offset from the database and add the offet. Otherwise we
+        // have to assume the tray contains only one slot and its location
+        // is also the location of where parts should be placed.
+        if (null != (l = this.getSingleTraySlotDesign(action.getArgs()[2], action.getArgs()[6]))
+                && null != (tsd = l.get(0))) { 
+            PoseType poseOffset = pose(point(tsd.getX_OFFSET(), tsd.getY_OFFSET(), 0.), vector(1., 0., 0.), vector(0., 0., 1.));
+            poseAbove = CRCLPosemath.multiply(pose, poseOffset);
+        } else {
+            poseAbove = CRCLPosemath.copy(pose);
+        }
+
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
         MoveToType moveAboveCmd = new MoveToType();
         moveAboveCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
