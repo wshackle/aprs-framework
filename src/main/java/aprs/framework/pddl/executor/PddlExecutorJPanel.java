@@ -160,9 +160,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jLabel2 = new javax.swing.JLabel();
         jCheckBoxReplan = new javax.swing.JCheckBox();
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        jScrollPane2 = new javax.swing.JScrollPane();
+        jScrollPaneOptions = new javax.swing.JScrollPane();
         jTableOptions = new javax.swing.JTable();
-        jScrollPane3 = new javax.swing.JScrollPane();
+        jScrollPaneTraySlotDesign = new javax.swing.JScrollPane();
         jTableTraySlotDesign = new javax.swing.JTable();
 
         jLabel6.setText("Pddl Output Actions");
@@ -306,9 +306,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 return canEdit [columnIndex];
             }
         });
-        jScrollPane2.setViewportView(jTableOptions);
+        jScrollPaneOptions.setViewportView(jTableOptions);
 
-        jTabbedPane1.addTab("Options", jScrollPane2);
+        jTabbedPane1.addTab("Options", jScrollPaneOptions);
 
         jTableTraySlotDesign.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -347,9 +347,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 jTableTraySlotDesignMouseClicked(evt);
             }
         });
-        jScrollPane3.setViewportView(jTableTraySlotDesign);
+        jScrollPaneTraySlotDesign.setViewportView(jTableTraySlotDesign);
 
-        jTabbedPane1.addTab("Tray Slot Desgn", jScrollPane3);
+        jTabbedPane1.addTab("Tray Slot Desgn", jScrollPaneTraySlotDesign);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -901,6 +901,31 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
         updatingTraySlotTable = false;
     }
+    
+    private void newTraySlotTable() {
+        try {
+            updatingTraySlotTable = true;
+            jTableTraySlotDesign.getModel().removeTableModelListener(traySlotModelListener);
+            checkDbSupplierPublisher();
+            TraySlotDesign tsd = new TraySlotDesign((-99)); // ID ignored on new operation
+            tsd.setPartDesignName("partDesignName");
+            tsd.setTrayDesignName("trayDesignName");
+            tsd.setX_OFFSET(0.0);
+            tsd.setY_OFFSET(0.0);
+            pddlActionToCrclGenerator.newSingleTraySlotDesign(tsd);
+            List<TraySlotDesign> designs = pddlActionToCrclGenerator.getAllTraySlotDesigns();
+            DefaultTableModel model = (DefaultTableModel) jTableTraySlotDesign.getModel();
+            model.setRowCount(0);
+            for (TraySlotDesign d : designs) {
+                model.addRow(new Object[]{d.getID(), d.getPartDesignName(), d.getTrayDesignName(), d.getX_OFFSET(), d.getY_OFFSET()});
+            }
+        } catch (SQLException | IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
+        updatingTraySlotTable = false;
+    }
+    
     private JPopupMenu traySlotPopup = new JPopupMenu();
 
     {
@@ -910,6 +935,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             updateTraySlotTable();
         });
         traySlotPopup.add(updateMenuItem);
+        JMenuItem newRowMenuItem = new JMenuItem("New");
+        newRowMenuItem.addActionListener(e -> {
+            traySlotPopup.setVisible(false);
+            newTraySlotTable();
+        });
+        traySlotPopup.add(newRowMenuItem);
     }
 
     private void showTraySlotPopup(Component comp, int x, int y) {
@@ -1045,9 +1076,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPaneOptions;
+    private javax.swing.JScrollPane jScrollPaneTraySlotDesign;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTableCrclProgram;
     private javax.swing.JTable jTableOptions;

@@ -1,0 +1,6 @@
+#params= PART_DESIGN_NAME(1), TRAY_DESIGN_NAME(2),X_SLOT_OFFSET(3),Y_SLOT_OFFSET(4)
+#results=
+insert into SlotDesigns ( PartDesignName, TrayDesignName,  X_OFFSET, Y_OFFSET) 
+values (?,?,?,?)
+
+
