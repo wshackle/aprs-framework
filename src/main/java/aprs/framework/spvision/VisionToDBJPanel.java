@@ -522,7 +522,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
             },
             new String [] {
-                "Position", "Name", "Repeats", "Rotation", "X", "Y", "Score"
+                "Position", "Name", "Repeats", "Rotation", "X", "Y", "Score", "Type"
             }
         ) {
             Class[] types = new Class [] {
@@ -1010,6 +1010,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             tm.setValueAt(ci.x, i, 4);
             tm.setValueAt(ci.y, i, 5);
             tm.setValueAt(ci.score, i, 6);
+	    tm.setValueAt(ci.type, i, 7);
         }
         if (this.jCheckBoxDebug.isSelected()) {
             appendLogDisplay(line + "\r\n");

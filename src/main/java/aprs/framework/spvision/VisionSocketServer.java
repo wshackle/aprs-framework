@@ -127,6 +127,8 @@ public class VisionSocketServer implements AutoCloseable {
                 sb.append(',');
                 sb.append(item.score);
                 sb.append(',');
+                sb.append(item.type);
+                sb.append(',');
             }
         }
         sb.append('\n');

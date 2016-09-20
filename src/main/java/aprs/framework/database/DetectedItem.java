@@ -50,6 +50,8 @@ public class DetectedItem {
     public double vzj = 0;
     public double vzk = 1;
     public double score;
+    public int visioncycle;
+    public String type;
 
     public DetectedItem() {
         score = 100.0;
