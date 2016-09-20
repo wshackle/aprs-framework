@@ -1,6 +1,11 @@
 #params=NAME,
 #results={NAME=name,X=x,Y=y,Z=z,VXI=vxi,VXJ=vxj,VXK=vxk,VZI=vxi,VZJ=vxj,VZK=vxk,}
-MATCH pointpath=(source { name:{1} } ) - [:hasSolidObject_PrimaryLocation]-> (n) -[r2] ->(pose:Pose) -  [r1:hasPose_Point] -> (p:Point),
+#MATCH pointpath=(source { name:{1} } ) - [:hasSolidObject_PrimaryLocation]-> (n) -[r2] ->(pose:Pose) -  [r1:hasPose_Point] -> (p:Point),
+#xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),
+#zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)
+#return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z, xaxis.hasVector_I as vxi,xaxis.hasVector_J as vxj,xaxis.hasVector_K as vxk, zaxis.hasVector_I as vzi,zaxis.hasVector_J as vzj,zaxis.hasVector_K as vzk
+
+MATCH pointpath=(source {name:{1}})<-[:hasSkuObject_Sku]-(object)-[:hasSolidObject_PrimaryLocation]->(n)-[r2]->(pose:Pose)- [r1:hasPose_Point] -> (p:Point),
 xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),
 zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)
-return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z, xaxis.hasVector_I as vxi,xaxis.hasVector_J as vxj,xaxis.hasVector_K as vxk, zaxis.hasVector_I as vzi,zaxis.hasVector_J as vzj,zaxis.hasVector_K as vzk
+return object.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z, xaxis.hasVector_I as vxi,xaxis.hasVector_J as vxj,xaxis.hasVector_K as vxk, zaxis.hasVector_I as vzi,zaxis.hasVector_J as vzj,zaxis.hasVector_K as vzk
