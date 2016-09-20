@@ -40,18 +40,22 @@ import javax.swing.JPanel;
 public class Object2DJPanel extends JPanel {
 
     public static final List<DetectedItem> EXAMPLES_ITEMS_LIST = Arrays.asList(
-            new DetectedItem("part_medium_gear_tray", Math.toRadians(45.0), 250, -250.0),
-            new DetectedItem("part_large_gear_tray", Math.toRadians(0.0), 300, -125.0),
-            new DetectedItem("part_small_gear_tray", Math.toRadians(-45.0), 400, 125.0),
-            new DetectedItem("large_gear_1", Math.toRadians(0.0), 275, -200.0),
-            new DetectedItem("large_gear_2", Math.toRadians(0.0), 350, 60.0),
-            new DetectedItem("medium_gear_1", Math.toRadians(0.0), 275, -100.0),
-            new DetectedItem("medium_gear_2", Math.toRadians(0.0), 375, 85.0),
-            new DetectedItem("small_gear_1", Math.toRadians(0.0), 275, -75.0),
-            new DetectedItem("small_gear_2", Math.toRadians(0.0), 380, 115.0),
-            new DetectedItem("kit_tray_a", Math.toRadians(-45.0), 600, 125.0),
-            new DetectedItem("kit_tray_b", Math.toRadians(0.0), 600, 0.0),
-            new DetectedItem("kit_tray_c", Math.toRadians(45.0), 650, -200.0)
+            // DetectedItem(String name, double rotation, double x, double y, double score, String type)
+            new DetectedItem("sku_part_medium_gear",0.10,700.45,-140.82,0.99,"P"),
+            new DetectedItem("sku_part_medium_gear",0.79,528.60,-122.51,0.95,"P"),
+            new DetectedItem("sku_part_medium_gear",-0.60,529.98,213.96,0.94,"P"),
+            new DetectedItem("sku_part_medium_gear",-0.02,527.61,-205.06,0.91,"P"),
+            new DetectedItem("sku_part_medium_gear",-0.75,216.66,128.56,0.91,"P"),
+            new DetectedItem("sku_part_small_gear",0.53,509.01,-11.83,0.95,"P"),
+            new DetectedItem("sku_part_small_gear",-0.23,640.49,32.88,0.89,"P"),
+            new DetectedItem("sku_part_small_gear",-0.23,640.49,32.88,0.89,"P"),
+            new DetectedItem("sku_part_small_gear",-0.07,310.04,-102.02,0.65,"P"),
+            new DetectedItem("sku_part_small_gear",-0.31,321.38,177.59,0.61,"P"),
+            new DetectedItem("sku_kit_s2l2_vessel",-0.02,295.65,-296.90,0.80,"KT"),
+            new DetectedItem("sku_kit_s2l2_vessel",0.01,310.90,-20.87,0.73,"KT"),
+            new DetectedItem("sku_small_gear_vessel",-0.03,609.22,5.09,0.95,"PT"),
+            new DetectedItem("sku_medium_gear_vessel",0.00,569.17,-161.29,0.67,"PT"),
+            new DetectedItem("sku_kit_m2l1_vessel",-1.57,579.86,170.14,0.96,"KT")
     );
     private List<DetectedItem> items = EXAMPLES_ITEMS_LIST;
 

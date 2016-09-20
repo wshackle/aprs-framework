@@ -57,6 +57,7 @@ public class DetectedItem {
         score = 100.0;
     }
 
+    
     public DetectedItem(String name, double rotation, double x, double y) {
         this.name = name;
         this.rotation = rotation;
@@ -67,6 +68,17 @@ public class DetectedItem {
         this.score = 100.0;
     }
 
+    public DetectedItem(String name, double rotation, double x, double y, double score, String type) {
+        this.name = name;
+        this.rotation = rotation;
+        this.vxi = Math.cos(rotation);
+        this.vxj = Math.sin(rotation);
+        this.x = x;
+        this.y = y;
+        this.score = score;
+        this.type = type;
+    }
+    
     public DetectedItem(String name, PoseType pose) {
         this.name = name;
         if (null != pose) {
@@ -99,7 +111,7 @@ public class DetectedItem {
 
     @Override
     public String toString() {
-        return "DetectedItem{" + "name=" + name + ", fullName=" + fullName + ", repeats=" + repeats + ", index=" + index + ", rotation=" + rotation + ", x=" + x + ", y=" + y + ", z=" + z + ", vxi=" + vxi + ", vxj=" + vxj + ", vxk=" + vxk + ", vzi=" + vzi + ", vzj=" + vzj + ", vzk=" + vzk + ", score=" + score + '}';
+        return "DetectedItem{" + "name=" + name + ", fullName=" + fullName + ", repeats=" + repeats + ", index=" + index + ", rotation=" + rotation + ", x=" + x + ", y=" + y + ", z=" + z + ", vxi=" + vxi + ", vxj=" + vxj + ", vxk=" + vxk + ", vzi=" + vzi + ", vzj=" + vzj + ", vzk=" + vzk + ", score=" + score + ", type=" + type + '}';
     }
 
 }

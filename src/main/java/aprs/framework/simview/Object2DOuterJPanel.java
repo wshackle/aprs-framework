@@ -82,6 +82,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             model.setValueAt(item.x, i, 1);
             model.setValueAt(item.y, i, 2);
             model.setValueAt(Math.toDegrees(item.rotation), i, 3);
+            model.setValueAt(item.type, i, 4);
         }
     }
 
@@ -203,19 +204,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             .addGap(0, 0, Short.MAX_VALUE)
         );
 
+        jTable1.setAutoCreateRowSorter(true);
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null}
             },
             new String [] {
-                "Name", "X", "Y", "Rotation"
+                "Name", "X", "Y", "Rotation", "Type"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
