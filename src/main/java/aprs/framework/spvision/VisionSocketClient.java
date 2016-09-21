@@ -31,6 +31,7 @@ import crcl.utils.CRCLPosemath;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -201,14 +202,16 @@ public class VisionSocketClient implements AutoCloseable {
 
     public static List<DetectedItem> lineToList(String line, List<DetectedItem> listIn, final VisionToDBJFrameInterface displayInterface) {
         List<DetectedItem> listOut = listIn;
+        String fa[]=null;
+        int i=0;
         try {
             if (null == listOut) {
                 listOut = new ArrayList<>();
             }
-            String fa[] = line.split(",");
+            fa = line.split(",");
             Map<String, Integer> repeatsMap = new HashMap<String, Integer>();
             int index = 0;
-            for (int i = 0; i < fa.length - 5; i += 6) {
+            for (i = 0; i < fa.length - 5; i += 6) {
                 DetectedItem ci = (listOut.size() > index) ? listOut.get(index) : new DetectedItem();
                 if (fa[i].length() < 1) {
                     continue;
@@ -279,6 +282,8 @@ public class VisionSocketClient implements AutoCloseable {
             }
         } catch (Exception exception) {
 
+            System.out.println("i = " + i);
+            System.out.println("fa = " + Arrays.toString(fa));
             String msg = "Failed to parse line \"" + line + "\" : " + exception.getMessage() + System.lineSeparator();
             if (null != displayInterface) {
                 displayInterface.addLogMessage(msg);
