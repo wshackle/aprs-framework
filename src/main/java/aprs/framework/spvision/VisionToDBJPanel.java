@@ -699,8 +699,21 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonDisconnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDisconnectVisionActionPerformed
+        stopVisionStartThread();
         Main.closeVision();
     }//GEN-LAST:event_jButtonDisconnectVisionActionPerformed
+
+    private void stopVisionStartThread() {
+        if (null != startVisionThread) {
+            startVisionThread.interrupt();
+            try {
+                startVisionThread.join(100);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            startVisionThread = null;
+        }
+    }
 
     private volatile boolean updatingFromArgs = false;
 
@@ -1010,7 +1023,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             tm.setValueAt(ci.x, i, 4);
             tm.setValueAt(ci.y, i, 5);
             tm.setValueAt(ci.score, i, 6);
-	    tm.setValueAt(ci.type, i, 7);
+            tm.setValueAt(ci.type, i, 7);
         }
         if (this.jCheckBoxDebug.isSelected()) {
             appendLogDisplay(line + "\r\n");
@@ -1172,22 +1185,39 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
     public static final String ADD_REPEAT_COUNTS_TO_DATABASE_NAMES = "AddRepeatCountsToDatabaseNames";
 
+    private Thread startVisionThread = null;
+
+    private void startVisionInternal(Map<String, String> argsMap) {
+        Main.startVision(argsMap);
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+            finishConnectVision();
+        } else {
+            javax.swing.SwingUtilities.invokeLater(this::finishConnectVision);
+        }
+    }
+
     public void connectVision() {
         try {
             Map<String, String> argsMap = Main.getArgsMap();
             argsMap.put("--visionhost", this.jTextFieldVisionHost.getText());
             argsMap.put("--visionport", this.jTextFieldVisionPort.getText());
-            Main.startVision(argsMap);
-            VisionSocketClient visionClient = Main.getVisionSocketClient();
-            if (null != visionClient) {
-                visionClient.setDebug(this.jCheckBoxDebug.isSelected());
-                visionClient.setAddRepeatCountsToDatabaseNames(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
-            }
-            saveProperties();
-            updateTransformFromTable();
+            stopVisionStartThread();
+            startVisionThread = new Thread(() -> startVisionInternal(argsMap), "startVisionThread");
+            startVisionThread.setDaemon(true);
+            startVisionThread.start();
         } catch (Exception exception) {
             addLogMessage(exception);
         }
+    }
+
+    private void finishConnectVision() {
+        VisionSocketClient visionClient = Main.getVisionSocketClient();
+        if (null != visionClient) {
+            visionClient.setDebug(this.jCheckBoxDebug.isSelected());
+            visionClient.setAddRepeatCountsToDatabaseNames(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+        }
+        saveProperties();
+        updateTransformFromTable();
     }
 
     private void jButtonConnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectVisionActionPerformed
@@ -1306,10 +1336,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }//GEN-LAST:event_jButtonUpdateResultDetailsActionPerformed
 
     private JPopupMenu popMenu = new JPopupMenu();
+
     {
         JMenuItem copyMenuItem = new JMenuItem("Copy");
         copyMenuItem.addActionListener(e -> copyText());
     }
+
     private void copyText() {
         this.jTextAreaLog.getTransferHandler().exportToClipboard(this.jTextAreaLog,
                 Toolkit.getDefaultToolkit().getSystemClipboard(),
@@ -1329,13 +1361,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void jTextAreaLogMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextAreaLogMousePressed
         if (evt.isPopupTrigger()) {
-            showPopup(evt.getComponent(),evt.getX(), evt.getY());
+            showPopup(evt.getComponent(), evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTextAreaLogMousePressed
 
     private void jTextAreaLogMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextAreaLogMouseReleased
         if (evt.isPopupTrigger()) {
-            showPopup(evt.getComponent(),evt.getX(), evt.getY());
+            showPopup(evt.getComponent(), evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTextAreaLogMouseReleased
 

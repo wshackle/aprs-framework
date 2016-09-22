@@ -249,6 +249,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private String mergeStatementString;
 
     private void setupStatements() throws SQLException {
+        if(null == queriesMap) {
+            throw new IllegalStateException("queriesMap == null");
+        }
         switch (dbtype) {
             case MYSQL:
                 useBatch = true;

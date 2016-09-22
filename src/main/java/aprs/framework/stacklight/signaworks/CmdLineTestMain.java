@@ -23,12 +23,8 @@
 package aprs.framework.stacklight.signaworks;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.util.Arrays;
 
 /**
@@ -68,7 +64,7 @@ public class CmdLineTestMain {
         writereqbuf[7] = 0; // SOUND 0=off , 1-5 different sout
         writereqbuf[8] = 0; // Spare
         writereqbuf[9] = 0; // Spare
-        
+
         socket.getOutputStream().write(writereqbuf);
         System.out.println("socket.getOutputStream().write(" + Arrays.toString(writereqbuf) + ") returned.");
 

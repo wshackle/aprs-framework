@@ -28,8 +28,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 
 /**
@@ -96,7 +98,8 @@ public class SocketLineReader {
             SocketLineReader.CallBack _cb) throws IOException {
         cb = _cb;
         if (isClient) {
-            s = new Socket(host, port);
+            s = new Socket();
+            s.connect(new InetSocketAddress(host, port), 500);
             s.setReuseAddress(true);
             br = new BufferedReader(new InputStreamReader(s.getInputStream()));
             ps = new PrintStream(s.getOutputStream());
