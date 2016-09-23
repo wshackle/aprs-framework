@@ -252,6 +252,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
         if(null == queriesMap) {
             throw new IllegalStateException("queriesMap == null");
         }
+        if(null == queriesMap.get(DbQueryEnum.SET_SINGLE_POSE)) {
+            throw new IllegalStateException("queriesMap.get(DbQueryEnum.SET_SINGLE_POSE) == null");
+        }
         switch (dbtype) {
             case MYSQL:
                 useBatch = true;

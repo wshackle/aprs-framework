@@ -34,6 +34,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -659,7 +660,11 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             loadQueriesMapInternal(queriesMap);
         } else {
-            javax.swing.SwingUtilities.invokeLater(() -> loadQueriesMapInternal(queriesMap));
+            try {
+                javax.swing.SwingUtilities.invokeAndWait(() -> loadQueriesMapInternal(queriesMap));
+            } catch (InterruptedException | InvocationTargetException ex) {
+                Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -748,9 +753,25 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         });
     }
 
-    public Map<DbQueryEnum, DbQueryInfo> getQueriesMap() {
-        DefaultTableModel model = (DefaultTableModel) jTableQueries.getModel();
+    private Map<DbQueryEnum, DbQueryInfo> map = null;
+    public  Map<DbQueryEnum, DbQueryInfo> getQueriesMap() {
+        if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+            map =  getQueriesMapInternal();
+        } else {
+            try {
+                javax.swing.SwingUtilities.invokeAndWait(() -> {
+                    map = getQueriesMapInternal();
+                });
+            } catch (InterruptedException | InvocationTargetException ex) {
+                Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return map;
+    }
+    
+    private Map<DbQueryEnum, DbQueryInfo> getQueriesMapInternal() {
         Map<DbQueryEnum, DbQueryInfo> map = new EnumMap<>(DbQueryEnum.class);
+        DefaultTableModel model = (DefaultTableModel) jTableQueries.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
             Object keyObject = model.getValueAt(i, 0);
             if (null == keyObject) {
