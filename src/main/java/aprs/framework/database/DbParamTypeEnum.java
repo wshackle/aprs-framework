@@ -33,5 +33,5 @@ public enum DbParamTypeEnum {
     TRAY_DESIGN_NAME,
     X_SLOT_OFFSET,
     Y_SLOT_OFFSET,
-    VISIONCYCLE;;
+    VISIONCYCLE;
 }

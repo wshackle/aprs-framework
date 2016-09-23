@@ -162,6 +162,7 @@ public class VisionSocketClient implements AutoCloseable {
 
                             @Override
                             public void run() {
+                                //System.out.println("visioncycle="+visioncycle);
                                 parseVisionLine(line);
                                 if (null != lastSkippedLine) {
                                     String skippedLine = lastSkippedLine;
@@ -169,6 +170,7 @@ public class VisionSocketClient implements AutoCloseable {
                                     parseVisionLine(skippedLine);
                                 }
                                 parsing_line = null;
+                                visioncycle++;
                             }
                         });
                     } else {
@@ -255,6 +257,7 @@ public class VisionSocketClient implements AutoCloseable {
                 }
                 
                 ci.visioncycle = visioncycle;
+                //System.out.println("VisionSocketClient visioncycle: "+visioncycle);
                 
                 if (fa[i + 4].length() > 0) {
 

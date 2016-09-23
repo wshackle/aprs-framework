@@ -1085,6 +1085,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     params.add(item.vzk);
                     stmnt.setDouble(index, item.vzk);
                     break;
+                
+                case VISIONCYCLE:
+                    params.add(item.visioncycle);
+                    stmnt.setInt(index, item.visioncycle);
+                    break;
 
                 default:
                     params.add(null);
