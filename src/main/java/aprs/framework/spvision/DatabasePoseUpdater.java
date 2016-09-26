@@ -292,6 +292,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                mergeStatementString = NEO4J_MERGE_STATEMENT_STRING;
 //                queryAllString = NEO4J_QUERY_ALL_POSES_QUERY_STRING;
                 mergeStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
+                //System.out.println("mergeStatementString ---> "+mergeStatementString);
                 queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
                 update_statement = con.prepareStatement(mergeStatementString);
 

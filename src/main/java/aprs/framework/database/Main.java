@@ -139,7 +139,7 @@ public class Main {
                 @Override
                 public void run() {
                     updating_pose_query = true;
-                    System.out.println("----> updating_pose_query is true");
+                    //System.out.println("----> updating_pose_query is true");
                     final List<PoseQueryElem> l = dup.getDirectPoseList();
                     if (null != l) {
                         java.awt.EventQueue.invokeLater(new Runnable() {

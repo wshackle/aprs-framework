@@ -520,6 +520,7 @@ public class QuerySet implements QuerySetInterface {
         setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value.doubleValue(), map);
     }
 
+    //TODO-
     @Override
     public void setPose(String name, PoseType pose) throws SQLException {
         if (closed) {

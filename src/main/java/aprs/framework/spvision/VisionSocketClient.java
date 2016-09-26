@@ -120,7 +120,7 @@ public class VisionSocketClient implements AutoCloseable {
         for (int i = 0; i < in.size(); i++) {
             DetectedItem inItem = in.get(i);
             PoseType newPose = CRCLPosemath.multiply(transform, inItem.toCrclPose());
-            DetectedItem outItem = new DetectedItem(inItem.name, newPose);
+            DetectedItem outItem = new DetectedItem(inItem.name, newPose, visioncycle);
             outItem.repeats = inItem.repeats;
             outItem.index = inItem.index;
             outItem.fullName = inItem.fullName;
@@ -257,7 +257,7 @@ public class VisionSocketClient implements AutoCloseable {
                 }
                 
                 ci.visioncycle = visioncycle;
-                //System.out.println("VisionSocketClient visioncycle: "+visioncycle);
+                //System.out.println("VisionSocketClient visioncycle-----> "+visioncycle);
                 
                 if (fa[i + 4].length() > 0) {
 

@@ -33,6 +33,7 @@ import static crcl.utils.CRCLPosemath.vector;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+//TODO-zeid
 public class DetectedItem {
 
     public String name;
@@ -79,7 +80,7 @@ public class DetectedItem {
         this.type = type;
     }
     
-    public DetectedItem(String name, PoseType pose) {
+    public DetectedItem(String name, PoseType pose, int visioncycle) {
         this.name = name;
         if (null != pose) {
             VectorType xAxis = pose.getXAxis();
@@ -103,6 +104,7 @@ public class DetectedItem {
             }
         }
         this.score = 100.0;
+        this.visioncycle = visioncycle;
     }
 
     public PoseType toCrclPose() {

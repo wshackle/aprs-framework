@@ -1,3 +1,36 @@
 #params=NAME{1}, X{2}, Y{3}, Z{4}, VXI{5},VXJ{6},VXK{7},VZI{8},VZJ{9},VZK{10}, VISIONCYCLE{11}
 #results=
-MATCH pointpath=(source {name:{1}})<-[:hasSkuObject_Sku]-(object) WHERE object.visioncycle={11} RETURN object.name
+MATCH (n{name:{1}})<-[:hasSkuObject_Sku]-(object)-[:hasSolidObject_PrimaryLocation]->(n)-[r2]->(pose:Pose)- [r1:hasPose_Point] -> (point:Point),
+xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),
+zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)
+FOREACH(ignoreMe IN CASE WHEN object.visioncycle=0 THEN [1] ELSE [] END | 
+SET object.visioncycle=1, 
+point.hasPoint_X= {2},
+point.hasPoint_Y= {3},
+point.hasPoint_Z= {4}, 
+xaxis.hasVector_I={5}, 
+xaxis.hasVector_J={6}, 
+xaxis.hasVector_K={7}, 
+zaxis.hasVector_I={8}, 
+zaxis.hasVector_J={9}, 
+zaxis.hasVector_K={10})
+
+FOREACH(ignoreMe IN CASE WHEN (object.visioncycle>0 
+ AND object.visioncycle<>{11} 
+ AND point.hasPoint_X<{2} + 1
+ AND point.hasPoint_X>{2} - 1
+ AND point.hasPoint_Y<{3} + 1
+ AND point.hasPoint_Y>{3} - 1) 
+THEN [1] ELSE [] END | 
+SET object.visioncycle={11}, 
+point.hasPoint_X= {2},
+point.hasPoint_Y= {3},
+point.hasPoint_Z= {4}, 
+xaxis.hasVector_I={5}, 
+xaxis.hasVector_J={6}, 
+xaxis.hasVector_K={7}, 
+zaxis.hasVector_I={8}, 
+zaxis.hasVector_J={9}, 
+zaxis.hasVector_K={10})
+
+RETURN object.hasPoint_X, object.hasPoint_Y, object.hasPoint_Z
