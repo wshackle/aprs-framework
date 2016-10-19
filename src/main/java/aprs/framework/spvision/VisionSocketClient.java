@@ -202,6 +202,7 @@ public class VisionSocketClient implements AutoCloseable {
         return lineToList(line, null, null);
     }
 
+    
     public static List<DetectedItem> lineToList(String line, List<DetectedItem> listIn, final VisionToDBJFrameInterface displayInterface) {
         List<DetectedItem> listOut = listIn;
         String fa[]=null;
@@ -336,6 +337,8 @@ public class VisionSocketClient implements AutoCloseable {
         if (debug) {
             long t1 = System.nanoTime();
             long time_diff = t1 - t0;
+            System.out.println("line = " + line);
+            System.out.println("visionList = " + visionList);
             System.out.printf("parseVisionLine time_diff = %.3f\n", (time_diff * 1e-9));
         }
     }

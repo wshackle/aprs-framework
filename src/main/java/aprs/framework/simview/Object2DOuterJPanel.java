@@ -37,10 +37,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTable;
+import javax.swing.RowSorter;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
@@ -91,6 +93,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             model.setValueAt(item.type, i, 4);
         }
         autoResizeTableColWidths(jTable1);
+        RowSorter rowSorter = jTable1.getRowSorter();
+        
+        if(null != rowSorter) {
+            rowSorter.allRowsChanged();
+//            List<RowSorter.SortKey> keys = rowSorter.getSortKeys();
+//            for(RowSorter.SortKey k : keys) {
+//                rowSorter.toggleSortOrder(k.getColumn());
+//                rowSorter.toggleSortOrder(k.getColumn());
+//                break;
+//            }
+        }
     }
 
     /**
@@ -186,6 +199,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jLabel3 = new javax.swing.JLabel();
         jTextFieldMaxXMaxY = new javax.swing.JTextField();
         jButtonReset = new javax.swing.JButton();
+        jCheckBoxShowRotations = new javax.swing.JCheckBox();
 
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
@@ -293,7 +307,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addComponent(jCheckBoxConnected)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxDebug)
-                        .addGap(0, 69, Short.MAX_VALUE))
+                        .addGap(0, 85, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -347,6 +361,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jCheckBoxShowRotations.setText("Show Rotations");
+        jCheckBoxShowRotations.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxShowRotationsActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -355,10 +376,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(jCheckBoxShowRotations)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(layout.createSequentialGroup()
@@ -397,7 +421,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jButtonDelete)
                             .addComponent(jButtonAdd)
-                            .addComponent(jButtonReset))
+                            .addComponent(jButtonReset)
+                            .addComponent(jCheckBoxShowRotations))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
@@ -522,6 +547,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 argsMap.put("--visionhost", jTextFieldHost.getText());
                 visionSocketClient.start(argsMap);
             }
+            visionSocketClient.setDebug(this.jCheckBoxDebug.isSelected());
             visionSocketClient.addListener(this);
         }
     }
@@ -613,11 +639,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
        if(null != visionSocketServer) {
            visionSocketServer.setDebug(this.jCheckBoxDebug.isSelected());
        }
+       if(null != visionSocketClient) {
+           visionSocketClient.setDebug(this.jCheckBoxDebug.isSelected());
+       }
     }//GEN-LAST:event_jCheckBoxDebugActionPerformed
 
     private void jButtonResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonResetActionPerformed
        this.setItems(Object2DJPanel.EXAMPLES_ITEMS_LIST);
     }//GEN-LAST:event_jButtonResetActionPerformed
+
+    private void jCheckBoxShowRotationsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowRotationsActionPerformed
+        object2DJPanel1.setViewRotations(this.jCheckBoxShowRotations.isSelected());
+    }//GEN-LAST:event_jCheckBoxShowRotationsActionPerformed
 
     public void setMinXMinYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
@@ -638,6 +671,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JButton jButtonReset;
     private javax.swing.JCheckBox jCheckBoxConnected;
     private javax.swing.JCheckBox jCheckBoxDebug;
+    private javax.swing.JCheckBox jCheckBoxShowRotations;
     private javax.swing.JCheckBox jCheckBoxSimulated;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

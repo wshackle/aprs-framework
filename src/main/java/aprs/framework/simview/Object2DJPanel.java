@@ -41,21 +41,21 @@ public class Object2DJPanel extends JPanel {
 
     public static final List<DetectedItem> EXAMPLES_ITEMS_LIST = Arrays.asList(
             // DetectedItem(String name, double rotation, double x, double y, double score, String type)
-            new DetectedItem("sku_part_medium_gear",0.10,700.45,-140.82,0.99,"P"),
-            new DetectedItem("sku_part_medium_gear",0.79,528.60,-122.51,0.95,"P"),
-            new DetectedItem("sku_part_medium_gear",-0.60,529.98,213.96,0.94,"P"),
-            new DetectedItem("sku_part_medium_gear",-0.02,527.61,-205.06,0.91,"P"),
-            new DetectedItem("sku_part_medium_gear",-0.75,216.66,128.56,0.91,"P"),
-            new DetectedItem("sku_part_small_gear",0.53,509.01,-11.83,0.95,"P"),
-            new DetectedItem("sku_part_small_gear",-0.23,640.49,32.88,0.89,"P"),
-            new DetectedItem("sku_part_small_gear",-0.23,640.49,32.88,0.89,"P"),
-            new DetectedItem("sku_part_small_gear",-0.07,310.04,-102.02,0.65,"P"),
-            new DetectedItem("sku_part_small_gear",-0.31,321.38,177.59,0.61,"P"),
-            new DetectedItem("sku_kit_s2l2_vessel",-0.02,295.65,-296.90,0.80,"KT"),
-            new DetectedItem("sku_kit_s2l2_vessel",0.01,310.90,-20.87,0.73,"KT"),
-            new DetectedItem("sku_small_gear_vessel",-0.03,609.22,5.09,0.95,"PT"),
-            new DetectedItem("sku_medium_gear_vessel",0.00,569.17,-161.29,0.67,"PT"),
-            new DetectedItem("sku_kit_m2l1_vessel",-1.57,579.86,170.14,0.96,"KT")
+            new DetectedItem("sku_part_medium_gear", 0.10, 700.45, -140.82, 0.99, "P"),
+            new DetectedItem("sku_part_medium_gear", 0.79, 528.60, -122.51, 0.95, "P"),
+            new DetectedItem("sku_part_medium_gear", -0.60, 529.98, 213.96, 0.94, "P"),
+            new DetectedItem("sku_part_medium_gear", -0.02, 527.61, -205.06, 0.91, "P"),
+            new DetectedItem("sku_part_medium_gear", -0.75, 216.66, 128.56, 0.91, "P"),
+            new DetectedItem("sku_part_small_gear", 0.53, 509.01, -11.83, 0.95, "P"),
+            new DetectedItem("sku_part_small_gear", -0.23, 640.49, 32.88, 0.89, "P"),
+            new DetectedItem("sku_part_small_gear", -0.23, 640.49, 32.88, 0.89, "P"),
+            new DetectedItem("sku_part_small_gear", -0.07, 310.04, -102.02, 0.65, "P"),
+            new DetectedItem("sku_part_small_gear", -0.31, 321.38, 177.59, 0.61, "P"),
+            new DetectedItem("sku_kit_s2l2_vessel", -0.02, 295.65, -296.90, 0.80, "KT"),
+            new DetectedItem("sku_kit_s2l2_vessel", 0.01, 310.90, -20.87, 0.73, "KT"),
+            new DetectedItem("sku_small_gear_vessel", -0.03, 609.22, 5.09, 0.95, "PT"),
+            new DetectedItem("sku_medium_gear_vessel", 0.00, 569.17, -161.29, 0.67, "PT"),
+            new DetectedItem("sku_kit_m2l1_vessel", -1.57, 579.86, 170.14, 0.96, "KT")
     );
     private List<DetectedItem> items = EXAMPLES_ITEMS_LIST;
 
@@ -73,6 +73,26 @@ public class Object2DJPanel extends JPanel {
      */
     public int getSelectedItemIndex() {
         return selectedItemIndex;
+    }
+
+    private boolean viewRotations;
+
+    /**
+     * Get the value of viewRotations
+     *
+     * @return the value of viewRotations
+     */
+    public boolean isViewRotations() {
+        return viewRotations;
+    }
+
+    /**
+     * Set the value of viewRotations
+     *
+     * @param viewRotations new value of viewRotations
+     */
+    public void setViewRotations(boolean viewRotations) {
+        this.viewRotations = viewRotations;
     }
 
     /**
@@ -167,7 +187,7 @@ public class Object2DJPanel extends JPanel {
 //            minX = min_x;
 //            maxY = max_y;
 //            minY = min_y;
-            g2d.drawString("Limits not set",0,0);
+            g2d.drawString("Limits not set", 0, 0);
             return;
         }
         double scale_x = (this.getSize().width - 30) / (max_x - min_x);
@@ -203,7 +223,9 @@ public class Object2DJPanel extends JPanel {
                 continue;
             }
             g2d.translate((item.x - min_x) * scale + 15, (max_y - item.y) * scale + 20);
-            g2d.rotate(item.rotation);
+            if (viewRotations) {
+                g2d.rotate(item.rotation);
+            }
             g2d.drawString(item.name, 0, 0);
             g2d.draw(new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20));
             g2d.setTransform(origTransform);
