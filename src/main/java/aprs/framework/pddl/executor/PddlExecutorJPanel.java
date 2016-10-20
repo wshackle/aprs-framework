@@ -163,6 +163,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTableOptions = new javax.swing.JTable();
         jScrollPaneTraySlotDesign = new javax.swing.JScrollPane();
         jTableTraySlotDesign = new javax.swing.JTable();
+        jPanel1 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jTextFieldManualObjectName = new javax.swing.JTextField();
+        jButtonTake = new javax.swing.JButton();
+        jButtonLookFor = new javax.swing.JButton();
+        jButtonReturn = new javax.swing.JButton();
+        jTextFieldTakeCount = new javax.swing.JTextField();
+        jTextFieldLookForCount = new javax.swing.JTextField();
+        jTextFieldReturnCount = new javax.swing.JTextField();
         jButtonClear = new javax.swing.JButton();
 
         jLabel6.setText("Pddl Output Actions");
@@ -351,6 +360,86 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         jTabbedPane1.addTab("Tray Slot Desgn", jScrollPaneTraySlotDesign);
 
+        jLabel1.setText("Object:");
+
+        jTextFieldManualObjectName.setText("sku_part_large_gear");
+        jTextFieldManualObjectName.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldManualObjectNameActionPerformed(evt);
+            }
+        });
+
+        jButtonTake.setText("Take");
+        jButtonTake.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonTakeActionPerformed(evt);
+            }
+        });
+
+        jButtonLookFor.setText("Look-For");
+        jButtonLookFor.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLookForActionPerformed(evt);
+            }
+        });
+
+        jButtonReturn.setText("Return");
+        jButtonReturn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonReturnActionPerformed(evt);
+            }
+        });
+
+        jTextFieldTakeCount.setEditable(false);
+        jTextFieldTakeCount.setText("0   ");
+
+        jTextFieldLookForCount.setEditable(false);
+        jTextFieldLookForCount.setText("0   ");
+
+        jTextFieldReturnCount.setEditable(false);
+        jTextFieldReturnCount.setText("0   ");
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTextFieldManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonTake)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTextFieldTakeCount, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonLookFor)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTextFieldLookForCount, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonReturn)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTextFieldReturnCount, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(161, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(jTextFieldManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonTake)
+                    .addComponent(jButtonLookFor)
+                    .addComponent(jButtonReturn)
+                    .addComponent(jTextFieldTakeCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jTextFieldLookForCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jTextFieldReturnCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(83, Short.MAX_VALUE))
+        );
+
+        jTabbedPane1.addTab("Manual Pickup Return", jPanel1);
+
         jButtonClear.setText("Clear");
         jButtonClear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -366,7 +455,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1)
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jScrollPane4)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel6)
@@ -912,7 +1001,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
         updatingTraySlotTable = false;
     }
-    
+
     private void newTraySlotTable() {
         try {
             updatingTraySlotTable = true;
@@ -936,7 +1025,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
         updatingTraySlotTable = false;
     }
-    
+
     private JPopupMenu traySlotPopup = new JPopupMenu();
 
     {
@@ -976,10 +1065,53 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jTableTraySlotDesignMouseReleased
 
     private void jButtonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearActionPerformed
+        clearAll();
+    }//GEN-LAST:event_jButtonClearActionPerformed
+
+    public void clearAll() {
         this.setActionsList(new ArrayList<>());
         DefaultTableModel model = (DefaultTableModel) jTableCrclProgram.getModel();
         model.setRowCount(0);
-    }//GEN-LAST:event_jButtonClearActionPerformed
+        replanFromIndex = 0;
+        jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+    }
+
+    private int takePartCount = 0;
+    private void jButtonTakeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonTakeActionPerformed
+        try {
+            takePartCount++;
+            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
+            this.takePart(jTextFieldManualObjectName.getText());
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonTakeActionPerformed
+
+    private int lookForCount = 0;
+    private void jButtonLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLookForActionPerformed
+        try {
+            lookForCount++;
+            this.jTextFieldLookForCount.setText(Integer.toString(lookForCount));
+            this.lookFor(jTextFieldManualObjectName.getText());
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonLookForActionPerformed
+
+    private int returnCount = 0;
+    private void jButtonReturnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonReturnActionPerformed
+        try {
+            returnCount++;
+            this.jTextFieldReturnCount.setText(Integer.toString(returnCount));
+            this.returnPart(jTextFieldManualObjectName.getText());
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonReturnActionPerformed
+
+    private void jTextFieldManualObjectNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldManualObjectNameActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jTextFieldManualObjectNameActionPerformed
 
     public void setCrclIndexes(int indexes[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
@@ -1032,8 +1164,93 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         replanStarted = false;
     }
 
+    public void takePart(String part) throws IOException {
+        clearAll();
+        Map<String, String> options = getTableOptions();
+        replanFromIndex = 0;
+        List<PddlAction> takePartActionsList = new ArrayList<>();
+        PddlAction takePartAction = new PddlAction("", "take-part",
+                new String[]{"", part}, "cost");
+        takePartActionsList.add(takePartAction);
+        List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(takePartActionsList, this.replanFromIndex, options);
+        int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
+        indexes = Arrays.copyOf(indexes, indexes.length);
+        setCrclIndexes(indexes);
+        setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
+        CRCLProgramType program = createEmptyProgram();
+        if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
+            jCheckBoxReplan.setSelected(true);
+            setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
+        } else {
+            jCheckBoxReplan.setSelected(false);
+            setReplanFromIndex(0);
+        }
+        jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+        program.getMiddleCommand().clear();
+        program.getMiddleCommand().addAll(cmds);
+        program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        setCrclProgram(program);
+        replanStarted = false;
+    }
+
+    public void returnPart(String part) throws IOException {
+        clearAll();
+        Map<String, String> options = getTableOptions();
+        replanFromIndex = 0;
+        List<MiddleCommandType> cmds = new ArrayList<>();
+        pddlActionToCrclGenerator.setOptions(options);
+        pddlActionToCrclGenerator.returnPart(part, cmds);
+        int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
+        indexes = Arrays.copyOf(indexes, indexes.length);
+        setCrclIndexes(indexes);
+        setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
+        CRCLProgramType program = createEmptyProgram();
+        if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
+            jCheckBoxReplan.setSelected(true);
+            setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
+        } else {
+            jCheckBoxReplan.setSelected(false);
+            setReplanFromIndex(0);
+        }
+        jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+        program.getMiddleCommand().clear();
+        program.getMiddleCommand().addAll(cmds);
+        program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        setCrclProgram(program);
+        replanStarted = false;
+    }
+
+    public void lookFor(String part) throws IOException {
+        clearAll();
+        Map<String, String> options = getTableOptions();
+        replanFromIndex = 0;
+        List<PddlAction> lookForActionsList = new ArrayList<>();
+        PddlAction takePartAction = new PddlAction("", "look-for-part",
+                new String[]{"", part}, "cost");
+        lookForActionsList.add(takePartAction);
+        List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(lookForActionsList, this.replanFromIndex, options);
+        int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
+        indexes = Arrays.copyOf(indexes, indexes.length);
+        setCrclIndexes(indexes);
+        setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
+        CRCLProgramType program = createEmptyProgram();
+        if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
+            jCheckBoxReplan.setSelected(true);
+            setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
+        } else {
+            jCheckBoxReplan.setSelected(false);
+            setReplanFromIndex(0);
+        }
+        jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+        program.getMiddleCommand().clear();
+        program.getMiddleCommand().addAll(cmds);
+        program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        setCrclProgram(program);
+        replanStarted = false;
+    }
+
     private void checkDbSupplierPublisher() throws IOException {
-        if(null != this.pddlActionToCrclGenerator && pddlActionToCrclGenerator.isConnected()) {
+        if (null != this.pddlActionToCrclGenerator && pddlActionToCrclGenerator.isConnected()) {
             return;
         }
         if (null != dbSetupSupplier) {
@@ -1089,13 +1306,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonGenerateCRCL;
     private javax.swing.JButton jButtonLoad;
     private javax.swing.JButton jButtonLoadPddlActionsFromFile;
+    private javax.swing.JButton jButtonLookFor;
     private javax.swing.JButton jButtonPddlOutputViewEdit;
+    private javax.swing.JButton jButtonReturn;
+    private javax.swing.JButton jButtonTake;
     private javax.swing.JCheckBox jCheckBoxAutoStartCrcl;
     private javax.swing.JCheckBox jCheckBoxNeedLookFor;
     private javax.swing.JCheckBox jCheckBoxReplan;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPaneOptions;
@@ -1106,7 +1328,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JTable jTablePddlOutput;
     private javax.swing.JTable jTableTraySlotDesign;
     private javax.swing.JTextField jTextFieldIndex;
+    private javax.swing.JTextField jTextFieldLookForCount;
+    private javax.swing.JTextField jTextFieldManualObjectName;
     private javax.swing.JTextField jTextFieldPddlOutputActions;
+    private javax.swing.JTextField jTextFieldReturnCount;
+    private javax.swing.JTextField jTextFieldTakeCount;
     // End of variables declaration//GEN-END:variables
 
     @Override
