@@ -59,7 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -164,6 +163,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTableOptions = new javax.swing.JTable();
         jScrollPaneTraySlotDesign = new javax.swing.JScrollPane();
         jTableTraySlotDesign = new javax.swing.JTable();
+        jButtonClear = new javax.swing.JButton();
 
         jLabel6.setText("Pddl Output Actions");
 
@@ -351,6 +351,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         jTabbedPane1.addTab("Tray Slot Desgn", jScrollPaneTraySlotDesign);
 
+        jButtonClear.setText("Clear");
+        jButtonClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonClearActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -364,13 +371,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldPddlOutputActions)
+                        .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, 325, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonLoad)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonLoadPddlActionsFromFile)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonPddlOutputViewEdit))
+                        .addComponent(jButtonPddlOutputViewEdit)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonClear)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -397,7 +407,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jButtonLoadPddlActionsFromFile)
                     .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButtonLoad)
-                    .addComponent(jButtonPddlOutputViewEdit))
+                    .addComponent(jButtonPddlOutputViewEdit)
+                    .addComponent(jButtonClear))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 145, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -964,6 +975,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }//GEN-LAST:event_jTableTraySlotDesignMouseReleased
 
+    private void jButtonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearActionPerformed
+        this.setActionsList(new ArrayList<>());
+        DefaultTableModel model = (DefaultTableModel) jTableCrclProgram.getModel();
+        model.setRowCount(0);
+    }//GEN-LAST:event_jButtonClearActionPerformed
+
     public void setCrclIndexes(int indexes[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < indexes.length; i++) {
@@ -1016,6 +1033,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private void checkDbSupplierPublisher() throws IOException {
+        if(null != this.pddlActionToCrclGenerator && pddlActionToCrclGenerator.isConnected()) {
+            return;
+        }
         if (null != dbSetupSupplier) {
             try {
                 dbSetupPublisher = dbSetupSupplier.call();
@@ -1029,21 +1049,21 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != dbSetupPublisher) {
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
-            for (Future<?> f : futures) {
-                if (!f.isDone() && !f.isCancelled()) {
-                    try {
-                        f.get();
-
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(PddlExecutorJPanel.class
-                                .getName()).log(Level.SEVERE, null, ex);
-
-                    } catch (ExecutionException ex) {
-                        Logger.getLogger(PddlExecutorJPanel.class
-                                .getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
+//            for (Future<?> f : futures) {
+//                if (!f.isDone() && !f.isCancelled()) {
+//                    try {
+//                        f.get();
+//
+//                    } catch (InterruptedException ex) {
+//                        Logger.getLogger(PddlExecutorJPanel.class
+//                                .getName()).log(Level.SEVERE, null, ex);
+//
+//                    } catch (ExecutionException ex) {
+//                        Logger.getLogger(PddlExecutorJPanel.class
+//                                .getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                }
+//            }
         } else {
             System.err.println("dbSetupPublisher == null");
         }
@@ -1064,6 +1084,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButtonClear;
     private javax.swing.JButton jButtonDbSetup;
     private javax.swing.JButton jButtonGenerateCRCL;
     private javax.swing.JButton jButtonLoad;

@@ -347,7 +347,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         // get the offset from the database and add the offet. Otherwise we
         // have to assume the tray contains only one slot and its location
         // is also the location of where parts should be placed.
-        if (null != (l = this.getSingleTraySlotDesign(action.getArgs()[2], action.getArgs()[6]))
+        if (false && null != (l = this.getSingleTraySlotDesign(action.getArgs()[2], action.getArgs()[6]))
                 && null != (tsd = l.get(0))) { 
             PoseType poseOffset = pose(point(tsd.getX_OFFSET(), tsd.getY_OFFSET(), 0.), vector(1., 0., 0.), vector(0., 0., 1.));
             poseAbove = CRCLPosemath.multiply(pose, poseOffset);

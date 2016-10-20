@@ -67,7 +67,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void setItems(List<DetectedItem> items) {
         try {
             settingItems = true;
-            if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+            if (javax.swing.SwingUtilities.isEventDispatchThread()) {
                 setItemsInternal(items);
             } else {
                 javax.swing.SwingUtilities.invokeLater(() -> setItemsInternal(items));
@@ -147,7 +147,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             item.x = Double.parseDouble(jTable1.getValueAt(i, 1).toString());
                             item.y = Double.parseDouble(jTable1.getValueAt(i, 2).toString());
                             item.rotation = Math.toRadians(Double.parseDouble(jTable1.getValueAt(i, 3).toString()));
-                            item.type =  Objects.toString(jTable1.getValueAt(i, 4));
+                            item.type = Objects.toString(jTable1.getValueAt(i, 4));
                             while (l.size() < i) {
                                 l.add(null);
                             }
@@ -432,7 +432,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     }// </editor-fold>//GEN-END:initComponents
 
-    
     public void autoResizeTableColWidths(JTable table) {
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -503,7 +502,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (this.jCheckBoxConnected.isSelected()) {
             connect();
         } else {
-            if(this.jCheckBoxSimulated.isSelected()) {
+            if (this.jCheckBoxSimulated.isSelected()) {
                 jButtonReset.setEnabled(true);
             }
             if (null != visionSocketClient) {
@@ -560,10 +559,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jButtonAddActionPerformed
 
     private void jButtonDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteActionPerformed
-        List<DetectedItem> l = new ArrayList<>();
-        l.addAll(getItems());
-        l.remove(jTable1.getSelectedRow());
-        setItems(l);
+        int row = jTable1.getSelectedRow();
+        List<DetectedItem> oldList = getItems();
+        if (row >= 0 && row < oldList.size()) {
+            List<DetectedItem> l = new ArrayList<>();
+            l.addAll(getItems());
+            l.remove(jTable1.getSelectedRow());
+            setItems(l);
+        }
     }//GEN-LAST:event_jButtonDeleteActionPerformed
 
 
@@ -592,7 +595,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         for (int i = 0; i < items.size(); i++) {
             DetectedItem item = items.get(i);
             double rel_x = (item.x - min_x) * scale + 15;
-            double rel_y = (max_y-item.y) * scale + 20;
+            double rel_y = (max_y - item.y) * scale + 20;
             double diff_x = rel_x - evt.getX();
             double diff_y = rel_y - evt.getY();
             double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
@@ -645,7 +648,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jCheckBoxDebugActionPerformed
 
     private void jButtonResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonResetActionPerformed
-       this.setItems(Object2DJPanel.EXAMPLES_ITEMS_LIST);
+        this.setItems(Object2DJPanel.EXAMPLES_ITEMS_LIST);
     }//GEN-LAST:event_jButtonResetActionPerformed
 
     private void jCheckBoxShowRotationsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowRotationsActionPerformed
@@ -709,9 +712,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("simulated", Boolean.toString(jCheckBoxSimulated.isSelected()));
             props.put("connected", Boolean.toString(jCheckBoxConnected.isSelected()));
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText());
-            props.put("xminymin",jTextFieldMinXMinY.getText());
+            props.put("xminymin", jTextFieldMinXMinY.getText());
             List<DetectedItem> l = getItems();
-            if(null != l && l.size() > 0) {
+            if (null != l && l.size() > 0) {
                 props.put(ITEMS_PROPERTY_NAME, VisionSocketServer.listToLine(l));
             }
             try (FileWriter fw = new FileWriter(propertiesFile)) {
@@ -731,7 +734,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             String itemsLine = props.getProperty(ITEMS_PROPERTY_NAME);
             if (null != itemsLine && itemsLine.length() > 0) {
                 List<DetectedItem> l = VisionSocketClient.lineToList(itemsLine);
-                if(null != l && l.size() > 0) {
+                if (null != l && l.size() > 0) {
                     setItems(l);
                 }
             }
@@ -757,12 +760,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jCheckBoxSimulated.setSelected(Boolean.valueOf(simulatedString));
             }
             String xmaxymaxString = props.getProperty("xmaxymax");
-            if(null != xmaxymaxString) {
+            if (null != xmaxymaxString) {
                 setMaxXMaxYText(xmaxymaxString);
                 jTextFieldMaxXMaxY.setText(xmaxymaxString);
             }
             String xminyminString = props.getProperty("xminymin");
-            if(null != xminyminString) {
+            if (null != xminyminString) {
                 setMinXMinYText(xminyminString);
                 jTextFieldMinXMinY.setText(xminyminString);
             }
@@ -770,14 +773,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (null != connectedString && connectedString.length() > 0) {
                 boolean connected = Boolean.valueOf(connectedString);
                 jCheckBoxConnected.setSelected(connected);
-                if(connected) {
+                if (connected) {
                     connect();
                 }
             }
         }
     }
 
-    
     @Override
     public File getPropertiesFile() {
         return propertiesFile;

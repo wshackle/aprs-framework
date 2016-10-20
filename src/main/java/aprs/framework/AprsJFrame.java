@@ -121,13 +121,21 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private PrintStream origOut = null;
     private PrintStream origErr = null;
 
-    private class MyPrintStream extends PrintStream {
+    static private class MyPrintStream extends PrintStream {
 
         final private PrintStream ps;
-
-        public MyPrintStream(PrintStream ps) {
+        final private LogDisplayJInternalFrame logDisplayJInternalFrame;
+        
+        public MyPrintStream(PrintStream ps, LogDisplayJInternalFrame logDisplayJInternalFrame) {
             super(ps, true);
             this.ps = ps;
+            this.logDisplayJInternalFrame = logDisplayJInternalFrame;
+            if(null == logDisplayJInternalFrame) {
+                throw new IllegalArgumentException("logDisplayJInteralFrame may not be null");
+            }
+            if(null == ps) {
+                throw new IllegalArgumentException("PrintStream ps may not be null");
+            }
         }
 
         @Override
@@ -239,8 +247,8 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             }
             logDisplayJInternalFrame.setVisible(true);
             jDesktopPane1.add(logDisplayJInternalFrame);
-            System.setOut(new MyPrintStream(System.out));
-            System.setErr(new MyPrintStream(System.err));
+            System.setOut(new MyPrintStream(System.out,logDisplayJInternalFrame));
+            System.setErr(new MyPrintStream(System.err,logDisplayJInternalFrame));
             activateInternalFrame(logDisplayJInternalFrame);
 
 //            Properties buildProperties = null;
@@ -364,11 +372,18 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     }
 
     private void activateInternalFrame(JInternalFrame internalFrame) {
-        internalFrame.setVisible(true);
-        internalFrame.getDesktopPane().getDesktopManager().deiconifyFrame(internalFrame);
-        internalFrame.getDesktopPane().getDesktopManager().activateFrame(internalFrame);
-        internalFrame.getDesktopPane().getDesktopManager().maximizeFrame(internalFrame);
-        internalFrame.moveToFront();
+        try {
+            internalFrame.setVisible(true);
+            if (null != internalFrame.getDesktopPane()
+                    && null != internalFrame.getDesktopPane().getDesktopManager()) {
+                internalFrame.getDesktopPane().getDesktopManager().deiconifyFrame(internalFrame);
+                internalFrame.getDesktopPane().getDesktopManager().activateFrame(internalFrame);
+                internalFrame.getDesktopPane().getDesktopManager().maximizeFrame(internalFrame);
+            }
+            internalFrame.moveToFront();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void showDatabaseSetupWindow() {
@@ -1263,37 +1278,29 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+
+        String prefLaf =  "Nimbus"; // "GTK+"; // Nimbus, Metal ...
+        /* Set the preferred look and feel */
+
+        if (prefLaf != null) {
+            /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
+             */
+            try {
+                for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+//                    System.out.println("info.getName() = " + info.getName());
+                    if (prefLaf.equals(info.getName())) {
+                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                        break;
 
+                    }
                 }
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+                java.util.logging.Logger.getLogger(AprsJFrame.class
+                        .getName()).log(java.util.logging.Level.SEVERE, null, ex);
+
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(AprsJFrame.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(AprsJFrame.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(AprsJFrame.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(AprsJFrame.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
-        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
