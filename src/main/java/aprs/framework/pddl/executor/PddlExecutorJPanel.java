@@ -35,7 +35,11 @@ import crcl.base.CRCLStatusType;
 import crcl.base.EndCanonType;
 import crcl.base.InitCanonType;
 import crcl.base.MiddleCommandType;
+import crcl.base.PoseType;
 import crcl.ui.client.PendantClientJPanel;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.vector;
 import crcl.utils.CRCLSocket;
 import java.awt.Component;
 import java.awt.Container;
@@ -49,6 +53,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import static java.lang.Integer.max;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -58,10 +63,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -165,13 +172,29 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTableTraySlotDesign = new javax.swing.JTable();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        jTextFieldManualObjectName = new javax.swing.JTextField();
         jButtonTake = new javax.swing.JButton();
         jButtonLookFor = new javax.swing.JButton();
         jButtonReturn = new javax.swing.JButton();
         jTextFieldTakeCount = new javax.swing.JTextField();
         jTextFieldLookForCount = new javax.swing.JTextField();
         jTextFieldReturnCount = new javax.swing.JTextField();
+        jComboBoxManualObjectName = new javax.swing.JComboBox<>();
+        jLabel3 = new javax.swing.JLabel();
+        jTextFieldTestXMin = new javax.swing.JTextField();
+        jTextFieldTestXMax = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jTextFieldTestYMin = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
+        jTextFieldTestYMax = new javax.swing.JTextField();
+        jButtonRandDropOff = new javax.swing.JButton();
+        jButtonRandomPickup = new javax.swing.JButton();
+        jLabel9 = new javax.swing.JLabel();
+        jTextFieldTestZ = new javax.swing.JTextField();
+        jTextFieldRandomPickupCount = new javax.swing.JTextField();
+        jTextFieldRandomDropoffCount = new javax.swing.JTextField();
+        jLabel10 = new javax.swing.JLabel();
+        jTextFieldRandomPose = new javax.swing.JTextField();
         jButtonClear = new javax.swing.JButton();
 
         jLabel6.setText("Pddl Output Actions");
@@ -362,13 +385,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         jLabel1.setText("Object:");
 
-        jTextFieldManualObjectName.setText("sku_part_large_gear");
-        jTextFieldManualObjectName.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldManualObjectNameActionPerformed(evt);
-            }
-        });
-
         jButtonTake.setText("Take");
         jButtonTake.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -399,28 +415,112 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldReturnCount.setEditable(false);
         jTextFieldReturnCount.setText("0   ");
 
+        jComboBoxManualObjectName.setEditable(true);
+
+        jLabel3.setText("XMin:");
+
+        jTextFieldTestXMin.setText("100.0 ");
+
+        jTextFieldTestXMax.setText("500.0 ");
+
+        jLabel4.setText("XMax:");
+
+        jLabel5.setText("YMin:");
+
+        jTextFieldTestYMin.setText("-200.0 ");
+
+        jLabel8.setText("YMax:");
+
+        jTextFieldTestYMax.setText("200.0 ");
+
+        jButtonRandDropOff.setText("Random Drop-off");
+        jButtonRandDropOff.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonRandDropOffActionPerformed(evt);
+            }
+        });
+
+        jButtonRandomPickup.setText("Pickup From Random Drop Off");
+        jButtonRandomPickup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonRandomPickupActionPerformed(evt);
+            }
+        });
+
+        jLabel9.setText("Z:");
+
+        jTextFieldTestZ.setText("-150.0");
+
+        jTextFieldRandomPickupCount.setEditable(false);
+        jTextFieldRandomPickupCount.setText("0   ");
+
+        jTextFieldRandomDropoffCount.setEditable(false);
+        jTextFieldRandomDropoffCount.setText("0   ");
+
+        jLabel10.setText("Pose:");
+
+        jTextFieldRandomPose.setEditable(false);
+        jTextFieldRandomPose.setText("0,0,0");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextFieldManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonTake)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextFieldTakeCount, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonLookFor)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextFieldLookForCount, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonReturn)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextFieldReturnCount, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(161, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonTake)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTakeCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonLookFor)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldLookForCount, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonReturn)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldReturnCount, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel3)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel4))
+                            .addComponent(jButtonRandDropOff))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonRandomPickup)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldRandomPickupCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel10)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldRandomPose, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel5)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel8)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel9)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addContainerGap(58, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -428,14 +528,35 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(jTextFieldManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButtonTake)
                     .addComponent(jButtonLookFor)
                     .addComponent(jButtonReturn)
                     .addComponent(jTextFieldTakeCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jTextFieldLookForCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextFieldReturnCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(83, Short.MAX_VALUE))
+                    .addComponent(jTextFieldReturnCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4)
+                    .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel5)
+                    .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel8)
+                    .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel9)
+                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonRandDropOff)
+                    .addComponent(jButtonRandomPickup)
+                    .addComponent(jTextFieldRandomPickupCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel10)
+                    .addComponent(jTextFieldRandomPose, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(17, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Manual Pickup Return", jPanel1);
@@ -582,6 +703,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private static final String PDDLOUTPUT = "pddl.output";
     private static final String PDDLCRCLAUTOSTART = "pddl.crcl.autostart";
 
+    public String[] getComboPartNames(int maxlen) {
+        DefaultComboBoxModel<String> cbm
+                = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
+        String ret[] = new String[max(maxlen, cbm.getSize())];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = cbm.getElementAt(i);
+        }
+        return ret;
+    }
+
     public void saveProperties() throws IOException {
         Map<String, String> propsMap = new HashMap<>();
         propsMap.put(PDDLOUTPUT, jTextFieldPddlOutputActions.getText());
@@ -589,10 +720,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         Properties props = new Properties();
         props.putAll(propsMap);
         props.putAll(getTableOptions());
+        props.put(MANUAL_PART_NAMES, Arrays.toString(getComboPartNames(5)));
         try (FileWriter fw = new FileWriter(propertiesFile)) {
             props.store(fw, "");
         }
     }
+    private static final String MANUAL_PART_NAMES = "manualPartNames";
 
     public void autoResizeTableColWidths(JTable table) {
 
@@ -1081,18 +1214,37 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             takePartCount++;
             this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
-            this.takePart(jTextFieldManualObjectName.getText());
+            String part = getComboPart();
+            this.takePart(part);
         } catch (IOException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonTakeActionPerformed
+
+    public String getComboPart() {
+        String part = jComboBoxManualObjectName.getSelectedItem().toString();
+        DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
+        boolean partfound = false;
+        for (int i = 0; i < cbm.getSize(); i++) {
+            String parti = cbm.getElementAt(i).toString();
+            if (parti.equals(part)) {
+                partfound = true;
+                break;
+            }
+        }
+        if (!partfound) {
+            cbm.insertElementAt(part, 0);
+        }
+        return part;
+    }
 
     private int lookForCount = 0;
     private void jButtonLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLookForActionPerformed
         try {
             lookForCount++;
             this.jTextFieldLookForCount.setText(Integer.toString(lookForCount));
-            this.lookFor(jTextFieldManualObjectName.getText());
+            String part = getComboPart();
+            this.lookFor(part);
         } catch (IOException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1103,15 +1255,48 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             returnCount++;
             this.jTextFieldReturnCount.setText(Integer.toString(returnCount));
-            this.returnPart(jTextFieldManualObjectName.getText());
+            String part = getComboPart();
+            this.returnPart(part);
         } catch (IOException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonReturnActionPerformed
 
-    private void jTextFieldManualObjectNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldManualObjectNameActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextFieldManualObjectNameActionPerformed
+    int randomDropOffCount = 0;
+
+    private void jButtonRandDropOffActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRandDropOffActionPerformed
+        try {
+            randomDropOffCount++;
+            this.jTextFieldRandomDropoffCount.setText(Integer.toString(randomDropOffCount));
+            this.randomDropOff();
+            String randomPoseString = 
+                    String.format("%.3f, %.3f, %.3f", 
+                    randomDropOffPose.getPoint().getX().doubleValue(),
+                     randomDropOffPose.getPoint().getY().doubleValue(),
+                     randomDropOffPose.getPoint().getZ().doubleValue());
+            System.out.println("randomPoseString = " + randomPoseString);
+            System.out.println("randomDropOffCount = " + randomDropOffCount);
+            this.jTextFieldRandomPose.setText(randomPoseString);
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonRandDropOffActionPerformed
+
+    int randomPickupCount = 0;
+    private void jButtonRandomPickupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRandomPickupActionPerformed
+        try {
+            randomPickupCount++;
+            this.jTextFieldRandomPickupCount.setText(Integer.toString(randomPickupCount));
+            this.randomPickup();
+            String randomPoseString = randomDropOffPose.getPoint().getX()
+                    + "," + randomDropOffPose.getPoint().getY()
+                    + "," + randomDropOffPose.getPoint().getZ();
+            System.out.println("randomPoseString = " + randomPoseString);
+            System.out.println("randomPickupCount = " + randomPickupCount);
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonRandomPickupActionPerformed
 
     public void setCrclIndexes(int indexes[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
@@ -1173,10 +1358,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 new String[]{"", part}, "cost");
         takePartActionsList.add(takePartAction);
         List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(takePartActionsList, this.replanFromIndex, options);
-        int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
-        indexes = Arrays.copyOf(indexes, indexes.length);
-        setCrclIndexes(indexes);
-        setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
         CRCLProgramType program = createEmptyProgram();
         if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
             jCheckBoxReplan.setSelected(true);
@@ -1200,10 +1381,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         List<MiddleCommandType> cmds = new ArrayList<>();
         pddlActionToCrclGenerator.setOptions(options);
         pddlActionToCrclGenerator.returnPart(part, cmds);
-        int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
-        indexes = Arrays.copyOf(indexes, indexes.length);
-        setCrclIndexes(indexes);
-        setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
         CRCLProgramType program = createEmptyProgram();
         if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
             jCheckBoxReplan.setSelected(true);
@@ -1220,6 +1397,67 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         replanStarted = false;
     }
 
+    Random random = new Random();
+    PoseType randomDropOffPose;
+
+    public PoseType getRandomDropOffPose() {
+        return randomDropOffPose;
+    }
+
+    public void randomDropOff() throws IOException {
+        clearAll();
+        Map<String, String> options = getTableOptions();
+        replanFromIndex = 0;
+        List<MiddleCommandType> cmds = new ArrayList<>();
+        pddlActionToCrclGenerator.setOptions(options);
+        double xMin = Double.valueOf(jTextFieldTestXMin.getText());
+        double xMax = Double.valueOf(jTextFieldTestXMax.getText());
+        double yMin = Double.valueOf(jTextFieldTestYMin.getText());
+        double yMax = Double.valueOf(jTextFieldTestYMax.getText());
+        double x = (xMax - xMin) * random.nextDouble() + xMin;
+        double y = (yMax - yMin) * random.nextDouble() + yMin;
+        double z = Double.valueOf(jTextFieldTestZ.getText());
+        randomDropOffPose = pose(point(x, y, z), vector(1.0, 0.0, 0.0), vector(0.0, 0.0, -1.0));
+        pddlActionToCrclGenerator.placePartByPose(cmds, randomDropOffPose);
+        CRCLProgramType program = createEmptyProgram();
+        if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
+            jCheckBoxReplan.setSelected(true);
+            setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
+        } else {
+            jCheckBoxReplan.setSelected(false);
+            setReplanFromIndex(0);
+        }
+        jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+        program.getMiddleCommand().clear();
+        program.getMiddleCommand().addAll(cmds);
+        program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        setCrclProgram(program);
+        replanStarted = false;
+    }
+
+    public void randomPickup() throws IOException {
+        clearAll();
+        Map<String, String> options = getTableOptions();
+        replanFromIndex = 0;
+        List<MiddleCommandType> cmds = new ArrayList<>();
+        pddlActionToCrclGenerator.setOptions(options);
+        pddlActionToCrclGenerator.takePartByPose(cmds, randomDropOffPose);
+        CRCLProgramType program = createEmptyProgram();
+        if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
+            jCheckBoxReplan.setSelected(true);
+            setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
+        } else {
+            jCheckBoxReplan.setSelected(false);
+            setReplanFromIndex(0);
+        }
+        jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+        program.getMiddleCommand().clear();
+        program.getMiddleCommand().addAll(cmds);
+        program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        setCrclProgram(program);
+        replanStarted = false;
+    }
+    
     public void lookFor(String part) throws IOException {
         clearAll();
         Map<String, String> options = getTableOptions();
@@ -1229,10 +1467,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 new String[]{"", part}, "cost");
         lookForActionsList.add(takePartAction);
         List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(lookForActionsList, this.replanFromIndex, options);
-        int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
-        indexes = Arrays.copyOf(indexes, indexes.length);
-        setCrclIndexes(indexes);
-        setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
         CRCLProgramType program = createEmptyProgram();
         if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
             jCheckBoxReplan.setSelected(true);
@@ -1308,15 +1542,24 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonLoadPddlActionsFromFile;
     private javax.swing.JButton jButtonLookFor;
     private javax.swing.JButton jButtonPddlOutputViewEdit;
+    private javax.swing.JButton jButtonRandDropOff;
+    private javax.swing.JButton jButtonRandomPickup;
     private javax.swing.JButton jButtonReturn;
     private javax.swing.JButton jButtonTake;
     private javax.swing.JCheckBox jCheckBoxAutoStartCrcl;
     private javax.swing.JCheckBox jCheckBoxNeedLookFor;
     private javax.swing.JCheckBox jCheckBoxReplan;
+    private javax.swing.JComboBox<String> jComboBoxManualObjectName;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane4;
@@ -1329,10 +1572,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JTable jTableTraySlotDesign;
     private javax.swing.JTextField jTextFieldIndex;
     private javax.swing.JTextField jTextFieldLookForCount;
-    private javax.swing.JTextField jTextFieldManualObjectName;
     private javax.swing.JTextField jTextFieldPddlOutputActions;
+    private javax.swing.JTextField jTextFieldRandomDropoffCount;
+    private javax.swing.JTextField jTextFieldRandomPickupCount;
+    private javax.swing.JTextField jTextFieldRandomPose;
     private javax.swing.JTextField jTextFieldReturnCount;
     private javax.swing.JTextField jTextFieldTakeCount;
+    private javax.swing.JTextField jTextFieldTestXMax;
+    private javax.swing.JTextField jTextFieldTestXMin;
+    private javax.swing.JTextField jTextFieldTestYMax;
+    private javax.swing.JTextField jTextFieldTestYMin;
+    private javax.swing.JTextField jTextFieldTestZ;
     // End of variables declaration//GEN-END:variables
 
     @Override
@@ -1355,7 +1605,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 this.jCheckBoxAutoStartCrcl.setSelected(Boolean.valueOf(autostart));
             }
             for (String name : props.stringPropertyNames()) {
-                if (!name.equals(PDDLCRCLAUTOSTART) && !name.equals(PDDLOUTPUT)) {
+                if (!name.equals(PDDLCRCLAUTOSTART)
+                        && !name.equals(PDDLOUTPUT)
+                        && !name.equals(MANUAL_PART_NAMES)) {
                     DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
                     boolean foundit = false;
                     for (int i = 0; i < model.getRowCount(); i++) {
@@ -1369,6 +1621,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     if (!foundit) {
                         model.addRow(new Object[]{name, props.getProperty(name)});
                     }
+                }
+            }
+            String manualPartNames = props.getProperty(MANUAL_PART_NAMES, "");
+            String pna[] = manualPartNames.split("[ \t,\\[\\]\\{\\}]+");
+            DefaultComboBoxModel<String> cbm
+                    = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
+            cbm.removeAllElements();
+            for (int i = 0; i < pna.length; i++) {
+                if (null != pna[i] && pna[i].length() > 0
+                        && !pna[i].equals("null")) {
+                    cbm.addElement(pna[i]);
                 }
             }
         }

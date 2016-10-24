@@ -230,7 +230,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options) {
         this.options = options;
-        List<MiddleCommandType> out = new ArrayList<>();
+        List<MiddleCommandType> cmds = new ArrayList<>();
         if (null == actionToCrclIndexes || actionToCrclIndexes.length != actions.size()) {
             actionToCrclIndexes = new int[actions.size()];
         }
@@ -238,35 +238,35 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             actionToCrclLabels = new String[actions.size()];
         }
         for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
-            actionToCrclIndexes[lastIndex] = out.size();
+            actionToCrclIndexes[lastIndex] = cmds.size();
             PddlAction action = actions.get(lastIndex);
             System.out.println("action = " + action);
             try {
                 switch (action.getType()) {
                     case "take-part":
-                        takePart(action, out);
+                        takePart(action, cmds);
                         break;
                     case "look-for-part":
                         if (!isLookForDone()) {
-                            lookForPart(action, out);
-                            return out;
+                            lookForPart(action, cmds);
+                            return cmds;
                         }
                         break;
 
                     case "place-part":
-                        placePart(action, out);
+                        placePart(action, cmds);
                         break;
                 }
             } catch (Exception ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 MessageType message = new MessageType();
-                message.setCommandID(BigInteger.valueOf(out.size() + 2));
+                message.setCommandID(BigInteger.valueOf(cmds.size() + 2));
                 message.setMessage(ex.toString());
-                out.add(message);
+                cmds.add(message);
                 actionToCrclLabels[lastIndex] = "Error";
             }
         }
-        return out;
+        return cmds;
     }
 
     private final HashMap<String, PoseType> returnPoses = new HashMap<>();
@@ -277,7 +277,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     
     public void returnPart(String part,  List<MiddleCommandType> out) {
-        placePartByPose(returnPoses.get(part), out);
+        placePartByPose(out, returnPoses.get(part));
     }
     
     public void takePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
@@ -293,37 +293,41 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pose = qs.getPose(action.getArgs()[1]);
         returnPoses.put(action.getArgs()[1], pose);
         pose.setZAxis(vector(0, 0, -1.0));
+        takePartByPose(out, pose);
+    }
+
+    public void takePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
         SetEndEffectorType openGripperCmd = new SetEndEffectorType();
-        openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        openGripperCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         openGripperCmd.setSetting(BigDecimal.ONE);
-        out.add(openGripperCmd);
+        cmds.add(openGripperCmd);
 
         PoseType poseAbove = CRCLPosemath.copy(pose);
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
         MoveToType moveAboveCmd = new MoveToType();
-        moveAboveCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        moveAboveCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         moveAboveCmd.setEndPosition(poseAbove);
-        out.add(moveAboveCmd);
+        cmds.add(moveAboveCmd);
 
         DwellType dwellCmd = new DwellType();
-        dwellCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        dwellCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         dwellCmd.setDwellTime(BigDecimal.valueOf(1.0));
-        out.add(dwellCmd);
+        cmds.add(dwellCmd);
 
         MoveToType moveToCmd = new MoveToType();
-        moveToCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        moveToCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         moveToCmd.setEndPosition(pose);
-        out.add(moveToCmd);
+        cmds.add(moveToCmd);
 
         SetEndEffectorType closeGrippeerCmd = new SetEndEffectorType();
-        closeGrippeerCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        closeGrippeerCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         closeGrippeerCmd.setSetting(BigDecimal.ZERO);
-        out.add(closeGrippeerCmd);
+        cmds.add(closeGrippeerCmd);
 
         MoveToType moveAboveCmd2 = new MoveToType();
-        moveAboveCmd2.setCommandID(BigInteger.valueOf(out.size() + 2));
+        moveAboveCmd2.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         moveAboveCmd2.setEndPosition(poseAbove);
-        out.add(moveAboveCmd2);
+        cmds.add(moveAboveCmd2);
     }
 
     private void lookForPart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
@@ -376,36 +380,36 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             pose = CRCLPosemath.multiply(pose, poseOffset);
         } 
         
-        placePartByPose(pose, out);
+        placePartByPose(out, pose);
     }
 
-    public void placePartByPose(PoseType pose, List<MiddleCommandType> out) {
+    public void placePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
         PoseType  poseAbove = CRCLPosemath.copy(pose);
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
         MoveToType moveAboveCmd = new MoveToType();
-        moveAboveCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        moveAboveCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         moveAboveCmd.setEndPosition(poseAbove);
-        out.add(moveAboveCmd);
+        cmds.add(moveAboveCmd);
 
         DwellType dwellCmd = new DwellType();
-        dwellCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        dwellCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         dwellCmd.setDwellTime(BigDecimal.valueOf(1.0));
-        out.add(dwellCmd);
+        cmds.add(dwellCmd);
 
         MoveToType moveToCmd = new MoveToType();
-        moveToCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        moveToCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         moveToCmd.setEndPosition(pose);
-        out.add(moveToCmd);
+        cmds.add(moveToCmd);
 
         SetEndEffectorType openGripperCmd = new SetEndEffectorType();
-        openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        openGripperCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         openGripperCmd.setSetting(BigDecimal.ONE);
-        out.add(openGripperCmd);
+        cmds.add(openGripperCmd);
 
         MoveToType moveAboveCmd2 = new MoveToType();
-        moveAboveCmd2.setCommandID(BigInteger.valueOf(out.size() + 2));
+        moveAboveCmd2.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         moveAboveCmd2.setEndPosition(poseAbove);
-        out.add(moveAboveCmd2);
+        cmds.add(moveAboveCmd2);
     }
 
     @Override
