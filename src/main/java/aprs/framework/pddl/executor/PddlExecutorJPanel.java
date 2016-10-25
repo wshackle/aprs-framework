@@ -53,6 +53,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import static java.lang.Integer.max;
 import java.math.BigInteger;
 import java.sql.SQLException;
@@ -419,19 +420,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         jLabel3.setText("XMin:");
 
-        jTextFieldTestXMin.setText("100.0 ");
+        jTextFieldTestXMin.setText("250.0 ");
 
-        jTextFieldTestXMax.setText("500.0 ");
+        jTextFieldTestXMax.setText("650.0 ");
 
         jLabel4.setText("XMax:");
 
         jLabel5.setText("YMin:");
 
-        jTextFieldTestYMin.setText("-200.0 ");
+        jTextFieldTestYMin.setText("-220.0 ");
 
         jLabel8.setText("YMax:");
 
-        jTextFieldTestYMax.setText("200.0 ");
+        jTextFieldTestYMax.setText("220.0 ");
 
         jButtonRandDropOff.setText("Random Drop-off");
         jButtonRandDropOff.addActionListener(new java.awt.event.ActionListener() {
@@ -449,7 +450,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         jLabel9.setText("Z:");
 
-        jTextFieldTestZ.setText("-150.0");
+        jTextFieldTestZ.setText("-149.0");
 
         jTextFieldRandomPickupCount.setEditable(false);
         jTextFieldRandomPickupCount.setText("0   ");
@@ -486,41 +487,38 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldReturnCount, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel3)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel4))
-                            .addComponent(jButtonRandDropOff))
+                        .addComponent(jButtonRandDropOff)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonRandomPickup)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldRandomPickupCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel10)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldRandomPose, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel5)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel8)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel9)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addContainerGap(58, Short.MAX_VALUE))
+                        .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonRandomPickup)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldRandomPickupCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel10)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldRandomPose, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(44, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -536,18 +534,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jTextFieldReturnCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4)
-                    .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5)
-                    .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel8)
-                    .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel9)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel9)
-                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jLabel3)
+                        .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel4)
+                        .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel5)
+                        .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel8)
+                        .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTextFieldTestZ))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonRandDropOff)
@@ -556,7 +554,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jLabel10)
                     .addComponent(jTextFieldRandomPose, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(17, Short.MAX_VALUE))
+                .addContainerGap(28, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Manual Pickup Return", jPanel1);
@@ -1269,11 +1267,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             randomDropOffCount++;
             this.jTextFieldRandomDropoffCount.setText(Integer.toString(randomDropOffCount));
             this.randomDropOff();
-            String randomPoseString = 
-                    String.format("%.3f, %.3f, %.3f", 
-                    randomDropOffPose.getPoint().getX().doubleValue(),
-                     randomDropOffPose.getPoint().getY().doubleValue(),
-                     randomDropOffPose.getPoint().getZ().doubleValue());
+            String randomPoseString
+                    = String.format("%.3f, %.3f, %.3f",
+                            randomDropOffPose.getPoint().getX().doubleValue(),
+                            randomDropOffPose.getPoint().getY().doubleValue(),
+                            randomDropOffPose.getPoint().getZ().doubleValue());
             System.out.println("randomPoseString = " + randomPoseString);
             System.out.println("randomDropOffCount = " + randomDropOffCount);
             this.jTextFieldRandomPose.setText(randomPoseString);
@@ -1283,6 +1281,20 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jButtonRandDropOffActionPerformed
 
     int randomPickupCount = 0;
+
+    public void writeCorrectionCsv(String filename, String line) throws IOException {
+        File f = new File(filename);
+        System.out.println("f.getCanonicalPath() = " + f.getCanonicalPath());
+        boolean newFile = !f.exists();
+        System.out.println("newFile = " + newFile);
+        try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
+            if (newFile) {
+                pw.println("Time,PartName,Robot_X,Robot_Y,Robot_Z,Db_X,Db_Y,Db_Z,Offset_X,Offset_Y,Offset_Z");
+            }
+            pw.println(line);
+        } 
+    }
+
     private void jButtonRandomPickupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRandomPickupActionPerformed
         try {
             randomPickupCount++;
@@ -1293,7 +1305,23 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     + "," + randomDropOffPose.getPoint().getZ();
             System.out.println("randomPoseString = " + randomPoseString);
             System.out.println("randomPickupCount = " + randomPickupCount);
-        } catch (IOException ex) {
+            String partName = (String) jComboBoxManualObjectName.getSelectedItem();
+            if (null != partName && partName.length() > 0) {
+                PoseType poseFromDb = pddlActionToCrclGenerator.getPartPose(partName);
+                if (null != poseFromDb) {
+                    String poseFromDbString = poseFromDb.getPoint().getX()
+                            + "," + poseFromDb.getPoint().getY()
+                            + "," + poseFromDb.getPoint().getZ();;
+                    System.out.println("poseFromDbString = " + poseFromDbString);
+                    String offsetString = randomDropOffPose.getPoint().getX().subtract(poseFromDb.getPoint().getX())
+                            + "," + randomDropOffPose.getPoint().getY().subtract(poseFromDb.getPoint().getY())
+                            + "," + randomDropOffPose.getPoint().getZ().subtract(poseFromDb.getPoint().getZ());
+                    System.out.println("offsetString = " + offsetString);
+                    writeCorrectionCsv("corrections.csv",
+                            System.currentTimeMillis() + ", " +partName+", "+randomPoseString+", "+poseFromDbString+", "+offsetString);
+                }
+            }
+        } catch (IOException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonRandomPickupActionPerformed
@@ -1457,7 +1485,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setCrclProgram(program);
         replanStarted = false;
     }
-    
+
     public void lookFor(String part) throws IOException {
         clearAll();
         Map<String, String> options = getTableOptions();
