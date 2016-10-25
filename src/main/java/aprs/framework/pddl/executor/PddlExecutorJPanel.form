@@ -253,11 +253,11 @@
                   <Table columnCount="2" rowCount="2">
                     <Column editable="false" title="Name" type="java.lang.String">
                       <Data value="lookForXYZ"/>
-                      <Data value="null"/>
+                      <Data value="approachZOffset"/>
                     </Column>
                     <Column editable="true" title="Value" type="java.lang.String">
                       <Data value="0.0,0.0,0.0"/>
-                      <Data value="null"/>
+                      <Data value="30.0"/>
                     </Column>
                   </Table>
                 </Property>

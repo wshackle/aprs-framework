@@ -307,6 +307,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         openGripperCmd.setSetting(BigDecimal.ONE);
         cmds.add(openGripperCmd);
 
+        String approachZOffsetString = options.get("approachZOffset");
+        if(null != approachZOffsetString && approachZOffsetString.length() > 0) {
+            try {
+                double val = Double.valueOf(approachZOffsetString);
+                approachZOffset = BigDecimal.valueOf(val);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
         PoseType poseAbove = CRCLPosemath.copy(pose);
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
         MoveToType moveAboveCmd = new MoveToType();
@@ -398,6 +407,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     public void placePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
+        
+        String approachZOffsetString = options.get("approachZOffset");
+        if(null != approachZOffsetString && approachZOffsetString.length() > 0) {
+            try {
+                double val = Double.valueOf(approachZOffsetString);
+                approachZOffset = BigDecimal.valueOf(val);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
+        
         PoseType  poseAbove = CRCLPosemath.copy(pose);
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
         MoveToType moveAboveCmd = new MoveToType();

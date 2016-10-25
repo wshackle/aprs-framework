@@ -318,7 +318,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTableOptions.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {"lookForXYZ", "0.0,0.0,0.0"},
-                {null, null}
+                {"approachZOffset", "30.0"}
             },
             new String [] {
                 "Name", "Value"
