@@ -238,6 +238,27 @@ public class QuerySet implements QuerySetInterface {
         return getQueryResultString(rs, getQueryInfo, type);
     }
 
+    
+        private boolean debug;
+
+    /**
+     * Get the value of debug
+     *
+     * @return the value of debug
+     */
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /**
+     * Set the value of debug
+     *
+     * @param debug new value of debug
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
     @Override
     public PoseType getPose(String name) throws SQLException {
         if (closed) {
@@ -249,33 +270,51 @@ public class QuerySet implements QuerySetInterface {
         setQueryStringParam(getPoseStatement, getPoseQueryInfo, DbParamTypeEnum.NAME, name, map);
 //        getPoseStatement.setString(1, name);
         String simQuery = createExpectedQueryString(getPoseQueryInfo, map);
-        System.out.println("simQuery = " + simQuery);
+        if(debug) {
+            System.out.println("simQuery = " + simQuery);
+        }
         try (ResultSet rs = getPoseStatement.executeQuery()) {
             if (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
-                    System.out.println("j = " + j);
+                    if(debug) {
+                        System.out.println("j = " + j);
+                    }
                     String cname = meta.getColumnName(j);
-                    System.out.println("cname = " + cname);
+                    if(debug) {
+                        System.out.println("cname = " + cname);
+                    }
                     String type = meta.getColumnTypeName(j);
-                    System.out.println("type = " + type);
+                    if(debug) {
+                        System.out.println("type = " + type);
+                    }
                     Object o = rs.getObject(j);
-                    System.out.println("o = " + o);
+                    if(debug) {
+                        System.out.println("o = " + o);
+                    }
                 }
                 String nameCheckString = getPoseQueryResultString(rs, DbParamTypeEnum.NAME);
-                System.out.println("nameCheckString = " + nameCheckString);
+                if(debug) {
+                    System.out.println("nameCheckString = " + nameCheckString);
+                }
                 if (!nameCheckString.equals(name)) {
                     throw new IllegalStateException("returned name " + nameCheckString + " does not match requested name " + name);
                 }
                 String xString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.X));
-                System.out.println("xString = " + xString);
+                if(debug) {
+                    System.out.println("xString = " + xString);
+                }
                 PointType point = new PointType();
                 point.setX(new BigDecimal(xString));
                 String yString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Y));
-                System.out.println("yString = " + yString);
+                if(debug) {
+                    System.out.println("yString = " + yString);
+                }
                 point.setY(new BigDecimal(yString));
                 String zString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Z));
-                System.out.println("zString = " + zString);
+                if(debug) {
+                    System.out.println("zString = " + zString);
+                }
                 if (null != zString) {
                     point.setZ(new BigDecimal(zString));
                 } else {
@@ -284,24 +323,36 @@ public class QuerySet implements QuerySetInterface {
                 pose.setPoint(point);
                 VectorType xAxis = new VectorType();
                 String vxiString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXI));
-                System.out.println("vxiString = " + vxiString);
+                if(debug) {
+                    System.out.println("vxiString = " + vxiString);
+                }
                 xAxis.setI(new BigDecimal(vxiString));
                 String vxjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXJ));
-                System.out.println("vxiString = " + vxjString);
+                if(debug) {
+                    System.out.println("vxiString = " + vxjString);
+                }
                 xAxis.setJ(new BigDecimal(vxjString));
                 String vxkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXK));
-                System.out.println("vxkString = " + vxkString);
+                if(debug) {
+                    System.out.println("vxkString = " + vxkString);
+                }
                 xAxis.setK(new BigDecimal(vxkString));
                 pose.setXAxis(xAxis);
                 VectorType zAxis = new VectorType();
                 String vziString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZI));
-                System.out.println("vziString = " + vziString);
+                if(debug) {
+                    System.out.println("vziString = " + vziString);
+                }
                 zAxis.setI(new BigDecimal(vziString));
                 String vzjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZJ));
-                System.out.println("vziString = " + vzjString);
+                if(debug) {
+                    System.out.println("vziString = " + vzjString);
+                }
                 zAxis.setJ(new BigDecimal(vzjString));
                 String vzkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZK));
-                System.out.println("vzkString = " + vzkString);
+                if(debug) {
+                    System.out.println("vzkString = " + vzkString);
+                }
                 zAxis.setK(new BigDecimal(vzkString));
                 pose.setZAxis(zAxis);
             } else {

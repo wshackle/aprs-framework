@@ -32,6 +32,7 @@ import aprs.framework.spvision.VisionToDBJPanel;
 import crcl.base.CRCLCommandInstanceType;
 import crcl.base.CRCLProgramType;
 import crcl.base.CRCLStatusType;
+import crcl.base.CommandStateEnumType;
 import crcl.base.EndCanonType;
 import crcl.base.InitCanonType;
 import crcl.base.MiddleCommandType;
@@ -72,6 +73,7 @@ import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -100,6 +102,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public PddlExecutorJPanel() {
         initComponents();
         jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
+        jCheckBoxDebug.setSelected(debug);
     }
 
     private static Object[] getTableRow(JTable table, int row) {
@@ -156,7 +159,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonLoadPddlActionsFromFile = new javax.swing.JButton();
         jTextFieldPddlOutputActions = new javax.swing.JTextField();
         jButtonLoad = new javax.swing.JButton();
-        jButtonDbSetup = new javax.swing.JButton();
         jButtonGenerateCRCL = new javax.swing.JButton();
         jButtonPddlOutputViewEdit = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -196,7 +198,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldRandomDropoffCount = new javax.swing.JTextField();
         jLabel10 = new javax.swing.JLabel();
         jTextFieldRandomPose = new javax.swing.JTextField();
+        jButtonContRandomTest = new javax.swing.JButton();
+        jButtonStopRandomTest = new javax.swing.JButton();
         jButtonClear = new javax.swing.JButton();
+        jCheckBoxDebug = new javax.swing.JCheckBox();
 
         jLabel6.setText("Pddl Output Actions");
 
@@ -248,13 +253,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonLoad.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonLoadActionPerformed(evt);
-            }
-        });
-
-        jButtonDbSetup.setText("Database Setup");
-        jButtonDbSetup.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonDbSetupActionPerformed(evt);
             }
         });
 
@@ -463,6 +461,20 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldRandomPose.setEditable(false);
         jTextFieldRandomPose.setText("0,0,0");
 
+        jButtonContRandomTest.setText("Continous Random Test");
+        jButtonContRandomTest.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonContRandomTestActionPerformed(evt);
+            }
+        });
+
+        jButtonStopRandomTest.setText("Stop");
+        jButtonStopRandomTest.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonStopRandomTestActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -517,8 +529,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel9)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(44, Short.MAX_VALUE))
+                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonContRandomTest)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonStopRandomTest)))
+                .addContainerGap(39, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -545,7 +561,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel8)
                         .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jTextFieldTestZ))
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jTextFieldTestZ)
+                        .addComponent(jButtonContRandomTest)
+                        .addComponent(jButtonStopRandomTest)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonRandDropOff)
@@ -554,7 +573,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jLabel10)
                     .addComponent(jTextFieldRandomPose, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(28, Short.MAX_VALUE))
+                .addContainerGap(16, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Manual Pickup Return", jPanel1);
@@ -563,6 +582,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonClear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonClearActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxDebug.setText("Debug");
+        jCheckBoxDebug.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxDebugActionPerformed(evt);
             }
         });
 
@@ -603,8 +629,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jCheckBoxAutoStartCrcl)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonGenerateCRCL)
-                        .addGap(11, 11, 11)
-                        .addComponent(jButtonDbSetup)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxDebug)
+                        .addGap(42, 42, 42)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -618,22 +645,22 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jButtonPddlOutputViewEdit)
                     .addComponent(jButtonClear))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 145, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 145, Short.MAX_VALUE)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jCheckBoxAutoStartCrcl)
                         .addComponent(jButtonGenerateCRCL)
-                        .addComponent(jButtonDbSetup)
                         .addComponent(jCheckBoxNeedLookFor)
                         .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel2)
-                        .addComponent(jCheckBoxReplan)))
+                        .addComponent(jCheckBoxReplan)
+                        .addComponent(jCheckBoxDebug)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 145, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 142, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -872,19 +899,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }
-
-    private void jButtonDbSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDbSetupActionPerformed
-        if (null != dbSetupSupplier) {
-            try {
-                dbSetupPublisher = dbSetupSupplier.call();
-                dbSetupPublisher.addDbSetupListener(this);
-
-            } catch (Exception ex) {
-                Logger.getLogger(VisionToDBJPanel.class
-                        .getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }//GEN-LAST:event_jButtonDbSetupActionPerformed
 
     private CRCLProgramType createEmptyProgram() {
         CRCLProgramType program = new CRCLProgramType();
@@ -1205,12 +1219,23 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         model.setRowCount(0);
         replanFromIndex = 0;
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+        if (null != customRunnables) {
+            customRunnables.clear();
+            customRunnables = null;
+        }
+        customRunnablesIndex = -1;
+        if (null != replanActionTimer) {
+            replanActionTimer.stop();
+            replanActionTimer = null;
+        }
+        this.replanRunnable = this.defaultReplanRunnable;
     }
 
     private int takePartCount = 0;
     private void jButtonTakeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonTakeActionPerformed
         try {
             takePartCount++;
+            clearAll();
             this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
             this.takePart(part);
@@ -1240,6 +1265,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void jButtonLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLookForActionPerformed
         try {
             lookForCount++;
+            clearAll();
             this.jTextFieldLookForCount.setText(Integer.toString(lookForCount));
             String part = getComboPart();
             this.lookFor(part);
@@ -1252,6 +1278,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void jButtonReturnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonReturnActionPerformed
         try {
             returnCount++;
+            clearAll();
             this.jTextFieldReturnCount.setText(Integer.toString(returnCount));
             String part = getComboPart();
             this.returnPart(part);
@@ -1265,6 +1292,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void jButtonRandDropOffActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRandDropOffActionPerformed
         try {
             randomDropOffCount++;
+            clearAll();
             this.jTextFieldRandomDropoffCount.setText(Integer.toString(randomDropOffCount));
             this.randomDropOff();
             String randomPoseString
@@ -1292,10 +1320,21 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 pw.println("Time,PartName,Robot_X,Robot_Y,Robot_Z,Db_X,Db_Y,Db_Z,Offset_X,Offset_Y,Offset_Z");
             }
             pw.println(line);
-        } 
+        }
     }
 
     private void jButtonRandomPickupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRandomPickupActionPerformed
+        clearAll();
+        recordCsvName = JOptionPane.showInputDialog("Name of CSV record file");
+        if (recordCsvName.endsWith(".csv")) {
+            recordCsvName += ".csv";
+        }
+        recordAndCompletRandomPickup();
+    }//GEN-LAST:event_jButtonRandomPickupActionPerformed
+
+    private String recordCsvName = "corrections.csv";
+
+    private void recordAndCompletRandomPickup() {
         try {
             randomPickupCount++;
             this.jTextFieldRandomPickupCount.setText(Integer.toString(randomPickupCount));
@@ -1317,14 +1356,59 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                             + "," + randomDropOffPose.getPoint().getY().subtract(poseFromDb.getPoint().getY())
                             + "," + randomDropOffPose.getPoint().getZ().subtract(poseFromDb.getPoint().getZ());
                     System.out.println("offsetString = " + offsetString);
-                    writeCorrectionCsv("corrections.csv",
-                            System.currentTimeMillis() + ", " +partName+", "+randomPoseString+", "+poseFromDbString+", "+offsetString);
+                    writeCorrectionCsv(recordCsvName,
+                            System.currentTimeMillis() + ", " + partName + ", " + randomPoseString + ", " + poseFromDbString + ", " + offsetString);
                 }
             }
         } catch (IOException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_jButtonRandomPickupActionPerformed
+    }
+
+    private void jButtonContRandomTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonContRandomTestActionPerformed
+        try {
+            clearAll();
+            recordCsvName = JOptionPane.showInputDialog("Name of CSV record file");
+            if (recordCsvName.endsWith(".csv")) {
+                recordCsvName += ".csv";
+            }
+            jCheckBoxReplan.setSelected(true);
+            jCheckBoxAutoStartCrcl.setSelected(true);
+            final String partName = (String) jComboBoxManualObjectName.getSelectedItem();
+            this.randomDropOff();
+            String randomPoseString
+                    = String.format("%.3f, %.3f, %.3f",
+                            randomDropOffPose.getPoint().getX().doubleValue(),
+                            randomDropOffPose.getPoint().getY().doubleValue(),
+                            randomDropOffPose.getPoint().getZ().doubleValue());
+            System.out.println("randomPoseString = " + randomPoseString);
+            System.out.println("randomDropOffCount = " + randomDropOffCount);
+            customRunnables = new ArrayList<>();
+            customRunnables.add(() -> {
+                System.out.println("Continuing with lookFor");
+                this.lookFor(partName);
+            });
+            customRunnables.add(() -> {
+                System.out.println("Continuing with recordAndCompletRandomPickup");
+                this.recordAndCompletRandomPickup();
+            });
+            customRunnables.add(() -> {
+                System.out.println("Continuing with randomDropOff");
+                this.randomDropOff();
+            });
+            this.customRunnablesIndex = 0;
+            this.replanRunnable = this.customReplanRunnable;
+        } catch (IOException iOException) {
+        }
+    }//GEN-LAST:event_jButtonContRandomTestActionPerformed
+
+    private void jButtonStopRandomTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStopRandomTestActionPerformed
+        this.clearAll();
+    }//GEN-LAST:event_jButtonStopRandomTestActionPerformed
+
+    private void jCheckBoxDebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxDebugActionPerformed
+        this.setDebug(this.jCheckBoxDebug.isSelected());
+    }//GEN-LAST:event_jCheckBoxDebugActionPerformed
 
     public void setCrclIndexes(int indexes[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
@@ -1387,13 +1471,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         takePartActionsList.add(takePartAction);
         List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(takePartActionsList, this.replanFromIndex, options);
         CRCLProgramType program = createEmptyProgram();
-        if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
-            jCheckBoxReplan.setSelected(true);
-            setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
-        } else {
-            jCheckBoxReplan.setSelected(false);
-            setReplanFromIndex(0);
-        }
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
@@ -1410,13 +1487,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         pddlActionToCrclGenerator.setOptions(options);
         pddlActionToCrclGenerator.returnPart(part, cmds);
         CRCLProgramType program = createEmptyProgram();
-        if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
-            jCheckBoxReplan.setSelected(true);
-            setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
-        } else {
-            jCheckBoxReplan.setSelected(false);
-            setReplanFromIndex(0);
-        }
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
@@ -1433,7 +1503,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public void randomDropOff() throws IOException {
-        clearAll();
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
         List<MiddleCommandType> cmds = new ArrayList<>();
@@ -1448,13 +1517,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         randomDropOffPose = pose(point(x, y, z), vector(1.0, 0.0, 0.0), vector(0.0, 0.0, -1.0));
         pddlActionToCrclGenerator.placePartByPose(cmds, randomDropOffPose);
         CRCLProgramType program = createEmptyProgram();
-        if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
-            jCheckBoxReplan.setSelected(true);
-            setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
-        } else {
-            jCheckBoxReplan.setSelected(false);
-            setReplanFromIndex(0);
-        }
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
@@ -1464,20 +1526,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public void randomPickup() throws IOException {
-        clearAll();
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
         List<MiddleCommandType> cmds = new ArrayList<>();
         pddlActionToCrclGenerator.setOptions(options);
         pddlActionToCrclGenerator.takePartByPose(cmds, randomDropOffPose);
         CRCLProgramType program = createEmptyProgram();
-        if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
-            jCheckBoxReplan.setSelected(true);
-            setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
-        } else {
-            jCheckBoxReplan.setSelected(false);
-            setReplanFromIndex(0);
-        }
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
@@ -1487,7 +1541,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public void lookFor(String part) throws IOException {
-        clearAll();
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
         List<PddlAction> lookForActionsList = new ArrayList<>();
@@ -1496,13 +1549,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         lookForActionsList.add(takePartAction);
         List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(lookForActionsList, this.replanFromIndex, options);
         CRCLProgramType program = createEmptyProgram();
-        if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
-            jCheckBoxReplan.setSelected(true);
-            setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
-        } else {
-            jCheckBoxReplan.setSelected(false);
-            setReplanFromIndex(0);
-        }
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
@@ -1564,7 +1610,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonClear;
-    private javax.swing.JButton jButtonDbSetup;
+    private javax.swing.JButton jButtonContRandomTest;
     private javax.swing.JButton jButtonGenerateCRCL;
     private javax.swing.JButton jButtonLoad;
     private javax.swing.JButton jButtonLoadPddlActionsFromFile;
@@ -1573,8 +1619,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonRandDropOff;
     private javax.swing.JButton jButtonRandomPickup;
     private javax.swing.JButton jButtonReturn;
+    private javax.swing.JButton jButtonStopRandomTest;
     private javax.swing.JButton jButtonTake;
     private javax.swing.JCheckBox jCheckBoxAutoStartCrcl;
+    private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxNeedLookFor;
     private javax.swing.JCheckBox jCheckBoxReplan;
     private javax.swing.JComboBox<String> jComboBoxManualObjectName;
@@ -1694,15 +1742,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private int replanFromIndex = -1;
     private boolean replanStarted = false;
 
-    @Override
-    public void accept(PendantClientJPanel panel, int line) {
-        CRCLStatusType status = panel.getStatus();
-        CRCLProgramType program = panel.getProgram();
-        if (line >= program.getMiddleCommand().size()
-                && jCheckBoxReplan.isSelected()
-                && !replanStarted) {
+    javax.swing.Timer replanActionTimer = null;
+
+    private final Runnable defaultReplanRunnable = new Runnable() {
+        @Override
+        public void run() {
             replanStarted = true;
-            javax.swing.Timer tmr
+            replanActionTimer
                     = new javax.swing.Timer(200, new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -1713,8 +1759,95 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                             }
                         }
                     });
-            tmr.setRepeats(false);
-            tmr.start();
+            replanActionTimer.setRepeats(false);
+            replanActionTimer.start();
+        }
+    };
+
+    private interface RunnableWithThrow {
+
+        public void run() throws Exception;
+    }
+    private List<RunnableWithThrow> customRunnables = null;
+    private int customRunnablesIndex = -1;
+
+    private final Runnable customReplanRunnable = new Runnable() {
+        @Override
+        public void run() {
+            replanStarted = true;
+            if (null != customRunnables
+                    && customRunnablesIndex >= 0
+                    && customRunnables.size() > 0
+                    && customRunnablesIndex < customRunnables.size()) {
+                replanActionTimer
+                        = new javax.swing.Timer(200, new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                if (null != customRunnables
+                                        && customRunnablesIndex >= 0
+                                        && customRunnables.size() > 0
+                                        && customRunnablesIndex < customRunnables.size()) {
+                                    try {
+                                        System.out.println("customRunnablesIndex = " + customRunnablesIndex);
+                                        RunnableWithThrow runnable = customRunnables.get(customRunnablesIndex);
+                                        customRunnablesIndex = (customRunnablesIndex + 1) % customRunnables.size();
+                                        if (null != runnable) {
+                                            runnable.run();
+                                        }
+                                    } catch (Exception ex) {
+                                        Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                        clearAll();
+                                    }
+                                }
+                            }
+                        });
+                replanActionTimer.setRepeats(false);
+                replanActionTimer.start();
+            }
+        }
+    };
+
+    private Runnable replanRunnable = defaultReplanRunnable;
+
+    private boolean debug;
+
+    /**
+     * Get the value of debug
+     *
+     * @return the value of debug
+     */
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /**
+     * Set the value of debug
+     *
+     * @param debug new value of debug
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+        this.pddlActionToCrclGenerator.setDebug(debug);
+    }
+
+    @Override
+    public void accept(PendantClientJPanel panel, int line) {
+        CRCLStatusType status = panel.getStatus();
+        CRCLProgramType program = panel.getProgram();
+        int sz = program.getMiddleCommand().size();
+        if (this.debug) {
+            System.out.println("replanStarted = " + replanStarted);
+            System.out.println("replanRunnable = " + replanRunnable);
+            System.out.println("jCheckBoxReplan.isSelected() = " + jCheckBoxReplan.isSelected());
+            System.out.println("sz = " + sz);
+            System.out.println("line = " + line);
+            System.out.println("status.getCommandStatus().getCommandState() = " + status.getCommandStatus().getCommandState());
+        }
+        if (line >= program.getMiddleCommand().size()
+                && jCheckBoxReplan.isSelected()
+                && !replanStarted
+                && null != replanRunnable) {
+            replanRunnable.run();
         }
     }
 }

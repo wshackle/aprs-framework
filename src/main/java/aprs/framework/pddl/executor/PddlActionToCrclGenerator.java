@@ -95,6 +95,28 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public Connection getDbConnection() {
         return dbConnection;
     }
+    
+        private boolean debug;
+
+    /**
+     * Get the value of debug
+     *
+     * @return the value of debug
+     */
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /**
+     * Set the value of debug
+     *
+     * @param debug new value of debug
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+        this.qs.setDebug(debug);
+    }
+
 
 //    private Map<DbQueryEnum, String> queriesMap;
 //
