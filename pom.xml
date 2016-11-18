@@ -74,6 +74,11 @@
             <artifactId>com.bsb.common.vaadin7.embed</artifactId>
             <version>0.6</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>crcl4java-motoman</artifactId>
+            <version>1.4-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     <repositories>
         <repository>

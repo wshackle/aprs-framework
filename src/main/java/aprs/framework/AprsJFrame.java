@@ -53,6 +53,7 @@ import aprs.framework.pddl.executor.PddlExecutorDisplayInterface;
 import aprs.framework.tomcat.CRCLWebAppRunner;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
+import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
 import crcl.base.CRCLProgramType;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.ui.client.PendantClientJPanel;
@@ -96,6 +97,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private FanucCRCLMain fanucCRCLMain = null;
     private FanucCRCLServerJInternalFrame fanucCRCLServerJInternalFrame = null;
     private ExploreGraphDbJInternalFrame exploreGraphDbJInternalFrame = null;
+    private MotomanCrclServerJInternalFrame motomanCrclServerJInternalFrame = null;
 
     public void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
         if (null != pendantClientJInternalFrame) {
@@ -125,15 +127,15 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
 
         final private PrintStream ps;
         final private LogDisplayJInternalFrame logDisplayJInternalFrame;
-        
+
         public MyPrintStream(PrintStream ps, LogDisplayJInternalFrame logDisplayJInternalFrame) {
             super(ps, true);
             this.ps = ps;
             this.logDisplayJInternalFrame = logDisplayJInternalFrame;
-            if(null == logDisplayJInternalFrame) {
+            if (null == logDisplayJInternalFrame) {
                 throw new IllegalArgumentException("logDisplayJInteralFrame may not be null");
             }
-            if(null == ps) {
+            if (null == ps) {
                 throw new IllegalArgumentException("PrintStream ps may not be null");
             }
         }
@@ -158,7 +160,8 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         }
     }
 
-    private int fancuCrclPort = CRCLSocket.DEFAULT_PORT;
+    private int fanucCrclPort = CRCLSocket.DEFAULT_PORT;
+    private int motomanCrclPort = CRCLSocket.DEFAULT_PORT;
     private String fanucNeighborhoodName = "AgilityLabLRMate200iD"; // FIXME hard-coded default
     private boolean fanucPreferRNN = false;
     private String fanucRobotHost = "129.6.78.111"; // FIXME hard-coded default
@@ -172,8 +175,21 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             }
             fanucCRCLMain.setDisplayInterface(fanucCRCLServerJInternalFrame);
             fanucCRCLMain.startDisplayInterface();
-            fanucCRCLMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fancuCrclPort);
+            fanucCRCLMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort);
         } catch (CRCLException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void startMotomanCrclServer() {
+        try {
+            if (null == motomanCrclServerJInternalFrame) {
+                motomanCrclServerJInternalFrame = new MotomanCrclServerJInternalFrame();
+                motomanCrclServerJInternalFrame.connectCrclMotoplus();
+                motomanCrclServerJInternalFrame.setVisible(true);
+            }
+            addInternalFrame(motomanCrclServerJInternalFrame);
+        } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -247,8 +263,8 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             }
             logDisplayJInternalFrame.setVisible(true);
             jDesktopPane1.add(logDisplayJInternalFrame);
-            System.setOut(new MyPrintStream(System.out,logDisplayJInternalFrame));
-            System.setErr(new MyPrintStream(System.err,logDisplayJInternalFrame));
+            System.setOut(new MyPrintStream(System.out, logDisplayJInternalFrame));
+            System.setErr(new MyPrintStream(System.err, logDisplayJInternalFrame));
             activateInternalFrame(logDisplayJInternalFrame);
 
 //            Properties buildProperties = null;
@@ -319,6 +335,9 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             setupWindowsMenu();
             if (jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()) {
                 startFanucCrclServer();
+            }
+            if (jCheckBoxMenuItemStartupMotomanCRCLServer.isSelected()) {
+                startMotomanCrclServer();
             }
             createDbSetupFrame();
             if (jCheckBoxMenuItemShowDatabaseSetup.isSelected()) {
@@ -589,6 +608,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         jCheckBoxMenuItemStartupRobtCRCLSimServer = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemShowDatabaseSetup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupFanucCRCLServer = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemStartupMotomanCRCLServer = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemConnectToDatabaseOnStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemConnectToVisionOnStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemExploreGraphDbStartup = new javax.swing.JCheckBoxMenuItem();
@@ -710,6 +730,14 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             }
         });
         jMenu3.add(jCheckBoxMenuItemStartupFanucCRCLServer);
+
+        jCheckBoxMenuItemStartupMotomanCRCLServer.setText("Motoman CRCL Server");
+        jCheckBoxMenuItemStartupMotomanCRCLServer.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jCheckBoxMenuItemStartupMotomanCRCLServer);
 
         jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(true);
         jCheckBoxMenuItemConnectToDatabaseOnStartup.setText("Connect To Database On Startup");
@@ -997,6 +1025,12 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed
 
+    private void jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed
+        if (jCheckBoxMenuItemStartupMotomanCRCLServer.isSelected()) {
+            startMotomanCrclServer();
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed
+
     public void startExploreGraphDb() {
         try {
             if (null == this.exploreGraphDbJInternalFrame) {
@@ -1141,6 +1175,22 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         if (null != startCRCLFanucServerString) {
             jCheckBoxMenuItemStartupFanucCRCLServer.setSelected(Boolean.valueOf(startCRCLFanucServerString));
         }
+        String fanucCrclLocalPortString = props.getProperty(FANUC_CRCL_LOCAL_PORT);
+        if (null != fanucCrclLocalPortString) {
+           this.fanucCrclPort = Integer.valueOf(fanucCrclLocalPortString);
+        }
+        String fanucRobotHostString = props.getProperty(FANUC_ROBOT_HOST);
+        if (null != fanucRobotHostString) {
+           this.fanucRobotHost = fanucRobotHostString;
+        }
+        String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
+        if (null != motomanCrclLocalPortString) {
+           this.motomanCrclPort = Integer.valueOf(motomanCrclLocalPortString);
+        }
+        String startCRCLMotomanServerString = props.getProperty(STARTUPROBOTCRCLMOTOMANSERVER);
+        if (null != startCRCLMotomanServerString) {
+            jCheckBoxMenuItemStartupMotomanCRCLServer.setSelected(Boolean.valueOf(startCRCLMotomanServerString));
+        }
         String startConnectDBString = props.getProperty(STARTUPCONNECTDATABASE);
         if (null != startConnectDBString) {
             jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(Boolean.valueOf(startConnectDBString));
@@ -1228,11 +1278,18 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         propsMap.put(STARTUPROBOTCRCLCLIENT, Boolean.toString(jCheckBoxMenuItemStartupRobotCrclGUI.isSelected()));
         propsMap.put(STARTUPROBOTCRCLSIMSERVER, Boolean.toString(jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected()));
         propsMap.put(STARTUPROBOTCRCLFANUCSERVER, Boolean.toString(jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()));
+        propsMap.put(STARTUPROBOTCRCLMOTOMANSERVER, Boolean.toString(jCheckBoxMenuItemStartupMotomanCRCLServer.isSelected()));
         propsMap.put(STARTUPCONNECTDATABASE, Boolean.toString(jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()));
         propsMap.put(STARTUPCONNECTVISION, Boolean.toString(jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()));
         propsMap.put(STARTUPEXPLOREGRAPHDB, Boolean.toString(jCheckBoxMenuItemExploreGraphDbStartup.isSelected()));
         propsMap.put(STARTUPCRCLWEBAPP, Boolean.toString(jCheckBoxMenuItemStartupCRCLWebApp.isSelected()));
         propsMap.put(CRCLWEBAPPPORT, Integer.toString(crclWebServerHttpPort));
+        if (null != fanucCRCLMain) {
+            this.fanucCrclPort = fanucCRCLMain.getLocalPort();
+            this.fanucRobotHost = fanucCRCLMain.getRemoteRobotHost();
+        }
+        propsMap.put(FANUC_CRCL_LOCAL_PORT, Integer.toString(fanucCrclPort));
+        propsMap.put(FANUC_ROBOT_HOST, fanucRobotHost);
         Properties props = new Properties();
         props.putAll(propsMap);
         try (FileWriter fw = new FileWriter(propertiesFile)) {
@@ -1262,12 +1319,16 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private static final String STARTUPROBOTCRCLCLIENT = "startup.robotcrclclient";
     private static final String STARTUPROBOTCRCLSIMSERVER = "startup.robotcrclsimserver";
     private static final String STARTUPROBOTCRCLFANUCSERVER = "startup.robotcrclfanucserver";
+    private static final String STARTUPROBOTCRCLMOTOMANSERVER = "startup.robotcrclmotomanserver";
 
     private static final String STARTUPCONNECTDATABASE = "startup.connectdatabase";
     private static final String STARTUPCONNECTVISION = "startup.connectvision";
     private static final String STARTUPEXPLOREGRAPHDB = "startup.exploreGraphDb";
     private static final String STARTUPCRCLWEBAPP = "startup.crclWebApp";
     private static final String CRCLWEBAPPPORT = "crclWebApp.httpPort";
+    private static final String FANUC_CRCL_LOCAL_PORT = "fanuc.crclLocalPort";
+    private static final String FANUC_ROBOT_HOST = "fanuc.robotHost";
+    private static final String MOTOMAN_CRCL_LOCAL_PORT = "motoman.crclLocalPort";
 
     @Override
     public void browseActionsFile() throws IOException {
@@ -1279,7 +1340,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
      */
     public static void main(String args[]) {
 
-        String prefLaf =  "Nimbus"; // "GTK+"; // Nimbus, Metal ...
+        String prefLaf = "Nimbus"; // "GTK+"; // Nimbus, Metal ...
         /* Set the preferred look and feel */
 
         if (prefLaf != null) {
@@ -1319,6 +1380,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupCRCLWebApp;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupFanucCRCLServer;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupMotomanCRCLServer;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObject2DView;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObjectSP;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupPDDLExecutor;
