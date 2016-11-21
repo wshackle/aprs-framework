@@ -1010,6 +1010,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.list = _list;
         DefaultTableModel tm = (DefaultTableModel) this.jTableFromVision.getModel();
 //        TableColumnModel tcm = this.jTableFromCognex.getColumnModel();
+        tm.setRowCount(0);
         for (int i = 0; i < list.size(); i++) {
             DetectedItem ci = list.get(i);
             if (tm.getRowCount() <= i) {
