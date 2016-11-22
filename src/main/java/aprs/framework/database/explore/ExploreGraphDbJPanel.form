@@ -66,6 +66,7 @@
                           <Component id="jButtonGetNodeLabels" linkSize="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonSaveDump" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonLoadDump" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="jCheckBoxDebug" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="jScrollPane4" max="32767" attributes="0"/>
@@ -108,7 +109,7 @@
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jScrollPane5" pref="0" max="32767" attributes="0"/>
                   </Group>
-                  <Component id="jScrollPane1" pref="565" max="32767" attributes="0"/>
+                  <Component id="jScrollPane1" pref="563" max="32767" attributes="0"/>
               </Group>
               <EmptySpace min="-2" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
@@ -118,9 +119,10 @@
                       <Component id="jButtonSaveDump" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jButtonLoadDump" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Component id="jCheckBoxDebug" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <Component id="jScrollPane4" pref="115" max="32767" attributes="0"/>
+                  <Component id="jScrollPane4" max="32767" attributes="0"/>
               </Group>
               <EmptySpace min="-2" max="-2" attributes="0"/>
           </Group>
@@ -327,6 +329,11 @@
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonLoadDumpActionPerformed"/>
       </Events>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="jCheckBoxDebug">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Debug"/>
+      </Properties>
     </Component>
   </SubComponents>
 </Form>

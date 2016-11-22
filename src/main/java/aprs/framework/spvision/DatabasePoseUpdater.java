@@ -246,6 +246,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private String queryAllString;
     private String querySingleString;
+    private String queryDeleteSinglePoseString;
     private String mergeStatementString;
 
     private void setupStatements() throws SQLException {
@@ -281,6 +282,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
                 query_all_statement = con.prepareStatement(queryAllString);
                 querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
+                queryDeleteSinglePoseString = queriesMap.get(DbQueryEnum.DELETE_SINGLE_POSE).getQuery();
                 get_single_statement = con.prepareStatement(querySingleString);
                 getSingleParamTypes = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getParams();
 
@@ -300,6 +302,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 query_all_statement = con.prepareStatement(queryAllString);
                 updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
                 querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
+                queryDeleteSinglePoseString = queriesMap.get(DbQueryEnum.DELETE_SINGLE_POSE).getQuery();
                 get_single_statement = con.prepareStatement(querySingleString);
                 getSingleParamTypes = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getParams();
 //                updateParamTypes = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
@@ -817,6 +820,13 @@ public class DatabasePoseUpdater implements AutoCloseable {
             if (null != displayInterface) {
                 displayInterface.updateResultsMap(updateResultsMap);
             }
+        }
+    }
+    
+    public void deletePose(String name) throws SQLException {
+        try(PreparedStatement stmnt = con.prepareStatement(queryDeleteSinglePoseString)) {
+            stmnt.setString(1, name);
+            stmnt.execute();
         }
     }
 

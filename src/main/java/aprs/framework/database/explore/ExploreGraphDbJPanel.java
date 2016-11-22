@@ -150,10 +150,13 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     private void updatePropsRels() {
         try {
             int index = this.jTableNodes.getSelectedRow();
+            if(jTableNodes.getColumnCount() < 1) {
+                return;
+            }
             if (index < 0 || index >= this.jTableNodes.getRowCount()) {
                 return;
             }
-            String s = this.jTableNodes.getValueAt(index, 0).toString();
+            String s = Objects.toString(this.jTableNodes.getValueAt(index, 0));
             if (!jTextFieldSelectedNodeId.getText().equals(s)) {
                 jTextFieldSelectedNodeId.setText(s);
             }
@@ -409,6 +412,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         jTextFieldSelectedNodeName = new javax.swing.JTextField();
         jButtonSaveDump = new javax.swing.JButton();
         jButtonLoadDump = new javax.swing.JButton();
+        jCheckBoxDebug = new javax.swing.JCheckBox();
 
         jListNodeLabels.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -535,6 +539,8 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             }
         });
 
+        jCheckBoxDebug.setText("Debug");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -579,7 +585,8 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jButtonGetNodeLabels)
                             .addComponent(jButtonSaveDump)
-                            .addComponent(jButtonLoadDump))
+                            .addComponent(jButtonLoadDump)
+                            .addComponent(jCheckBoxDebug))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jScrollPane4)))
                 .addContainerGap())
@@ -616,7 +623,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                             .addComponent(jButtonGotoNext))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 565, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 563, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
@@ -625,8 +632,9 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                         .addComponent(jButtonSaveDump)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonLoadDump)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxDebug))
+                    .addComponent(jScrollPane4))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -752,9 +760,9 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     }
 
     private void saveDump(File f) throws FileNotFoundException, SQLException {
-        System.out.println("Saving to "+f +" ...");
+        System.out.println("Saving to " + f + " ...");
         try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
-            
+
             // Skip adding the contstraints
 //            try (PreparedStatement stmtn
 //                    = connection.prepareStatement("MATCH (n) WITH DISTINCT labels(n) AS labels UNWIND labels AS label RETURN DISTINCT label ORDER BY label");
@@ -785,7 +793,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                     = connection.prepareStatement("MATCH (n) -[r] -> (o) return n,labels(n),id(n),r,type(r),o,labels(o),id(o)");
                     ResultSet rs = stmtn.executeQuery()) {
                 while (rs.next()) {
-                    Map<String, Object> map =  new HashMap<>(); //getMapFromResultSet(rs, 1);
+                    Map<String, Object> map = new HashMap<>(); //getMapFromResultSet(rs, 1);
                     map.put("origID", rs.getString(3));
                     if (map.keySet().size() > 0) {
                         List<String> labels = getListFromResultSet(rs, 2);
@@ -794,8 +802,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                         appendNodeLabelsString(labels, sb);
                         appendPropsString(map, sb);
                         sb.append(" ) ,");
-                        
-                        
+
                         sb.append(" (o");
                         labels = getListFromResultSet(rs, 7);
                         appendNodeLabelsString(labels, sb);
@@ -814,7 +821,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 }
             }
         }
-        System.out.println("Finished saving to "+f);
+        System.out.println("Finished saving to " + f);
     }
 
     private void appendNodeLabelsString(List<String> labels, StringBuilder sb) {
@@ -1003,34 +1010,39 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             ResultSetMetaData meta = rs.getMetaData();
             metaColCount = meta.getColumnCount();
             while (rs.next()) {
-                for (int rsIndex = 1; rsIndex <= metaColCount; rsIndex++) {
-                    try {
-                        String colName = rs.getMetaData().getColumnName(rsIndex);
-                        System.out.println("colName = " + colName);
-                    } catch (Exception exception) {
-                        exception.printStackTrace();
-                    }
-                    try {
-                        String colLabel = rs.getMetaData().getColumnLabel(rsIndex);
-                        System.out.println("colLabel = " + colLabel);
-                    } catch (Exception exception) {
-                        exception.printStackTrace();
+                if (this.jCheckBoxDebug.isSelected()) {
+                    for (int rsIndex = 1; rsIndex <= metaColCount; rsIndex++) {
+                        try {
+                            String colName = rs.getMetaData().getColumnName(rsIndex);
+                            System.out.println("colName = " + colName);
+                        } catch (Exception exception) {
+                            exception.printStackTrace();
+                        }
+                        try {
+                            String colLabel = rs.getMetaData().getColumnLabel(rsIndex);
+                            System.out.println("colLabel = " + colLabel);
+                        } catch (Exception exception) {
+                            exception.printStackTrace();
+                        }
                     }
                 }
                 listOfListOfMaps.add(new ArrayList<>());
                 List<Map> thisRowListMap = listOfListOfMaps.get(row);
-
-                for (int rsIndex = 1; rsIndex <= metaColCount; rsIndex++) {
-                    try {
-                        String str = rs.getString(rsIndex);
-                        System.out.println("row = " + row + ",rsIndex=" + rsIndex + ",str = " + str);
-                    } catch (Exception excepion) {
-                        excepion.printStackTrace();
+                if (this.jCheckBoxDebug.isSelected()) {
+                    for (int rsIndex = 1; rsIndex <= metaColCount; rsIndex++) {
+                        try {
+                            String str = rs.getString(rsIndex);
+                            System.out.println("row = " + row + ",rsIndex=" + rsIndex + ",str = " + str);
+                        } catch (Exception excepion) {
+                            excepion.printStackTrace();
+                        }
                     }
                 }
                 for (int rsIndex = 1; rsIndex <= metaColCount; rsIndex++) {
                     String str = rs.getString(rsIndex);
-                    System.out.println("str = " + str);
+                    if (this.jCheckBoxDebug.isSelected()) {
+                        System.out.println("str = " + str);
+                    }
 //                    Object rsObject = rs.getObject(rsIndex, Object.class);
                     Map map = getMapFromResultSet(rs, rsIndex);
                     thisRowListMap.add(map);
@@ -1054,7 +1066,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 }
                 row++;
             }
-            for (int rsIndex = 1; rsIndex <= metaColCount; rsIndex++) {
+            for (int rsIndex = 1; rsIndex <= metaColCount && rsIndex <= listOfLabelsLists.size(); rsIndex++) {
                 List<String> sublist = listOfLabelsLists.get(rsIndex - 1);
                 for (int tableIndex = 0; tableIndex < sublist.size(); tableIndex++) {
                     model.addColumn(meta.getColumnName(rsIndex) + "." + sublist.get(tableIndex));
@@ -1075,7 +1087,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 tableOffset += listOfLabelsLists.get(rsIndex - 1).size();
             }
         }
-        if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             updateNodes(model);
         } else {
             javax.swing.SwingUtilities.invokeLater(() -> updateNodes(model));
@@ -1102,6 +1114,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     private javax.swing.JButton jButtonGotoNext;
     private javax.swing.JButton jButtonLoadDump;
     private javax.swing.JButton jButtonSaveDump;
+    private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

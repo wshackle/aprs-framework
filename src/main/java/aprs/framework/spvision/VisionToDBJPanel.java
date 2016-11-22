@@ -168,6 +168,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jLabel20 = new javax.swing.JLabel();
         jButtonCheck = new javax.swing.JButton();
         jButtonAddItem = new javax.swing.JButton();
+        jButtonDelete = new javax.swing.JButton();
         jPanelTableFromVision = new javax.swing.JPanel();
         jScrollPaneTableFromVision = new javax.swing.JScrollPane();
         jTableFromVision = new javax.swing.JTable();
@@ -485,6 +486,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
+        jButtonDelete.setText("Delete");
+        jButtonDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDeleteActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelTableFromDatabaseLayout = new javax.swing.GroupLayout(jPanelTableFromDatabase);
         jPanelTableFromDatabase.setLayout(jPanelTableFromDatabaseLayout);
         jPanelTableFromDatabaseLayout.setHorizontalGroup(
@@ -495,7 +503,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jScrollPaneTableFromDatabase, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(jPanelTableFromDatabaseLayout.createSequentialGroup()
                         .addComponent(jLabel20)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 78, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonDelete)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonAddItem)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonCheck)))
@@ -507,7 +517,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addGroup(jPanelTableFromDatabaseLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel20)
                     .addComponent(jButtonCheck)
-                    .addComponent(jButtonAddItem))
+                    .addComponent(jButtonAddItem)
+                    .addComponent(jButtonDelete))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPaneTableFromDatabase, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
                 .addContainerGap())
@@ -1379,6 +1390,24 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }//GEN-LAST:event_jCheckBoxVerifyUpdatesActionPerformed
 
+    private void jButtonDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteActionPerformed
+       for(int i : jTableFromDatabase.getSelectedRows()) {
+           String name = (String) jTableFromDatabase.getModel().getValueAt(i, 0);
+           try {
+               
+               if(name != null && name.length() > 0) {
+                    Main.getDatabasePoseUpdater().deletePose(name);
+               }
+                
+           } catch (SQLException ex) {
+               Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+               appendLogDisplay("\nDelete "+name+" failed :"+ex+"\n");
+           }
+       }
+       jTableFromDatabase.getSelectionModel().clearSelection();
+       Main.queryDatabase();
+    }//GEN-LAST:event_jButtonDeleteActionPerformed
+
     private DbType oldDbType = null;
 
 
@@ -1387,6 +1416,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JButton jButtonCheck;
     private javax.swing.JButton jButtonConnectVision;
     private javax.swing.JButton jButtonDbSetup;
+    private javax.swing.JButton jButtonDelete;
     private javax.swing.JButton jButtonDisconnectVision;
     private javax.swing.JButton jButtonUpdateResultDetails;
     private javax.swing.JCheckBox jCheckBoxAddRepeatCountsToDatabaseNames;
