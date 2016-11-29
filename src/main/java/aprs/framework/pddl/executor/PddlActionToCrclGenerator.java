@@ -58,6 +58,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private DbSetup dbSetup;
     private boolean closeDbConnection = true;
     private QuerySet qs;
+    
+    private ErrorMap errorMap=null;
+
+    public ErrorMap getErrorMap() {
+        return errorMap;
+    }
+
+    public void setErrorMap(ErrorMap errorMap) {
+        this.errorMap = errorMap;
+    }
+    
+    
 
     public List<TraySlotDesign> getAllTraySlotDesigns() throws SQLException {
         return qs.getAllTraySlotDesigns();
@@ -313,6 +325,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         out.add(msg);
 
         PoseType pose = getPartPose(action.getArgs()[1]);
+        if(null != errorMap) {
+            pose = errorMap.correctPose(pose);
+        }
         returnPoses.put(action.getArgs()[1], pose);
         pose.setZAxis(vector(0, 0, -1.0));
         takePartByPose(out, pose);
@@ -483,6 +498,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.setDbSetup(setup);
     }
 
+    
     @Override
     public void close() throws Exception {
         if (closeDbConnection && null != dbConnection) {

@@ -167,8 +167,8 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     }
 
     @Override
-    public void restoreProperties() {
-        this.visionToDBJPanel.restoreProperties();
+    public void loadProperties() {
+        this.visionToDBJPanel.loadProperties();
     }
 
     @Override

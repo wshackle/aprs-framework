@@ -24,6 +24,7 @@ package aprs.framework.simview;
 
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.Main;
+import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
 import aprs.framework.spvision.VisionSocketClient;
 import aprs.framework.spvision.VisionSocketServer;
 import java.awt.Component;
@@ -37,10 +38,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JTable;
 import javax.swing.RowSorter;
 import javax.swing.event.ListSelectionEvent;
@@ -168,6 +169,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 object2DJPanel1.setSelectedItemIndex(jTable1.getSelectedRow());
             }
         });
+//        jComboBoxDisplayAxis.setModel( new DefaultComboBoxModel<>(DisplayAxis.values()));
         setMaxXMaxYText(jTextFieldMaxXMaxY.getText());
         setMinXMinYText(jTextFieldMinXMinY.getText());
     }
@@ -202,6 +204,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldMaxXMaxY = new javax.swing.JTextField();
         jButtonReset = new javax.swing.JButton();
         jCheckBoxShowRotations = new javax.swing.JCheckBox();
+        jComboBoxDisplayAxis = new javax.swing.JComboBox<>();
 
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
@@ -222,7 +225,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setLayout(object2DJPanel1Layout);
         object2DJPanel1Layout.setHorizontalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 398, Short.MAX_VALUE)
+            .addGap(0, 441, Short.MAX_VALUE)
         );
         object2DJPanel1Layout.setVerticalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -335,7 +338,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonRefresh)))
-                .addContainerGap(13, Short.MAX_VALUE))
+                .addContainerGap(56, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -389,6 +392,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jComboBoxDisplayAxis.setModel(new DefaultComboBoxModel<>(DisplayAxis.values()));
+        jComboBoxDisplayAxis.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBoxDisplayAxisActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -407,6 +417,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(layout.createSequentialGroup()
+                                .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButtonReset)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButtonDelete)
@@ -429,7 +441,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 203, Short.MAX_VALUE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel3)
@@ -443,7 +455,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             .addComponent(jButtonDelete)
                             .addComponent(jButtonAdd)
                             .addComponent(jButtonReset)
-                            .addComponent(jCheckBoxShowRotations))
+                            .addComponent(jCheckBoxShowRotations)
+                            .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
@@ -545,6 +558,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jCheckBoxConnectedActionPerformed
 
+    
+
     private void connect() throws NumberFormatException {
         if (this.jCheckBoxSimulated.isSelected()) {
             try {
@@ -555,19 +570,25 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
-            if (null != Main.getVisionSocketClient()) {
-                visionSocketClient = Main.getVisionSocketClient();
-            } else {
-                visionSocketClient = new VisionSocketClient();
-                Map<String, String> argsMap = new HashMap<>();
-                for (Map.Entry<String, String> e : Main.getArgsMap().entrySet()) {
-                    argsMap.put(e.getKey(), e.getValue());
-                }
-                argsMap.put("--visionport", jTextFieldPort.getText());
-                argsMap.put("--visionhost", jTextFieldHost.getText());
-                visionSocketClient.start(argsMap);
+            visionSocketClient = new VisionSocketClient();
+            Map<String, String> argsMap = new HashMap<>();
+            for (Map.Entry<String, String> e : Main.getArgsMap().entrySet()) {
+                argsMap.put(e.getKey(), e.getValue());
             }
+            argsMap.put("--visionport", jTextFieldPort.getText());
+            argsMap.put("--visionhost", jTextFieldHost.getText());
             visionSocketClient.setDebug(this.jCheckBoxDebug.isSelected());
+            visionSocketClient.start(argsMap);
+            if (!visionSocketClient.isConnected()) {
+                jCheckBoxConnected.setSelected(false);
+                try {
+                    visionSocketClient.close();
+                } catch (Exception ex) {
+                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                visionSocketClient = null;
+                return;
+            }
             visionSocketClient.addListener(this);
         }
     }
@@ -690,6 +711,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jButtonRefreshActionPerformed
 
+    private void jComboBoxDisplayAxisActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxDisplayAxisActionPerformed
+        object2DJPanel1.setDisplayAxis((DisplayAxis) jComboBoxDisplayAxis.getSelectedItem());
+    }//GEN-LAST:event_jComboBoxDisplayAxisActionPerformed
+
     public void setMinXMinYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
@@ -713,6 +738,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxPause;
     private javax.swing.JCheckBox jCheckBoxShowRotations;
     private javax.swing.JCheckBox jCheckBoxSimulated;
+    private javax.swing.JComboBox<DisplayAxis> jComboBoxDisplayAxis;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -762,7 +788,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private static final String ITEMS_PROPERTY_NAME = "items";
 
     @Override
-    public void restoreProperties() throws IOException {
+    public void loadProperties() throws IOException {
         if (null != propertiesFile && propertiesFile.exists()) {
             Properties props = new Properties();
             try (FileReader fr = new FileReader(propertiesFile)) {

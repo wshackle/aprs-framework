@@ -16,3 +16,4 @@ hs_err_pid*
 # log and err files
 run*.log
 run*.err
+/nbproject/

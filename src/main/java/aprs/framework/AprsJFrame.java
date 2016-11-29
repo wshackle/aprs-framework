@@ -55,11 +55,14 @@ import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
 import crcl.base.CRCLProgramType;
+import crcl.base.CommandStatusType;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.ui.client.PendantClientJPanel;
+import crcl.ui.client.UpdateTitleListener;
 import crcl.ui.server.SimServerJInternalFrame;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLSocket;
+import java.awt.Container;
 import java.io.PrintStream;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Callable;
@@ -252,6 +255,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
      */
     public AprsJFrame() {
         try {
+            initPropertiesFileInfo();
             initComponents();
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -305,7 +309,12 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
-            initPropertiesFile();
+//            initPropertiesFile();
+            if (propertiesFile.exists()) {
+                loadProperties();
+            } else {
+                saveProperties();
+            }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -469,8 +478,8 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private void startObject2DJinternalFrame() {
         try {
             object2DViewJInternalFrame = new Object2DViewJInternalFrame();
-            object2DViewJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "object2DViewProperties.txt"));
-            object2DViewJInternalFrame.restoreProperties();
+            updateSubPropertiesFiles();
+            object2DViewJInternalFrame.loadProperties();
             object2DViewJInternalFrame.pack();
             object2DViewJInternalFrame.setVisible(true);
             jDesktopPane1.add(object2DViewJInternalFrame);
@@ -484,11 +493,22 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         try {
             pendantClientJInternalFrame = new PendantClientJInternalFrame();
 //            pendantClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "object2DViewProperties.txt"));
-//            pendantClientJInternalFrame.restoreProperties();
+//            pendantClientJInternalFrame.loadProperties();
             pendantClientJInternalFrame.pack();
             pendantClientJInternalFrame.setVisible(true);
             jDesktopPane1.add(pendantClientJInternalFrame);
             pendantClientJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(pendantClientJInternalFrame);
+            pendantClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
+                @Override
+                public void titleChanged(CommandStatusType ccst, Container container, String stateString, String stateDescription) {
+                    String oldTitle = getTitle();
+                    String newTitle = "APRS Coordinator : "+stateString+" : "+stateDescription;
+                    if(!oldTitle.equals(newTitle)) {
+                        setTitle(newTitle);
+                        setupWindowsMenu();
+                    }   
+                }
+            });
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -498,7 +518,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         try {
             simServerJInternalFrame = new SimServerJInternalFrame();
 //            pendantClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "object2DViewProperties.txt"));
-//            pendantClientJInternalFrame.restoreProperties();
+//            pendantClientJInternalFrame.loadProperties();
             simServerJInternalFrame.pack();
             simServerJInternalFrame.setVisible(true);
             jDesktopPane1.add(simServerJInternalFrame);
@@ -529,17 +549,22 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     }
 
     private void startVisionToDbJinternalFrame() {
-        visionToDbJInternalFrame = new VisionToDbJInternalFrame();
-        visionToDbJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "visionToDBProperties.txt"));
-        visionToDbJInternalFrame.restoreProperties();
-        visionToDbJInternalFrame.pack();
-        visionToDbJInternalFrame.setVisible(true);
-        visionToDbJInternalFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
-        jDesktopPane1.add(visionToDbJInternalFrame);
-        visionToDbJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(visionToDbJInternalFrame);
-        DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
-        if (null != pub) {
-            pub.addDbSetupListener(toDbListener);
+        try {
+            visionToDbJInternalFrame = new VisionToDbJInternalFrame();
+            updateSubPropertiesFiles();
+//        visionToDbJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "visionToDBProperties.txt"));
+            visionToDbJInternalFrame.loadProperties();
+            visionToDbJInternalFrame.pack();
+            visionToDbJInternalFrame.setVisible(true);
+            visionToDbJInternalFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
+            jDesktopPane1.add(visionToDbJInternalFrame);
+            visionToDbJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(visionToDbJInternalFrame);
+            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+            if (null != pub) {
+                pub.addDbSetupListener(toDbListener);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -552,7 +577,8 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             this.pddlExecutorJInternalFrame1.setVisible(true);
             jDesktopPane1.add(pddlExecutorJInternalFrame1);
             pddlExecutorJInternalFrame1.getDesktopPane().getDesktopManager().maximizeFrame(pddlExecutorJInternalFrame1);
-            this.pddlExecutorJInternalFrame1.setPropertiesFile(new File(propertiesDirectory, "actionsToCrclProperties.txt"));
+            updateSubPropertiesFiles();
+//            this.pddlExecutorJInternalFrame1.setPropertiesFile(new File(propertiesDirectory, "actionsToCrclProperties.txt"));
             this.pddlExecutorJInternalFrame1.loadProperties();
             pddlExecutorJInternalFrame1.setDbSetupSupplier(dbSetupPublisherSupplier);
             if (null != pddlPlannerJInternalFrame) {
@@ -571,10 +597,11 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
                 pddlPlannerJInternalFrame = new PddlPlannerJInternalFrame();
                 pddlPlannerJInternalFrame.pack();
             }
+            updateSubPropertiesFiles();
             pddlPlannerJInternalFrame.setVisible(true);
             jDesktopPane1.add(pddlPlannerJInternalFrame);
             pddlPlannerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(pddlPlannerJInternalFrame);
-            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
+//            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
             pddlPlannerJInternalFrame.loadProperties();
             pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
         } catch (IOException ex) {
@@ -596,7 +623,8 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         jMenu1 = new javax.swing.JMenu();
         jMenuItemLoadProperties = new javax.swing.JMenuItem();
         jMenuItemSaveProperties = new javax.swing.JMenuItem();
-        jMenuItemSetProperiesFile = new javax.swing.JMenuItem();
+        jMenuItemSavePropsAs = new javax.swing.JMenuItem();
+        jMenuItemLoadPropertiesFile = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         jMenuItemExit = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
@@ -639,13 +667,21 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         });
         jMenu1.add(jMenuItemSaveProperties);
 
-        jMenuItemSetProperiesFile.setText("Set Properties File ...");
-        jMenuItemSetProperiesFile.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItemSavePropsAs.setText("Save Properties As ...");
+        jMenuItemSavePropsAs.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemSetProperiesFileActionPerformed(evt);
+                jMenuItemSavePropsAsActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItemSetProperiesFile);
+        jMenu1.add(jMenuItemSavePropsAs);
+
+        jMenuItemLoadPropertiesFile.setText("Load Properties File ...");
+        jMenuItemLoadPropertiesFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemLoadPropertiesFileActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemLoadPropertiesFile);
         jMenu1.add(jSeparator1);
 
         jMenuItemExit.setText("Exit");
@@ -880,31 +916,31 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         }
     }//GEN-LAST:event_jMenuItemSavePropertiesActionPerformed
 
-    private void jMenuItemSetProperiesFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetProperiesFileActionPerformed
+    private void jMenuItemLoadPropertiesFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadPropertiesFileActionPerformed
         JFileChooser chooser = new JFileChooser(propertiesDirectory);
-        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 setPropertiesFile(chooser.getSelectedFile());
-                initPropertiesFile();
+                loadProperties();
+//                initPropertiesFile();
             } catch (IOException ex) {
                 Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }//GEN-LAST:event_jMenuItemSetProperiesFileActionPerformed
+    }//GEN-LAST:event_jMenuItemLoadPropertiesFileActionPerformed
 
-    private void initPropertiesFile() throws IOException {
-        propertiesDirectory = propertiesFile.getParentFile();
-        if (propertiesFile.exists()) {
-            loadProperties();
-        } else {
-            if (!propertiesDirectory.exists()) {
-                System.out.println("The directory " + propertiesDirectory + " does not exist, it will be created now.");
-            }
-            System.out.println("Properties file " + propertiesFile + " does not exist.");
-            System.out.println("It will be created with the current properties.");
-            saveProperties();
-        }
-    }
+//    private void initPropertiesFile() throws IOException {
+//        if (propertiesFile.exists()) {
+//            loadProperties();
+//        } else {
+//            if (!propertiesDirectory.exists()) {
+//                System.out.println("The directory " + propertiesDirectory + " does not exist, it will be created now.");
+//            }
+//            System.out.println("Properties file " + propertiesFile + " does not exist.");
+//            System.out.println("It will be created with the current properties.");
+//            saveProperties();
+//        }
+//    }
 
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
         try {
@@ -1031,6 +1067,19 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed
 
+    private void jMenuItemSavePropsAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePropsAsActionPerformed
+        JFileChooser chooser = new JFileChooser(propertiesDirectory);
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                setPropertiesFile(chooser.getSelectedFile());
+//                initPropertiesFile();
+                this.saveProperties();
+            } catch (IOException ex) {
+                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jMenuItemSavePropsAsActionPerformed
+
     public void startExploreGraphDb() {
         try {
             if (null == this.exploreGraphDbJInternalFrame) {
@@ -1040,8 +1089,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
                 this.addInternalFrame(exploreGraphDbJInternalFrame);
             }
             activateInternalFrame(this.exploreGraphDbJInternalFrame);
-            saveProperties();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -1065,18 +1113,39 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         this.pddlExecutorJInternalFrame1.processActions();
     }
 
-    static private File propertiesFile;
-    static private File propertiesDirectory;
+    private File propertiesFile;
+    private File propertiesDirectory;
+    public static final String APRS_DEFAULT_PROPERTIES_FILENAME = "aprs_properties.txt";
+    private File lastAprsPropertiesFileFile;
 
-    static {
+    private void initPropertiesFileInfo() {
         String aprsPropsDir = System.getProperty("aprs.properties.dir");
         if (null != aprsPropsDir) {
             propertiesDirectory = new File(aprsPropsDir);
         } else {
             propertiesDirectory = new File(System.getProperty("user.home"), ".aprs");
         }
+        lastAprsPropertiesFileFile = new File(propertiesDirectory, "lastPropsFileName.txt");
+        if (lastAprsPropertiesFileFile.exists()) {
+            try {
+                Properties p = new Properties();
+                p.load(new FileReader(lastAprsPropertiesFileFile));
+                String fname = p.getProperty("lastPropertyFileName");
+                if (fname != null && fname.length() > 0) {
+                    File f = new File(fname);
+                    if (f.exists()) {
+                        propertiesFile = f;
+                        propertiesDirectory = propertiesFile.getParentFile();
+                        return;
+                    }
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         propertiesDirectory.mkdirs();
-        propertiesFile = new File(propertiesDirectory, "aprs_pddl_wrapper_propeties.txt");
+        String aprsPropsFilename = System.getProperty("aprs.properties.filename", APRS_DEFAULT_PROPERTIES_FILENAME);
+        propertiesFile = new File(propertiesDirectory, aprsPropsFilename);
     }
 
     private final DbSetupListener toVisListener = new DbSetupListener() {
@@ -1100,14 +1169,12 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             if (null != visionToDbJInternalFrame) {
                 DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
                 if (null != pub) {
-                    DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, "dbsetup.txt"), dbSetup);
+                    DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
                     pub.setDbSetup(setup);
                 }
             }
         }
     };
-
-    private File dbPropertiesFile = new File(propertiesDirectory, "dbsetup.txt");
 
     private final DbSetupListener toDbListener = new DbSetupListener() {
         @Override
@@ -1131,7 +1198,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             if (null != dbSetupJInternalFrame) {
                 DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
                 if (null != pub) {
-                    DbSetupBuilder.savePropertiesFile(dbPropertiesFile, dbSetup);
+                    DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
                     pub.setDbSetup(setup);
                 }
             }
@@ -1143,6 +1210,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     @Override
     public final void loadProperties() throws IOException {
         Properties props = new Properties();
+        System.out.println("AprsJFrame loading properties from " + propertiesFile.getCanonicalPath());
         try (FileReader fr = new FileReader(propertiesFile)) {
             props.load(fr);
         }
@@ -1177,15 +1245,15 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         }
         String fanucCrclLocalPortString = props.getProperty(FANUC_CRCL_LOCAL_PORT);
         if (null != fanucCrclLocalPortString) {
-           this.fanucCrclPort = Integer.valueOf(fanucCrclLocalPortString);
+            this.fanucCrclPort = Integer.valueOf(fanucCrclLocalPortString);
         }
         String fanucRobotHostString = props.getProperty(FANUC_ROBOT_HOST);
         if (null != fanucRobotHostString) {
-           this.fanucRobotHost = fanucRobotHostString;
+            this.fanucRobotHost = fanucRobotHostString;
         }
         String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
         if (null != motomanCrclLocalPortString) {
-           this.motomanCrclPort = Integer.valueOf(motomanCrclLocalPortString);
+            this.motomanCrclPort = Integer.valueOf(motomanCrclLocalPortString);
         }
         String startCRCLMotomanServerString = props.getProperty(STARTUPROBOTCRCLMOTOMANSERVER);
         if (null != startCRCLMotomanServerString) {
@@ -1237,13 +1305,18 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
 //        if (null != addargs) {
 //            jTextFieldAdditionalArgs.setText(addargs);
 //        }
-        if (null != pddlPlannerJInternalFrame) {
+        this.updateSubPropertiesFiles();
+        if (null != this.pddlPlannerJInternalFrame) {
             this.pddlPlannerJInternalFrame.loadProperties();
         }
-        if (null != pddlExecutorJInternalFrame1) {
+        if (null != this.pddlExecutorJInternalFrame1) {
             this.pddlExecutorJInternalFrame1.loadProperties();
         }
-        dbSetup = DbSetupBuilder.loadFromPropertiesFile(new File(propertiesDirectory, "dbsetup.txt")).build();
+
+        if (null != this.object2DViewJInternalFrame) {
+            this.object2DViewJInternalFrame.loadProperties();
+        }
+        dbSetup = DbSetupBuilder.loadFromPropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt")).build();
 
         if (null != dbSetupJInternalFrame) {
             DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
@@ -1252,19 +1325,24 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             }
         }
         if (null != visionToDbJInternalFrame) {
-            this.visionToDbJInternalFrame.restoreProperties();
+            this.visionToDbJInternalFrame.loadProperties();
             DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
             if (null != pub) {
                 pub.setDbSetup(dbSetup);
             }
         }
         if (null != object2DViewJInternalFrame) {
-            this.object2DViewJInternalFrame.restoreProperties();
+            this.object2DViewJInternalFrame.loadProperties();
         }
     }
 
     @Override
     public void saveProperties() throws IOException {
+        File propsParent = propertiesFile.getParentFile();
+        if (!propsParent.exists()) {
+            System.out.println("Directory " + propsParent + " does not exist. (Creating it now.)");
+            propsParent.mkdirs();
+        }
         Map<String, String> propsMap = new HashMap<>();
 //        propsMap.put(PROGRAMEXECUTABLE, jTextFieldPlannerProgramExecutable.getText());
 //        propsMap.put(PDDLDOMAIN, jTextFieldPddlDomainFile.getText());
@@ -1292,9 +1370,11 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         propsMap.put(FANUC_ROBOT_HOST, fanucRobotHost);
         Properties props = new Properties();
         props.putAll(propsMap);
+        System.out.println("AprsJFrame saving properties to " + propertiesFile.getCanonicalPath());
         try (FileWriter fw = new FileWriter(propertiesFile)) {
             props.store(fw, "");
         }
+        updateSubPropertiesFiles();
         if (null != this.pddlPlannerJInternalFrame) {
             this.pddlPlannerJInternalFrame.saveProperties();
         }
@@ -1308,7 +1388,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             this.object2DViewJInternalFrame.saveProperties();
         }
         if (null != dbSetup) {
-            DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, "dbsetup.txt"), dbSetup);
+            DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
         }
     }
 
@@ -1394,8 +1474,9 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItemExit;
     private javax.swing.JMenuItem jMenuItemLoadProperties;
+    private javax.swing.JMenuItem jMenuItemLoadPropertiesFile;
     private javax.swing.JMenuItem jMenuItemSaveProperties;
-    private javax.swing.JMenuItem jMenuItemSetProperiesFile;
+    private javax.swing.JMenuItem jMenuItemSavePropsAs;
     private javax.swing.JMenu jMenuWindow;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     // End of variables declaration//GEN-END:variables
@@ -1418,6 +1499,49 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     @Override
     public void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
+        propertiesDirectory = propertiesFile.getParentFile();
+        if (!propertiesDirectory.exists()) {
+            try {
+                System.out.println("Directory " + propertiesDirectory.getCanonicalPath() + " does not exist. (Creating it now!)");
+                propertiesDirectory.mkdirs();
+            } catch (IOException ex) {
+                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        try {
+            updateSubPropertiesFiles();
+        } catch (IOException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    private String propertiesFileBaseString = "";
+
+    public void updateSubPropertiesFiles() throws IOException {
+        String base = propertiesFile.getName();
+        int pindex = base.indexOf('.');
+        if (pindex > 0) {
+            base = base.substring(0, pindex);
+        }
+        propertiesFileBaseString = base;
+        if (null != this.pddlPlannerJInternalFrame) {
+            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_pddlPlanner.txt"));
+        }
+        if (null != this.pddlExecutorJInternalFrame1) {
+            this.pddlExecutorJInternalFrame1.setPropertiesFile(new File(propertiesDirectory, base + "_actionsToCrclProperties.txt"));
+        }
+        if (null != this.visionToDbJInternalFrame) {
+            visionToDbJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_visionToDBProperties.txt"));
+        }
+        if (null != this.object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_object2DViewProperties.txt"));
+        }
+        if (null != lastAprsPropertiesFileFile) {
+            Properties props = new Properties();
+            props.put("lastPropertyFileName", propertiesFile.getCanonicalPath());
+            try (FileWriter fw = new FileWriter(lastAprsPropertiesFileFile)) {
+                props.store(fw, "");
+            }
+        }
     }
 
     @Override

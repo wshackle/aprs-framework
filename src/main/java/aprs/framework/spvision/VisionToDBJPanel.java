@@ -73,6 +73,8 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  *
@@ -88,7 +90,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public VisionToDBJPanel() {
         initComponents();
 //        jSpinnerLogLines.setValue(100);
-        restoreProperties();
+        loadProperties();
         oldDbType = null;
         jTableTransform.getModel().addTableModelListener(new TableModelListener() {
             @Override
@@ -1563,7 +1565,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     @Override
-    public final void restoreProperties() {
+    public final void loadProperties() {
         try {
             restoringProperties = true;
             if (null != propertiesFile && propertiesFile.exists()) {

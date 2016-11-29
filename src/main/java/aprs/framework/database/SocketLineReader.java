@@ -50,6 +50,14 @@ public class SocketLineReader {
     }
     private ServerSocket ss = null;
 
+    public boolean isConnected() { 
+        if(null != s) {
+            return s.isConnected();
+        } else {
+            return null != ss && ss.isBound() && !ss.isClosed();
+        }
+    }
+    
     private class Clnt {
 
         Socket s;

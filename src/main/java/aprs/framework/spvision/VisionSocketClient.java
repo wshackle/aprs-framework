@@ -284,6 +284,9 @@ public class VisionSocketClient implements AutoCloseable {
                 index++;
                 repeatsMap.put(ci.name, ci.repeats + 1);
             }
+            while (listOut.size() > index) {
+                listOut.remove(index);
+            }
         } catch (Exception exception) {
 
             System.out.println("i = " + i);
@@ -398,6 +401,10 @@ public class VisionSocketClient implements AutoCloseable {
             }
             updateListeners();
         }
+    }
+    
+    public boolean isConnected() {
+        return null != visionSlr && visionSlr.isConnected();
     }
 
     @Override

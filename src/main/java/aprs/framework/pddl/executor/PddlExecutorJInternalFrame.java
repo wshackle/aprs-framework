@@ -24,8 +24,10 @@ package aprs.framework.pddl.executor;
 
 import aprs.framework.PddlAction;
 import aprs.framework.database.DbSetupPublisher;
+import crcl.ui.client.UpdateTitleListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -41,6 +43,8 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
     public PddlExecutorJInternalFrame() {
         initComponents();
     }
+    
+    
 
     /**
      * This method is called from within the constructor to initialize the form.

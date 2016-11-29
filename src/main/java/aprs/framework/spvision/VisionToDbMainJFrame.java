@@ -193,7 +193,7 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
     }//GEN-LAST:event_jMenuItemSavePropertiesActionPerformed
 
     private void jMenuItemReloadPropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemReloadPropertiesActionPerformed
-        this.visionToDBJPanel.restoreProperties();
+        this.visionToDBJPanel.loadProperties();
     }//GEN-LAST:event_jMenuItemReloadPropertiesActionPerformed
 
     private Object2DJFrame object2DJFrame = null;
@@ -257,8 +257,8 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
     }
 
     @Override
-    public void restoreProperties() {
-        this.visionToDBJPanel.restoreProperties();
+    public void loadProperties() {
+        this.visionToDBJPanel.loadProperties();
     }
 
     @Override

@@ -41,5 +41,5 @@ public interface CommonJFrameInterface {
 
     public void saveProperties() throws IOException;
 
-    public void restoreProperties() throws IOException;
+    public void loadProperties() throws IOException;
 }

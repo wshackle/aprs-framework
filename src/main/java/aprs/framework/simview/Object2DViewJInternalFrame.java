@@ -106,8 +106,8 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
 
     @Override
-    public void restoreProperties() throws IOException {
-        object2DOuterJPanel1.restoreProperties();
+    public void loadProperties() throws IOException {
+        object2DOuterJPanel1.loadProperties();
     }
     
 }
