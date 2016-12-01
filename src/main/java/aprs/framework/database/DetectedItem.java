@@ -28,6 +28,8 @@ import crcl.base.VectorType;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.vector;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 
 /**
  *
@@ -53,7 +55,11 @@ public class DetectedItem {
     public double score;
     public int visioncycle;
     public String type;
-
+    public AffineTransform displayTransform;
+    public AffineTransform origTransform;
+    public AffineTransform relTransform;
+    public Rectangle2D.Double displayRect;
+    
     public DetectedItem() {
         score = 100.0;
     }

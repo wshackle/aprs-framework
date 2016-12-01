@@ -28,10 +28,13 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JPanel;
 
 /**
@@ -171,6 +174,7 @@ public class Object2DJPanel extends JPanel {
             case POS_Y_NEG_X:
                 g2d.translate((itemy - minY) * scale + 15, (itemx - minX) * scale + 20);
                 break;
+
             case NEG_X_NEG_Y:
                 g2d.translate((maxX - itemx) * scale + 15, (itemy - minY) * scale + 20);
                 break;
@@ -179,6 +183,69 @@ public class Object2DJPanel extends JPanel {
                 g2d.translate((maxY - itemy) * scale + 15, (maxX - itemx) * scale + 20);
                 break;
         }
+    }
+
+    private double currentX = 0;
+
+    /**
+     * Get the value of currentX
+     *
+     * @return the value of currentX
+     */
+    public double getCurrentX() {
+        return currentX;
+    }
+
+    /**
+     * Set the value of currentX
+     *
+     * @param currentX new value of currentX
+     */
+    public void setCurrentX(double currentX) {
+        this.currentX = currentX;
+        this.repaint();
+    }
+
+    private double currentY = 0;
+
+    /**
+     * Get the value of currentY
+     *
+     * @return the value of currentY
+     */
+    public double getCurrentY() {
+        return currentY;
+    }
+
+    /**
+     * Set the value of currentY
+     *
+     * @param currentY new value of currentY
+     */
+    public void setCurrentY(double currentY) {
+        this.currentY = currentY;
+        this.repaint();
+    }
+
+    private boolean showCurrentXY;
+
+    /**
+     * Get the value of showCurrentXY
+     *
+     * @return the value of showCurrentXY
+     */
+    public boolean isShowCurrentXY() {
+        return showCurrentXY;
+    }
+
+    /**
+     * Set the value of showCurrentXY
+     *
+     * @param showCurrentXY new value of showCurrentXY
+     */
+    public void setShowCurrentXY(boolean showCurrentXY) {
+        this.showCurrentXY = showCurrentXY;
+        this.repaint();
     }
 
     @Override
@@ -281,7 +348,17 @@ public class Object2DJPanel extends JPanel {
                 g2d.rotate(item.rotation);
             }
             g2d.drawString(item.name, 0, 0);
-            g2d.draw(new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20));
+            item.displayTransform = g2d.getTransform();
+            item.origTransform = origTransform;
+            try {
+                item.relTransform = origTransform.createInverse();
+                item.relTransform.concatenate(item.displayTransform);
+            } catch (NoninvertibleTransformException ex) {
+                Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            item.displayRect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20);
+            g2d.draw(item.displayRect);
             g2d.setTransform(origTransform);
         }
         g2d.drawString(String.format("Offset = %.2f,%.2f scale=%.2f", minX, minY, scale), 10, this.getSize().height - 10);
@@ -312,6 +389,16 @@ public class Object2DJPanel extends JPanel {
             g2d.setColor(Color.BLACK);
             g2d.draw(rect);
             g2d.drawString(item.name, 0, 0);
+            g2d.setTransform(origTransform);
+        }
+        if (this.showCurrentXY) {
+            this.translate(g2d, currentX, currentY);
+//            g2d.drawString(String.format("CurrentXY = %.2f,%.2f", currentX, currentY), 10, this.getSize().height - 10);
+            Color origColor = g2d.getColor();
+            g2d.setColor(Color.red);
+            g2d.drawLine(-10, 0, 10, 0);
+            g2d.drawLine(0, -10, 0, 10);
+            g2d.setColor(origColor);
             g2d.setTransform(origTransform);
         }
     }

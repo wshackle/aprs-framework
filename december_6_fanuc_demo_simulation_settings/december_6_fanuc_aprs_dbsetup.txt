@@ -1,0 +1,10 @@
+#
+#Thu Dec 01 16:08:48 EST 2016
+--dbtype=NEO4J
+NEO4J.localhost_7480.name=neo4j
+NEO4J.localhost_7480.internalQueriesResourceDir=true
+NEO4J.host=localhost
+NEO4J.localhost_7480.passwd=password
+NEO4J.localhost.port=7480
+NEO4J.localhost_7480.queriesDir=neo4j/v1
+NEO4J.localhost_7480.user=neo4j

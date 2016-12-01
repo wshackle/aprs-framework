@@ -113,6 +113,18 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             pendantClientJInternalFrame.removeProgramLineListener(l);
         }
     }
+    
+    public void addCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
+        if (null != pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.addCurrentPoseListener(l);
+        }
+    }
+
+    public void removeCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
+        if (null != pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.removeCurrentPoseListener(l);
+        }
+    }
 
     public void setCRCLProgram(CRCLProgramType program, boolean autoStart) throws JAXBException {
         if (null != pendantClientJInternalFrame) {
@@ -123,6 +135,9 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         }
     }
 
+    public void abortCrclProgram() {
+        
+    }
     private PrintStream origOut = null;
     private PrintStream origErr = null;
 

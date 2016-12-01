@@ -46,13 +46,15 @@
                       <Component id="jTextFieldIndex" min="-2" pref="26" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jCheckBoxNeedLookFor" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="jCheckBoxAutoStartCrcl" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="169" max="-2" attributes="0"/>
+                      <Component id="jButtonGenerateAndRun" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jButtonGenerateCRCL" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jCheckBoxDebug" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="42" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jButtonAbort" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -78,13 +80,14 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="jLabel7" alignment="1" min="-2" max="-2" attributes="0"/>
                   <Group type="103" alignment="1" groupAlignment="3" attributes="0">
-                      <Component id="jCheckBoxAutoStartCrcl" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonGenerateCRCL" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jCheckBoxNeedLookFor" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jTextFieldIndex" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jCheckBoxReplan" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jCheckBoxDebug" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jButtonAbort" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jButtonGenerateAndRun" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace min="-2" max="-2" attributes="0"/>
@@ -194,11 +197,6 @@
         </Component>
       </SubComponents>
     </Container>
-    <Component class="javax.swing.JCheckBox" name="jCheckBoxAutoStartCrcl">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="Automatically Start CRCL programs"/>
-      </Properties>
-    </Component>
     <Component class="javax.swing.JCheckBox" name="jCheckBoxNeedLookFor">
       <Properties>
         <Property name="text" type="java.lang.String" value="Skip LookFor"/>
@@ -306,7 +304,7 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jScrollPane2" pref="712" max="32767" attributes="0"/>
+                      <Component id="jScrollPane2" pref="833" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -771,7 +769,7 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
-                              <Component id="jScrollPane3" pref="712" max="32767" attributes="0"/>
+                              <Component id="jScrollPane3" pref="833" max="32767" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">
@@ -859,6 +857,22 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxDebugActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="jButtonAbort">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Abort"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonAbortActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="jButtonGenerateAndRun">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Generate and Run"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonGenerateAndRunActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

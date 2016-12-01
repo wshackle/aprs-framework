@@ -22,17 +22,24 @@
  */
 package aprs.framework.simview;
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.Main;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
 import aprs.framework.spvision.VisionSocketClient;
 import aprs.framework.spvision.VisionSocketServer;
+import crcl.base.PoseType;
+import crcl.ui.client.PendantClientJPanel;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +48,9 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JFileChooser;
 import javax.swing.JTable;
 import javax.swing.RowSorter;
 import javax.swing.event.ListSelectionEvent;
@@ -57,7 +66,7 @@ import javax.swing.table.TableColumn;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener {
+public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener, PendantClientJPanel.CurrentPoseListener {
 
     public List<DetectedItem> getItems() {
         return object2DJPanel1.getItems();
@@ -112,6 +121,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      */
     public Object2DOuterJPanel() {
         initComponents();
+        this.setItems(object2DJPanel1.getItems());
         jTable1.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
@@ -172,6 +182,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //        jComboBoxDisplayAxis.setModel( new DefaultComboBoxModel<>(DisplayAxis.values()));
         setMaxXMaxYText(jTextFieldMaxXMaxY.getText());
         setMinXMinYText(jTextFieldMinXMinY.getText());
+        object2DJPanel1.setShowCurrentXY(jCheckBoxShowCurrent.isSelected());
     }
 
     /**
@@ -205,6 +216,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jButtonReset = new javax.swing.JButton();
         jCheckBoxShowRotations = new javax.swing.JCheckBox();
         jComboBoxDisplayAxis = new javax.swing.JComboBox<>();
+        jTextFieldFilename = new javax.swing.JTextField();
+        jButtonSave = new javax.swing.JButton();
+        jButtonLoad = new javax.swing.JButton();
+        jButtonCurrent = new javax.swing.JButton();
+        jLabel4 = new javax.swing.JLabel();
+        jTextFieldCurrentXY = new javax.swing.JTextField();
+        jCheckBoxShowCurrent = new javax.swing.JCheckBox();
 
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
@@ -225,7 +243,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setLayout(object2DJPanel1Layout);
         object2DJPanel1Layout.setHorizontalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 441, Short.MAX_VALUE)
+            .addGap(0, 503, Short.MAX_VALUE)
         );
         object2DJPanel1Layout.setVerticalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -252,6 +270,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 return types [columnIndex];
             }
         });
+        jTable1.setMaximumSize(new java.awt.Dimension(400, 64));
         jScrollPane1.setViewportView(jTable1);
 
         jButtonAdd.setText("Add");
@@ -269,6 +288,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         });
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Connection"));
+        jPanel1.setMaximumSize(new java.awt.Dimension(407, 32767));
 
         jCheckBoxSimulated.setText("Simulated");
         jCheckBoxSimulated.addActionListener(new java.awt.event.ActionListener() {
@@ -323,7 +343,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jCheckBoxSimulated)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxConnected)
+                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxDebug)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -337,8 +357,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonRefresh)))
-                .addContainerGap(56, Short.MAX_VALUE))
+                        .addComponent(jButtonRefresh))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -399,49 +418,110 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jButtonSave.setText("Save");
+        jButtonSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSaveActionPerformed(evt);
+            }
+        });
+
+        jButtonLoad.setText("Load");
+        jButtonLoad.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLoadActionPerformed(evt);
+            }
+        });
+
+        jButtonCurrent.setText("Current");
+        jButtonCurrent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonCurrentActionPerformed(evt);
+            }
+        });
+
+        jLabel4.setText("Current");
+
+        jTextFieldCurrentXY.setText("0.0,0.0");
+        jTextFieldCurrentXY.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldCurrentXYActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxShowCurrent.setText("Show");
+        jCheckBoxShowCurrent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxShowCurrentActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jCheckBoxShowRotations)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldFilename)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonSave)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonLoad))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(jButtonReset)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonDelete)
-                                .addGap(10, 10, 10)
-                                .addComponent(jButtonAdd))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel3)
-                                    .addComponent(jLabel2))
+                                .addComponent(jButtonCurrent)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
-                                    .addComponent(jTextFieldMaxXMaxY))))))
+                                .addComponent(jButtonDelete)
+                                .addGap(4, 4, 4)
+                                .addComponent(jButtonAdd))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addGroup(layout.createSequentialGroup()
+                                    .addComponent(jCheckBoxShowRotations)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(jComboBoxDisplayAxis, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addGroup(layout.createSequentialGroup()
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jLabel2)
+                                        .addGroup(layout.createSequentialGroup()
+                                            .addComponent(jCheckBoxShowCurrent)
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                            .addComponent(jLabel4))
+                                        .addComponent(jLabel3))
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(jTextFieldMaxXMaxY, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE))))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jTextFieldFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonSave)
+                    .addComponent(jButtonLoad))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 153, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jCheckBoxShowRotations)
+                            .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel4)
+                            .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jCheckBoxShowCurrent))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel3)
@@ -455,10 +535,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             .addComponent(jButtonDelete)
                             .addComponent(jButtonAdd)
                             .addComponent(jButtonReset)
-                            .addComponent(jCheckBoxShowRotations)
-                            .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jButtonCurrent))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -558,8 +638,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jCheckBoxConnectedActionPerformed
 
-    
-
     private void connect() throws NumberFormatException {
         if (this.jCheckBoxSimulated.isSelected()) {
             try {
@@ -596,7 +674,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void jButtonAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddActionPerformed
         List<DetectedItem> l = new ArrayList<>();
         l.addAll(getItems());
-        l.add(new DetectedItem());
+        DetectedItem item = new DetectedItem("item_" + (l.size() + 1), 0,
+                (object2DJPanel1.getMaxX() + object2DJPanel1.getMinX()) / 2.0,
+                (object2DJPanel1.getMaxY() + object2DJPanel1.getMinY()) / 2.0
+        );
+        l.add(item);
         setItems(l);
     }//GEN-LAST:event_jButtonAddActionPerformed
 
@@ -615,15 +697,53 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void object2DJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseDragged
         double scale = object2DJPanel1.getScale();
         double min_x = object2DJPanel1.getMinX();
+        double max_x = object2DJPanel1.getMaxX();
+        double min_y = object2DJPanel1.getMinY();
         double max_y = object2DJPanel1.getMaxY();
         if (null != draggedItem) {
-            draggedItem.x = ((evt.getX() - 15) / scale) + min_x;
-            draggedItem.y = max_y - ((evt.getY() - 20) / scale);
+            switch (object2DJPanel1.getDisplayAxis()) {
+                case POS_X_POS_Y:
+                    draggedItem.x = ((evt.getX() - 15) / scale) + min_x;
+                    draggedItem.y = max_y - ((evt.getY() - 20) / scale);
+                    break;
+
+                case POS_Y_NEG_X:
+                    draggedItem.x = ((evt.getY() - 20) / scale) + min_x;
+                    draggedItem.y = ((evt.getX() - 15) / scale) + min_y;
+                    break;
+
+                case NEG_X_NEG_Y:
+                    draggedItem.x = max_x - ((evt.getX() - 15) / scale);
+                    draggedItem.y = ((evt.getY() - 20) / scale) + min_y;
+                    break;
+
+                case NEG_Y_POS_X:
+                    draggedItem.x = max_x - ((evt.getY() - 20) / scale);
+                    draggedItem.y = max_y - ((evt.getX() - 15) / scale);
+                    break;
+            }
+//            draggedItem.x = ((evt.getX() - 15) / scale) + min_x;
+//            draggedItem.y = max_y - ((evt.getY() - 20) / scale);
             this.setItems(this.getItems());
         }
     }//GEN-LAST:event_object2DJPanel1MouseDragged
 
     private DetectedItem draggedItem = null;
+
+    private boolean insideItem(DetectedItem item, int x, int y) {
+        if (null == item || null == item.displayRect || null == item.displayTransform) {
+            return false;
+        }
+        boolean inside = false;
+        try {
+            Point2D newPoint = item.relTransform.inverseTransform(new Point2D.Double(x, y), null);
+            System.out.println("newPoint = " + newPoint.getX() + ", " + newPoint.getY());
+            inside = item.displayRect.contains(newPoint);
+        } catch (NoninvertibleTransformException ex) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return inside;
+    }
 
     private void object2DJPanel1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MousePressed
         List<DetectedItem> items = this.getItems();
@@ -638,13 +758,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             DetectedItem item = items.get(i);
             double rel_x = (item.x - min_x) * scale + 15;
             double rel_y = (max_y - item.y) * scale + 20;
-            double diff_x = rel_x - evt.getX();
-            double diff_y = rel_y - evt.getY();
+            int x = evt.getX();
+            int y = evt.getY();
+
+            double diff_x = rel_x - x;
+            double diff_y = rel_y - y;
             double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
-            if (dist < 35 && dist < minDist) {
-                minDist = dist;
-                closestItem = item;
-                minIndex = i;
+            if (dist < minDist) {
+                if (insideItem(item, x, y)) {
+                    minDist = dist;
+                    closestItem = item;
+                    minIndex = i;
+                }
             }
         }
         if (minIndex >= 0) {
@@ -715,6 +840,108 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setDisplayAxis((DisplayAxis) jComboBoxDisplayAxis.getSelectedItem());
     }//GEN-LAST:event_jComboBoxDisplayAxisActionPerformed
 
+    private void loadFile(File f) throws IOException {
+        String line = Files.lines(f.toPath()).skip(1).map(String::trim).collect(Collectors.joining(","));
+        this.setItems(VisionSocketClient.lineToList(line));
+        jTextFieldFilename.setText(f.getCanonicalPath());
+    }
+
+    private void saveFile(File f) throws IOException {
+
+        try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+            pw.println("name,rotation,x,y,score,type");
+            for (DetectedItem item : getItems()) {
+                pw.println(item.name + "," + item.rotation + "," + item.x + "," + item.y + "," + item.score + "," + item.type);
+            }
+        }
+        jTextFieldFilename.setText(f.getCanonicalPath());
+    }
+
+    private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
+        String fname = jTextFieldFilename.getText();
+        File dir = new File(System.getProperty("user.home"));
+        File f = null;
+        if (null != fname && fname.length() > 0) {
+            f = new File(fname);
+            if (f.getParentFile().exists()) {
+                dir = f.getParentFile();
+            }
+        }
+        JFileChooser chooser = new JFileChooser(dir);
+        if (null != f && f.exists()) {
+            chooser.setSelectedFile(f);
+        }
+        if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
+            try {
+                loadFile(chooser.getSelectedFile());
+            } catch (IOException ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jButtonLoadActionPerformed
+
+    private void jButtonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveActionPerformed
+        String fname = jTextFieldFilename.getText();
+        File dir = new File(System.getProperty("user.home"));
+        File f = null;
+        if (null != fname && fname.length() > 0) {
+            f = new File(fname);
+            if (f.getParentFile().exists()) {
+                dir = f.getParentFile();
+            }
+        }
+        JFileChooser chooser = new JFileChooser(dir);
+        if (null != f && f.exists()) {
+            chooser.setSelectedFile(f);
+        }
+        if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
+            try {
+                saveFile(chooser.getSelectedFile());
+            } catch (IOException ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jButtonSaveActionPerformed
+
+    private void jTextFieldCurrentXYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldCurrentXYActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jTextFieldCurrentXYActionPerformed
+
+    double currentX = 0.0;
+    double currentY = 0.0;
+
+    public void connectCurrentPosition() {
+        AprsJFrame aprsJframe = AprsJFrame.getCurrentAprsJFrame();
+        if (null != aprsJframe) {
+            aprsJframe.addCurrentPoseListener(this);
+        }
+    }
+    
+    public void disconnectCurrentPosition() {
+        AprsJFrame aprsJframe = AprsJFrame.getCurrentAprsJFrame();
+        if (null != aprsJframe) {
+            aprsJframe.removeCurrentPoseListener(this);
+        }
+    }
+    private void jButtonCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCurrentActionPerformed
+        List<DetectedItem> items = this.getItems();
+        int selectedIndex = object2DJPanel1.getSelectedItemIndex();
+        if (selectedIndex >= 0 && selectedIndex < items.size()) {
+            DetectedItem item = items.get(selectedIndex);
+            item.x = currentX;
+            item.y = currentY;
+        }
+    }//GEN-LAST:event_jButtonCurrentActionPerformed
+
+    private void jCheckBoxShowCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowCurrentActionPerformed
+        object2DJPanel1.setShowCurrentXY(jCheckBoxShowCurrent.isSelected());
+        if(jCheckBoxShowCurrent.isSelected()) {
+            connectCurrentPosition();
+        } else {
+            disconnectCurrentPosition();
+        }
+    }//GEN-LAST:event_jCheckBoxShowCurrentActionPerformed
+
     public void setMinXMinYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
@@ -730,22 +957,29 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonAdd;
+    private javax.swing.JButton jButtonCurrent;
     private javax.swing.JButton jButtonDelete;
+    private javax.swing.JButton jButtonLoad;
     private javax.swing.JButton jButtonRefresh;
     private javax.swing.JButton jButtonReset;
+    private javax.swing.JButton jButtonSave;
     private javax.swing.JCheckBox jCheckBoxConnected;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxPause;
+    private javax.swing.JCheckBox jCheckBoxShowCurrent;
     private javax.swing.JCheckBox jCheckBoxShowRotations;
     private javax.swing.JCheckBox jCheckBoxSimulated;
     private javax.swing.JComboBox<DisplayAxis> jComboBoxDisplayAxis;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabelHost;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
+    private javax.swing.JTextField jTextFieldCurrentXY;
+    private javax.swing.JTextField jTextFieldFilename;
     private javax.swing.JTextField jTextFieldHost;
     private javax.swing.JTextField jTextFieldMaxXMaxY;
     private javax.swing.JTextField jTextFieldMinXMinY;
@@ -776,6 +1010,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("connected", Boolean.toString(jCheckBoxConnected.isSelected()));
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText());
             props.put("xminymin", jTextFieldMinXMinY.getText());
+            props.put("datafile", jTextFieldFilename.getText());
             List<DetectedItem> l = getItems();
             if (null != l && l.size() > 0) {
                 props.put(ITEMS_PROPERTY_NAME, VisionSocketServer.listToLine(l));
@@ -822,6 +1057,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (null != simulatedString && simulatedString.length() > 0) {
                 jCheckBoxSimulated.setSelected(Boolean.valueOf(simulatedString));
             }
+            String datafileString = props.getProperty("datafile");
+            if (null != datafileString && datafileString.length() > 0) {
+                jTextFieldFilename.setText(datafileString);
+                File f = new File(datafileString);
+                if (f.exists() && f.canRead()) {
+                    loadFile(f);
+                }
+            }
             String xmaxymaxString = props.getProperty("xmaxymax");
             if (null != xmaxymaxString) {
                 setMaxXMaxYText(xmaxymaxString);
@@ -861,5 +1104,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             });
         }
+    }
+
+    @Override
+    public void accept(PendantClientJPanel panel, PoseType pose) {
+        currentX = pose.getPoint().getX().doubleValue();
+        currentY = pose.getPoint().getY().doubleValue();
+        jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));
+        object2DJPanel1.setCurrentX(currentX);
+        object2DJPanel1.setCurrentY(currentY);
     }
 }

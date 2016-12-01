@@ -1,0 +1,6 @@
+#
+#Thu Dec 01 16:08:48 EST 2016
+approachZOffset=30.0
+pddl.output=/mnt/ubuntu/home/shackle/aprs-framework/example_pddl/dec_6_2016_fanuc_demo_actions.txt
+manualPartNames=[medium_gear_1, null, null, null, null]
+lookForXYZ=0.0,0.0,0.0
