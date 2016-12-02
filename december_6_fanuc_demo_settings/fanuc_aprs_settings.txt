@@ -1,5 +1,5 @@
 #
-#Fri Dec 02 11:26:28 EST 2016
+#Fri Dec 02 15:33:34 EST 2016
 startup.pddl.objectview=true
 startup.pddl.planner=true
 startup.pddl.objectsp=true
