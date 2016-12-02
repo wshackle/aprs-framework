@@ -1,0 +1,15 @@
+(look-for-part robot_1 medium_gear_1 sku_part_medium_gear kit_lg1med2_1 part_gripper)
+(take-part robot_1 medium_gear_1 sku_part_medium_gear part_large_gear_tray part_gripper kit_lg1med2_1)
+(look-for-part robot_1 medium_gear_1 sku_part_medium_gear kit_lg1med2_1 part_gripper)
+(place-part robot_1 medium_gear_1 sku_part_medium_gear kit_s2b2 part_gripper work_table_1 kit_lg1med2_1_slot_m1)
+(look-for-part robot_1 medium_gear_2 sku_part_medium_gear kit_lg1med2_1 part_gripper)
+(take-part robot_1 medium_gear_2 sku_part_medium_gear part_large_gear_tray part_gripper kit_lg1med2_1)
+(look-for-part robot_1 medium_gear_2 sku_part_medium_gear kit_lg1med2_1 part_gripper)
+(place-part robot_1 medium_gear_2 sku_part_medium_gear kit_s2b2 part_gripper work_table_1 kit_lg1med2_1_slot_m2)
+(look-for-part robot_1 large_gear_1 sku_part_medium_gear kit_lg1med2_1 part_gripper)
+(take-part robot_1 large_gear_1 sku_part_medium_gear part_large_gear_tray part_gripper kit_lg1med2_1)
+(look-for-part robot_1 large_gear_1 sku_part_medium_gear kit_lg1med2_1 part_gripper)
+(place-part robot_1 large_gear_1 sku_part_medium_gear kit_s2b2 part_gripper work_table_1 kit_lg1med2_1_slot_l1)
+(look-for-part robot_1 medium_gear_3 sku_part_medium_gear kit_lg1med2_1 part_gripper)
+
+

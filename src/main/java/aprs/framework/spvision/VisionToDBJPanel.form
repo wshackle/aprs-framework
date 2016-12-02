@@ -583,7 +583,10 @@
                           <Component id="jScrollPaneTableFromVision" max="32767" attributes="0"/>
                           <Group type="102" attributes="0">
                               <Component id="jLabel19" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                              <EmptySpace max="32767" attributes="0"/>
+                              <Component id="jButtonForceAll" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonForceSingleUpdate" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
@@ -593,7 +596,11 @@
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <Component id="jLabel19" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel19" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonForceSingleUpdate" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonForceAll" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jScrollPaneTableFromVision" pref="0" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
@@ -638,6 +645,22 @@
                 <Property name="text" type="java.lang.String" value="From Vision:"/>
               </Properties>
             </Component>
+            <Component class="javax.swing.JButton" name="jButtonForceSingleUpdate">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Force Single Update"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonForceSingleUpdateActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonForceAll">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Force All"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonForceAllActionPerformed"/>
+              </Events>
+            </Component>
           </SubComponents>
         </Container>
         <Container class="javax.swing.JPanel" name="jPanelTableUpdateResults">
@@ -652,6 +675,8 @@
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="jLabel21" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="32767" attributes="0"/>
+                              <Component id="jCheckBoxDelOnUpdate" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
                               <Component id="jCheckBoxVerifyUpdates" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButtonUpdateResultDetails" min="-2" max="-2" attributes="0"/>
@@ -668,6 +693,7 @@
                           <Component id="jLabel21" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonUpdateResultDetails" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jCheckBoxVerifyUpdates" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jCheckBoxDelOnUpdate" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jScrollPaneTableUpdateResults" pref="159" max="32767" attributes="0"/>
@@ -711,11 +737,16 @@
             </Component>
             <Component class="javax.swing.JCheckBox" name="jCheckBoxVerifyUpdates">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Verify Updates"/>
+                <Property name="text" type="java.lang.String" value="Verify "/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxVerifyUpdatesActionPerformed"/>
               </Events>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="jCheckBoxDelOnUpdate">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Del on Update"/>
+              </Properties>
             </Component>
           </SubComponents>
         </Container>

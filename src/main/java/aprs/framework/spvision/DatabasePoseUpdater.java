@@ -104,8 +104,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public void setMaxUpdateTimeMillis(long maxUpdateTimeMillis) {
         this.maxUpdateTimeMillis = maxUpdateTimeMillis;
     }
-    
-        private long totalUpdateTimeNanos;
+
+    private long totalUpdateTimeNanos;
 
     /**
      * Get the value of totalUpdateTimeNanos
@@ -125,7 +125,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         this.totalUpdateTimeNanos = totalUpdateTimeNanos;
     }
 
-        private long maxUpdateTimeNanos;
+    private long maxUpdateTimeNanos;
 
     /**
      * Get the value of maxUpdateTimeNanos
@@ -144,7 +144,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public void setMaxUpdateTimeNanos(long maxUpdateTimeNanos) {
         this.maxUpdateTimeNanos = maxUpdateTimeNanos;
     }
-
 
     private int totalUpdates;
 
@@ -204,6 +203,26 @@ public class DatabasePoseUpdater implements AutoCloseable {
         this.verify = verify;
     }
 
+    private boolean delOnUpdate;
+
+    /**
+     * Get the value of delOnUpdate
+     *
+     * @return the value of delOnUpdate
+     */
+    public boolean isDelOnUpdate() {
+        return delOnUpdate;
+    }
+
+    /**
+     * Set the value of delOnUpdate
+     *
+     * @param delOnUpdate new value of delOnUpdate
+     */
+    public void setDelOnUpdate(boolean delOnUpdate) {
+        this.delOnUpdate = delOnUpdate;
+    }
+
     public DbType getDbType() {
         return dbtype;
     }
@@ -250,10 +269,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private String mergeStatementString;
 
     private void setupStatements() throws SQLException {
-        if(null == queriesMap) {
+        if (null == queriesMap) {
             throw new IllegalStateException("queriesMap == null");
         }
-        if(null == queriesMap.get(DbQueryEnum.SET_SINGLE_POSE)) {
+        if (null == queriesMap.get(DbQueryEnum.SET_SINGLE_POSE)) {
             throw new IllegalStateException("queriesMap.get(DbQueryEnum.SET_SINGLE_POSE) == null");
         }
         switch (dbtype) {
@@ -560,15 +579,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     @Override
     public String toString() {
-        return "DatabasePoseUpdater{" + "con=" + con +", dbtype=" + dbtype + ", useBatch=" + useBatch + ", verify=" + verify + ", totalUpdateTimeMillis=" + totalUpdateTimeMillis + ", maxUpdateTimeMillis=" + maxUpdateTimeMillis + ", totalUpdateTimeNanos=" + totalUpdateTimeNanos + ", maxUpdateTimeNanos=" + maxUpdateTimeNanos + ", totalUpdates=" + totalUpdates + ", totalListUpdates=" + totalListUpdates + ", sharedConnection=" + sharedConnection + ", queryAllString=" + queryAllString + ", querySingleString=" + querySingleString + ", mergeStatementString=" + mergeStatementString + ", updateParamTypes=" + updateParamTypes + ", getSingleParamTypes=" + getSingleParamTypes + ", debug=" + debug + '}';
+        return "DatabasePoseUpdater{" + "con=" + con + ", dbtype=" + dbtype + ", useBatch=" + useBatch + ", verify=" + verify + ", totalUpdateTimeMillis=" + totalUpdateTimeMillis + ", maxUpdateTimeMillis=" + maxUpdateTimeMillis + ", totalUpdateTimeNanos=" + totalUpdateTimeNanos + ", maxUpdateTimeNanos=" + maxUpdateTimeNanos + ", totalUpdates=" + totalUpdates + ", totalListUpdates=" + totalListUpdates + ", sharedConnection=" + sharedConnection + ", queryAllString=" + queryAllString + ", querySingleString=" + querySingleString + ", mergeStatementString=" + mergeStatementString + ", updateParamTypes=" + updateParamTypes + ", getSingleParamTypes=" + getSingleParamTypes + ", debug=" + debug + '}';
     }
 
-    
     @Override
     public void close() {
 
-        System.out.println("Closing "+ this);
-        
+        System.out.println("Closing " + this);
+
         try {
             if (null != update_statement) {
                 update_statement.close();
@@ -632,6 +650,26 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private final Map<String, UpdateResults> updateResultsMap = new HashMap<>();
 
+        private boolean forceUpdates;
+
+    /**
+     * Get the value of forceUpdates
+     *
+     * @return the value of forceUpdates
+     */
+    public boolean isForceUpdates() {
+        return forceUpdates;
+    }
+
+    /**
+     * Set the value of forceUpdates
+     *
+     * @param forceUpdates new value of forceUpdates
+     */
+    public void setForceUpdates(boolean forceUpdates) {
+        this.forceUpdates = forceUpdates;
+    }
+
     /**
      * Get the value of updateResultsMap
      *
@@ -645,164 +683,177 @@ public class DatabasePoseUpdater implements AutoCloseable {
         VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
         List<DetectedItem> itemsToVerify = new ArrayList<>();
         try {
-            if (null == update_statement) {
-                return;
-            }
             long t0_nanos = System.nanoTime();
             long t0_millis = System.currentTimeMillis();
             int updates = 0;
+            synchronized (this) {
+                if (delOnUpdate) {
+                    for (DetectedItem item : list) {
+                        deletePose(item.fullName);
+                        deletePose(item.name);
+                    }
+                }
+                if (null == update_statement) {
+                    return;
+                }
 
-            List<UpdateResults> batchUrs = new ArrayList<>();
-            if (null != displayInterface && displayInterface.isDebug()) {
-                debug = true;
-                displayInterface.addLogMessage("Begin updateVisionList");
-            } else {
-                debug = false;
-            }
-            int updatedCount = -1;
-            for (int i = 0; i < list.size(); i++) {
-                DetectedItem ci = list.get(i);
-                if (null == ci || ci.name.compareTo("*") == 0) {
-                    continue;
+                List<UpdateResults> batchUrs = new ArrayList<>();
+                if (null != displayInterface && displayInterface.isDebug()) {
+                    debug = true;
+                    displayInterface.addLogMessage("Begin updateVisionList");
+                } else {
+                    debug = false;
                 }
-                if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
-                    ci.fullName = ci.name;
-                }
-                if (addRepeatCountsToName) {
-                    ci.fullName = ci.name + "_" + (ci.repeats + 1);
-                }
-                List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, update_statement);
-                UpdateResults ur = updateResultsMap.get(ci.fullName);
-                String updateStringFilled = fillQueryString(mergeStatementString, paramsList);
-                if (null != ur) {
-                    if (Math.abs(ur.getX() - ci.x) < 1e-6
-                            && Math.abs(ur.getY() - ci.y) < 1e-6
-                            && Math.abs(ur.getRotation() - ci.rotation) < 1e-6) {
+                int updatedCount = -1;
+                List<String> skippedUpdates = new ArrayList<>();
+                for (int i = 0; i < list.size(); i++) {
+                    DetectedItem ci = list.get(i);
+                    if (null == ci || ci.name.compareTo("*") == 0) {
                         continue;
                     }
-                } else {
-                    ur = new UpdateResults(ci.fullName);
-                }
-                itemsToVerify.add(ci);
-                ur.setException(null);
-                ur.setVerified(false);
-                
-                try {
-
-                    ur.setLastDetectedItem(ci);
-
-                    if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("updateStringFilled = \r\n" + updateStringFilled + "\r\n");
+                    if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
+                        ci.fullName = ci.name;
                     }
-                    if (useBatch) {
-                        update_statement.addBatch();
-                        batchUrs.add(ur);
-                        updates++;
+                    if (addRepeatCountsToName) {
+                        ci.fullName = ci.name + "_" + (ci.repeats + 1);
+                    }
+                    List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, update_statement);
+                    UpdateResults ur = updateResultsMap.get(ci.fullName);
+                    String updateStringFilled = fillQueryString(mergeStatementString, paramsList);
+                    
+                    if (null != ur) {
+                        if (!forceUpdates &&
+                                Math.abs(ur.getX() - ci.x) < 1e-6
+                                && Math.abs(ur.getY() - ci.y) < 1e-6
+                                && Math.abs(ur.getRotation() - ci.rotation) < 1e-6) {
+                            skippedUpdates.add(ci.fullName);
+                            continue;
+                        }
                     } else {
-                        boolean exec_result = update_statement.execute();
+                        ur = new UpdateResults(ci.fullName);
+                    }
+                    itemsToVerify.add(ci);
+                    ur.setException(null);
+                    ur.setVerified(false);
+
+                    try {
+
+                        ur.setLastDetectedItem(ci);
+
                         if (null != displayInterface && displayInterface.isDebug()) {
-                            displayInterface.addLogMessage(" update_statement.execute() returned  " + exec_result + "\r\n");
+                            displayInterface.addLogMessage("updateStringFilled = \r\n" + updateStringFilled + "\r\n");
                         }
-                        if (exec_result) {
-                            try (ResultSet rs = update_statement.getResultSet()) {
-                                if (null != displayInterface && displayInterface.isDebug()) {
-                                    displayInterface.addLogMessage("update_statement.getResultSet() = " + rs + "\r\n");
-                                }
-                                List<Map<String, String>> resultSetMapList = new ArrayList<>();
-                                while (rs.next()) {
-                                    ResultSetMetaData meta = rs.getMetaData();
-                                    Map<String, String> resultMap = new LinkedHashMap<>();
-                                    if (null != displayInterface && displayInterface.isDebug()) {
-                                        displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
-                                    }
-                                    for (int j = 1; j <= meta.getColumnCount(); j++) {
-                                        String name = meta.getColumnName(j);
-                                        String value = rs.getObject(name, Object.class).toString();
-                                        if (j == 1 && updatedCount < 0 && name.startsWith("count")) {
-                                            try {
-                                                updatedCount = Integer.valueOf(value);
-                                            } catch (NumberFormatException nfe) {
-                                            }
-                                        }
-                                        resultMap.put(name, value);
-                                    }
-                                    resultSetMapList.add(resultMap);
-                                    if (null != displayInterface
-                                            && displayInterface.isDebug()
-                                            && resultMap.keySet().size() > 0) {
-                                        displayInterface.addLogMessage("resultMap=" + resultMap.toString() + System.lineSeparator());
-                                    }
-                                }
-                                ur.setLastResultSetMapList(resultSetMapList);
-                            }
+                        if (useBatch) {
+                            update_statement.addBatch();
+                            batchUrs.add(ur);
+                            updates++;
                         } else {
-                            updatedCount = update_statement.getUpdateCount();
+                            boolean exec_result = update_statement.execute();
+                            if (null != displayInterface && displayInterface.isDebug()) {
+                                displayInterface.addLogMessage(" update_statement.execute() returned  " + exec_result + "\r\n");
+                            }
+                            if (exec_result) {
+                                try (ResultSet rs = update_statement.getResultSet()) {
+                                    if (null != displayInterface && displayInterface.isDebug()) {
+                                        displayInterface.addLogMessage("update_statement.getResultSet() = " + rs + "\r\n");
+                                    }
+                                    List<Map<String, String>> resultSetMapList = new ArrayList<>();
+                                    while (rs.next()) {
+                                        ResultSetMetaData meta = rs.getMetaData();
+                                        Map<String, String> resultMap = new LinkedHashMap<>();
+                                        if (null != displayInterface && displayInterface.isDebug()) {
+                                            displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
+                                        }
+                                        for (int j = 1; j <= meta.getColumnCount(); j++) {
+                                            String name = meta.getColumnName(j);
+                                            String value = rs.getObject(name, Object.class).toString();
+                                            if (j == 1 && updatedCount < 0 && name.startsWith("count")) {
+                                                try {
+                                                    updatedCount = Integer.valueOf(value);
+                                                } catch (NumberFormatException nfe) {
+                                                }
+                                            }
+                                            resultMap.put(name, value);
+                                        }
+                                        resultSetMapList.add(resultMap);
+                                        if (null != displayInterface
+                                                && displayInterface.isDebug()
+                                                && resultMap.keySet().size() > 0) {
+                                            displayInterface.addLogMessage("resultMap=" + resultMap.toString() + System.lineSeparator());
+                                        }
+                                    }
+                                    ur.setLastResultSetMapList(resultSetMapList);
+                                }
+                            } else {
+                                updatedCount = update_statement.getUpdateCount();
+                            }
+                            if (null != displayInterface && displayInterface.isDebug()) {
+                                displayInterface.addLogMessage("update_statement.execute() returned = " + exec_result + "\r\n");
+                                displayInterface.addLogMessage("update_statement.getUpdateCount() returned = " + updatedCount + "\r\n");
+                            }
+                            if (updatedCount > 1) {
+                                updatedCount = 1;
+                            }
+                            ur.setUpdateCount(updatedCount);
+                            ur.setTotalUpdateCount(updatedCount + ur.getTotalUpdateCount());
+                            ur.setReturnedResultSet(exec_result);
+//                    poses_updated += update_statement.getUpdateCount();
+                            poses_updated++;
                         }
-                        if (null != displayInterface && displayInterface.isDebug()) {
-                            displayInterface.addLogMessage("update_statement.execute() returned = " + exec_result + "\r\n");
-                            displayInterface.addLogMessage("update_statement.getUpdateCount() returned = " + updatedCount + "\r\n");
-                        }
+                    } catch (Exception exception) {
+                        ur.setException(exception);
+                    }
+                    ur.setUpdateStringFilled(updateStringFilled);
+                    ur.setStatementExecutionCount(ur.getStatementExecutionCount() + 1);
+                    updateResultsMap.put(ci.fullName, ur);
+                    if (null != ur.getException()) {
+                        throw new RuntimeException("ur=" + ur, ur.getException());
+                    }
+                }
+                if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage("Skipped updates = " + skippedUpdates);
+                    }
+                if (updates > 0 && useBatch) {
+                    int batchReturn[] = update_statement.executeBatch();
+                    if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage("Batch returns : " + Arrays.toString(batchReturn));
+                    }
+                    updates = 0;
+                    for (int batchIndex = 0; batchIndex < batchReturn.length; batchIndex++) {
+                        int br = batchReturn[batchIndex];
+                        updates += br;
+                        UpdateResults ur = batchUrs.get(batchIndex);
+                        updatedCount = br;
                         if (updatedCount > 1) {
                             updatedCount = 1;
                         }
                         ur.setUpdateCount(updatedCount);
-                        ur.setTotalUpdateCount(updatedCount + ur.getTotalUpdateCount());
-                        ur.setReturnedResultSet(exec_result);
-//                    poses_updated += update_statement.getUpdateCount();
-                        poses_updated++;
+                        ur.setTotalUpdateCount(ur.getUpdateCount() + ur.getTotalUpdateCount());
+                        updateResultsMap.put(ur.name, ur);
                     }
-                } catch (Exception exception) {
-                    ur.setException(exception);
-                }
-                ur.setUpdateStringFilled(updateStringFilled);
-                ur.setStatementExecutionCount(ur.getStatementExecutionCount() + 1);
-                updateResultsMap.put(ci.fullName, ur);
-                if (null != ur.getException()) {
-                    throw new RuntimeException("ur=" + ur, ur.getException());
+                    poses_updated += updates;
                 }
             }
-
-            if (updates > 0 && useBatch) {
-                int batchReturn[] = update_statement.executeBatch();
-                if (null != displayInterface && displayInterface.isDebug()) {
-                    displayInterface.addLogMessage("Batch returns : " + Arrays.toString(batchReturn));
-                }
-                updates = 0;
-                for (int batchIndex = 0; batchIndex < batchReturn.length; batchIndex++) {
-                    int br = batchReturn[batchIndex];
-                    updates += br;
-                    UpdateResults ur = batchUrs.get(batchIndex);
-                    updatedCount = br;
-                    if (updatedCount > 1) {
-                        updatedCount = 1;
-                    }
-                    ur.setUpdateCount(updatedCount);
-                    ur.setTotalUpdateCount(ur.getUpdateCount() + ur.getTotalUpdateCount());
-                    updateResultsMap.put(ur.name, ur);
-                }
-                poses_updated += updates;
-            }
-
             long t1_nanos = System.nanoTime();
             long t1_millis = System.currentTimeMillis();
             long millis_diff = t1_millis - t0_millis;
-            if(millis_diff > 0) {
+            if (millis_diff > 0) {
                 totalUpdateTimeMillis += millis_diff;
             }
             long nanos_diff = t1_nanos - t0_nanos;
-            if(nanos_diff > 0) {
+            if (nanos_diff > 0) {
                 totalUpdateTimeNanos += nanos_diff;
             }
-            if(nanos_diff > maxUpdateTimeNanos) {
+            if (nanos_diff > maxUpdateTimeNanos) {
                 maxUpdateTimeNanos = nanos_diff;
             }
-            if(millis_diff > maxUpdateTimeMillis) {
+            if (millis_diff > maxUpdateTimeMillis) {
                 maxUpdateTimeMillis = millis_diff;
             }
             totalListUpdates++;
             totalUpdates = poses_updated;
             if (null != displayInterface && displayInterface.isDebug()) {
-                
+
                 displayInterface.addLogMessage("poses_updated=" + poses_updated);
                 displayInterface.addLogMessage("end updateVisionList");
                 displayInterface.addLogMessage("updates=" + updates);
@@ -822,9 +873,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
             }
         }
     }
-    
+
     public void deletePose(String name) throws SQLException {
-        try(PreparedStatement stmnt = con.prepareStatement(queryDeleteSinglePoseString)) {
+        try (PreparedStatement stmnt = con.prepareStatement(queryDeleteSinglePoseString)) {
             stmnt.setString(1, name);
             stmnt.execute();
         }
@@ -839,110 +890,112 @@ public class DatabasePoseUpdater implements AutoCloseable {
             long t0 = System.nanoTime();
             int updates = 0;
 
-            List<UpdateResults> batchUrs = new ArrayList<>();
-            if (null != displayInterface && displayInterface.isDebug()) {
-                debug = true;
-                displayInterface.addLogMessage("Begin updateVisionList");
-            } else {
-                debug = false;
-            }
-            int verifiedCount = -1;
-            for (int i = 0; i < list.size(); i++) {
-                DetectedItem ci = list.get(i);
-                if (null == ci || ci.name.compareTo("*") == 0) {
-                    continue;
+            synchronized (this) {
+                List<UpdateResults> batchUrs = new ArrayList<>();
+                if (null != displayInterface && displayInterface.isDebug()) {
+                    debug = true;
+                    displayInterface.addLogMessage("Begin updateVisionList");
+                } else {
+                    debug = false;
                 }
-                if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
-                    ci.fullName = ci.name;
-                }
-                if (addRepeatCountsToName) {
-                    ci.fullName = ci.name + "_" + (ci.repeats + 1);
-                }
-                List<Object> paramsList = poseParamsToStatement(ci, getSingleParamTypes, get_single_statement);
-                UpdateResults ur = updateResultsMap.get(ci.fullName);
-                String verifyQueryStringFilled = fillQueryString(querySingleString, paramsList);
-                if (null == ur) {
-                    ur = new UpdateResults(ci.fullName);
-                }
-                ur.setVerifyException(null);
-                ur.setVerified(false);
-
-                try {
-                    if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("verifyQueryStringFilled = \r\n" + verifyQueryStringFilled + "\r\n");
+                int verifiedCount = -1;
+                for (int i = 0; i < list.size(); i++) {
+                    DetectedItem ci = list.get(i);
+                    if (null == ci || ci.name.compareTo("*") == 0) {
+                        continue;
                     }
-
-                    boolean exec_result = get_single_statement.execute();
-                    if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage(" get_single_statement.execute() returned  " + exec_result + "\r\n");
+                    if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
+                        ci.fullName = ci.name;
                     }
-                    if (exec_result) {
-                        try (ResultSet rs = get_single_statement.getResultSet()) {
-                            if (null != displayInterface && displayInterface.isDebug()) {
-                                displayInterface.addLogMessage("get_single_statement.getResultSet() = " + rs + "\r\n");
-                            }
-                            List<Map<String, String>> resultSetMapList = new ArrayList<>();
-                            Map<DbParamTypeEnum, String> resultParamMap
-                                    = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getResults();
-                            while (rs.next()) {
-                                double x = fix(rs, resultParamMap.get(DbParamTypeEnum.X));
-                                double y = fix(rs, resultParamMap.get(DbParamTypeEnum.Y));
-                                double vxi = fix(rs, resultParamMap.get(DbParamTypeEnum.VXI));
-                                double vxj = fix(rs, resultParamMap.get(DbParamTypeEnum.VXJ));
-                                if (Math.abs(x - ci.x) < 1e-6
-                                        && Math.abs(y - ci.y) < 1e-6
-                                        && Math.abs(Math.cos(ci.rotation) - vxi) < 1e-6
-                                        && Math.abs(Math.sin(ci.rotation) - vxj) < 1e-6) {
-                                    ur.setVerified(true);
-                                }
-                                ResultSetMetaData meta = rs.getMetaData();
-                                Map<String, String> resultMap = new LinkedHashMap<>();
-                                if (null != displayInterface && displayInterface.isDebug()) {
-                                    displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
-                                }
-                                for (int j = 1; j <= meta.getColumnCount(); j++) {
-                                    String name = meta.getColumnName(j);
-                                    String value = null;
-                                    try {
-                                        if (null == value) {
-                                            value = rs.getString(name);
-                                        }
-                                    } catch (Exception exception) {
-                                    }
-                                    try {
-                                        if (null == value) {
-                                            value = Objects.toString(rs.getObject(name, Object.class));
-                                        }
-                                    } catch (Exception exception) {
-                                    }
-                                    if (j == 1 && verifiedCount < 0 && name.startsWith("count")) {
-                                        try {
-                                            verifiedCount = Integer.valueOf(value);
-                                        } catch (NumberFormatException nfe) {
-                                        }
-                                    }
-                                    resultMap.put(name, value);
-                                }
-                                resultSetMapList.add(resultMap);
-                                if (null != displayInterface
-                                        && displayInterface.isDebug()
-                                        && resultMap.keySet().size() > 0) {
-                                    displayInterface.addLogMessage("resultMap=" + resultMap.toString() + System.lineSeparator());
-                                }
-                            }
-                            ur.setLastVerificationResultSetListMap(resultSetMapList);
+                    if (addRepeatCountsToName) {
+                        ci.fullName = ci.name + "_" + (ci.repeats + 1);
+                    }
+                    List<Object> paramsList = poseParamsToStatement(ci, getSingleParamTypes, get_single_statement);
+                    UpdateResults ur = updateResultsMap.get(ci.fullName);
+                    String verifyQueryStringFilled = fillQueryString(querySingleString, paramsList);
+                    if (null == ur) {
+                        ur = new UpdateResults(ci.fullName);
+                    }
+                    ur.setVerifyException(null);
+                    ur.setVerified(false);
+
+                    try {
+                        if (null != displayInterface && displayInterface.isDebug()) {
+                            displayInterface.addLogMessage("verifyQueryStringFilled = \r\n" + verifyQueryStringFilled + "\r\n");
                         }
-                    } else {
-                        verifiedCount = 0;
-                    }
 
-                } catch (Exception exception) {
-                    ur.setVerifyException(exception);
-                }
-                ur.setVerificationQueryStringFilled(verifyQueryStringFilled);
-                updateResultsMap.put(ci.fullName, ur);
-                if (null != ur.getVerifyException()) {
-                    throw new RuntimeException("ur=" + ur, ur.getVerifyException());
+                        boolean exec_result = get_single_statement.execute();
+                        if (null != displayInterface && displayInterface.isDebug()) {
+                            displayInterface.addLogMessage(" get_single_statement.execute() returned  " + exec_result + "\r\n");
+                        }
+                        if (exec_result) {
+                            try (ResultSet rs = get_single_statement.getResultSet()) {
+                                if (null != displayInterface && displayInterface.isDebug()) {
+                                    displayInterface.addLogMessage("get_single_statement.getResultSet() = " + rs + "\r\n");
+                                }
+                                List<Map<String, String>> resultSetMapList = new ArrayList<>();
+                                Map<DbParamTypeEnum, String> resultParamMap
+                                        = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getResults();
+                                while (rs.next()) {
+                                    double x = fix(rs, resultParamMap.get(DbParamTypeEnum.X));
+                                    double y = fix(rs, resultParamMap.get(DbParamTypeEnum.Y));
+                                    double vxi = fix(rs, resultParamMap.get(DbParamTypeEnum.VXI));
+                                    double vxj = fix(rs, resultParamMap.get(DbParamTypeEnum.VXJ));
+                                    if (Math.abs(x - ci.x) < 1e-6
+                                            && Math.abs(y - ci.y) < 1e-6
+                                            && Math.abs(Math.cos(ci.rotation) - vxi) < 1e-6
+                                            && Math.abs(Math.sin(ci.rotation) - vxj) < 1e-6) {
+                                        ur.setVerified(true);
+                                    }
+                                    ResultSetMetaData meta = rs.getMetaData();
+                                    Map<String, String> resultMap = new LinkedHashMap<>();
+                                    if (null != displayInterface && displayInterface.isDebug()) {
+                                        displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
+                                    }
+                                    for (int j = 1; j <= meta.getColumnCount(); j++) {
+                                        String name = meta.getColumnName(j);
+                                        String value = null;
+                                        try {
+                                            if (null == value) {
+                                                value = rs.getString(name);
+                                            }
+                                        } catch (Exception exception) {
+                                        }
+                                        try {
+                                            if (null == value) {
+                                                value = Objects.toString(rs.getObject(name, Object.class));
+                                            }
+                                        } catch (Exception exception) {
+                                        }
+                                        if (j == 1 && verifiedCount < 0 && name.startsWith("count")) {
+                                            try {
+                                                verifiedCount = Integer.valueOf(value);
+                                            } catch (NumberFormatException nfe) {
+                                            }
+                                        }
+                                        resultMap.put(name, value);
+                                    }
+                                    resultSetMapList.add(resultMap);
+                                    if (null != displayInterface
+                                            && displayInterface.isDebug()
+                                            && resultMap.keySet().size() > 0) {
+                                        displayInterface.addLogMessage("resultMap=" + resultMap.toString() + System.lineSeparator());
+                                    }
+                                }
+                                ur.setLastVerificationResultSetListMap(resultSetMapList);
+                            }
+                        } else {
+                            verifiedCount = 0;
+                        }
+
+                    } catch (Exception exception) {
+                        ur.setVerifyException(exception);
+                    }
+                    ur.setVerificationQueryStringFilled(verifyQueryStringFilled);
+                    updateResultsMap.put(ci.fullName, ur);
+                    if (null != ur.getVerifyException()) {
+                        throw new RuntimeException("ur=" + ur, ur.getVerifyException());
+                    }
                 }
             }
 
@@ -1096,7 +1149,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     params.add(item.vzk);
                     stmnt.setDouble(index, item.vzk);
                     break;
-                
+
                 case VISIONCYCLE:
                     params.add(item.visioncycle);
                     stmnt.setInt(index, item.visioncycle);

@@ -832,6 +832,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void jButtonRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRefreshActionPerformed
         if (null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
+            this.setItems(object2DJPanel1.getItems());
             visionSocketServer.publishList(this.getItems());
         }
     }//GEN-LAST:event_jButtonRefreshActionPerformed
@@ -1011,6 +1012,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText());
             props.put("xminymin", jTextFieldMinXMinY.getText());
             props.put("datafile", jTextFieldFilename.getText());
+            DisplayAxis displayAxis = object2DJPanel1.getDisplayAxis();
+            props.put("displayAxis", displayAxis.toString());
             List<DetectedItem> l = getItems();
             if (null != l && l.size() > 0) {
                 props.put(ITEMS_PROPERTY_NAME, VisionSocketServer.listToLine(l));
@@ -1082,6 +1085,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (connected) {
                     connect();
                 }
+            }
+            String displayAxisString = props.getProperty("displayAxis"); 
+            if(displayAxisString != null && displayAxisString.length() > 0 ) {
+                DisplayAxis displayAxis = DisplayAxis.valueOf(displayAxisString);
+                jComboBoxDisplayAxis.setSelectedItem(displayAxis);
+                object2DJPanel1.setDisplayAxis(displayAxis);
             }
         }
     }

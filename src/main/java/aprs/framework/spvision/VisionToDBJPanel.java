@@ -106,18 +106,31 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void updateTransformFromTable() {
         try {
-            PoseType pose = pose(point(transform(0, 1), transform(0, 2), transform(0, 3)),
-                    vector(transform(1, 1), transform(1, 2), transform(1, 3)),
-                    vector(transform(2, 2), transform(2, 2), transform(2, 3)));
+            PoseType pose = getTransformPose();
             VisionSocketClient visionClient = Main.getVisionSocketClient();
-            if (null != visionClient) {
-                visionClient.setTransform(pose);
-                visionClient.publishVisionList(Main.getDatabasePoseUpdater(), this);
-                visionClient.setDebug(this.jCheckBoxDebug.isSelected());
+            DatabasePoseUpdater dup = Main.getDatabasePoseUpdater();
+            if (null != dup) {
+                dup.getUpdateResultsMap().clear();
+                boolean origForceUpdates = dup.isForceUpdates();
+                dup.setForceUpdates(true);
+                if (null != visionClient) {
+                    visionClient.setTransform(pose);
+                    visionClient.publishVisionList(dup, this);
+                    visionClient.setDebug(this.jCheckBoxDebug.isSelected());
+                }
+                dup.setForceUpdates(origForceUpdates);
             }
+
         } catch (Exception e) {
             addLogMessage(e);
         }
+    }
+
+    public PoseType getTransformPose() {
+        PoseType pose = pose(point(transform(0, 1), transform(0, 2), transform(0, 3)),
+                vector(transform(1, 1), transform(1, 2), transform(1, 3)),
+                vector(transform(2, 2), transform(2, 2), transform(2, 3)));
+        return pose;
     }
 
     /**
@@ -175,12 +188,15 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jScrollPaneTableFromVision = new javax.swing.JScrollPane();
         jTableFromVision = new javax.swing.JTable();
         jLabel19 = new javax.swing.JLabel();
+        jButtonForceSingleUpdate = new javax.swing.JButton();
+        jButtonForceAll = new javax.swing.JButton();
         jPanelTableUpdateResults = new javax.swing.JPanel();
         jScrollPaneTableUpdateResults = new javax.swing.JScrollPane();
         jTableUpdateResults = new javax.swing.JTable();
         jLabel21 = new javax.swing.JLabel();
         jButtonUpdateResultDetails = new javax.swing.JButton();
         jCheckBoxVerifyUpdates = new javax.swing.JCheckBox();
+        jCheckBoxDelOnUpdate = new javax.swing.JCheckBox();
         jSpinnerLogLines = new javax.swing.JSpinner();
         jLabel1 = new javax.swing.JLabel();
 
@@ -550,6 +566,20 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
         jLabel19.setText("From Vision:");
 
+        jButtonForceSingleUpdate.setText("Force Single Update");
+        jButtonForceSingleUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonForceSingleUpdateActionPerformed(evt);
+            }
+        });
+
+        jButtonForceAll.setText("Force All");
+        jButtonForceAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonForceAllActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelTableFromVisionLayout = new javax.swing.GroupLayout(jPanelTableFromVision);
         jPanelTableFromVision.setLayout(jPanelTableFromVisionLayout);
         jPanelTableFromVisionLayout.setHorizontalGroup(
@@ -560,13 +590,19 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jScrollPaneTableFromVision, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanelTableFromVisionLayout.createSequentialGroup()
                         .addComponent(jLabel19)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonForceAll)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonForceSingleUpdate)))
                 .addContainerGap())
         );
         jPanelTableFromVisionLayout.setVerticalGroup(
             jPanelTableFromVisionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTableFromVisionLayout.createSequentialGroup()
-                .addComponent(jLabel19)
+                .addGroup(jPanelTableFromVisionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel19)
+                    .addComponent(jButtonForceSingleUpdate)
+                    .addComponent(jButtonForceAll))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPaneTableFromVision, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                 .addContainerGap())
@@ -607,12 +643,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
-        jCheckBoxVerifyUpdates.setText("Verify Updates");
+        jCheckBoxVerifyUpdates.setText("Verify ");
         jCheckBoxVerifyUpdates.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jCheckBoxVerifyUpdatesActionPerformed(evt);
             }
         });
+
+        jCheckBoxDelOnUpdate.setText("Del on Update");
 
         javax.swing.GroupLayout jPanelTableUpdateResultsLayout = new javax.swing.GroupLayout(jPanelTableUpdateResults);
         jPanelTableUpdateResults.setLayout(jPanelTableUpdateResultsLayout);
@@ -625,6 +663,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addGroup(jPanelTableUpdateResultsLayout.createSequentialGroup()
                         .addComponent(jLabel21)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxDelOnUpdate)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxVerifyUpdates)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonUpdateResultDetails)))
@@ -636,7 +676,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addGroup(jPanelTableUpdateResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel21)
                     .addComponent(jButtonUpdateResultDetails)
-                    .addComponent(jCheckBoxVerifyUpdates))
+                    .addComponent(jCheckBoxVerifyUpdates)
+                    .addComponent(jCheckBoxDelOnUpdate))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPaneTableUpdateResults, javax.swing.GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
                 .addContainerGap())
@@ -932,6 +973,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //        this.pq_list = _list;
         DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
 //        TableColumnModel tcm = this.jTableFromCognex.getColumnModel();
+        tm.setRowCount(0);
         for (int i = 0; i < _list.size(); i++) {
             PoseQueryElem pqe = _list.get(i);
             if (tm.getRowCount() <= i) {
@@ -1075,6 +1117,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 VisionSocketClient visionClient = Main.getVisionSocketClient();
                 if (null != visionClient) {
                     visionClient.setDebug(this.jCheckBoxDebug.isSelected());
+                    visionClient.setTransform(this.getTransformPose());
                     visionClient.publishVisionList(Main.getDatabasePoseUpdater(), this);
                 }
             }
@@ -1277,6 +1320,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }//GEN-LAST:event_jTextFieldAcquireActionPerformed
 
     private void jButtonCheckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCheckActionPerformed
+        DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
+        tm.setRowCount(0);
         Main.queryDatabase();
     }//GEN-LAST:event_jButtonCheckActionPerformed
 
@@ -1290,7 +1335,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (isDebug()) {
             addLogMessage("Detected item to add = " + item);
         }
-        Main.getDatabasePoseUpdater().updateVisionList(Collections.singletonList(item), false);
+        List<DetectedItem> singletonList = Collections.singletonList(item);
+        DatabasePoseUpdater dup = Main.getDatabasePoseUpdater();
+        PoseType pose = getTransformPose();
+        if (null != pose) {
+            List<DetectedItem> transformedList = VisionSocketClient.transformList(singletonList, pose);
+            System.out.println("transformedList = " + transformedList);
+            dup.updateVisionList(transformedList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+        } else {
+            dup.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+        }
     }//GEN-LAST:event_jButtonAddItemActionPerformed
 
     private Callable<DbSetupPublisher> dbSetupSupplier = null;
@@ -1326,6 +1380,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }//GEN-LAST:event_jButtonDbSetupActionPerformed
 
     private void jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed
+
         VisionSocketClient visionClient = Main.getVisionSocketClient();
         if (null != visionClient) {
             visionClient.setDebug(this.jCheckBoxDebug.isSelected());
@@ -1393,22 +1448,71 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }//GEN-LAST:event_jCheckBoxVerifyUpdatesActionPerformed
 
     private void jButtonDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteActionPerformed
-       for(int i : jTableFromDatabase.getSelectedRows()) {
-           String name = (String) jTableFromDatabase.getModel().getValueAt(i, 0);
-           try {
-               
-               if(name != null && name.length() > 0) {
+        for (int i : jTableFromDatabase.getSelectedRows()) {
+            String name = (String) jTableFromDatabase.getModel().getValueAt(i, 0);
+            try {
+
+                if (name != null && name.length() > 0) {
                     Main.getDatabasePoseUpdater().deletePose(name);
-               }
-                
-           } catch (SQLException ex) {
-               Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-               appendLogDisplay("\nDelete "+name+" failed :"+ex+"\n");
-           }
-       }
-       jTableFromDatabase.getSelectionModel().clearSelection();
-       Main.queryDatabase();
+                }
+
+            } catch (SQLException ex) {
+                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                appendLogDisplay("\nDelete " + name + " failed :" + ex + "\n");
+            }
+        }
+        jTableFromDatabase.getSelectionModel().clearSelection();
+        DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
+        tm.setRowCount(0);
+        Main.queryDatabase();
     }//GEN-LAST:event_jButtonDeleteActionPerformed
+
+    private void jButtonForceSingleUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonForceSingleUpdateActionPerformed
+        int row = jTableFromVision.getSelectedRow();
+        forceUpdateSingle(row);
+    }//GEN-LAST:event_jButtonForceSingleUpdateActionPerformed
+
+    private void jButtonForceAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonForceAllActionPerformed
+        forceAllUpdates();
+    }//GEN-LAST:event_jButtonForceAllActionPerformed
+
+    public void forceAllUpdates() throws NumberFormatException {
+        DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
+        tm.setRowCount(0);
+        for (int i = 0; i < jTableFromVision.getRowCount(); i++) {
+            forceUpdateSingle(i);
+        }
+        Main.queryDatabase();
+    }
+
+    public void forceUpdateSingle(int row) throws NumberFormatException {
+        DetectedItem item = new DetectedItem();
+        item.name = (String) jTableFromVision.getValueAt(row, 1);
+        item.fullName = item.name;
+        item.rotation = Double.valueOf(jTableFromVision.getValueAt(row, 3).toString());
+        item.x = Double.valueOf(jTableFromVision.getValueAt(row, 4).toString());
+        item.y = Double.valueOf(jTableFromVision.getValueAt(row, 5).toString());
+        item.score = Double.valueOf(jTableFromVision.getValueAt(row, 6).toString());
+        item.type = (String) jTableFromVision.getValueAt(row, 7);
+        System.out.println("item = " + item);
+        List<DetectedItem> singletonList = Collections.singletonList(item);
+        System.out.println("singletonList = " + singletonList);
+        DatabasePoseUpdater dup = Main.getDatabasePoseUpdater();
+        boolean origForceUpdates = dup.isForceUpdates();
+        dup.setForceUpdates(true);
+        boolean isDebug = jCheckBoxDebug.isSelected();
+        jCheckBoxDebug.setSelected(true);
+        PoseType pose = getTransformPose();
+        if (null != pose) {
+            List<DetectedItem> transformedList = VisionSocketClient.transformList(singletonList, pose);
+            System.out.println("transformedList = " + transformedList);
+            dup.updateVisionList(transformedList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+        } else {
+            dup.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+        }
+        dup.setForceUpdates(origForceUpdates);
+        jCheckBoxDebug.setSelected(isDebug);
+    }
 
     private DbType oldDbType = null;
 
@@ -1420,9 +1524,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JButton jButtonDbSetup;
     private javax.swing.JButton jButtonDelete;
     private javax.swing.JButton jButtonDisconnectVision;
+    private javax.swing.JButton jButtonForceAll;
+    private javax.swing.JButton jButtonForceSingleUpdate;
     private javax.swing.JButton jButtonUpdateResultDetails;
     private javax.swing.JCheckBox jCheckBoxAddRepeatCountsToDatabaseNames;
     private javax.swing.JCheckBox jCheckBoxDebug;
+    private javax.swing.JCheckBox jCheckBoxDelOnUpdate;
     private javax.swing.JCheckBox jCheckBoxVerifyUpdates;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
