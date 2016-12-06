@@ -42,6 +42,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,11 @@ import java.util.logging.Logger;
  */
 public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable {
 
+    public static class ReturnPartInfo {
+        String partName;
+        PoseType pickupPose;
+        
+    }
     private java.sql.Connection dbConnection;
     private DbSetup dbSetup;
     private boolean closeDbConnection = true;
@@ -198,6 +204,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     BigDecimal approachZOffset = BigDecimal.valueOf(30.0);
 
+    private String actionToCrclTakenPartsNames[] = null;
+
+    public String[] getActionToCrclTakenPartsNames() {
+        return actionToCrclTakenPartsNames;
+    }
+
+   
     private int actionToCrclIndexes[] = null;
 
     public int[] getActionToCrclIndexes() {
@@ -268,11 +281,22 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == actionToCrclIndexes || actionToCrclIndexes.length != actions.size()) {
             actionToCrclIndexes = new int[actions.size()];
         }
+        for (int i = startingIndex; i < actionToCrclIndexes.length; i++) {
+            actionToCrclIndexes[i] = -1;
+        }
         if (null == actionToCrclLabels || actionToCrclLabels.length != actions.size()) {
             actionToCrclLabels = new String[actions.size()];
         }
+        for (int i = startingIndex; i < actionToCrclLabels.length; i++) {
+            actionToCrclLabels[i] = "UNDEFINED";
+        }
+        if (null == actionToCrclTakenPartsNames || actionToCrclTakenPartsNames.length != actions.size()) {
+            actionToCrclTakenPartsNames = new String[actions.size()];
+        }
         for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
             actionToCrclIndexes[lastIndex] = cmds.size();
+            actionToCrclTakenPartsNames[lastIndex] = null;
+            actionToCrclLabels[lastIndex] = "";
             PddlAction action = actions.get(lastIndex);
             System.out.println("action = " + action);
             try {
@@ -283,6 +307,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     case "look-for-part":
                         if (!isLookForDone()) {
                             lookForPart(action, cmds);
+                            actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
                             return cmds;
                         }
                         break;
@@ -291,6 +316,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         placePart(action, cmds);
                         break;
                 }
+                actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
             } catch (Exception ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 MessageType message = new MessageType();
@@ -303,17 +329,24 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return cmds;
     }
 
-    private final HashMap<String, PoseType> returnPoses = new HashMap<>();
+    private final Map<String, PoseType> returnPosesByName = new HashMap<>();
 
-    public HashMap<String, PoseType> getReturnPoses() {
-        return returnPoses;
+    public Map<String, PoseType> getReturnPosesByName() {
+        return returnPosesByName;
     }
 
+    private String lastTakenPart = null;
+
+    public String getLastTakenPart() {
+        return lastTakenPart;
+    }
+    
     
     public void returnPart(String part,  List<MiddleCommandType> out) {
-        placePartByPose(out, returnPoses.get(part));
+        placePartByPose(out, returnPosesByName.get(part));
     }
     
+
     public void takePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
@@ -323,14 +356,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setMessage("take-part " + partName);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
-
-        PoseType pose = getPartPose(action.getArgs()[1]);
+        
+        PoseType pose = getPartPose(partName);
         if(null != errorMap) {
             pose = errorMap.correctPose(pose);
         }
-        returnPoses.put(action.getArgs()[1], pose);
+        returnPosesByName.put(action.getArgs()[1], pose);
         pose.setZAxis(vector(0, 0, -1.0));
         takePartByPose(out, pose);
+        lastTakenPart = partName;
     }
 
     public PoseType getPartPose(String partname) throws SQLException {
@@ -491,6 +525,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         dwellCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         dwellCmd.setDwellTime(BigDecimal.valueOf(1.0));
         cmds.add(dwellCmd);
+        this.lastTakenPart = null;
     }
 
     @Override

@@ -88,14 +88,15 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.xml.bind.JAXBException;
 import java.awt.HeadlessException;
-import java.nio.file.Files;
-import java.util.stream.Collectors;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
-import java.net.BindException;
-import rcs.posemath.PM_CARTESIAN;
-import rcs.posemath.PmCartesian;
-import rcs.posemath.Posemath;
+import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Date;
+import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -229,10 +230,26 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonErrorMapFileBrowse = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
+        jScrollPane5 = new javax.swing.JScrollPane();
+        jPanel4 = new javax.swing.JPanel();
+        jLabel16 = new javax.swing.JLabel();
+        jTextFieldExternalControlPort = new javax.swing.JTextField();
+        jCheckBoxEnableExternalControlPort = new javax.swing.JCheckBox();
+        jScrollPane6 = new javax.swing.JScrollPane();
+        jTextAreaExternalCommads = new javax.swing.JTextArea();
+        jButtonSafeAbort = new javax.swing.JButton();
+        jTextFieldSafeAbortCount = new javax.swing.JTextField();
+        jLabel18 = new javax.swing.JLabel();
+        jLabel19 = new javax.swing.JLabel();
+        jTextFieldSafeAbortRequestCount = new javax.swing.JTextField();
         jButtonClear = new javax.swing.JButton();
         jCheckBoxDebug = new javax.swing.JCheckBox();
         jButtonAbort = new javax.swing.JButton();
         jButtonGenerateAndRun = new javax.swing.JButton();
+        jLabel17 = new javax.swing.JLabel();
+        jTextFieldCurrentPart = new javax.swing.JTextField();
+        jButtonStep = new javax.swing.JButton();
+        jButtonContinue = new javax.swing.JButton();
 
         jLabel6.setText("Pddl Output Actions");
 
@@ -240,20 +257,20 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         jTablePddlOutput.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
             },
             new String [] {
-                "CRCLIndex", "Label", "Type", "Args", "Cost"
+                "#", "CRCLIndex", "Label", "Type", "Args", "Cost", "TakenPart"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false
+                false, false, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -718,7 +735,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 833, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 954, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -763,7 +780,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 833, Short.MAX_VALUE)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 954, Short.MAX_VALUE)
                         .addContainerGap())
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel13)
@@ -786,6 +803,86 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         );
 
         jTabbedPane1.addTab("Error Map", jPanel3);
+
+        jLabel16.setText("Port:");
+
+        jTextFieldExternalControlPort.setText("9999");
+
+        jCheckBoxEnableExternalControlPort.setText("Enable");
+        jCheckBoxEnableExternalControlPort.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxEnableExternalControlPortActionPerformed(evt);
+            }
+        });
+
+        jTextAreaExternalCommads.setColumns(20);
+        jTextAreaExternalCommads.setRows(5);
+        jScrollPane6.setViewportView(jTextAreaExternalCommads);
+
+        jButtonSafeAbort.setText("Safe Abort");
+        jButtonSafeAbort.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSafeAbortActionPerformed(evt);
+            }
+        });
+
+        jTextFieldSafeAbortCount.setEditable(false);
+        jTextFieldSafeAbortCount.setText("0");
+
+        jLabel18.setText("Safe Aborts Completed: ");
+
+        jLabel19.setText("SafeAbortsRequested:");
+
+        jTextFieldSafeAbortRequestCount.setEditable(false);
+        jTextFieldSafeAbortRequestCount.setText("0");
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 933, Short.MAX_VALUE)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addComponent(jLabel16)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldExternalControlPort, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxEnableExternalControlPort)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonSafeAbort)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel19)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldSafeAbortRequestCount, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel18)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldSafeAbortCount, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel16)
+                    .addComponent(jTextFieldExternalControlPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jCheckBoxEnableExternalControlPort)
+                    .addComponent(jButtonSafeAbort)
+                    .addComponent(jTextFieldSafeAbortCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel18)
+                    .addComponent(jLabel19)
+                    .addComponent(jTextFieldSafeAbortRequestCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane6))
+        );
+
+        jScrollPane5.setViewportView(jPanel4);
+
+        jTabbedPane1.addTab("External Control", jScrollPane5);
 
         jButtonClear.setText("Clear");
         jButtonClear.addActionListener(new java.awt.event.ActionListener() {
@@ -812,6 +909,24 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonGenerateAndRun.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonGenerateAndRunActionPerformed(evt);
+            }
+        });
+
+        jLabel17.setText("Part:");
+
+        jTextFieldCurrentPart.setText(" ");
+
+        jButtonStep.setText("Step");
+        jButtonStep.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonStepActionPerformed(evt);
+            }
+        });
+
+        jButtonContinue.setText("Continue");
+        jButtonContinue.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonContinueActionPerformed(evt);
             }
         });
 
@@ -848,7 +963,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxNeedLookFor)
-                        .addGap(169, 169, 169)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel17)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonStep)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonContinue)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonGenerateAndRun)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonGenerateCRCL)
@@ -884,7 +1007,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jCheckBoxReplan)
                         .addComponent(jCheckBoxDebug)
                         .addComponent(jButtonAbort)
-                        .addComponent(jButtonGenerateAndRun)))
+                        .addComponent(jButtonGenerateAndRun)
+                        .addComponent(jLabel17)
+                        .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jButtonStep)
+                        .addComponent(jButtonContinue)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 136, Short.MAX_VALUE)
                 .addContainerGap())
@@ -1042,7 +1169,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != action) {
             this.getActionsList().add(action);
             DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
-            model.addRow(new Object[]{-1, action.getLabel(), action.getType(), Arrays.toString(action.getArgs()), action.getCost()});
+            model.addRow(new Object[]{model.getRowCount(), -1, action.getLabel(), action.getType(), Arrays.toString(action.getArgs()), action.getCost()});
         }
     }
 
@@ -1292,7 +1419,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private boolean autoStart = true;
-    
+
+    private volatile CRCLProgramType unstartedProgram = null;
+
     /**
      * Set the value of crclProgram
      *
@@ -1303,14 +1432,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             this.crclProgram = crclProgram;
             AprsJFrame aprsJframe = AprsJFrame.getCurrentAprsJFrame();
             if (null != aprsJframe) {
-
-                aprsJframe.setCRCLProgram(crclProgram,autoStart);
+                aprsJframe.setCRCLProgram(crclProgram, autoStart);
                 aprsJframe.addProgramLineListener(this);
             }
             if (javax.swing.SwingUtilities.isEventDispatchThread()) {
                 this.loadProgramToTable(crclProgram);
             } else {
                 javax.swing.SwingUtilities.invokeLater(() -> loadProgramToTable(crclProgram));
+            }
+            if (!autoStart) {
+                unstartedProgram = crclProgram;
+            } else {
+                unstartedProgram = null;
             }
 //            String programText = CRCLSocket.getUtilSocket().programToPrettyString(crclProgram, true);
 //            jTextAreaCrcl.setText(programText);
@@ -1325,6 +1458,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         try {
             autoStart = false;
+            setReplanFromIndex(0);
             generateCrcl();
         } catch (IOException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -1345,10 +1479,24 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return replanFromIndex;
     }
 
+    private String currentPart = null;
+
     public void setReplanFromIndex(int replanFromIndex) {
         this.replanFromIndex = replanFromIndex;
         jTablePddlOutput.getSelectionModel().setSelectionInterval(replanFromIndex, replanFromIndex);
         jTablePddlOutput.scrollRectToVisible(new Rectangle(jTablePddlOutput.getCellRect(replanFromIndex, 0, true)));
+        String[] names = this.pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
+        if (names != null && names.length >= replanFromIndex && replanFromIndex > 0) {
+            currentPart = names[replanFromIndex - 1];
+
+        } else {
+            currentPart = null;
+        }
+        if (null != currentPart) {
+            jTextFieldCurrentPart.setText(currentPart);
+        } else {
+            jTextFieldCurrentPart.setText("");
+        }
     }
 
 
@@ -1446,8 +1594,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         this.setActionsList(new ArrayList<>());
         DefaultTableModel model = (DefaultTableModel) jTableCrclProgram.getModel();
         model.setRowCount(0);
-        replanFromIndex = 0;
-        jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+        setReplanFromIndex(0);
+        safeAbortRequested = false;
+        safeAbortRunnablesVector.clear();
+        abortProgram();
+    }
+
+    private void abortProgram() {
+
         if (null != customRunnables) {
             customRunnables.clear();
             customRunnables = null;
@@ -1462,6 +1616,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != aprsJframe) {
             aprsJframe.abortCrclProgram();
         }
+        this.safeAbortRequested = false;
     }
 
     private int takePartCount = 0;
@@ -1800,7 +1955,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jButtonGridTestActionPerformed
 
     private void jButtonAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAbortActionPerformed
-        clearAll();
+        setReplanFromIndex(0);
+        abortProgram();
     }//GEN-LAST:event_jButtonAbortActionPerformed
 
     private void jButtonGenerateAndRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGenerateAndRunActionPerformed
@@ -1812,13 +1968,200 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }//GEN-LAST:event_jButtonGenerateAndRunActionPerformed
 
+    private ServerSocket externalControlSocket = null;
+    private Thread externalControlAcceptThread = null;
+    private List<Socket> externalControlClientSockets = null;
+    private List<Thread> externalControlClientThreads = null;
+
+    private static void sendSocket(Socket s, String msg) {
+        try {
+            s.getOutputStream().write(msg.getBytes());
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void handleExternalCommand(Socket s, String line) {
+        jTextAreaExternalCommads.append(new Date() + ":" + s.getRemoteSocketAddress() + ": " + line + "\r\n");
+        if (line.startsWith("safe_abort")) {
+            if (this.safeAbort()) {
+                sendSocket(s,"Done\r\n");
+            } else {
+                this.safeAbortRunnablesVector.add(() -> sendSocket(s,"Done\r\n"));
+            }
+        }
+        jTextAreaExternalCommads.setCaretPosition(jTextAreaExternalCommads.getText().length() - 1);
+    }
+
+    private void runMainExternalControlClientHandler(final Socket s) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(s.getInputStream()))) {
+            String line = null;
+            while (null != (line = br.readLine()) && !Thread.currentThread().isInterrupted()) {
+                if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
+                    final String finalLine = line;
+                    javax.swing.SwingUtilities.invokeAndWait(() -> handleExternalCommand(s, finalLine));
+                } else {
+                    handleExternalCommand(s, line);
+                }
+            }
+        } catch (IOException | InterruptedException | InvocationTargetException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            s.close();
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void runExternalControlMainServerThread() {
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+
+                final Socket s = externalControlSocket.accept();
+                externalControlClientSockets.add(s);
+                Thread t = new Thread(() -> runMainExternalControlClientHandler(s),
+                        "externalControlClientThread_" + s.getRemoteSocketAddress());
+                t.start();
+                externalControlClientThreads.add(t);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setExternalControlPortEnabled(boolean on) throws IOException {
+        closeExternalControlService();
+        externalControlSocket = new ServerSocket(Integer.valueOf(jTextFieldExternalControlPort.getText()));
+        externalControlClientSockets = new ArrayList<>();
+        externalControlClientThreads = new ArrayList<>();
+        externalControlAcceptThread = new Thread(this::runExternalControlMainServerThread, "externalControlMainServerThread");
+        externalControlAcceptThread.start();
+        if (jCheckBoxEnableExternalControlPort.isSelected() != on) {
+            jCheckBoxEnableExternalControlPort.setSelected(on);
+        }
+    }
+
+    private static void closeSocket(Socket s) {
+        try {
+            s.close();
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private static void closeThread(Thread t) {
+        try {
+            t.interrupt();
+            t.join(100);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void closeExternalControlService() {
+        if (null != externalControlSocket) {
+            try {
+                externalControlSocket.close();
+            } catch (IOException ex) {
+                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        if (null != externalControlAcceptThread) {
+            externalControlAcceptThread.interrupt();
+            try {
+                externalControlAcceptThread.join(100);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        if (externalControlClientSockets != null) {
+            externalControlClientSockets.forEach(s -> closeSocket(s));
+            externalControlClientSockets.clear();
+            externalControlClientSockets = null;
+        }
+        if (externalControlClientThreads != null) {
+            externalControlClientThreads.forEach(t -> closeThread(t));
+            externalControlClientThreads.clear();
+            externalControlClientThreads = null;
+        }
+    }
+
+    private void jCheckBoxEnableExternalControlPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxEnableExternalControlPortActionPerformed
+        try {
+            setExternalControlPortEnabled(jCheckBoxEnableExternalControlPort.isSelected());
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jCheckBoxEnableExternalControlPortActionPerformed
+
+    private void jButtonStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStepActionPerformed
+        try {
+            autoStart = !started;
+            if (null != unstartedProgram) {
+                setCrclProgram(unstartedProgram);
+            } else {
+                generateCrcl();
+            }
+            autoStart = false;
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonStepActionPerformed
+
+    private int safeAboutCount = 0;
+    private int safeAbortRequestCount = 0;
+
+    private void incSafeAbortCount() {
+        safeAboutCount++;
+        jTextFieldSafeAbortCount.setText(Integer.toString(safeAboutCount));
+    }
+
+    private void incSafeAbortRequestCount() {
+        safeAbortRequestCount++;
+        jTextFieldSafeAbortRequestCount.setText(Integer.toString(safeAbortRequestCount));
+    }
+
+    public boolean safeAbort() {
+        incSafeAbortRequestCount();
+        if (null == currentPart) {
+            incSafeAbortCount();
+            this.abortProgram();
+            return true;
+        } else {
+            this.safeAbortRequested = true;
+            this.safeAbortRunnablesVector.add(this::incSafeAbortCount);
+        }
+        return false;
+    }
+
+    private void jButtonSafeAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSafeAbortActionPerformed
+        this.safeAbort();
+    }//GEN-LAST:event_jButtonSafeAbortActionPerformed
+
+    private void jButtonContinueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonContinueActionPerformed
+        autoStart = true;
+        safeAbortRequested = false;
+        safeAbortRunnablesVector.clear();
+        if (null != unstartedProgram) {
+            setCrclProgram(unstartedProgram);
+        } else {
+            try {
+                generateCrcl();
+            } catch (IOException ex) {
+                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+    }//GEN-LAST:event_jButtonContinueActionPerformed
+
     public void setCrclIndexes(int indexes[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < indexes.length; i++) {
             if (i >= model.getRowCount()) {
                 break;
             }
-            model.setValueAt(indexes[i], i, 0);
+            model.setValueAt(indexes[i], i, 1);
         }
         this.autoResizeTableColWidths(jTablePddlOutput);
     }
@@ -1830,13 +2173,47 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 break;
             }
             if (null != labels[i]) {
-                model.setValueAt(labels[i], i, 1);
+                model.setValueAt(labels[i], i, 2);
             }
         }
         this.autoResizeTableColWidths(jTablePddlOutput);
     }
 
+    public void setPddlTakenParts(String parts[]) {
+        DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
+        for (int i = 0; i < parts.length; i++) {
+            if (i >= model.getRowCount()) {
+                break;
+            }
+            if (null != parts[i]) {
+                model.setValueAt(parts[i], i, 6);
+            }
+        }
+        this.autoResizeTableColWidths(jTablePddlOutput);
+    }
+
+    boolean started = false;
+
+    private volatile boolean safeAbortRequested = false;
+    private final Vector<Runnable> safeAbortRunnablesVector = new Vector<Runnable>();
+
     private void generateCrcl() throws IOException {
+        synchronized (this) {
+            if (safeAbortRequested && null == currentPart) {
+                safeAbortRequested = false;
+                autoStart = false;
+                this.abortProgram();
+                synchronized (safeAbortRunnablesVector) {
+                    while (safeAbortRunnablesVector.size() > 0) {
+                        Runnable r = safeAbortRunnablesVector.remove(0);
+                        if (null != r) {
+                            r.run();
+                        }
+                    }
+                }
+                return;
+            }
+        }
         checkDbSupplierPublisher();
         Map<String, String> options = getTableOptions();
         if (replanFromIndex < 0 || replanFromIndex > actionsList.size()) {
@@ -1847,6 +2224,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         indexes = Arrays.copyOf(indexes, indexes.length);
         setCrclIndexes(indexes);
         setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
+        setPddlTakenParts(pddlActionToCrclGenerator.getActionToCrclTakenPartsNames());
         CRCLProgramType program = createEmptyProgram();
         if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()) {
             jCheckBoxReplan.setSelected(true);
@@ -1860,6 +2238,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getMiddleCommand().addAll(cmds);
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
         setCrclProgram(program);
+        started = autoStart;
         replanStarted = false;
     }
 
@@ -2115,6 +2494,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonAbort;
     private javax.swing.JButton jButtonClear;
     private javax.swing.JButton jButtonContRandomTest;
+    private javax.swing.JButton jButtonContinue;
     private javax.swing.JButton jButtonErrorMapFileBrowse;
     private javax.swing.JButton jButtonGenerateAndRun;
     private javax.swing.JButton jButtonGenerateCRCL;
@@ -2128,10 +2508,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonRecordSuccess;
     private javax.swing.JButton jButtonReset;
     private javax.swing.JButton jButtonReturn;
+    private javax.swing.JButton jButtonSafeAbort;
+    private javax.swing.JButton jButtonStep;
     private javax.swing.JButton jButtonStopRandomTest;
     private javax.swing.JButton jButtonTake;
     private javax.swing.JButton jButtonTestPickup;
     private javax.swing.JCheckBox jCheckBoxDebug;
+    private javax.swing.JCheckBox jCheckBoxEnableExternalControlPort;
     private javax.swing.JCheckBox jCheckBoxNeedLookFor;
     private javax.swing.JCheckBox jCheckBoxReplan;
     private javax.swing.JComboBox<String> jComboBoxManualObjectName;
@@ -2142,6 +2525,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
+    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -2153,10 +2540,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane5;
+    private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPaneOptions;
     private javax.swing.JScrollPane jScrollPaneTraySlotDesign;
     private javax.swing.JTabbedPane jTabbedPane1;
@@ -2165,8 +2555,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JTable jTableOptions;
     private javax.swing.JTable jTablePddlOutput;
     private javax.swing.JTable jTableTraySlotDesign;
+    private javax.swing.JTextArea jTextAreaExternalCommads;
     private javax.swing.JTextField jTextFieldAdjPose;
+    private javax.swing.JTextField jTextFieldCurrentPart;
     private javax.swing.JTextField jTextFieldErrorMapFilename;
+    private javax.swing.JTextField jTextFieldExternalControlPort;
     private javax.swing.JTextField jTextFieldGridSize;
     private javax.swing.JTextField jTextFieldIndex;
     private javax.swing.JTextField jTextFieldLogFilename;
@@ -2178,6 +2571,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JTextField jTextFieldRecordFailCount;
     private javax.swing.JTextField jTextFieldRecordSuccessCount;
     private javax.swing.JTextField jTextFieldReturnCount;
+    private javax.swing.JTextField jTextFieldSafeAbortCount;
+    private javax.swing.JTextField jTextFieldSafeAbortRequestCount;
     private javax.swing.JTextField jTextFieldTakeCount;
     private javax.swing.JTextField jTextFieldTestPose;
     private javax.swing.JTextField jTextFieldTestXMax;

@@ -94,7 +94,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private Object2DViewJInternalFrame object2DViewJInternalFrame = null;
     private PddlPlannerJInternalFrame pddlPlannerJInternalFrame = null;
     private DbSetupJInternalFrame dbSetupJInternalFrame = null;
-    private PendantClientJInternalFrame pendantClientJInternalFrame = null;
+    private volatile PendantClientJInternalFrame pendantClientJInternalFrame = null;
     private SimServerJInternalFrame simServerJInternalFrame = null;
     private LogDisplayJInternalFrame logDisplayJInternalFrame = null;
     private FanucCRCLMain fanucCRCLMain = null;
@@ -102,7 +102,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private ExploreGraphDbJInternalFrame exploreGraphDbJInternalFrame = null;
     private MotomanCrclServerJInternalFrame motomanCrclServerJInternalFrame = null;
 
-    public void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
+    public synchronized void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.addProgramLineListener(l);
         }
@@ -136,8 +136,11 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     }
 
     public void abortCrclProgram() {
-        
+        if (null != pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.abortProgram();
+        }
     }
+    
     private PrintStream origOut = null;
     private PrintStream origErr = null;
 
