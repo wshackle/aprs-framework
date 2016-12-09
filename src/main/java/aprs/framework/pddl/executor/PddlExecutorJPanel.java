@@ -97,6 +97,10 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  *
@@ -180,9 +184,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTableOptions = new javax.swing.JTable();
         jScrollPaneTraySlotDesign = new javax.swing.JScrollPane();
         jTableTraySlotDesign = new javax.swing.JTable();
-        jPanel1 = new javax.swing.JPanel();
+        jPanelOuterManualControl = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
-        jPanel2 = new javax.swing.JPanel();
+        jPanelInnerManualControl = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jButtonTake = new javax.swing.JButton();
         jButtonLookFor = new javax.swing.JButton();
@@ -224,6 +228,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldOffset = new javax.swing.JTextField();
         jLabel15 = new javax.swing.JLabel();
         jTextFieldAdjPose = new javax.swing.JTextField();
+        jComboBoxManualSlotName = new javax.swing.JComboBox<>();
+        jLabel20 = new javax.swing.JLabel();
+        jButtonPlacePart = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel13 = new javax.swing.JLabel();
         jTextFieldErrorMapFilename = new javax.swing.JTextField();
@@ -361,8 +368,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         jTableOptions.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
+                {"rpy", "175.0,0.0,0.0"},
                 {"lookForXYZ", "0.0,0.0,0.0"},
-                {"approachZOffset", "30.0"}
+                {"approachZOffset", "50.0"},
+                {"fastTransSpeed", "200.0"},
+                {"slowTransSpeed", "75"},
+                {"lookDwellTime", "3.0"},
+                {"rotSpeed", "30.0"},
+                {"settleDwellTime", "0.1"}
             },
             new String [] {
                 "Name", "Value"
@@ -573,14 +586,25 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         jTextFieldAdjPose.setText("0,0,0");
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        jComboBoxManualSlotName.setEditable(true);
+
+        jLabel20.setText("Slot");
+
+        jButtonPlacePart.setText("Place");
+        jButtonPlacePart.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonPlacePartActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanelInnerManualControlLayout = new javax.swing.GroupLayout(jPanelInnerManualControl);
+        jPanelInnerManualControl.setLayout(jPanelInnerManualControlLayout);
+        jPanelInnerManualControlLayout.setHorizontalGroup(
+            jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
                         .addComponent(jButtonReset)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonRecordFail)
@@ -596,7 +620,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jTextFieldLogFilename, javax.swing.GroupLayout.PREFERRED_SIZE, 323, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton4))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -615,8 +639,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel12)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonPlacePart)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel20)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -642,7 +672,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jButtonGridTest)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonStopRandomTest))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
                         .addComponent(jButtonRandDropOff)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -665,14 +695,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
+        jPanelInnerManualControlLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
 
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        jPanelInnerManualControlLayout.setVerticalGroup(
+            jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel1)
                         .addComponent(jButtonTake)
                         .addComponent(jButtonLookFor)
@@ -682,10 +712,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jTextFieldReturnCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel12))
-                    .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel20)
+                        .addComponent(jButtonPlacePart)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel3)
                         .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel4)
@@ -694,28 +728,28 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel8)
                         .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jButtonContRandomTest)
                         .addComponent(jButtonStopRandomTest)
                         .addComponent(jLabel9)
                         .addComponent(jButtonGridTest)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jButtonRandDropOff)
                         .addComponent(jButtonTestPickup)
                         .addComponent(jTextFieldRandomPickupCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel10)
                         .addComponent(jTextFieldTestPose, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jTextFieldOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel15)
                         .addComponent(jTextFieldAdjPose, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel14)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonReset)
                     .addComponent(jButtonRecordFail)
                     .addComponent(jButtonRecordSuccess)
@@ -727,26 +761,26 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 .addContainerGap(21, Short.MAX_VALUE))
         );
 
-        jScrollPane2.setViewportView(jPanel2);
+        jScrollPane2.setViewportView(jPanelInnerManualControl);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanelOuterManualControlLayout = new javax.swing.GroupLayout(jPanelOuterManualControl);
+        jPanelOuterManualControl.setLayout(jPanelOuterManualControlLayout);
+        jPanelOuterManualControlLayout.setHorizontalGroup(
+            jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 954, Short.MAX_VALUE)
                 .addContainerGap())
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        jPanelOuterManualControlLayout.setVerticalGroup(
+            jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 165, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
-        jTabbedPane1.addTab("Manual Pickup Return", jPanel1);
+        jTabbedPane1.addTab("Manual Pickup Return", jPanelOuterManualControl);
 
         jLabel13.setText("File name:");
 
@@ -1091,6 +1125,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return ret;
     }
 
+    public String[] getComboSlotNames(int maxlen) {
+        DefaultComboBoxModel<String> cbm
+                = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
+        String ret[] = new String[max(maxlen, cbm.getSize())];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = cbm.getElementAt(i);
+        }
+        return ret;
+    }
+
     public void saveProperties() throws IOException {
         Map<String, String> propsMap = new HashMap<>();
         propsMap.put(PDDLOUTPUT, jTextFieldPddlOutputActions.getText());
@@ -1099,11 +1143,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         props.putAll(propsMap);
         props.putAll(getTableOptions());
         props.put(MANUAL_PART_NAMES, Arrays.toString(getComboPartNames(5)));
+        props.put(MANUAL_PART_NAMES, Arrays.toString(getComboSlotNames(5)));
         try (FileWriter fw = new FileWriter(propertiesFile)) {
             props.store(fw, "");
         }
     }
     private static final String MANUAL_PART_NAMES = "manualPartNames";
+    private static final String MANUAL_SLOT_NAMES = "manualSlotNames";
 
     public void autoResizeTableColWidths(JTable table) {
 
@@ -1483,6 +1529,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     public void setReplanFromIndex(int replanFromIndex) {
         this.replanFromIndex = replanFromIndex;
+        if (replanFromIndex == 0) {
+            currentPart = null;
+            jTextFieldCurrentPart.setText("");
+
+        }
         jTablePddlOutput.getSelectionModel().setSelectionInterval(replanFromIndex, replanFromIndex);
         jTablePddlOutput.scrollRectToVisible(new Rectangle(jTablePddlOutput.getCellRect(replanFromIndex, 0, true)));
         String[] names = this.pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
@@ -1624,6 +1675,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             takePartCount++;
             clearAll();
+            autoStart = true;
             this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
             this.takePart(part);
@@ -1649,11 +1701,29 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return part;
     }
 
+    public String getComboSlot() {
+        String slot = jComboBoxManualSlotName.getSelectedItem().toString();
+        DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
+        boolean partfound = false;
+        for (int i = 0; i < cbm.getSize(); i++) {
+            String parti = cbm.getElementAt(i).toString();
+            if (parti.equals(slot)) {
+                partfound = true;
+                break;
+            }
+        }
+        if (!partfound) {
+            cbm.insertElementAt(slot, 0);
+        }
+        return slot;
+    }
+
     private int lookForCount = 0;
     private void jButtonLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLookForActionPerformed
         try {
             lookForCount++;
             clearAll();
+            autoStart = true;
             this.jTextFieldLookForCount.setText(Integer.toString(lookForCount));
             String part = getComboPart();
             this.lookFor(part);
@@ -1667,6 +1737,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             returnCount++;
             clearAll();
+            autoStart = true;
             this.jTextFieldReturnCount.setText(Integer.toString(returnCount));
             String part = getComboPart();
             this.returnPart(part);
@@ -1955,12 +2026,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jButtonGridTestActionPerformed
 
     private void jButtonAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAbortActionPerformed
+        if (null != currentPart) {
+            this.jComboBoxManualObjectName.setSelectedItem(currentPart);
+        }
         setReplanFromIndex(0);
         abortProgram();
     }//GEN-LAST:event_jButtonAbortActionPerformed
 
     private void jButtonGenerateAndRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGenerateAndRunActionPerformed
         try {
+            setReplanFromIndex(0);
             autoStart = true;
             generateCrcl();
         } catch (IOException ex) {
@@ -1985,9 +2060,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextAreaExternalCommads.append(new Date() + ":" + s.getRemoteSocketAddress() + ": " + line + "\r\n");
         if (line.startsWith("safe_abort")) {
             if (this.safeAbort()) {
-                sendSocket(s,"Done\r\n");
+                sendSocket(s, "Done\r\n");
             } else {
-                this.safeAbortRunnablesVector.add(() -> sendSocket(s,"Done\r\n"));
+                this.safeAbortRunnablesVector.add(() -> sendSocket(s, "Done\r\n"));
             }
         }
         jTextAreaExternalCommads.setCaretPosition(jTextAreaExternalCommads.getText().length() - 1);
@@ -2155,6 +2230,21 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     }//GEN-LAST:event_jButtonContinueActionPerformed
 
+    private int placePartCount = 0;
+    private void jButtonPlacePartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPlacePartActionPerformed
+        try {
+            placePartCount++;
+            clearAll();
+            autoStart = true;
+//            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
+            String part = getComboPart();
+            String slot = getComboSlot();
+            this.placePartSlot(part, slot);
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonPlacePartActionPerformed
+
     public void setCrclIndexes(int indexes[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < indexes.length; i++) {
@@ -2239,6 +2329,51 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
         setCrclProgram(program);
         started = autoStart;
+        replanStarted = false;
+    }
+
+    public void placePartSlot(String part, String slot) throws IOException {
+        clearAll();
+        Map<String, String> options = getTableOptions();
+        replanFromIndex = 0;
+        List<PddlAction> placePartActionsList = new ArrayList<>();
+        PddlAction placePartAction = new PddlAction("", "place-part",
+                new String[]{"", part, ""/*2*/, ""/*3*/, ""/*4*/, ""/*5*/, slot}, "cost");
+        placePartActionsList.add(placePartAction);
+        pddlActionToCrclGenerator.setErrorMap(errorMap);
+        List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(placePartActionsList, this.replanFromIndex, options);
+        CRCLProgramType program = createEmptyProgram();
+        jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+        program.getMiddleCommand().clear();
+        program.getMiddleCommand().addAll(cmds);
+        program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        setCrclProgram(program);
+
+        if (null != errorMap) {
+            PointType offset = errorMap.getLastOffset();
+            if (null != offset) {
+                jTextFieldOffset.setText(String.format("%.3f,%.3f", offset.getX().doubleValue(), offset.getY().doubleValue()));
+            }
+            PoseType testPose = errorMap.getLastPoseOut();
+            if (null != testPose) {
+                String testPoseString
+                        = String.format("%.3f, %.3f, %.3f",
+                                testPose.getPoint().getX().doubleValue(),
+                                testPose.getPoint().getY().doubleValue(),
+                                testPose.getPoint().getZ().doubleValue());
+                jTextFieldAdjPose.setText(testPoseString);
+            }
+            PoseType origPose = errorMap.getLastPoseIn();
+            if (null != origPose) {
+                String origPoseString
+                        = String.format("%.3f, %.3f, %.3f",
+                                origPose.getPoint().getX().doubleValue(),
+                                origPose.getPoint().getY().doubleValue(),
+                                origPose.getPoint().getZ().doubleValue());
+                this.jTextFieldTestPose.setText(origPoseString);
+            }
+        }
+
         replanStarted = false;
     }
 
@@ -2503,6 +2638,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonLoadPddlActionsFromFile;
     private javax.swing.JButton jButtonLookFor;
     private javax.swing.JButton jButtonPddlOutputViewEdit;
+    private javax.swing.JButton jButtonPlacePart;
     private javax.swing.JButton jButtonRandDropOff;
     private javax.swing.JButton jButtonRecordFail;
     private javax.swing.JButton jButtonRecordSuccess;
@@ -2518,6 +2654,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JCheckBox jCheckBoxNeedLookFor;
     private javax.swing.JCheckBox jCheckBoxReplan;
     private javax.swing.JComboBox<String> jComboBoxManualObjectName;
+    private javax.swing.JComboBox<String> jComboBoxManualSlotName;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -2530,6 +2667,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -2537,10 +2675,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanelInnerManualControl;
+    private javax.swing.JPanel jPanelOuterManualControl;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
@@ -2604,7 +2742,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             for (String name : props.stringPropertyNames()) {
                 if (!name.equals(PDDLCRCLAUTOSTART)
                         && !name.equals(PDDLOUTPUT)
-                        && !name.equals(MANUAL_PART_NAMES)) {
+                        && !name.equals(MANUAL_PART_NAMES)
+                        && !name.equals(MANUAL_SLOT_NAMES)) {
                     DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
                     boolean foundit = false;
                     for (int i = 0; i < model.getRowCount(); i++) {
@@ -2631,6 +2770,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     cbm.addElement(pna[i]);
                 }
             }
+
+            String manualSlotNames = props.getProperty(MANUAL_SLOT_NAMES, "");
+            String sna[] = manualPartNames.split("[ \t,\\[\\]\\{\\}]+");
+            cbm
+                    = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
+            cbm.removeAllElements();
+            for (int i = 0; i < sna.length; i++) {
+                if (null != sna[i] && sna[i].length() > 0
+                        && !sna[i].equals("null")) {
+                    cbm.addElement(sna[i]);
+                }
+            }
+
         }
     }
 

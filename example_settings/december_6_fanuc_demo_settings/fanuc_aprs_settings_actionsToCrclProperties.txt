@@ -1,0 +1,12 @@
+#
+#Wed Dec 07 10:14:57 EST 2016
+lookDwellTime=3.0
+approachZOffset=50.0
+manualPartNames=[kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear, null]
+slowTransSpeed=75
+fastTransSpeed=200.0
+settleDwellTime=0.1
+lookDwell=3.0
+defaultDwellTime=0.1
+lookForXYZ=217,150,171
+pddl.output=C\:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\example_pddl\\dec_6_2016_fanuc_demo_actions_fast.txt

@@ -1,5 +1,5 @@
 #
-#Fri Dec 02 15:33:34 EST 2016
+#Wed Dec 07 10:14:57 EST 2016
 simulated=true
 --visionport=4000
 connected=true
@@ -8,4 +8,4 @@ items=medium_gear_1,0.0,600.3153076171875,-185.5487823486328,100.0,PT,medium_gea
 xminymin=200.0, -500.0
 displayAxis=NEG_Y_POS_X
 xmaxymax=700.0, 200.0
-datafile=C\:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\december_6_fanuc_demo_simulation_settings\\objects.csv
+datafile=C\:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\december_6_fanuc_demo_simulation_settings\\fanuc_cart_objects.csv

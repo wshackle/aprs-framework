@@ -1,0 +1,17 @@
+#
+#Wed Dec 07 10:14:57 EST 2016
+startup.pddl.objectview=true
+startup.pddl.planner=true
+startup.pddl.objectsp=true
+startup.pddl.executor=true
+startup.robotcrclclient=true
+startup.robotcrclmotomanserver=false
+startup.exploreGraphDb=true
+fanuc.robotHost=129.6.78.111
+startup.crclWebApp=false
+startup.connectvision=true
+crclWebApp.httpPort=8081
+startup.robotcrclsimserver=false
+fanuc.crclLocalPort=64444
+startup.robotcrclfanucserver=true
+startup.connectdatabase=true

@@ -255,14 +255,26 @@
             <Component class="javax.swing.JTable" name="jTableOptions">
               <Properties>
                 <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                  <Table columnCount="2" rowCount="2">
+                  <Table columnCount="2" rowCount="8">
                     <Column editable="false" title="Name" type="java.lang.String">
+                      <Data value="rpy"/>
                       <Data value="lookForXYZ"/>
                       <Data value="approachZOffset"/>
+                      <Data value="fastTransSpeed"/>
+                      <Data value="slowTransSpeed"/>
+                      <Data value="lookDwellTime"/>
+                      <Data value="rotSpeed"/>
+                      <Data value="settleDwellTime"/>
                     </Column>
                     <Column editable="true" title="Value" type="java.lang.String">
+                      <Data value="175.0,0.0,0.0"/>
                       <Data value="0.0,0.0,0.0"/>
+                      <Data value="50.0"/>
+                      <Data value="200.0"/>
+                      <Data value="75"/>
+                      <Data value="3.0"/>
                       <Data value="30.0"/>
+                      <Data value="0.1"/>
                     </Column>
                   </Table>
                 </Property>
@@ -304,7 +316,7 @@
             </Component>
           </SubComponents>
         </Container>
-        <Container class="javax.swing.JPanel" name="jPanel1">
+        <Container class="javax.swing.JPanel" name="jPanelOuterManualControl">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="Manual Pickup Return">
@@ -338,7 +350,7 @@
 
               <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
               <SubComponents>
-                <Container class="javax.swing.JPanel" name="jPanel2">
+                <Container class="javax.swing.JPanel" name="jPanelInnerManualControl">
 
                   <Layout>
                     <DimensionLayout dim="0">
@@ -383,6 +395,12 @@
                                       <Component id="jLabel12" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jTextFieldGridSize" min="-2" pref="62" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jButtonPlacePart" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jLabel20" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jComboBoxManualSlotName" min="-2" pref="173" max="-2" attributes="0"/>
                                   </Group>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
@@ -453,7 +471,12 @@
                                       <Component id="jComboBoxManualObjectName" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="jLabel12" alignment="3" min="-2" max="-2" attributes="0"/>
                                   </Group>
-                                  <Component id="jTextFieldGridSize" min="-2" pref="28" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="jTextFieldGridSize" alignment="3" min="-2" pref="28" max="-2" attributes="0"/>
+                                      <Component id="jComboBoxManualSlotName" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jLabel20" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jButtonPlacePart" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
@@ -760,6 +783,30 @@
                       <Properties>
                         <Property name="text" type="java.lang.String" value="0,0,0"/>
                       </Properties>
+                    </Component>
+                    <Component class="javax.swing.JComboBox" name="jComboBoxManualSlotName">
+                      <Properties>
+                        <Property name="editable" type="boolean" value="true"/>
+                        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+                          <StringArray count="0"/>
+                        </Property>
+                      </Properties>
+                      <AuxValues>
+                        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
+                      </AuxValues>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="jLabel20">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Slot"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="jButtonPlacePart">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Place"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonPlacePartActionPerformed"/>
+                      </Events>
                     </Component>
                   </SubComponents>
                 </Container>

@@ -1,6 +1,0 @@
-#
-#Fri Dec 02 15:33:34 EST 2016
-approachZOffset=50.0
-pddl.output=C\:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\example_pddl\\dec_6_2016_fanuc_demo_actions_fast.txt
-manualPartNames=[kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear, null]
-lookForXYZ=217,150,171

@@ -113,7 +113,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             pendantClientJInternalFrame.removeProgramLineListener(l);
         }
     }
-    
+
     public void addCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.addCurrentPoseListener(l);
@@ -136,11 +136,11 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     }
 
     public void abortCrclProgram() {
-        if (null != pendantClientJInternalFrame) {
+        if (null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected()) {
             pendantClientJInternalFrame.abortProgram();
         }
     }
-    
+
     private PrintStream origOut = null;
     private PrintStream origErr = null;
 
@@ -206,6 +206,8 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         try {
             if (null == motomanCrclServerJInternalFrame) {
                 motomanCrclServerJInternalFrame = new MotomanCrclServerJInternalFrame();
+                updateSubPropertiesFiles();
+                motomanCrclServerJInternalFrame.loadProperties();
                 motomanCrclServerJInternalFrame.connectCrclMotoplus();
                 motomanCrclServerJInternalFrame.setVisible(true);
             }
@@ -510,6 +512,8 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private void startPendantClientJInternalFrame() {
         try {
             pendantClientJInternalFrame = new PendantClientJInternalFrame();
+            updateSubPropertiesFiles();
+            pendantClientJInternalFrame.loadProperties();
 //            pendantClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "object2DViewProperties.txt"));
 //            pendantClientJInternalFrame.loadProperties();
             pendantClientJInternalFrame.pack();
@@ -520,11 +524,11 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
                 @Override
                 public void titleChanged(CommandStatusType ccst, Container container, String stateString, String stateDescription) {
                     String oldTitle = getTitle();
-                    String newTitle = "APRS Coordinator : "+stateString+" : "+stateDescription;
-                    if(!oldTitle.equals(newTitle)) {
+                    String newTitle = "APRS Coordinator : " + stateString + " : " + stateDescription;
+                    if (!oldTitle.equals(newTitle)) {
                         setTitle(newTitle);
                         setupWindowsMenu();
-                    }   
+                    }
                 }
             });
         } catch (Exception ex) {
@@ -1269,10 +1273,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         if (null != fanucRobotHostString) {
             this.fanucRobotHost = fanucRobotHostString;
         }
-        String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
-        if (null != motomanCrclLocalPortString) {
-            this.motomanCrclPort = Integer.valueOf(motomanCrclLocalPortString);
-        }
+
         String startCRCLMotomanServerString = props.getProperty(STARTUPROBOTCRCLMOTOMANSERVER);
         if (null != startCRCLMotomanServerString) {
             jCheckBoxMenuItemStartupMotomanCRCLServer.setSelected(Boolean.valueOf(startCRCLMotomanServerString));
@@ -1352,6 +1353,19 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         if (null != object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.loadProperties();
         }
+        if (null != this.pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.loadProperties();
+        }
+        if (null != this.motomanCrclServerJInternalFrame) {
+            motomanCrclServerJInternalFrame.loadProperties();
+        }
+        String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
+        if (null != motomanCrclLocalPortString) {
+            this.motomanCrclPort = Integer.valueOf(motomanCrclLocalPortString);
+            if (null != motomanCrclServerJInternalFrame) {
+                motomanCrclServerJInternalFrame.setCrclPort(motomanCrclPort);
+            }
+        }
     }
 
     @Override
@@ -1383,9 +1397,13 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         if (null != fanucCRCLMain) {
             this.fanucCrclPort = fanucCRCLMain.getLocalPort();
             this.fanucRobotHost = fanucCRCLMain.getRemoteRobotHost();
+            propsMap.put(FANUC_CRCL_LOCAL_PORT, Integer.toString(fanucCrclPort));
+            propsMap.put(FANUC_ROBOT_HOST, fanucRobotHost);
         }
-        propsMap.put(FANUC_CRCL_LOCAL_PORT, Integer.toString(fanucCrclPort));
-        propsMap.put(FANUC_ROBOT_HOST, fanucRobotHost);
+        if (null != motomanCrclServerJInternalFrame) {
+            this.motomanCrclPort = motomanCrclServerJInternalFrame.getCrclPort();
+            propsMap.put(MOTOMAN_CRCL_LOCAL_PORT, Integer.toString(motomanCrclPort));
+        }
         Properties props = new Properties();
         props.putAll(propsMap);
         System.out.println("AprsJFrame saving properties to " + propertiesFile.getCanonicalPath());
@@ -1404,6 +1422,12 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         }
         if (null != this.object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.saveProperties();
+        }
+        if (null != this.pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.saveProperties();
+        }
+        if (null != this.motomanCrclServerJInternalFrame) {
+            motomanCrclServerJInternalFrame.saveProperties();
         }
         if (null != dbSetup) {
             DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
@@ -1559,6 +1583,13 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             try (FileWriter fw = new FileWriter(lastAprsPropertiesFileFile)) {
                 props.store(fw, "");
             }
+        }
+        if (null != pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_crclPendantClientProperties.txt"));
+        }
+
+        if (null != motomanCrclServerJInternalFrame) {
+            motomanCrclServerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_motomanCrclServerProperties.txt"));
         }
     }
 
