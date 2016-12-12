@@ -496,7 +496,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addSetFastSpeed(cmds);
 
-        addMoveTo(cmds, poseAbove, true);
+        addMoveTo(cmds, poseAbove, false);
 
         addSettleDwell(cmds);
 
@@ -695,7 +695,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addOpenGripper(out, pose);
 
-        addMoveTo(out, pose, true);
+        addMoveTo(out, pose, false);
 
         addLookDwell(out);
 
@@ -752,7 +752,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addSetFastSpeed(cmds);
 
-        addMoveTo(cmds, poseAbove, true);
+        addMoveTo(cmds, poseAbove, false);
 
         addSettleDwell(cmds);
 
