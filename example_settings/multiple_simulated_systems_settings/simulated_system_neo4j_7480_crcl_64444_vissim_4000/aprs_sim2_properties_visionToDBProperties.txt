@@ -1,14 +1,14 @@
 #
-#Wed Dec 14 14:32:19 EST 2016
+#Wed Dec 14 15:58:36 EST 2016
 MYSQL.localhost_7486.name=neo4j
 --aquirestate=ON
---dbport=7486
+--dbport=7480
 MYSQL.localhost.port=7486
 NEO4J.localhost_7486.passwd=password
 MYSQL.localhost_7486.passwd=password
 MYSQL.localhost_7486.queriesDir=mysql
 MYSQL.localhost_7486.internalQueriesResourceDir=true
---visionport=4001
+--visionport=4000
 MYSQL.host=localhost
 MYSQL.localhost_7486.user=neo4j
 --commandport=4001
@@ -36,6 +36,6 @@ AddRepeatCountsToDatabaseNames=false
 --dbpasswd=password
 NEO4J.localhost_7480.user=neo4j
 --showgui=true
-NEO4J.localhost.port=7486
-NEO4J.localhost_7486.user=neo4j
+NEO4J.localhost.port=7480
 --dbuser=neo4j
+NEO4J.localhost_7486.user=neo4j

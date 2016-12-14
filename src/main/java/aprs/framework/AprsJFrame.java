@@ -49,7 +49,6 @@ import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenuItem;
-import aprs.framework.pddl.executor.PddlExecutorDisplayInterface;
 import aprs.framework.tomcat.CRCLWebAppRunner;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
@@ -64,13 +63,13 @@ import crcl.utils.CRCLException;
 import crcl.utils.CRCLSocket;
 import java.awt.Container;
 import java.io.PrintStream;
-import java.lang.ref.WeakReference;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javax.swing.JOptionPane;
 import javax.xml.bind.JAXBException;
 
@@ -78,17 +77,17 @@ import javax.xml.bind.JAXBException;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDisplayInterface {
+public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, AutoCloseable {
 
-    private static WeakReference<AprsJFrame> aprsJFrameWeakRef = null;
-
-    public static AprsJFrame getCurrentAprsJFrame() {
-        if (aprsJFrameWeakRef != null) {
-            return aprsJFrameWeakRef.get();
-        } else {
-            return null;
-        }
-    }
+//    private static WeakReference<AprsJFrame> aprsJFrameWeakRef = null;
+//
+//    public static AprsJFrame getCurrentAprsJFrame() {
+//        if (aprsJFrameWeakRef != null) {
+//            return aprsJFrameWeakRef.get();
+//        } else {
+//            return null;
+//        }
+//    }
     private VisionToDbJInternalFrame visionToDbJInternalFrame = null;
     private PddlExecutorJInternalFrame pddlExecutorJInternalFrame1 = null;
     private Object2DViewJInternalFrame object2DViewJInternalFrame = null;
@@ -101,6 +100,48 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private FanucCRCLServerJInternalFrame fanucCRCLServerJInternalFrame = null;
     private ExploreGraphDbJInternalFrame exploreGraphDbJInternalFrame = null;
     private MotomanCrclServerJInternalFrame motomanCrclServerJInternalFrame = null;
+
+    private String taskName;
+
+    /**
+     * Get the value of taskName
+     *
+     * @return the value of taskName
+     */
+    public String getTaskName() {
+        return taskName;
+    }
+
+    /**
+     * Set the value of taskName
+     *
+     * @param taskName new value of taskName
+     */
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
+        updateTitle("", "");
+    }
+
+    private String robotName = null;
+
+    /**
+     * Get the value of robotName
+     *
+     * @return the value of robotName
+     */
+    public String getRobotName() {
+        return robotName;
+    }
+
+    /**
+     * Set the value of robotName
+     *
+     * @param robotName new value of robotName
+     */
+    public void setRobotName(String robotName) {
+        this.robotName = robotName;
+        updateTitle("", "");
+    }
 
     public synchronized void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
         if (null != pendantClientJInternalFrame) {
@@ -280,54 +321,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-        try {
-            if (null == logDisplayJInternalFrame) {
-                logDisplayJInternalFrame = new LogDisplayJInternalFrame();
-                logDisplayJInternalFrame.pack();
-            }
-            logDisplayJInternalFrame.setVisible(true);
-            jDesktopPane1.add(logDisplayJInternalFrame);
-            System.setOut(new MyPrintStream(System.out, logDisplayJInternalFrame));
-            System.setErr(new MyPrintStream(System.err, logDisplayJInternalFrame));
-            activateInternalFrame(logDisplayJInternalFrame);
-
-//            Properties buildProperties = null;
-//            try (InputStream inputStream = AprsJFrame.class.getResourceAsStream("/build.properties")) {
-//                if (null != inputStream) {
-//                    buildProperties = new Properties();
-//                    buildProperties.load(inputStream);
-//                }
-//            }
-//            if (null != buildProperties) {
-//                String revision = buildProperties.getProperty("revision");
-//                System.out.println("Build revision = " + revision);
-//                String version = buildProperties.getProperty("version");
-//                System.out.println("Build version = " + version);
-//                String timestamp = buildProperties.getProperty("timestamp");
-//                System.out.println("Build timestamp = " + timestamp + "\n Build timestamp as Date = " + new Date(Long.valueOf(timestamp)));
-//            }
-//            Properties gitProperties = null;
-//            try (InputStream inputStream = AprsJFrame.class.getResourceAsStream("git.properties")) {
-//                if (null != inputStream) {
-//                    gitProperties = new Properties();
-//                    gitProperties.load(inputStream);
-//                }
-//            }
-//            try (BufferedReader br = new BufferedReader(new InputStreamReader(AprsJFrame.class.getResourceAsStream("git.properties")))) {
-//                String line = null;
-//                while(null != (line = br.readLine())) {
-//                    System.out.println(line);
-//                }   
-//            }
-//            if (null != gitProperties) {
-//                String tag = gitProperties.getProperty("git.tag");
-//                System.out.println("git.tag = " + tag);
-//                String revision = gitProperties.getProperty("git.revision");
-//                System.out.println("git.revision = " + revision);
-//            }
-        } catch (Exception ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        initLoggerWindow();
         try {
 //            initPropertiesFile();
             if (propertiesFile.exists()) {
@@ -338,6 +332,48 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
+        commonInit();
+    }
+
+    public AprsJFrame(File propertiesFile) {
+        try {
+            initComponents();
+        } catch (Exception ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        initLoggerWindow();
+        try {
+            setPropertiesFile(propertiesFile);
+//            initPropertiesFile();
+            if (propertiesFile.exists()) {
+                loadProperties();
+            } else {
+                saveProperties();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        commonInit();
+    }
+    
+    private void commonInit()  {
+        startWindowsFromMenuCheckboxes();
+
+        try {
+            setIconImage(ImageIO.read(AprsJFrame.class.getResource("aprs.png")));
+        } catch (Exception ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (null != logDisplayJInternalFrame) {
+            activateInternalFrame(logDisplayJInternalFrame);
+        }
+        setupWindowsMenu();
+        updateTitle("", "");
+//        aprsJFrameWeakRef = new WeakReference<>(this);
+
+    }
+
+    private void startWindowsFromMenuCheckboxes() {
         try {
             if (jCheckBoxMenuItemStartupPDDLPlanner.isSelected()) {
                 startPddlPlanner();
@@ -405,18 +441,57 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
 
+    private void initLoggerWindow() {
         try {
-            setIconImage(ImageIO.read(AprsJFrame.class.getResource("aprs.png")));
+            if (null == logDisplayJInternalFrame) {
+                logDisplayJInternalFrame = new LogDisplayJInternalFrame();
+                logDisplayJInternalFrame.pack();
+            }
+            logDisplayJInternalFrame.setVisible(true);
+            jDesktopPane1.add(logDisplayJInternalFrame);
+            System.setOut(new MyPrintStream(System.out, logDisplayJInternalFrame));
+            System.setErr(new MyPrintStream(System.err, logDisplayJInternalFrame));
+            activateInternalFrame(logDisplayJInternalFrame);
+
+//            Properties buildProperties = null;
+//            try (InputStream inputStream = AprsJFrame.class.getResourceAsStream("/build.properties")) {
+//                if (null != inputStream) {
+//                    buildProperties = new Properties();
+//                    buildProperties.load(inputStream);
+//                }
+//            }
+//            if (null != buildProperties) {
+//                String revision = buildProperties.getProperty("revision");
+//                System.out.println("Build revision = " + revision);
+//                String version = buildProperties.getProperty("version");
+//                System.out.println("Build version = " + version);
+//                String timestamp = buildProperties.getProperty("timestamp");
+//                System.out.println("Build timestamp = " + timestamp + "\n Build timestamp as Date = " + new Date(Long.valueOf(timestamp)));
+//            }
+//            Properties gitProperties = null;
+//            try (InputStream inputStream = AprsJFrame.class.getResourceAsStream("git.properties")) {
+//                if (null != inputStream) {
+//                    gitProperties = new Properties();
+//                    gitProperties.load(inputStream);
+//                }
+//            }
+//            try (BufferedReader br = new BufferedReader(new InputStreamReader(AprsJFrame.class.getResourceAsStream("git.properties")))) {
+//                String line = null;
+//                while(null != (line = br.readLine())) {
+//                    System.out.println(line);
+//                }
+//            }
+//            if (null != gitProperties) {
+//                String tag = gitProperties.getProperty("git.tag");
+//                System.out.println("git.tag = " + tag);
+//                String revision = gitProperties.getProperty("git.revision");
+//                System.out.println("git.revision = " + revision);
+//            }
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (null != logDisplayJInternalFrame) {
-            activateInternalFrame(logDisplayJInternalFrame);
-        }
-        setupWindowsMenu();
-        aprsJFrameWeakRef = new WeakReference<>(this);
-
     }
 
     private void activateInternalFrame(JInternalFrame internalFrame) {
@@ -499,6 +574,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         try {
             object2DViewJInternalFrame = new Object2DViewJInternalFrame();
             updateSubPropertiesFiles();
+            object2DViewJInternalFrame.setAprsJFrame(this);
             object2DViewJInternalFrame.loadProperties();
             object2DViewJInternalFrame.pack();
             object2DViewJInternalFrame.setVisible(true);
@@ -506,6 +582,18 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             object2DViewJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(object2DViewJInternalFrame);
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void updateTitle(String stateString, String stateDescription) {
+        String oldTitle = getTitle();
+        String newTitle = "APRS : " + ((robotName != null) ? robotName : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : " + stateDescription;
+        if (newTitle.length() > 70) {
+            newTitle = newTitle.substring(0, 70) + " ... ";
+        }
+        if (!oldTitle.equals(newTitle)) {
+            setTitle(newTitle);
+            setupWindowsMenu();
         }
     }
 
@@ -523,13 +611,9 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             pendantClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
                 @Override
                 public void titleChanged(CommandStatusType ccst, Container container, String stateString, String stateDescription) {
-                    String oldTitle = getTitle();
-                    String newTitle = "APRS Coordinator : " + stateString + " : " + stateDescription;
-                    if (!oldTitle.equals(newTitle)) {
-                        setTitle(newTitle);
-                        setupWindowsMenu();
-                    }
+                    updateTitle(stateString, stateDescription);
                 }
+
             });
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -538,11 +622,14 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
 
     private void startSimServerJInternalFrame() {
         try {
-            simServerJInternalFrame = new SimServerJInternalFrame();
+            simServerJInternalFrame = new SimServerJInternalFrame(false);
 //            pendantClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "object2DViewProperties.txt"));
 //            pendantClientJInternalFrame.loadProperties();
+            updateSubPropertiesFiles();
+            simServerJInternalFrame.loadProperties();
             simServerJInternalFrame.pack();
             simServerJInternalFrame.setVisible(true);
+            simServerJInternalFrame.restartServer();
             jDesktopPane1.add(simServerJInternalFrame);
             simServerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(simServerJInternalFrame);
         } catch (Exception ex) {
@@ -596,6 +683,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
                 pddlExecutorJInternalFrame1 = new PddlExecutorJInternalFrame();
                 this.pddlExecutorJInternalFrame1.pack();
             }
+            this.pddlExecutorJInternalFrame1.setAprsJFrame(this);
             this.pddlExecutorJInternalFrame1.setVisible(true);
             jDesktopPane1.add(pddlExecutorJInternalFrame1);
             pddlExecutorJInternalFrame1.getDesktopPane().getDesktopManager().maximizeFrame(pddlExecutorJInternalFrame1);
@@ -1187,14 +1275,16 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
 //                    }
 //                }
 //            }
-            dbSetup = setup;
-            if (null != visionToDbJInternalFrame) {
-                DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
-                if (null != pub) {
-                    DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
-                    pub.setDbSetup(setup);
+            Utils.runOnDispatchThread(() -> {
+                dbSetup = setup;
+                if (null != visionToDbJInternalFrame) {
+                    DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+                    if (null != pub) {
+                        DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
+                        pub.setDbSetup(setup);
+                    }
                 }
-            }
+            });
         }
     };
 
@@ -1216,14 +1306,16 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
 //                    }
 //                }
 //            }
-            dbSetup = setup;
-            if (null != dbSetupJInternalFrame) {
-                DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
-                if (null != pub) {
-                    DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
-                    pub.setDbSetup(setup);
+            Utils.runOnDispatchThread(() -> {
+                dbSetup = setup;
+                if (null != dbSetupJInternalFrame) {
+                    DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+                    if (null != pub) {
+                        DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
+                        pub.setDbSetup(setup);
+                    }
                 }
-            }
+            });
         }
     };
 
@@ -1356,6 +1448,9 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         if (null != this.pendantClientJInternalFrame) {
             pendantClientJInternalFrame.loadProperties();
         }
+        if (null != this.simServerJInternalFrame) {
+            simServerJInternalFrame.loadProperties();
+        }
         if (null != this.motomanCrclServerJInternalFrame) {
             motomanCrclServerJInternalFrame.loadProperties();
         }
@@ -1365,6 +1460,16 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             if (null != motomanCrclServerJInternalFrame) {
                 motomanCrclServerJInternalFrame.setCrclPort(motomanCrclPort);
             }
+        }
+        String robotNameString = props.getProperty(APRSROBOT_PROPERTY_NAME);
+        if (null != robotNameString) {
+            setRobotName(robotNameString);
+        } else {
+            setDefaultRobotName();
+        }
+        String taskNameString = props.getProperty(APRSTASK_PROPERTY_NAME);
+        if (null != taskNameString) {
+            setTaskName(taskNameString);
         }
     }
 
@@ -1394,6 +1499,9 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         propsMap.put(STARTUPEXPLOREGRAPHDB, Boolean.toString(jCheckBoxMenuItemExploreGraphDbStartup.isSelected()));
         propsMap.put(STARTUPCRCLWEBAPP, Boolean.toString(jCheckBoxMenuItemStartupCRCLWebApp.isSelected()));
         propsMap.put(CRCLWEBAPPPORT, Integer.toString(crclWebServerHttpPort));
+        setDefaultRobotName();
+        propsMap.put(APRSROBOT_PROPERTY_NAME, robotName);
+        propsMap.put(APRSTASK_PROPERTY_NAME, taskName);
         if (null != fanucCRCLMain) {
             this.fanucCrclPort = fanucCRCLMain.getLocalPort();
             this.fanucRobotHost = fanucCRCLMain.getRemoteRobotHost();
@@ -1404,6 +1512,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             this.motomanCrclPort = motomanCrclServerJInternalFrame.getCrclPort();
             propsMap.put(MOTOMAN_CRCL_LOCAL_PORT, Integer.toString(motomanCrclPort));
         }
+
         Properties props = new Properties();
         props.putAll(propsMap);
         System.out.println("AprsJFrame saving properties to " + propertiesFile.getCanonicalPath());
@@ -1426,11 +1535,34 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         if (null != this.pendantClientJInternalFrame) {
             pendantClientJInternalFrame.saveProperties();
         }
+        if (null != this.simServerJInternalFrame) {
+            simServerJInternalFrame.saveProperties();
+        }
         if (null != this.motomanCrclServerJInternalFrame) {
             motomanCrclServerJInternalFrame.saveProperties();
         }
         if (null != dbSetup) {
             DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
+        }
+    }
+    private static final String APRSTASK_PROPERTY_NAME = "aprs.taskName";
+    private static final String APRSROBOT_PROPERTY_NAME = "aprs.robotName";
+
+    private void setDefaultRobotName() {
+        if (null == robotName) {
+            if (fanucCRCLMain != null) {
+                setRobotName("Fanuc");
+            } else if (motomanCrclServerJInternalFrame != null) {
+                setRobotName("Motoman");
+            } else if (simServerJInternalFrame != null) {
+                setRobotName("Simulated");
+            } else if (jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()) {
+                setRobotName("Fanuc");
+            } else if (jCheckBoxMenuItemStartupMotomanCRCLServer.isSelected()) {
+                setRobotName("Motoman");
+            } else if (jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected()) {
+                setRobotName("Simulated");
+            }
         }
     }
 
@@ -1451,11 +1583,6 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     private static final String FANUC_CRCL_LOCAL_PORT = "fanuc.crclLocalPort";
     private static final String FANUC_ROBOT_HOST = "fanuc.robotHost";
     private static final String MOTOMAN_CRCL_LOCAL_PORT = "motoman.crclLocalPort";
-
-    @Override
-    public void browseActionsFile() throws IOException {
-        this.pddlExecutorJInternalFrame1.browseActionsFile();
-    }
 
     /**
      * @param args the command line arguments
@@ -1524,22 +1651,12 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
     // End of variables declaration//GEN-END:variables
 
     @Override
-    public List<PddlAction> getActionsList() {
-        return pddlExecutorJInternalFrame1.getActionsList();
-    }
-
-    @Override
-    public void setActionsList(List<PddlAction> actionsList) {
-        pddlExecutorJInternalFrame1.setActionsList(actionsList);
-    }
-
-    @Override
     public File getPropertiesFile() {
         return propertiesFile;
     }
 
     @Override
-    public void setPropertiesFile(File propertiesFile) {
+    public final void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
         propertiesDirectory = propertiesFile.getParentFile();
         if (!propertiesDirectory.exists()) {
@@ -1556,6 +1673,7 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
     private String propertiesFileBaseString = "";
 
     public void updateSubPropertiesFiles() throws IOException {
@@ -1588,24 +1706,12 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             pendantClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_crclPendantClientProperties.txt"));
         }
 
+        if (null != simServerJInternalFrame) {
+            simServerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_crclSimServerProperties.txt"));
+        }
         if (null != motomanCrclServerJInternalFrame) {
             motomanCrclServerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_motomanCrclServerProperties.txt"));
         }
-    }
-
-    @Override
-    public void autoResizeTableColWidthsPddlOutput() {
-        pddlExecutorJInternalFrame1.autoResizeTableColWidthsPddlOutput();
-    }
-
-    @Override
-    public boolean isLoadEnabled() {
-        return pddlExecutorJInternalFrame1.isLoadEnabled();
-    }
-
-    @Override
-    public void setLoadEnabled(boolean enable) {
-        pddlExecutorJInternalFrame1.setLoadEnabled(enable);
     }
 
     Future disconnectDatabaseFuture = null;
@@ -1633,15 +1739,12 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             for (Future<?> f : futures) {
                 if (!f.isDone() && !f.isCancelled()) {
                     try {
-                        f.get();
+                        f.get(100, TimeUnit.MILLISECONDS);
 
-                    } catch (InterruptedException ex) {
+                    } catch (InterruptedException | ExecutionException | TimeoutException ex) {
                         Logger.getLogger(AprsJFrame.class
                                 .getName()).log(Level.SEVERE, null, ex);
 
-                    } catch (ExecutionException ex) {
-                        Logger.getLogger(AprsJFrame.class
-                                .getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             }
@@ -1649,6 +1752,26 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
         } catch (IOException iOException) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, iOException);
         }
+    }
+
+    private int priority;
+
+    /**
+     * Get the value of priority
+     *
+     * @return the value of priority
+     */
+    public int getPriority() {
+        return priority;
+    }
+
+    /**
+     * Set the value of priority
+     *
+     * @param priority new value of priority
+     */
+    public void setPriority(int priority) {
+        this.priority = priority;
     }
 
     @Override
@@ -1681,9 +1804,15 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             disconnectDatabaseFuture.cancel(true);
             disconnectDatabaseFuture = null;
         }
+        if (null != simServerJInternalFrame) {
+            simServerJInternalFrame.close();
+            simServerJInternalFrame.setVisible(false);
+            simServerJInternalFrame = null;
+        }
         disconnectDatabase();
         connectService.shutdownNow();
         connectService.awaitTermination(100, TimeUnit.MILLISECONDS);
+        this.setVisible(false);
     }
 
     private void closeActionsToCrclJInternalFrame() throws Exception {
@@ -1706,4 +1835,5 @@ public class AprsJFrame extends javax.swing.JFrame implements PddlExecutorDispla
             pddlPlannerJInternalFrame = null;
         }
     }
+
 }

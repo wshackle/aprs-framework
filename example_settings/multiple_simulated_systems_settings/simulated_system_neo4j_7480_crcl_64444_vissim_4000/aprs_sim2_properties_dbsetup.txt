@@ -1,11 +1,11 @@
 #
-#Wed Dec 14 14:32:33 EST 2016
+#Wed Dec 14 15:58:38 EST 2016
 NEO4J.localhost_7486.user=neo4j
 --dbtype=NEO4J
 NEO4J.localhost_7480.user=neo4j
 NEO4J.localhost_7486.internalQueriesResourceDir=true
 NEO4J.localhost_7486.queriesDir=neo4j/v1
-NEO4J.localhost.port=7486
+NEO4J.localhost.port=7480
 NEO4J.host=localhost
 NEO4J.localhost_7480.internalQueriesResourceDir=true
 NEO4J.localhost_7486.name=neo4j

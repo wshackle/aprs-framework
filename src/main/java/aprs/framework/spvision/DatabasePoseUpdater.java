@@ -23,7 +23,6 @@
  */
 package aprs.framework.spvision;
 
-import aprs.framework.database.Main;
 import aprs.framework.database.DbParamTypeEnum;
 import aprs.framework.database.DbQueryEnum;
 import aprs.framework.database.DbQueryInfo;
@@ -38,11 +37,18 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -474,7 +480,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private static double fix(ResultSet rs, String colLabel) throws SQLException {
         String s = rs.getString(colLabel);
         if (null == s) {
-//            VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
+//            VisionToDBJFrameInterface displayInterface = DbMain.getDisplayInterface();
 //            if (null != displayInterface) {
 //                displayInterface.addLogMessage("Null return to from rs.getString(\""+colLabel+"\")");
 //            } else {
@@ -488,7 +494,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
 //    private List<PoseQueryElem> getNeo4jBoltDirectPoseList() {
-//        VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
+//        VisionToDBJFrameInterface displayInterface = DbMain.getDisplayInterface();
 //        if (null != displayInterface) {
 //            debug = displayInterface.isDebug();
 //        }
@@ -509,7 +515,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //        }
 //        return Collections.emptyList();
 //    }
-    public List<PoseQueryElem> getDirectPoseList() {
+    private List<PoseQueryElem> getDirectPoseList() {
         switch (dbtype) {
             case MYSQL:
             case NEO4J:
@@ -522,9 +528,28 @@ public class DatabasePoseUpdater implements AutoCloseable {
         }
     }
 
+    private VisionToDBJFrameInterface displayInterface;
+
+    /**
+     * Get the value of displayInterface
+     *
+     * @return the value of displayInterface
+     */
+    public VisionToDBJFrameInterface getDisplayInterface() {
+        return displayInterface;
+    }
+
+    /**
+     * Set the value of displayInterface
+     *
+     * @param displayInterface new value of displayInterface
+     */
+    public void setDisplayInterface(VisionToDBJFrameInterface displayInterface) {
+        this.displayInterface = displayInterface;
+    }
+
     private List<PoseQueryElem> getJdbcDirectPoseList() {
         List<PoseQueryElem> l = new ArrayList<PoseQueryElem>();
-        VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
         if (null != displayInterface) {
             debug = displayInterface.isDebug();
         }
@@ -617,12 +642,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 con = null;
             }
         } catch (Exception exception) {
-            if (null != Main.getDisplayInterface()) {
-                Main.getDisplayInterface().addLogMessage(exception);
+            if (null != displayInterface) {
+                displayInterface.addLogMessage(exception);
             } else {
                 exception.printStackTrace();
             }
         }
+        pqExecServ.shutdownNow();
+        try {
+            pqExecServ.awaitTermination(100, TimeUnit.MILLISECONDS);
 //        if (null != neo4jJavaDriver) {
 //            neo4jJavaDriver.close();
 //            neo4jJavaDriver = null;
@@ -639,6 +667,25 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //            neo4jSession.close();
 //            neo4jSession = null;
 //        }
+//        if (null != neo4jJavaDriver) {
+//            neo4jJavaDriver.close();
+//            neo4jJavaDriver = null;
+//        }
+//        if (null != neo4jSession) {
+//            neo4jSession.close();
+//            neo4jSession = null;
+//        }
+//        if (null != neo4jJavaDriver) {
+//            neo4jJavaDriver.close();
+//            neo4jJavaDriver = null;
+//        }
+//        if (null != neo4jSession) {
+//            neo4jSession.close();
+//            neo4jSession = null;
+//        }
+        } catch (InterruptedException ex) {
+            Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     protected void finalize() {
@@ -650,7 +697,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private final Map<String, UpdateResults> updateResultsMap = new HashMap<>();
 
-        private boolean forceUpdates;
+    private boolean forceUpdates;
 
     /**
      * Get the value of forceUpdates
@@ -680,7 +727,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     public void updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
-        VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
         List<DetectedItem> itemsToVerify = new ArrayList<>();
         try {
             long t0_nanos = System.nanoTime();
@@ -720,10 +766,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, update_statement);
                     UpdateResults ur = updateResultsMap.get(ci.fullName);
                     String updateStringFilled = fillQueryString(mergeStatementString, paramsList);
-                    
+
                     if (null != ur) {
-                        if (!forceUpdates &&
-                                Math.abs(ur.getX() - ci.x) < 1e-6
+                        if (!forceUpdates
+                                && Math.abs(ur.getX() - ci.x) < 1e-6
                                 && Math.abs(ur.getY() - ci.y) < 1e-6
                                 && Math.abs(ur.getRotation() - ci.rotation) < 1e-6) {
                             skippedUpdates.add(ci.fullName);
@@ -811,8 +857,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     }
                 }
                 if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Skipped updates = " + skippedUpdates);
-                    }
+                    displayInterface.addLogMessage("Skipped updates = " + skippedUpdates);
+                }
                 if (updates > 0 && useBatch) {
                     int batchReturn[] = update_statement.executeBatch();
                     if (null != displayInterface && displayInterface.isDebug()) {
@@ -882,7 +928,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     public void verifyVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
-        VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
         try {
             if (null == get_single_statement) {
                 return;
@@ -1163,6 +1208,35 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return params;
     }
 
+    private final ExecutorService pqExecServ = Executors.newSingleThreadExecutor();
+
+    public CompletableFuture<List<PoseQueryElem>> queryDatabase() throws InterruptedException, ExecutionException {
+       return  CompletableFuture.supplyAsync(() -> Collections.unmodifiableList(getDirectPoseList()),pqExecServ);
+//                    new Runnable() {
+//
+//                @Override
+//                public void run() {
+//                    updating_pose_query = true;
+//                    //System.out.println("----> updating_pose_query is true");
+//                    final List<PoseQueryElem> l = getDirectPoseList();
+//                    if (null != l && null != displayInterface) {
+//                        java.awt.EventQueue.invokeLater(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                displayInterface.updataPoseQueryInfo(l);
+//                            }
+//                        });
+//                    }
+//                    updating_pose_query = false;
+//                }
+//            });
+//        } else if (!updating_pose_query) {
+//            throw new IllegalStateException("PoseDatabaseUpdater: " + this);
+//        }
+    }
+    
+    private volatile boolean updating_pose_query = false;
+
 //    private List<Object> poseParamsToStatement(DetectedItem item) throws SQLException {
 //        ArrayList<Object> params = new ArrayList<>();
 //        for (int i : curIndexSet.xindexes) {
@@ -1207,7 +1281,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //    }
 //    public boolean updatePose(String name, double x, double y, double rotation) throws SQLException {
 //        this.poseParamsToStatement(name, x, y, rotation);
-//        VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
+//        VisionToDBJFrameInterface displayInterface = DbMain.getDisplayInterface();
 //        if (null != displayInterface && displayInterface.isDebug()) {
 //            displayInterface.addLogMessage(update_statement.toString());
 //        }

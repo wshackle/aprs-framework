@@ -36,6 +36,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -475,6 +476,22 @@ public class DbSetupBuilder {
         return builder;
     }
 
+    public static Map<String, String> getDefaultArgsMap() {
+        Map<String, String> defaultArgsMap = new HashMap<>();
+        defaultArgsMap.put("--dbhost", "localhost");
+        defaultArgsMap.put("--dbport", "7480");
+        defaultArgsMap.put("--dbname", "");
+        defaultArgsMap.put("--dbuser", "neo4j");
+        defaultArgsMap.put("--dbpasswd", "password");
+        defaultArgsMap.put("--visionhost", "localhost");
+        defaultArgsMap.put("--visionport", "4000");
+        defaultArgsMap.put("--commandport", "4001");
+        defaultArgsMap.put("--acquirestate", AcquireEnum.ON.toString());
+        defaultArgsMap.put("--showgui", "true");
+        defaultArgsMap.put("--dbtype", DbType.NEO4J.toString());
+        return defaultArgsMap;
+    }
+    
     /**
      * Create an initialized builder from a properties file. It will just create
      * a default if the file does not exist or is empty.
@@ -491,7 +508,7 @@ public class DbSetupBuilder {
             } catch (IOException ex) {
                 Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
-            Map<String, String> argsMap = Main.getArgsMap();
+            Map<String, String> argsMap = getDefaultArgsMap();
             for (String propName : props.stringPropertyNames()) {
                 argsMap.put(propName, props.getProperty(propName));
             }
@@ -519,7 +536,7 @@ public class DbSetupBuilder {
             } catch (IOException ex) {
                 Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
-            Map<String, String> argsMap = Main.getArgsMap();
+            Map<String, String> argsMap = getDefaultArgsMap();
             for (String propName : props.stringPropertyNames()) {
                 argsMap.put(propName, props.getProperty(propName));
             }

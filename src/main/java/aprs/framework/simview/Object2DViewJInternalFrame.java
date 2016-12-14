@@ -22,6 +22,7 @@
  */
 package aprs.framework.simview;
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.database.DetectedItem;
 import java.io.File;
 import java.io.IOException;
@@ -108,6 +109,14 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     @Override
     public void loadProperties() throws IOException {
         object2DOuterJPanel1.loadProperties();
+    }
+    
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        object2DOuterJPanel1.setAprsJFrame(aprsJFrame);
+    }
+
+    public AprsJFrame getAprsJFrame() {
+        return object2DOuterJPanel1.getAprsJFrame();
     }
     
 }

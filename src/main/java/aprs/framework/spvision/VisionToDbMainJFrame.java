@@ -22,14 +22,11 @@
  */
 package aprs.framework.spvision;
 
-import aprs.framework.database.Main;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.PoseQueryElem;
-import aprs.framework.spvision.VisionToDBJFrameInterface;
 import aprs.framework.simview.Object2DJFrame;
-import aprs.framework.spvision.DatabasePoseUpdater;
 import java.awt.Frame;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -55,7 +52,6 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
      */
     public VisionToDbMainJFrame() {
         initComponents();
-        Main.setDisplayInterface(this);
     }
 
     @Override
@@ -178,7 +174,7 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
 //        System.out.println("formWindowClosing called.");
-        Main.closeAll();
+//        DbMain.closeAll();
     }//GEN-LAST:event_formWindowClosing
 
     private void jMenuItemSetPropertiesFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPropertiesFileActionPerformed

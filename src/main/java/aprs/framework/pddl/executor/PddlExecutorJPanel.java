@@ -38,6 +38,7 @@ import crcl.base.MiddleCommandType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.client.PendantClientJPanel;
+import crcl.utils.CRCLException;
 import static crcl.utils.CRCLPosemath.pose;
 import crcl.utils.CRCLSocket;
 import java.awt.Component;
@@ -1425,10 +1426,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try {
                 instance.setCRCLCommand(initCanon);
                 model.addRow(new Object[]{initCanon.getCommandID().intValue(),
-                    trimXml(crclSocket.commandInstanceToPrettyString(instance, false))
+                    trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                 });
 
-            } catch (JAXBException ex) {
+            } catch (JAXBException | CRCLException ex) {
+                model.addRow(new Object[]{initCanon.getCommandID().intValue(),
+                    ex.getMessage()
+                });
                 Logger.getLogger(PddlExecutorJPanel.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
@@ -1438,10 +1442,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 try {
                     instance.setCRCLCommand(midCmd);
                     model.addRow(new Object[]{midCmd.getCommandID().intValue(),
-                        trimXml(crclSocket.commandInstanceToPrettyString(instance, false))
+                        trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                     });
 
-                } catch (JAXBException ex) {
+                } catch (JAXBException | CRCLException ex) {
+                    model.addRow(new Object[]{midCmd.getCommandID().intValue(),
+                        ex.getMessage()
+                    });
                     Logger.getLogger(PddlExecutorJPanel.class
                             .getName()).log(Level.SEVERE, null, ex);
                 }
@@ -1452,10 +1459,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try {
                 instance.setCRCLCommand(endCanon);
                 model.addRow(new Object[]{endCanon.getCommandID().intValue(),
-                    trimXml(crclSocket.commandInstanceToPrettyString(instance, false))
+                    trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                 });
 
-            } catch (JAXBException ex) {
+            } catch (JAXBException | CRCLException ex) {
+                model.addRow(new Object[]{endCanon.getCommandID().intValue(),
+                    ex.getMessage()
+                });
                 Logger.getLogger(PddlExecutorJPanel.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
@@ -1468,6 +1478,26 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private volatile CRCLProgramType unstartedProgram = null;
 
+        private AprsJFrame aprsJFrame;
+
+    /**
+     * Get the value of aprsJFrame
+     *
+     * @return the value of aprsJFrame
+     */
+    public AprsJFrame getAprsJFrame() {
+        return aprsJFrame;
+    }
+
+    /**
+     * Set the value of aprsJFrame
+     *
+     * @param aprsJFrame new value of aprsJFrame
+     */
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        this.aprsJFrame = aprsJFrame;
+    }
+
     /**
      * Set the value of crclProgram
      *
@@ -1476,10 +1506,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public void setCrclProgram(CRCLProgramType crclProgram) {
         try {
             this.crclProgram = crclProgram;
-            AprsJFrame aprsJframe = AprsJFrame.getCurrentAprsJFrame();
-            if (null != aprsJframe) {
-                aprsJframe.setCRCLProgram(crclProgram, autoStart);
-                aprsJframe.addProgramLineListener(this);
+            if (null != aprsJFrame) {
+                aprsJFrame.setCRCLProgram(crclProgram, autoStart);
+                aprsJFrame.addProgramLineListener(this);
             }
             if (javax.swing.SwingUtilities.isEventDispatchThread()) {
                 this.loadProgramToTable(crclProgram);
@@ -1663,9 +1692,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             replanActionTimer = null;
         }
         this.replanRunnable = this.defaultReplanRunnable;
-        AprsJFrame aprsJframe = AprsJFrame.getCurrentAprsJFrame();
-        if (null != aprsJframe) {
-            aprsJframe.abortCrclProgram();
+        if (null != aprsJFrame) {
+            aprsJFrame.abortCrclProgram();
         }
         this.safeAbortRequested = false;
     }

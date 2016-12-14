@@ -22,12 +22,9 @@
  */
 package aprs.framework.spvision;
 
-import aprs.framework.database.Main;
-import aprs.framework.database.AcquireEnum;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.SocketLineReader;
 import crcl.base.PoseType;
-import crcl.utils.CRCLPosemath;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -39,6 +36,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -47,11 +46,10 @@ import java.util.concurrent.TimeUnit;
 public class VisionSocketClient implements AutoCloseable {
 
     private List<DetectedItem> visionList = null;
-    private List<DetectedItem> transformedVisionList = null;
     private SocketLineReader visionSlr = null;
     private ExecutorService visionExecServ = Executors.newFixedThreadPool(1);
     private volatile String parsing_line = null;
-     private static int visioncycle = 0;
+    private static int visioncycle = 0;
 
     private PrintStream replyPs;
 
@@ -63,6 +61,7 @@ public class VisionSocketClient implements AutoCloseable {
 
     public void setTransform(PoseType transform) {
         this.transform = transform;
+        this.updateListeners();
     }
 
     public PrintStream getReplyPs() {
@@ -78,7 +77,6 @@ public class VisionSocketClient implements AutoCloseable {
     public int getPoseUpdatesParsed() {
         return poseUpdatesParsed;
     }
-    private AcquireEnum acquire = AcquireEnum.ON;
 
     public List<DetectedItem> getVisionList() {
         return Collections.unmodifiableList(visionList);
@@ -86,64 +84,61 @@ public class VisionSocketClient implements AutoCloseable {
 
     public static interface VisionSocketClientListener {
 
-        public void accept(VisionSocketClient client);
+        public void visionClientUpdateRecieved(List<DetectedItem> list, String line);
     }
 
-    private List<VisionSocketClientListener> listListeners = null;
+    private final List<VisionSocketClientListener> listListeners = new ArrayList<>();
 
     public void addListener(VisionSocketClientListener listener) {
-        if (null == listListeners) {
-            listListeners = new ArrayList<>();
+        synchronized (listListeners) {
+            listListeners.add(listener);
         }
-        listListeners.add(listener);
     }
 
     public void removeListListener(VisionSocketClientListener listener) {
-        if (null != listListeners) {
+        synchronized (listListeners) {
             listListeners.remove(listener);
         }
     }
 
-    private void updateListeners() {
-        if (null != listListeners) {
-            for (int i = 0; i < listListeners.size(); i++) {
-                VisionSocketClientListener listener = listListeners.get(i);
-                if (null != listener) {
-                    listener.accept(this);
+    public void updateListeners() {
+        if (null != visionList) {
+            List<DetectedItem> listToSend = Collections.unmodifiableList(new ArrayList<>(visionList));
+            synchronized (listListeners) {
+                for (int i = 0; i < listListeners.size(); i++) {
+                    VisionSocketClientListener listener = listListeners.get(i);
+                    if (null != listener) {
+                        listener.visionClientUpdateRecieved(listToSend, this.getLine());
+                    }
                 }
             }
         }
     }
 
-    public static List<DetectedItem> transformList(List<DetectedItem> in, PoseType transform) {
-        List<DetectedItem> out = new ArrayList<>();
-        for (int i = 0; i < in.size(); i++) {
-            DetectedItem inItem = in.get(i);
-            PoseType newPose = CRCLPosemath.multiply(transform, inItem.toCrclPose());
-            DetectedItem outItem = new DetectedItem(inItem.name, newPose, visioncycle);
-            outItem.repeats = inItem.repeats;
-            outItem.index = inItem.index;
-            outItem.fullName = inItem.fullName;
-            outItem.name = inItem.name;
-            outItem.score = inItem.score;
-            out.add(outItem);
-        }
-        return out;
+    private VisionToDBJFrameInterface displayInterface;
+
+    /**
+     * Get the value of displayInterface
+     *
+     * @return the value of displayInterface
+     */
+    public VisionToDBJFrameInterface getDisplayInterface() {
+        return displayInterface;
     }
 
-    public AcquireEnum getAcquire() {
-        return acquire;
-    }
-
-    public void setAcquire(AcquireEnum acquire) {
-        this.acquire = acquire;
+    /**
+     * Set the value of displayInterface
+     *
+     * @param displayInterface new value of displayInterface
+     */
+    public void setDisplayInterface(VisionToDBJFrameInterface displayInterface) {
+        this.displayInterface = displayInterface;
     }
 
     public void start(Map<String, String> argsMap) {
         String host = "HOSTNOTSET";
         short port = -99;
         try {
-            acquire = AcquireEnum.valueOf(argsMap.get("--aquirestate"));
             host = argsMap.get("--visionhost");
             port = Short.valueOf(argsMap.get("--visionport"));
             visionSlr = SocketLineReader.start(true,
@@ -178,7 +173,6 @@ public class VisionSocketClient implements AutoCloseable {
                     }
                 }
             });
-            final VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
             if (null != displayInterface) {
                 displayInterface.setVisionConnected(true);
             }
@@ -202,11 +196,10 @@ public class VisionSocketClient implements AutoCloseable {
         return lineToList(line, null, null);
     }
 
-    
     public static List<DetectedItem> lineToList(String line, List<DetectedItem> listIn, final VisionToDBJFrameInterface displayInterface) {
         List<DetectedItem> listOut = listIn;
-        String fa[]=null;
-        int i=0;
+        String fa[] = null;
+        int i = 0;
         try {
             if (null == listOut) {
                 listOut = new ArrayList<>();
@@ -256,10 +249,10 @@ public class VisionSocketClient implements AutoCloseable {
                     }
                     continue;
                 }
-                
+
                 ci.visioncycle = visioncycle;
                 //System.out.println("VisionSocketClient visioncycle-----> "+visioncycle);
-                
+
                 if (fa[i + 4].length() > 0) {
 
                     ci.score = Double.valueOf(fa[i + 4]);
@@ -270,10 +263,10 @@ public class VisionSocketClient implements AutoCloseable {
                         continue;
                     }
                 }
-                
-                 //--getting the type
-                ci.type = String.valueOf(fa[i+5]);
-                
+
+                //--getting the type
+                ci.type = String.valueOf(fa[i + 5]);
+
                 ci.index = index;
                 ci.repeats = (repeatsMap.containsKey(ci.name)) ? repeatsMap.get(ci.name) : 0;
                 if (listOut.size() > index) {
@@ -303,46 +296,67 @@ public class VisionSocketClient implements AutoCloseable {
         return listOut;
     }
 
-    private boolean addRepeatCountsToDatabaseNames = false;
-
-    /**
-     * Get the value of addRepeatCountsToDatabaseNames
-     *
-     * @return the value of addRepeatCountsToDatabaseNames
-     */
-    public boolean isAddRepeatCountsToDatabaseNames() {
-        return addRepeatCountsToDatabaseNames;
-    }
-
-    /**
-     * Set the value of addRepeatCountsToDatabaseNames
-     *
-     * @param addRepeatCountsToDatabaseNames new value of
-     * addRepeatCountsToDatabaseNames
-     */
-    public void setAddRepeatCountsToDatabaseNames(boolean addRepeatCountsToDatabaseNames) {
-        this.addRepeatCountsToDatabaseNames = addRepeatCountsToDatabaseNames;
-    }
-
+//    private boolean addRepeatCountsToDatabaseNames = false;
+//
+//    /**
+//     * Get the value of addRepeatCountsToDatabaseNames
+//     *
+//     * @return the value of addRepeatCountsToDatabaseNames
+//     */
+//    public boolean isAddRepeatCountsToDatabaseNames() {
+//        return addRepeatCountsToDatabaseNames;
+//    }
+//
+//    /**
+//     * Set the value of addRepeatCountsToDatabaseNames
+//     *
+//     * @param addRepeatCountsToDatabaseNames new value of
+//     * addRepeatCountsToDatabaseNames
+//     */
+//    public void setAddRepeatCountsToDatabaseNames(boolean addRepeatCountsToDatabaseNames) {
+//        this.addRepeatCountsToDatabaseNames = addRepeatCountsToDatabaseNames;
+//    }
+//    private DatabasePoseUpdater dpu;
+//
+//    /**
+//     * Get the value of dpu
+//     *
+//     * @return the value of dpu
+//     */
+//    public DatabasePoseUpdater getDpu() {
+//        return dpu;
+//    }
+//
+//    /**
+//     * Set the value of dpu
+//     *
+//     * @param dpu new value of dpu
+//     */
+//    public void setDpu(DatabasePoseUpdater dpu) {
+//        this.dpu = dpu;
+//    }
     public void parseVisionLine(final String line) {
-        long t0 = System.nanoTime();
-        this.line = line;
-        final DatabasePoseUpdater dup = Main.getDatabasePoseUpdater();
-        final VisionToDBJFrameInterface displayInterface = Main.getDisplayInterface();
+        try {
+            long t0 = System.nanoTime();
+            this.line = line;
 
 //        System.out.println("line = " + line);
-        if (visionList == null) {
-            visionList = new ArrayList<>();
-        }
-        visionList = lineToList(line, visionList, displayInterface);
-        poseUpdatesParsed += visionList.size();
-        publishVisionList(dup, displayInterface);
-        if (debug) {
-            long t1 = System.nanoTime();
-            long time_diff = t1 - t0;
-            System.out.println("line = " + line);
-            System.out.println("visionList = " + visionList);
-            System.out.printf("parseVisionLine time_diff = %.3f\n", (time_diff * 1e-9));
+            if (visionList == null) {
+                visionList = new ArrayList<>();
+            }
+            visionList = lineToList(line, visionList, displayInterface);
+            poseUpdatesParsed += visionList.size();
+//            publishVisionList(dpu, displayInterface);
+            updateListeners();
+            if (debug) {
+                long t1 = System.nanoTime();
+                long time_diff = t1 - t0;
+                System.out.println("line = " + line);
+                System.out.println("visionList = " + visionList);
+                System.out.printf("parseVisionLine time_diff = %.3f\n", (time_diff * 1e-9));
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -366,43 +380,42 @@ public class VisionSocketClient implements AutoCloseable {
         this.debug = debug;
     }
 
-    public void publishVisionList(final DatabasePoseUpdater dup, final VisionToDBJFrameInterface displayInterface) {
-        if (null != visionList) {
-            if (acquire != AcquireEnum.OFF) {
-                if (null != dup) {
-                    if (null != transform) {
-                        transformedVisionList = transformList(visionList, transform);
-                        dup.updateVisionList(transformedVisionList, this.addRepeatCountsToDatabaseNames);
-                    } else {
-                        dup.updateVisionList(visionList, this.addRepeatCountsToDatabaseNames);
-                    }
-                }
-                if (acquire == AcquireEnum.ONCE) {
-                    acquire = AcquireEnum.OFF;
-                    if (null != replyPs) {
-                        replyPs.println("Acquire Status: " + acquire);
-                        replyPs = null;
-                    }
-                    if (null != displayInterface) {
-                        displayInterface.setAquiring(acquire.toString());
-                    }
-                }
-            }
-            if (null != displayInterface) {
-                java.awt.EventQueue.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        displayInterface.updateInfo(visionList, line);
-                    }
-                });
-                if (null != Main.getDatabasePoseUpdater()) {
-                    Main.queryDatabase();
-                }
-            }
-            updateListeners();
-        }
-    }
-    
+//    public void publishVisionList(final DatabasePoseUpdater dpu, final VisionToDBJFrameInterface displayInterface) throws InterruptedException, ExecutionException {
+//        if (null != visionList) {
+//            if (acquire != AcquireEnum.OFF) {
+//                if (null != dpu) {
+//                    if (null != transform) {
+//                        transformedVisionList = transformList(visionList, transform);
+//                        dpu.updateVisionList(transformedVisionList, this.addRepeatCountsToDatabaseNames);
+//                    } else {
+//                        dpu.updateVisionList(visionList, this.addRepeatCountsToDatabaseNames);
+//                    }
+//                }
+//                if (acquire == AcquireEnum.ONCE) {
+//                    acquire = AcquireEnum.OFF;
+//                    if (null != replyPs) {
+//                        replyPs.println("Acquire Status: " + acquire);
+//                        replyPs = null;
+//                    }
+//                    if (null != displayInterface) {
+//                        displayInterface.setAquiring(acquire.toString());
+//                    }
+//                }
+//            }
+//            if (null != displayInterface) {
+//                java.awt.EventQueue.invokeLater(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        displayInterface.updateInfo(visionList, line);
+//                    }
+//                });
+//                if (null != dpu) {
+//                    dpu.queryDatabase();
+//                }
+//            }
+//            updateListeners();
+//        }
+//    }
     public boolean isConnected() {
         return null != visionSlr && visionSlr.isConnected();
     }
@@ -419,6 +432,7 @@ public class VisionSocketClient implements AutoCloseable {
             visionExecServ.awaitTermination(100, TimeUnit.MILLISECONDS);
             visionExecServ = null;
         }
+
     }
 
     @Override

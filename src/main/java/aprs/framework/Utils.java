@@ -20,41 +20,22 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.pddl.executor;
-
-import aprs.framework.AprsJFrame;
-import aprs.framework.AprsJFrame;
-import aprs.framework.DisplayInterface;
-import aprs.framework.DisplayInterface;
-import aprs.framework.PddlAction;
-import aprs.framework.PddlAction;
-import java.io.IOException;
-import java.util.List;
+package aprs.framework;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface PddlExecutorDisplayInterface extends DisplayInterface {
-
-    public void browseActionsFile() throws IOException;
-
-    public List<PddlAction> getActionsList();
-
-    public void setActionsList(List<PddlAction> actionsList);
-
-    public void addAction(PddlAction action);
-
-    public void processActions();
+public class Utils {
     
-    public void autoResizeTableColWidthsPddlOutput();
-
-    public boolean isLoadEnabled();
-
-    public void setLoadEnabled(boolean enable);
+    private Utils() {
+    }
     
-    public void setAprsJFrame(AprsJFrame aprsJFrame);
-    
-    public AprsJFrame getAprsJFrame();
-
+    public static void runOnDispatchThread(final Runnable r) {
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+            r.run();
+        } else {
+            javax.swing.SwingUtilities.invokeLater(r);
+        }
+    }
 }

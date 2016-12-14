@@ -1,0 +1,17 @@
+#
+#Wed Dec 14 15:58:18 EST 2016
+startup.pddl.objectview=true
+startup.pddl.planner=true
+startup.pddl.objectsp=true
+startup.pddl.executor=true
+aprs.robotName=Simulated
+startup.robotcrclclient=true
+startup.robotcrclmotomanserver=false
+startup.exploreGraphDb=false
+startup.crclWebApp=false
+startup.connectvision=true
+aprs.taskName=null
+crclWebApp.httpPort=8081
+startup.robotcrclsimserver=true
+startup.robotcrclfanucserver=false
+startup.connectdatabase=true

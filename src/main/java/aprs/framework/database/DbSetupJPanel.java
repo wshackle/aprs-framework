@@ -24,6 +24,7 @@ package aprs.framework.database;
 
 import aprs.framework.spvision.VisionToDBJPanel;
 import aprs.framework.DisplayInterface;
+import aprs.framework.Utils;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -89,7 +90,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
 
 //    private static List<String> getClasspathEntriesByPath(String path) throws IOException {
-//        InputStream is = Main.class.getClassLoader().getResourceAsStream(path);
+//        InputStream is = DbMain.class.getClassLoader().getResourceAsStream(path);
 //        if(null == is) {
 //            return null;
 //        }
@@ -105,7 +106,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 //                .filter(line -> line.trim().length() > 0) // Filter out empty lines
 //                .collect(Collectors.toList());              // Collect remaining lines into a List again
 //    }
-
     JTextArea editTableArea = null;
     List<JTextArea> viewAreas = null;
 
@@ -528,10 +528,12 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             String resDir = RESOURCE_BASE + resDirSuffix;
             Map<DbQueryEnum, DbQueryInfo> queriesMap
                     = DbSetupBuilder.readResourceQueriesDirectory(resDir);
-            loadQueriesMap(queriesMap);
-            if (!updatingFromDbSetup) {
-                notifyAllDbSetupListeners();
-            }
+            loadQueriesMap(queriesMap, () -> {
+                if (!updatingFromDbSetup) {
+                    notifyAllDbSetupListeners();
+                }
+            });
+
         } catch (IOException iOException) {
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, iOException);
         }
@@ -562,7 +564,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             jRadioButtonExternDir.setSelected(true);
             Map<DbQueryEnum, DbQueryInfo> queriesMap
                     = DbSetupBuilder.readQueriesDirectory(f.getAbsolutePath());
-            loadQueriesMap(queriesMap);
+            loadQueriesMap(queriesMap,null);
         } catch (IOException ex) {
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -638,7 +640,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             if (!queriesMapReloaded) {
                 Map<DbQueryEnum, DbQueryInfo> queriesMap = setup.getQueriesMap();
                 if (null != queriesMap) {
-                    loadQueriesMap(queriesMap);
+                    loadQueriesMap(queriesMap,null);
                 }
             }
         } finally {
@@ -646,7 +648,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }
 
-    private void loadQueriesMapInternal(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
+    private void loadQueriesMapInternal(Map<DbQueryEnum, DbQueryInfo> queriesMap, Runnable r) {
         DefaultTableModel model = (DefaultTableModel) jTableQueries.getModel();
         model.setRowCount(0);
         for (Map.Entry<DbQueryEnum, DbQueryInfo> entry : queriesMap.entrySet()) {
@@ -654,18 +656,13 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
         autoResizeTableColWidths(jTableQueries);
         autoResizeTableRowHeights(jTableQueries);
+        if (null != r) {
+            r.run();
+        }
     }
 
-    private void loadQueriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
-        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
-            loadQueriesMapInternal(queriesMap);
-        } else {
-            try {
-                javax.swing.SwingUtilities.invokeAndWait(() -> loadQueriesMapInternal(queriesMap));
-            } catch (InterruptedException | InvocationTargetException ex) {
-                Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+    private void loadQueriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap, Runnable r) {
+        Utils.runOnDispatchThread(() -> loadQueriesMapInternal(queriesMap, r));
     }
 
     public void setupMultiLineTable(JTable jTable,
@@ -754,9 +751,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
 
     private Map<DbQueryEnum, DbQueryInfo> map = null;
-    public  Map<DbQueryEnum, DbQueryInfo> getQueriesMap() {
-        if(javax.swing.SwingUtilities.isEventDispatchThread()) {
-            map =  getQueriesMapInternal();
+
+    public Map<DbQueryEnum, DbQueryInfo> getQueriesMap() {
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+            map = getQueriesMapInternal();
         } else {
             try {
                 javax.swing.SwingUtilities.invokeAndWait(() -> {
@@ -768,7 +766,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
         return map;
     }
-    
+
     private Map<DbQueryEnum, DbQueryInfo> getQueriesMapInternal() {
         Map<DbQueryEnum, DbQueryInfo> map = new EnumMap<>(DbQueryEnum.class);
         DefaultTableModel model = (DefaultTableModel) jTableQueries.getModel();
@@ -959,8 +957,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         return updateArgsMap(this.getDbSetup().getDbType());
     }
 
+    private final Map<String, String> argsMap = DbSetupBuilder.getDefaultArgsMap();
+
     public Map<String, String> updateArgsMap(DbType dbtype) {
-        Map<String, String> argsMap = Main.getArgsMap();
         DbSetup curSetup = this.getDbSetup();
         argsMap.put("--dbhost", curSetup.getHost());
         argsMap.put("--dbport", Integer.toString(curSetup.getPort()));
@@ -982,7 +981,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 } catch (IOException ex) {
                     Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                Map<String, String> argsMap = Main.getArgsMap();
                 for (String propName : props.stringPropertyNames()) {
                     argsMap.put(propName, props.getProperty(propName));
                 }
@@ -1147,7 +1145,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     String resDir = RESOURCE_BASE + resDirSuffix;
                     Map<DbQueryEnum, DbQueryInfo> queriesMap
                             = DbSetupBuilder.readResourceQueriesDirectory(resDir);
-                    loadQueriesMap(queriesMap);
+                    loadQueriesMap(queriesMap,null);
                     builder = builder.queriesMap(queriesMap);
                 } catch (IOException ex) {
                     Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -1161,7 +1159,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                         jTextFieldQueriesDirectory.setText(queryDir);
                         Map<DbQueryEnum, DbQueryInfo> queriesMap
                                 = DbSetupBuilder.readQueriesDirectory(queryDir);
-                        loadQueriesMap(queriesMap);
+                        loadQueriesMap(queriesMap,null);
                         builder = builder.queriesMap(queriesMap);
                     } catch (IOException ex) {
                         Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -1252,7 +1250,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 } catch (IOException ex) {
                     Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                Map<String, String> argsMap = Main.getArgsMap();
                 for (String propName : props.stringPropertyNames()) {
                     argsMap.put(propName, props.getProperty(propName));
                 }

@@ -24,7 +24,7 @@ package aprs.framework.simview;
 
 import aprs.framework.AprsJFrame;
 import aprs.framework.database.DetectedItem;
-import aprs.framework.database.Main;
+import aprs.framework.database.DbSetupBuilder;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
 import aprs.framework.spvision.VisionSocketClient;
 import aprs.framework.spvision.VisionSocketServer;
@@ -619,29 +619,36 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (this.jCheckBoxSimulated.isSelected()) {
                 jButtonReset.setEnabled(true);
             }
-            if (null != visionSocketClient) {
-                if (visionSocketClient != Main.getVisionSocketClient()) {
-                    try {
-                        visionSocketClient.close();
-                    } catch (Exception ex) {
-                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                } else {
-                    visionSocketClient.removeListListener(this);
-                }
-                visionSocketClient = null;
-            }
-            if (null != visionSocketServer) {
-                visionSocketServer.close();
-                visionSocketServer = null;
-            }
+            disconnect();
         }
     }//GEN-LAST:event_jCheckBoxConnectedActionPerformed
+
+    private void disconnect() {
+        if (null != visionSocketClient) {
+            try {
+                visionSocketClient.close();
+            } catch (Exception ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            visionSocketClient.removeListListener(this);
+            visionSocketClient = null;
+        }
+        if (null != visionSocketServer) {
+            visionSocketServer.close();
+            visionSocketServer = null;
+        }
+    }
 
     private void connect() throws NumberFormatException {
         if (this.jCheckBoxSimulated.isSelected()) {
             try {
-                visionSocketServer = new VisionSocketServer(Integer.parseInt(this.jTextFieldPort.getText()));
+                int port = Integer.parseInt(this.jTextFieldPort.getText());
+                if(null != visionSocketServer && visionSocketServer.getPort() != port) {
+                    disconnect();
+                }
+                if (null == visionSocketServer) {
+                    visionSocketServer = new VisionSocketServer(port);
+                }
                 visionSocketServer.setDebug(this.jCheckBoxDebug.isSelected());
                 visionSocketServer.publishList(getItems());
             } catch (IOException ex) {
@@ -649,10 +656,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         } else {
             visionSocketClient = new VisionSocketClient();
-            Map<String, String> argsMap = new HashMap<>();
-            for (Map.Entry<String, String> e : Main.getArgsMap().entrySet()) {
-                argsMap.put(e.getKey(), e.getValue());
-            }
+            Map<String, String> argsMap = DbSetupBuilder.getDefaultArgsMap();
             argsMap.put("--visionport", jTextFieldPort.getText());
             argsMap.put("--visionhost", jTextFieldHost.getText());
             visionSocketClient.setDebug(this.jCheckBoxDebug.isSelected());
@@ -911,17 +915,35 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     double currentX = 0.0;
     double currentY = 0.0;
 
+    private AprsJFrame aprsJFrame;
+
+    /**
+     * Get the value of aprsJFrame
+     *
+     * @return the value of aprsJFrame
+     */
+    public AprsJFrame getAprsJFrame() {
+        return aprsJFrame;
+    }
+
+    /**
+     * Set the value of aprsJFrame
+     *
+     * @param aprsJFrame new value of aprsJFrame
+     */
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        this.aprsJFrame = aprsJFrame;
+    }
+
     public void connectCurrentPosition() {
-        AprsJFrame aprsJframe = AprsJFrame.getCurrentAprsJFrame();
-        if (null != aprsJframe) {
-            aprsJframe.addCurrentPoseListener(this);
+        if (null != aprsJFrame) {
+            aprsJFrame.addCurrentPoseListener(this);
         }
     }
-    
+
     public void disconnectCurrentPosition() {
-        AprsJFrame aprsJframe = AprsJFrame.getCurrentAprsJFrame();
-        if (null != aprsJframe) {
-            aprsJframe.removeCurrentPoseListener(this);
+        if (null != aprsJFrame) {
+            aprsJFrame.removeCurrentPoseListener(this);
         }
     }
     private void jButtonCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCurrentActionPerformed
@@ -936,7 +958,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void jCheckBoxShowCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowCurrentActionPerformed
         object2DJPanel1.setShowCurrentXY(jCheckBoxShowCurrent.isSelected());
-        if(jCheckBoxShowCurrent.isSelected()) {
+        if (jCheckBoxShowCurrent.isSelected()) {
             connectCurrentPosition();
         } else {
             disconnectCurrentPosition();
@@ -1086,8 +1108,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     connect();
                 }
             }
-            String displayAxisString = props.getProperty("displayAxis"); 
-            if(displayAxisString != null && displayAxisString.length() > 0 ) {
+            String displayAxisString = props.getProperty("displayAxis");
+            if (displayAxisString != null && displayAxisString.length() > 0) {
                 DisplayAxis displayAxis = DisplayAxis.valueOf(displayAxisString);
                 jComboBoxDisplayAxis.setSelectedItem(displayAxis);
                 object2DJPanel1.setDisplayAxis(displayAxis);
@@ -1101,8 +1123,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public void accept(VisionSocketClient client) {
-        final List<DetectedItem> l = client.getVisionList();
+    public void visionClientUpdateRecieved(List<DetectedItem> l, String line) {
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             setItems(l);
         } else {

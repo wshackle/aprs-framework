@@ -48,6 +48,11 @@ public class VisionSocketServer implements AutoCloseable {
     private ExecutorService publishService;
     private final boolean shutdownServiceOnClose;
 
+    public int getPort() {
+        return serverSocket != null? serverSocket.getLocalPort(): -1;
+    }
+    
+    
     private static class DaemonThreadFactory implements ThreadFactory {
 
         @Override
@@ -68,21 +73,30 @@ public class VisionSocketServer implements AutoCloseable {
     }
 
     public VisionSocketServer(int port, int backlog, InetAddress bindAddr) throws IOException {
-        serverSocket = new ServerSocket(port, backlog, bindAddr);
-        this.executorService = Executors.newCachedThreadPool(daemonThreadFactory);
-        this.publishService = Executors.newSingleThreadExecutor(daemonThreadFactory);
-        this.shutdownServiceOnClose = true;
-        start();
+        try {
+            this.shutdownServiceOnClose = true;
+            serverSocket = new ServerSocket(port, backlog, bindAddr);
+            this.executorService = Executors.newCachedThreadPool(daemonThreadFactory);
+            this.publishService = Executors.newSingleThreadExecutor(daemonThreadFactory);
+            
+            start();
+        } catch (IOException iOException) {
+            throw new IOException("Can't bind to port=" + port+" with bindAddr="+bindAddr, iOException);
+        }
     }
 
     public VisionSocketServer(int port) throws IOException {
-        serverSocket = new ServerSocket(port);
-        this.executorService = Executors.newCachedThreadPool(daemonThreadFactory);
-        this.publishService = Executors.newSingleThreadExecutor(daemonThreadFactory);
-        this.shutdownServiceOnClose = true;
-        start();
+        try {
+            this.shutdownServiceOnClose = true;
+            serverSocket = new ServerSocket(port);
+            this.executorService = Executors.newCachedThreadPool(daemonThreadFactory);
+            this.publishService = Executors.newSingleThreadExecutor(daemonThreadFactory);
+            start();
+        } catch (IOException iOException) {
+            throw new IOException("Can't bind to port=" + port, iOException);
+        }
     }
-    
+
     private List<Socket> clients = new ArrayList<Socket>();
 
     private void start() {
@@ -92,10 +106,10 @@ public class VisionSocketServer implements AutoCloseable {
                 try {
                     while (!closing && !Thread.currentThread().isInterrupted()) {
                         Socket clientSocket = serverSocket.accept();
-                        if(debug) {
+                        if (debug) {
                             System.out.println("clientSocket = " + clientSocket);
                         }
-                        if(null != bytesToSend) {
+                        if (null != bytesToSend) {
                             clientSocket.getOutputStream().write(bytesToSend);
                         }
                         synchronized (clients) {
@@ -111,7 +125,7 @@ public class VisionSocketServer implements AutoCloseable {
 
     private volatile boolean closing = false;
     private byte bytesToSend[] = null;
-    
+
     public static String listToLine(List<DetectedItem> list) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < list.size(); i++) {
@@ -134,8 +148,8 @@ public class VisionSocketServer implements AutoCloseable {
         sb.append('\n');
         return sb.toString();
     }
-    
-        private boolean debug = false;
+
+    private boolean debug = false;
 
     /**
      * Get the value of debug
@@ -165,11 +179,11 @@ public class VisionSocketServer implements AutoCloseable {
                         Socket client = clients.get(i);
                         if (null != client) {
                             try {
-                                if(debug) {
+                                if (debug) {
                                     System.out.println(String.format("Sending %d bytes to %s:%d : %s",
                                             bytesToSend.length,
-                                            ((InetSocketAddress)client.getRemoteSocketAddress()).getHostString(),
-                                            ((InetSocketAddress)client.getRemoteSocketAddress()).getPort(),
+                                            ((InetSocketAddress) client.getRemoteSocketAddress()).getHostString(),
+                                            ((InetSocketAddress) client.getRemoteSocketAddress()).getPort(),
                                             new String(bytesToSend)));
                                 }
                                 client.getOutputStream().write(bytesToSend);

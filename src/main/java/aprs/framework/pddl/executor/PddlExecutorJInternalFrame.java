@@ -22,6 +22,7 @@
  */
 package aprs.framework.pddl.executor;
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.PddlAction;
 import aprs.framework.database.DbSetupPublisher;
 import crcl.ui.client.UpdateTitleListener;
@@ -159,5 +160,15 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
 
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {
         actionsToCrclJPanel1.setDbSetupSupplier(dbSetupSupplier);
+    }
+
+    @Override
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        actionsToCrclJPanel1.setAprsJFrame(aprsJFrame);
+    }
+
+    @Override
+    public AprsJFrame getAprsJFrame() {
+        return actionsToCrclJPanel1.getAprsJFrame();
     }
 }

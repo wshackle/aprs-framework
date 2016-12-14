@@ -438,7 +438,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.settleDwellTime = settleDwellTime;
     }
 
-    private VectorType xAxis;
+    private VectorType xAxis = vector(1.0,0.0,0.0);
 
     private PmRpy rpy = new PmRpy();
 
@@ -741,7 +741,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         placePartByPose(out, pose);
     }
 
-    private VectorType zAxis;
+    private VectorType zAxis = vector(0.0,0.0,-1.0);
 
     public void placePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
 

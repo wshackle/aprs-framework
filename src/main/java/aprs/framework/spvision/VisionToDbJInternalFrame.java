@@ -23,7 +23,7 @@
 
 package aprs.framework.spvision;
 
-import aprs.framework.database.Main;
+
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
@@ -46,7 +46,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
      */
     public VisionToDbJInternalFrame() {
         initComponents();
-        Main.setDisplayInterface(this);
+//        DbMain.setDisplayInterface(this);
     }
     
     public DbSetupPublisher getDbSetupPublisher() {
@@ -94,53 +94,62 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    @Override
     public void setAquiring(String s) {
         this.visionToDBJPanel.setAquiring(s);
     }
 
+    @Override
     public void updateInfo(List<DetectedItem> _list, String line) {
         this.visionToDBJPanel.updateInfo(_list, line);
     }
     
+    @Override
     public void updataPoseQueryInfo(final List<PoseQueryElem> _list) {
         this.visionToDBJPanel.updataPoseQueryInfo(_list);
     }
     
+    @Override
     public boolean isDebug() {
         return this.visionToDBJPanel.isDebug();
     }
     
+    @Override
     public void addLogMessage(String stmnt) {
         this.visionToDBJPanel.addLogMessage(stmnt);
     }
     
+    @Override
     public void setVisionConnected(boolean _val) {
         this.visionToDBJPanel.setVisionConnected(_val);
     }
     
+    @Override
     public void setDBConnected(boolean _val) {
         this.visionToDBJPanel.setDBConnected(_val);
     }
     
+    @Override
      public void setLastCommand(String c) {
          this.visionToDBJPanel.setLastCommand(c);
      }
      
+    @Override
      public void setCommandConnected(boolean _val) {
          this.visionToDBJPanel.setCommandConnected(_val);
      }
      
      public void startCommand(Map<String, String> argsMap) {
-         Main.startCommand(argsMap);
+         visionToDBJPanel.startCommand(argsMap);
      }
 
-     public void startVision(Map<String, String> argsMap) {
-         Main.startVision(argsMap);
-     }
-     
-     public Map<String,String> getArgsMap() {
-         return Main.getArgsMap();
-     }
+//     public void startVision(Map<String, String> argsMap) {
+//         visionToDBJPanel.startVision(argsMap);
+//     }
+//     
+//     public Map<String,String> getArgsMap() {
+//         return visionToDBJPanel.getArgsMap();
+//     }
      
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.framework.spvision.VisionToDBJPanel visionToDBJPanel;
