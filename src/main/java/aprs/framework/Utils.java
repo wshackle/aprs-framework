@@ -22,6 +22,13 @@
  */
 package aprs.framework;
 
+import java.awt.Component;
+import java.awt.Container;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableColumnModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -36,6 +43,44 @@ public class Utils {
             r.run();
         } else {
             javax.swing.SwingUtilities.invokeLater(r);
+        }
+    }
+    
+    public static void autoResizeTableColWidths(JTable table) {
+
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+        int fullsize = 0;
+        Container parent = table.getParent();
+        if (null != parent) {
+            fullsize = Math.max(parent.getPreferredSize().width, parent.getSize().width);
+        }
+        int sumWidths = 0;
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
+            TableColumn col = colModel.getColumn(i);
+            int width = 0;
+
+            TableCellRenderer renderer = col.getHeaderRenderer();
+            if (renderer == null) {
+                renderer = table.getTableHeader().getDefaultRenderer();
+            }
+            Component headerComp = renderer.getTableCellRendererComponent(table, col.getHeaderValue(),
+                    false, false, 0, i);
+            width = Math.max(width, headerComp.getPreferredSize().width);
+            for (int r = 0; r < table.getRowCount(); r++) {
+                renderer = table.getCellRenderer(r, i);
+                Component comp = renderer.getTableCellRendererComponent(table, table.getValueAt(r, i),
+                        false, false, r, i);
+                width = Math.max(width, comp.getPreferredSize().width);
+            }
+            if (i == table.getColumnCount() - 1) {
+                if (width < fullsize - sumWidths) {
+                    width = fullsize - sumWidths;
+                }
+            }
+            col.setPreferredWidth(width + 2);
+            sumWidths += width + 2;
         }
     }
 }

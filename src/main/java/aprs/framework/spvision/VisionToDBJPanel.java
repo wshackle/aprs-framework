@@ -22,6 +22,7 @@
  */
 package aprs.framework.spvision;
 
+import static aprs.framework.Utils.autoResizeTableColWidths;
 import static aprs.framework.Utils.runOnDispatchThread;
 import aprs.framework.database.AcquireEnum;
 import aprs.framework.database.DbQueryEnum;
@@ -64,15 +65,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.TransferHandler;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
 import java.io.PrintStream;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
@@ -962,46 +959,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             tm.setValueAt(pqe.getZ(), i, 3);
             tm.setValueAt(pqe.getRot(), i, 4);
         }
-        this.autoResizeTableColWidths(jTableFromDatabase);
+        autoResizeTableColWidths(jTableFromDatabase);
     }
 
-    public void autoResizeTableColWidths(JTable table) {
-
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-
-        int fullsize = 0;
-        Container parent = table.getParent();
-        if (null != parent) {
-            fullsize = Math.max(parent.getPreferredSize().width, parent.getSize().width);
-        }
-        int sumWidths = 0;
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
-            TableColumn col = colModel.getColumn(i);
-            int width = 0;
-
-            TableCellRenderer renderer = col.getHeaderRenderer();
-            if (renderer == null) {
-                renderer = table.getTableHeader().getDefaultRenderer();
-            }
-            Component headerComp = renderer.getTableCellRendererComponent(table, col.getHeaderValue(),
-                    false, false, 0, i);
-            width = Math.max(width, headerComp.getPreferredSize().width);
-            for (int r = 0; r < table.getRowCount(); r++) {
-                renderer = table.getCellRenderer(r, i);
-                Component comp = renderer.getTableCellRendererComponent(table, table.getValueAt(r, i),
-                        false, false, r, i);
-                width = Math.max(width, comp.getPreferredSize().width);
-            }
-            if (i == table.getColumnCount() - 1) {
-                if (width < fullsize - sumWidths) {
-                    width = fullsize - sumWidths;
-                }
-            }
-            col.setPreferredWidth(width + 2);
-            sumWidths += width + 2;
-        }
-    }
+    
 
     public boolean isDebug() {
         return this.jCheckBoxDebug.isSelected();
@@ -1069,7 +1030,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (this.jCheckBoxDebug.isSelected()) {
             appendLogDisplay("\nupdateInfo(\n\t_list=" + visionList + ",\n\tline =" + line + "\n\t)\r\n");
         }
-        this.autoResizeTableColWidths(jTableFromVision);
+        autoResizeTableColWidths(jTableFromVision);
     }
 
 //    private final TableModelListener tableModelListener;

@@ -23,6 +23,7 @@
 package aprs.framework.simview;
 
 import aprs.framework.AprsJFrame;
+import static aprs.framework.Utils.autoResizeTableColWidths;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.DbSetupBuilder;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
@@ -30,8 +31,6 @@ import aprs.framework.spvision.VisionSocketClient;
 import aprs.framework.spvision.VisionSocketServer;
 import crcl.base.PoseType;
 import crcl.ui.client.PendantClientJPanel;
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.io.File;
@@ -41,7 +40,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,16 +49,12 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
-import javax.swing.JTable;
 import javax.swing.RowSorter;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
 
 /**
  *
@@ -546,43 +540,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     }// </editor-fold>//GEN-END:initComponents
 
-    public void autoResizeTableColWidths(JTable table) {
-
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-
-        int fullsize = 0;
-        Container parent = table.getParent();
-        if (null != parent) {
-            fullsize = Math.max(parent.getPreferredSize().width, parent.getSize().width);
-        }
-        int sumWidths = 0;
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
-            TableColumn col = colModel.getColumn(i);
-            int width = 0;
-
-            TableCellRenderer renderer = col.getHeaderRenderer();
-            if (renderer == null) {
-                renderer = table.getTableHeader().getDefaultRenderer();
-            }
-            Component headerComp = renderer.getTableCellRendererComponent(table, col.getHeaderValue(),
-                    false, false, 0, i);
-            width = Math.max(width, headerComp.getPreferredSize().width);
-            for (int r = 0; r < table.getRowCount(); r++) {
-                renderer = table.getCellRenderer(r, i);
-                Component comp = renderer.getTableCellRendererComponent(table, table.getValueAt(r, i),
-                        false, false, r, i);
-                width = Math.max(width, comp.getPreferredSize().width);
-            }
-            if (i == table.getColumnCount() - 1) {
-                if (width < fullsize - sumWidths) {
-                    width = fullsize - sumWidths;
-                }
-            }
-            col.setPreferredWidth(width + 2);
-            sumWidths += width + 2;
-        }
-    }
 
     private void jCheckBoxSimulatedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxSimulatedActionPerformed
         this.jCheckBoxConnected.setSelected(false);

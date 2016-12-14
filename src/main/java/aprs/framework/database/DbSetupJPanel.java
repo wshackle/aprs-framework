@@ -25,18 +25,16 @@ package aprs.framework.database;
 import aprs.framework.spvision.VisionToDBJPanel;
 import aprs.framework.DisplayInterface;
 import aprs.framework.Utils;
+import static aprs.framework.Utils.autoResizeTableColWidths;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -54,7 +52,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
 import javax.swing.JTable;
@@ -564,7 +561,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             jRadioButtonExternDir.setSelected(true);
             Map<DbQueryEnum, DbQueryInfo> queriesMap
                     = DbSetupBuilder.readQueriesDirectory(f.getAbsolutePath());
-            loadQueriesMap(queriesMap,null);
+            loadQueriesMap(queriesMap, null);
         } catch (IOException ex) {
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -640,7 +637,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             if (!queriesMapReloaded) {
                 Map<DbQueryEnum, DbQueryInfo> queriesMap = setup.getQueriesMap();
                 if (null != queriesMap) {
-                    loadQueriesMap(queriesMap,null);
+                    loadQueriesMap(queriesMap, null);
                 }
             }
         } finally {
@@ -1145,7 +1142,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     String resDir = RESOURCE_BASE + resDirSuffix;
                     Map<DbQueryEnum, DbQueryInfo> queriesMap
                             = DbSetupBuilder.readResourceQueriesDirectory(resDir);
-                    loadQueriesMap(queriesMap,null);
+                    loadQueriesMap(queriesMap, null);
                     builder = builder.queriesMap(queriesMap);
                 } catch (IOException ex) {
                     Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -1159,7 +1156,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                         jTextFieldQueriesDirectory.setText(queryDir);
                         Map<DbQueryEnum, DbQueryInfo> queriesMap
                                 = DbSetupBuilder.readQueriesDirectory(queryDir);
-                        loadQueriesMap(queriesMap,null);
+                        loadQueriesMap(queriesMap, null);
                         builder = builder.queriesMap(queriesMap);
                     } catch (IOException ex) {
                         Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -1177,44 +1174,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 //        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".user", this.jTextFieldDBUser.getText());
 //        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".passwd", this.jPasswordFieldDBPassword.getPassword());
 //        
-    }
-
-    public void autoResizeTableColWidths(JTable table) {
-
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-
-        int fullsize = 0;
-        Container parent = table.getParent();
-        if (null != parent) {
-            fullsize = Math.max(parent.getPreferredSize().width, parent.getSize().width);
-        }
-        int sumWidths = 0;
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
-            TableColumn col = colModel.getColumn(i);
-            int width = 0;
-
-            TableCellRenderer renderer = col.getHeaderRenderer();
-            if (renderer == null) {
-                renderer = table.getTableHeader().getDefaultRenderer();
-            }
-            Component headerComp = renderer.getTableCellRendererComponent(table, col.getHeaderValue(),
-                    false, false, 0, i);
-            width = Math.max(width, headerComp.getPreferredSize().width);
-            for (int r = 0; r < table.getRowCount(); r++) {
-                renderer = table.getCellRenderer(r, i);
-                Component comp = renderer.getTableCellRendererComponent(table, table.getValueAt(r, i),
-                        false, false, r, i);
-                width = Math.max(width, comp.getPreferredSize().width);
-            }
-            if (i == table.getColumnCount() - 1) {
-                if (width < fullsize - sumWidths) {
-                    width = fullsize - sumWidths;
-                }
-            }
-            col.setPreferredWidth(width + 2);
-            sumWidths += width + 2;
-        }
     }
 
     public void autoResizeTableRowHeights(JTable table) {

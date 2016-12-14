@@ -24,6 +24,7 @@ package aprs.framework.pddl.executor;
 
 import aprs.framework.AprsJFrame;
 import aprs.framework.PddlAction;
+import static aprs.framework.Utils.autoResizeTableColWidths;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
@@ -42,7 +43,6 @@ import crcl.utils.CRCLException;
 import static crcl.utils.CRCLPosemath.pose;
 import crcl.utils.CRCLSocket;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -89,17 +89,12 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.xml.bind.JAXBException;
 import java.awt.HeadlessException;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
 import java.util.Vector;
-import java.util.concurrent.atomic.AtomicInteger;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 
@@ -1152,43 +1147,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private static final String MANUAL_PART_NAMES = "manualPartNames";
     private static final String MANUAL_SLOT_NAMES = "manualSlotNames";
 
-    public void autoResizeTableColWidths(JTable table) {
-
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-
-        int fullsize = 0;
-        Container parent = table.getParent();
-        if (null != parent) {
-            fullsize = Math.max(parent.getPreferredSize().width, parent.getSize().width);
-        }
-        int sumWidths = 0;
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
-            TableColumn col = colModel.getColumn(i);
-            int width = 0;
-
-            TableCellRenderer renderer = col.getHeaderRenderer();
-            if (renderer == null) {
-                renderer = table.getTableHeader().getDefaultRenderer();
-            }
-            Component headerComp = renderer.getTableCellRendererComponent(table, col.getHeaderValue(),
-                    false, false, 0, i);
-            width = Math.max(width, headerComp.getPreferredSize().width);
-            for (int r = 0; r < table.getRowCount(); r++) {
-                renderer = table.getCellRenderer(r, i);
-                Component comp = renderer.getTableCellRendererComponent(table, table.getValueAt(r, i),
-                        false, false, r, i);
-                width = Math.max(width, comp.getPreferredSize().width);
-            }
-            if (i == table.getColumnCount() - 1) {
-                if (width < fullsize - sumWidths) {
-                    width = fullsize - sumWidths;
-                }
-            }
-            col.setPreferredWidth(width + 2);
-            sumWidths += width + 2;
-        }
-    }
 
     public void autoResizeTableRowHeights(JTable table) {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -2281,7 +2239,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             model.setValueAt(indexes[i], i, 1);
         }
-        this.autoResizeTableColWidths(jTablePddlOutput);
+        autoResizeTableColWidths(jTablePddlOutput);
     }
 
     public void setPddlLabelss(String labels[]) {
@@ -2294,7 +2252,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 model.setValueAt(labels[i], i, 2);
             }
         }
-        this.autoResizeTableColWidths(jTablePddlOutput);
+        autoResizeTableColWidths(jTablePddlOutput);
     }
 
     public void setPddlTakenParts(String parts[]) {
@@ -2307,7 +2265,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 model.setValueAt(parts[i], i, 6);
             }
         }
-        this.autoResizeTableColWidths(jTablePddlOutput);
+        autoResizeTableColWidths(jTablePddlOutput);
     }
 
     boolean started = false;

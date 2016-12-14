@@ -106,7 +106,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 { new Integer(2), "2  1l2m Kits", "Fanuc", null}
             },
             new String [] {
-                "Priority", "Task", "Robot", "PropertiesFile"
+                "Priority", "Task(s)", "Robot(s)", "PropertiesFile"
             }
         ) {
             Class[] types = new Class [] {
@@ -387,6 +387,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         for (AprsJFrame aprsJframe : aprsSystems) {
             tm.addRow(new Object[]{aprsJframe.getPriority(), aprsJframe.getTaskName(), aprsJframe.getRobotName(), aprsJframe.getPropertiesFile().getCanonicalPath()});
         }
+        Utils.autoResizeTableColWidths(jTableTasks);
     }
 
     public void updateRobotsTable() throws IOException {
@@ -400,6 +401,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         for (String robot : robotSet) {
             tm.addRow(new Object[]{robot, true});
         }
+        Utils.autoResizeTableColWidths(jTableRobots);
     }
 
     /**

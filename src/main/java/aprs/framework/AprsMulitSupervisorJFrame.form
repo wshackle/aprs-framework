@@ -143,11 +143,11 @@
                       <Data value="1"/>
                       <Data value="2"/>
                     </Column>
-                    <Column editable="true" title="Task" type="java.lang.String">
+                    <Column editable="true" title="Task(s)" type="java.lang.String">
                       <Data value="2 2l2s Kits"/>
                       <Data value="2  1l2m Kits"/>
                     </Column>
-                    <Column editable="true" title="Robot" type="java.lang.String">
+                    <Column editable="true" title="Robot(s)" type="java.lang.String">
                       <Data value="Motoman"/>
                       <Data value="Fanuc"/>
                     </Column>
