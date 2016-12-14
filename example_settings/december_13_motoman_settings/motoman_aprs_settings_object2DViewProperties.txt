@@ -1,9 +1,9 @@
 #
-#Mon Dec 12 11:29:39 EST 2016
+#Tue Dec 13 13:57:59 EST 2016
 simulated=true
 --visionport=4000
 connected=true
-items=large_gear_1,0.0,547.516,179.732,100.0,PT,large_gear_2,0.0,547.148,77.012,100.0,PT,kit_lg2small2_1_slot_l2,0.0,675.213,69.636,100.0,PT,kit_lg2small2_1_slot_l1,0.0,679.36,187.826,100.0,PT,kit_lg2small2_1_slot_s1,0.0,761.083,183.244,100.0,null,kit_lg2small2_1_slot_s2,0.0,763.609,75.496,100.0,null,small_gear_1,0.0,752.717,-28.923,100.0,null,small_gear_2,0.0,749.399,-84.561,100.0,null,\n
+items=large_gear_1,0.0,547.516,179.732,100.0,PT,large_gear_2,0.0,547.148,77.012,100.0,PT,kit_lg2small2_1_slot_l2,0.0,675.213,69.636,100.0,PT,kit_lg2small2_1_slot_l1,0.0,679.36,187.826,100.0,PT,kit_lg2small2_1_slot_s1,0.0,761.083,183.244,100.0,null,kit_lg2small2_1_slot_s2,0.0,763.609,75.496,100.0,null,small_gear_1,0.0,578.055,-59.098,100.0,null,small_gear_2,0.0,574.479,-109.95,100.0,null,\n
 --visionhost=localhost
 xminymin=0.0, -500.0
 displayAxis=NEG_X_NEG_Y
