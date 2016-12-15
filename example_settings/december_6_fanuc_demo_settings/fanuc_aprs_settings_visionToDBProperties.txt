@@ -1,5 +1,5 @@
 #
-#Wed Dec 07 10:14:57 EST 2016
+#Wed Dec 14 16:42:51 EST 2016
 NEO4J.localhost_4000.name=neo4j
 MYSQL.localhost_7486.name=neo4j
 --aquirestate=ON
@@ -40,6 +40,7 @@ NEO4J.localhost_7486.internalQueriesResourceDir=true
 NEO4J.localhost_7486.name=neo4j
 NEO4J.ying-220_7480.user=neo4j
 NEO4J.localhost_7486.queriesDir=neo4j/v1
+--acquirestate=ON
 AddRepeatCountsToDatabaseNames=false
 --dbpasswd=password
 --showgui=true

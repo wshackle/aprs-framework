@@ -355,8 +355,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         commonInit();
     }
-    
-    private void commonInit()  {
+
+    private void commonInit() {
         startWindowsFromMenuCheckboxes();
 
         try {
@@ -1501,7 +1501,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         propsMap.put(CRCLWEBAPPPORT, Integer.toString(crclWebServerHttpPort));
         setDefaultRobotName();
         propsMap.put(APRSROBOT_PROPERTY_NAME, robotName);
-        propsMap.put(APRSTASK_PROPERTY_NAME, taskName);
+        if (null != taskName) {
+            propsMap.put(APRSTASK_PROPERTY_NAME, taskName);
+        }
         if (null != fanucCRCLMain) {
             this.fanucCrclPort = fanucCRCLMain.getLocalPort();
             this.fanucRobotHost = fanucCRCLMain.getRemoteRobotHost();
@@ -1673,7 +1675,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     private String propertiesFileBaseString = "";
 
     public void updateSubPropertiesFiles() throws IOException {
