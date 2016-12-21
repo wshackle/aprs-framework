@@ -27,6 +27,7 @@ import aprs.framework.database.DbParamTypeEnum;
 import aprs.framework.database.DbQueryEnum;
 import aprs.framework.database.DbQueryInfo;
 import aprs.framework.database.DbSetupBuilder;
+import static aprs.framework.database.DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.PoseQueryElem;
@@ -47,7 +48,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -369,7 +369,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //            + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
 //            + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy";
 
-    private void setupConnection(String host, int port, String db, String username, String password, boolean debug) throws SQLException {
+    private CompletableFuture<Void> setupConnection(String host, int port, String db, String username, String password, boolean debug) throws SQLException {
         switch (dbtype) {
             case MYSQL:
                 useBatch = true;
@@ -379,8 +379,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 useBatch = false;
                 break;
         }
-        con = DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password, debug);
-        System.out.println("DatabasePoseUpdater connected to database of type " + dbtype + " on host " + host + " with port " + port);
+        return DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT)
+                .thenAccept(c -> con = c)
+                .thenRun(() -> System.out.println("DatabasePoseUpdater connected to database of type " + dbtype + " on host " + host + " with port " + port));
     }
 
     final private Map<DbQueryEnum, DbQueryInfo> queriesMap;
@@ -397,8 +398,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
         this.dbtype = dbtype;
         sharedConnection = false;
         this.queriesMap = queriesMap;
-        setupConnection(host, port, db, username, password, debug);
-        setupStatements();
+        setupConnection(host, port, db, username, password, debug)
+                .thenRun(() -> {
+                    try {
+                        setupStatements();
+                    } catch (SQLException ex) {
+                        Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
     }
 
 //    private static final String MYSQL_UPDATE_STRING
@@ -1211,7 +1218,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private final ExecutorService pqExecServ = Executors.newSingleThreadExecutor();
 
     public CompletableFuture<List<PoseQueryElem>> queryDatabase() throws InterruptedException, ExecutionException {
-       return  CompletableFuture.supplyAsync(() -> Collections.unmodifiableList(getDirectPoseList()),pqExecServ);
+        return CompletableFuture.supplyAsync(() -> Collections.unmodifiableList(getDirectPoseList()), pqExecServ);
 //                    new Runnable() {
 //
 //                @Override
@@ -1234,7 +1241,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //            throw new IllegalStateException("PoseDatabaseUpdater: " + this);
 //        }
     }
-    
+
     private volatile boolean updating_pose_query = false;
 
 //    private List<Object> poseParamsToStatement(DetectedItem item) throws SQLException {

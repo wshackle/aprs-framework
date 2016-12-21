@@ -1,5 +1,5 @@
 #
-#Wed Dec 14 16:12:17 EST 2016
+#Tue Dec 20 09:37:09 EST 2016
 MYSQL.localhost_7486.name=neo4j
 --aquirestate=ON
 --dbport=7480
@@ -37,5 +37,5 @@ AddRepeatCountsToDatabaseNames=false
 NEO4J.localhost_7480.user=neo4j
 --showgui=true
 NEO4J.localhost.port=7480
-NEO4J.localhost_7486.user=neo4j
 --dbuser=neo4j
+NEO4J.localhost_7486.user=neo4j

@@ -25,12 +25,11 @@ package aprs.framework.pddl.executor;
 import aprs.framework.AprsJFrame;
 import aprs.framework.PddlAction;
 import aprs.framework.database.DbSetupPublisher;
-import crcl.ui.client.UpdateTitleListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 
 /**
  *
@@ -45,8 +44,26 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
         initComponents();
     }
     
+    public void abortProgram() {
+        actionsToCrclJPanel1.abortProgram();
+    }
     
+    public CompletableFuture<Void> safeAbort() {
+        return this.actionsToCrclJPanel1.safeAbort();
+    }
+    
+    public CompletableFuture<Void> continueActionList() {
+        return this.actionsToCrclJPanel1.continueActionList();
+    }
 
+    public void addPositionMap(PositionMap pm) {
+        actionsToCrclJPanel1.addPositionMap(pm);
+    }
+    
+    public void removePositionMap(PositionMap pm) {
+        actionsToCrclJPanel1.removePositionMap(pm);
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

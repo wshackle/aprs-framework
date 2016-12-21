@@ -30,6 +30,7 @@ import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.explore.ExploreGraphDbJInternalFrame;
 import aprs.framework.logdisplay.LogDisplayJInternalFrame;
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
+import aprs.framework.pddl.executor.PositionMap;
 import aprs.framework.pddl.planner.PddlPlannerJInternalFrame;
 import aprs.framework.simview.Object2DViewJInternalFrame;
 import aprs.framework.spvision.VisionToDbJInternalFrame;
@@ -63,7 +64,10 @@ import crcl.utils.CRCLException;
 import crcl.utils.CRCLSocket;
 import java.awt.Container;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -103,6 +107,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private String taskName;
 
+    public void addPositionMap(PositionMap pm) {
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.addPositionMap(pm);
+        }
+
+    }
+
+    public void removePositionMap(PositionMap pm) {
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.removePositionMap(pm);
+        }
+    }
+
     /**
      * Get the value of taskName
      *
@@ -110,6 +127,47 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public String getTaskName() {
         return taskName;
+    }
+
+    public CompletableFuture<Void> safeAbort() {
+        return this.pddlExecutorJInternalFrame1.safeAbort();
+    }
+
+    public CompletableFuture<Void> safeAbortAndDisconnectAsync() {
+        return this.pddlExecutorJInternalFrame1.safeAbort()
+                .thenRunAsync(this::disconnectRobot);
+    }
+
+    public void disconnectRobot() {
+        if (null != pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.disconnect();
+        }
+        this.setRobotName(null);
+    }
+
+    public void connectRobot(String robotName, String host, int port) {
+        if (null != pendantClientJInternalFrame) {
+            setRobotName(robotName);
+            pendantClientJInternalFrame.connect(host, port);
+        }
+    }
+
+    public String getRobotCrclHost() {
+        if (null != pendantClientJInternalFrame) {
+            return pendantClientJInternalFrame.getHost();
+        }
+        return null;
+    }
+
+    public int getRobotCrclPort() {
+        if (null != pendantClientJInternalFrame) {
+            return pendantClientJInternalFrame.getPort();
+        }
+        return -1;
+    }
+
+    public CompletableFuture<Void> continueActionList() {
+        return pddlExecutorJInternalFrame1.continueActionList();
     }
 
     /**
@@ -143,7 +201,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         updateTitle("", "");
     }
 
-    public synchronized void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
+    public void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.addProgramLineListener(l);
         }
@@ -174,6 +232,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 pendantClientJInternalFrame.runCurrentProgram();
             }
         }
+    }
+    
+    public void immediateAbort() {
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.abortProgram();
+        } else {
+            abortCrclProgram();
+        }
+    }
+    
+    public String getDetailsString() {
+        StringBuilder sb = new StringBuilder();
+        if(null != pendantClientJInternalFrame) {
+            sb.append("cmd="+pendantClientJInternalFrame.getCurrentProgramCommand()+"\r\n");
+            pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state="+state+"\r\n"));
+            sb.append("connected="+pendantClientJInternalFrame.isConnected()+"\r\n");
+        }
+        sb.append("robotCrclPort="+this.getRobotCrclPort()+"\r\n");
+        return sb.toString();
     }
 
     public void abortCrclProgram() {
@@ -585,6 +662,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    final private List<Runnable> titleUpdateRunnables = Collections.synchronizedList(new ArrayList<>());
+
+    /**
+     * Get the value of titleUpdateRunnables
+     *
+     * @return the value of titleUpdateRunnables
+     */
+    public List<Runnable> getTitleUpdateRunnables() {
+        return titleUpdateRunnables;
+    }
+
     private void updateTitle(String stateString, String stateDescription) {
         String oldTitle = getTitle();
         String newTitle = "APRS : " + ((robotName != null) ? robotName : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : " + stateDescription;
@@ -594,6 +682,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (!oldTitle.equals(newTitle)) {
             setTitle(newTitle);
             setupWindowsMenu();
+            for (Runnable r : titleUpdateRunnables) {
+                r.run();
+            }
         }
     }
 
@@ -622,16 +713,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private void startSimServerJInternalFrame() {
         try {
-            simServerJInternalFrame = new SimServerJInternalFrame(false);
+            if (null == simServerJInternalFrame) {
+                simServerJInternalFrame = new SimServerJInternalFrame(false);
 //            pendantClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "object2DViewProperties.txt"));
 //            pendantClientJInternalFrame.loadProperties();
-            updateSubPropertiesFiles();
-            simServerJInternalFrame.loadProperties();
-            simServerJInternalFrame.pack();
-            simServerJInternalFrame.setVisible(true);
-            simServerJInternalFrame.restartServer();
-            jDesktopPane1.add(simServerJInternalFrame);
-            simServerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(simServerJInternalFrame);
+                updateSubPropertiesFiles();
+                simServerJInternalFrame.loadProperties();
+                simServerJInternalFrame.pack();
+                simServerJInternalFrame.setVisible(true);
+                simServerJInternalFrame.restartServer();
+                jDesktopPane1.add(simServerJInternalFrame);
+                simServerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(simServerJInternalFrame);
+            }
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -757,7 +850,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jCheckBoxMenuItemConnectVision = new javax.swing.JCheckBoxMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("APRS Coordinator");
+        setTitle("APRS");
 
         jMenu1.setText("File");
 
@@ -1196,6 +1289,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 this.exploreGraphDbJInternalFrame = new ExploreGraphDbJInternalFrame();
                 DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
                 dbSetupPublisher.addDbSetupListener(exploreGraphDbJInternalFrame);
+                exploreGraphDbJInternalFrame.accept(dbSetupPublisher.getDbSetup());
                 this.addInternalFrame(exploreGraphDbJInternalFrame);
             }
             activateInternalFrame(this.exploreGraphDbJInternalFrame);
@@ -1544,7 +1638,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             motomanCrclServerJInternalFrame.saveProperties();
         }
         if (null != dbSetup) {
-            DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
+            File dbPropsFile = new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
+            if (null != dbSetupJInternalFrame) {
+                dbSetupJInternalFrame.setPropertiesFile(dbPropsFile);
+            }
+            DbSetupBuilder.savePropertiesFile(dbPropsFile, dbSetup);
         }
     }
     private static final String APRSTASK_PROPERTY_NAME = "aprs.taskName";
@@ -1713,6 +1811,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         if (null != motomanCrclServerJInternalFrame) {
             motomanCrclServerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_motomanCrclServerProperties.txt"));
+        }
+        if (null != dbSetupJInternalFrame) {
+            File dbPropsFile = new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
+            dbSetupJInternalFrame.setPropertiesFile(dbPropsFile);
         }
     }
 

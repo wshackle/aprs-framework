@@ -1,0 +1,11 @@
+#
+#Tue Dec 20 15:41:08 EST 2016
+simulated=false
+--visionport=4000
+connected=false
+items=sku_part_medium_gear,0.1,700.45,-140.82,0.99,P,sku_part_medium_gear,0.79,528.6,-122.51,0.95,P,sku_part_medium_gear,-0.6,529.98,213.96,0.94,P,sku_part_medium_gear,-0.02,527.61,-205.06,0.91,P,sku_part_medium_gear,-0.75,216.66,128.56,0.91,P,sku_part_small_gear,0.53,509.01,-11.83,0.95,P,sku_part_small_gear,-0.23,640.49,32.88,0.89,P,sku_part_small_gear,-0.23,640.49,32.88,0.89,P,sku_part_small_gear,-0.07,310.04,-102.02,0.65,P,sku_part_small_gear,-0.31,321.38,177.59,0.61,P,sku_kit_s2l2_vessel,-0.02,295.65,-296.9,0.8,KT,sku_kit_s2l2_vessel,0.01,310.9,-20.87,0.73,KT,sku_small_gear_vessel,-0.03,609.22,5.09,0.95,PT,sku_medium_gear_vessel,0.0,569.17,-161.29,0.67,PT,sku_kit_m2l1_vessel,-1.57,579.86,170.14,0.96,KT,\n
+--visionhost=localhost
+xminymin=200.0, -315.0
+displayAxis=POS_X_POS_Y
+xmaxymax=700.0, 315.0
+datafile=

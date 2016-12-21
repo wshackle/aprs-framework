@@ -26,19 +26,24 @@ package aprs.framework.pddl.executor;
  *
  * @author shackle
  */
-public class ErrorMapEntry {
+public class PositionMapEntry {
 
     private final double robotX;
     private final double robotY;
+    private final double robotZ;
     private final double offsetX;
     private final double offsetY;
+    private final double offsetZ;
 
-    public ErrorMapEntry(double robotX, double robotY, double offsetX, double offsetY) {
+    public PositionMapEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ) {
         this.robotX = robotX;
         this.robotY = robotY;
+        this.robotZ = robotZ;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
+        this.offsetZ = offsetZ;
     }
+    
 
     public double getRobotX() {
         return robotX;
@@ -56,18 +61,28 @@ public class ErrorMapEntry {
         return offsetY;
     }
 
+    public double getRobotZ() {
+        return robotZ;
+    }
+
+    public double getOffsetZ() {
+        return offsetZ;
+    }
+
     @Override
     public String toString() {
-        return "ErrorMapEntry{" + "robotX=" + robotX + ", robotY=" + robotY + ", offsetX=" + offsetX + ", offsetY=" + offsetY + '}';
+        return "PositionMapEntry{" + "robotX=" + robotX + ", robotY=" + robotY + ", robotZ=" + robotZ + ", offsetX=" + offsetX + ", offsetY=" + offsetY + ", offsetZ=" + offsetZ + '}';
     }
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 97 * hash + (int) (Double.doubleToLongBits(this.robotX) ^ (Double.doubleToLongBits(this.robotX) >>> 32));
-        hash = 97 * hash + (int) (Double.doubleToLongBits(this.robotY) ^ (Double.doubleToLongBits(this.robotY) >>> 32));
-        hash = 97 * hash + (int) (Double.doubleToLongBits(this.offsetX) ^ (Double.doubleToLongBits(this.offsetX) >>> 32));
-        hash = 97 * hash + (int) (Double.doubleToLongBits(this.offsetY) ^ (Double.doubleToLongBits(this.offsetY) >>> 32));
+        int hash = 5;
+        hash = 29 * hash + (int) (Double.doubleToLongBits(this.robotX) ^ (Double.doubleToLongBits(this.robotX) >>> 32));
+        hash = 29 * hash + (int) (Double.doubleToLongBits(this.robotY) ^ (Double.doubleToLongBits(this.robotY) >>> 32));
+        hash = 29 * hash + (int) (Double.doubleToLongBits(this.robotZ) ^ (Double.doubleToLongBits(this.robotZ) >>> 32));
+        hash = 29 * hash + (int) (Double.doubleToLongBits(this.offsetX) ^ (Double.doubleToLongBits(this.offsetX) >>> 32));
+        hash = 29 * hash + (int) (Double.doubleToLongBits(this.offsetY) ^ (Double.doubleToLongBits(this.offsetY) >>> 32));
+        hash = 29 * hash + (int) (Double.doubleToLongBits(this.offsetZ) ^ (Double.doubleToLongBits(this.offsetZ) >>> 32));
         return hash;
     }
 
@@ -82,11 +97,14 @@ public class ErrorMapEntry {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final ErrorMapEntry other = (ErrorMapEntry) obj;
+        final PositionMapEntry other = (PositionMapEntry) obj;
         if (Double.doubleToLongBits(this.robotX) != Double.doubleToLongBits(other.robotX)) {
             return false;
         }
         if (Double.doubleToLongBits(this.robotY) != Double.doubleToLongBits(other.robotY)) {
+            return false;
+        }
+        if (Double.doubleToLongBits(this.robotZ) != Double.doubleToLongBits(other.robotZ)) {
             return false;
         }
         if (Double.doubleToLongBits(this.offsetX) != Double.doubleToLongBits(other.offsetX)) {
@@ -95,7 +113,12 @@ public class ErrorMapEntry {
         if (Double.doubleToLongBits(this.offsetY) != Double.doubleToLongBits(other.offsetY)) {
             return false;
         }
+        if (Double.doubleToLongBits(this.offsetZ) != Double.doubleToLongBits(other.offsetZ)) {
+            return false;
+        }
         return true;
     }
+
+    
 
 }

@@ -39,6 +39,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,6 +60,7 @@ public class DbSetupBuilder {
     private boolean internalQueriesResourceDir = true;
     private String queriesDir;
     private boolean debug = false;
+    private int loginTimeout = DEFAULT_LOGIN_TIMEOUT;
 
     public static Map<DbQueryEnum, DbQueryInfo> getDefaultQueriesMap(DbType type) {
         switch (type) {
@@ -191,6 +193,7 @@ public class DbSetupBuilder {
         private final boolean internalQueriesResourceDir;
         private final String queriesDir;
         private final boolean debug;
+        private final int loginTimeout;
 
         private DbSetupInternal(
                 DbType type,
@@ -203,7 +206,8 @@ public class DbSetupBuilder {
                 Map<DbQueryEnum, DbQueryInfo> queriesMap,
                 boolean internalQueriesResourceDir,
                 String queriesDir,
-                boolean debug) {
+                boolean debug,
+                int loginTimeout) {
             this.type = type;
             this.host = host;
             this.port = port;
@@ -215,6 +219,7 @@ public class DbSetupBuilder {
             this.internalQueriesResourceDir = internalQueriesResourceDir;
             this.queriesDir = queriesDir;
             this.debug = debug;
+            this.loginTimeout = loginTimeout;
         }
 
         @Override
@@ -272,6 +277,11 @@ public class DbSetupBuilder {
             return debug;
         }
 
+        @Override
+        public int getLoginTimeout() {
+            return loginTimeout;
+        }
+
     }
 
     public DbSetupBuilder setup(DbSetup setup) throws IOException {
@@ -308,7 +318,8 @@ public class DbSetupBuilder {
                 ((queriesMap != null) ? Collections.unmodifiableMap(queriesMap) : null),
                 internalQueriesResourceDir,
                 queriesDir,
-                debug);
+                debug,
+                loginTimeout);
     }
 
     public DbSetupBuilder type(DbType type) {
@@ -370,6 +381,11 @@ public class DbSetupBuilder {
 
     public DbSetupBuilder debug(boolean debug) {
         this.debug = debug;
+        return this;
+    }
+    
+    public DbSetupBuilder loginTimeout(int loginTimeout) {
+        this.loginTimeout = loginTimeout;
         return this;
     }
     
@@ -645,15 +661,40 @@ public class DbSetupBuilder {
         }
     }
 
-    public Connection connect() throws SQLException {
+    public CompletableFuture<Connection>  connect() throws SQLException {
         return connect(this.build());
     }
 
-    public static Connection connect(DbSetup setup) throws SQLException {
-        return setupConnection(setup.getDbType(), setup.getHost(), setup.getPort(), setup.getDbName(), setup.getDbUser(), new String(setup.getDbPassword()),setup.isDebug());
+    public static CompletableFuture<Connection>  connect(DbSetup setup) throws SQLException {
+        return setupConnection(setup.getDbType(), setup.getHost(), setup.getPort(), setup.getDbName(), setup.getDbUser(), new String(setup.getDbPassword()),setup.isDebug(), setup.getLoginTimeout());
     }
 
-    public static Connection setupConnection(DbType dbtype, String host, int port, String db, String username, String password, boolean debug) throws SQLException {
+    public static final int DEFAULT_LOGIN_TIMEOUT = 5; // in seconds 
+    
+    public static CompletableFuture<Connection> setupConnection(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) throws SQLException {
+        CompletableFuture<Connection> ret = new CompletableFuture<>();
+        new Thread(() -> {
+            Connection conn;
+            try {
+               ret.complete(setupConnectionPriv(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT));
+            } catch (SQLException ex) {
+                ret.completeExceptionally(ex);
+                Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }, "connectionSetupThread").start();
+        return ret;
+        
+//        return CompletableFuture. -> {
+//            try {
+//                return setupConnectionPriv(dbtype,host,port,db,username,password,debug);
+//            } catch (SQLException ex) {
+//                Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//            
+//                });
+    }   
+    private static Connection setupConnectionPriv(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) throws SQLException {
+      
         switch (dbtype) {
             case MYSQL:
 //                useBatch = true;
@@ -669,6 +710,9 @@ public class DbSetupBuilder {
 //                } catch (ClassNotFoundException classNotFoundException) {
 //                    classNotFoundException.printStackTrace();
 //                }
+                if(loginTimeout > 0) {
+                    DriverManager.setLoginTimeout(loginTimeout);
+                }
                 return DriverManager.getConnection(mysql_url, username, password);
 
             case NEO4J:
@@ -688,6 +732,9 @@ public class DbSetupBuilder {
                     } catch (ClassNotFoundException classNotFoundException) {
                         classNotFoundException.printStackTrace();
                     }
+                }
+                if(loginTimeout > 0) {
+                    DriverManager.setLoginTimeout(loginTimeout);
                 }
                 return DriverManager.getConnection(neo4j_url, properties);
 

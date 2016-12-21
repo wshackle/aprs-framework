@@ -22,6 +22,7 @@
  */
 package aprs.framework.database.explore;
 
+import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
@@ -1099,7 +1100,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         try {
             if (setup.isConnected()) {
                 if (setup.getDbType() == DbType.NEO4J || setup.getDbType() == DbType.NEO4J_BOLT) {
-                    setConnection(DbSetupBuilder.connect(setup));
+                    DbSetupBuilder.connect(setup).thenAccept(conn -> Utils.runOnDispatchThread(() -> setConnection(conn)));
                     System.out.println("ExploreGraph connected to database of on host " + setup.getHost() + " with port " + setup.getPort());
                 } else {
                     closeConnection();

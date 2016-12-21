@@ -24,7 +24,16 @@ package aprs.framework;
 
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -34,18 +43,91 @@ import javax.swing.table.TableColumn;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class Utils {
-    
+
     private Utils() {
     }
-    
-    public static void runOnDispatchThread(final Runnable r) {
-        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
-            r.run();
-        } else {
-            javax.swing.SwingUtilities.invokeLater(r);
+
+    public static interface RunnableWithThrow {
+
+        public void run() throws Exception;
+    }
+
+    public static class SwingFuture<T> extends CompletableFuture<T> {
+
+        @Override
+        public T get() throws InterruptedException, ExecutionException {
+            if (SwingUtilities.isEventDispatchThread()) {
+                throw new IllegalStateException("One can not get a swing future result on the EventDispatchThread. (getNow can still be used.)");
+            }
+            return super.get();
+        }
+
+        @Override
+        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            if (SwingUtilities.isEventDispatchThread()) {
+                throw new IllegalStateException("One can not get a swing future result on the EventDispatchThread. (getNow can still be used.)");
+            }
+            return super.get(timeout, unit); 
+        }
+        
+        
+
+    }
+
+    public static SwingFuture<Void> runOnDispatchThreadWithCatch(final RunnableWithThrow r) {
+        SwingFuture<Void> ret = new SwingFuture<>();
+        try {
+            if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+                r.run();
+                ret.complete(null);
+                return ret;
+            } else {
+
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    try {
+                        r.run();
+                        ret.complete(null);
+                    } catch (Exception ex) {
+                        ret.completeExceptionally(ex);
+                        Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
+                return ret;
+            }
+        } catch (Throwable exception) {
+
+            ret.completeExceptionally(exception);
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, exception);
+            return ret;
         }
     }
-    
+
+    public static SwingFuture<Void> runOnDispatchThread(final Runnable r) {
+        SwingFuture<Void> ret = new SwingFuture<>();
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+            r.run();
+            ret.complete(null);
+                return ret;
+        } else {
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                r.run();
+                ret.complete(null);
+            });
+            return ret;
+        }
+    }
+
+    public static <R> SwingFuture<R> supplyOnDispatchThread(final Supplier<R> s) {
+        SwingFuture<R> ret = new SwingFuture<>();
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+            ret.complete(s.get());
+            return ret;
+        } else {
+            javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
+            return ret;
+        }
+    }
+
     public static void autoResizeTableColWidths(JTable table) {
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -81,6 +163,28 @@ public class Utils {
             }
             col.setPreferredWidth(width + 2);
             sumWidths += width + 2;
+        }
+    }
+
+    static public void autoResizeTableRowHeights(JTable table) {
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+        for (int rowIndex = 0; rowIndex < table.getRowCount(); rowIndex++) {
+            int height = 0;
+            for (int colIndex = 0; colIndex < table.getColumnCount(); colIndex++) {
+                DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
+                TableColumn col = colModel.getColumn(colIndex);
+                TableCellRenderer renderer = table.getCellRenderer(rowIndex, colIndex);
+                Object value = table.getValueAt(rowIndex, colIndex);
+                Component comp = renderer.getTableCellRendererComponent(table, value,
+                        false, false, rowIndex, colIndex);
+                Dimension compSize = comp.getPreferredSize();
+                int thisCompHeight = compSize.height;
+                height = Math.max(height, thisCompHeight);
+            }
+            if (height > 0) {
+                table.setRowHeight(rowIndex, height);
+            }
         }
     }
 }

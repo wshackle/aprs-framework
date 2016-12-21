@@ -22,6 +22,8 @@
  */
 package aprs.framework.database;
 
+import java.io.File;
+
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -74,6 +76,14 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
     
     public DbSetupPublisher getDbSetupPublisher() {
         return this.dbSetupJPanel1;
+    }
+    
+    public void setPropertiesFile(File f) {
+        dbSetupJPanel1.setPropertiesFile(f);
+    }
+    
+    public File getPropertiesFile() {
+        return dbSetupJPanel1.getPropertiesFile();
     }
     
 

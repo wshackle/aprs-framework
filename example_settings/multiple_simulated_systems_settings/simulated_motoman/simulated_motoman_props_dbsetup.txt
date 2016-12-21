@@ -1,0 +1,20 @@
+#
+#Wed Dec 21 12:07:08 EST 2016
+NEO4J.host=localhost
+NEO4J.localhost_7486.internalQueriesResourceDir=true
+NEO4J.localhost_7480.internalQueriesResourceDir=true
+NEO4J.localhost_4000.queriesDir=neo4j/v1
+NEO4J.localhost_4000.user=neo4j
+NEO4J.localhost_4000.name=neo4j
+NEO4J.localhost_7480.queriesDir=neo4j/v1
+NEO4J.localhost_7480.passwd=password
+NEO4J.localhost_4000.passwd=
+--dbtype=NEO4J
+NEO4J.localhost_7486.name=neo4j
+NEO4J.localhost_7486.user=neo4j
+NEO4J.localhost_7480.name=neo4j
+NEO4J.localhost_4000.internalQueriesResourceDir=true
+NEO4J.localhost_7480.user=neo4j
+NEO4J.localhost_7486.queriesDir=neo4j/v1
+NEO4J.localhost.port=7486
+NEO4J.localhost_7486.passwd=password

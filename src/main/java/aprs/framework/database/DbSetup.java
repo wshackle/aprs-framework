@@ -52,4 +52,5 @@ public interface DbSetup {
     
     public boolean isDebug();
 
+    public int getLoginTimeout();
 }

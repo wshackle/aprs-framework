@@ -1,0 +1,12 @@
+#
+#Tue Dec 20 15:40:58 EST 2016
+lookDwellTime=3.0
+approachZOffset=50.0
+manualPartNames=[null, null, null, null, null]
+rotSpeed=30.0
+slowTransSpeed=75
+fastTransSpeed=200.0
+settleDwellTime=0.1
+rpy=175.0,0.0,0.0
+lookForXYZ=0.0,0.0,0.0
+pddl.output=

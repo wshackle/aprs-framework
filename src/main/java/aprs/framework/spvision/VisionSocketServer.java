@@ -29,6 +29,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,10 +50,9 @@ public class VisionSocketServer implements AutoCloseable {
     private final boolean shutdownServiceOnClose;
 
     public int getPort() {
-        return serverSocket != null? serverSocket.getLocalPort(): -1;
+        return serverSocket != null ? serverSocket.getLocalPort() : -1;
     }
-    
-    
+
     private static class DaemonThreadFactory implements ThreadFactory {
 
         @Override
@@ -78,10 +78,10 @@ public class VisionSocketServer implements AutoCloseable {
             serverSocket = new ServerSocket(port, backlog, bindAddr);
             this.executorService = Executors.newCachedThreadPool(daemonThreadFactory);
             this.publishService = Executors.newSingleThreadExecutor(daemonThreadFactory);
-            
+
             start();
         } catch (IOException iOException) {
-            throw new IOException("Can't bind to port=" + port+" with bindAddr="+bindAddr, iOException);
+            throw new IOException("Can't bind to port=" + port + " with bindAddr=" + bindAddr, iOException);
         }
     }
 
@@ -97,7 +97,7 @@ public class VisionSocketServer implements AutoCloseable {
         }
     }
 
-    private List<Socket> clients = new ArrayList<Socket>();
+    private final List<Socket> clients = Collections.synchronizedList(new ArrayList<Socket>());
 
     private void start() {
         this.executorService.submit(new Runnable() {
@@ -112,9 +112,7 @@ public class VisionSocketServer implements AutoCloseable {
                         if (null != bytesToSend) {
                             clientSocket.getOutputStream().write(bytesToSend);
                         }
-                        synchronized (clients) {
-                            clients.add(clientSocket);
-                        }
+                        clients.add(clientSocket);
                     }
                 } catch (IOException ex) {
                     Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -174,22 +172,20 @@ public class VisionSocketServer implements AutoCloseable {
         publishService.submit(new Runnable() {
             @Override
             public void run() {
-                synchronized (clients) {
-                    for (int i = 0; i < clients.size() && !closing; i++) {
-                        Socket client = clients.get(i);
-                        if (null != client) {
-                            try {
-                                if (debug) {
-                                    System.out.println(String.format("Sending %d bytes to %s:%d : %s",
-                                            bytesToSend.length,
-                                            ((InetSocketAddress) client.getRemoteSocketAddress()).getHostString(),
-                                            ((InetSocketAddress) client.getRemoteSocketAddress()).getPort(),
-                                            new String(bytesToSend)));
-                                }
-                                client.getOutputStream().write(bytesToSend);
-                            } catch (IOException ex) {
-                                Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
+                for (int i = 0; i < clients.size() && !closing; i++) {
+                    Socket client = clients.get(i);
+                    if (null != client) {
+                        try {
+                            if (debug) {
+                                System.out.println(String.format("Sending %d bytes to %s:%d : %s",
+                                        bytesToSend.length,
+                                        ((InetSocketAddress) client.getRemoteSocketAddress()).getHostString(),
+                                        ((InetSocketAddress) client.getRemoteSocketAddress()).getPort(),
+                                        new String(bytesToSend)));
                             }
+                            client.getOutputStream().write(bytesToSend);
+                        } catch (IOException ex) {
+                            Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }
@@ -229,19 +225,18 @@ public class VisionSocketServer implements AutoCloseable {
             }
             publishService = null;
         }
-        synchronized (clients) {
-            for (int i = 0; i < clients.size(); i++) {
-                Socket client = clients.get(i);
-                if (null != client) {
-                    try {
-                        client.close();
-                    } catch (IOException ex) {
-                        Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+
+        for (int i = 0; i < clients.size(); i++) {
+            Socket client = clients.get(i);
+            if (null != client) {
+                try {
+                    client.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            clients.clear();
         }
+        clients.clear();
     }
 
     @Override

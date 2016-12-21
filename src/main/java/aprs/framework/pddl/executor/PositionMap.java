@@ -24,7 +24,6 @@ package aprs.framework.pddl.executor;
 
 import crcl.base.PointType;
 import crcl.base.PoseType;
-import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.pose;
 import java.io.File;
 import java.io.IOException;
@@ -32,49 +31,101 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.swing.table.DefaultTableModel;
 import rcs.posemath.PmCartesian;
 import rcs.posemath.Posemath;
+import static crcl.utils.CRCLPosemath.point;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.Iterator;
 
 /**
  *
  * @author shackle
  */
-public class ErrorMap {
-    
-    private final List<ErrorMapEntry> errmapList;
+public class PositionMap {
+
+    private final List<PositionMapEntry> errmapList;
     private final List<String[]> errmapStringsList;
     private final String fileName;
-    private final String []columnHeaders;
+    private final String[] columnHeaders;
     private PoseType lastPoseIn;
     private PoseType lastPoseOut;
     private PointType lastOffset;
-    
+
+    public Iterable<Object[]> getTableIterable() {
+        return new Iterable<Object[]>() {
+            
+            private final List<PositionMapEntry> l = new ArrayList(errmapList);
+            @Override
+            public Iterator<Object[]> iterator() {
+
+                return new Iterator<Object[]>() {
+
+                    int index = 0;
+
+                    @Override
+                    public boolean hasNext() {
+                        return index < l.size();
+                    }
+
+                    @Override
+                    public Object[] next() {
+                        PositionMapEntry entry = l.get(index);
+                        ++index;
+                        return new Object[]{entry.getRobotX(),entry.getRobotY(),entry.getOffsetZ(),entry.getOffsetX(),entry.getOffsetY(),entry.getOffsetZ()};
+                    }
+                };
+            }
+        };
+    }
+
     public static class BadErrorMapFormatException extends Exception {
 
         public BadErrorMapFormatException(String message) {
             super(message);
         }
     }
-    
-    
-    public ErrorMap(File f) throws IOException, BadErrorMapFormatException {
+
+    public static final String DEFAULT_COLUMN_HEADERS[] = new String[]{"X", "Y", "Z", "Offset_X", "Offset_Y", "Offset_Z"};
+
+    private PositionMap() {
+        errmapList = Collections.emptyList();
+        errmapStringsList = Collections.emptyList();
+        fileName = null;
+        columnHeaders = DEFAULT_COLUMN_HEADERS;
+    }
+
+    public static PositionMap emptyPositionMap() {
+        return new PositionMap();
+    }
+
+    public PositionMap(File f) throws IOException, BadErrorMapFormatException {
         errmapStringsList = Files.lines(f.toPath()).map(l -> l.split(",")).collect(Collectors.toList());
         columnHeaders = errmapStringsList.get(0);
-        
+
         fileName = f.getCanonicalPath();
         int robotXIndex = -1;
         int robotYIndex = -1;
+        int robotZIndex = -1;
         int offsetXIndex = -1;
         int offsetYIndex = -1;
-        for (int i = 0; i <columnHeaders.length; i++) {
+        int offsetZIndex = -1;
+        for (int i = 0; i < columnHeaders.length; i++) {
             switch (columnHeaders[i]) {
+                case "X":
                 case "Robot_X":
                     robotXIndex = i;
                     break;
 
+                case "Y":
                 case "Robot_Y":
                     robotYIndex = i;
+                    break;
+
+                case "Z":
+                case "Robot_Z":
+                    robotZIndex = i;
                     break;
 
                 case "Offset_X":
@@ -83,6 +134,10 @@ public class ErrorMap {
 
                 case "Offset_Y":
                     offsetYIndex = i;
+                    break;
+
+                case "Offset_Z":
+                    offsetZIndex = i;
                     break;
             }
         }
@@ -102,13 +157,29 @@ public class ErrorMap {
         errmapList = new ArrayList<>();
         for (int i = 1; i < errmapStringsList.size(); i++) {
             String a[] = errmapStringsList.get(i);
-            errmapList.add(new ErrorMapEntry(Double.valueOf(a[robotXIndex]), Double.valueOf(a[robotYIndex]),
-                    Double.valueOf(a[offsetXIndex]), Double.valueOf(a[offsetYIndex])));
+            double robotX = (robotXIndex >= 0 ? Double.valueOf(a[robotXIndex]) : 0);
+            double robotY = (robotYIndex >= 0 ? Double.valueOf(a[robotYIndex]) : 0);
+            double robotZ = (robotZIndex >= 0 ? Double.valueOf(a[robotZIndex]) : 0);
+            double offsetX = (offsetXIndex >= 0 ? Double.valueOf(a[offsetXIndex]) : 0);
+            double offsetY = (offsetYIndex >= 0 ? Double.valueOf(a[offsetYIndex]) : 0);
+            double offsetZ = (offsetZIndex >= 0 ? Double.valueOf(a[offsetZIndex]) : 0);
+
+            errmapList.add(new PositionMapEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ));
         }
 //        errmapList = errmapStringsList.stream().map(a -> {
-//            return new ErrorMapEntry(Double.valueOf(a[robotXIndex]), Double.valueOf(a[robotYIndex]),
+//            return new PositionMapEntry(Double.valueOf(a[robotXIndex]), Double.valueOf(a[robotYIndex]),
 //                    Double.valueOf(a[robotXIndex]), Double.valueOf(a[robotXIndex]));
 //        }).collect(Collectors.toList());
+    }
+
+    public void saveFile(File f) throws IOException {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+            pw.println("X,Y,Z,Offset_X,Offset_Y,Offset_Z");
+            for (int i = 0; i < this.errmapList.size(); i++) {
+                PositionMapEntry entry = this.errmapList.get(i);
+                pw.println(entry.getRobotX() + "," + entry.getRobotY() + "," + entry.getRobotZ() + "," + entry.getOffsetX() + "," + entry.getOffsetY() + "," + entry.getOffsetZ());
+            }
+        }
     }
 
     public PoseType correctPose(PoseType poseIn) {
@@ -122,14 +193,14 @@ public class ErrorMap {
         lastPoseOut = poseOut;
         return poseOut;
     }
-    
-    private double dist(ErrorMapEntry e, double x, double y) {
+
+    private double dist(PositionMapEntry e, double x, double y) {
         double dx = e.getRobotX() - x;
         double dy = e.getRobotY() - y;
         return Math.sqrt(dx * dx + dy * dy);
     }
-    
-    static public ErrorMapEntry combine(ErrorMapEntry e1, ErrorMapEntry e2, double x, double y) {
+
+    static public PositionMapEntry combine(PositionMapEntry e1, PositionMapEntry e2, double x, double y) {
         if (null == e1) {
             return e2;
         }
@@ -140,52 +211,56 @@ public class ErrorMap {
         PmCartesian c2 = new PmCartesian(e2.getRobotX(), e2.getRobotY(), 0);
         PmCartesian diff = c2.subtract(c1);
         if (diff.mag() < 1e-6) {
-            return new ErrorMapEntry((e1.getRobotX() + e2.getRobotX()) / 2.0,
+            return new PositionMapEntry((e1.getRobotX() + e2.getRobotX()) / 2.0,
                     (e1.getRobotY() + e2.getRobotY()) / 2.0,
+                    (e1.getRobotZ() + e2.getRobotZ()) / 2.0,
                     (e1.getOffsetX() + e2.getOffsetX()) / 2.0,
-                    (e1.getOffsetY() + e2.getOffsetY()) / 2.0);
+                    (e1.getOffsetY() + e2.getOffsetY()) / 2.0,
+                    (e1.getOffsetZ() + e2.getOffsetZ()) / 2.0);
         }
         PmCartesian xy = new PmCartesian(x, y, 0);
         PmCartesian diff2 = xy.subtract(c1);
-        double d = Posemath.pmCartCartDot(diff, diff2) / (diff.mag()*diff.mag());
+        double d = Posemath.pmCartCartDot(diff, diff2) / (diff.mag() * diff.mag());
         PmCartesian center = c1.add(diff.multiply(d));
         double s1 = d;
-        double s2 = (1-d);
-        return new ErrorMapEntry(center.x, center.y,
+        double s2 = (1 - d);
+        return new PositionMapEntry(center.x, center.y, center.z,
                 e1.getOffsetX() * s2 + e2.getOffsetX() * s1,
-                e1.getOffsetY()* s2 + e2.getOffsetY() * s1);
+                e1.getOffsetY() * s2 + e2.getOffsetY() * s1,
+                e1.getOffsetZ() * s2 + e2.getOffsetZ() * s1
+        );
     }
-    
+
     public PointType getOffset(double x, double y) {
-        ErrorMapEntry e1 = errmapList.stream()
+        PositionMapEntry e1 = errmapList.stream()
                 .filter(e -> e.getRobotX() <= x && e.getRobotY() <= y)
                 .min((em1, em2) -> Double.compare(dist(em1, x, y), dist(em2, x, y)))
                 .orElse(null);
 
-        ErrorMapEntry e2 = errmapList.stream()
+        PositionMapEntry e2 = errmapList.stream()
                 .filter(e -> e.getRobotX() >= x && e.getRobotY() <= y)
                 .min((em1, em2) -> Double.compare(dist(em1, x, y), dist(em2, x, y)))
                 .orElse(null);
 
-        ErrorMapEntry e12 = combine(e1, e2, x, y);
+        PositionMapEntry e12 = combine(e1, e2, x, y);
 
-        ErrorMapEntry e3 = errmapList.stream()
+        PositionMapEntry e3 = errmapList.stream()
                 .filter(e -> e.getRobotX() <= x && e.getRobotY() >= y)
                 .min((em1, em2) -> Double.compare(dist(em1, x, y), dist(em2, x, y)))
                 .orElse(null);
 
-        ErrorMapEntry e4 = errmapList.stream()
+        PositionMapEntry e4 = errmapList.stream()
                 .filter(e -> e.getRobotX() >= x && e.getRobotY() >= y)
                 .min((em1, em2) -> Double.compare(dist(em1, x, y), dist(em2, x, y)))
                 .orElse(null);
-        ErrorMapEntry e34 = combine(e3, e4, x, y);
+        PositionMapEntry e34 = combine(e3, e4, x, y);
 
-        ErrorMapEntry eme = combine(e12, e34, x, y);
-        lastOffset = point(eme.getOffsetX(), eme.getOffsetY(), 0);
+        PositionMapEntry eme = combine(e12, e34, x, y);
+        lastOffset = point(eme.getOffsetX(), eme.getOffsetY(), eme.getOffsetZ());
         return lastOffset;
     }
-    
-    public List<ErrorMapEntry> getErrmapList() {
+
+    public List<PositionMapEntry> getErrmapList() {
         return errmapList;
     }
 
@@ -212,5 +287,5 @@ public class ErrorMap {
     public PointType getLastOffset() {
         return lastOffset;
     }
-    
+
 }

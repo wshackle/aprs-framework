@@ -22,7 +22,9 @@
  */
 package aprs.framework.database.explore;
 
+import aprs.framework.Utils;
 import aprs.framework.database.DbSetupBuilder;
+import static aprs.framework.database.DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT;
 import aprs.framework.database.DbType;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -116,12 +118,13 @@ public class ExploreGraphDbJFrame extends javax.swing.JFrame {
             public void run() {
                 try {
                     ExploreGraphDbJFrame frm = new ExploreGraphDbJFrame();
-                    frm.setConnection(DbSetupBuilder.setupConnection(DbType.NEO4J,
+                    DbSetupBuilder.setupConnection(DbType.NEO4J,
                             "localhost",
                             7482, "",
                             "neo4j",
                             "password",
-                            true));
+                            true, DEFAULT_LOGIN_TIMEOUT)
+                            .thenAccept(c -> Utils.runOnDispatchThread(() -> frm.setConnection(c)));
                     frm.setVisible(true);
                 } catch (SQLException ex) {
                     Logger.getLogger(ExploreGraphDbJFrame.class.getName()).log(Level.SEVERE, null, ex);
