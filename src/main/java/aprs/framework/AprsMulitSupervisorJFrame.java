@@ -101,9 +101,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             }
         });
         jTableTasks.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
-            
+
             private final List<JTextArea> areas = new ArrayList<>();
-    
+
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 while (areas.size() <= row) {
@@ -177,16 +177,32 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             }
         });
         try {
-            loadSetupFile(new File(readFirstLine(lastSetupFileFile)));
-            loadPositionMaps(new File(readFirstLine(lastPosMapFileFile)));
+            if (lastSetupFileFile.exists()) {
+                File setupFile = new File(readFirstLine(lastSetupFileFile));
+                if (setupFile.exists()) {
+                    loadSetupFile(setupFile);
+                }
+            }
         } catch (IOException ex) {
+            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
             try {
                 closeAllAprsSystems();
             } catch (IOException ex1) {
-                // ignore
+                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex1);
             }
         }
-        
+
+        if (lastPosMapFileFile.exists()) {
+            try {
+                File posFile = new File(readFirstLine(lastPosMapFileFile));
+                if (posFile.exists()) {
+                    loadPositionMaps(posFile);
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
 //        jTablePositionMappings.setDefaultEditor(Object.class, new DefaultCellEditor(new JTextField()));
 //        jTablePositionMappings.setDefaultEditor(Object.class, new TableCellEditor() {
 //
@@ -331,9 +347,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
         String stealFromOrigCrclHost = stealFrom.getRobotCrclHost();
         int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
-        
-        return CompletableFuture.allOf(stealFrom.safeAbortAndDisconnectAsync(),stealFor.safeAbort())
-                .thenRun( () -> {
+
+        return CompletableFuture.allOf(stealFrom.safeAbortAndDisconnectAsync(), stealFor.safeAbort())
+                .thenRun(() -> {
                     stealFor.connectRobot(stealFrom.getRobotName(), stealFromOrigCrclHost, stealFromOrigCrclPort);
                     stealFor.addPositionMap(pm);
 //                    return null;
@@ -771,7 +787,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemSafeAbortAllActionPerformed
 
     private void jMenuItemImmediateAbortAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImmediateAbortAllActionPerformed
-       immediateAbortAll();
+        immediateAbortAll();
     }//GEN-LAST:event_jMenuItemImmediateAbortAllActionPerformed
 
     private void clearPosTable() {
@@ -818,7 +834,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             aprsSystems.get(i).immediateAbort();
         }
     }
-    
+
     public CompletableFuture<Void> safeAbortAll() {
         CompletableFuture futures[] = new CompletableFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
@@ -826,7 +842,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
         return CompletableFuture.allOf(futures);
     }
-    
+
     public void saveSetupFile(File f) throws IOException {
         saveJTable(f, jTableTasks);
         saveLastSetupFile(f);
@@ -887,7 +903,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         subMap.put(sys2, f);
     }
 
-    public void loadPositionMaps(File f) throws IOException {
+    final public void loadPositionMaps(File f) throws IOException {
         System.out.println("Loading position maps  file :" + f.getCanonicalPath());
         DefaultTableModel tm = (DefaultTableModel) jTablePositionMappings.getModel();
         tm.setRowCount(0);
@@ -1042,7 +1058,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         DefaultTableModel tm = (DefaultTableModel) jTableTasks.getModel();
         tm.setRowCount(0);
         for (AprsJFrame aprsJframe : aprsSystems) {
-            tm.addRow(new Object[]{aprsJframe.getPriority(), aprsJframe.getTaskName(), aprsJframe.getRobotName(), aprsJframe.getDetailsString(),aprsJframe.getPropertiesFile()});
+            tm.addRow(new Object[]{aprsJframe.getPriority(), aprsJframe.getTaskName(), aprsJframe.getRobotName(), aprsJframe.getDetailsString(), aprsJframe.getPropertiesFile()});
         }
         Utils.autoResizeTableColWidths(jTableTasks);
         Utils.autoResizeTableRowHeights(jTableTasks);

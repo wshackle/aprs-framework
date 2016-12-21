@@ -296,7 +296,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.options = options;
     }
 
-    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options) {
+    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options) throws IllegalStateException, SQLException {
         this.options = options;
         List<MiddleCommandType> cmds = new ArrayList<>();
         if (null == actionToCrclIndexes || actionToCrclIndexes.length != actions.size()) {
@@ -324,7 +324,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             actionToCrclLabels[lastIndex] = "";
             PddlAction action = actions.get(lastIndex);
             System.out.println("action = " + action);
-            try {
+//            try {
                 switch (action.getType()) {
                     case "take-part":
                         takePart(action, cmds);
@@ -342,14 +342,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         break;
                 }
                 actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
-            } catch (Exception ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                MessageType message = new MessageType();
-                message.setCommandID(BigInteger.valueOf(cmds.size() + 2));
-                message.setMessage(ex.toString());
-                cmds.add(message);
-                actionToCrclLabels[lastIndex] = "Error";
-            }
+//            } catch (Exception ex) {
+//                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+//                MessageType message = new MessageType();
+//                message.setCommandID(BigInteger.valueOf(cmds.size() + 2));
+//                message.setMessage(ex.toString());
+//                cmds.add(message);
+//                actionToCrclLabels[lastIndex] = "Error";
+//            }
         }
         return cmds;
     }
