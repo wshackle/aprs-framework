@@ -233,7 +233,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         }
     }
-    
+
     public void immediateAbort() {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.abortProgram();
@@ -241,15 +241,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             abortCrclProgram();
         }
     }
-    
+
     public String getDetailsString() {
         StringBuilder sb = new StringBuilder();
-        if(null != pendantClientJInternalFrame) {
-            sb.append("cmd="+pendantClientJInternalFrame.getCurrentProgramCommand()+"\r\n");
-            pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state="+state+"\r\n"));
-            sb.append("connected="+pendantClientJInternalFrame.isConnected()+"\r\n");
+        if (null != pendantClientJInternalFrame) {
+            sb.append("cmd=" + pendantClientJInternalFrame.getCurrentProgramCommand() + "\r\n");
+            pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state=" + state + "\r\n"));
+            sb.append("connected=" + pendantClientJInternalFrame.isConnected() + "\r\n");
         }
-        sb.append("robotCrclPort="+this.getRobotCrclPort()+"\r\n");
+        sb.append("robotCrclPort=" + this.getRobotCrclPort() + "\r\n");
         return sb.toString();
     }
 
@@ -347,6 +347,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private Future connectDatabaseFuture = null;
 
     public void startConnectDatabase() {
+        if (closing) {
+            throw new IllegalStateException("Attempt to start connect database when already closing.");
+        }
         System.out.println("Starting connect to database ...");
         jCheckBoxMenuItemConnectDatabase.setSelected(true);
         jCheckBoxMenuItemConnectDatabase.setEnabled(true);
@@ -379,6 +382,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public void startConnectVision() {
+        if (closing) {
+            throw new IllegalStateException("Attempt to start connect vision when already closing.");
+        }
         connectService.submit(this::connectVision);
     }
 
@@ -495,24 +501,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             setupWindowsMenu();
             if (jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()) {
-                javax.swing.Timer tmr = new javax.swing.Timer(500, new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        startConnectDatabase();
-                    }
-                });
-                tmr.setRepeats(false);
-                tmr.start();
+                startConnectDatabase();
             }
             if (jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()) {
-                javax.swing.Timer tmr = new javax.swing.Timer(500, new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        connectVision();
-                    }
-                });
-                tmr.setRepeats(false);
-                tmr.start();
+                connectVision();
             }
             System.out.println("Constructor for AprsJframe complete.");
         } catch (Exception ex) {
@@ -1878,8 +1870,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         this.priority = priority;
     }
 
+    private volatile boolean closing = false;
+
     @Override
     public void close() throws Exception {
+        closing = true;
+        System.out.println("AprsJFrame.close()");
         try {
             closePddlPlanner();
 
