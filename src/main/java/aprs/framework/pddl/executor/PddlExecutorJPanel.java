@@ -2425,7 +2425,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         double z = Double.valueOf(jTextFieldTestZ.getText());
         jTextFieldTestPose.setText(String.format("%.3f,%.3f,%.3f", x, y, z));
         PoseType origPose = pose(point(x, y, z), vector(1.0, 0.0, 0.0), vector(0.0, 0.0, -1.0));
-        PointType offset = getPositionMaps().get(0).getOffset(x, y);
+        PointType offset = getPositionMaps().get(0).getOffset(x, y, 0);
         testDropOffPose = correctPose(origPose);
 
         pddlActionToCrclGenerator.placePartByPose(cmds, testDropOffPose);
@@ -2457,10 +2457,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private double gridTestMaxX = 1;
     private double gridTestMaxY = 1;
 
+<<<<<<< Upstream, based on origin/master
     private PointType getOffset(double x, double y) {
         PointType out = point(x, y, 0);
         for (PositionMap pm : getPositionMaps()) {
             out = pm.getOffset(out.getX().doubleValue(), out.getY().doubleValue());
+=======
+    private PointType getOffset(double x, double y, double z) {
+        PointType out = point(x, y, z);
+        for (PositionMap pm : getPositionMaps()) {
+            out = pm.getOffset(out.getX().doubleValue(), out.getY().doubleValue(), out.getZ().doubleValue());
+>>>>>>> 0c75bdc setup support for multisystem simulator
         }
         return out;
     }
@@ -2489,7 +2496,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         System.out.println("gridTestCurrentX = " + gridTestCurrentX);
         System.out.println("gridTestCurrentY = " + gridTestCurrentY);
         PoseType origPose = pose(point(x, y, z), vector(1.0, 0.0, 0.0), vector(0.0, 0.0, -1.0));
-        PointType offset = getOffset(x, y);
+        PointType offset = getOffset(x, y, z);
         testDropOffPose = correctPose(origPose);
         pddlActionToCrclGenerator.placePartByPose(cmds, testDropOffPose);
         CRCLProgramType program = createEmptyProgram();

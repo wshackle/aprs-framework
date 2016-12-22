@@ -76,17 +76,17 @@ public class ErrorMapTest {
         double x = 0.0;
         double y = 0.5;
         PositionMapEntry expResult = new PositionMapEntry(0, 0.5, 0, 3, 3, 0);
-        PositionMapEntry result = PositionMap.combine(e1, e2, x, y);
+        PositionMapEntry result = PositionMap.combine(e1, e2, x, y, 0);
         assertErrorMapEntryEquals(expResult, result);
         x = 10.0;
         y = 0.5;
         expResult = new PositionMapEntry(0, 0.5, 0, 3, 3, 0);
-        result = combine(e1, e2, x, y);
+        result = combine(e1, e2, x, y, 0);
         assertErrorMapEntryEquals(expResult, result);
         x = 10.0;
         y = 1.0;
         expResult = new PositionMapEntry(0, 1.0, 0, 4, 4, 0);
-        result = combine(e1, e2, x, y);
+        result = combine(e1, e2, x, y, 0);
         assertErrorMapEntryEquals(expResult, result);
 
         e1 = new PositionMapEntry(0, 0, 0, 2, 2, 0);
@@ -94,17 +94,17 @@ public class ErrorMapTest {
         x = 0.5;
         y = 0.0;
         expResult = new PositionMapEntry(0.5, 0, 0, 3, 3, 0);
-        result = combine(e1, e2, x, y);
+        result = combine(e1, e2, x, y, 0);
         assertErrorMapEntryEquals(expResult, result);
         x = 0.5;
         y = 10.0;
         expResult = new PositionMapEntry(0.5, 0, 0, 3, 3, 0);
-        result = combine(e1, e2, x, y);
+        result = combine(e1, e2, x, y, 0);
         assertErrorMapEntryEquals(expResult, result);
         x = 1.0;
         y = 10.0;
         expResult = new PositionMapEntry(1.0, 0, 0, 4, 4, 0);
-        result = combine(e1, e2, x, y);
+        result = combine(e1, e2, x, y, 0);
         assertErrorMapEntryEquals(expResult, result);
 
         e1 = new PositionMapEntry(0, 0, 0, 2, 2, 0);
@@ -112,12 +112,12 @@ public class ErrorMapTest {
         x = 0.5;
         y = 0.5;
         expResult = new PositionMapEntry(0.5, 0.5, 0, 3, 3, 0);
-        result = combine(e1, e2, x, y);
+        result = combine(e1, e2, x, y, 0);
         assertErrorMapEntryEquals(expResult, result);
         x = 1.0;
         y = 1.0;
         expResult = new PositionMapEntry(1.0, 1.0, 0, 4, 4, 0);
-        result = combine(e1, e2, x, y);
+        result = combine(e1, e2, x, y, 0);
         assertErrorMapEntryEquals(expResult, result);
     }
 
