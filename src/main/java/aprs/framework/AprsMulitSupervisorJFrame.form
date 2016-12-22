@@ -81,6 +81,14 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemLoadPosMapsActionPerformed"/>
               </Events>
             </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemConnectAll">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Connect All ..."/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemConnectAllActionPerformed"/>
+              </Events>
+            </MenuItem>
           </SubComponents>
         </Menu>
         <Menu class="javax.swing.JMenu" name="jMenu2">
@@ -248,7 +256,7 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jScrollPaneRobots" pref="671" max="32767" attributes="0"/>
+                          <Component id="jScrollPaneRobots" pref="815" max="32767" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -398,21 +406,22 @@
               <Layout>
                 <DimensionLayout dim="0">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Group type="102" alignment="0" attributes="0">
+                      <Group type="102" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Component id="jScrollPane2" max="32767" attributes="0"/>
                               <Group type="102" attributes="0">
                                   <Component id="jButtonSetInFromCurrent" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace min="-2" pref="62" max="-2" attributes="0"/>
-                                  <Component id="jButton2" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace min="-2" pref="50" max="-2" attributes="0"/>
+                                  <Component id="jButtonAddLine" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jButton3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jButtonDeleteLine" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jButtonSaveSelectedPosMap" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace pref="32" max="32767" attributes="0"/>
+                                  <EmptySpace pref="18" max="32767" attributes="0"/>
                                   <Component id="jButtonSetOutFromCurrent" min="-2" max="-2" attributes="0"/>
                               </Group>
+                              <Component id="jTextFieldSelectedPosMapFilename" alignment="0" max="32767" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
@@ -424,14 +433,15 @@
                           <EmptySpace min="-2" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="jButtonSetInFromCurrent" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="jButton2" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="jButton3" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="jButtonAddLine" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="jButtonDeleteLine" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jButtonSetOutFromCurrent" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jButtonSaveSelectedPosMap" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace min="-2" max="-2" attributes="0"/>
-                          <Component id="jScrollPane2" pref="208" max="32767" attributes="0"/>
+                          <Component id="jScrollPane2" pref="181" max="32767" attributes="0"/>
                           <EmptySpace min="-2" max="-2" attributes="0"/>
+                          <Component id="jTextFieldSelectedPosMapFilename" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -439,23 +449,37 @@
               <SubComponents>
                 <Component class="javax.swing.JButton" name="jButtonSetInFromCurrent">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Set In From Current"/>
+                    <Property name="text" type="java.lang.String" value="Set In From Selected Row System"/>
+                    <Property name="enabled" type="boolean" value="false"/>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonSetInFromCurrentActionPerformed"/>
+                  </Events>
                 </Component>
-                <Component class="javax.swing.JButton" name="jButton2">
+                <Component class="javax.swing.JButton" name="jButtonAddLine">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Add Line"/>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonAddLineActionPerformed"/>
+                  </Events>
                 </Component>
-                <Component class="javax.swing.JButton" name="jButton3">
+                <Component class="javax.swing.JButton" name="jButtonDeleteLine">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Delete Line"/>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonDeleteLineActionPerformed"/>
+                  </Events>
                 </Component>
                 <Component class="javax.swing.JButton" name="jButtonSetOutFromCurrent">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Set Out From Current"/>
+                    <Property name="text" type="java.lang.String" value="Set Out From Selected Column System"/>
+                    <Property name="enabled" type="boolean" value="false"/>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonSetOutFromCurrentActionPerformed"/>
+                  </Events>
                 </Component>
                 <Container class="javax.swing.JScrollPane" name="jScrollPane2">
                   <AuxValues>
@@ -486,13 +510,13 @@
                             <Column editable="true" title="Zout" type="java.lang.Double">
                               <Data value="0.0"/>
                             </Column>
-                            <Column editable="true" title="Offset_X" type="java.lang.Double">
+                            <Column editable="false" title="Offset_X" type="java.lang.Double">
                               <Data value="0.0"/>
                             </Column>
-                            <Column editable="true" title="Offset_Y" type="java.lang.Double">
+                            <Column editable="false" title="Offset_Y" type="java.lang.Double">
                               <Data value="0.0"/>
                             </Column>
-                            <Column editable="true" title="Offset_Z" type="java.lang.Double">
+                            <Column editable="false" title="Offset_Z" type="java.lang.Double">
                               <Data value="0.0"/>
                             </Column>
                           </Table>
@@ -505,6 +529,11 @@
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Save"/>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonSaveSelectedPosMapActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JTextField" name="jTextFieldSelectedPosMapFilename">
                 </Component>
               </SubComponents>
             </Container>

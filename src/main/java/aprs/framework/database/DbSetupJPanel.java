@@ -84,6 +84,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         editTableArea = new JTextArea();
         viewAreas = new ArrayList<>();
         setupMultiLineTable(jTableQueries, 1, editTableArea, viewAreas);
+        jTextFieldDBLoginTimeout.setText(Integer.toString(DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT));
     }
 
 //    private static List<String> getClasspathEntriesByPath(String path) throws IOException {

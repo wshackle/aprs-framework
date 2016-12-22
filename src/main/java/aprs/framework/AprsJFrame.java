@@ -56,6 +56,7 @@ import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
 import crcl.base.CRCLProgramType;
 import crcl.base.CommandStatusType;
+import crcl.base.PoseType;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.ui.client.UpdateTitleListener;
@@ -120,6 +121,32 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    public PoseType getCurrentPose() {
+        if(null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected()) {
+            return pendantClientJInternalFrame.getCurrentPose();
+        }
+        return null;
+    }
+    
+    public boolean isConnected() {
+        if(null != pendantClientJInternalFrame ) {
+            return pendantClientJInternalFrame.isConnected();
+        }
+        return false;
+    }
+    
+    public void setConnected(boolean connected) {
+        if(null != pendantClientJInternalFrame ) {
+            if(pendantClientJInternalFrame.isConnected() != connected) {
+                if(connected) {
+                    pendantClientJInternalFrame.connectCurrent();
+                } else {
+                    pendantClientJInternalFrame.disconnect();
+                }
+            }
+        }
+    }
+    
     /**
      * Get the value of taskName
      *

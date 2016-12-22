@@ -26,7 +26,9 @@ import aprs.framework.pddl.executor.PositionMap;
 import aprs.framework.pddl.executor.PositionMapEntry;
 import aprs.framework.pddl.executor.PositionMapJPanel;
 import com.google.common.base.Objects;
+import crcl.base.PoseType;
 import java.awt.Component;
+import java.awt.HeadlessException;
 import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.File;
@@ -37,6 +39,7 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EventObject;
@@ -51,6 +54,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
@@ -204,6 +208,51 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        jTableSelectedPosMapFile.getModel().addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                if (TableModelEvent.UPDATE == e.getType()) {
+                    if (e.getFirstRow() == e.getLastRow()
+                            && e.getLastRow() >= 0
+                            && e.getColumn() >= 0) {
+                        double dval = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), e.getColumn());
+                        double other;
+                        switch (e.getColumn()) {
+                            case 0:
+                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 3);
+                                jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 6);
+                                break;
+
+                            case 1:
+                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 4);
+                                jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 7);
+                                break;
+
+                            case 2:
+                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 5);
+                                jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 8);
+                                break;
+
+                            case 3:
+                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 0);
+                                jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 6);
+                                break;
+
+                            case 4:
+                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 1);
+                                jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 7);
+                                break;
+
+                            case 5:
+                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 2);
+                                jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 8);
+                                break;
+
+                        }
+                    }
+                }
+            }
+        });
 
 //        jTablePositionMappings.setDefaultEditor(Object.class, new DefaultCellEditor(new JTextField()));
 //        jTablePositionMappings.setDefaultEditor(Object.class, new TableCellEditor() {
@@ -304,29 +353,61 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     JPanel blankPanel = new JPanel();
 
+    private AprsJFrame posMapInSys = null;
+    private AprsJFrame posMapOutSys = null;
+
+    private AprsJFrame findSystemWithRobot(String robot) {
+        for (int i = 0; i < aprsSystems.size(); i++) {
+            AprsJFrame aj = aprsSystems.get(i);
+            if (aj.getRobotName().equals(robot)) {
+                return aj;
+            }
+        }
+        return null;
+    }
+
     private void updateSelectedPosMapFileTable() {
-        int col = jTablePositionMappings.getSelectedRow();
-        int row = jTablePositionMappings.getSelectedColumn();
-        if(row >= 0 && col > 0) {
+        int row = jTablePositionMappings.getSelectedRow();
+        int col = jTablePositionMappings.getSelectedColumn();
+        jButtonSetInFromCurrent.setEnabled(false);
+        jButtonSetOutFromCurrent.setEnabled(false);
+        if (row >= 0 && row < jTablePositionMappings.getRowCount() && col > 0 && col < jTablePositionMappings.getColumnCount()) {
             try {
-                DefaultTableModel model = (DefaultTableModel) jTablePositionMappings.getModel();
-                model.setRowCount(0);
                 String inSys = (String) jTablePositionMappings.getValueAt(row, 0);
                 String outSys = (String) jTablePositionMappings.getColumnName(col);
+                posMapInSys = findSystemWithRobot(inSys);
+
+                if (null != posMapInSys) {
+                    jButtonSetInFromCurrent.setText("Set In From " + posMapInSys.getRobotName());
+                    jButtonSetInFromCurrent.setEnabled(true);
+                }
+                posMapOutSys = findSystemWithRobot(outSys);
+                if (null != posMapOutSys) {
+                    jButtonSetOutFromCurrent.setText("Set Out From " + posMapOutSys.getRobotName());
+                    jButtonSetOutFromCurrent.setEnabled(true);
+                }
                 File f = getPosMapFile(inSys, outSys);
-                PositionMap pm = new PositionMap(f);
-                for (int i = 0; i < pm.getErrmapList().size(); i++) {
-                    PositionMapEntry pme = pm.getErrmapList().get(i);
-                    model.addRow(new Object[]{
-                        pme.getRobotX(), pme.getRobotY(),pme.getRobotZ(),
-                        pme.getRobotX()+pme.getOffsetX(), pme.getRobotY()+pme.getOffsetY(),pme.getRobotZ()+pme.getOffsetZ(),
-                        pme.getOffsetX(), pme.getOffsetY(),pme.getOffsetZ()
-                    });
+                if (f != null) {
+                    jTextFieldSelectedPosMapFilename.setText(f.getCanonicalPath());
+                    PositionMap pm = new PositionMap(f);
+                    DefaultTableModel model = (DefaultTableModel) jTableSelectedPosMapFile.getModel();
+                    model.setRowCount(0);
+                    for (int i = 0; i < pm.getErrmapList().size(); i++) {
+                        PositionMapEntry pme = pm.getErrmapList().get(i);
+                        model.addRow(new Object[]{
+                            pme.getRobotX(), pme.getRobotY(), pme.getRobotZ(),
+                            pme.getRobotX() + pme.getOffsetX(), pme.getRobotY() + pme.getOffsetY(), pme.getRobotZ() + pme.getOffsetZ(),
+                            pme.getOffsetX(), pme.getOffsetY(), pme.getOffsetZ()
+                        });
+                    }
+                }
+                if (jTableSelectedPosMapFile.getRowCount() > 0) {
+                    jTableSelectedPosMapFile.getSelectionModel().setSelectionInterval(0, 0);
                 }
             } catch (IOException | PositionMap.BadErrorMapFormatException ex) {
                 Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
+
         }
     }
     private List<List<PositionMapJPanel>> positionMapJPanels = new ArrayList<>();
@@ -423,12 +504,13 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jTablePositionMappings = new javax.swing.JTable();
         jPanel1 = new javax.swing.JPanel();
         jButtonSetInFromCurrent = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
+        jButtonAddLine = new javax.swing.JButton();
+        jButtonDeleteLine = new javax.swing.JButton();
         jButtonSetOutFromCurrent = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableSelectedPosMapFile = new javax.swing.JTable();
         jButtonSaveSelectedPosMap = new javax.swing.JButton();
+        jTextFieldSelectedPosMapFilename = new javax.swing.JTextField();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItemSaveSetupAs = new javax.swing.JMenuItem();
@@ -440,6 +522,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jMenuItemImmediateAbortAll = new javax.swing.JMenuItem();
         jMenuItemSavePosMaps = new javax.swing.JMenuItem();
         jMenuItemLoadPosMaps = new javax.swing.JMenuItem();
+        jMenuItemConnectAll = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -514,7 +597,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 671, Short.MAX_VALUE)
+                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 815, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelRobotsLayout.setVerticalGroup(
@@ -583,13 +666,35 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Selected File"));
 
-        jButtonSetInFromCurrent.setText("Set In From Current");
+        jButtonSetInFromCurrent.setText("Set In From Selected Row System");
+        jButtonSetInFromCurrent.setEnabled(false);
+        jButtonSetInFromCurrent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSetInFromCurrentActionPerformed(evt);
+            }
+        });
 
-        jButton2.setText("Add Line");
+        jButtonAddLine.setText("Add Line");
+        jButtonAddLine.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonAddLineActionPerformed(evt);
+            }
+        });
 
-        jButton3.setText("Delete Line");
+        jButtonDeleteLine.setText("Delete Line");
+        jButtonDeleteLine.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDeleteLineActionPerformed(evt);
+            }
+        });
 
-        jButtonSetOutFromCurrent.setText("Set Out From Current");
+        jButtonSetOutFromCurrent.setText("Set Out From Selected Column System");
+        jButtonSetOutFromCurrent.setEnabled(false);
+        jButtonSetOutFromCurrent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSetOutFromCurrentActionPerformed(evt);
+            }
+        });
 
         jTableSelectedPosMapFile.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -602,14 +707,26 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             Class[] types = new Class [] {
                 java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
             };
+            boolean[] canEdit = new boolean [] {
+                true, true, true, true, true, true, false, false, false
+            };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
             }
         });
         jScrollPane2.setViewportView(jTableSelectedPosMapFile);
 
         jButtonSaveSelectedPosMap.setText("Save");
+        jButtonSaveSelectedPosMap.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSaveSelectedPosMapActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -621,14 +738,15 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     .addComponent(jScrollPane2)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jButtonSetInFromCurrent)
-                        .addGap(62, 62, 62)
-                        .addComponent(jButton2)
+                        .addGap(50, 50, 50)
+                        .addComponent(jButtonAddLine)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton3)
+                        .addComponent(jButtonDeleteLine)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonSaveSelectedPosMap)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 32, Short.MAX_VALUE)
-                        .addComponent(jButtonSetOutFromCurrent)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
+                        .addComponent(jButtonSetOutFromCurrent))
+                    .addComponent(jTextFieldSelectedPosMapFilename))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -637,13 +755,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonSetInFromCurrent)
-                    .addComponent(jButton2)
-                    .addComponent(jButton3)
+                    .addComponent(jButtonAddLine)
+                    .addComponent(jButtonDeleteLine)
                     .addComponent(jButtonSetOutFromCurrent)
                     .addComponent(jButtonSaveSelectedPosMap))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 208, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 181, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTextFieldSelectedPosMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         javax.swing.GroupLayout jPanelPositionMappingsLayout = new javax.swing.GroupLayout(jPanelPositionMappings);
@@ -742,6 +861,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItemLoadPosMaps);
 
+        jMenuItemConnectAll.setText("Connect All ...");
+        jMenuItemConnectAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemConnectAllActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemConnectAll);
+
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Edit");
@@ -806,6 +933,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     private void jMenuItemSaveSetupAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveSetupAsActionPerformed
         JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
+        if(lastSetupFile != null) {
+            chooser.setCurrentDirectory(lastSetupFile.getParentFile());
+            chooser.setSelectedFile(lastSetupFile);
+        }
         if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
             try {
                 saveSetupFile(chooser.getSelectedFile());
@@ -819,6 +950,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     private void jMenuItemLoadSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadSetupActionPerformed
         JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
+        if(lastSetupFile != null) {
+            chooser.setCurrentDirectory(lastSetupFile.getParentFile());
+            chooser.setSelectedFile(lastSetupFile);
+        }
         if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
             try {
                 loadSetupFile(chooser.getSelectedFile());
@@ -878,17 +1013,24 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemStartAllActionPerformed
 
     private void jMenuItemSavePosMapsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePosMapsActionPerformed
+        browseAndSavePositionMappings();
+    }//GEN-LAST:event_jMenuItemSavePosMapsActionPerformed
+
+    private void browseAndSavePositionMappings() throws HeadlessException {
         JFileChooser chooser = new JFileChooser();
+        if(null != lastPosMapFile) {
+            chooser.setCurrentDirectory(lastPosMapFile.getParentFile());
+            chooser.setSelectedFile(lastPosMapFile);
+        }
         if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
             try {
                 savePositionMaps(chooser.getSelectedFile());
-
             } catch (IOException ex) {
                 Logger.getLogger(AprsMulitSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }//GEN-LAST:event_jMenuItemSavePosMapsActionPerformed
+    }
 
     private void jTablePositionMappingsMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTablePositionMappingsMousePressed
         if (evt.isPopupTrigger()) {
@@ -910,6 +1052,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     private void jMenuItemLoadPosMapsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadPosMapsActionPerformed
         JFileChooser chooser = new JFileChooser();
+        if(lastPosMapFile != null) {
+            chooser.setCurrentDirectory(lastPosMapFile.getParentFile());
+            chooser.setSelectedFile(lastPosMapFile);
+        }
         if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
             try {
                 loadPositionMaps(chooser.getSelectedFile());
@@ -929,6 +1075,103 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         immediateAbortAll();
     }//GEN-LAST:event_jMenuItemImmediateAbortAllActionPerformed
 
+    private void jButtonSetInFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSetInFromCurrentActionPerformed
+        int row = jTableSelectedPosMapFile.getSelectedRow();
+        if (row >= 0 && row < jTableSelectedPosMapFile.getRowCount()) {
+            if (null != posMapInSys) {
+                PoseType pose = posMapInSys.getCurrentPose();
+                if (null != pose) {
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX().doubleValue(), row, 0);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY().doubleValue(), row, 1);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ().doubleValue(), row, 2);
+                    double otherx = (double) jTableSelectedPosMapFile.getValueAt(row, 3);
+                    double othery = (double) jTableSelectedPosMapFile.getValueAt(row, 4);
+                    double otherz = (double) jTableSelectedPosMapFile.getValueAt(row, 5);
+                    jTableSelectedPosMapFile.setValueAt(otherx - pose.getPoint().getX().doubleValue(), row, 6);
+                    jTableSelectedPosMapFile.setValueAt(othery - pose.getPoint().getY().doubleValue(), row, 7);
+                    jTableSelectedPosMapFile.setValueAt(otherz - pose.getPoint().getZ().doubleValue(), row, 8);
+                }
+            }
+        }
+    }//GEN-LAST:event_jButtonSetInFromCurrentActionPerformed
+
+    private void jMenuItemConnectAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemConnectAllActionPerformed
+        connectAll();
+    }//GEN-LAST:event_jMenuItemConnectAllActionPerformed
+
+    private void jButtonSetOutFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSetOutFromCurrentActionPerformed
+        int row = jTableSelectedPosMapFile.getSelectedRow();
+        if (row >= 0 && row < jTableSelectedPosMapFile.getRowCount()) {
+            if (null != posMapOutSys) {
+                PoseType pose = posMapOutSys.getCurrentPose();
+                if (null != pose) {
+
+                    double otherx = (double) jTableSelectedPosMapFile.getValueAt(row, 0);
+                    double othery = (double) jTableSelectedPosMapFile.getValueAt(row, 1);
+                    double otherz = (double) jTableSelectedPosMapFile.getValueAt(row, 2);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX().doubleValue(), row, 3);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY().doubleValue(), row, 4);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ().doubleValue(), row, 5);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX().doubleValue() - otherx, row, 6);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY().doubleValue() - othery, row, 7);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ().doubleValue() - otherz, row, 8);
+                }
+            }
+        }
+    }//GEN-LAST:event_jButtonSetOutFromCurrentActionPerformed
+
+    private void jButtonAddLineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddLineActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableSelectedPosMapFile.getModel();
+        model.addRow(new Double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+    }//GEN-LAST:event_jButtonAddLineActionPerformed
+
+    private void jButtonDeleteLineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteLineActionPerformed
+        int row = jTableSelectedPosMapFile.getSelectedRow();
+        if (row >= 0 && row < jTableSelectedPosMapFile.getRowCount()) {
+            DefaultTableModel model = (DefaultTableModel) jTableSelectedPosMapFile.getModel();
+            model.removeRow(row);
+        }
+    }//GEN-LAST:event_jButtonDeleteLineActionPerformed
+
+    private void jButtonSaveSelectedPosMapActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveSelectedPosMapActionPerformed
+        try {
+            File f = resolveFile(jTextFieldSelectedPosMapFilename.getText(), lastPosMapFile.getParentFile());
+            JFileChooser chooser = new JFileChooser(f.getParentFile());
+            chooser.setSelectedFile(f);
+            if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
+                savePosFile(chooser.getSelectedFile());
+            }
+            int row = jTablePositionMappings.getSelectedRow();
+            int col = jTablePositionMappings.getSelectedColumn();
+            if (row >= 0 && row < jTablePositionMappings.getRowCount() && col > 0 && col < jTablePositionMappings.getColumnCount()) {
+                DefaultTableModel model = (DefaultTableModel) jTablePositionMappings.getModel();
+                model.setValueAt(relativeFile(lastPosMapFile.getParentFile(), chooser.getSelectedFile()), row, col);
+            }
+            jTextFieldSelectedPosMapFilename.setText(chooser.getSelectedFile().getCanonicalPath());
+            if (JOptionPane.showConfirmDialog(this, "Also Save files list?") == JOptionPane.YES_OPTION) {
+                browseAndSavePositionMappings();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonSaveSelectedPosMapActionPerformed
+
+    private void savePosFile(File f) throws IOException {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+            for (int i = 0; i < jTableSelectedPosMapFile.getColumnCount(); i++) {
+                pw.print(jTableSelectedPosMapFile.getColumnName(i));
+                pw.print(",");
+            }
+            pw.println();
+            for (int i = 0; i < jTableSelectedPosMapFile.getRowCount(); i++) {
+                for (int j = 0; j < jTableSelectedPosMapFile.getColumnCount(); j++) {
+                    pw.print(jTableSelectedPosMapFile.getValueAt(i, j));
+                    pw.print(",");
+                }
+            }
+        }
+    }
+
     private void clearPosTable() {
         DefaultTableModel tm = (DefaultTableModel) jTablePositionMappings.getModel();
         tm.setRowCount(0);
@@ -944,7 +1187,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
         Utils.autoResizeTableColWidths(jTablePositionMappings);
         Utils.autoResizeTableRowHeights(jTablePositionMappings);
-        posTablePopupMenu.setVisible(false);
+        if (null != posTablePopupMenu) {
+            posTablePopupMenu.setVisible(false);
+        }
     }
 
     private JPopupMenu posTablePopupMenu = null;
@@ -971,6 +1216,12 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     public void immediateAbortAll() {
         for (int i = 0; i < aprsSystems.size(); i++) {
             aprsSystems.get(i).immediateAbort();
+        }
+    }
+
+    public void connectAll() {
+        for (int i = 0; i < aprsSystems.size(); i++) {
+            aprsSystems.get(i).setConnected(true);
         }
     }
 
@@ -1071,13 +1322,8 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     a[i] = csvRecord.get(i);
                     if (null != a[i] && !"null".equals(a[i]) && !"".equals(a[i])) {
                         if (i > 0) {
-                            File fi = new File((String) a[i]);
-                            if (!fi.exists()) {
-                                File altFile = f.getParentFile().toPath().toRealPath().resolve((String) a[i]).toFile();
-                                if (altFile.exists()) {
-                                    fi = altFile;
-                                }
-                            }
+                            String fname = (String) a[i];
+                            File fi = resolveFile(fname, f.getParentFile());
                             setPosMapFile((String) a[0], tm.getColumnName(i), fi);
                         }
                     }
@@ -1086,6 +1332,21 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             }
         }
         saveLastPosMapFile(f);
+    }
+
+    private static File resolveFile(String fname, File dir) throws IOException {
+        File fi = new File(fname);
+        if (!fi.exists()) {
+            File altFile = dir.toPath().toRealPath().resolve(fname).toFile();
+            if (altFile.exists()) {
+                fi = altFile;
+            }
+        }
+        return fi;
+    }
+
+    private static String relativeFile(File dir, File f) throws IOException {
+        return dir.toPath().relativize(f.toPath()).toString();
     }
 
     private File lastSetupFile = null;
@@ -1191,6 +1452,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         updateTasksTable();
         updateRobotsTable();
         saveLastSetupFile(f);
+        clearPosTable();
     }
 
     public void updateTasksTable() throws IOException {
@@ -1260,8 +1522,8 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButtonAddLine;
+    private javax.swing.JButton jButtonDeleteLine;
     private javax.swing.JButton jButtonSaveSelectedPosMap;
     private javax.swing.JButton jButtonSetInFromCurrent;
     private javax.swing.JButton jButtonSetOutFromCurrent;
@@ -1269,6 +1531,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItemAddSystem;
+    private javax.swing.JMenuItem jMenuItemConnectAll;
     private javax.swing.JMenuItem jMenuItemDeleteSelectedSystem;
     private javax.swing.JMenuItem jMenuItemImmediateAbortAll;
     private javax.swing.JMenuItem jMenuItemLoadPosMaps;
@@ -1292,5 +1555,6 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JTable jTableRobots;
     private javax.swing.JTable jTableSelectedPosMapFile;
     private javax.swing.JTable jTableTasks;
+    private javax.swing.JTextField jTextFieldSelectedPosMapFilename;
     // End of variables declaration//GEN-END:variables
 }
