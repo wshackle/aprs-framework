@@ -1766,7 +1766,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             final String partName = (String) jComboBoxManualObjectName.getSelectedItem();
             this.randomDropOff();
             String randomPoseString
-                    = String.format("%.3f, %.3f, %.3f",
+                    = String.format("%.1f, %.1f, %.1f",
                             testDropOffPose.getPoint().getX().doubleValue(),
                             testDropOffPose.getPoint().getY().doubleValue(),
                             testDropOffPose.getPoint().getZ().doubleValue());
@@ -1833,7 +1833,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             final String partName = (String) jComboBoxManualObjectName.getSelectedItem();
             this.gridDropOff();
             String randomPoseString
-                    = String.format("%.3f, %.3f, %.3f",
+                    = String.format("%.1f, %.1f, %.1f",
                             testDropOffPose.getPoint().getX().doubleValue(),
                             testDropOffPose.getPoint().getY().doubleValue(),
                             testDropOffPose.getPoint().getZ().doubleValue());
@@ -2303,12 +2303,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //        if (null != getPositionMap()) {
 //            PointType offset = getPositionMap().getLastOffset();
 //            if (null != offset) {
-//                jTextFieldOffset.setText(String.format("%.3f,%.3f", offset.getX().doubleValue(), offset.getY().doubleValue()));
+//                jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX().doubleValue(), offset.getY().doubleValue()));
 //            }
 //            PoseType testPose = getPositionMap().getLastPoseOut();
 //            if (null != testPose) {
 //                String testPoseString
-//                        = String.format("%.3f, %.3f, %.3f",
+//                        = String.format("%.1f, %.1f, %.1f",
 //                                testPose.getPoint().getX().doubleValue(),
 //                                testPose.getPoint().getY().doubleValue(),
 //                                testPose.getPoint().getZ().doubleValue());
@@ -2317,7 +2317,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //            PoseType origPose = getPositionMap().getLastPoseIn();
 //            if (null != origPose) {
 //                String origPoseString
-//                        = String.format("%.3f, %.3f, %.3f",
+//                        = String.format("%.1f, %.1f, %.1f",
 //                                origPose.getPoint().getX().doubleValue(),
 //                                origPose.getPoint().getY().doubleValue(),
 //                                origPose.getPoint().getZ().doubleValue());
@@ -2347,12 +2347,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         for (PositionMap positionMap : getPositionMaps()) {
             PointType offset = positionMap.getLastOffset();
             if (null != offset) {
-                jTextFieldOffset.setText(String.format("%.3f,%.3f", offset.getX().doubleValue(), offset.getY().doubleValue()));
+                jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX().doubleValue(), offset.getY().doubleValue()));
             }
             PoseType testPose = positionMap.getLastPoseOut();
             if (null != testPose) {
                 String testPoseString
-                        = String.format("%.3f, %.3f, %.3f",
+                        = String.format("%.1f, %.1f, %.1f",
                                 testPose.getPoint().getX().doubleValue(),
                                 testPose.getPoint().getY().doubleValue(),
                                 testPose.getPoint().getZ().doubleValue());
@@ -2361,7 +2361,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             PoseType origPose = positionMap.getLastPoseIn();
             if (null != origPose) {
                 String origPoseString
-                        = String.format("%.3f, %.3f, %.3f",
+                        = String.format("%.1f, %.1f, %.1f",
                                 origPose.getPoint().getX().doubleValue(),
                                 origPose.getPoint().getY().doubleValue(),
                                 origPose.getPoint().getZ().doubleValue());
@@ -2423,7 +2423,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         double x = (xMax - xMin) * random.nextDouble() + xMin;
         double y = (yMax - yMin) * random.nextDouble() + yMin;
         double z = Double.valueOf(jTextFieldTestZ.getText());
-        jTextFieldTestPose.setText(String.format("%.3f,%.3f,%.3f", x, y, z));
+        jTextFieldTestPose.setText(String.format("%.1f,%.1f,%.1f", x, y, z));
         PoseType origPose = pose(point(x, y, z), vector(1.0, 0.0, 0.0), vector(0.0, 0.0, -1.0));
         PointType offset = getPositionMaps().get(0).getOffset(x, y, 0);
         testDropOffPose = correctPose(origPose);
@@ -2436,17 +2436,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
         setCrclProgram(program);
         String randomPoseString
-                = String.format("%.3f, %.3f, %.3f",
+                = String.format("%.1f, %.1f, %.1f",
                         testDropOffPose.getPoint().getX().doubleValue(),
                         testDropOffPose.getPoint().getY().doubleValue(),
                         testDropOffPose.getPoint().getZ().doubleValue());
         String origPoseString
-                = String.format("%.3f, %.3f, %.3f",
+                = String.format("%.1f, %.1f, %.1f",
                         origPose.getPoint().getX().doubleValue(),
                         origPose.getPoint().getY().doubleValue(),
                         origPose.getPoint().getZ().doubleValue());
         System.out.println("randomPoseString = " + randomPoseString);
-        jTextFieldOffset.setText(String.format("%.3f,%.3f", offset.getX().doubleValue(), offset.getY().doubleValue()));
+        jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX().doubleValue(), offset.getY().doubleValue()));
         jTextFieldAdjPose.setText(randomPoseString);
         this.jTextFieldTestPose.setText(origPoseString);
         replanStarted.set(false);
@@ -2500,17 +2500,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
         setCrclProgram(program);
         String gridPoseString
-                = String.format("%.3f, %.3f, %.3f",
+                = String.format("%.1f, %.1f, %.1f",
                         testDropOffPose.getPoint().getX().doubleValue(),
                         testDropOffPose.getPoint().getY().doubleValue(),
                         testDropOffPose.getPoint().getZ().doubleValue());
         String origPoseString
-                = String.format("%.3f, %.3f, %.3f",
+                = String.format("%.1f, %.1f, %.1f",
                         origPose.getPoint().getX().doubleValue(),
                         origPose.getPoint().getY().doubleValue(),
                         origPose.getPoint().getZ().doubleValue());
         System.out.println("gridPoseString = " + gridPoseString);
-        jTextFieldOffset.setText(String.format("%.3f,%.3f", offset.getX().doubleValue(), offset.getY().doubleValue()));
+        jTextFieldOffset.setText(String.format("%.1f,%.1f,%.1f", offset.getX().doubleValue(), offset.getY().doubleValue(), offset.getZ().doubleValue()));
         jTextFieldAdjPose.setText(gridPoseString);
         this.jTextFieldTestPose.setText(origPoseString);
         replanStarted.set(false);

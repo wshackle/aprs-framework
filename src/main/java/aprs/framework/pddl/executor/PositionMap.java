@@ -191,9 +191,10 @@ public class PositionMap {
         PointType offsetPt = getOffset(poseIn.getPoint().getX().doubleValue(),
                 poseIn.getPoint().getY().doubleValue(),
                 poseIn.getPoint().getZ().doubleValue());
-        PoseType poseOut = pose(point(offsetPt.getX().add(poseIn.getPoint().getX()),
+        PointType pt =  point(offsetPt.getX().add(poseIn.getPoint().getX()),
                 offsetPt.getY().add(poseIn.getPoint().getY()),
-                poseIn.getPoint().getZ()), poseIn.getXAxis(), poseIn.getZAxis()
+                offsetPt.getZ().add(poseIn.getPoint().getZ()));
+        PoseType poseOut = pose(pt, poseIn.getXAxis(), poseIn.getZAxis()
         );
         lastPoseOut = poseOut;
         return poseOut;

@@ -164,7 +164,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     }
 
     public void setPositionMap(int index, PositionMap positionMap) {
-        while(positionMaps.size() < index) {
+        while(positionMaps.size() <= index) {
             positionMaps.add(null);
         }
         positionMaps.set(index, positionMap);
@@ -226,7 +226,8 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     private void loadPositionMapToTable(PositionMap positionMap) {
          DefaultTableModel m = (DefaultTableModel) jTable1.getModel();
            m.setRowCount(0);
-        m.setColumnIdentifiers(positionMap.getColumnHeaders());
+//        m.setColumnIdentifiers(positionMap.getColumnHeaders());
+//        m.set
         jTextFieldErrorMapFilename.setText(positionMap.getFileName());
         for(Object a[] : positionMap.getTableIterable()) {
             m.addRow(a);

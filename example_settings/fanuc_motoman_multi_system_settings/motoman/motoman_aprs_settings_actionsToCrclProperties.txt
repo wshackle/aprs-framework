@@ -1,5 +1,5 @@
 #
-#Wed Dec 21 17:15:29 EST 2016
+#Thu Dec 22 14:31:00 EST 2016
 lookDwellTime=3.0
 approachZOffset=50.0
 manualPartNames=[large_gear_2, large_gear_1, kit_lg2small2_1_slot_s2, small_gear_2, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]

@@ -1136,8 +1136,12 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     private void jButtonSaveSelectedPosMapActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveSelectedPosMapActionPerformed
         try {
             File f = resolveFile(jTextFieldSelectedPosMapFilename.getText(), lastPosMapFile.getParentFile());
-            JFileChooser chooser = new JFileChooser(f.getParentFile());
-            chooser.setSelectedFile(f);
+            JFileChooser chooser = new JFileChooser();
+            if(null != f) {
+                chooser.setCurrentDirectory(f.getParentFile());
+                chooser.setSelectedFile(f);
+            }
+            
             if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
                 savePosFile(chooser.getSelectedFile());
             }
@@ -1168,6 +1172,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     pw.print(jTableSelectedPosMapFile.getValueAt(i, j));
                     pw.print(",");
                 }
+                pw.println();
             }
         }
     }
@@ -1336,7 +1341,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     private static File resolveFile(String fname, File dir) throws IOException {
         File fi = new File(fname);
-        if (!fi.exists()) {
+        if (!fi.exists() && dir != null && dir.exists() && dir.isDirectory()) {
             File altFile = dir.toPath().toRealPath().resolve(fname).toFile();
             if (altFile.exists()) {
                 fi = altFile;
