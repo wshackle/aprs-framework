@@ -31,13 +31,13 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import rcs.posemath.PmCartesian;
-import rcs.posemath.Posemath;
 import static crcl.utils.CRCLPosemath.point;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Iterator;
+import rcs.posemath.PmCartesian;
+import rcs.posemath.Posemath;
 
 /**
  *
@@ -55,8 +55,9 @@ public class PositionMap {
 
     public Iterable<Object[]> getTableIterable() {
         return new Iterable<Object[]>() {
-            
+
             private final List<PositionMapEntry> l = new ArrayList(errmapList);
+
             @Override
             public Iterator<Object[]> iterator() {
 
@@ -73,7 +74,7 @@ public class PositionMap {
                     public Object[] next() {
                         PositionMapEntry entry = l.get(index);
                         ++index;
-                        return new Object[]{entry.getRobotX(),entry.getRobotY(),entry.getOffsetZ(),entry.getOffsetX(),entry.getOffsetY(),entry.getOffsetZ()};
+                        return new Object[]{entry.getRobotX(), entry.getRobotY(), entry.getOffsetZ(), entry.getOffsetX(), entry.getOffsetY(), entry.getOffsetZ()};
                     }
                 };
             }
@@ -114,16 +115,19 @@ public class PositionMap {
         for (int i = 0; i < columnHeaders.length; i++) {
             switch (columnHeaders[i]) {
                 case "X":
+                case "Xin":
                 case "Robot_X":
                     robotXIndex = i;
                     break;
 
                 case "Y":
+                case "Yin":
                 case "Robot_Y":
                     robotYIndex = i;
                     break;
 
                 case "Z":
+                case "Zin":
                 case "Robot_Z":
                     robotZIndex = i;
                     break;
@@ -185,7 +189,8 @@ public class PositionMap {
     public PoseType correctPose(PoseType poseIn) {
         lastPoseIn = poseIn;
         PointType offsetPt = getOffset(poseIn.getPoint().getX().doubleValue(),
-                poseIn.getPoint().getY().doubleValue());
+                poseIn.getPoint().getY().doubleValue(),
+                poseIn.getPoint().getZ().doubleValue());
         PoseType poseOut = pose(point(offsetPt.getX().add(poseIn.getPoint().getX()),
                 offsetPt.getY().add(poseIn.getPoint().getY()),
                 poseIn.getPoint().getZ()), poseIn.getXAxis(), poseIn.getZAxis()
@@ -200,15 +205,15 @@ public class PositionMap {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    static public PositionMapEntry combine(PositionMapEntry e1, PositionMapEntry e2, double x, double y) {
+    static public PositionMapEntry combine(PositionMapEntry e1, PositionMapEntry e2, double x, double y, double z) {
         if (null == e1) {
             return e2;
         }
         if (null == e2) {
             return e1;
         }
-        PmCartesian c1 = new PmCartesian(e1.getRobotX(), e1.getRobotY(), 0);
-        PmCartesian c2 = new PmCartesian(e2.getRobotX(), e2.getRobotY(), 0);
+        PmCartesian c1 = new PmCartesian(e1.getRobotX(), e1.getRobotY(), e1.getRobotZ());
+        PmCartesian c2 = new PmCartesian(e2.getRobotX(), e2.getRobotY(), e2.getRobotZ());
         PmCartesian diff = c2.subtract(c1);
         if (diff.mag() < 1e-6) {
             return new PositionMapEntry((e1.getRobotX() + e2.getRobotX()) / 2.0,
@@ -218,7 +223,7 @@ public class PositionMap {
                     (e1.getOffsetY() + e2.getOffsetY()) / 2.0,
                     (e1.getOffsetZ() + e2.getOffsetZ()) / 2.0);
         }
-        PmCartesian xy = new PmCartesian(x, y, 0);
+        PmCartesian xy = new PmCartesian(x, y, z);
         PmCartesian diff2 = xy.subtract(c1);
         double d = Posemath.pmCartCartDot(diff, diff2) / (diff.mag() * diff.mag());
         PmCartesian center = c1.add(diff.multiply(d));
@@ -231,7 +236,9 @@ public class PositionMap {
         );
     }
 
-    public PointType getOffset(double x, double y) {
+   
+
+    public PointType getOffset(double x, double y, double z) {
         PositionMapEntry e1 = errmapList.stream()
                 .filter(e -> e.getRobotX() <= x && e.getRobotY() <= y)
                 .min((em1, em2) -> Double.compare(dist(em1, x, y), dist(em2, x, y)))
@@ -242,7 +249,7 @@ public class PositionMap {
                 .min((em1, em2) -> Double.compare(dist(em1, x, y), dist(em2, x, y)))
                 .orElse(null);
 
-        PositionMapEntry e12 = combine(e1, e2, x, y);
+        PositionMapEntry e12 = combine(e1, e2, x, y, z);
 
         PositionMapEntry e3 = errmapList.stream()
                 .filter(e -> e.getRobotX() <= x && e.getRobotY() >= y)
@@ -253,9 +260,9 @@ public class PositionMap {
                 .filter(e -> e.getRobotX() >= x && e.getRobotY() >= y)
                 .min((em1, em2) -> Double.compare(dist(em1, x, y), dist(em2, x, y)))
                 .orElse(null);
-        PositionMapEntry e34 = combine(e3, e4, x, y);
+        PositionMapEntry e34 = combine(e3, e4, x, y, z);
 
-        PositionMapEntry eme = combine(e12, e34, x, y);
+        PositionMapEntry eme = combine(e12, e34, x, y, z);
         lastOffset = point(eme.getOffsetX(), eme.getOffsetY(), eme.getOffsetZ());
         return lastOffset;
     }

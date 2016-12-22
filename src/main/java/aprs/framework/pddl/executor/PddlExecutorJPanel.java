@@ -2300,7 +2300,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //                this.jTextFieldTestPose.setText(origPoseString);
 //            }
 //        }
-
         replanStarted = false;
     }
 
@@ -2321,7 +2320,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
         setCrclProgram(program);
 
-        for(PositionMap positionMap : getPositionMaps()) {
+        for (PositionMap positionMap : getPositionMaps()) {
             PointType offset = positionMap.getLastOffset();
             if (null != offset) {
                 jTextFieldOffset.setText(String.format("%.3f,%.3f", offset.getX().doubleValue(), offset.getY().doubleValue()));
@@ -2371,18 +2370,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public PoseType getTestDropOffPose() {
         return testDropOffPose;
     }
-    
+
     public void addPositionMap(PositionMap pm) {
         positionMapJPanel1.addPositionMap(pm);
     }
-    
+
     public void removePositionMap(PositionMap pm) {
         positionMapJPanel1.removePositionMap(pm);
     }
-    
+
     public PoseType correctPose(PoseType poseIn) {
         PoseType pout = poseIn;
-        for(PositionMap pm : getPositionMaps()) {
+        for (PositionMap pm : getPositionMaps()) {
             pout = pm.correctPose(pout);
         }
         return pout;
@@ -2402,7 +2401,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         double z = Double.valueOf(jTextFieldTestZ.getText());
         jTextFieldTestPose.setText(String.format("%.3f,%.3f,%.3f", x, y, z));
         PoseType origPose = pose(point(x, y, z), vector(1.0, 0.0, 0.0), vector(0.0, 0.0, -1.0));
-        PointType offset = getPositionMaps().get(0).getOffset(x, y);
+        PointType offset = getPositionMaps().get(0).getOffset(x, y, 0);
         testDropOffPose = correctPose(origPose);
 
         pddlActionToCrclGenerator.placePartByPose(cmds, testDropOffPose);
@@ -2433,11 +2432,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private double gridTestCurrentY = 0;
     private double gridTestMaxX = 1;
     private double gridTestMaxY = 1;
-    
-    private PointType getOffset(double x, double y) {
-        PointType out = point(x,y,0);
-        for(PositionMap pm : getPositionMaps()) {
-            out = pm.getOffset(out.getX().doubleValue(), out.getY().doubleValue());
+
+    private PointType getOffset(double x, double y, double z) {
+        PointType out = point(x, y, z);
+        for (PositionMap pm : getPositionMaps()) {
+            out = pm.getOffset(out.getX().doubleValue(), out.getY().doubleValue(), out.getZ().doubleValue());
         }
         return out;
     }
@@ -2466,7 +2465,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         System.out.println("gridTestCurrentX = " + gridTestCurrentX);
         System.out.println("gridTestCurrentY = " + gridTestCurrentY);
         PoseType origPose = pose(point(x, y, z), vector(1.0, 0.0, 0.0), vector(0.0, 0.0, -1.0));
-        PointType offset = getOffset(x, y);
+        PointType offset = getOffset(x, y, z);
         testDropOffPose = correctPose(origPose);
         pddlActionToCrclGenerator.placePartByPose(cmds, testDropOffPose);
         CRCLProgramType program = createEmptyProgram();

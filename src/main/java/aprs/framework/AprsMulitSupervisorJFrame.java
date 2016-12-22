@@ -23,6 +23,7 @@
 package aprs.framework;
 
 import aprs.framework.pddl.executor.PositionMap;
+import aprs.framework.pddl.executor.PositionMapEntry;
 import aprs.framework.pddl.executor.PositionMapJPanel;
 import com.google.common.base.Objects;
 import java.awt.Component;
@@ -186,7 +187,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 // ignore
             }
         }
-        
+        jTablePositionMappings.getSelectionModel().addListSelectionListener(x -> updateSelectedPosMapFileTable());
 //        jTablePositionMappings.setDefaultEditor(Object.class, new DefaultCellEditor(new JTextField()));
 //        jTablePositionMappings.setDefaultEditor(Object.class, new TableCellEditor() {
 //
@@ -286,6 +287,31 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     JPanel blankPanel = new JPanel();
 
+    private void updateSelectedPosMapFileTable() {
+        int col = jTablePositionMappings.getSelectedRow();
+        int row = jTablePositionMappings.getSelectedColumn();
+        if(row >= 0 && col > 0) {
+            try {
+                DefaultTableModel model = (DefaultTableModel) jTablePositionMappings.getModel();
+                model.setRowCount(0);
+                String inSys = (String) jTablePositionMappings.getValueAt(row, 0);
+                String outSys = (String) jTablePositionMappings.getColumnName(col);
+                File f = getPosMapFile(inSys, outSys);
+                PositionMap pm = new PositionMap(f);
+                for (int i = 0; i < pm.getErrmapList().size(); i++) {
+                    PositionMapEntry pme = pm.getErrmapList().get(i);
+                    model.addRow(new Object[]{
+                        pme.getRobotX(), pme.getRobotY(),pme.getRobotZ(),
+                        pme.getRobotX()+pme.getOffsetX(), pme.getRobotY()+pme.getOffsetY(),pme.getRobotZ()+pme.getOffsetZ(),
+                        pme.getOffsetX(), pme.getOffsetY(),pme.getOffsetZ()
+                    });
+                }
+            } catch (IOException | PositionMap.BadErrorMapFormatException ex) {
+                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        }
+    }
     private List<List<PositionMapJPanel>> positionMapJPanels = new ArrayList<>();
 
     private List<PositionMapJPanel> getPositionMapRow(int row) {
@@ -374,8 +400,18 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jPanelRobots = new javax.swing.JPanel();
         jScrollPaneRobots = new javax.swing.JScrollPane();
         jTableRobots = new javax.swing.JTable();
+        jPanelPositionMappings = new javax.swing.JPanel();
+        jPanelPosMapFiles = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTablePositionMappings = new javax.swing.JTable();
+        jPanel1 = new javax.swing.JPanel();
+        jButtonSetInFromCurrent = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
+        jButton3 = new javax.swing.JButton();
+        jButtonSetOutFromCurrent = new javax.swing.JButton();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTableSelectedPosMapFile = new javax.swing.JTable();
+        jButtonSaveSelectedPosMap = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItemSaveSetupAs = new javax.swing.JMenuItem();
@@ -431,7 +467,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         );
         jPanelTasksLayout.setVerticalGroup(
             jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
+            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 248, Short.MAX_VALUE)
         );
 
         jPanelRobots.setBorder(javax.swing.BorderFactory.createTitledBorder("Robots"));
@@ -461,14 +497,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE)
+                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 671, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelRobotsLayout.setVerticalGroup(
             jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 137, Short.MAX_VALUE)
+                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -497,6 +533,8 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
         jTabbedPane2.addTab("Tasks and Robots", jPanelTasksAndRobots);
 
+        jPanelPosMapFiles.setBorder(javax.swing.BorderFactory.createTitledBorder("Files"));
+
         jTablePositionMappings.setModel(defaultPositionMappingsModel());
         jTablePositionMappings.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent evt) {
@@ -511,7 +549,107 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(jTablePositionMappings);
 
-        jTabbedPane2.addTab("Position Mappings", jScrollPane1);
+        javax.swing.GroupLayout jPanelPosMapFilesLayout = new javax.swing.GroupLayout(jPanelPosMapFiles);
+        jPanelPosMapFiles.setLayout(jPanelPosMapFilesLayout);
+        jPanelPosMapFilesLayout.setHorizontalGroup(
+            jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
+                .addComponent(jScrollPane1)
+                .addGap(6, 6, 6))
+        );
+        jPanelPosMapFilesLayout.setVerticalGroup(
+            jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Selected File"));
+
+        jButtonSetInFromCurrent.setText("Set In From Current");
+
+        jButton2.setText("Add Line");
+
+        jButton3.setText("Delete Line");
+
+        jButtonSetOutFromCurrent.setText("Set Out From Current");
+
+        jTableSelectedPosMapFile.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                { new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0)}
+            },
+            new String [] {
+                "Xin", "Yin", "Zin", "Xout", "Yout", "Zout", "Offset_X", "Offset_Y", "Offset_Z"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPane2.setViewportView(jTableSelectedPosMapFile);
+
+        jButtonSaveSelectedPosMap.setText("Save");
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jButtonSetInFromCurrent)
+                        .addGap(62, 62, 62)
+                        .addComponent(jButton2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonSaveSelectedPosMap)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 32, Short.MAX_VALUE)
+                        .addComponent(jButtonSetOutFromCurrent)))
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonSetInFromCurrent)
+                    .addComponent(jButton2)
+                    .addComponent(jButton3)
+                    .addComponent(jButtonSetOutFromCurrent)
+                    .addComponent(jButtonSaveSelectedPosMap))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 208, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        javax.swing.GroupLayout jPanelPositionMappingsLayout = new javax.swing.GroupLayout(jPanelPositionMappings);
+        jPanelPositionMappings.setLayout(jPanelPositionMappingsLayout);
+        jPanelPositionMappingsLayout.setHorizontalGroup(
+            jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelPositionMappingsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanelPosMapFiles, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        jPanelPositionMappingsLayout.setVerticalGroup(
+            jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelPositionMappingsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanelPosMapFiles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jTabbedPane2.addTab("Position Mapping", jPanelPositionMappings);
 
         jMenu1.setText("File");
 
@@ -1105,6 +1243,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButtonSaveSelectedPosMap;
+    private javax.swing.JButton jButtonSetInFromCurrent;
+    private javax.swing.JButton jButtonSetOutFromCurrent;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
@@ -1117,15 +1260,20 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemSavePosMaps;
     private javax.swing.JMenuItem jMenuItemSaveSetupAs;
     private javax.swing.JMenuItem jMenuItemStartAll;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanelPosMapFiles;
+    private javax.swing.JPanel jPanelPositionMappings;
     private javax.swing.JPanel jPanelRobots;
     private javax.swing.JPanel jPanelTasks;
     private javax.swing.JPanel jPanelTasksAndRobots;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPaneRobots;
     private javax.swing.JScrollPane jScrollPaneTasks;
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTable jTablePositionMappings;
     private javax.swing.JTable jTableRobots;
+    private javax.swing.JTable jTableSelectedPosMapFile;
     private javax.swing.JTable jTableTasks;
     // End of variables declaration//GEN-END:variables
 }
