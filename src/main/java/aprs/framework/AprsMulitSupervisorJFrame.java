@@ -456,10 +456,19 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         String stealFromOrigCrclHost = stealFrom.getRobotCrclHost();
         int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
 
+        String fromRpyOption = stealFrom.getExecutorOptions().get("rpy");
+        String fromLookForXYZOption = stealFrom.getExecutorOptions().get("lookForXYZ");
+        
         return CompletableFuture.allOf(stealFrom.safeAbortAndDisconnectAsync(), stealFor.safeAbort())
                 .thenRun(() -> {
                     stealFor.connectRobot(stealFrom.getRobotName(), stealFromOrigCrclHost, stealFromOrigCrclPort);
                     stealFor.addPositionMap(pm);
+                    if(null != fromRpyOption) {
+                        stealFor.setExecutorOption("rpy", fromRpyOption);
+                    }
+                    if(null != fromLookForXYZOption) {
+                        stealFor.setExecutorOption("lookForXYZ", fromLookForXYZOption);
+                    }
 //                    return null;
                 })
                 //                        () -> 

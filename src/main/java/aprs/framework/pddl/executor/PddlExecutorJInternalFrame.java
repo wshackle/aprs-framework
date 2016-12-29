@@ -28,6 +28,7 @@ import aprs.framework.database.DbSetupPublisher;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
@@ -62,6 +63,13 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
     
     public void removePositionMap(PositionMap pm) {
         actionsToCrclJPanel1.removePositionMap(pm);
+    }
+    public Map<String,String> getOptions() {
+        return this.actionsToCrclJPanel1.getTableOptions();
+    }
+    
+    public void setOption(String key, String value) {
+        this.actionsToCrclJPanel1.setOption(key, value);
     }
     
     /**

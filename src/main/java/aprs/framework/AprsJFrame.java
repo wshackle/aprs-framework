@@ -108,6 +108,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private String taskName;
 
+    public Map<String,String> getExecutorOptions() {
+        if(null == pddlExecutorJInternalFrame1) {
+            return null;
+        }
+        return pddlExecutorJInternalFrame1.getOptions();
+    }
+    
+    public void setExecutorOption(String key, String value) {
+        if(null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.setOption(key, value);
+        }
+    }
+    
     public void addPositionMap(PositionMap pm) {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.addPositionMap(pm);

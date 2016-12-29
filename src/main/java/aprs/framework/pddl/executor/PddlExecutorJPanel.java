@@ -101,6 +101,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.http.client.methods.RequestBuilder;
 
 /**
  *
@@ -2372,6 +2373,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         replanStarted.set(false);
     }
 
+    
     public void returnPart(String part) throws IOException {
         clearAll();
         Map<String, String> options = getTableOptions();
@@ -2585,6 +2587,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
+    public void setOption(String key, String val) {
+        TableModel model = jTableOptions.getModel();
+        for (int i = 0; i < model.getRowCount(); i++) {
+            Object keyCheck = model.getValueAt(i, 0);
+            if(keyCheck.equals(key)) {
+                model.setValueAt(val, i, 1);
+                break;
+            }
+        }
+        pddlActionToCrclGenerator.setOptions(getTableOptions());
+    }
+    
     public Map<String, String> getTableOptions() {
         Map<String, String> options = new HashMap<>();
         TableModel model = jTableOptions.getModel();
@@ -2691,6 +2705,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private aprs.framework.pddl.executor.PositionMapJPanel positionMapJPanel1;
     // End of variables declaration//GEN-END:variables
 
+    
+    
     @Override
     public void loadProperties() throws IOException {
         if (null != propertiesFile && propertiesFile.canRead()) {

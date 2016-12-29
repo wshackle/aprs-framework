@@ -1,5 +1,5 @@
 #
-#Wed Dec 21 17:15:18 EST 2016
+#Thu Dec 29 11:34:03 EST 2016
 lookDwellTime=3.0
 approachZOffset=50.0
 manualPartNames=[kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear, null]
@@ -10,5 +10,5 @@ settleDwellTime=0.1
 rpy=180.0,0.0,0.0
 lookDwell=1.0
 defaultDwellTime=0.1
-lookForXYZ=217,150,171
+lookForXYZ=210,-150,171
 pddl.output=C\:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\example_pddl\\jan_24_2017_fanuc_demo_actions_no_large.txt

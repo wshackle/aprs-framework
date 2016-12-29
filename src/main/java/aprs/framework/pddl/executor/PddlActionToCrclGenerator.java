@@ -745,6 +745,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("Database not setup and connected.");
         }
         PoseType pose = qs.getPose(action.getArgs()[6]);
+        pose = correctPose(pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
 
