@@ -2128,7 +2128,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     public CompletableFuture<Void> safeAbort() {
         final CompletableFuture<Void> ret = new CompletableFuture<>();
-        if(!runningProgram) {
+        if (!runningProgram) {
             ret.complete(null);
             return ret;
         }
@@ -2310,7 +2310,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     program.setName("pddl_" + replanFromIndex + "_" + pddlActionToCrclGenerator.getLastIndex());
                     lastCrclProgName = crclProgName;
                     crclProgName = program.getName();
-                    if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size()-1) {
+                    if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size() - 1) {
                         jCheckBoxReplan.setSelected(true);
                         setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
                     } else {
@@ -2321,7 +2321,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     program.getMiddleCommand().clear();
                     program.getMiddleCommand().addAll(cmds);
                     program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
-                    if(autoStart) {
+                    if (autoStart) {
                         runningProgram = true;
                     }
                     setCrclProgram(program);
@@ -2938,7 +2938,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private boolean runningProgram = false;
-    
+
     @Override
     public void accept(PendantClientJPanel panel, int line) {
         CRCLStatusType status = panel.getStatus();
@@ -2964,10 +2964,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     replanRunnable.run();
                 }
             } else {
-                 crclProgName = "NOT_RUNNING";
-                runningProgram=false;
-                runProgramCompleteRunnables();
-               
+                crclProgName = "NOT_RUNNING";
+                runningProgram = false;
+                if (!replanStarted.getAndSet(true)) {
+                    runProgramCompleteRunnables();
+                }
             }
         }
     }
