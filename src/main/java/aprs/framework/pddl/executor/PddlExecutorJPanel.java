@@ -2349,22 +2349,22 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             if (null != offset) {
                 jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX().doubleValue(), offset.getY().doubleValue()));
             }
-            PoseType testPose = positionMap.getLastPoseOut();
-            if (null != testPose) {
+            PointType testPoint = positionMap.getLastPointOut();
+            if (null != testPoint) {
                 String testPoseString
                         = String.format("%.1f, %.1f, %.1f",
-                                testPose.getPoint().getX().doubleValue(),
-                                testPose.getPoint().getY().doubleValue(),
-                                testPose.getPoint().getZ().doubleValue());
+                                testPoint.getX().doubleValue(),
+                                testPoint.getY().doubleValue(),
+                                testPoint.getZ().doubleValue());
                 jTextFieldAdjPose.setText(testPoseString);
             }
-            PoseType origPose = positionMap.getLastPoseIn();
-            if (null != origPose) {
+            PointType origPoint = positionMap.getLastPointIn();
+            if (null != origPoint) {
                 String origPoseString
                         = String.format("%.1f, %.1f, %.1f",
-                                origPose.getPoint().getX().doubleValue(),
-                                origPose.getPoint().getY().doubleValue(),
-                                origPose.getPoint().getZ().doubleValue());
+                                origPoint.getX().doubleValue(),
+                                origPoint.getY().doubleValue(),
+                                origPoint.getZ().doubleValue());
                 this.jTextFieldTestPose.setText(origPoseString);
             }
         }

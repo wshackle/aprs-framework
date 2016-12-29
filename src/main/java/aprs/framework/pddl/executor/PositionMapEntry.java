@@ -22,6 +22,12 @@
  */
 package aprs.framework.pddl.executor;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import rcs.posemath.PmCartesian;
+
 /**
  *
  * @author shackle
@@ -34,16 +40,70 @@ public class PositionMapEntry {
     private final double offsetX;
     private final double offsetY;
     private final double offsetZ;
+    private final double minX;
+    private final double maxX;
+    private final double minY;
+    private final double maxY;
+    private final double minZ;
+    private final double maxZ;
+    private final List<PositionMapEntry> combined;
 
-    public PositionMapEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ) {
+    private PositionMapEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ, double minX, double maxX, double minY, double maxY, double minZ, double maxZ, PositionMapEntry ... combined) {
         this.robotX = robotX;
         this.robotY = robotY;
         this.robotZ = robotZ;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.offsetZ = offsetZ;
+        this.minX = minX;
+        this.maxX = maxX;
+        this.minY = minY;
+        this.maxY = maxY;
+        this.minZ = minZ;
+        this.maxZ = maxZ;
+        this.combined = new ArrayList<>();
+        this.combined.addAll(Arrays.asList(combined));
+        for(PositionMapEntry pme: combined) {
+            this.combined.addAll(pme.combined);
+        }
     }
-    
+
+    private PositionMapEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ) {
+        this.robotX = robotX;
+        this.robotY = robotY;
+        this.robotZ = robotZ;
+        this.maxX = this.minX = robotX;
+        this.maxY = this.minY = robotY;
+        this.maxZ = this.minZ = robotZ;
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+        this.offsetZ = offsetZ;
+        combined = Collections.emptyList();
+    }
+
+    public static PositionMapEntry pointOffsetEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ) {
+        return new PositionMapEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ);
+    }
+
+    public static PositionMapEntry pointOffsetEntryCombining(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ, PositionMapEntry pme1, PositionMapEntry pme2) {
+        return new PositionMapEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ,
+                Math.min(pme1.minX, pme2.minX),
+                Math.max(pme1.maxX, pme2.maxX),
+                Math.min(pme1.minY, pme2.minY),
+                Math.max(pme1.maxY, pme2.maxY),
+                Math.min(pme1.minZ, pme2.minZ),
+                Math.max(pme1.maxZ, pme2.maxZ),
+                pme1,pme2
+        );
+    }
+
+    public static PositionMapEntry pointPairEntry(double robotX, double robotY, double robotZ, double otherX, double otherY, double otherZ) {
+        return new PositionMapEntry(robotX, robotY, robotZ, otherX - robotX, otherY - robotY, otherZ - robotZ);
+    }
+
+    public static PositionMapEntry cartPairEntry(PmCartesian robotCart, PmCartesian otherCart) {
+        return pointPairEntry(robotCart.x, robotCart.y, robotCart.z, otherCart.x, otherCart.y, otherCart.z);
+    }
 
     public double getRobotX() {
         return robotX;
@@ -69,56 +129,51 @@ public class PositionMapEntry {
         return offsetZ;
     }
 
+    public double getOtherX() {
+        return robotX + offsetX;
+    }
+
+    public double getOtherY() {
+        return robotY + offsetY;
+    }
+
+    public double getOtherZ() {
+        return robotZ + offsetZ;
+    }
+
     @Override
     public String toString() {
-        return "PositionMapEntry{" + "robotX=" + robotX + ", robotY=" + robotY + ", robotZ=" + robotZ + ", offsetX=" + offsetX + ", offsetY=" + offsetY + ", offsetZ=" + offsetZ + '}';
+        return "PositionMapEntry{" + "robot(X,Y,Z)=" + robotX + "," + robotY + "," + robotZ + ", other(X,Y,Z)=" + getOtherX() + "," + getOtherY() + ", " + getOtherZ() + ", offset(X,Y,Z)=" + offsetX + "," + offsetY + "," + offsetZ + '}';
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 5;
-        hash = 29 * hash + (int) (Double.doubleToLongBits(this.robotX) ^ (Double.doubleToLongBits(this.robotX) >>> 32));
-        hash = 29 * hash + (int) (Double.doubleToLongBits(this.robotY) ^ (Double.doubleToLongBits(this.robotY) >>> 32));
-        hash = 29 * hash + (int) (Double.doubleToLongBits(this.robotZ) ^ (Double.doubleToLongBits(this.robotZ) >>> 32));
-        hash = 29 * hash + (int) (Double.doubleToLongBits(this.offsetX) ^ (Double.doubleToLongBits(this.offsetX) >>> 32));
-        hash = 29 * hash + (int) (Double.doubleToLongBits(this.offsetY) ^ (Double.doubleToLongBits(this.offsetY) >>> 32));
-        hash = 29 * hash + (int) (Double.doubleToLongBits(this.offsetZ) ^ (Double.doubleToLongBits(this.offsetZ) >>> 32));
-        return hash;
+    public double getMinX() {
+        return minX;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final PositionMapEntry other = (PositionMapEntry) obj;
-        if (Double.doubleToLongBits(this.robotX) != Double.doubleToLongBits(other.robotX)) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.robotY) != Double.doubleToLongBits(other.robotY)) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.robotZ) != Double.doubleToLongBits(other.robotZ)) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.offsetX) != Double.doubleToLongBits(other.offsetX)) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.offsetY) != Double.doubleToLongBits(other.offsetY)) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.offsetZ) != Double.doubleToLongBits(other.offsetZ)) {
-            return false;
-        }
-        return true;
+    public double getMaxX() {
+        return maxX;
     }
 
+    public double getMinY() {
+        return minY;
+    }
+
+    public double getMaxY() {
+        return maxY;
+    }
+
+    public double getMinZ() {
+        return minZ;
+    }
+
+    public double getMaxZ() {
+        return maxZ;
+    }
+
+    public List<PositionMapEntry> getCombined() {
+        return combined;
+    }
+    
     
 
 }
