@@ -458,24 +458,32 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
         String fromRpyOption = stealFrom.getExecutorOptions().get("rpy");
         String fromLookForXYZOption = stealFrom.getExecutorOptions().get("lookForXYZ");
-        
+
         return CompletableFuture.allOf(stealFrom.safeAbortAndDisconnectAsync(), stealFor.safeAbort())
                 .thenRun(() -> {
                     stealFor.connectRobot(stealFrom.getRobotName(), stealFromOrigCrclHost, stealFromOrigCrclPort);
                     stealFor.addPositionMap(pm);
-                    if(null != fromRpyOption) {
+                    if (null != fromRpyOption) {
                         stealFor.setExecutorOption("rpy", fromRpyOption);
                     }
-                    if(null != fromLookForXYZOption) {
+                    if (null != fromLookForXYZOption) {
                         stealFor.setExecutorOption("lookForXYZ", fromLookForXYZOption);
                     }
 //                    return null;
                 })
                 //                        () -> 
-                .thenCompose(x -> stealFor.continueActionList())
-                .thenCompose(x -> stealFor.safeAbortAndDisconnectAsync())
-                .thenRun(() -> stealFrom.connectRobot(stealFrom.getRobotName(), stealFromOrigCrclHost, stealFromOrigCrclPort))
-                .thenCompose(x -> stealFrom.continueActionList());
+                .thenCompose(x -> {
+                    return stealFor.continueActionList();
+                })
+                .thenCompose(x -> {
+                    return stealFor.safeAbortAndDisconnectAsync();
+                })
+                .thenRun(() -> {
+                    stealFrom.connectRobot(stealFrom.getRobotName(), stealFromOrigCrclHost, stealFromOrigCrclPort);
+                })
+                .thenCompose(x -> {
+                    return stealFrom.continueActionList();
+                });
 
     }
 
@@ -942,7 +950,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     private void jMenuItemSaveSetupAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveSetupAsActionPerformed
         JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
-        if(lastSetupFile != null) {
+        if (lastSetupFile != null) {
             chooser.setCurrentDirectory(lastSetupFile.getParentFile());
             chooser.setSelectedFile(lastSetupFile);
         }
@@ -959,7 +967,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     private void jMenuItemLoadSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadSetupActionPerformed
         JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
-        if(lastSetupFile != null) {
+        if (lastSetupFile != null) {
             chooser.setCurrentDirectory(lastSetupFile.getParentFile());
             chooser.setSelectedFile(lastSetupFile);
         }
@@ -1027,7 +1035,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     private void browseAndSavePositionMappings() throws HeadlessException {
         JFileChooser chooser = new JFileChooser();
-        if(null != lastPosMapFile) {
+        if (null != lastPosMapFile) {
             chooser.setCurrentDirectory(lastPosMapFile.getParentFile());
             chooser.setSelectedFile(lastPosMapFile);
         }
@@ -1061,7 +1069,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     private void jMenuItemLoadPosMapsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadPosMapsActionPerformed
         JFileChooser chooser = new JFileChooser();
-        if(lastPosMapFile != null) {
+        if (lastPosMapFile != null) {
             chooser.setCurrentDirectory(lastPosMapFile.getParentFile());
             chooser.setSelectedFile(lastPosMapFile);
         }
@@ -1146,11 +1154,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         try {
             File f = resolveFile(jTextFieldSelectedPosMapFilename.getText(), lastPosMapFile.getParentFile());
             JFileChooser chooser = new JFileChooser();
-            if(null != f) {
+            if (null != f) {
                 chooser.setCurrentDirectory(f.getParentFile());
                 chooser.setSelectedFile(f);
             }
-            
+
             if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
                 savePosFile(chooser.getSelectedFile());
             }
