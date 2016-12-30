@@ -2630,7 +2630,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
             return CompletableFuture.runAsync(() -> {
-
                 for (Future<?> f : futures) {
                     if (!f.isDone() && !f.isCancelled()) {
                         try {

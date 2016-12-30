@@ -54,6 +54,7 @@ import aprs.framework.tomcat.CRCLWebAppRunner;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
+import crcl.base.CRCLCommandType;
 import crcl.base.CRCLProgramType;
 import crcl.base.CommandStatusType;
 import crcl.base.PoseType;
@@ -77,6 +78,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.swing.JOptionPane;
 import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -108,19 +111,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private String taskName;
 
-    public Map<String,String> getExecutorOptions() {
-        if(null == pddlExecutorJInternalFrame1) {
+    public Map<String, String> getExecutorOptions() {
+        if (null == pddlExecutorJInternalFrame1) {
             return null;
         }
         return pddlExecutorJInternalFrame1.getOptions();
     }
-    
+
     public void setExecutorOption(String key, String value) {
-        if(null != pddlExecutorJInternalFrame1) {
+        if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.setOption(key, value);
         }
     }
-    
+
     public void addPositionMap(PositionMap pm) {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.addPositionMap(pm);
@@ -135,23 +138,23 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public PoseType getCurrentPose() {
-        if(null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected()) {
+        if (null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected()) {
             return pendantClientJInternalFrame.getCurrentPose();
         }
         return null;
     }
-    
+
     public boolean isConnected() {
-        if(null != pendantClientJInternalFrame ) {
+        if (null != pendantClientJInternalFrame) {
             return pendantClientJInternalFrame.isConnected();
         }
         return false;
     }
-    
+
     public void setConnected(boolean connected) {
-        if(null != pendantClientJInternalFrame ) {
-            if(pendantClientJInternalFrame.isConnected() != connected) {
-                if(connected) {
+        if (null != pendantClientJInternalFrame) {
+            if (pendantClientJInternalFrame.isConnected() != connected) {
+                if (connected) {
                     pendantClientJInternalFrame.connectCurrent();
                 } else {
                     pendantClientJInternalFrame.disconnect();
@@ -159,7 +162,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         }
     }
-    
+
     /**
      * Get the value of taskName
      *
@@ -285,11 +288,26 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public String getDetailsString() {
         StringBuilder sb = new StringBuilder();
         if (null != pendantClientJInternalFrame) {
-            sb.append("cmd=" + pendantClientJInternalFrame.getCurrentProgramCommand() + "\r\n");
-            pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state=" + state + "\r\n"));
-            sb.append("connected=" + pendantClientJInternalFrame.isConnected() + "\r\n");
+            CRCLCommandType cmd = pendantClientJInternalFrame.getCurrentProgramCommand();
+            if (null != cmd) {
+                try {
+                    sb.append("cmd=").append(CRCLSocket.getUtilSocket().commandToSimpleString(cmd)).append("\r\n");
+                } catch (ParserConfigurationException | SAXException | IOException ex) {
+                    sb.append("cmd= Exception : ").append(ex).append("\r\n");
+                    Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            pendantClientJInternalFrame.getCurrentStatus().ifPresent(status -> {
+                if (null != status.getCommandStatus() 
+                        && null != status.getCommandStatus().getStateDescription()
+                        && status.getCommandStatus().getStateDescription().length() > 0) {
+                    sb.append("state description =").append(status.getCommandStatus().getStateDescription()).append("\r\n");
+                }
+            });
+            pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state=").append(state).append("\r\n"));
+            sb.append("connected=").append(pendantClientJInternalFrame.isConnected()).append("\r\n");
         }
-        sb.append("robotCrclPort=" + this.getRobotCrclPort() + "\r\n");
+        sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append("\r\n");
         return sb.toString();
     }
 

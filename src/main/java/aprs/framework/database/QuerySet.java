@@ -27,6 +27,7 @@ import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.VectorType;
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -35,6 +36,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -42,11 +45,33 @@ import java.util.TreeMap;
  */
 public class QuerySet implements QuerySetInterface {
 
+    private final java.sql.Connection dbConnection;
+
+    public Connection getDbConnection() {
+        return dbConnection;
+    }
+    
+    public boolean isConnected() {
+        try {
+            return !closed && null != dbConnection && !dbConnection.isClosed();
+        } catch (SQLException ex) {
+            Logger.getLogger(QuerySet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+    
     public QuerySet(
             DbType dbtype,
             java.sql.Connection con,
             Map<DbQueryEnum, DbQueryInfo> queriesMap) throws SQLException {
         this.dbtype = dbtype;
+        this.dbConnection = con;
+        if(null == con) {
+            throw new IllegalArgumentException("connection is null");
+        }
+        if(con.isClosed()) {
+            throw new IllegalArgumentException("connection is already closed");
+        }
         if (null == queriesMap) {
             throw new IllegalArgumentException("queriesMap is null");
         }
@@ -259,6 +284,7 @@ public class QuerySet implements QuerySetInterface {
         this.debug = debug;
     }
 
+    
     @Override
     public PoseType getPose(String name) throws SQLException {
         if (closed) {
