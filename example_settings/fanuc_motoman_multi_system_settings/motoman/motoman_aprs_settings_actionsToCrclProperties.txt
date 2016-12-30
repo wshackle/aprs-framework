@@ -1,8 +1,8 @@
 #
-#Thu Dec 22 14:31:00 EST 2016
+#Fri Dec 30 14:34:51 EST 2016
 lookDwellTime=3.0
 approachZOffset=50.0
-manualPartNames=[large_gear_2, large_gear_1, kit_lg2small2_1_slot_s2, small_gear_2, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]
+manualPartNames=[kit_lg2small2_2_slot_l2, large_gear_2, large_gear_1, kit_lg2small2_1_slot_s2, small_gear_2, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]
 rotSpeed=30.0
 fastTransSpeed=200
 slowTransSpeed=50
@@ -10,5 +10,5 @@ settleDwellTime=0.1
 rpy=0.0,0.0,0.0
 lookDwell=1.0
 defaultDwellTime=0.5
-lookForXYZ=100,435,0
-pddl.output=C\:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\example_pddl\\dec_13_2016_motoman_demo_actions.txt
+lookForXYZ=240,435,0
+pddl.output=C\:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\example_pddl\\jan_24_2017_motoman_demo_actions.txt

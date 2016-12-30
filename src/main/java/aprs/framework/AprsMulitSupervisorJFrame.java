@@ -359,7 +359,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     private AprsJFrame findSystemWithRobot(String robot) {
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame aj = aprsSystems.get(i);
-            if (aj.getRobotName().equals(robot)) {
+            if (aj.getRobotName() != null && aj.getRobotName().equals(robot)) {
                 return aj;
             }
         }
