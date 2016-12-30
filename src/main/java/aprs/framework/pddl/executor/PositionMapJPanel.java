@@ -193,8 +193,24 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     }
 
     public void removePositionMap(PositionMap positionMap) {
-        this.positionMaps.add(positionMap);
-        jSpinnerIndex.setModel(new SpinnerNumberModel((int) jSpinnerIndex.getValue(), 0, positionMaps.size(), 1));
+        int spinVal = (int) jSpinnerIndex.getValue();
+        String pfn = positionMap.getFileName();
+        this.positionMaps.remove(positionMap);
+        if (pfn != null && pfn.length() > 0) {
+            for (int i = 0; i < positionMaps.size(); i++) {
+                if (positionMaps.get(i).getFileName().equals(pfn)) {
+                    positionMaps.remove(i);
+                }
+            }
+        }
+        if (spinVal < 0 || spinVal >= positionMaps.size()) {
+            spinVal = 0;
+        }
+        if(positionMaps.size() < 1) {
+            addPositionMap(PositionMap.emptyPositionMap());
+        }
+        loadPositionMapToTable(getPositionMap(spinVal));
+        jSpinnerIndex.setModel(new SpinnerNumberModel(spinVal, 0, positionMaps.size(), 1));
     }
 
     private boolean selected;
@@ -294,10 +310,14 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_jSpinnerIndexStateChanged
 
     private void jButtonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearActionPerformed
+        clearCurrentMap();
+    }//GEN-LAST:event_jButtonClearActionPerformed
+
+    public void clearCurrentMap() {
         final int spinVal = (int) jSpinnerIndex.getValue();
         setPositionMap(spinVal, PositionMap.emptyPositionMap());
         loadPositionMapToTable(getPositionMap(spinVal));
-    }//GEN-LAST:event_jButtonClearActionPerformed
+    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

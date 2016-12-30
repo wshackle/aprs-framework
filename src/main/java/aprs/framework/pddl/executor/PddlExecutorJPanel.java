@@ -2327,7 +2327,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     setCrclProgram(program);
                     started = autoStart;
                     replanStarted.set(false);
-                } catch (IllegalStateException | SQLException ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                 }
             });
@@ -2460,10 +2460,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     public void addPositionMap(PositionMap pm) {
         positionMapJPanel1.addPositionMap(pm);
+        pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
     }
 
     public void removePositionMap(PositionMap pm) {
         positionMapJPanel1.removePositionMap(pm);
+        pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
     }
 
     public PoseType correctPose(PoseType poseIn) {

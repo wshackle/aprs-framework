@@ -197,6 +197,13 @@ public class PositionMap {
     }
 
     public PoseType correctPose(PoseType poseIn) {
+        if (errmapList.size() < 1) {
+            if(null != poseIn) {
+                lastPointIn = poseIn.getPoint();
+                lastPointOut = poseIn.getPoint();
+            }
+            return poseIn;
+        }
         lastPointIn = poseIn.getPoint();
         PointType offsetPt = getOffset(poseIn.getPoint().getX().doubleValue(),
                 poseIn.getPoint().getY().doubleValue(),
@@ -211,6 +218,10 @@ public class PositionMap {
     }
 
     public PointType correctPoint(PointType ptIn) {
+        if (errmapList.size() < 1) {
+            lastPointIn = lastPointOut = ptIn;
+            return ptIn;
+        }
         lastPointIn = ptIn;
         PointType offsetPt = getOffset(ptIn.getX().doubleValue(),
                 ptIn.getY().doubleValue(),
@@ -365,6 +376,16 @@ public class PositionMap {
     }
 
     public PointType getOffset(double x, double y, double z) {
+        return getOffsetInternal(x, y, z, 0);
+    }
+
+    private PointType getOffsetInternal(double x, double y, double z, int recurseLevel) {
+        if (errmapList.size() < 1) {
+            return null;
+        }
+        if (errmapList.size() == 1) {
+            return point(errmapList.get(0).getOffsetX(),errmapList.get(0).getOffsetY(),errmapList.get(0).getOffsetZ());
+        }
         PositionMapEntry e12 = findXCombo(robotY -> robotY <= y, x, y, z);
         PositionMapEntry e34 = findXCombo(robotY -> robotY >= y, x, y, z);
         if (null == e12 || null == e34) {
@@ -392,7 +413,7 @@ public class PositionMap {
                                     continue;
                                 }
                                 if (k == l) {
-                                    if(k == i) {
+                                    if (k == i) {
                                         continue;
                                     }
                                     e34 = sortedList.get(k);
@@ -423,10 +444,12 @@ public class PositionMap {
                 }
             }
             if (null == e12 || null == e34) {
-                PointType p1 = getOffset(x+000.1, y+000.1, z);
-                PointType p2 = getOffset(x-000.1, y-000.1, z);
-                if(null != p1 && null != p2) {
-                    return CRCLPosemath.multiply(0.5,CRCLPosemath.add(p1, p2));
+                if (recurseLevel == 0) {
+                    PointType p1 = getOffsetInternal(x + 000.1, y + 000.1, z, recurseLevel + 1);
+                    PointType p2 = getOffsetInternal(x - 000.1, y - 000.1, z, recurseLevel + 1);
+                    if (null != p1 && null != p2) {
+                        return CRCLPosemath.multiply(0.5, CRCLPosemath.add(p1, p2));
+                    }
                 }
                 throw new IllegalStateException("x=" + x + ",y=" + y + ",e12=" + e12 + ", e34=" + e34 + ", sortedList=" + sortedList);
             }

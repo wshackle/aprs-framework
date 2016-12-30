@@ -455,19 +455,27 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
         String stealFromOrigCrclHost = stealFrom.getRobotCrclHost();
         int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
+        String stealFromRobotName = stealFrom.getRobotName();
 
-        String fromRpyOption = stealFrom.getExecutorOptions().get("rpy");
-        String fromLookForXYZOption = stealFrom.getExecutorOptions().get("lookForXYZ");
+        String stealForOrigCrclHost = stealFor.getRobotCrclHost();
+        int stealForOrigCrclPort = stealFor.getRobotCrclPort();
+        String stealForRobotName = stealFor.getRobotName();
+        
+        String stealFromRpyOption = stealFrom.getExecutorOptions().get("rpy");
+        String stealFromLookForXYZOption = stealFrom.getExecutorOptions().get("lookForXYZ");
+
+        String stealForRpyOption = stealFor.getExecutorOptions().get("rpy");
+        String stealForLookForXYZOption = stealFor.getExecutorOptions().get("lookForXYZ");
 
         return CompletableFuture.allOf(stealFrom.safeAbortAndDisconnectAsync(), stealFor.safeAbort())
                 .thenRun(() -> {
-                    stealFor.connectRobot(stealFrom.getRobotName(), stealFromOrigCrclHost, stealFromOrigCrclPort);
+                    stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
                     stealFor.addPositionMap(pm);
-                    if (null != fromRpyOption) {
-                        stealFor.setExecutorOption("rpy", fromRpyOption);
+                    if (null != stealFromRpyOption) {
+                        stealFor.setExecutorOption("rpy", stealFromRpyOption);
                     }
-                    if (null != fromLookForXYZOption) {
-                        stealFor.setExecutorOption("lookForXYZ", fromLookForXYZOption);
+                    if (null != stealFromLookForXYZOption) {
+                        stealFor.setExecutorOption("lookForXYZ", stealFromLookForXYZOption);
                     }
 //                    return null;
                 })
@@ -479,7 +487,18 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     return stealFor.safeAbortAndDisconnectAsync();
                 })
                 .thenRun(() -> {
-                    stealFrom.connectRobot(stealFrom.getRobotName(), stealFromOrigCrclHost, stealFromOrigCrclPort);
+                    stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
+                    
+                    if (null != stealForRpyOption) {
+                        stealFor.setExecutorOption("rpy", stealForRpyOption);
+                    }
+                    if (null != stealForLookForXYZOption) {
+                        stealFor.setExecutorOption("lookForXYZ", stealForLookForXYZOption);
+                    }
+                    stealFor.removePositionMap(pm);
+                    stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);
+                    stealFor.disconnectRobot();
+                    stealFor.setRobotName(stealForRobotName);
                 })
                 .thenCompose(x -> {
                     return stealFrom.continueActionList();
