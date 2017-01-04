@@ -1431,6 +1431,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             this.crclProgram = crclProgram;
             unstartedProgram = null;
             Utils.runOnDispatchThreadWithCatch(() -> loadProgramToTable(crclProgram));
+            this.runningProgram = true;
             if (null == aprsJFrame) {
                 throw new IllegalStateException("Can't start crcl program with null aprsJFrame reference.");
             }
@@ -2451,6 +2452,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private void runProgramCompleteRunnables() {
+        this.runningProgram = false;
         List<Runnable> runnables = new ArrayList<>();
         synchronized (programCompleteRunnablesList) {
             runnables.addAll(programCompleteRunnablesList);
@@ -3008,7 +3010,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private int customRunnablesIndex = -1;
 
     private void runAllCustomRunnables() {
-
+        
         if (null != customRunnables
                 && customRunnablesIndex >= 0
                 && customRunnables.size() > 0
