@@ -3066,9 +3066,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private boolean runningProgram = false;
 
     @Override
-    public void accept(PendantClientJPanel panel, int line) {
-        CRCLStatusType status = panel.getStatus();
-        CRCLProgramType program = panel.getProgram();
+    public void accept(PendantClientJPanel panel, int line,CRCLProgramType program, CRCLStatusType status) {
         CommandStateEnumType state = status.getCommandStatus().getCommandState();
         int sz = program.getMiddleCommand().size();
         if (this.debug) {
