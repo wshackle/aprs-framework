@@ -268,13 +268,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    public void setCRCLProgram(CRCLProgramType program, boolean autoStart) throws JAXBException {
+    public synchronized  void setCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (null != pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.setProgram(program);
-            if (autoStart) {
-                pendantClientJInternalFrame.runCurrentProgram();
+            synchronized (pendantClientJInternalFrame) {
+                pendantClientJInternalFrame.setProgram(program);
             }
         }
+    }
+
+    public synchronized CompletableFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException {
+        if (null != pendantClientJInternalFrame) {
+                pendantClientJInternalFrame.setProgram(program);
+                return pendantClientJInternalFrame.runCurrentProgram();
+        }
+        CompletableFuture<Boolean> ret = new CompletableFuture<>();
+        ret.complete(false);
+        return ret;
     }
 
     public void immediateAbort() {
@@ -298,7 +307,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }
             }
             pendantClientJInternalFrame.getCurrentStatus().ifPresent(status -> {
-                if (null != status.getCommandStatus() 
+                if (null != status.getCommandStatus()
                         && null != status.getCommandStatus().getStateDescription()
                         && status.getCommandStatus().getStateDescription().length() > 0) {
                     sb.append("state description =").append(status.getCommandStatus().getStateDescription()).append("\r\n");

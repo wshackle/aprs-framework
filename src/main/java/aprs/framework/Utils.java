@@ -67,10 +67,8 @@ public class Utils {
             if (SwingUtilities.isEventDispatchThread()) {
                 throw new IllegalStateException("One can not get a swing future result on the EventDispatchThread. (getNow can still be used.)");
             }
-            return super.get(timeout, unit); 
+            return super.get(timeout, unit);
         }
-        
-        
 
     }
 
@@ -107,7 +105,7 @@ public class Utils {
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             r.run();
             ret.complete(null);
-                return ret;
+            return ret;
         } else {
             javax.swing.SwingUtilities.invokeLater(() -> {
                 r.run();
@@ -125,6 +123,25 @@ public class Utils {
         } else {
             javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
             return ret;
+        }
+    }
+
+    private static <R> R unwrap(CompletableFuture<R> f) {
+        try {
+            return f.get();
+        } catch (InterruptedException | ExecutionException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+
+    public static <R> CompletableFuture<R> composeOnDispatchThread(final Supplier<CompletableFuture<R>> s) {
+        CompletableFuture<CompletableFuture<R>> ret = new SwingFuture<>();
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+            return s.get();
+        } else {
+            javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
+            return ret.thenApply(f -> unwrap(f));
         }
     }
 
