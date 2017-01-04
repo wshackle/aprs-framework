@@ -53,6 +53,14 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
         return this.actionsToCrclJPanel1.safeAbort();
     }
     
+    public int getCurrentActionIndex() {
+        return this.actionsToCrclJPanel1.getCurrentActionIndex();
+    }
+    
+    public List<PddlAction> getActionsList() {
+        return this.actionsToCrclJPanel1.getActionsList();
+    }
+    
     public CompletableFuture<Void> continueActionList() {
         return this.actionsToCrclJPanel1.continueActionList();
     }
@@ -113,11 +121,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
         this.actionsToCrclJPanel1.browseActionsFile();
     }
 
-    @Override
-    public List<PddlAction> getActionsList() {
-        return this.actionsToCrclJPanel1.getActionsList();
-    }
-
+    
     @Override
     public void setActionsList(List<PddlAction> actionsList) {
         this.actionsToCrclJPanel1.setActionsList(actionsList);

@@ -2248,6 +2248,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }//GEN-LAST:event_jButtonPlacePartActionPerformed
 
+    private int[] crclIndexes = null;
+
     public void setCrclIndexes(int indexes[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < indexes.length; i++) {
@@ -2257,6 +2259,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             model.setValueAt(indexes[i], i, 1);
         }
         autoResizeTableColWidths(jTablePddlOutput);
+        this.crclIndexes = indexes;
     }
 
     public void setPddlLabelss(String labels[]) {
@@ -2366,6 +2369,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return ret;
         }
     }
+    private int crclStartActionIndex = -1;
+    private int crclEndActionIndex = -1;
 
     private CompletableFuture<Boolean> generateCrcl() throws IOException, IllegalStateException, SQLException {
         boolean doSafeAbort;
@@ -2399,6 +2404,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         replanFromIndex = 0;
                     }
                     pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
+                    crclStartActionIndex = this.replanFromIndex;
+                    currentActionIndex = crclStartActionIndex;
+                    if (null != aprsJFrame) {
+                        aprsJFrame.updateTitle();
+                    }
                     List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(actionsList, this.replanFromIndex, options);
                     int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
                     indexes = Arrays.copyOf(indexes, indexes.length);
@@ -2410,6 +2420,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     lastCrclProgName = crclProgName;
                     crclProgName = program.getName();
                     boolean replanAfterCrclBlock = false;
+                    crclEndActionIndex = pddlActionToCrclGenerator.getLastIndex();
                     if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size() - 1) {
                         setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
                         replanAfterCrclBlock = jCheckBoxReplan.isSelected();
@@ -3010,7 +3021,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private int customRunnablesIndex = -1;
 
     private void runAllCustomRunnables() {
-        
+
         if (null != customRunnables
                 && customRunnablesIndex >= 0
                 && customRunnables.size() > 0
@@ -3065,10 +3076,38 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private boolean runningProgram = false;
 
+    private int currentActionIndex = -1;
+
+    public int getCurrentActionIndex() {
+        return currentActionIndex;
+    }
+
+    private int actionIndexFromCrclLine(int crclLine) {
+        if (null != crclIndexes) {
+            for (int i = crclStartActionIndex; i < crclIndexes.length && i < crclEndActionIndex; i++) {
+                if (crclLine >= crclIndexes[i]) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    PddlAction actionFromIndex(int index) {
+        if (null != actionsList && actionsList.size() >= index && index >= 0) {
+            return actionsList.get(index);
+        }
+        return null;
+    }
+
     @Override
-    public void accept(PendantClientJPanel panel, int line,CRCLProgramType program, CRCLStatusType status) {
+    public void accept(PendantClientJPanel panel, int line, CRCLProgramType program, CRCLStatusType status) {
         CommandStateEnumType state = status.getCommandStatus().getCommandState();
         int sz = program.getMiddleCommand().size();
+        currentActionIndex = actionIndexFromCrclLine(line);
+        if (null != aprsJFrame) {
+            aprsJFrame.updateTitle();
+        }
         if (this.debug) {
             System.out.println("replanStarted = " + replanStarted);
             System.out.println("replanRunnable = " + replanRunnable);
@@ -3080,6 +3119,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             System.out.println("lastCrclProgName = " + lastCrclProgName);
             System.out.println("program.getName() = " + program.getName());
         }
+
 //        if (line >= sz && state != CommandStateEnumType.CRCL_WORKING
 //                && (Objects.equals(crclProgName, program.getName()) || !Objects.equals(lastCrclProgName, program.getName()))) {
 //            if (jCheckBoxReplan.isSelected()

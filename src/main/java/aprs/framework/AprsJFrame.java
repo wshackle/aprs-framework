@@ -56,6 +56,7 @@ import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
 import crcl.base.CRCLCommandType;
 import crcl.base.CRCLProgramType;
+import crcl.base.CRCLStatusType;
 import crcl.base.CommandStatusType;
 import crcl.base.PoseType;
 import crcl.ui.client.PendantClientJInternalFrame;
@@ -68,6 +69,7 @@ import java.awt.Container;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -268,7 +270,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    public synchronized  void setCRCLProgram(CRCLProgramType program) throws JAXBException {
+    public synchronized void setCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (null != pendantClientJInternalFrame) {
             synchronized (pendantClientJInternalFrame) {
                 pendantClientJInternalFrame.setProgram(program);
@@ -278,8 +280,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     public synchronized CompletableFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (null != pendantClientJInternalFrame) {
-                pendantClientJInternalFrame.setProgram(program);
-                return pendantClientJInternalFrame.runCurrentProgram();
+            pendantClientJInternalFrame.setProgram(program);
+            return pendantClientJInternalFrame.runCurrentProgram();
         }
         CompletableFuture<Boolean> ret = new CompletableFuture<>();
         ret.complete(false);
@@ -315,6 +317,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             });
             pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state=").append(state).append("\r\n"));
             sb.append("connected=").append(pendantClientJInternalFrame.isConnected()).append("\r\n");
+        }
+        if (null != pddlExecutorJInternalFrame1) {
+            List<PddlAction> actions = pddlExecutorJInternalFrame1.getActionsList();
+            int curActionIndex = pddlExecutorJInternalFrame1.getCurrentActionIndex();
+            if (null != actions ) {
+                sb.append("PDDL curActionIndex=").append(curActionIndex).append("\r\n");
+                sb.append("PDDL actions size=").append(actions.size()).append("\r\n");
+                if(curActionIndex >= 0 && curActionIndex < actions.size()) {
+                    sb.append("PDDL action =").append(actions.get(curActionIndex)).append("\r\n");
+                }
+            }
         }
         sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append("\r\n");
         return sb.toString();
@@ -741,9 +754,24 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (!oldTitle.equals(newTitle)) {
             setTitle(newTitle);
             setupWindowsMenu();
-            for (Runnable r : titleUpdateRunnables) {
-                r.run();
+        }
+        for (Runnable r : titleUpdateRunnables) {
+            r.run();
+        }
+    }
+
+    public void updateTitle() {
+        if (null != pendantClientJInternalFrame) {
+            CommandStatusType cs = pendantClientJInternalFrame.getCurrentStatus()
+                    .map(x -> x.getCommandStatus())
+                    .orElse(null);
+            if (null == cs || null == cs.getCommandState()) {
+                updateTitle("", "");
+            } else {
+                updateTitle(cs.getCommandState().toString(), cs.getStateDescription());
             }
+        } else {
+            updateTitle("", "");
         }
     }
 
