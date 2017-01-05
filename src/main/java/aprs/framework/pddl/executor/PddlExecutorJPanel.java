@@ -2489,7 +2489,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
-        setCrclProgram(program);
+        startCrclProgram(program);
 
 //        if (null != getPositionMap()) {
 //            PointType offset = getPositionMap().getLastOffset();
@@ -2518,7 +2518,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         replanStarted.set(false);
     }
 
-    public void takePart(String part) throws IOException, IllegalStateException, SQLException {
+    public CompletableFuture<Boolean> takePart(String part) throws IOException, IllegalStateException, SQLException {
         clearAll();
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
@@ -2533,8 +2533,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
-        setCrclProgram(program);
-
+        
         for (PositionMap positionMap : getPositionMaps()) {
             PointType offset = positionMap.getLastOffset();
             if (null != offset) {
@@ -2561,9 +2560,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
 
         replanStarted.set(false);
+        return startCrclProgram(program);
     }
 
-    public void returnPart(String part) throws IOException {
+    public CompletableFuture<Boolean>  returnPart(String part) throws IOException {
         clearAll();
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
@@ -2575,8 +2575,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
-        setCrclProgram(program);
+        
         replanStarted.set(false);
+        return startCrclProgram(program);
     }
 
     Random random = new Random();
