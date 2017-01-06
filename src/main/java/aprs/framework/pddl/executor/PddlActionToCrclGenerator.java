@@ -329,9 +329,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         addSetUnits(cmds);
         for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
-            actionToCrclIndexes[lastIndex] = cmds.size();
-            actionToCrclTakenPartsNames[lastIndex] = null;
-            actionToCrclLabels[lastIndex] = "";
+            
             PddlAction action = actions.get(lastIndex);
             System.out.println("action = " + action);
 //            try {
@@ -348,6 +346,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     placePart(action, cmds);
                     break;
             }
+            actionToCrclIndexes[lastIndex] = cmds.size();
+            actionToCrclLabels[lastIndex] = "";
             actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
 //            } catch (Exception ex) {
 //                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);

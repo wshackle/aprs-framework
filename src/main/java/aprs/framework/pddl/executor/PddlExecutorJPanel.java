@@ -3085,13 +3085,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private int actionIndexFromCrclLine(int crclLine) {
         if (null != crclIndexes) {
-            for (int i = crclStartActionIndex; i < crclIndexes.length && i < crclEndActionIndex; i++) {
-                if (crclLine >= crclIndexes[i]) {
+            for (int i = crclStartActionIndex; i < crclIndexes.length && i <= crclEndActionIndex; i++) {
+                if (crclLine <= crclIndexes[i]) {
                     return i;
                 }
             }
         }
-        return -1;
+        return crclEndActionIndex;
     }
 
     PddlAction actionFromIndex(int index) {
