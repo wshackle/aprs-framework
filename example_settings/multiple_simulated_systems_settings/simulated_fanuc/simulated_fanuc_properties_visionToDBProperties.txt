@@ -1,5 +1,5 @@
 #
-#Wed Jan 04 16:11:04 EST 2017
+#Mon Jan 09 15:07:34 EST 2017
 NEO4J.host=localhost
 --visionport=4000
 --visionhost=localhost
@@ -16,13 +16,13 @@ NEO4J.localhost_4000.passwd=
 --dbtype=NEO4J
 transform.point.z=0.0
 transform.point.y=0.0
-transform.point.x=0.0
 --acquirestate=ON
+transform.point.x=0.0
 AddRepeatCountsToDatabaseNames=false
 --dbport=7480
-NEO4J.localhost_7480.user=neo4j
-NEO4J.localhost_7480.name=neo4j
 --commandport=4001
+NEO4J.localhost_7480.name=neo4j
+NEO4J.localhost_7480.user=neo4j
 --dbhost=localhost
 --dbpasswd=password
 NEO4J.localhost.port=7480

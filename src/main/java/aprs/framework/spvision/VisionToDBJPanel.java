@@ -74,6 +74,7 @@ import java.io.PrintStream;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -590,11 +591,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
             },
             new String [] {
-                "Position", "Name", "Repeats", "Rotation", "X", "Y", "Score", "Type"
+                "Position", "Name", "Repeats", "Rotation", "X", "Y", "Score", "Type", "In PT?", "In KT?"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Boolean.class, java.lang.Boolean.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -1006,7 +1007,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             for (int i = 0; i < visionList.size(); i++) {
                 DetectedItem ci = visionList.get(i);
                 if (tm.getRowCount() <= i) {
-                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.score, ci.type});
+                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.score, ci.type,ci.insideKitTray,ci.insidePartsTray});
                     continue;
                 }
                 tm.setValueAt(ci.index, i, 0);
@@ -1017,6 +1018,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 tm.setValueAt(ci.y, i, 5);
                 tm.setValueAt(ci.score, i, 6);
                 tm.setValueAt(ci.type, i, 7);
+                tm.setValueAt(ci.insidePartsTray, i, 8);
+                tm.setValueAt(ci.insideKitTray, i, 9);
             }
         }
         if (this.jCheckBoxDebug.isSelected()) {
@@ -1584,7 +1587,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void jButtonForceSingleUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonForceSingleUpdateActionPerformed
         int row = jTableFromVision.getSelectedRow();
-        forceUpdateSingle(row);
+        if(row >= 0) {
+            forceUpdateSingle(row);
+        }
     }//GEN-LAST:event_jButtonForceSingleUpdateActionPerformed
 
     private void jButtonForceAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonForceAllActionPerformed
@@ -1606,13 +1611,19 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     public void forceUpdateSingle(int row) throws NumberFormatException {
         DetectedItem item = new DetectedItem();
+        Map<String,Integer> nameMap = new HashMap<>();
+        for (int i = 0; i < jTableFromVision.getColumnCount(); i++) {
+            nameMap.put(jTableFromVision.getColumnName(i), i);
+        }
         item.name = (String) jTableFromVision.getValueAt(row, 1);
         item.fullName = item.name;
         item.rotation = Double.valueOf(jTableFromVision.getValueAt(row, 3).toString());
         item.x = Double.valueOf(jTableFromVision.getValueAt(row, 4).toString());
         item.y = Double.valueOf(jTableFromVision.getValueAt(row, 5).toString());
         item.score = Double.valueOf(jTableFromVision.getValueAt(row, 6).toString());
-        item.type = (String) jTableFromVision.getValueAt(row, 7);
+        item.type = (String) jTableFromVision.getValueAt(row, nameMap.get("Type"));
+        item.insideKitTray = (Boolean) jTableFromVision.getValueAt(row, nameMap.get("In KT?"));
+        item.insidePartsTray = (Boolean) jTableFromVision.getValueAt(row, nameMap.get("In PT?"));
         System.out.println("item = " + item);
         List<DetectedItem> singletonList = Collections.singletonList(item);
         System.out.println("singletonList = " + singletonList);

@@ -52,6 +52,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -768,6 +769,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     public void updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
         List<DetectedItem> itemsToVerify = new ArrayList<>();
+        List<DetectedItem> partsTrays
+                = list.stream()
+                .filter((DetectedItem item) -> "PT".equals(item.type))
+                .collect(Collectors.toList());
+        List<DetectedItem> kitTrays
+                = list.stream()
+                .filter((DetectedItem item) -> "KT".equals(item.type))
+                .collect(Collectors.toList());
+
         try {
             long t0_nanos = System.nanoTime();
             long t0_millis = System.currentTimeMillis();
@@ -804,6 +814,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     DetectedItem ci = list.get(i);
                     if (null == ci || ci.name.compareTo("*") == 0) {
                         continue;
+                    }
+                    if ("P".equals(ci.type)) {
+                        if (ci.insidePartsTray || inside(partsTrays, ci)) {
+                            ci.fullName = ci.name + "_in_pt";
+                            ci.insidePartsTray = true;
+                        } else if (ci.insideKitTray || inside(kitTrays, ci)) {
+                            ci.fullName = ci.name + "_in_kt";
+                            ci.insideKitTray = true;
+                        }
                     }
                     if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
                         ci.fullName = ci.name;
@@ -984,6 +1003,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 displayInterface.updateResultsMap(updateResultsMap);
             }
         }
+    }
+
+    private static boolean inside(List<DetectedItem> partsTrays, DetectedItem ci) {
+        return partsTrays.stream().anyMatch((DetectedItem item) -> Math.abs(item.x - ci.x) < 100 && Math.abs(item.y - ci.y) < 100);
     }
 
     public void deletePose(String name) throws SQLException {

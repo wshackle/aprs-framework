@@ -59,6 +59,8 @@ public class DetectedItem {
     public AffineTransform origTransform;
     public AffineTransform relTransform;
     public Rectangle2D.Double displayRect;
+    public boolean insideKitTray;
+    public boolean insidePartsTray;
     
     public DetectedItem() {
         score = 100.0;
