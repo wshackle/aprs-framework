@@ -55,24 +55,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import java.util.Arrays;
 import rcs.posemath.PmCartesian;
-import rcs.posemath.PmException;
 import rcs.posemath.PmRpy;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 
@@ -329,7 +314,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         addSetUnits(cmds);
         for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
-            
+
             PddlAction action = actions.get(lastIndex);
             System.out.println("action = " + action);
 //            try {

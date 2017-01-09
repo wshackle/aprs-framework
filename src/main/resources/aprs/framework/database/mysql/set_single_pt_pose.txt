@@ -1,0 +1,23 @@
+#params= X(1), Y(2), VXI(3),VXJ(4),NAME(5),NAME(6),NAME(7)
+#results=
+update Point p, Vector vx, Vector vz 
+set p.hasPoint_X = ?, p.hasPoint_Y = ?, vx.hasVector_I = ?, vx.hasVector_J = ?,
+ vx.hasVector_K=0, vz.hasVector_I=0,vz.hasVector_J=0,vz.hasVector_K=1
+ where p._NAME = (
+select hasPoseLocation_Point from PoseLocation
+where _NAME =  (
+select hasSolidObject_PrimaryLocation from SolidObject
+where _NAME = ? ) )
+and
+vx._NAME = (
+select hasPoseLocation_XAxis from PoseLocation
+where _NAME =  (
+select hasSolidObject_PrimaryLocation from SolidObject
+where _NAME = ? ) )
+ and 
+ vz._NAME = (
+select hasPoseLocation_ZAxis from PoseLocation
+where _NAME =  (
+select hasSolidObject_PrimaryLocation from SolidObject
+where _NAME = ? ) )
+

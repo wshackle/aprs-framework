@@ -205,7 +205,7 @@ public class VisionSocketClient implements AutoCloseable {
                 listOut = new ArrayList<>();
             }
             fa = line.split(",");
-            Map<String, Integer> repeatsMap = new HashMap<String, Integer>();
+           
             int index = 0;
             for (i = 0; i < fa.length - 5; i += 6) {
                 DetectedItem ci = (listOut.size() > index) ? listOut.get(index) : new DetectedItem();
@@ -268,14 +268,14 @@ public class VisionSocketClient implements AutoCloseable {
                 ci.type = String.valueOf(fa[i + 5]);
 
                 ci.index = index;
-                ci.repeats = (repeatsMap.containsKey(ci.name)) ? repeatsMap.get(ci.name) : 0;
+//                ci.repeats = (repeatsMap.containsKey(ci.name)) ? repeatsMap.get(ci.name) : 0;
                 if (listOut.size() > index) {
                     listOut.set(index, ci);
                 } else {
                     listOut.add(ci);
                 }
                 index++;
-                repeatsMap.put(ci.name, ci.repeats + 1);
+//                repeatsMap.put(ci.name, ci.repeats + 1);
             }
             while (listOut.size() > index) {
                 listOut.remove(index);

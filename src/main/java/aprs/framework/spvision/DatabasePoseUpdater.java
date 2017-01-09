@@ -39,6 +39,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -60,6 +61,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private Connection con;
     private PreparedStatement update_statement;
+    private PreparedStatement update_parts_tray_statement;
+    private PreparedStatement update_kit_tray_statement;
 //    private PreparedStatement addnew_statement;
     private PreparedStatement query_all_statement;
     private PreparedStatement get_single_statement;
@@ -272,7 +275,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private String queryAllString;
     private String querySingleString;
     private String queryDeleteSinglePoseString;
-    private String mergeStatementString;
+    private String updateStatementString;
+    private String updatePartsTrayStatementString;
+    private String updateKitTrayStatementString;
 
     private void setupStatements() throws SQLException {
         if (null == queriesMap) {
@@ -301,9 +306,23 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                + " where _NAME = ? ) )");
 //                mergeStatementString = MYSQL_UPDATE_STRING;
 //                queryAllString = MYSQL_QUERY_ALL_STRING;
-                mergeStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
+                updateStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
                 queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
-                update_statement = con.prepareStatement(mergeStatementString);
+                update_statement = con.prepareStatement(updateStatementString);
+                updateKitTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_KT_POSE).getQuery();
+                if (updateKitTrayStatementString != null && updateKitTrayStatementString.length() > 0) {
+                    update_kit_tray_statement = con.prepareStatement(updateKitTrayStatementString);
+                } else {
+                    update_kit_tray_statement = update_statement;
+                    updateKitTrayStatementString = updateStatementString;
+                }
+                updatePartsTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_PT_POSE).getQuery();
+                if (updateKitTrayStatementString != null && updateKitTrayStatementString.length() > 0) {
+                    update_parts_tray_statement = con.prepareStatement(updatePartsTrayStatementString);
+                } else {
+                    update_parts_tray_statement = update_statement;
+                    updatePartsTrayStatementString = updateStatementString;
+                }
                 updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
                 query_all_statement = con.prepareStatement(queryAllString);
                 querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
@@ -318,10 +337,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 useBatch = false;
 //                mergeStatementString = NEO4J_MERGE_STATEMENT_STRING;
 //                queryAllString = NEO4J_QUERY_ALL_POSES_QUERY_STRING;
-                mergeStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
+                updateStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
                 //System.out.println("mergeStatementString ---> "+mergeStatementString);
                 queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
-                update_statement = con.prepareStatement(mergeStatementString);
+                update_statement = con.prepareStatement(updateStatementString);
 
 //                addnew_statement = con.prepareStatement(db);
                 query_all_statement = con.prepareStatement(queryAllString);
@@ -330,6 +349,20 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 queryDeleteSinglePoseString = queriesMap.get(DbQueryEnum.DELETE_SINGLE_POSE).getQuery();
                 get_single_statement = con.prepareStatement(querySingleString);
                 getSingleParamTypes = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getParams();
+                updateKitTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_KT_POSE).getQuery();
+                if (updateKitTrayStatementString != null && updateKitTrayStatementString.length() > 0) {
+                    update_kit_tray_statement = con.prepareStatement(updateKitTrayStatementString);
+                } else {
+                    update_kit_tray_statement = update_statement;
+                    updateKitTrayStatementString = updateStatementString;
+                }
+                updatePartsTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_PT_POSE).getQuery();
+                if (updateKitTrayStatementString != null && updateKitTrayStatementString.length() > 0) {
+                    update_parts_tray_statement = con.prepareStatement(updatePartsTrayStatementString);
+                } else {
+                    update_parts_tray_statement = update_statement;
+                    updatePartsTrayStatementString = updateStatementString;
+                }
 //                updateParamTypes = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
                 break;
 
@@ -611,7 +644,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     @Override
     public String toString() {
-        return "DatabasePoseUpdater{" + "con=" + con + ", dbtype=" + dbtype + ", useBatch=" + useBatch + ", verify=" + verify + ", totalUpdateTimeMillis=" + totalUpdateTimeMillis + ", maxUpdateTimeMillis=" + maxUpdateTimeMillis + ", totalUpdateTimeNanos=" + totalUpdateTimeNanos + ", maxUpdateTimeNanos=" + maxUpdateTimeNanos + ", totalUpdates=" + totalUpdates + ", totalListUpdates=" + totalListUpdates + ", sharedConnection=" + sharedConnection + ", queryAllString=" + queryAllString + ", querySingleString=" + querySingleString + ", mergeStatementString=" + mergeStatementString + ", updateParamTypes=" + updateParamTypes + ", getSingleParamTypes=" + getSingleParamTypes + ", debug=" + debug + '}';
+        return "DatabasePoseUpdater{" + "con=" + con + ", dbtype=" + dbtype + ", useBatch=" + useBatch + ", verify=" + verify + ", totalUpdateTimeMillis=" + totalUpdateTimeMillis + ", maxUpdateTimeMillis=" + maxUpdateTimeMillis + ", totalUpdateTimeNanos=" + totalUpdateTimeNanos + ", maxUpdateTimeNanos=" + maxUpdateTimeNanos + ", totalUpdates=" + totalUpdates + ", totalListUpdates=" + totalListUpdates + ", sharedConnection=" + sharedConnection + ", queryAllString=" + queryAllString + ", querySingleString=" + querySingleString + ", mergeStatementString=" + updateStatementString + ", updateParamTypes=" + updateParamTypes + ", getSingleParamTypes=" + getSingleParamTypes + ", debug=" + debug + '}';
     }
 
     @Override
@@ -749,7 +782,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 if (null == update_statement) {
                     return;
                 }
-
+                if (addRepeatCountsToName) {
+                    Collections.sort(list, new Comparator<DetectedItem>() {
+                        @Override
+                        public int compare(DetectedItem o1, DetectedItem o2) {
+                            return Double.compare(1000.0 * ((int) (o1.x / 25)) + o1.y, 1000.0 * ((int) (o2.x / 25)) + o2.y);
+                        }
+                    });
+                }
                 List<UpdateResults> batchUrs = new ArrayList<>();
                 if (null != displayInterface && displayInterface.isDebug()) {
                     debug = true;
@@ -759,6 +799,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 }
                 int updatedCount = -1;
                 List<String> skippedUpdates = new ArrayList<>();
+                Map<String, Integer> repeatsMap = new HashMap<String, Integer>();
                 for (int i = 0; i < list.size(); i++) {
                     DetectedItem ci = list.get(i);
                     if (null == ci || ci.name.compareTo("*") == 0) {
@@ -768,11 +809,29 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         ci.fullName = ci.name;
                     }
                     if (addRepeatCountsToName) {
+                        ci.repeats = (repeatsMap.containsKey(ci.name)) ? repeatsMap.get(ci.name) : 0;
+                        repeatsMap.put(ci.name, ci.repeats + 1);
                         ci.fullName = ci.name + "_" + (ci.repeats + 1);
                     }
-                    List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, update_statement);
+                    PreparedStatement stmnt = update_statement;
+                    String statementString = updateStatementString;
+                    if (null != ci.type) {
+                        switch (ci.type) {
+                            case "PT":
+                                stmnt = update_parts_tray_statement;
+                                statementString = updatePartsTrayStatementString;
+                                break;
+
+                            case "KT":
+                                stmnt = update_kit_tray_statement;
+                                statementString = updateKitTrayStatementString;
+                                break;
+                        }
+                    }
+                    List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, stmnt);
+                    String updateStringFilled = fillQueryString(statementString, paramsList);
+
                     UpdateResults ur = updateResultsMap.get(ci.fullName);
-                    String updateStringFilled = fillQueryString(mergeStatementString, paramsList);
 
                     if (null != ur) {
                         if (!forceUpdates

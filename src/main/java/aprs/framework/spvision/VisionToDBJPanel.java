@@ -1006,7 +1006,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             for (int i = 0; i < visionList.size(); i++) {
                 DetectedItem ci = visionList.get(i);
                 if (tm.getRowCount() <= i) {
-                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.score});
+                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.score, ci.type});
                     continue;
                 }
                 tm.setValueAt(ci.index, i, 0);
@@ -1211,6 +1211,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             outItem.fullName = inItem.fullName;
             outItem.name = inItem.name;
             outItem.score = inItem.score;
+            outItem.type = inItem.type;
             out.add(outItem);
         }
         return out;
@@ -1234,11 +1235,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (null != transform) {
                 transformedVisionList = transformList(visionList, transform);
                 dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames);
+                runOnDispatchThread(() -> this.updateInfo(transformedVisionList, line));
             } else {
                 dpu.updateVisionList(visionList, addRepeatCountsToDatabaseNames);
+                runOnDispatchThread(() -> this.updateInfo(visionList, line));
             }
         }
-        runOnDispatchThread(() -> this.updateInfo(visionList, line));
+        
     }
 
     private void startVisionInternal(Map<String, String> argsMap) {

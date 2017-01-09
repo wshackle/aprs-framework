@@ -1,0 +1,12 @@
+#params=NAME{1}, X{2}, Y{3}, Z{4}, VXI{5},VXJ{6},VXK{7},VZI{8},VZJ{9},VZK{10}
+#results=
+MERGE (thing:PartTray { name:{1} } )
+merge (thing) - [:hasPhysicalLocation_RefObject] -> (pl:PhysicalLocation)
+merge (pl) - [:hasPoseLocation_Pose] -> (pose:PoseLocation)
+merge (pose) - [:hasPose_Point] -> (pt:Point)
+merge (pose) - [:hasPose_XAxis] -> (xaxis:Vector)
+merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)
+set pt.hasPoint_X= {2},pt.hasPoint_Y= {3},pt.hasPoint_Z= {4}
+set xaxis.hasVector_I={5}, xaxis.hasVector_J={6}, xaxis.hasVector_K={7}
+set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}
+return count(pt) + count(xaxis) + count(zaxis)

@@ -1,0 +1,10 @@
+#params= X(1), Y(2), VXI(3),VXJ(4),NAME(5)
+#results=
+insert into Poses (  X, Y, VXI, VXJ, Name) 
+values (?,?,?,?,?)
+on duplicate key update
+  X = values(X),
+  Y = values(Y),
+  VXI = values(VXI),
+  VXJ = values(VXJ);
+
