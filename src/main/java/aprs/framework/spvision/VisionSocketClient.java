@@ -103,7 +103,8 @@ public class VisionSocketClient implements AutoCloseable {
 
     public void updateListeners() {
         if (null != visionList) {
-            List<DetectedItem> listToSend = Collections.unmodifiableList(new ArrayList<>(visionList));
+            List<DetectedItem> listToSend = new ArrayList<>();
+            listToSend.addAll(visionList);
             synchronized (listListeners) {
                 for (int i = 0; i < listListeners.size(); i++) {
                     VisionSocketClientListener listener = listListeners.get(i);

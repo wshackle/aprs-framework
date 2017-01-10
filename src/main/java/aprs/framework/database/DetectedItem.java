@@ -114,6 +114,12 @@ public class DetectedItem {
         this.score = 100.0;
         this.visioncycle = visioncycle;
     }
+    
+    public double dist(DetectedItem other) {
+        double dx = x-other.x;
+        double dy = y-other.y;
+        return Math.sqrt(dx*dx+dy*dy);
+    }
 
     public PoseType toCrclPose() {
         return pose(point(x, y, z), vector(vxi, vxj, vxk), vector(vzi, vzj, vzk));

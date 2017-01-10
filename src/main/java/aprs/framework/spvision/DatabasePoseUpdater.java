@@ -767,7 +767,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return updateResultsMap;
     }
 
-    public void updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
+    public List<DetectedItem>  updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
         List<DetectedItem> itemsToVerify = new ArrayList<>();
         List<DetectedItem> partsTrays
                 = list.stream()
@@ -777,7 +777,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 = list.stream()
                 .filter((DetectedItem item) -> "KT".equals(item.type))
                 .collect(Collectors.toList());
-
+        List<DetectedItem>  returnedList = new ArrayList<>();
         try {
             long t0_nanos = System.nanoTime();
             long t0_millis = System.currentTimeMillis();
@@ -790,7 +790,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     }
                 }
                 if (null == update_statement) {
-                    return;
+                    throw new IllegalStateException("update_statement == null");
                 }
                 if (addRepeatCountsToName) {
                     Collections.sort(list, new Comparator<DetectedItem>() {
@@ -816,13 +816,13 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         continue;
                     }
                     if ("P".equals(ci.type)) {
-                        if (ci.insidePartsTray || inside(partsTrays, ci)) {
-                            ci.fullName = ci.name + "_in_pt";
-                            ci.insidePartsTray = true;
-                        } else if (ci.insideKitTray || inside(kitTrays, ci)) {
+                        if (ci.insideKitTray || inside(kitTrays, ci)) {
                             ci.fullName = ci.name + "_in_kt";
                             ci.insideKitTray = true;
-                        }
+                        } else if (ci.insidePartsTray || inside(partsTrays, ci)) {
+                            ci.fullName = ci.name + "_in_pt";
+                            ci.insidePartsTray = true;
+                        } 
                     }
                     if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
                         ci.fullName = ci.name;
@@ -847,6 +847,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                                 break;
                         }
                     }
+                    returnedList.add(ci);
                     List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, stmnt);
                     String updateStringFilled = fillQueryString(statementString, paramsList);
 
@@ -1003,10 +1004,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 displayInterface.updateResultsMap(updateResultsMap);
             }
         }
+        return returnedList;
     }
 
-    private static boolean inside(List<DetectedItem> partsTrays, DetectedItem ci) {
-        return partsTrays.stream().anyMatch((DetectedItem item) -> Math.abs(item.x - ci.x) < 100 && Math.abs(item.y - ci.y) < 100);
+    private static boolean inside(List<DetectedItem> trays, DetectedItem ci) {
+        return trays.stream().anyMatch((DetectedItem item) -> item.dist(ci) < 65.0);
     }
 
     public void deletePose(String name) throws SQLException {

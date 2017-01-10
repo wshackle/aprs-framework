@@ -214,7 +214,7 @@ public class QuerySet implements QuerySetInterface {
         String qString = queryInfo.getQuery();
         if (null != paramTypes) {
             for (int i = 0; i < paramTypes.length; i++) {
-                qString = qString.replace(String.format(queryFormat, i), map.get(i + 1).toString());
+                qString = qString.replace(String.format(queryFormat, i+1), map.get(i + 1).toString());
             }
         }
         return qString;
@@ -382,7 +382,7 @@ public class QuerySet implements QuerySetInterface {
                 zAxis.setK(new BigDecimal(vzkString));
                 pose.setZAxis(zAxis);
             } else {
-                throw new IllegalStateException("Database returned empty ResultSet for query to getPose for name=" + name);
+                throw new IllegalStateException("Database returned empty ResultSet for query to getPose for name=" + name+", simQuery="+simQuery);
             }
 //            if (rs.next()) {
 //                String nameCheckString = rs.getString(1);
