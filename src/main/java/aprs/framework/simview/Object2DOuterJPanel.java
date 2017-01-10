@@ -506,7 +506,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 153, Short.MAX_VALUE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jCheckBoxShowRotations)
@@ -600,7 +600,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (this.jCheckBoxSimulated.isSelected()) {
             try {
                 int port = Integer.parseInt(this.jTextFieldPort.getText());
-                if(null != visionSocketServer && visionSocketServer.getPort() != port) {
+                if (null != visionSocketServer && visionSocketServer.getPort() != port) {
                     disconnect();
                 }
                 if (null == visionSocketServer) {
@@ -1093,6 +1093,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
+    boolean lastIsHoldingObjectExpected = false;
+    int captured_item_index = -1;
+
     @Override
     public void accept(PendantClientJPanel panel, PoseType pose) {
         currentX = pose.getPoint().getX().doubleValue();
@@ -1100,5 +1103,33 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));
         object2DJPanel1.setCurrentX(currentX);
         object2DJPanel1.setCurrentY(currentY);
+        boolean isHoldingObjectExpected = panel.isHoldingObjectExpected();
+        List<DetectedItem> l = getItems();
+        if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
+
+            double min_dist = Double.POSITIVE_INFINITY;
+            int min_dist_index = -1;
+            for (int i = 0; i < 10; i++) {
+                DetectedItem item = l.get(i);
+                double dist = item.dist(currentX, currentY);
+                if (dist < min_dist) {
+                    min_dist_index = i;
+                    min_dist = dist;
+                }
+            }
+            if (min_dist < 3.0 && min_dist_index >= 0) {
+                captured_item_index = min_dist_index;
+            }
+        }
+        if (!isHoldingObjectExpected) {
+            captured_item_index = -1;
+        }
+        if (captured_item_index >= 0 && captured_item_index < l.size()) {
+            DetectedItem item = l.get(captured_item_index);
+            item.x =  currentX;
+            item.y =  currentY;
+            l.set(captured_item_index, item);
+            setItems(l);
+        }
     }
 }

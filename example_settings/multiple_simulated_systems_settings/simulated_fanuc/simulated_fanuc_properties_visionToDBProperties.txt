@@ -1,5 +1,5 @@
 #
-#Mon Jan 09 15:07:34 EST 2017
+#Tue Jan 10 11:44:34 EST 2017
 NEO4J.host=localhost
 --visionport=4000
 --visionhost=localhost
@@ -12,6 +12,7 @@ NEO4J.localhost_4000.name=neo4j
 transform.zaxis.j=0.0
 transform.zaxis.i=0.0
 NEO4J.localhost_7480.passwd=password
+NEO4J.localhost_7494.passwd=password
 NEO4J.localhost_4000.passwd=
 --dbtype=NEO4J
 transform.point.z=0.0
@@ -19,13 +20,15 @@ transform.point.y=0.0
 --acquirestate=ON
 transform.point.x=0.0
 AddRepeatCountsToDatabaseNames=false
---dbport=7480
+NEO4J.localhost_7494.user=neo4j
+NEO4J.localhost_7494.name=neo4j
+--dbport=7494
 --commandport=4001
 NEO4J.localhost_7480.name=neo4j
 NEO4J.localhost_7480.user=neo4j
 --dbhost=localhost
 --dbpasswd=password
-NEO4J.localhost.port=7480
+NEO4J.localhost.port=7494
 transform.xaxis.k=0.0
 transform.xaxis.j=0.0
 transform.xaxis.i=1.0

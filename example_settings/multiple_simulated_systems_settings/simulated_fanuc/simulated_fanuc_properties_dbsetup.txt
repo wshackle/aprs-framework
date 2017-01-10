@@ -1,15 +1,25 @@
 #
-#Mon Jan 09 15:07:34 EST 2017
-NEO4J.localhost_4000.name=neo4j
---dbtype=NEO4J
-NEO4J.localhost_7480.user=neo4j
-NEO4J.localhost_4000.user=neo4j
-NEO4J.localhost_4000.passwd=
-NEO4J.localhost_4000.queriesDir=mysql
-NEO4J.localhost.port=7480
-NEO4J.localhost_4000.internalQueriesResourceDir=true
-NEO4J.localhost_7480.internalQueriesResourceDir=true
+#Tue Jan 10 13:23:27 EST 2017
 NEO4J.host=localhost
+NEO4J.localhost_7486.internalQueriesResourceDir=true
+NEO4J.localhost_7480.internalQueriesResourceDir=true
+NEO4J.localhost_7494.queriesDir=neo4j/v2
+NEO4J.localhost_4000.queriesDir=mysql
+NEO4J.localhost_4000.user=neo4j
+NEO4J.localhost_4000.name=neo4j
 NEO4J.localhost_7480.queriesDir=neo4j/v1
 NEO4J.localhost_7480.passwd=password
+NEO4J.localhost_7494.passwd=password
+NEO4J.localhost_4000.passwd=
+--dbtype=NEO4J
+NEO4J.localhost_7494.internalQueriesResourceDir=true
+NEO4J.localhost_7486.name=neo4j
+NEO4J.localhost_7486.user=neo4j
+NEO4J.localhost_7494.name=neo4j
+NEO4J.localhost_7494.user=neo4j
+NEO4J.localhost_7480.user=neo4j
+NEO4J.localhost_4000.internalQueriesResourceDir=true
 NEO4J.localhost_7480.name=neo4j
+NEO4J.localhost_7486.queriesDir=neo4j/v1
+NEO4J.localhost.port=7486
+NEO4J.localhost_7486.passwd=password

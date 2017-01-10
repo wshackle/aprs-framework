@@ -116,11 +116,15 @@ public class DetectedItem {
     }
     
     public double dist(DetectedItem other) {
-        double dx = x-other.x;
-        double dy = y-other.y;
-        return Math.sqrt(dx*dx+dy*dy);
+       return dist(other.x,other.y);
     }
 
+    public double dist(double otherx, double othery) {
+        double dx = x-otherx;
+        double dy = y-othery;
+        return Math.sqrt(dx*dx+dy*dy);
+    }
+    
     public PoseType toCrclPose() {
         return pose(point(x, y, z), vector(vxi, vxj, vxk), vector(vzi, vzj, vzk));
     }
