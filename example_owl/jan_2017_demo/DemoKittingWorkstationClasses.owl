@@ -2163,6 +2163,14 @@ InverseObjectProperties(:hasSlot_Part
 ObjectPropertyDomain(:hadByPart_Slot :Part)
 ObjectPropertyRange(:hadByPart_Slot :Slot)
 
+Declaration(DataProperty(:hasSlot_IsOccupied))
+DataPropertyDomain(:hasSlot_IsOccupied :Slot)
+DataPropertyRange(:hasSlot_IsOccupied xsd:boolean)
+FunctionalDataProperty(:hasSlot_IsOccupied)
+EquivalentClasses(:Slot ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasSlot_IsOccupied xsd:boolean)
+  DataAllValuesFrom (:hasSlot_IsOccupied xsd:boolean)))
+
 
 
 Declaration(Class(:SolidObject))

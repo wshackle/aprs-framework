@@ -6,7 +6,7 @@ Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
 Prefix(:=</http://www.nist.gov/el/ontologies//usr/local/zeid/github/usnistgov/iora/_build/owl/FanucWorkstationInstance.owl#>)
 Prefix(:=</http://www.nist.gov/el/ontologies//usr/local/zeid/github/usnistgov/iora/_build/xml/MotomanWorkstation/xmlSchemas/DemoKittingWorkstationClasses.owl#>)
 Ontology(</http://www.nist.gov/el/ontologies//usr/local/zeid/github/usnistgov/iora/_build/owl/FanucWorkstationInstance.owl>
-Import(<file:/home/shackle/Demo-zeid-9-Jan-2017/Demo/OWL/DemoKittingWorkstationClasses.owl>)
+Import(<file:/usr/local/zeid/github/usnistgov/iora/_build/owl/DemoKittingWorkstationClasses.owl>)
 
 //*****************************************
 // 1 start :KittingWorkstation fanuc_workstation
@@ -115,6 +115,48 @@ ObjectPropertyAssertion(:hasPartsTray_Design
                         :kit_tray_m2l1_1 :kit_m2l1_design)
 DataPropertyAssertion(:hasPartsTray_Complete :kit_tray_m2l1_1
                       "false"^^xsd:boolean)
+ObjectPropertyAssertion(:hasPartsTray_Slot
+                        :kit_tray_m2l1_1 :kit_m2l1_1_slot_mg_1)
+
+//*****************************************
+// 3 start :Slot kit_m2l1_1_slot_mg_1
+Declaration(NamedIndividual(:kit_m2l1_1_slot_mg_1))
+ClassAssertion(:Slot :kit_m2l1_1_slot_mg_1)
+ObjectPropertyAssertion(:hasSlot_PartRefAndPose
+                        :kit_m2l1_1_slot_mg_1 :part_ref_and_pose_kit_m2l1_mg_1)
+DataPropertyAssertion(:hasSlot_IsOccupied :kit_m2l1_1_slot_mg_1
+                      "false"^^xsd:boolean)
+// 3 end :Slot
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsTray_Slot
+                        :kit_tray_m2l1_1 :kit_m2l1_1_slot_mg_2)
+
+//*****************************************
+// 3 start :Slot kit_m2l1_1_slot_mg_2
+Declaration(NamedIndividual(:kit_m2l1_1_slot_mg_2))
+ClassAssertion(:Slot :kit_m2l1_1_slot_mg_2)
+ObjectPropertyAssertion(:hasSlot_PartRefAndPose
+                        :kit_m2l1_1_slot_mg_2 :part_ref_and_pose_kit_m2l1_mg_2)
+DataPropertyAssertion(:hasSlot_IsOccupied :kit_m2l1_1_slot_mg_2
+                      "false"^^xsd:boolean)
+// 3 end :Slot
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsTray_Slot
+                        :kit_tray_m2l1_1 :kit_m2l1_1_slot_lg_1)
+
+//*****************************************
+// 3 start :Slot kit_m2l1_1_slot_lg_1
+Declaration(NamedIndividual(:kit_m2l1_1_slot_lg_1))
+ClassAssertion(:Slot :kit_m2l1_1_slot_lg_1)
+ObjectPropertyAssertion(:hasSlot_PartRefAndPose
+                        :kit_m2l1_1_slot_lg_1 :part_ref_and_pose_kit_m2l1_lg_1)
+DataPropertyAssertion(:hasSlot_IsOccupied :kit_m2l1_1_slot_lg_1
+                      "false"^^xsd:boolean)
+// 3 end :Slot
+//*****************************************
+
 // 2 end :PartsTray
 //*****************************************
 
@@ -203,6 +245,48 @@ ObjectPropertyAssertion(:hasPartsTray_Design
                         :kit_tray_m2l1_2 :kit_m2l1_design)
 DataPropertyAssertion(:hasPartsTray_Complete :kit_tray_m2l1_2
                       "false"^^xsd:boolean)
+ObjectPropertyAssertion(:hasPartsTray_Slot
+                        :kit_tray_m2l1_2 :kit_m2l1_2_slot_mg_1)
+
+//*****************************************
+// 3 start :Slot kit_m2l1_2_slot_mg_1
+Declaration(NamedIndividual(:kit_m2l1_2_slot_mg_1))
+ClassAssertion(:Slot :kit_m2l1_2_slot_mg_1)
+ObjectPropertyAssertion(:hasSlot_PartRefAndPose
+                        :kit_m2l1_2_slot_mg_1 :part_ref_and_pose_kit_m2l1_mg_1)
+DataPropertyAssertion(:hasSlot_IsOccupied :kit_m2l1_2_slot_mg_1
+                      "false"^^xsd:boolean)
+// 3 end :Slot
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsTray_Slot
+                        :kit_tray_m2l1_2 :kit_m2l1_2_slot_mg_2)
+
+//*****************************************
+// 3 start :Slot kit_m2l1_2_slot_mg_2
+Declaration(NamedIndividual(:kit_m2l1_2_slot_mg_2))
+ClassAssertion(:Slot :kit_m2l1_2_slot_mg_2)
+ObjectPropertyAssertion(:hasSlot_PartRefAndPose
+                        :kit_m2l1_2_slot_mg_2 :part_ref_and_pose_kit_m2l1_mg_2)
+DataPropertyAssertion(:hasSlot_IsOccupied :kit_m2l1_2_slot_mg_2
+                      "false"^^xsd:boolean)
+// 3 end :Slot
+//*****************************************
+
+ObjectPropertyAssertion(:hasPartsTray_Slot
+                        :kit_tray_m2l1_2 :kit_m2l1_2_slot_lg_1)
+
+//*****************************************
+// 3 start :Slot kit_m2l1_2_slot_lg_1
+Declaration(NamedIndividual(:kit_m2l1_2_slot_lg_1))
+ClassAssertion(:Slot :kit_m2l1_2_slot_lg_1)
+ObjectPropertyAssertion(:hasSlot_PartRefAndPose
+                        :kit_m2l1_2_slot_lg_1 :part_ref_and_pose_kit_m2l1_lg_1)
+DataPropertyAssertion(:hasSlot_IsOccupied :kit_m2l1_2_slot_lg_1
+                      "false"^^xsd:boolean)
+// 3 end :Slot
+//*****************************************
+
 // 2 end :PartsTray
 //*****************************************
 
@@ -2235,6 +2319,16 @@ DifferentIndividuals(
  :pose_part_medium_gear_tray_mg_3
  :pose_part_medium_gear_tray_mg_4
  :robot_pose)
+
+//*****************************************
+// :Slot individuals 
+DifferentIndividuals(
+ :kit_m2l1_1_slot_lg_1
+ :kit_m2l1_1_slot_mg_1
+ :kit_m2l1_1_slot_mg_2
+ :kit_m2l1_2_slot_lg_1
+ :kit_m2l1_2_slot_mg_1
+ :kit_m2l1_2_slot_mg_2)
 
 //*****************************************
 // :StockKeepingUnit individuals 
