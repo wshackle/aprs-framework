@@ -1,5 +1,5 @@
 #
-#Tue Jan 10 07:47:07 EST 2017
+#Tue Jan 10 16:34:52 EST 2017
 NEO4J.ying-220_7486.name=neo4j
 NEO4J.ying-220_7480.queriesDir=neo4j/v1
 --dbtype=NEO4J
@@ -9,7 +9,7 @@ NEO4J.ying-220_7480.internalQueriesResourceDir=true
 NEO4J.ying-220_7486.passwd=password
 NEO4J.ying-220_7486.queriesDir=neo4j/v1
 NEO4J.ying-220_7480.passwd=password
-NEO4J.ying-220_7480.user=neo4j
 NEO4J.host=ying-220
+NEO4J.ying-220_7480.user=neo4j
 NEO4J.ying-220.port=7486
 NEO4J.ying-220_7486.internalQueriesResourceDir=true
