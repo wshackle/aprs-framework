@@ -1,5 +1,5 @@
 #
-#Tue Jan 10 16:34:52 EST 2017
+#Wed Jan 11 12:36:21 EST 2017
 lookDwellTime=3.0
 approachZOffset=50.0
 manualPartNames=[kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear, null]

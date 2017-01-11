@@ -100,13 +100,26 @@ public class SocketLineReader {
     private BufferedReader br = null;
     private PrintStream ps;
     private SocketLineReader.CallBack cb;
+    
+    public int getPort() {
+        if(s == null) {
+            return -1;
+        }
+        return s.getPort();
+    }
 
+    public String getHost() {
+        return host;
+    }
+    private String host=null;
+    
     private SocketLineReader privateStart(boolean isClient,
             String host, int port, final String threadname,
             SocketLineReader.CallBack _cb) throws IOException {
         cb = _cb;
         if (isClient) {
             s = new Socket();
+            this.host = host;
             s.connect(new InetSocketAddress(host, port), 500);
             s.setReuseAddress(true);
             br = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -117,7 +130,7 @@ public class SocketLineReader {
                 public void run() {
                     try {
                         String line = null;
-                        while (null != (line = br.readLine()) && !Thread.interrupted()) {
+                        while (null != (line = br.readLine()) && !Thread.currentThread().isInterrupted()) {
                             cb.call(line, ps);
                         }
                     } catch (Exception exception) {
@@ -135,7 +148,7 @@ public class SocketLineReader {
                 @Override
                 public void run() {
                     try {
-                        while (!Thread.interrupted()) {
+                        while (!Thread.currentThread().isInterrupted()) {
                             final Clnt c = new Clnt();
                             c.s = ss.accept();
                             c.br = new BufferedReader(new InputStreamReader(c.s.getInputStream()));
@@ -146,7 +159,7 @@ public class SocketLineReader {
                                 public void run() {
                                     try {
                                         String line = null;
-                                        while (null != (line = c.br.readLine()) && !Thread.interrupted()) {
+                                        while (null != (line = c.br.readLine()) && !Thread.currentThread().isInterrupted()) {
                                             cb.call(line, c.ps);
                                         }
                                     } catch (Exception exception) {

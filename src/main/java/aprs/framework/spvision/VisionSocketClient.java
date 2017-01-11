@@ -136,6 +136,20 @@ public class VisionSocketClient implements AutoCloseable {
         this.displayInterface = displayInterface;
     }
 
+    public int getPort() {
+        if(null == visionSlr) {
+            return -1;
+        }
+        return visionSlr.getPort();
+    }
+    
+    public String getHost() {
+        if(null == visionSlr) {
+            return null;
+        }
+        return visionSlr.getHost();
+    }
+    
     public void start(Map<String, String> argsMap) {
         String host = "HOSTNOTSET";
         short port = -99;

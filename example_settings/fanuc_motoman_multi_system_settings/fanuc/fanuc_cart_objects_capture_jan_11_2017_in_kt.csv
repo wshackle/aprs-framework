@@ -1,0 +1,10 @@
+name,rotation,x,y,score,type
+sku_part_large_gear,0.1,411.89,-77.14,0.98,P
+sku_part_large_gear,0.14,410.61,115.14,0.65,P
+sku_part_medium_gear,0.0,453.08,-159.38,0.78,P
+sku_part_medium_gear,0.0,454.76,19.36,0.73,P
+sku_part_medium_gear,0.0,373.57,19.89,0.72,P
+sku_part_medium_gear,0.0,372.16,-159.7,0.69,P
+sku_large_gear_vessel,3.11,550.64,64.77,0.97,PT
+sku_medium_gear_vessel,0.0,572.36,-120.08,0.89,PT
+sku_kit_m2l1_vessel,1.57,413.51,-107.44,0.62,KT

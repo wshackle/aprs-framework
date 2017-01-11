@@ -612,10 +612,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
+            int port = Integer.valueOf(jTextFieldPort.getText());
+            String host = jTextFieldHost.getText();
+            if(null != visionSocketClient) {
+                if(visionSocketClient.isConnected() 
+                        && port == visionSocketClient.getPort()
+                        && Objects.equals(visionSocketClient.getHost(), host)) {
+                    return;
+                }
+                try {
+                    visionSocketClient.close();
+                } catch (Exception ex) {
+                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
             visionSocketClient = new VisionSocketClient();
             Map<String, String> argsMap = DbSetupBuilder.getDefaultArgsMap();
             argsMap.put("--visionport", jTextFieldPort.getText());
-            argsMap.put("--visionhost", jTextFieldHost.getText());
+            argsMap.put("--visionhost", host);
             visionSocketClient.setDebug(this.jCheckBoxDebug.isSelected());
             visionSocketClient.start(argsMap);
             if (!visionSocketClient.isConnected()) {
