@@ -461,16 +461,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    public void startConnectVision() {
+    public void connectVision() {
         if (closing) {
             throw new IllegalStateException("Attempt to start connect vision when already closing.");
         }
-        connectService.submit(this::connectVision);
-    }
-
-    public void connectVision() {
         if (null != visionToDbJInternalFrame) {
-            visionToDbJInternalFrame.connectVision();
+            Utils.runOnDispatchThread(() -> visionToDbJInternalFrame.connectVision());
         }
     }
 

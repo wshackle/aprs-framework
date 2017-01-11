@@ -303,7 +303,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jRadioButtonExternDir)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldQueriesDirectory, javax.swing.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE)
+                        .addComponent(jTextFieldQueriesDirectory, javax.swing.GroupLayout.DEFAULT_SIZE, 136, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonLoadExternalDirectory)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -425,7 +425,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     .addComponent(jButtonSave)
                     .addComponent(jCheckBoxDebug))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 91, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -830,6 +830,15 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         return jTextFieldQueriesDirectory.getText();
     }
 
+    private static int parseIntOr(String string, int defaultValue) {
+        try {
+            return Integer.valueOf(string);
+        } catch(Exception ex) {
+            
+        }
+        return defaultValue;
+    }
+    
     public DbSetup getDbSetup() {
         return new DbSetupBuilder()
                 .connected(connected)
@@ -839,7 +848,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 .dbname(jTextFieldDBName.getText())
                 .user(jTextFieldDBUser.getText())
                 .port(Integer.parseInt(jTextFieldDBPort.getText()))
-                .loginTimeout(Integer.parseInt(jTextFieldDBLoginTimeout.getText()))
+                .loginTimeout(parseIntOr(jTextFieldDBLoginTimeout.getText(),5))
                 .queriesMap(getQueriesMap())
                 .internalQueriesResourceDir(jRadioButtonResourceDir.isSelected())
                 .queriesDir(getQueriesDir())
