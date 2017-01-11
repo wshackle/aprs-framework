@@ -1004,8 +1004,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (null != visionList) {
             for (int i = 0; i < visionList.size(); i++) {
                 DetectedItem ci = visionList.get(i);
-                if(ci.fullName == null || ci.fullName.length() < 1) {
-                    System.err.println("bad ci fullname "+ci);
+                if (ci.fullName == null || ci.fullName.length() < 1) {
+                    System.err.println("bad ci fullname " + ci);
                 }
                 if (tm.getRowCount() <= i) {
                     tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.score, ci.type, ci.insidePartsTray, ci.insideKitTray, ci.fullName});
@@ -1437,7 +1437,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }//GEN-LAST:event_jButtonCheckActionPerformed
 
     private void queryDatabase() throws InterruptedException, ExecutionException {
-        dpu.queryDatabase().thenAccept(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
+        if (null != dpu) {
+            dpu.queryDatabase().thenAccept(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
+        }
     }
 
     private void jButtonAddItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddItemActionPerformed
