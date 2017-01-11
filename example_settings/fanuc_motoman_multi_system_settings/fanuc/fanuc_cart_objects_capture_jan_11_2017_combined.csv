@@ -8,10 +8,10 @@ sku_part_medium_gear,0.0,533.56,-160.09,0.76,P
 sku_large_gear_vessel,3.11,550.45,65.16,0.8,PT
 sku_medium_gear_vessel,0.01,571.9,-119.9,0.92,PT
 sku_kit_m2l1_vessel,-1.57,414.84,-108.16,0.63,KT
-kit_lg1med2_1_slot_l1,0.1,411.89,-77.14,0.98,SLOT
-kit_lg1med2_2_slot_l1,0.14,410.61,115.14,0.65,SLOT
+kit_lg1med2_1_slot_l1,0.14,410.61,115.14,0.65,SLOT
+kit_lg1med2_2_slot_l1,0.1,411.89,-77.14,0.98,SLOT
 kit_lg1med2_1_slot_m1,0.0,453.08,-159.38,0.78,SLOT
-kit_lg1med2_1_slot_m2,0.0,454.76,19.36,0.73,SLOT
+kit_lg1med2_1_slot_m2,0.0,372.16,-159.7,0.69,SLOT
+kit_lg1med2_2_slot_m2,0.0,454.76,19.36,0.73,SLOT
 kit_lg1med2_2_slot_m1,0.0,373.57,19.89,0.72,SLOT
-kit_lg1med2_2_slot_m2,0.0,372.16,-159.7,0.69,P
 
