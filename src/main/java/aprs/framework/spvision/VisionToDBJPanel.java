@@ -1066,6 +1066,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     visionClient.updateListeners();
                 }
             }
+            this.jButtonAddItem.setEnabled(_val);
+            this.jButtonCheck.setEnabled(_val);
+            this.jButtonForceAll.setEnabled(_val);
+            this.jButtonForceSingleUpdate.setEnabled(_val);
         } catch (Exception ex) {
             this.jLabelDatabaseStatus.setText("DISCONNECTED");
             this.jLabelDatabaseStatus.setBackground(Color.RED);
