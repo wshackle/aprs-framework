@@ -99,6 +99,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 updateTransformFromTable();
             }
         });
+        jTableFromVision.getSelectionModel().addListSelectionListener(x -> {
+            jButtonForceSingleUpdate.setEnabled(jTableFromVision.getSelectedRow() >= 0 && null != dpu);
+        });
     }
 
     private double transform(int row, int col) {
@@ -1069,7 +1072,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             this.jButtonAddItem.setEnabled(_val);
             this.jButtonCheck.setEnabled(_val);
             this.jButtonForceAll.setEnabled(_val);
-            this.jButtonForceSingleUpdate.setEnabled(_val);
+            this.jButtonForceSingleUpdate.setEnabled(_val && jTableFromVision.getSelectedRow() >= 0);
         } catch (Exception ex) {
             this.jLabelDatabaseStatus.setText("DISCONNECTED");
             this.jLabelDatabaseStatus.setBackground(Color.RED);
