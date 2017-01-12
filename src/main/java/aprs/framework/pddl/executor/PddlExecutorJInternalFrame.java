@@ -25,6 +25,8 @@ package aprs.framework.pddl.executor;
 import aprs.framework.AprsJFrame;
 import aprs.framework.PddlAction;
 import aprs.framework.database.DbSetupPublisher;
+import crcl.base.PointType;
+import crcl.base.PoseType;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -36,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  implements PddlExecutorDisplayInterface{
+public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame implements PddlExecutorDisplayInterface {
 
     /**
      * Creates new form ActionsToCrclJInternalFrame
@@ -44,23 +46,31 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
     public PddlExecutorJInternalFrame() {
         initComponents();
     }
+
+    public PoseType correctPose(PoseType poseIn) {
+        return actionsToCrclJPanel1.correctPose(poseIn);
+    }
+
+    public PointType reverseCorrectPoint(PointType ptIn) {
+        return actionsToCrclJPanel1.reverseCorrectPoint(ptIn);
+    }
     
     public void abortProgram() {
         actionsToCrclJPanel1.abortProgram();
     }
-    
+
     public CompletableFuture<Void> safeAbort() {
         return this.actionsToCrclJPanel1.safeAbort();
     }
-    
+
     public int getCurrentActionIndex() {
         return this.actionsToCrclJPanel1.getCurrentActionIndex();
     }
-    
+
     public List<PddlAction> getActionsList() {
         return this.actionsToCrclJPanel1.getActionsList();
     }
-    
+
     public CompletableFuture<Void> continueActionList() {
         return this.actionsToCrclJPanel1.continueActionList();
     }
@@ -68,18 +78,19 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
     public void addPositionMap(PositionMap pm) {
         actionsToCrclJPanel1.addPositionMap(pm);
     }
-    
+
     public void removePositionMap(PositionMap pm) {
         actionsToCrclJPanel1.removePositionMap(pm);
     }
-    public Map<String,String> getOptions() {
+
+    public Map<String, String> getOptions() {
         return this.actionsToCrclJPanel1.getTableOptions();
     }
-    
+
     public void setOption(String key, String value) {
         this.actionsToCrclJPanel1.setOption(key, value);
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -121,7 +132,6 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
         this.actionsToCrclJPanel1.browseActionsFile();
     }
 
-    
     @Override
     public void setActionsList(List<PddlAction> actionsList) {
         this.actionsToCrclJPanel1.setActionsList(actionsList);
@@ -136,7 +146,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
     public void processActions() {
         this.actionsToCrclJPanel1.processActions();
     }
-    
+
     @Override
     public File getPropertiesFile() {
         return this.actionsToCrclJPanel1.getPropertiesFile();
@@ -182,7 +192,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame  impl
         actionsToCrclJPanel1.close();
         this.setVisible(false);
     }
-    
+
     public Callable<DbSetupPublisher> getDbSetupSupplier() {
         return actionsToCrclJPanel1.getDbSetupSupplier();
     }

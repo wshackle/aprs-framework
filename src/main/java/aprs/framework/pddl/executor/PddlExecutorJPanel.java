@@ -2604,7 +2604,24 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         return pout;
     }
+    
+    public PointType correctPoint(PointType ptIn) {
+        PointType pout = ptIn;
+        for (PositionMap pm : getPositionMaps()) {
+            pout = pm.correctPoint(ptIn);
+        }
+        return pout;
+    }
 
+    public PointType reverseCorrectPoint(PointType ptIn) {
+        PointType pout = ptIn;
+        List<PositionMap> l = getReversePositionMaps();
+        for (PositionMap pm : l) {
+            pout = pm.correctPoint(ptIn);
+        }
+        return pout;
+    }
+    
     public CompletableFuture<Boolean> randomDropOff() {
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
@@ -3145,4 +3162,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return positionMapJPanel1.getPositionMaps();
     }
 
+    public List<PositionMap> getReversePositionMaps() {
+        return positionMapJPanel1.getReversePositionMaps();
+    }
 }

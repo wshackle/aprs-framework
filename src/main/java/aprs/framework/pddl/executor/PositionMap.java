@@ -106,6 +106,13 @@ public class PositionMap {
         fileName = null;
         columnHeaders = DEFAULT_COLUMN_HEADERS;
     }
+    
+    public PositionMap(final List<PositionMapEntry> l) {
+        errmapList = l;
+        errmapStringsList = Collections.emptyList();
+        fileName = null;
+        columnHeaders = DEFAULT_COLUMN_HEADERS;
+    }
 
     public static PositionMap emptyPositionMap() {
         return new PositionMap();
@@ -232,6 +239,8 @@ public class PositionMap {
         lastPointOut = pt;
         return pt;
     }
+    
+    
 
     private static double dist(PositionMapEntry e, double x, double y) {
         double dx = e.getRobotX() - x;
@@ -535,4 +544,12 @@ public class PositionMap {
         return lastOffset;
     }
 
+    public PositionMap reverse() {
+        List<PositionMapEntry> l = new ArrayList<>();
+        for(PositionMapEntry entry : errmapList) {
+            l.add(PositionMapEntry.pointOffsetEntry(entry.getOtherX(), entry.getOtherY(), entry.getOtherZ(), -entry.getOffsetX(), -entry.getOffsetY(), -entry.getOffsetZ()));
+        }
+        PositionMap rpm = new PositionMap(l);
+        return rpm;
+    }
 }

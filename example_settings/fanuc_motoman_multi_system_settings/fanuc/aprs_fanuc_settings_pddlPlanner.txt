@@ -1,5 +1,5 @@
 #
-#Wed Jan 11 12:36:21 EST 2017
+#Thu Jan 12 09:26:18 EST 2017
 pddl.addargs=-I -n
 pddl.planner.host=localhost
 program.executable=popf3-clp

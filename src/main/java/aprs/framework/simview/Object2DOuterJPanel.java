@@ -29,6 +29,7 @@ import aprs.framework.database.DbSetupBuilder;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
 import aprs.framework.spvision.VisionSocketClient;
 import aprs.framework.spvision.VisionSocketServer;
+import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.client.PendantClientJPanel;
 import java.awt.geom.NoninvertibleTransformException;
@@ -1131,8 +1132,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @Override
     public void accept(PendantClientJPanel panel, PoseType pose) {
-        currentX = pose.getPoint().getX().doubleValue();
-        currentY = pose.getPoint().getY().doubleValue();
+        PointType ptIn = pose.getPoint();
+        
+        PointType uncorrectedPoint = aprsJFrame.reverseCorrectPoint(ptIn);
+        currentX = uncorrectedPoint.getX().doubleValue();
+        currentY = uncorrectedPoint.getY().doubleValue();
         jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));
         object2DJPanel1.setCurrentX(currentX);
         object2DJPanel1.setCurrentY(currentY);

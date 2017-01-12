@@ -56,8 +56,8 @@ import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
 import crcl.base.CRCLCommandType;
 import crcl.base.CRCLProgramType;
-import crcl.base.CRCLStatusType;
 import crcl.base.CommandStatusType;
+import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.ui.client.PendantClientJPanel;
@@ -69,7 +69,6 @@ import java.awt.Container;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -258,6 +257,20 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    public PoseType correctPose(PoseType poseIn) {
+        if(null !=  pddlExecutorJInternalFrame1) {
+            return pddlExecutorJInternalFrame1.correctPose(poseIn);
+        }
+        return poseIn;
+    }
+    
+     public PointType reverseCorrectPoint(PointType ptIn) {
+        if(null !=  pddlExecutorJInternalFrame1) {
+            return pddlExecutorJInternalFrame1.reverseCorrectPoint(ptIn);
+        }
+        return ptIn;
+    }
+     
     private final List<PendantClientJPanel.CurrentPoseListener> unaddedPoseListeners = new ArrayList<>();
 
     public void addCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {

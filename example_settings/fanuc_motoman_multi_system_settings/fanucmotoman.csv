@@ -1,2 +1,2 @@
-1,2 2l2s kits,Motoman,C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\example_settings\fanuc_motoman_multi_system_settings\motoman\motoman_aprs_settings.txt
-2,2 1l2m kits,Fanuc,C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\example_settings\fanuc_motoman_multi_system_settings\fanuc\aprs_fanuc_settings.txt
+1,Shared Table,Motoman,C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\example_settings\fanuc_motoman_multi_system_settings\motoman\motoman_aprs_settings.txt
+2,Fanuc Cart,Fanuc,C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\example_settings\fanuc_motoman_multi_system_settings\fanuc\aprs_fanuc_settings.txt

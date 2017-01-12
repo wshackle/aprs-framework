@@ -168,12 +168,26 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     public final List<PositionMap> getPositionMaps() {
         return Collections.unmodifiableList(positionMaps);
     }
+    private List<PositionMap> reversePositionMaps = new ArrayList<>();
+
+    public final List<PositionMap> getReversePositionMaps() {
+        if (null == reversePositionMaps) {
+            reversePositionMaps = new ArrayList<>();
+            for (int i = positionMaps.size()-1; i >= 0 ; i--) {
+                PositionMap pm = positionMaps.get(i);
+                PositionMap rpm = pm.reverse();
+                reversePositionMaps.add(rpm);
+            }
+        }
+        return Collections.unmodifiableList(reversePositionMaps);
+    }
 
     public PositionMap getPositionMap(int index) {
         return positionMaps.get(index);
     }
 
     public void setPositionMap(int index, PositionMap positionMap) {
+        reversePositionMaps = null;
         while (positionMaps.size() <= index) {
             positionMaps.add(null);
         }
@@ -185,6 +199,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     }
 
     public void addPositionMap(PositionMap positionMap) {
+        reversePositionMaps = null;
         this.positionMaps.add(positionMap);
         if (positionMaps.size() == 1) {
             loadPositionMapToTable(positionMap);
@@ -193,6 +208,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     }
 
     public void removePositionMap(PositionMap positionMap) {
+        reversePositionMaps = null;
         int spinVal = (int) jSpinnerIndex.getValue();
         String pfn = positionMap.getFileName();
         this.positionMaps.remove(positionMap);
@@ -206,7 +222,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         if (spinVal < 0 || spinVal >= positionMaps.size()) {
             spinVal = 0;
         }
-        if(positionMaps.size() < 1) {
+        if (positionMaps.size() < 1) {
             addPositionMap(PositionMap.emptyPositionMap());
         }
         loadPositionMapToTable(getPositionMap(spinVal));
