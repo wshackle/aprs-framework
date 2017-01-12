@@ -1,5 +1,5 @@
 #
-#Tue Jan 10 11:46:50 EST 2017
+#Wed Jan 11 16:55:04 EST 2017
 lookDwellTime=3.0
 approachZOffset=50.0
 manualPartNames=[null, null, null, null, null]

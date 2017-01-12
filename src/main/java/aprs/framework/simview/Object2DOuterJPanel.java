@@ -928,14 +928,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jButtonCurrentActionPerformed
 
     private void jCheckBoxShowCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowCurrentActionPerformed
-        object2DJPanel1.setShowCurrentXY(jCheckBoxShowCurrent.isSelected());
-        if (jCheckBoxShowCurrent.isSelected()) {
+        setTrackCurrentPos(jCheckBoxShowCurrent.isSelected());
+    }//GEN-LAST:event_jCheckBoxShowCurrentActionPerformed
+
+    public void setTrackCurrentPos(boolean v) {
+        object2DJPanel1.setShowCurrentXY(v);
+        if (v) {
             connectCurrentPosition();
         } else {
             disconnectCurrentPosition();
         }
-    }//GEN-LAST:event_jCheckBoxShowCurrentActionPerformed
-
+    }
+    
     public void setMinXMinYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
@@ -1002,6 +1006,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("--visionhost", jTextFieldHost.getText());
             props.put("simulated", Boolean.toString(jCheckBoxSimulated.isSelected()));
             props.put("connected", Boolean.toString(jCheckBoxConnected.isSelected()));
+            props.put("trackcurrentpos", Boolean.toString(jCheckBoxShowCurrent.isSelected()));
+            props.put("showrotations", Boolean.toString(jCheckBoxShowRotations.isSelected()));
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText());
             props.put("xminymin", jTextFieldMinXMinY.getText());
             props.put("datafile", jTextFieldFilename.getText());
@@ -1084,6 +1090,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 DisplayAxis displayAxis = DisplayAxis.valueOf(displayAxisString);
                 jComboBoxDisplayAxis.setSelectedItem(displayAxis);
                 object2DJPanel1.setDisplayAxis(displayAxis);
+            }
+            String trackCurrentPosString = props.getProperty("trackcurrentpos");
+            if (trackCurrentPosString != null && trackCurrentPosString.length() > 0) {
+               boolean trackCurrentPos = Boolean.valueOf(trackCurrentPosString);
+               jCheckBoxShowCurrent.setSelected(trackCurrentPos);
+               this.setTrackCurrentPos(trackCurrentPos);
+            }
+            //showrotations
+            String showRotationsString = props.getProperty("showrotations");
+            if (showRotationsString != null && showRotationsString.length() > 0) {
+               boolean showRotations = Boolean.valueOf(showRotationsString);
+               jCheckBoxShowRotations.setSelected(showRotations);
+               object2DJPanel1.setViewRotations(showRotations);
             }
         }
     }

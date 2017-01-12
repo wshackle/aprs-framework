@@ -597,6 +597,15 @@ public class QuerySet implements QuerySetInterface {
         setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value.doubleValue(), map);
     }
 
+    private static String toSku(String name) {
+        String sku = name;
+        if(sku.startsWith("sku_")) {
+            sku = sku.substring(4);
+        }
+        sku = "stock_keeping_unit_"+sku;
+        return sku;
+    }
+    
     //TODO-
     @Override
     public void setPose(String name, PoseType pose) throws SQLException {
@@ -610,6 +619,7 @@ public class QuerySet implements QuerySetInterface {
 
         Map<Integer, Object> map = new TreeMap<>();
         setPoseQueryStringParam(DbParamTypeEnum.NAME, name, map);
+        setPoseQueryStringParam(DbParamTypeEnum.SKU_NAME, toSku(name), map);
         PointType point = pose.getPoint();
         setPoseQueryDoubleParam(DbParamTypeEnum.X, point.getX(), map);
         setPoseQueryDoubleParam(DbParamTypeEnum.Y, point.getY(), map);

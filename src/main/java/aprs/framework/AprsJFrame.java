@@ -258,9 +258,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private final List<PendantClientJPanel.CurrentPoseListener> unaddedPoseListeners = new ArrayList<>();
+
     public void addCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.addCurrentPoseListener(l);
+        } else {
+            unaddedPoseListeners.add(l);
         }
     }
 
@@ -321,10 +325,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != pddlExecutorJInternalFrame1) {
             List<PddlAction> actions = pddlExecutorJInternalFrame1.getActionsList();
             int curActionIndex = pddlExecutorJInternalFrame1.getCurrentActionIndex();
-            if (null != actions ) {
+            if (null != actions) {
                 sb.append("PDDL curActionIndex=").append(curActionIndex).append("\r\n");
                 sb.append("PDDL actions size=").append(actions.size()).append("\r\n");
-                if(curActionIndex >= 0 && curActionIndex < actions.size()) {
+                if (curActionIndex >= 0 && curActionIndex < actions.size()) {
                     sb.append("PDDL action =").append(actions.get(curActionIndex)).append("\r\n");
                 }
             }
@@ -789,6 +793,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }
 
             });
+            if (null != unaddedPoseListeners) {
+                List<PendantClientJPanel.CurrentPoseListener> tempList = new ArrayList<>();
+                tempList.addAll(unaddedPoseListeners);
+                unaddedPoseListeners.clear();
+                for (PendantClientJPanel.CurrentPoseListener l : tempList) {
+                    pendantClientJInternalFrame.addCurrentPoseListener(l);
+                }
+            }
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -807,9 +819,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 simServerJInternalFrame.restartServer();
                 jDesktopPane1.add(simServerJInternalFrame);
                 simServerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(simServerJInternalFrame);
+
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -847,9 +861,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
             if (null != pub) {
                 pub.addDbSetupListener(toDbListener);
+
             }
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -869,10 +885,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pddlExecutorJInternalFrame1.setDbSetupSupplier(dbSetupPublisherSupplier);
             if (null != pddlPlannerJInternalFrame) {
                 pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
+
             }
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -890,8 +908,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 //            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
             pddlPlannerJInternalFrame.loadProperties();
             pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -1143,8 +1163,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             setupWindowsMenu();
             saveProperties();
+
         } catch (Exception ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupPDDLPlannerActionPerformed
 
@@ -1157,8 +1179,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             setupWindowsMenu();
             saveProperties();
+
         } catch (Exception ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupPDDLExecutorActionPerformed
 
@@ -1169,8 +1193,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             setupWindowsMenu();
             saveProperties();
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupObjectSPActionPerformed
 
@@ -1181,24 +1207,30 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             setupWindowsMenu();
             saveProperties();
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupObject2DViewActionPerformed
 
     private void jMenuItemLoadPropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadPropertiesActionPerformed
         try {
             this.loadProperties();
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jMenuItemLoadPropertiesActionPerformed
 
     private void jMenuItemSavePropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePropertiesActionPerformed
         try {
             this.saveProperties();
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jMenuItemSavePropertiesActionPerformed
 
@@ -1209,8 +1241,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 setPropertiesFile(chooser.getSelectedFile());
                 loadProperties();
 //                initPropertiesFile();
+
             } catch (IOException ex) {
-                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsJFrame.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_jMenuItemLoadPropertiesFileActionPerformed
@@ -1231,8 +1265,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
         try {
             close();
+
         } catch (Exception ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jMenuItemExitActionPerformed
 
@@ -1245,8 +1281,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             setupWindowsMenu();
             saveProperties();
+
         } catch (Exception ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed
 
@@ -1259,8 +1297,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             setupWindowsMenu();
             saveProperties();
+
         } catch (Exception ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemShowDatabaseSetupActionPerformed
 
@@ -1328,8 +1368,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 startCrclWebApp();
             }
             saveProperties();
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupCRCLWebAppActionPerformed
 
@@ -1342,8 +1384,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed
         try {
             saveProperties();
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed
 
@@ -1360,8 +1404,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 setPropertiesFile(chooser.getSelectedFile());
 //                initPropertiesFile();
                 this.saveProperties();
+
             } catch (IOException ex) {
-                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsJFrame.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_jMenuItemSavePropsAsActionPerformed
@@ -1376,8 +1422,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 this.addInternalFrame(exploreGraphDbJInternalFrame);
             }
             activateInternalFrame(this.exploreGraphDbJInternalFrame);
+
         } catch (Exception ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -1387,8 +1435,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 // FIXME decide what to do later
             }
             saveProperties();
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -1424,10 +1474,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         propertiesFile = f;
                         propertiesDirectory = propertiesFile.getParentFile();
                         return;
+
                     }
                 }
             } catch (IOException ex) {
-                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsJFrame.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
         propertiesDirectory.mkdirs();
@@ -1846,14 +1898,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             try {
                 System.out.println("Directory " + propertiesDirectory.getCanonicalPath() + " does not exist. (Creating it now!)");
                 propertiesDirectory.mkdirs();
+
             } catch (IOException ex) {
-                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsJFrame.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
         try {
             updateSubPropertiesFiles();
+
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -1936,8 +1992,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }
             }
             System.out.println("Finished disconnect from database.");
+
         } catch (IOException iOException) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, iOException);
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, iOException);
         }
     }
 
@@ -1983,6 +2041,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         try {
             stopCrclWebApp();
+
         } catch (Exception exception) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, exception);

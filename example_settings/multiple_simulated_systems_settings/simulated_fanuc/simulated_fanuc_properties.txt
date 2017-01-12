@@ -1,10 +1,10 @@
 #
-#Mon Jan 09 09:36:36 EST 2017
+#Wed Jan 11 16:55:04 EST 2017
 startup.pddl.objectview=true
 startup.pddl.planner=true
 startup.pddl.objectsp=true
 startup.pddl.executor=true
-aprs.robotName=Simulated_Fanuc
+aprs.robotName=Sim_Fanuc
 startup.robotcrclclient=true
 startup.robotcrclmotomanserver=false
 startup.exploreGraphDb=false

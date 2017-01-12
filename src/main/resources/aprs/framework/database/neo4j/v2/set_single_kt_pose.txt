@@ -1,56 +1,12 @@
-#params=NAME{1}, X{2}, Y{3}, Z{4}, VXI{5},VXJ{6},VXK{7},VZI{8},VZJ{9},VZK{10}, VISIONCYCLE{11}
+#params=NAME{1}, X{2}, Y{3}, Z{4}, VXI{5},VXJ{6},VXK{7},VZI{8},VZJ{9},VZK{10},SKU_NAME{11}
 #results=
-OPTIONAL MATCH (sku{name:{1}})<-[:hasSkuObject_Sku]-(o)-[:hasSolidObject_PrimaryLocation]->()-[]->(pose:Pose)-[:hasPose_Point]-> (point:Point),
-xaxispath= pose - [:hasPose_XAxis] -> (xaxis:Vector),
-zaxispath= pose - [:hasPose_ZAxis] -> (zaxis:Vector)
-WHERE o.visioncycle=1
-WITH o,xaxis,zaxis,point
-ORDER BY o.name ASC
-LIMIT 1
-SET point.hasPoint_X={2},
-point.hasPoint_Y={3},
-point.hasPoint_Z={4},
-xaxis.hasVector_I={5}, 
-xaxis.hasVector_J={6}, 
-xaxis.hasVector_K={7},
-zaxis.hasVector_I={8}, 
-zaxis.hasVector_J={9}, 
-zaxis.hasVector_K={10}
-WITH o, point, xaxis, zaxis
-
-
-OPTIONAL MATCH (sku{name:{1}})<-[:hasSkuObject_Sku]-(o1)-[:hasSolidObject_PrimaryLocation]->()-[]->(pose1:Pose)-[:hasPose_Point]-> (point1:Point),
-xaxispath= pose - [:hasPose_XAxis] -> (xaxis1:Vector),
-zaxispath= pose - [:hasPose_ZAxis] -> (zaxis1:Vector)
-WHERE o1.visioncycle>1
-AND  o1.visioncycle={11}
-AND toFloat (point1.hasPoint_X) < ({2} + 1)
-AND toFloat (point1.hasPoint_X) > ({2} - 1)
-AND toFloat (point1.hasPoint_Y) < ({3} + 1)
-AND toFloat (point1.hasPoint_Y) > ({3} - 1)
-WITH o,o1,xaxis1,zaxis1,point1,point,xaxis,zaxis
-ORDER BY o1.name ASC
-LIMIT 1
-SET o1.visioncycle=({11}+1), 
-point1.hasPoint_X={2},
-point1.hasPoint_Y={3},
-point1.hasPoint_Z={4},
-xaxis1.hasVector_I={5}, 
-xaxis1.hasVector_J={6}, 
-xaxis1.hasVector_K={7},
-zaxis1.hasVector_I={8}, 
-zaxis1.hasVector_J={9}, 
-zaxis1.hasVector_K={10}
-
-MERGE (v:VisionCycle {name:'v'+{11}}) 
-ON CREATE SET v.cycle=1
-ON MATCH SET v.cycle={11}
-WITH v,o,o1, point, point1, xaxis, xaxis1, zaxis, zaxis1
-
-SET o.visioncycle=({11}+1)
-WITH o,v,point, point1, xaxis, xaxis1, zaxis, zaxis1
-
-OPTIONAL MATCH (vc:VisionCycle) WHERE vc.cycle=({11}-1) DELETE vc
-
-RETURN CASE WHEN v.cycle=1 THEN count(point) + count(xaxis) + count(zaxis) 
-ELSE count(point1) + count(xaxis1) + count(zaxis1) END
+MERGE (thing:PartsTray { name:{1} } )
+merge (thing) - [:hasSkuObject_Sku] -> (sku:StockKeepingUnit { name:{11} } )
+merge (thing) -[:hasSolidObject_PrimaryLocation] -> () -[:hasPoseLocation_Pose] -> (pose:Pose)
+merge (pose) - [:hasPose_Point] -> (pt:Point)
+merge (pose) - [:hasPose_XAxis] -> (xaxis:Vector)
+merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)
+set pt.hasPoint_X= {2},pt.hasPoint_Y= {3},pt.hasPoint_Z= {4}
+set xaxis.hasVector_I={5}, xaxis.hasVector_J={6}, xaxis.hasVector_K={7}
+set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}
+return count(pt) + count(xaxis) + count(zaxis)

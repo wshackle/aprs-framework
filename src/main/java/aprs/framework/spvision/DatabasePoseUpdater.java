@@ -767,7 +767,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return updateResultsMap;
     }
 
-    public List<DetectedItem>  updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
+    public List<DetectedItem> updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
         List<DetectedItem> itemsToVerify = new ArrayList<>();
         List<DetectedItem> partsTrays
                 = list.stream()
@@ -777,7 +777,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 = list.stream()
                 .filter((DetectedItem item) -> "KT".equals(item.type))
                 .collect(Collectors.toList());
-        List<DetectedItem>  returnedList = new ArrayList<>();
+        List<DetectedItem> returnedList = new ArrayList<>();
         try {
             long t0_nanos = System.nanoTime();
             long t0_millis = System.currentTimeMillis();
@@ -822,7 +822,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         } else if (ci.insidePartsTray || inside(partsTrays, ci)) {
                             ci.fullName = ci.name + "_in_pt";
                             ci.insidePartsTray = true;
-                        } 
+                        }
                     }
                     if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
                         ci.fullName = ci.name;
@@ -1241,6 +1241,13 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     stmnt.setString(index, item.fullName);
                     break;
 
+                case SKU_NAME:
+                    String sku = toSku(item.name);
+                    String quotedSKU = "\"" + sku + "\"";
+                    params.add(quotedSKU);
+                    stmnt.setString(index, sku);
+                    break;
+
                 case X:
                     params.add(item.x);
                     stmnt.setDouble(index, item.x);
@@ -1297,6 +1304,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
             }
         }
         return params;
+    }
+
+    private static String toSku(String name) {
+        String sku = name;
+        if(sku.startsWith("sku_")) {
+            sku = sku.substring(4);
+        }
+        sku = "stock_keeping_unit_"+sku;
+        return sku;
     }
 
     private final ExecutorService pqExecServ = Executors.newSingleThreadExecutor();
