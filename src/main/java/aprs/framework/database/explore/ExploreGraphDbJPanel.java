@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -635,7 +636,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     private void jListNodeLabelsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jListNodeLabelsValueChanged
         String s = this.jListNodeLabels.getSelectedValue();
         if (null != s && s.length() > 0) {
-            String query = "MATCH (n:" + s + ") RETURN ID(n),n";
+            String query = "MATCH (n:" + s + ") RETURN ID(n),LABELS(n),n";
             jTextFieldQuery.setText(query);
             try {
                 runQuery(query);
@@ -674,7 +675,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             if (label.endsWith("\"")) {
                 label = label.substring(0, label.length() - 1);
             }
-            String query = "MATCH (n:" + label + ") RETURN ID(n),n";
+            String query = "MATCH (n:" + label + ") RETURN ID(n),LABELS(n),n";
             jTextFieldQuery.setText(query);
 //        Map map = (Map) jTable.getValueAt(row, 2);
             String id = (String) jTable.getValueAt(row, 2).toString();
@@ -938,6 +939,13 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             }
             String str = rs.getString(index);
             result = rs.getObject(index, Map.class);//stringToMap(str);
+        } catch(ClassCastException cce) {
+            try {
+                List l = rs.getObject(index, List.class);
+                result = Collections.singletonMap("", l);
+            } catch (Exception ex2) {
+                Logger.getLogger(ExploreGraphDbJPanel.class.getName()).log(Level.SEVERE, null, ex2);
+            }
         } catch (Exception ex) {
             Logger.getLogger(ExploreGraphDbJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }

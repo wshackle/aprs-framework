@@ -918,6 +918,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             aprsJFrame.removeCurrentPoseListener(this);
         }
     }
+    
     private void jButtonCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCurrentActionPerformed
         List<DetectedItem> items = this.getItems();
         int selectedIndex = object2DJPanel1.getSelectedItemIndex();

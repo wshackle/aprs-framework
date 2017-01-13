@@ -1,13 +1,13 @@
 #
-#Wed Dec 21 09:57:56 EST 2016
+#Fri Jan 13 11:30:06 EST 2017
 startup.pddl.objectview=true
 startup.pddl.planner=true
 startup.pddl.objectsp=true
 startup.pddl.executor=true
-aprs.robotName=Simulated_Motoman
+aprs.robotName=Sim_Motoman
 startup.robotcrclclient=true
 startup.robotcrclmotomanserver=false
-startup.exploreGraphDb=false
+startup.exploreGraphDb=true
 startup.crclWebApp=false
 startup.connectvision=true
 aprs.taskName=2 2L2S Kits

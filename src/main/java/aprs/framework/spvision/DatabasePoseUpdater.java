@@ -815,6 +815,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     if (null == ci || ci.name.compareTo("*") == 0) {
                         continue;
                     }
+                    if(ci.name.startsWith("sku_")) {
+                        ci.name = ci.name.substring(4);
+                    }
                     if ("P".equals(ci.type)) {
                         if (ci.insideKitTray || inside(kitTrays, ci)) {
                             ci.fullName = ci.name + "_in_kt";
@@ -827,25 +830,29 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
                         ci.fullName = ci.name;
                     }
-                    if (addRepeatCountsToName) {
-                        ci.repeats = (repeatsMap.containsKey(ci.name)) ? repeatsMap.get(ci.name) : 0;
-                        repeatsMap.put(ci.name, ci.repeats + 1);
-                        ci.fullName = ci.name + "_" + (ci.repeats + 1);
-                    }
+                    
                     PreparedStatement stmnt = update_statement;
                     String statementString = updateStatementString;
+                    boolean addRepeatCountsThisItem = addRepeatCountsToName;
                     if (null != ci.type) {
                         switch (ci.type) {
                             case "PT":
                                 stmnt = update_parts_tray_statement;
                                 statementString = updatePartsTrayStatementString;
+                                addRepeatCountsThisItem = true;
                                 break;
 
                             case "KT":
                                 stmnt = update_kit_tray_statement;
                                 statementString = updateKitTrayStatementString;
+                                addRepeatCountsThisItem = true;
                                 break;
                         }
+                    }
+                    if (addRepeatCountsThisItem) {
+                        ci.repeats = (repeatsMap.containsKey(ci.name)) ? repeatsMap.get(ci.name) : 0;
+                        repeatsMap.put(ci.name, ci.repeats + 1);
+                        ci.fullName = ci.name + "_" + (ci.repeats + 1);
                     }
                     returnedList.add(ci);
                     List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, stmnt);

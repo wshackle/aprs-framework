@@ -6,7 +6,7 @@ Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
 Prefix(:=</http://www.nist.gov/el/ontologies//usr/local/zeid/github/usnistgov/iora/_build/owl/MotomanWorkstationInstance.owl#>)
 Prefix(:=</http://www.nist.gov/el/ontologies//usr/local/zeid/github/usnistgov/iora/_build/xml/MotomanWorkstation/xmlSchemas/DemoKittingWorkstationClasses.owl#>)
 Ontology(</http://www.nist.gov/el/ontologies//usr/local/zeid/github/usnistgov/iora/_build/owl/MotomanWorkstationInstance.owl>
-Import(<file:/usr/local/zeid/github/usnistgov/iora/_build/owl/DemoKittingWorkstationClasses.owl>)
+Import(<file:/home/shackle/aprs-framework/example_owl/jan_2017_demo/DemoKittingWorkstationClasses.owl>)
 
 //*****************************************
 // 1 start :KittingWorkstation motoman_workstation
@@ -31,14 +31,14 @@ DataPropertyAssertion(:hasKittingWorkstation_AngleUnit :motoman_workstation
 DataPropertyAssertion(:hasKittingWorkstation_LengthUnit :motoman_workstation
                       "meter"^^xsd:NMTOKEN)
 ObjectPropertyAssertion(:hasKittingWorkstation_Object
-                        :motoman_workstation :kit_tray_s2l2_1)
+                        :motoman_workstation :kit_s2l2_vessel_1)
 
 //*****************************************
-// 2 start :PartsTray kit_tray_s2l2_1
-Declaration(NamedIndividual(:kit_tray_s2l2_1))
-ClassAssertion(:PartsTray :kit_tray_s2l2_1)
+// 2 start :PartsTray kit_s2l2_vessel_1
+Declaration(NamedIndividual(:kit_s2l2_vessel_1))
+ClassAssertion(:PartsTray :kit_s2l2_vessel_1)
 ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
-                        :kit_tray_s2l2_1 :kit_s2l2_location_1)
+                        :kit_s2l2_vessel_1 :kit_s2l2_location_1)
 
 //*****************************************
 // 3 start :PoseOnlyLocation kit_s2l2_location_1
@@ -108,15 +108,15 @@ DataPropertyAssertion(:hasVector_K :kit_s2l2_z_axis_1
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :kit_tray_s2l2_1 :stock_keeping_unit_kit_tray_s2l2)
-DataPropertyAssertion(:hasPartsVessel_SerialNumber :kit_tray_s2l2_1
+                        :kit_s2l2_vessel_1 :sku_kit_s2l2_vessel)
+DataPropertyAssertion(:hasPartsVessel_SerialNumber :kit_s2l2_vessel_1
                       "1"^^xsd:NMTOKEN)
 ObjectPropertyAssertion(:hasPartsTray_Design
-                        :kit_tray_s2l2_1 :kit_s2l2_design)
-DataPropertyAssertion(:hasPartsTray_Complete :kit_tray_s2l2_1
+                        :kit_s2l2_vessel_1 :kit_s2l2_design)
+DataPropertyAssertion(:hasPartsTray_Complete :kit_s2l2_vessel_1
                       "false"^^xsd:boolean)
 ObjectPropertyAssertion(:hasPartsTray_Slot
-                        :kit_tray_s2l2_1 :kit_s2l2_1_slot_sg_1)
+                        :kit_s2l2_vessel_1 :kit_s2l2_1_slot_sg_1)
 
 //*****************************************
 // 3 start :Slot kit_s2l2_1_slot_sg_1
@@ -130,7 +130,7 @@ DataPropertyAssertion(:hasSlot_IsOccupied :kit_s2l2_1_slot_sg_1
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsTray_Slot
-                        :kit_tray_s2l2_1 :kit_s2l2_1_slot_sg_2)
+                        :kit_s2l2_vessel_1 :kit_s2l2_1_slot_sg_2)
 
 //*****************************************
 // 3 start :Slot kit_s2l2_1_slot_sg_2
@@ -144,7 +144,7 @@ DataPropertyAssertion(:hasSlot_IsOccupied :kit_s2l2_1_slot_sg_2
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsTray_Slot
-                        :kit_tray_s2l2_1 :kit_s2l2_1_slot_lg_1)
+                        :kit_s2l2_vessel_1 :kit_s2l2_1_slot_lg_1)
 
 //*****************************************
 // 3 start :Slot kit_s2l2_1_slot_lg_1
@@ -158,7 +158,7 @@ DataPropertyAssertion(:hasSlot_IsOccupied :kit_s2l2_1_slot_lg_1
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsTray_Slot
-                        :kit_tray_s2l2_1 :kit_s2l2_1_slot_lg_2)
+                        :kit_s2l2_vessel_1 :kit_s2l2_1_slot_lg_2)
 
 //*****************************************
 // 3 start :Slot kit_s2l2_1_slot_lg_2
@@ -175,14 +175,14 @@ DataPropertyAssertion(:hasSlot_IsOccupied :kit_s2l2_1_slot_lg_2
 //*****************************************
 
 ObjectPropertyAssertion(:hasKittingWorkstation_Object
-                        :motoman_workstation :kit_tray_s2l2_2)
+                        :motoman_workstation :kit_s2l2_vessel_2)
 
 //*****************************************
-// 2 start :PartsTray kit_tray_s2l2_2
-Declaration(NamedIndividual(:kit_tray_s2l2_2))
-ClassAssertion(:PartsTray :kit_tray_s2l2_2)
+// 2 start :PartsTray kit_s2l2_vessel_2
+Declaration(NamedIndividual(:kit_s2l2_vessel_2))
+ClassAssertion(:PartsTray :kit_s2l2_vessel_2)
 ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
-                        :kit_tray_s2l2_2 :kit_s2l2_location_2)
+                        :kit_s2l2_vessel_2 :kit_s2l2_location_2)
 
 //*****************************************
 // 3 start :PoseOnlyLocation kit_s2l2_location_2
@@ -252,15 +252,15 @@ DataPropertyAssertion(:hasVector_K :kit_s2l2_z_axis_2
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :kit_tray_s2l2_2 :stock_keeping_unit_kit_tray_s2l2)
-DataPropertyAssertion(:hasPartsVessel_SerialNumber :kit_tray_s2l2_2
+                        :kit_s2l2_vessel_2 :sku_kit_s2l2_vessel)
+DataPropertyAssertion(:hasPartsVessel_SerialNumber :kit_s2l2_vessel_2
                       "2"^^xsd:NMTOKEN)
 ObjectPropertyAssertion(:hasPartsTray_Design
-                        :kit_tray_s2l2_2 :kit_s2l2_design)
-DataPropertyAssertion(:hasPartsTray_Complete :kit_tray_s2l2_2
+                        :kit_s2l2_vessel_2 :kit_s2l2_design)
+DataPropertyAssertion(:hasPartsTray_Complete :kit_s2l2_vessel_2
                       "false"^^xsd:boolean)
 ObjectPropertyAssertion(:hasPartsTray_Slot
-                        :kit_tray_s2l2_2 :kit_s2l2_2_slot_sg_1)
+                        :kit_s2l2_vessel_2 :kit_s2l2_2_slot_sg_1)
 
 //*****************************************
 // 3 start :Slot kit_s2l2_2_slot_sg_1
@@ -274,7 +274,7 @@ DataPropertyAssertion(:hasSlot_IsOccupied :kit_s2l2_2_slot_sg_1
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsTray_Slot
-                        :kit_tray_s2l2_2 :kit_s2l2_2_slot_sg_2)
+                        :kit_s2l2_vessel_2 :kit_s2l2_2_slot_sg_2)
 
 //*****************************************
 // 3 start :Slot kit_s2l2_2_slot_sg_2
@@ -288,7 +288,7 @@ DataPropertyAssertion(:hasSlot_IsOccupied :kit_s2l2_2_slot_sg_2
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsTray_Slot
-                        :kit_tray_s2l2_2 :kit_s2l2_2_slot_lg_1)
+                        :kit_s2l2_vessel_2 :kit_s2l2_2_slot_lg_1)
 
 //*****************************************
 // 3 start :Slot kit_s2l2_2_slot_lg_1
@@ -302,7 +302,7 @@ DataPropertyAssertion(:hasSlot_IsOccupied :kit_s2l2_2_slot_lg_1
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsTray_Slot
-                        :kit_tray_s2l2_2 :kit_s2l2_2_slot_lg_2)
+                        :kit_s2l2_vessel_2 :kit_s2l2_2_slot_lg_2)
 
 //*****************************************
 // 3 start :Slot kit_s2l2_2_slot_lg_2
@@ -319,72 +319,72 @@ DataPropertyAssertion(:hasSlot_IsOccupied :kit_s2l2_2_slot_lg_2
 //*****************************************
 
 ObjectPropertyAssertion(:hasKittingWorkstation_Object
-                        :motoman_workstation :part_small_gear_tray)
+                        :motoman_workstation :small_gear_vessel_1)
 
 //*****************************************
-// 2 start :PartsTray part_small_gear_tray
-Declaration(NamedIndividual(:part_small_gear_tray))
-ClassAssertion(:PartsTray :part_small_gear_tray)
+// 2 start :PartsTray small_gear_vessel_1
+Declaration(NamedIndividual(:small_gear_vessel_1))
+ClassAssertion(:PartsTray :small_gear_vessel_1)
 ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
-                        :part_small_gear_tray :part_small_gear_tray_location)
+                        :small_gear_vessel_1 :small_gear_vessel_1_location)
 
 //*****************************************
-// 3 start :PoseOnlyLocation part_small_gear_tray_location
-Declaration(NamedIndividual(:part_small_gear_tray_location))
-ClassAssertion(:PoseOnlyLocation :part_small_gear_tray_location)
+// 3 start :PoseOnlyLocation small_gear_vessel_1_location
+Declaration(NamedIndividual(:small_gear_vessel_1_location))
+ClassAssertion(:PoseOnlyLocation :small_gear_vessel_1_location)
 ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
-                        :part_small_gear_tray_location :motoman_workstation)
+                        :small_gear_vessel_1_location :motoman_workstation)
 ObjectPropertyAssertion(:hasPoseLocation_Pose
-                        :part_small_gear_tray_location :part_small_gear_tray_pose)
+                        :small_gear_vessel_1_location :small_gear_vessel_1_pose)
 
 //*****************************************
-// 4 start :Pose part_small_gear_tray_pose
-Declaration(NamedIndividual(:part_small_gear_tray_pose))
-ClassAssertion(:Pose :part_small_gear_tray_pose)
+// 4 start :Pose small_gear_vessel_1_pose
+Declaration(NamedIndividual(:small_gear_vessel_1_pose))
+ClassAssertion(:Pose :small_gear_vessel_1_pose)
 ObjectPropertyAssertion(:hasPose_Point
-                        :part_small_gear_tray_pose :part_small_gear_tray_point)
+                        :small_gear_vessel_1_pose :small_gear_vessel_1_point)
 
 //*****************************************
-// 5 start :Point part_small_gear_tray_point
-Declaration(NamedIndividual(:part_small_gear_tray_point))
-ClassAssertion(:Point :part_small_gear_tray_point)
-DataPropertyAssertion(:hasPoint_X :part_small_gear_tray_point
+// 5 start :Point small_gear_vessel_1_point
+Declaration(NamedIndividual(:small_gear_vessel_1_point))
+ClassAssertion(:Point :small_gear_vessel_1_point)
+DataPropertyAssertion(:hasPoint_X :small_gear_vessel_1_point
                       "5.500000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Y :part_small_gear_tray_point
+DataPropertyAssertion(:hasPoint_Y :small_gear_vessel_1_point
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Z :part_small_gear_tray_point
+DataPropertyAssertion(:hasPoint_Z :small_gear_vessel_1_point
                       "0.000000"^^xsd:decimal)
 // 5 end :Point
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_XAxis
-                        :part_small_gear_tray_pose :part_small_gear_tray_x_axis)
+                        :small_gear_vessel_1_pose :small_gear_vessel_1_x_axis)
 
 //*****************************************
-// 5 start :Vector part_small_gear_tray_x_axis
-Declaration(NamedIndividual(:part_small_gear_tray_x_axis))
-ClassAssertion(:Vector :part_small_gear_tray_x_axis)
-DataPropertyAssertion(:hasVector_I :part_small_gear_tray_x_axis
+// 5 start :Vector small_gear_vessel_1_x_axis
+Declaration(NamedIndividual(:small_gear_vessel_1_x_axis))
+ClassAssertion(:Vector :small_gear_vessel_1_x_axis)
+DataPropertyAssertion(:hasVector_I :small_gear_vessel_1_x_axis
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :part_small_gear_tray_x_axis
+DataPropertyAssertion(:hasVector_J :small_gear_vessel_1_x_axis
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :part_small_gear_tray_x_axis
+DataPropertyAssertion(:hasVector_K :small_gear_vessel_1_x_axis
                       "0.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_ZAxis
-                        :part_small_gear_tray_pose :part_small_gear_tray_z_axis)
+                        :small_gear_vessel_1_pose :small_gear_vessel_1_z_axis)
 
 //*****************************************
-// 5 start :Vector part_small_gear_tray_z_axis
-Declaration(NamedIndividual(:part_small_gear_tray_z_axis))
-ClassAssertion(:Vector :part_small_gear_tray_z_axis)
-DataPropertyAssertion(:hasVector_I :part_small_gear_tray_z_axis
+// 5 start :Vector small_gear_vessel_1_z_axis
+Declaration(NamedIndividual(:small_gear_vessel_1_z_axis))
+ClassAssertion(:Vector :small_gear_vessel_1_z_axis)
+DataPropertyAssertion(:hasVector_I :small_gear_vessel_1_z_axis
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :part_small_gear_tray_z_axis
+DataPropertyAssertion(:hasVector_J :small_gear_vessel_1_z_axis
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :part_small_gear_tray_z_axis
+DataPropertyAssertion(:hasVector_K :small_gear_vessel_1_z_axis
                       "1.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
@@ -396,9 +396,9 @@ DataPropertyAssertion(:hasVector_K :part_small_gear_tray_z_axis
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :part_small_gear_tray :stock_keeping_unit_small_gear_parts_tray)
+                        :small_gear_vessel_1 :sku_small_gear_vessel)
 ObjectPropertyAssertion(:hasPartsVessel_Part
-                        :part_small_gear_tray :part_small_gear_1)
+                        :small_gear_vessel_1 :part_small_gear_1)
 
 //*****************************************
 // 3 start :Part part_small_gear_1
@@ -475,14 +475,14 @@ DataPropertyAssertion(:hasVector_K :part_small_gear_1_z_axis
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :part_small_gear_1 :stock_keeping_unit_part_small_gear)
+                        :part_small_gear_1 :sku_part_small_gear)
 DataPropertyAssertion(:hasPart_SerialNumber :part_small_gear_1
                       "sg1"^^xsd:NMTOKEN)
 // 3 end :Part
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsVessel_Part
-                        :part_small_gear_tray :part_small_gear_2)
+                        :small_gear_vessel_1 :part_small_gear_2)
 
 //*****************************************
 // 3 start :Part part_small_gear_2
@@ -559,14 +559,14 @@ DataPropertyAssertion(:hasVector_K :part_small_gear_2_z_axis
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :part_small_gear_2 :stock_keeping_unit_part_small_gear)
+                        :part_small_gear_2 :sku_part_small_gear)
 DataPropertyAssertion(:hasPart_SerialNumber :part_small_gear_2
                       "sg2"^^xsd:NMTOKEN)
 // 3 end :Part
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsVessel_Part
-                        :part_small_gear_tray :part_small_gear_3)
+                        :small_gear_vessel_1 :part_small_gear_3)
 
 //*****************************************
 // 3 start :Part part_small_gear_3
@@ -643,14 +643,14 @@ DataPropertyAssertion(:hasVector_K :part_small_gear_3_z_axis
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :part_small_gear_3 :stock_keeping_unit_part_small_gear)
+                        :part_small_gear_3 :sku_part_small_gear)
 DataPropertyAssertion(:hasPart_SerialNumber :part_small_gear_3
                       "sg3"^^xsd:NMTOKEN)
 // 3 end :Part
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsVessel_Part
-                        :part_small_gear_tray :part_small_gear_4)
+                        :small_gear_vessel_1 :part_small_gear_4)
 
 //*****************************************
 // 3 start :Part part_small_gear_4
@@ -727,88 +727,88 @@ DataPropertyAssertion(:hasVector_K :part_small_gear_4_z_axis
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :part_small_gear_4 :stock_keeping_unit_part_small_gear)
+                        :part_small_gear_4 :sku_part_small_gear)
 DataPropertyAssertion(:hasPart_SerialNumber :part_small_gear_4
                       "sg4"^^xsd:NMTOKEN)
 // 3 end :Part
 //*****************************************
 
-DataPropertyAssertion(:hasPartsVessel_SerialNumber :part_small_gear_tray
+DataPropertyAssertion(:hasPartsVessel_SerialNumber :small_gear_vessel_1
                       "3"^^xsd:NMTOKEN)
 ObjectPropertyAssertion(:hasPartsTray_Design
-                        :part_small_gear_tray :part_small_gear_tray_design)
-DataPropertyAssertion(:hasPartsTray_Complete :part_small_gear_tray
+                        :small_gear_vessel_1 :small_gear_vessel_design)
+DataPropertyAssertion(:hasPartsTray_Complete :small_gear_vessel_1
                       "true"^^xsd:boolean)
 // 2 end :PartsTray
 //*****************************************
 
 ObjectPropertyAssertion(:hasKittingWorkstation_Object
-                        :motoman_workstation :part_large_gear_tray_1)
+                        :motoman_workstation :large_gear_vessel_1)
 
 //*****************************************
-// 2 start :PartsTray part_large_gear_tray_1
-Declaration(NamedIndividual(:part_large_gear_tray_1))
-ClassAssertion(:PartsTray :part_large_gear_tray_1)
+// 2 start :PartsTray large_gear_vessel_1
+Declaration(NamedIndividual(:large_gear_vessel_1))
+ClassAssertion(:PartsTray :large_gear_vessel_1)
 ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
-                        :part_large_gear_tray_1 :part_large_gear_tray_1_location)
+                        :large_gear_vessel_1 :large_gear_vessel_1_location)
 
 //*****************************************
-// 3 start :PoseOnlyLocation part_large_gear_tray_1_location
-Declaration(NamedIndividual(:part_large_gear_tray_1_location))
-ClassAssertion(:PoseOnlyLocation :part_large_gear_tray_1_location)
+// 3 start :PoseOnlyLocation large_gear_vessel_1_location
+Declaration(NamedIndividual(:large_gear_vessel_1_location))
+ClassAssertion(:PoseOnlyLocation :large_gear_vessel_1_location)
 ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
-                        :part_large_gear_tray_1_location :motoman_workstation)
+                        :large_gear_vessel_1_location :motoman_workstation)
 ObjectPropertyAssertion(:hasPoseLocation_Pose
-                        :part_large_gear_tray_1_location :part_large_gear_tray_1_pose)
+                        :large_gear_vessel_1_location :large_gear_vessel_1_pose)
 
 //*****************************************
-// 4 start :Pose part_large_gear_tray_1_pose
-Declaration(NamedIndividual(:part_large_gear_tray_1_pose))
-ClassAssertion(:Pose :part_large_gear_tray_1_pose)
+// 4 start :Pose large_gear_vessel_1_pose
+Declaration(NamedIndividual(:large_gear_vessel_1_pose))
+ClassAssertion(:Pose :large_gear_vessel_1_pose)
 ObjectPropertyAssertion(:hasPose_Point
-                        :part_large_gear_tray_1_pose :part_large_gear_tray_1_point)
+                        :large_gear_vessel_1_pose :large_gear_vessel_1_point)
 
 //*****************************************
-// 5 start :Point part_large_gear_tray_1_point
-Declaration(NamedIndividual(:part_large_gear_tray_1_point))
-ClassAssertion(:Point :part_large_gear_tray_1_point)
-DataPropertyAssertion(:hasPoint_X :part_large_gear_tray_1_point
+// 5 start :Point large_gear_vessel_1_point
+Declaration(NamedIndividual(:large_gear_vessel_1_point))
+ClassAssertion(:Point :large_gear_vessel_1_point)
+DataPropertyAssertion(:hasPoint_X :large_gear_vessel_1_point
                       "6.500000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Y :part_large_gear_tray_1_point
+DataPropertyAssertion(:hasPoint_Y :large_gear_vessel_1_point
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Z :part_large_gear_tray_1_point
+DataPropertyAssertion(:hasPoint_Z :large_gear_vessel_1_point
                       "0.000000"^^xsd:decimal)
 // 5 end :Point
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_XAxis
-                        :part_large_gear_tray_1_pose :part_large_gear_tray_1_x_axis)
+                        :large_gear_vessel_1_pose :large_gear_vessel_1_x_axis)
 
 //*****************************************
-// 5 start :Vector part_large_gear_tray_1_x_axis
-Declaration(NamedIndividual(:part_large_gear_tray_1_x_axis))
-ClassAssertion(:Vector :part_large_gear_tray_1_x_axis)
-DataPropertyAssertion(:hasVector_I :part_large_gear_tray_1_x_axis
+// 5 start :Vector large_gear_vessel_1_x_axis
+Declaration(NamedIndividual(:large_gear_vessel_1_x_axis))
+ClassAssertion(:Vector :large_gear_vessel_1_x_axis)
+DataPropertyAssertion(:hasVector_I :large_gear_vessel_1_x_axis
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :part_large_gear_tray_1_x_axis
+DataPropertyAssertion(:hasVector_J :large_gear_vessel_1_x_axis
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :part_large_gear_tray_1_x_axis
+DataPropertyAssertion(:hasVector_K :large_gear_vessel_1_x_axis
                       "0.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_ZAxis
-                        :part_large_gear_tray_1_pose :part_large_gear_tray_1_z_axis)
+                        :large_gear_vessel_1_pose :large_gear_vessel_1_z_axis)
 
 //*****************************************
-// 5 start :Vector part_large_gear_tray_1_z_axis
-Declaration(NamedIndividual(:part_large_gear_tray_1_z_axis))
-ClassAssertion(:Vector :part_large_gear_tray_1_z_axis)
-DataPropertyAssertion(:hasVector_I :part_large_gear_tray_1_z_axis
+// 5 start :Vector large_gear_vessel_1_z_axis
+Declaration(NamedIndividual(:large_gear_vessel_1_z_axis))
+ClassAssertion(:Vector :large_gear_vessel_1_z_axis)
+DataPropertyAssertion(:hasVector_I :large_gear_vessel_1_z_axis
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :part_large_gear_tray_1_z_axis
+DataPropertyAssertion(:hasVector_J :large_gear_vessel_1_z_axis
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :part_large_gear_tray_1_z_axis
+DataPropertyAssertion(:hasVector_K :large_gear_vessel_1_z_axis
                       "1.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
@@ -820,9 +820,9 @@ DataPropertyAssertion(:hasVector_K :part_large_gear_tray_1_z_axis
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :part_large_gear_tray_1 :stock_keeping_unit_large_gear_parts_tray)
+                        :large_gear_vessel_1 :sku_large_gear_vessel)
 ObjectPropertyAssertion(:hasPartsVessel_Part
-                        :part_large_gear_tray_1 :part_large_gear_1)
+                        :large_gear_vessel_1 :part_large_gear_1)
 
 //*****************************************
 // 3 start :Part part_large_gear_1
@@ -899,14 +899,14 @@ DataPropertyAssertion(:hasVector_K :part_large_gear_1_z_axis
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :part_large_gear_1 :stock_keeping_unit_part_large_gear)
+                        :part_large_gear_1 :sku_part_large_gear)
 DataPropertyAssertion(:hasPart_SerialNumber :part_large_gear_1
                       "lg1"^^xsd:NMTOKEN)
 // 3 end :Part
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsVessel_Part
-                        :part_large_gear_tray_1 :part_large_gear_2)
+                        :large_gear_vessel_1 :part_large_gear_2)
 
 //*****************************************
 // 3 start :Part part_large_gear_2
@@ -983,88 +983,88 @@ DataPropertyAssertion(:hasVector_K :part_large_gear_2_z_axis
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :part_large_gear_2 :stock_keeping_unit_part_large_gear)
+                        :part_large_gear_2 :sku_part_large_gear)
 DataPropertyAssertion(:hasPart_SerialNumber :part_large_gear_2
                       "lg2"^^xsd:NMTOKEN)
 // 3 end :Part
 //*****************************************
 
-DataPropertyAssertion(:hasPartsVessel_SerialNumber :part_large_gear_tray_1
+DataPropertyAssertion(:hasPartsVessel_SerialNumber :large_gear_vessel_1
                       "4"^^xsd:NMTOKEN)
 ObjectPropertyAssertion(:hasPartsTray_Design
-                        :part_large_gear_tray_1 :part_large_gear_tray_design)
-DataPropertyAssertion(:hasPartsTray_Complete :part_large_gear_tray_1
+                        :large_gear_vessel_1 :large_gear_vessel_design)
+DataPropertyAssertion(:hasPartsTray_Complete :large_gear_vessel_1
                       "true"^^xsd:boolean)
 // 2 end :PartsTray
 //*****************************************
 
 ObjectPropertyAssertion(:hasKittingWorkstation_Object
-                        :motoman_workstation :part_large_gear_tray_2)
+                        :motoman_workstation :large_gear_vessel_2)
 
 //*****************************************
-// 2 start :PartsTray part_large_gear_tray_2
-Declaration(NamedIndividual(:part_large_gear_tray_2))
-ClassAssertion(:PartsTray :part_large_gear_tray_2)
+// 2 start :PartsTray large_gear_vessel_2
+Declaration(NamedIndividual(:large_gear_vessel_2))
+ClassAssertion(:PartsTray :large_gear_vessel_2)
 ObjectPropertyAssertion(:hasSolidObject_PrimaryLocation
-                        :part_large_gear_tray_2 :part_large_gear_tray_2_location)
+                        :large_gear_vessel_2 :large_gear_vessel_2_location)
 
 //*****************************************
-// 3 start :PoseOnlyLocation part_large_gear_tray_2_location
-Declaration(NamedIndividual(:part_large_gear_tray_2_location))
-ClassAssertion(:PoseOnlyLocation :part_large_gear_tray_2_location)
+// 3 start :PoseOnlyLocation large_gear_vessel_2_location
+Declaration(NamedIndividual(:large_gear_vessel_2_location))
+ClassAssertion(:PoseOnlyLocation :large_gear_vessel_2_location)
 ObjectPropertyAssertion(:hasPhysicalLocation_RefObject
-                        :part_large_gear_tray_2_location :motoman_workstation)
+                        :large_gear_vessel_2_location :motoman_workstation)
 ObjectPropertyAssertion(:hasPoseLocation_Pose
-                        :part_large_gear_tray_2_location :part_large_gear_tray_2_pose)
+                        :large_gear_vessel_2_location :large_gear_vessel_2_pose)
 
 //*****************************************
-// 4 start :Pose part_large_gear_tray_2_pose
-Declaration(NamedIndividual(:part_large_gear_tray_2_pose))
-ClassAssertion(:Pose :part_large_gear_tray_2_pose)
+// 4 start :Pose large_gear_vessel_2_pose
+Declaration(NamedIndividual(:large_gear_vessel_2_pose))
+ClassAssertion(:Pose :large_gear_vessel_2_pose)
 ObjectPropertyAssertion(:hasPose_Point
-                        :part_large_gear_tray_2_pose :part_large_gear_tray_2_point)
+                        :large_gear_vessel_2_pose :large_gear_vessel_2_point)
 
 //*****************************************
-// 5 start :Point part_large_gear_tray_2_point
-Declaration(NamedIndividual(:part_large_gear_tray_2_point))
-ClassAssertion(:Point :part_large_gear_tray_2_point)
-DataPropertyAssertion(:hasPoint_X :part_large_gear_tray_2_point
+// 5 start :Point large_gear_vessel_2_point
+Declaration(NamedIndividual(:large_gear_vessel_2_point))
+ClassAssertion(:Point :large_gear_vessel_2_point)
+DataPropertyAssertion(:hasPoint_X :large_gear_vessel_2_point
                       "6.500000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Y :part_large_gear_tray_2_point
+DataPropertyAssertion(:hasPoint_Y :large_gear_vessel_2_point
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Z :part_large_gear_tray_2_point
+DataPropertyAssertion(:hasPoint_Z :large_gear_vessel_2_point
                       "0.000000"^^xsd:decimal)
 // 5 end :Point
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_XAxis
-                        :part_large_gear_tray_2_pose :part_large_gear_tray_2_x_axis)
+                        :large_gear_vessel_2_pose :large_gear_vessel_2_x_axis)
 
 //*****************************************
-// 5 start :Vector part_large_gear_tray_2_x_axis
-Declaration(NamedIndividual(:part_large_gear_tray_2_x_axis))
-ClassAssertion(:Vector :part_large_gear_tray_2_x_axis)
-DataPropertyAssertion(:hasVector_I :part_large_gear_tray_2_x_axis
+// 5 start :Vector large_gear_vessel_2_x_axis
+Declaration(NamedIndividual(:large_gear_vessel_2_x_axis))
+ClassAssertion(:Vector :large_gear_vessel_2_x_axis)
+DataPropertyAssertion(:hasVector_I :large_gear_vessel_2_x_axis
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :part_large_gear_tray_2_x_axis
+DataPropertyAssertion(:hasVector_J :large_gear_vessel_2_x_axis
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :part_large_gear_tray_2_x_axis
+DataPropertyAssertion(:hasVector_K :large_gear_vessel_2_x_axis
                       "0.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_ZAxis
-                        :part_large_gear_tray_2_pose :part_large_gear_tray_2_z_axis)
+                        :large_gear_vessel_2_pose :large_gear_vessel_2_z_axis)
 
 //*****************************************
-// 5 start :Vector part_large_gear_tray_2_z_axis
-Declaration(NamedIndividual(:part_large_gear_tray_2_z_axis))
-ClassAssertion(:Vector :part_large_gear_tray_2_z_axis)
-DataPropertyAssertion(:hasVector_I :part_large_gear_tray_2_z_axis
+// 5 start :Vector large_gear_vessel_2_z_axis
+Declaration(NamedIndividual(:large_gear_vessel_2_z_axis))
+ClassAssertion(:Vector :large_gear_vessel_2_z_axis)
+DataPropertyAssertion(:hasVector_I :large_gear_vessel_2_z_axis
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :part_large_gear_tray_2_z_axis
+DataPropertyAssertion(:hasVector_J :large_gear_vessel_2_z_axis
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :part_large_gear_tray_2_z_axis
+DataPropertyAssertion(:hasVector_K :large_gear_vessel_2_z_axis
                       "1.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
@@ -1076,9 +1076,9 @@ DataPropertyAssertion(:hasVector_K :part_large_gear_tray_2_z_axis
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :part_large_gear_tray_2 :stock_keeping_unit_large_gear_parts_tray)
+                        :large_gear_vessel_2 :sku_large_gear_vessel)
 ObjectPropertyAssertion(:hasPartsVessel_Part
-                        :part_large_gear_tray_2 :part_large_gear_3)
+                        :large_gear_vessel_2 :part_large_gear_3)
 
 //*****************************************
 // 3 start :Part part_large_gear_3
@@ -1155,14 +1155,14 @@ DataPropertyAssertion(:hasVector_K :part_large_gear_3_z_axis
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :part_large_gear_3 :stock_keeping_unit_part_large_gear)
+                        :part_large_gear_3 :sku_part_large_gear)
 DataPropertyAssertion(:hasPart_SerialNumber :part_large_gear_3
                       "lg3"^^xsd:NMTOKEN)
 // 3 end :Part
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsVessel_Part
-                        :part_large_gear_tray_2 :part_large_gear_4)
+                        :large_gear_vessel_2 :part_large_gear_4)
 
 //*****************************************
 // 3 start :Part part_large_gear_4
@@ -1239,17 +1239,17 @@ DataPropertyAssertion(:hasVector_K :part_large_gear_4_z_axis
 //*****************************************
 
 ObjectPropertyAssertion(:hasSkuObject_Sku
-                        :part_large_gear_4 :stock_keeping_unit_part_large_gear)
+                        :part_large_gear_4 :sku_part_large_gear)
 DataPropertyAssertion(:hasPart_SerialNumber :part_large_gear_4
                       "lg4"^^xsd:NMTOKEN)
 // 3 end :Part
 //*****************************************
 
-DataPropertyAssertion(:hasPartsVessel_SerialNumber :part_large_gear_tray_2
+DataPropertyAssertion(:hasPartsVessel_SerialNumber :large_gear_vessel_2
                       "5"^^xsd:NMTOKEN)
 ObjectPropertyAssertion(:hasPartsTray_Design
-                        :part_large_gear_tray_2 :part_large_gear_tray_design)
-DataPropertyAssertion(:hasPartsTray_Complete :part_large_gear_tray_2
+                        :large_gear_vessel_2 :large_gear_vessel_design)
+DataPropertyAssertion(:hasPartsTray_Complete :large_gear_vessel_2
                       "true"^^xsd:boolean)
 // 2 end :PartsTray
 //*****************************************
@@ -1362,7 +1362,7 @@ ObjectPropertyAssertion(:hasKittingWorkstation_PartsTrayDesign
 Declaration(NamedIndividual(:kit_s2l2_design))
 ClassAssertion(:PartsTrayDesign :kit_s2l2_design)
 ObjectPropertyAssertion(:hasPartsTrayDesign_VesselSku
-                        :kit_s2l2_design :stock_keeping_unit_kit_tray_s2l2)
+                        :kit_s2l2_design :sku_kit_s2l2_vessel)
 ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
                         :kit_s2l2_design :part_ref_and_pose_kit_s2l2_sg_1)
 
@@ -1371,7 +1371,7 @@ ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
 Declaration(NamedIndividual(:part_ref_and_pose_kit_s2l2_sg_1))
 ClassAssertion(:PartRefAndPose :part_ref_and_pose_kit_s2l2_sg_1)
 ObjectPropertyAssertion(:hasPartRefAndPose_Sku
-                        :part_ref_and_pose_kit_s2l2_sg_1 :stock_keeping_unit_part_small_gear)
+                        :part_ref_and_pose_kit_s2l2_sg_1 :sku_part_small_gear)
 ObjectPropertyAssertion(:hasPartRefAndPose_Pose
                         :part_ref_and_pose_kit_s2l2_sg_1 :pose_kit_s2l2_sg_1)
 
@@ -1441,7 +1441,7 @@ ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
 Declaration(NamedIndividual(:part_ref_and_pose_kit_s2l2_sg_2))
 ClassAssertion(:PartRefAndPose :part_ref_and_pose_kit_s2l2_sg_2)
 ObjectPropertyAssertion(:hasPartRefAndPose_Sku
-                        :part_ref_and_pose_kit_s2l2_sg_2 :stock_keeping_unit_part_small_gear)
+                        :part_ref_and_pose_kit_s2l2_sg_2 :sku_part_small_gear)
 ObjectPropertyAssertion(:hasPartRefAndPose_Pose
                         :part_ref_and_pose_kit_s2l2_sg_2 :pose_kit_s2l2_sg_2)
 
@@ -1511,7 +1511,7 @@ ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
 Declaration(NamedIndividual(:part_ref_and_pose_kit_s2l2_lg_1))
 ClassAssertion(:PartRefAndPose :part_ref_and_pose_kit_s2l2_lg_1)
 ObjectPropertyAssertion(:hasPartRefAndPose_Sku
-                        :part_ref_and_pose_kit_s2l2_lg_1 :stock_keeping_unit_part_large_gear)
+                        :part_ref_and_pose_kit_s2l2_lg_1 :sku_part_large_gear)
 ObjectPropertyAssertion(:hasPartRefAndPose_Pose
                         :part_ref_and_pose_kit_s2l2_lg_1 :pose_kit_s2l2_lg_1)
 
@@ -1581,7 +1581,7 @@ ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
 Declaration(NamedIndividual(:part_ref_and_pose_kit_s2l2_lg_2))
 ClassAssertion(:PartRefAndPose :part_ref_and_pose_kit_s2l2_lg_2)
 ObjectPropertyAssertion(:hasPartRefAndPose_Sku
-                        :part_ref_and_pose_kit_s2l2_lg_2 :stock_keeping_unit_part_large_gear)
+                        :part_ref_and_pose_kit_s2l2_lg_2 :sku_part_large_gear)
 ObjectPropertyAssertion(:hasPartRefAndPose_Pose
                         :part_ref_and_pose_kit_s2l2_lg_2 :pose_kit_s2l2_lg_2)
 
@@ -1647,74 +1647,74 @@ DataPropertyAssertion(:hasVector_K :z_axis_kit_s2l2_lg_2
 //*****************************************
 
 ObjectPropertyAssertion(:hasKittingWorkstation_PartsTrayDesign
-                        :motoman_workstation :part_large_gear_tray_design)
+                        :motoman_workstation :large_gear_vessel_design)
 
 //*****************************************
-// 2 start :PartsTrayDesign part_large_gear_tray_design
-Declaration(NamedIndividual(:part_large_gear_tray_design))
-ClassAssertion(:PartsTrayDesign :part_large_gear_tray_design)
+// 2 start :PartsTrayDesign large_gear_vessel_design
+Declaration(NamedIndividual(:large_gear_vessel_design))
+ClassAssertion(:PartsTrayDesign :large_gear_vessel_design)
 ObjectPropertyAssertion(:hasPartsTrayDesign_VesselSku
-                        :part_large_gear_tray_design :stock_keeping_unit_large_gear_parts_tray)
+                        :large_gear_vessel_design :sku_large_gear_vessel)
 ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
-                        :part_large_gear_tray_design :part_ref_and_pose_part_large_gear_tray_lg_1)
+                        :large_gear_vessel_design :part_ref_and_pose_large_gear_vessel_lg_1)
 
 //*****************************************
-// 3 start :PartRefAndPose part_ref_and_pose_part_large_gear_tray_lg_1
-Declaration(NamedIndividual(:part_ref_and_pose_part_large_gear_tray_lg_1))
-ClassAssertion(:PartRefAndPose :part_ref_and_pose_part_large_gear_tray_lg_1)
+// 3 start :PartRefAndPose part_ref_and_pose_large_gear_vessel_lg_1
+Declaration(NamedIndividual(:part_ref_and_pose_large_gear_vessel_lg_1))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_large_gear_vessel_lg_1)
 ObjectPropertyAssertion(:hasPartRefAndPose_Sku
-                        :part_ref_and_pose_part_large_gear_tray_lg_1 :stock_keeping_unit_part_large_gear)
+                        :part_ref_and_pose_large_gear_vessel_lg_1 :sku_part_large_gear)
 ObjectPropertyAssertion(:hasPartRefAndPose_Pose
-                        :part_ref_and_pose_part_large_gear_tray_lg_1 :pose_part_large_gear_tray_lg_1)
+                        :part_ref_and_pose_large_gear_vessel_lg_1 :pose_large_gear_vessel_lg_1)
 
 //*****************************************
-// 4 start :Pose pose_part_large_gear_tray_lg_1
-Declaration(NamedIndividual(:pose_part_large_gear_tray_lg_1))
-ClassAssertion(:Pose :pose_part_large_gear_tray_lg_1)
+// 4 start :Pose pose_large_gear_vessel_lg_1
+Declaration(NamedIndividual(:pose_large_gear_vessel_lg_1))
+ClassAssertion(:Pose :pose_large_gear_vessel_lg_1)
 ObjectPropertyAssertion(:hasPose_Point
-                        :pose_part_large_gear_tray_lg_1 :point_part_large_gear_tray_lg_1)
+                        :pose_large_gear_vessel_lg_1 :point_large_gear_vessel_lg_1)
 
 //*****************************************
-// 5 start :Point point_part_large_gear_tray_lg_1
-Declaration(NamedIndividual(:point_part_large_gear_tray_lg_1))
-ClassAssertion(:Point :point_part_large_gear_tray_lg_1)
-DataPropertyAssertion(:hasPoint_X :point_part_large_gear_tray_lg_1
+// 5 start :Point point_large_gear_vessel_lg_1
+Declaration(NamedIndividual(:point_large_gear_vessel_lg_1))
+ClassAssertion(:Point :point_large_gear_vessel_lg_1)
+DataPropertyAssertion(:hasPoint_X :point_large_gear_vessel_lg_1
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Y :point_part_large_gear_tray_lg_1
+DataPropertyAssertion(:hasPoint_Y :point_large_gear_vessel_lg_1
                       "0.050000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Z :point_part_large_gear_tray_lg_1
+DataPropertyAssertion(:hasPoint_Z :point_large_gear_vessel_lg_1
                       "0.000000"^^xsd:decimal)
 // 5 end :Point
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_XAxis
-                        :pose_part_large_gear_tray_lg_1 :x_axis_part_large_gear_tray_lg_1)
+                        :pose_large_gear_vessel_lg_1 :x_axis_large_gear_vessel_lg_1)
 
 //*****************************************
-// 5 start :Vector x_axis_part_large_gear_tray_lg_1
-Declaration(NamedIndividual(:x_axis_part_large_gear_tray_lg_1))
-ClassAssertion(:Vector :x_axis_part_large_gear_tray_lg_1)
-DataPropertyAssertion(:hasVector_I :x_axis_part_large_gear_tray_lg_1
+// 5 start :Vector x_axis_large_gear_vessel_lg_1
+Declaration(NamedIndividual(:x_axis_large_gear_vessel_lg_1))
+ClassAssertion(:Vector :x_axis_large_gear_vessel_lg_1)
+DataPropertyAssertion(:hasVector_I :x_axis_large_gear_vessel_lg_1
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :x_axis_part_large_gear_tray_lg_1
+DataPropertyAssertion(:hasVector_J :x_axis_large_gear_vessel_lg_1
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :x_axis_part_large_gear_tray_lg_1
+DataPropertyAssertion(:hasVector_K :x_axis_large_gear_vessel_lg_1
                       "0.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_ZAxis
-                        :pose_part_large_gear_tray_lg_1 :z_axis_part_large_gear_tray_lg_1)
+                        :pose_large_gear_vessel_lg_1 :z_axis_large_gear_vessel_lg_1)
 
 //*****************************************
-// 5 start :Vector z_axis_part_large_gear_tray_lg_1
-Declaration(NamedIndividual(:z_axis_part_large_gear_tray_lg_1))
-ClassAssertion(:Vector :z_axis_part_large_gear_tray_lg_1)
-DataPropertyAssertion(:hasVector_I :z_axis_part_large_gear_tray_lg_1
+// 5 start :Vector z_axis_large_gear_vessel_lg_1
+Declaration(NamedIndividual(:z_axis_large_gear_vessel_lg_1))
+ClassAssertion(:Vector :z_axis_large_gear_vessel_lg_1)
+DataPropertyAssertion(:hasVector_I :z_axis_large_gear_vessel_lg_1
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :z_axis_part_large_gear_tray_lg_1
+DataPropertyAssertion(:hasVector_J :z_axis_large_gear_vessel_lg_1
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :z_axis_part_large_gear_tray_lg_1
+DataPropertyAssertion(:hasVector_K :z_axis_large_gear_vessel_lg_1
                       "1.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
@@ -1726,65 +1726,65 @@ DataPropertyAssertion(:hasVector_K :z_axis_part_large_gear_tray_lg_1
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
-                        :part_large_gear_tray_design :part_ref_and_pose_part_large_gear_tray_lg_2)
+                        :large_gear_vessel_design :part_ref_and_pose_large_gear_vessel_lg_2)
 
 //*****************************************
-// 3 start :PartRefAndPose part_ref_and_pose_part_large_gear_tray_lg_2
-Declaration(NamedIndividual(:part_ref_and_pose_part_large_gear_tray_lg_2))
-ClassAssertion(:PartRefAndPose :part_ref_and_pose_part_large_gear_tray_lg_2)
+// 3 start :PartRefAndPose part_ref_and_pose_large_gear_vessel_lg_2
+Declaration(NamedIndividual(:part_ref_and_pose_large_gear_vessel_lg_2))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_large_gear_vessel_lg_2)
 ObjectPropertyAssertion(:hasPartRefAndPose_Sku
-                        :part_ref_and_pose_part_large_gear_tray_lg_2 :stock_keeping_unit_part_large_gear)
+                        :part_ref_and_pose_large_gear_vessel_lg_2 :sku_part_large_gear)
 ObjectPropertyAssertion(:hasPartRefAndPose_Pose
-                        :part_ref_and_pose_part_large_gear_tray_lg_2 :pose_part_large_gear_tray_lg_2)
+                        :part_ref_and_pose_large_gear_vessel_lg_2 :pose_large_gear_vessel_lg_2)
 
 //*****************************************
-// 4 start :Pose pose_part_large_gear_tray_lg_2
-Declaration(NamedIndividual(:pose_part_large_gear_tray_lg_2))
-ClassAssertion(:Pose :pose_part_large_gear_tray_lg_2)
+// 4 start :Pose pose_large_gear_vessel_lg_2
+Declaration(NamedIndividual(:pose_large_gear_vessel_lg_2))
+ClassAssertion(:Pose :pose_large_gear_vessel_lg_2)
 ObjectPropertyAssertion(:hasPose_Point
-                        :pose_part_large_gear_tray_lg_2 :point_part_large_gear_tray_lg_2)
+                        :pose_large_gear_vessel_lg_2 :point_large_gear_vessel_lg_2)
 
 //*****************************************
-// 5 start :Point point_part_large_gear_tray_lg_2
-Declaration(NamedIndividual(:point_part_large_gear_tray_lg_2))
-ClassAssertion(:Point :point_part_large_gear_tray_lg_2)
-DataPropertyAssertion(:hasPoint_X :point_part_large_gear_tray_lg_2
+// 5 start :Point point_large_gear_vessel_lg_2
+Declaration(NamedIndividual(:point_large_gear_vessel_lg_2))
+ClassAssertion(:Point :point_large_gear_vessel_lg_2)
+DataPropertyAssertion(:hasPoint_X :point_large_gear_vessel_lg_2
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Y :point_part_large_gear_tray_lg_2
+DataPropertyAssertion(:hasPoint_Y :point_large_gear_vessel_lg_2
                       "-0.050000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Z :point_part_large_gear_tray_lg_2
+DataPropertyAssertion(:hasPoint_Z :point_large_gear_vessel_lg_2
                       "0.000000"^^xsd:decimal)
 // 5 end :Point
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_XAxis
-                        :pose_part_large_gear_tray_lg_2 :x_axis_part_large_gear_tray_lg_2)
+                        :pose_large_gear_vessel_lg_2 :x_axis_large_gear_vessel_lg_2)
 
 //*****************************************
-// 5 start :Vector x_axis_part_large_gear_tray_lg_2
-Declaration(NamedIndividual(:x_axis_part_large_gear_tray_lg_2))
-ClassAssertion(:Vector :x_axis_part_large_gear_tray_lg_2)
-DataPropertyAssertion(:hasVector_I :x_axis_part_large_gear_tray_lg_2
+// 5 start :Vector x_axis_large_gear_vessel_lg_2
+Declaration(NamedIndividual(:x_axis_large_gear_vessel_lg_2))
+ClassAssertion(:Vector :x_axis_large_gear_vessel_lg_2)
+DataPropertyAssertion(:hasVector_I :x_axis_large_gear_vessel_lg_2
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :x_axis_part_large_gear_tray_lg_2
+DataPropertyAssertion(:hasVector_J :x_axis_large_gear_vessel_lg_2
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :x_axis_part_large_gear_tray_lg_2
+DataPropertyAssertion(:hasVector_K :x_axis_large_gear_vessel_lg_2
                       "0.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_ZAxis
-                        :pose_part_large_gear_tray_lg_2 :z_axis_part_large_gear_tray_lg_2)
+                        :pose_large_gear_vessel_lg_2 :z_axis_large_gear_vessel_lg_2)
 
 //*****************************************
-// 5 start :Vector z_axis_part_large_gear_tray_lg_2
-Declaration(NamedIndividual(:z_axis_part_large_gear_tray_lg_2))
-ClassAssertion(:Vector :z_axis_part_large_gear_tray_lg_2)
-DataPropertyAssertion(:hasVector_I :z_axis_part_large_gear_tray_lg_2
+// 5 start :Vector z_axis_large_gear_vessel_lg_2
+Declaration(NamedIndividual(:z_axis_large_gear_vessel_lg_2))
+ClassAssertion(:Vector :z_axis_large_gear_vessel_lg_2)
+DataPropertyAssertion(:hasVector_I :z_axis_large_gear_vessel_lg_2
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :z_axis_part_large_gear_tray_lg_2
+DataPropertyAssertion(:hasVector_J :z_axis_large_gear_vessel_lg_2
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :z_axis_part_large_gear_tray_lg_2
+DataPropertyAssertion(:hasVector_K :z_axis_large_gear_vessel_lg_2
                       "1.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
@@ -1799,74 +1799,74 @@ DataPropertyAssertion(:hasVector_K :z_axis_part_large_gear_tray_lg_2
 //*****************************************
 
 ObjectPropertyAssertion(:hasKittingWorkstation_PartsTrayDesign
-                        :motoman_workstation :part_small_gear_tray_design)
+                        :motoman_workstation :small_gear_vessel_design)
 
 //*****************************************
-// 2 start :PartsTrayDesign part_small_gear_tray_design
-Declaration(NamedIndividual(:part_small_gear_tray_design))
-ClassAssertion(:PartsTrayDesign :part_small_gear_tray_design)
+// 2 start :PartsTrayDesign small_gear_vessel_design
+Declaration(NamedIndividual(:small_gear_vessel_design))
+ClassAssertion(:PartsTrayDesign :small_gear_vessel_design)
 ObjectPropertyAssertion(:hasPartsTrayDesign_VesselSku
-                        :part_small_gear_tray_design :stock_keeping_unit_small_gear_parts_tray)
+                        :small_gear_vessel_design :sku_small_gear_vessel)
 ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
-                        :part_small_gear_tray_design :part_ref_and_pose_part_small_gear_tray_sg_1)
+                        :small_gear_vessel_design :part_ref_and_pose_small_gear_vessel_1_sg_1)
 
 //*****************************************
-// 3 start :PartRefAndPose part_ref_and_pose_part_small_gear_tray_sg_1
-Declaration(NamedIndividual(:part_ref_and_pose_part_small_gear_tray_sg_1))
-ClassAssertion(:PartRefAndPose :part_ref_and_pose_part_small_gear_tray_sg_1)
+// 3 start :PartRefAndPose part_ref_and_pose_small_gear_vessel_1_sg_1
+Declaration(NamedIndividual(:part_ref_and_pose_small_gear_vessel_1_sg_1))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_small_gear_vessel_1_sg_1)
 ObjectPropertyAssertion(:hasPartRefAndPose_Sku
-                        :part_ref_and_pose_part_small_gear_tray_sg_1 :stock_keeping_unit_part_small_gear)
+                        :part_ref_and_pose_small_gear_vessel_1_sg_1 :sku_part_small_gear)
 ObjectPropertyAssertion(:hasPartRefAndPose_Pose
-                        :part_ref_and_pose_part_small_gear_tray_sg_1 :pose_part_small_gear_tray_sg_1)
+                        :part_ref_and_pose_small_gear_vessel_1_sg_1 :pose_small_gear_vessel_1_sg_1)
 
 //*****************************************
-// 4 start :Pose pose_part_small_gear_tray_sg_1
-Declaration(NamedIndividual(:pose_part_small_gear_tray_sg_1))
-ClassAssertion(:Pose :pose_part_small_gear_tray_sg_1)
+// 4 start :Pose pose_small_gear_vessel_1_sg_1
+Declaration(NamedIndividual(:pose_small_gear_vessel_1_sg_1))
+ClassAssertion(:Pose :pose_small_gear_vessel_1_sg_1)
 ObjectPropertyAssertion(:hasPose_Point
-                        :pose_part_small_gear_tray_sg_1 :point_part_small_gear_tray_sg_1)
+                        :pose_small_gear_vessel_1_sg_1 :point_small_gear_vessel_1_sg_1)
 
 //*****************************************
-// 5 start :Point point_part_small_gear_tray_sg_1
-Declaration(NamedIndividual(:point_part_small_gear_tray_sg_1))
-ClassAssertion(:Point :point_part_small_gear_tray_sg_1)
-DataPropertyAssertion(:hasPoint_X :point_part_small_gear_tray_sg_1
+// 5 start :Point point_small_gear_vessel_1_sg_1
+Declaration(NamedIndividual(:point_small_gear_vessel_1_sg_1))
+ClassAssertion(:Point :point_small_gear_vessel_1_sg_1)
+DataPropertyAssertion(:hasPoint_X :point_small_gear_vessel_1_sg_1
                       "-0.030000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Y :point_part_small_gear_tray_sg_1
+DataPropertyAssertion(:hasPoint_Y :point_small_gear_vessel_1_sg_1
                       "0.030000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Z :point_part_small_gear_tray_sg_1
+DataPropertyAssertion(:hasPoint_Z :point_small_gear_vessel_1_sg_1
                       "0.000000"^^xsd:decimal)
 // 5 end :Point
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_XAxis
-                        :pose_part_small_gear_tray_sg_1 :x_axis_part_small_gear_tray_sg_1)
+                        :pose_small_gear_vessel_1_sg_1 :x_axis_small_gear_vessel_1_sg_1)
 
 //*****************************************
-// 5 start :Vector x_axis_part_small_gear_tray_sg_1
-Declaration(NamedIndividual(:x_axis_part_small_gear_tray_sg_1))
-ClassAssertion(:Vector :x_axis_part_small_gear_tray_sg_1)
-DataPropertyAssertion(:hasVector_I :x_axis_part_small_gear_tray_sg_1
+// 5 start :Vector x_axis_small_gear_vessel_1_sg_1
+Declaration(NamedIndividual(:x_axis_small_gear_vessel_1_sg_1))
+ClassAssertion(:Vector :x_axis_small_gear_vessel_1_sg_1)
+DataPropertyAssertion(:hasVector_I :x_axis_small_gear_vessel_1_sg_1
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :x_axis_part_small_gear_tray_sg_1
+DataPropertyAssertion(:hasVector_J :x_axis_small_gear_vessel_1_sg_1
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :x_axis_part_small_gear_tray_sg_1
+DataPropertyAssertion(:hasVector_K :x_axis_small_gear_vessel_1_sg_1
                       "0.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_ZAxis
-                        :pose_part_small_gear_tray_sg_1 :z_axis_part_small_gear_tray_sg_1)
+                        :pose_small_gear_vessel_1_sg_1 :z_axis_small_gear_vessel_1_sg_1)
 
 //*****************************************
-// 5 start :Vector z_axis_part_small_gear_tray_sg_1
-Declaration(NamedIndividual(:z_axis_part_small_gear_tray_sg_1))
-ClassAssertion(:Vector :z_axis_part_small_gear_tray_sg_1)
-DataPropertyAssertion(:hasVector_I :z_axis_part_small_gear_tray_sg_1
+// 5 start :Vector z_axis_small_gear_vessel_1_sg_1
+Declaration(NamedIndividual(:z_axis_small_gear_vessel_1_sg_1))
+ClassAssertion(:Vector :z_axis_small_gear_vessel_1_sg_1)
+DataPropertyAssertion(:hasVector_I :z_axis_small_gear_vessel_1_sg_1
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :z_axis_part_small_gear_tray_sg_1
+DataPropertyAssertion(:hasVector_J :z_axis_small_gear_vessel_1_sg_1
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :z_axis_part_small_gear_tray_sg_1
+DataPropertyAssertion(:hasVector_K :z_axis_small_gear_vessel_1_sg_1
                       "1.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
@@ -1878,65 +1878,65 @@ DataPropertyAssertion(:hasVector_K :z_axis_part_small_gear_tray_sg_1
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
-                        :part_small_gear_tray_design :part_ref_and_pose_part_small_gear_tray_sg_2)
+                        :small_gear_vessel_design :part_ref_and_pose_small_gear_vessel_1_sg_2)
 
 //*****************************************
-// 3 start :PartRefAndPose part_ref_and_pose_part_small_gear_tray_sg_2
-Declaration(NamedIndividual(:part_ref_and_pose_part_small_gear_tray_sg_2))
-ClassAssertion(:PartRefAndPose :part_ref_and_pose_part_small_gear_tray_sg_2)
+// 3 start :PartRefAndPose part_ref_and_pose_small_gear_vessel_1_sg_2
+Declaration(NamedIndividual(:part_ref_and_pose_small_gear_vessel_1_sg_2))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_small_gear_vessel_1_sg_2)
 ObjectPropertyAssertion(:hasPartRefAndPose_Sku
-                        :part_ref_and_pose_part_small_gear_tray_sg_2 :stock_keeping_unit_part_small_gear)
+                        :part_ref_and_pose_small_gear_vessel_1_sg_2 :sku_part_small_gear)
 ObjectPropertyAssertion(:hasPartRefAndPose_Pose
-                        :part_ref_and_pose_part_small_gear_tray_sg_2 :pose_part_small_gear_tray_sg_2)
+                        :part_ref_and_pose_small_gear_vessel_1_sg_2 :pose_small_gear_vessel_1_sg_2)
 
 //*****************************************
-// 4 start :Pose pose_part_small_gear_tray_sg_2
-Declaration(NamedIndividual(:pose_part_small_gear_tray_sg_2))
-ClassAssertion(:Pose :pose_part_small_gear_tray_sg_2)
+// 4 start :Pose pose_small_gear_vessel_1_sg_2
+Declaration(NamedIndividual(:pose_small_gear_vessel_1_sg_2))
+ClassAssertion(:Pose :pose_small_gear_vessel_1_sg_2)
 ObjectPropertyAssertion(:hasPose_Point
-                        :pose_part_small_gear_tray_sg_2 :point_part_small_gear_tray_sg_2)
+                        :pose_small_gear_vessel_1_sg_2 :point_small_gear_vessel_1_sg_2)
 
 //*****************************************
-// 5 start :Point point_part_small_gear_tray_sg_2
-Declaration(NamedIndividual(:point_part_small_gear_tray_sg_2))
-ClassAssertion(:Point :point_part_small_gear_tray_sg_2)
-DataPropertyAssertion(:hasPoint_X :point_part_small_gear_tray_sg_2
+// 5 start :Point point_small_gear_vessel_1_sg_2
+Declaration(NamedIndividual(:point_small_gear_vessel_1_sg_2))
+ClassAssertion(:Point :point_small_gear_vessel_1_sg_2)
+DataPropertyAssertion(:hasPoint_X :point_small_gear_vessel_1_sg_2
                       "0.030000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Y :point_part_small_gear_tray_sg_2
+DataPropertyAssertion(:hasPoint_Y :point_small_gear_vessel_1_sg_2
                       "0.030000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Z :point_part_small_gear_tray_sg_2
+DataPropertyAssertion(:hasPoint_Z :point_small_gear_vessel_1_sg_2
                       "0.000000"^^xsd:decimal)
 // 5 end :Point
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_XAxis
-                        :pose_part_small_gear_tray_sg_2 :x_axis_part_small_gear_tray_sg_2)
+                        :pose_small_gear_vessel_1_sg_2 :x_axis_small_gear_vessel_1_sg_2)
 
 //*****************************************
-// 5 start :Vector x_axis_part_small_gear_tray_sg_2
-Declaration(NamedIndividual(:x_axis_part_small_gear_tray_sg_2))
-ClassAssertion(:Vector :x_axis_part_small_gear_tray_sg_2)
-DataPropertyAssertion(:hasVector_I :x_axis_part_small_gear_tray_sg_2
+// 5 start :Vector x_axis_small_gear_vessel_1_sg_2
+Declaration(NamedIndividual(:x_axis_small_gear_vessel_1_sg_2))
+ClassAssertion(:Vector :x_axis_small_gear_vessel_1_sg_2)
+DataPropertyAssertion(:hasVector_I :x_axis_small_gear_vessel_1_sg_2
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :x_axis_part_small_gear_tray_sg_2
+DataPropertyAssertion(:hasVector_J :x_axis_small_gear_vessel_1_sg_2
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :x_axis_part_small_gear_tray_sg_2
+DataPropertyAssertion(:hasVector_K :x_axis_small_gear_vessel_1_sg_2
                       "0.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_ZAxis
-                        :pose_part_small_gear_tray_sg_2 :z_axis_part_small_gear_tray_sg_2)
+                        :pose_small_gear_vessel_1_sg_2 :z_axis_small_gear_vessel_1_sg_2)
 
 //*****************************************
-// 5 start :Vector z_axis_part_small_gear_tray_sg_2
-Declaration(NamedIndividual(:z_axis_part_small_gear_tray_sg_2))
-ClassAssertion(:Vector :z_axis_part_small_gear_tray_sg_2)
-DataPropertyAssertion(:hasVector_I :z_axis_part_small_gear_tray_sg_2
+// 5 start :Vector z_axis_small_gear_vessel_1_sg_2
+Declaration(NamedIndividual(:z_axis_small_gear_vessel_1_sg_2))
+ClassAssertion(:Vector :z_axis_small_gear_vessel_1_sg_2)
+DataPropertyAssertion(:hasVector_I :z_axis_small_gear_vessel_1_sg_2
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :z_axis_part_small_gear_tray_sg_2
+DataPropertyAssertion(:hasVector_J :z_axis_small_gear_vessel_1_sg_2
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :z_axis_part_small_gear_tray_sg_2
+DataPropertyAssertion(:hasVector_K :z_axis_small_gear_vessel_1_sg_2
                       "1.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
@@ -1948,65 +1948,65 @@ DataPropertyAssertion(:hasVector_K :z_axis_part_small_gear_tray_sg_2
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
-                        :part_small_gear_tray_design :part_ref_and_pose_part_small_gear_tray_sg_3)
+                        :small_gear_vessel_design :part_ref_and_pose_small_gear_vessel_1_sg_3)
 
 //*****************************************
-// 3 start :PartRefAndPose part_ref_and_pose_part_small_gear_tray_sg_3
-Declaration(NamedIndividual(:part_ref_and_pose_part_small_gear_tray_sg_3))
-ClassAssertion(:PartRefAndPose :part_ref_and_pose_part_small_gear_tray_sg_3)
+// 3 start :PartRefAndPose part_ref_and_pose_small_gear_vessel_1_sg_3
+Declaration(NamedIndividual(:part_ref_and_pose_small_gear_vessel_1_sg_3))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_small_gear_vessel_1_sg_3)
 ObjectPropertyAssertion(:hasPartRefAndPose_Sku
-                        :part_ref_and_pose_part_small_gear_tray_sg_3 :stock_keeping_unit_part_small_gear)
+                        :part_ref_and_pose_small_gear_vessel_1_sg_3 :sku_part_small_gear)
 ObjectPropertyAssertion(:hasPartRefAndPose_Pose
-                        :part_ref_and_pose_part_small_gear_tray_sg_3 :pose_part_small_gear_tray_sg_3)
+                        :part_ref_and_pose_small_gear_vessel_1_sg_3 :pose_small_gear_vessel_1_sg_3)
 
 //*****************************************
-// 4 start :Pose pose_part_small_gear_tray_sg_3
-Declaration(NamedIndividual(:pose_part_small_gear_tray_sg_3))
-ClassAssertion(:Pose :pose_part_small_gear_tray_sg_3)
+// 4 start :Pose pose_small_gear_vessel_1_sg_3
+Declaration(NamedIndividual(:pose_small_gear_vessel_1_sg_3))
+ClassAssertion(:Pose :pose_small_gear_vessel_1_sg_3)
 ObjectPropertyAssertion(:hasPose_Point
-                        :pose_part_small_gear_tray_sg_3 :point_part_small_gear_tray_sg_3)
+                        :pose_small_gear_vessel_1_sg_3 :point_small_gear_vessel_1_sg_3)
 
 //*****************************************
-// 5 start :Point point_part_small_gear_tray_sg_3
-Declaration(NamedIndividual(:point_part_small_gear_tray_sg_3))
-ClassAssertion(:Point :point_part_small_gear_tray_sg_3)
-DataPropertyAssertion(:hasPoint_X :point_part_small_gear_tray_sg_3
+// 5 start :Point point_small_gear_vessel_1_sg_3
+Declaration(NamedIndividual(:point_small_gear_vessel_1_sg_3))
+ClassAssertion(:Point :point_small_gear_vessel_1_sg_3)
+DataPropertyAssertion(:hasPoint_X :point_small_gear_vessel_1_sg_3
                       "-0.030000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Y :point_part_small_gear_tray_sg_3
+DataPropertyAssertion(:hasPoint_Y :point_small_gear_vessel_1_sg_3
                       "-0.030000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Z :point_part_small_gear_tray_sg_3
+DataPropertyAssertion(:hasPoint_Z :point_small_gear_vessel_1_sg_3
                       "0.000000"^^xsd:decimal)
 // 5 end :Point
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_XAxis
-                        :pose_part_small_gear_tray_sg_3 :x_axis_part_small_gear_tray_sg_3)
+                        :pose_small_gear_vessel_1_sg_3 :x_axis_small_gear_vessel_1_sg_3)
 
 //*****************************************
-// 5 start :Vector x_axis_part_small_gear_tray_sg_3
-Declaration(NamedIndividual(:x_axis_part_small_gear_tray_sg_3))
-ClassAssertion(:Vector :x_axis_part_small_gear_tray_sg_3)
-DataPropertyAssertion(:hasVector_I :x_axis_part_small_gear_tray_sg_3
+// 5 start :Vector x_axis_small_gear_vessel_1_sg_3
+Declaration(NamedIndividual(:x_axis_small_gear_vessel_1_sg_3))
+ClassAssertion(:Vector :x_axis_small_gear_vessel_1_sg_3)
+DataPropertyAssertion(:hasVector_I :x_axis_small_gear_vessel_1_sg_3
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :x_axis_part_small_gear_tray_sg_3
+DataPropertyAssertion(:hasVector_J :x_axis_small_gear_vessel_1_sg_3
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :x_axis_part_small_gear_tray_sg_3
+DataPropertyAssertion(:hasVector_K :x_axis_small_gear_vessel_1_sg_3
                       "0.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_ZAxis
-                        :pose_part_small_gear_tray_sg_3 :z_axis_part_small_gear_tray_sg_3)
+                        :pose_small_gear_vessel_1_sg_3 :z_axis_small_gear_vessel_1_sg_3)
 
 //*****************************************
-// 5 start :Vector z_axis_part_small_gear_tray_sg_3
-Declaration(NamedIndividual(:z_axis_part_small_gear_tray_sg_3))
-ClassAssertion(:Vector :z_axis_part_small_gear_tray_sg_3)
-DataPropertyAssertion(:hasVector_I :z_axis_part_small_gear_tray_sg_3
+// 5 start :Vector z_axis_small_gear_vessel_1_sg_3
+Declaration(NamedIndividual(:z_axis_small_gear_vessel_1_sg_3))
+ClassAssertion(:Vector :z_axis_small_gear_vessel_1_sg_3)
+DataPropertyAssertion(:hasVector_I :z_axis_small_gear_vessel_1_sg_3
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :z_axis_part_small_gear_tray_sg_3
+DataPropertyAssertion(:hasVector_J :z_axis_small_gear_vessel_1_sg_3
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :z_axis_part_small_gear_tray_sg_3
+DataPropertyAssertion(:hasVector_K :z_axis_small_gear_vessel_1_sg_3
                       "1.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
@@ -2018,65 +2018,65 @@ DataPropertyAssertion(:hasVector_K :z_axis_part_small_gear_tray_sg_3
 //*****************************************
 
 ObjectPropertyAssertion(:hasPartsTrayDesign_PartRefAndPose
-                        :part_small_gear_tray_design :part_ref_and_pose_part_small_gear_tray_sg_4)
+                        :small_gear_vessel_design :part_ref_and_pose_small_gear_vessel_1_sg_4)
 
 //*****************************************
-// 3 start :PartRefAndPose part_ref_and_pose_part_small_gear_tray_sg_4
-Declaration(NamedIndividual(:part_ref_and_pose_part_small_gear_tray_sg_4))
-ClassAssertion(:PartRefAndPose :part_ref_and_pose_part_small_gear_tray_sg_4)
+// 3 start :PartRefAndPose part_ref_and_pose_small_gear_vessel_1_sg_4
+Declaration(NamedIndividual(:part_ref_and_pose_small_gear_vessel_1_sg_4))
+ClassAssertion(:PartRefAndPose :part_ref_and_pose_small_gear_vessel_1_sg_4)
 ObjectPropertyAssertion(:hasPartRefAndPose_Sku
-                        :part_ref_and_pose_part_small_gear_tray_sg_4 :stock_keeping_unit_part_small_gear)
+                        :part_ref_and_pose_small_gear_vessel_1_sg_4 :sku_part_small_gear)
 ObjectPropertyAssertion(:hasPartRefAndPose_Pose
-                        :part_ref_and_pose_part_small_gear_tray_sg_4 :pose_part_small_gear_tray_sg_4)
+                        :part_ref_and_pose_small_gear_vessel_1_sg_4 :pose_small_gear_vessel_1_sg_4)
 
 //*****************************************
-// 4 start :Pose pose_part_small_gear_tray_sg_4
-Declaration(NamedIndividual(:pose_part_small_gear_tray_sg_4))
-ClassAssertion(:Pose :pose_part_small_gear_tray_sg_4)
+// 4 start :Pose pose_small_gear_vessel_1_sg_4
+Declaration(NamedIndividual(:pose_small_gear_vessel_1_sg_4))
+ClassAssertion(:Pose :pose_small_gear_vessel_1_sg_4)
 ObjectPropertyAssertion(:hasPose_Point
-                        :pose_part_small_gear_tray_sg_4 :point_part_small_gear_tray_sg_4)
+                        :pose_small_gear_vessel_1_sg_4 :point_small_gear_vessel_1_sg_4)
 
 //*****************************************
-// 5 start :Point point_part_small_gear_tray_sg_4
-Declaration(NamedIndividual(:point_part_small_gear_tray_sg_4))
-ClassAssertion(:Point :point_part_small_gear_tray_sg_4)
-DataPropertyAssertion(:hasPoint_X :point_part_small_gear_tray_sg_4
+// 5 start :Point point_small_gear_vessel_1_sg_4
+Declaration(NamedIndividual(:point_small_gear_vessel_1_sg_4))
+ClassAssertion(:Point :point_small_gear_vessel_1_sg_4)
+DataPropertyAssertion(:hasPoint_X :point_small_gear_vessel_1_sg_4
                       "0.030000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Y :point_part_small_gear_tray_sg_4
+DataPropertyAssertion(:hasPoint_Y :point_small_gear_vessel_1_sg_4
                       "-0.030000"^^xsd:decimal)
-DataPropertyAssertion(:hasPoint_Z :point_part_small_gear_tray_sg_4
+DataPropertyAssertion(:hasPoint_Z :point_small_gear_vessel_1_sg_4
                       "0.000000"^^xsd:decimal)
 // 5 end :Point
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_XAxis
-                        :pose_part_small_gear_tray_sg_4 :x_axis_part_small_gear_tray_sg_4)
+                        :pose_small_gear_vessel_1_sg_4 :x_axis_small_gear_vessel_1_sg_4)
 
 //*****************************************
-// 5 start :Vector x_axis_part_small_gear_tray_sg_4
-Declaration(NamedIndividual(:x_axis_part_small_gear_tray_sg_4))
-ClassAssertion(:Vector :x_axis_part_small_gear_tray_sg_4)
-DataPropertyAssertion(:hasVector_I :x_axis_part_small_gear_tray_sg_4
+// 5 start :Vector x_axis_small_gear_vessel_1_sg_4
+Declaration(NamedIndividual(:x_axis_small_gear_vessel_1_sg_4))
+ClassAssertion(:Vector :x_axis_small_gear_vessel_1_sg_4)
+DataPropertyAssertion(:hasVector_I :x_axis_small_gear_vessel_1_sg_4
                       "1.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :x_axis_part_small_gear_tray_sg_4
+DataPropertyAssertion(:hasVector_J :x_axis_small_gear_vessel_1_sg_4
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :x_axis_part_small_gear_tray_sg_4
+DataPropertyAssertion(:hasVector_K :x_axis_small_gear_vessel_1_sg_4
                       "0.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
 
 ObjectPropertyAssertion(:hasPose_ZAxis
-                        :pose_part_small_gear_tray_sg_4 :z_axis_part_small_gear_tray_sg_4)
+                        :pose_small_gear_vessel_1_sg_4 :z_axis_small_gear_vessel_1_sg_4)
 
 //*****************************************
-// 5 start :Vector z_axis_part_small_gear_tray_sg_4
-Declaration(NamedIndividual(:z_axis_part_small_gear_tray_sg_4))
-ClassAssertion(:Vector :z_axis_part_small_gear_tray_sg_4)
-DataPropertyAssertion(:hasVector_I :z_axis_part_small_gear_tray_sg_4
+// 5 start :Vector z_axis_small_gear_vessel_1_sg_4
+Declaration(NamedIndividual(:z_axis_small_gear_vessel_1_sg_4))
+ClassAssertion(:Vector :z_axis_small_gear_vessel_1_sg_4)
+DataPropertyAssertion(:hasVector_I :z_axis_small_gear_vessel_1_sg_4
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_J :z_axis_part_small_gear_tray_sg_4
+DataPropertyAssertion(:hasVector_J :z_axis_small_gear_vessel_1_sg_4
                       "0.000000"^^xsd:decimal)
-DataPropertyAssertion(:hasVector_K :z_axis_part_small_gear_tray_sg_4
+DataPropertyAssertion(:hasVector_K :z_axis_small_gear_vessel_1_sg_4
                       "1.000000"^^xsd:decimal)
 // 5 end :Vector
 //*****************************************
@@ -2655,16 +2655,16 @@ DataPropertyAssertion(:hasPoint_Z :fanuc_point_min
 //*****************************************
 
 ObjectPropertyAssertion(:hasKittingWorkstation_Sku
-                        :motoman_workstation :stock_keeping_unit_part_small_gear)
+                        :motoman_workstation :sku_part_small_gear)
 
 //*****************************************
-// 2 start :StockKeepingUnit stock_keeping_unit_part_small_gear
-Declaration(NamedIndividual(:stock_keeping_unit_part_small_gear))
-ClassAssertion(:StockKeepingUnit :stock_keeping_unit_part_small_gear)
-DataPropertyAssertion(:hasStockKeepingUnit_Description :stock_keeping_unit_part_small_gear
+// 2 start :StockKeepingUnit sku_part_small_gear
+Declaration(NamedIndividual(:sku_part_small_gear))
+ClassAssertion(:StockKeepingUnit :sku_part_small_gear)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_part_small_gear
                       "SKU for Part small gear"^^xsd:string)
 ObjectPropertyAssertion(:hasStockKeepingUnit_InternalShape
-                        :stock_keeping_unit_part_small_gear :shape_part_small_gear)
+                        :sku_part_small_gear :shape_part_small_gear)
 
 //*****************************************
 // 3 start :CylindricalShape shape_part_small_gear
@@ -2681,22 +2681,22 @@ DataPropertyAssertion(:hasCylindricalShape_HasTop :shape_part_small_gear
 // 3 end :CylindricalShape
 //*****************************************
 
-DataPropertyAssertion(:hasStockKeepingUnit_Weight :stock_keeping_unit_part_small_gear
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_part_small_gear
                       "0.180000"^^xsd:decimal)
 // 2 end :StockKeepingUnit
 //*****************************************
 
 ObjectPropertyAssertion(:hasKittingWorkstation_Sku
-                        :motoman_workstation :stock_keeping_unit_part_large_gear)
+                        :motoman_workstation :sku_part_large_gear)
 
 //*****************************************
-// 2 start :StockKeepingUnit stock_keeping_unit_part_large_gear
-Declaration(NamedIndividual(:stock_keeping_unit_part_large_gear))
-ClassAssertion(:StockKeepingUnit :stock_keeping_unit_part_large_gear)
-DataPropertyAssertion(:hasStockKeepingUnit_Description :stock_keeping_unit_part_large_gear
+// 2 start :StockKeepingUnit sku_part_large_gear
+Declaration(NamedIndividual(:sku_part_large_gear))
+ClassAssertion(:StockKeepingUnit :sku_part_large_gear)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_part_large_gear
                       "SKU for Part large gear"^^xsd:string)
 ObjectPropertyAssertion(:hasStockKeepingUnit_InternalShape
-                        :stock_keeping_unit_part_large_gear :shape_part_large_gear)
+                        :sku_part_large_gear :shape_part_large_gear)
 
 //*****************************************
 // 3 start :CylindricalShape shape_part_large_gear
@@ -2713,22 +2713,22 @@ DataPropertyAssertion(:hasCylindricalShape_HasTop :shape_part_large_gear
 // 3 end :CylindricalShape
 //*****************************************
 
-DataPropertyAssertion(:hasStockKeepingUnit_Weight :stock_keeping_unit_part_large_gear
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_part_large_gear
                       "0.180000"^^xsd:decimal)
 // 2 end :StockKeepingUnit
 //*****************************************
 
 ObjectPropertyAssertion(:hasKittingWorkstation_Sku
-                        :motoman_workstation :stock_keeping_unit_kit_tray_s2l2)
+                        :motoman_workstation :sku_kit_s2l2_vessel)
 
 //*****************************************
-// 2 start :StockKeepingUnit stock_keeping_unit_kit_tray_s2l2
-Declaration(NamedIndividual(:stock_keeping_unit_kit_tray_s2l2))
-ClassAssertion(:StockKeepingUnit :stock_keeping_unit_kit_tray_s2l2)
-DataPropertyAssertion(:hasStockKeepingUnit_Description :stock_keeping_unit_kit_tray_s2l2
+// 2 start :StockKeepingUnit sku_kit_s2l2_vessel
+Declaration(NamedIndividual(:sku_kit_s2l2_vessel))
+ClassAssertion(:StockKeepingUnit :sku_kit_s2l2_vessel)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_kit_s2l2_vessel
                       "SKU for KitTrays that hold 2 small and 2 large gears"^^xsd:string)
 ObjectPropertyAssertion(:hasStockKeepingUnit_InternalShape
-                        :stock_keeping_unit_kit_tray_s2l2 :shape_kit_tray)
+                        :sku_kit_s2l2_vessel :shape_kit_tray)
 
 //*****************************************
 // 3 start :BoxyShape shape_kit_tray
@@ -2747,75 +2747,75 @@ DataPropertyAssertion(:hasBoxyShape_HasTop :shape_kit_tray
 // 3 end :BoxyShape
 //*****************************************
 
-DataPropertyAssertion(:hasStockKeepingUnit_Weight :stock_keeping_unit_kit_tray_s2l2
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_kit_s2l2_vessel
                       "0.200000"^^xsd:decimal)
 // 2 end :StockKeepingUnit
 //*****************************************
 
 ObjectPropertyAssertion(:hasKittingWorkstation_Sku
-                        :motoman_workstation :stock_keeping_unit_small_gear_parts_tray)
+                        :motoman_workstation :sku_small_gear_vessel)
 
 //*****************************************
-// 2 start :StockKeepingUnit stock_keeping_unit_small_gear_parts_tray
-Declaration(NamedIndividual(:stock_keeping_unit_small_gear_parts_tray))
-ClassAssertion(:StockKeepingUnit :stock_keeping_unit_small_gear_parts_tray)
-DataPropertyAssertion(:hasStockKeepingUnit_Description :stock_keeping_unit_small_gear_parts_tray
+// 2 start :StockKeepingUnit sku_small_gear_vessel
+Declaration(NamedIndividual(:sku_small_gear_vessel))
+ClassAssertion(:StockKeepingUnit :sku_small_gear_vessel)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_small_gear_vessel
                       "SKU for PartsTrays of small gears"^^xsd:string)
 ObjectPropertyAssertion(:hasStockKeepingUnit_InternalShape
-                        :stock_keeping_unit_small_gear_parts_tray :shape_small_gear_parts_tray)
+                        :sku_small_gear_vessel :shape_small_gear_vessel_1)
 
 //*****************************************
-// 3 start :BoxyShape shape_small_gear_parts_tray
-Declaration(NamedIndividual(:shape_small_gear_parts_tray))
-ClassAssertion(:BoxyShape :shape_small_gear_parts_tray)
-DataPropertyAssertion(:hasShapeDesign_Description :shape_small_gear_parts_tray
+// 3 start :BoxyShape shape_small_gear_vessel_1
+Declaration(NamedIndividual(:shape_small_gear_vessel_1))
+ClassAssertion(:BoxyShape :shape_small_gear_vessel_1)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_small_gear_vessel_1
                       "Shape of PartsTrays for small gears"^^xsd:string)
-DataPropertyAssertion(:hasBoxyShape_Length :shape_small_gear_parts_tray
+DataPropertyAssertion(:hasBoxyShape_Length :shape_small_gear_vessel_1
                       "0.110000"^^xsd:decimal)
-DataPropertyAssertion(:hasBoxyShape_Width :shape_small_gear_parts_tray
+DataPropertyAssertion(:hasBoxyShape_Width :shape_small_gear_vessel_1
                       "0.110000"^^xsd:decimal)
-DataPropertyAssertion(:hasBoxyShape_Height :shape_small_gear_parts_tray
+DataPropertyAssertion(:hasBoxyShape_Height :shape_small_gear_vessel_1
                       "0.020000"^^xsd:decimal)
-DataPropertyAssertion(:hasBoxyShape_HasTop :shape_small_gear_parts_tray
+DataPropertyAssertion(:hasBoxyShape_HasTop :shape_small_gear_vessel_1
                       "false"^^xsd:boolean)
 // 3 end :BoxyShape
 //*****************************************
 
-DataPropertyAssertion(:hasStockKeepingUnit_Weight :stock_keeping_unit_small_gear_parts_tray
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_small_gear_vessel
                       "0.200000"^^xsd:decimal)
 // 2 end :StockKeepingUnit
 //*****************************************
 
 ObjectPropertyAssertion(:hasKittingWorkstation_Sku
-                        :motoman_workstation :stock_keeping_unit_large_gear_parts_tray)
+                        :motoman_workstation :sku_large_gear_vessel)
 
 //*****************************************
-// 2 start :StockKeepingUnit stock_keeping_unit_large_gear_parts_tray
-Declaration(NamedIndividual(:stock_keeping_unit_large_gear_parts_tray))
-ClassAssertion(:StockKeepingUnit :stock_keeping_unit_large_gear_parts_tray)
-DataPropertyAssertion(:hasStockKeepingUnit_Description :stock_keeping_unit_large_gear_parts_tray
+// 2 start :StockKeepingUnit sku_large_gear_vessel
+Declaration(NamedIndividual(:sku_large_gear_vessel))
+ClassAssertion(:StockKeepingUnit :sku_large_gear_vessel)
+DataPropertyAssertion(:hasStockKeepingUnit_Description :sku_large_gear_vessel
                       "SKU for PartsTrays of large gears"^^xsd:string)
 ObjectPropertyAssertion(:hasStockKeepingUnit_InternalShape
-                        :stock_keeping_unit_large_gear_parts_tray :shape_large_gear_parts_tray)
+                        :sku_large_gear_vessel :shape_large_gear_vessel)
 
 //*****************************************
-// 3 start :BoxyShape shape_large_gear_parts_tray
-Declaration(NamedIndividual(:shape_large_gear_parts_tray))
-ClassAssertion(:BoxyShape :shape_large_gear_parts_tray)
-DataPropertyAssertion(:hasShapeDesign_Description :shape_large_gear_parts_tray
+// 3 start :BoxyShape shape_large_gear_vessel
+Declaration(NamedIndividual(:shape_large_gear_vessel))
+ClassAssertion(:BoxyShape :shape_large_gear_vessel)
+DataPropertyAssertion(:hasShapeDesign_Description :shape_large_gear_vessel
                       "Shape of PartsTrays for large gears"^^xsd:string)
-DataPropertyAssertion(:hasBoxyShape_Length :shape_large_gear_parts_tray
+DataPropertyAssertion(:hasBoxyShape_Length :shape_large_gear_vessel
                       "0.220000"^^xsd:decimal)
-DataPropertyAssertion(:hasBoxyShape_Width :shape_large_gear_parts_tray
+DataPropertyAssertion(:hasBoxyShape_Width :shape_large_gear_vessel
                       "0.110000"^^xsd:decimal)
-DataPropertyAssertion(:hasBoxyShape_Height :shape_large_gear_parts_tray
+DataPropertyAssertion(:hasBoxyShape_Height :shape_large_gear_vessel
                       "0.020000"^^xsd:decimal)
-DataPropertyAssertion(:hasBoxyShape_HasTop :shape_large_gear_parts_tray
+DataPropertyAssertion(:hasBoxyShape_HasTop :shape_large_gear_vessel
                       "false"^^xsd:boolean)
 // 3 end :BoxyShape
 //*****************************************
 
-DataPropertyAssertion(:hasStockKeepingUnit_Weight :stock_keeping_unit_large_gear_parts_tray
+DataPropertyAssertion(:hasStockKeepingUnit_Weight :sku_large_gear_vessel
                       "0.200000"^^xsd:decimal)
 // 2 end :StockKeepingUnit
 //*****************************************
@@ -2836,8 +2836,8 @@ DifferentIndividuals(
 // :BoxyShape individuals 
 DifferentIndividuals(
  :shape_kit_tray
- :shape_large_gear_parts_tray
- :shape_small_gear_parts_tray
+ :shape_large_gear_vessel
+ :shape_small_gear_vessel_1
  :shape_work_table)
 
 //*****************************************
@@ -2859,12 +2859,12 @@ DifferentIndividuals(
  :part_ref_and_pose_kit_s2l2_lg_2
  :part_ref_and_pose_kit_s2l2_sg_1
  :part_ref_and_pose_kit_s2l2_sg_2
- :part_ref_and_pose_part_large_gear_tray_lg_1
- :part_ref_and_pose_part_large_gear_tray_lg_2
- :part_ref_and_pose_part_small_gear_tray_sg_1
- :part_ref_and_pose_part_small_gear_tray_sg_2
- :part_ref_and_pose_part_small_gear_tray_sg_3
- :part_ref_and_pose_part_small_gear_tray_sg_4)
+ :part_ref_and_pose_large_gear_vessel_lg_1
+ :part_ref_and_pose_large_gear_vessel_lg_2
+ :part_ref_and_pose_small_gear_vessel_1_sg_1
+ :part_ref_and_pose_small_gear_vessel_1_sg_2
+ :part_ref_and_pose_small_gear_vessel_1_sg_3
+ :part_ref_and_pose_small_gear_vessel_1_sg_4)
 
 //*****************************************
 // :Part individuals 
@@ -2882,17 +2882,17 @@ DifferentIndividuals(
 // :PartsTrayDesign individuals 
 DifferentIndividuals(
  :kit_s2l2_design
- :part_large_gear_tray_design
- :part_small_gear_tray_design)
+ :large_gear_vessel_design
+ :small_gear_vessel_design)
 
 //*****************************************
 // :PartsTray individuals 
 DifferentIndividuals(
- :kit_tray_s2l2_1
- :kit_tray_s2l2_2
- :part_large_gear_tray_1
- :part_large_gear_tray_2
- :part_small_gear_tray)
+ :kit_s2l2_vessel_1
+ :kit_s2l2_vessel_2
+ :large_gear_vessel_1
+ :large_gear_vessel_2
+ :small_gear_vessel_1)
 
 //*****************************************
 // :Point individuals 
@@ -2913,23 +2913,23 @@ DifferentIndividuals(
  :part_large_gear_2_point
  :part_large_gear_3_point
  :part_large_gear_4_point
- :part_large_gear_tray_1_point
- :part_large_gear_tray_2_point
+ :large_gear_vessel_1_point
+ :large_gear_vessel_2_point
  :part_small_gear_1_point
  :part_small_gear_2_point
  :part_small_gear_3_point
  :part_small_gear_4_point
- :part_small_gear_tray_point
+ :small_gear_vessel_1_point
  :point_kit_s2l2_lg_1
  :point_kit_s2l2_lg_2
  :point_kit_s2l2_sg_1
  :point_kit_s2l2_sg_2
- :point_part_large_gear_tray_lg_1
- :point_part_large_gear_tray_lg_2
- :point_part_small_gear_tray_sg_1
- :point_part_small_gear_tray_sg_2
- :point_part_small_gear_tray_sg_3
- :point_part_small_gear_tray_sg_4
+ :point_large_gear_vessel_lg_1
+ :point_large_gear_vessel_lg_2
+ :point_small_gear_vessel_1_sg_1
+ :point_small_gear_vessel_1_sg_2
+ :point_small_gear_vessel_1_sg_3
+ :point_small_gear_vessel_1_sg_4
  :shared_work_table_point)
 
 //*****************************************
@@ -2955,9 +2955,9 @@ DifferentIndividuals(
  :motoman_offset
  :motoman_robot_location
  :motomanpart_gripper_location
- :part_large_gear_tray_1_location
- :part_large_gear_tray_2_location
- :part_small_gear_tray_location
+ :large_gear_vessel_1_location
+ :large_gear_vessel_2_location
+ :small_gear_vessel_1_location
  :shared_work_table_location)
 
 //*****************************************
@@ -2975,23 +2975,23 @@ DifferentIndividuals(
  :part_large_gear_2_pose
  :part_large_gear_3_pose
  :part_large_gear_4_pose
- :part_large_gear_tray_1_pose
- :part_large_gear_tray_2_pose
+ :large_gear_vessel_1_pose
+ :large_gear_vessel_2_pose
  :part_small_gear_1_pose
  :part_small_gear_2_pose
  :part_small_gear_3_pose
  :part_small_gear_4_pose
- :part_small_gear_tray_pose
+ :small_gear_vessel_1_pose
  :pose_kit_s2l2_lg_1
  :pose_kit_s2l2_lg_2
  :pose_kit_s2l2_sg_1
  :pose_kit_s2l2_sg_2
- :pose_part_large_gear_tray_lg_1
- :pose_part_large_gear_tray_lg_2
- :pose_part_small_gear_tray_sg_1
- :pose_part_small_gear_tray_sg_2
- :pose_part_small_gear_tray_sg_3
- :pose_part_small_gear_tray_sg_4
+ :pose_large_gear_vessel_lg_1
+ :pose_large_gear_vessel_lg_2
+ :pose_small_gear_vessel_1_sg_1
+ :pose_small_gear_vessel_1_sg_2
+ :pose_small_gear_vessel_1_sg_3
+ :pose_small_gear_vessel_1_sg_4
  :shared_work_table_pose)
 
 //*****************************************
@@ -3015,11 +3015,11 @@ DifferentIndividuals(
 //*****************************************
 // :StockKeepingUnit individuals 
 DifferentIndividuals(
- :stock_keeping_unit_kit_tray_s2l2
- :stock_keeping_unit_large_gear_parts_tray
- :stock_keeping_unit_part_large_gear
- :stock_keeping_unit_part_small_gear
- :stock_keeping_unit_small_gear_parts_tray)
+ :sku_kit_s2l2_vessel
+ :sku_large_gear_vessel
+ :sku_part_large_gear
+ :sku_part_small_gear
+ :sku_small_gear_vessel)
 
 //*****************************************
 // :Vector individuals 
@@ -3048,10 +3048,10 @@ DifferentIndividuals(
  :part_large_gear_3_z_axis
  :part_large_gear_4_x_axis
  :part_large_gear_4_z_axis
- :part_large_gear_tray_1_x_axis
- :part_large_gear_tray_1_z_axis
- :part_large_gear_tray_2_x_axis
- :part_large_gear_tray_2_z_axis
+ :large_gear_vessel_1_x_axis
+ :large_gear_vessel_1_z_axis
+ :large_gear_vessel_2_x_axis
+ :large_gear_vessel_2_z_axis
  :part_small_gear_1_x_axis
  :part_small_gear_1_z_axis
  :part_small_gear_2_x_axis
@@ -3060,28 +3060,28 @@ DifferentIndividuals(
  :part_small_gear_3_z_axis
  :part_small_gear_4_x_axis
  :part_small_gear_4_z_axis
- :part_small_gear_tray_x_axis
- :part_small_gear_tray_z_axis
+ :small_gear_vessel_1_x_axis
+ :small_gear_vessel_1_z_axis
  :shared_work_table_x_axis
  :shared_work_table_z_axis
  :x_axis_kit_s2l2_lg_1
  :x_axis_kit_s2l2_lg_2
  :x_axis_kit_s2l2_sg_1
  :x_axis_kit_s2l2_sg_2
- :x_axis_part_large_gear_tray_lg_1
- :x_axis_part_large_gear_tray_lg_2
- :x_axis_part_small_gear_tray_sg_1
- :x_axis_part_small_gear_tray_sg_2
- :x_axis_part_small_gear_tray_sg_3
- :x_axis_part_small_gear_tray_sg_4
+ :x_axis_large_gear_vessel_lg_1
+ :x_axis_large_gear_vessel_lg_2
+ :x_axis_small_gear_vessel_1_sg_1
+ :x_axis_small_gear_vessel_1_sg_2
+ :x_axis_small_gear_vessel_1_sg_3
+ :x_axis_small_gear_vessel_1_sg_4
  :z_axis_kit_s2l2_lg_1
  :z_axis_kit_s2l2_lg_2
  :z_axis_kit_s2l2_sg_1
  :z_axis_kit_s2l2_sg_2
- :z_axis_part_large_gear_tray_lg_1
- :z_axis_part_large_gear_tray_lg_2
- :z_axis_part_small_gear_tray_sg_1
- :z_axis_part_small_gear_tray_sg_2
- :z_axis_part_small_gear_tray_sg_3
- :z_axis_part_small_gear_tray_sg_4)
+ :z_axis_large_gear_vessel_lg_1
+ :z_axis_large_gear_vessel_lg_2
+ :z_axis_small_gear_vessel_1_sg_1
+ :z_axis_small_gear_vessel_1_sg_2
+ :z_axis_small_gear_vessel_1_sg_3
+ :z_axis_small_gear_vessel_1_sg_4)
 )

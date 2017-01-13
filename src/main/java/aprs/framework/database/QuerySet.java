@@ -599,10 +599,9 @@ public class QuerySet implements QuerySetInterface {
 
     private static String toSku(String name) {
         String sku = name;
-        if(sku.startsWith("sku_")) {
-            sku = sku.substring(4);
+        if(!sku.startsWith("sku_")) {
+            sku = "sku_"+sku;
         }
-        sku = "stock_keeping_unit_"+sku;
         return sku;
     }
     

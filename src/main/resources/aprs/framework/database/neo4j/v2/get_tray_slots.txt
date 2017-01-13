@@ -1,0 +1,6 @@
+#params= NAME{1}
+#results={NAME=name,X=x,Y=y}
+match (p:PartsTray)-[:hasPartsTray_Slot]-(s:Slot)-[:hasSlot_PartRefAndPose]-(prp:PartRefAndPose)-[:hasPartRefAndPose_Pose]-(pose:Pose)-[:hasPose_Point]-(point:Point) where p.name={1} return s.name, point.hasPoint_X, point.hasPoint_Y
+
+
+
