@@ -62,6 +62,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private Connection con;
     private PreparedStatement update_statement;
+    private PreparedStatement get_tray_slots_statement;
     private PreparedStatement update_parts_tray_statement;
     private PreparedStatement update_kit_tray_statement;
 //    private PreparedStatement addnew_statement;
@@ -279,6 +280,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private String updateStatementString;
     private String updatePartsTrayStatementString;
     private String updateKitTrayStatementString;
+    private String getTraySlotsQueryString;
 
     private void setupStatements() throws SQLException {
         if (null == queriesMap) {
@@ -308,6 +310,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                mergeStatementString = MYSQL_UPDATE_STRING;
 //                queryAllString = MYSQL_QUERY_ALL_STRING;
                 updateStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
+                getTraySlotsQueryString = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getQuery();
+                get_tray_slots_statement = con.prepareStatement(getTraySlotsQueryString);
                 queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
                 update_statement = con.prepareStatement(updateStatementString);
                 updateKitTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_KT_POSE).getQuery();
@@ -325,6 +329,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     updatePartsTrayStatementString = updateStatementString;
                 }
                 updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
+                getTraySlotsParamTypes = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getParams();
                 query_all_statement = con.prepareStatement(queryAllString);
                 querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
                 queryDeleteSinglePoseString = queriesMap.get(DbQueryEnum.DELETE_SINGLE_POSE).getQuery();
@@ -342,6 +347,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 //System.out.println("mergeStatementString ---> "+mergeStatementString);
                 queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
                 update_statement = con.prepareStatement(updateStatementString);
+                getTraySlotsParamTypes = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getParams();
+
+                getTraySlotsQueryString = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getQuery();
+                get_tray_slots_statement = con.prepareStatement(getTraySlotsQueryString);
 
 //                addnew_statement = con.prepareStatement(db);
                 query_all_statement = con.prepareStatement(queryAllString);
@@ -496,6 +505,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //
 //    };
     private DbParamTypeEnum updateParamTypes[] = null;// NEO4J_MERGE_STATEMENT_PARAM_TYPES;
+    private DbParamTypeEnum getTraySlotsParamTypes[] = null;// NEO4J_MERGE_STATEMENT_PARAM_TYPES;
     private DbParamTypeEnum getSingleParamTypes[] = null;//NEO4J_MERGE_STATEMENT_PARAM_TYPES;
 
     private boolean debug;
@@ -767,6 +777,101 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return updateResultsMap;
     }
 
+    public List<DetectedItem> getSlots(DetectedItem tray) {
+        List<DetectedItem> ret = new ArrayList<>();
+        try {
+            String tray_name =tray.name;
+            if(tray_name.startsWith("sku_")) {
+                tray_name = tray_name.substring(4);
+            }
+            List<Object> paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
+            String updateStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
+            boolean exec_result = get_tray_slots_statement.execute();
+            if (exec_result) {
+                try (ResultSet rs = get_tray_slots_statement.getResultSet()) {
+                    if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage("get_tray_slots_statement.getResultSet() = " + rs + "\r\n");
+                    }
+                    List<Map<String, String>> resultSetMapList = new ArrayList<>();
+                    while (rs.next()) {
+                        ResultSetMetaData meta = rs.getMetaData();
+                        Map<String, String> resultMap = new LinkedHashMap<>();
+                        if (null != displayInterface && displayInterface.isDebug()) {
+                            displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
+                        }
+                        for (int j = 1; j <= meta.getColumnCount(); j++) {
+                            String name = meta.getColumnName(j);
+                            String value = rs.getObject(name, Object.class).toString();
+                            resultMap.put(name, value);
+                        }
+                        if (null != displayInterface
+                                && displayInterface.isDebug()
+                                && resultMap.keySet().size() > 0) {
+                            displayInterface.addLogMessage("resultMap=" + resultMap.toString() + System.lineSeparator());
+                        }
+                        String name = resultMap.get("name");
+                        String sku_name = resultMap.get("sku_name");
+                        double x = fix(rs,"x")*1000.0;
+                        double y = fix(rs,"y")*1000.0;
+                        
+                        if(sku_name.startsWith("sku_")) {
+                            sku_name = sku_name.substring(4);
+                        }
+
+                        if(sku_name.startsWith("part_")) {
+                            sku_name = sku_name.substring(5);
+                        }
+                        
+                        
+                        DetectedItem item = new DetectedItem("empty_slot_for_"+sku_name+"_in_"+tray_name, 0,
+                                tray.x + x * Math.cos(tray.rotation) - y * Math.sin(tray.rotation),
+                                tray.y + x * Math.sin(tray.rotation) + y * Math.cos(tray.rotation));
+                        item.type = "EMPTY_SLOT";
+                        ret.add(item);
+                        item = new DetectedItem(name, 0,
+                                tray.x + x * Math.cos(tray.rotation) - y * Math.sin(tray.rotation),
+                                tray.y + x * Math.sin(tray.rotation) + y * Math.cos(tray.rotation));
+                        item.type = "SLOT";
+                        ret.add(item);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ret;
+    }
+
+    public double closestDist(DetectedItem subject, List<DetectedItem> l) {
+        return l.stream()
+                .mapToDouble(item -> subject.distFromXY(item))
+                .min()
+                .orElse(Double.POSITIVE_INFINITY);
+    }
+
+    public List<DetectedItem> findEmptySlots(List<DetectedItem> slots, List<DetectedItem> parts) {
+        return slots.stream()
+                .filter(slot -> closestDist(slot, parts) > 25.0)
+                .collect(Collectors.toList());
+    }
+
+    public List<DetectedItem> findAllEmptyTraySlots(List<DetectedItem> trays, List<DetectedItem> parts) {
+        List<DetectedItem> emptySlots = new ArrayList<>();
+        int count =1;
+        for (DetectedItem tray : trays) {
+
+            tray.fullName = tray.name;
+            if (tray.fullName.startsWith("sku_")) {
+                tray.fullName = tray.fullName.substring(4);
+            }
+            tray.fullName = tray.fullName+"_"+count;
+            count++;
+            List<DetectedItem> slots = getSlots(tray);
+            emptySlots.addAll(findEmptySlots(slots, parts));
+        }
+        return emptySlots;
+    }
+
     public List<DetectedItem> updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
         List<DetectedItem> itemsToVerify = new ArrayList<>();
         List<DetectedItem> partsTrays
@@ -777,6 +882,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 = list.stream()
                 .filter((DetectedItem item) -> "KT".equals(item.type))
                 .collect(Collectors.toList());
+        List<DetectedItem> parts
+                = list.stream()
+                .filter((DetectedItem item) -> "P".equals(item.type))
+                .collect(Collectors.toList());
+        List<DetectedItem> fullList = new ArrayList<>();
+        fullList.addAll(list);
+        List<DetectedItem> emptySlots = findAllEmptyTraySlots(kitTrays, parts);
+        fullList.addAll(emptySlots);
         List<DetectedItem> returnedList = new ArrayList<>();
         try {
             long t0_nanos = System.nanoTime();
@@ -810,12 +923,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 int updatedCount = -1;
                 List<String> skippedUpdates = new ArrayList<>();
                 Map<String, Integer> repeatsMap = new HashMap<String, Integer>();
-                for (int i = 0; i < list.size(); i++) {
-                    DetectedItem ci = list.get(i);
+                for (int i = 0; i < fullList.size(); i++) {
+                    DetectedItem ci = fullList.get(i);
                     if (null == ci || ci.name.compareTo("*") == 0) {
                         continue;
                     }
-                    if(ci.name.startsWith("sku_")) {
+                    if (ci.name.startsWith("sku_")) {
                         ci.name = ci.name.substring(4);
                     }
                     if ("P".equals(ci.type)) {
@@ -830,7 +943,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     if (ci.name != null && ci.name.length() > 0 && (ci.fullName == null || ci.fullName.length() < 1)) {
                         ci.fullName = ci.name;
                     }
-                    
+
                     PreparedStatement stmnt = update_statement;
                     String statementString = updateStatementString;
                     boolean addRepeatCountsThisItem = addRepeatCountsToName;
@@ -857,7 +970,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     returnedList.add(ci);
                     List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, stmnt);
                     String updateStringFilled = fillQueryString(statementString, paramsList);
-
+                    ci.setQuery = updateStringFilled;
                     UpdateResults ur = updateResultsMap.get(ci.fullName);
 
                     if (null != ur) {
@@ -1315,10 +1428,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private static String toSku(String name) {
         String sku = name;
-        if(sku.startsWith("sku_")) {
-            sku = sku.substring(4);
+        if (!sku.startsWith("sku_")) {
+            sku = "sku_" + name;
         }
-        sku = "stock_keeping_unit_"+sku;
         return sku;
     }
 

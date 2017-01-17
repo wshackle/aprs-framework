@@ -39,7 +39,6 @@ import aprs.framework.database.SocketLineReader;
 import crcl.base.PoseType;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLPosemath;
-import static crcl.utils.CRCLPosemath.pose;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
@@ -71,11 +70,16 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
+import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.concurrent.ExecutionException;
+import java.awt.Desktop;
+import java.io.BufferedWriter;
+import javax.swing.JTable;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
 /**
  *
@@ -227,12 +231,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jButtonCheck = new javax.swing.JButton();
         jButtonAddItem = new javax.swing.JButton();
         jButtonDelete = new javax.swing.JButton();
+        jButtonCsvFromDatabase = new javax.swing.JButton();
         jPanelTableFromVision = new javax.swing.JPanel();
         jScrollPaneTableFromVision = new javax.swing.JScrollPane();
         jTableFromVision = new javax.swing.JTable();
         jLabel19 = new javax.swing.JLabel();
         jButtonForceSingleUpdate = new javax.swing.JButton();
         jButtonForceAll = new javax.swing.JButton();
+        jButtonCsv = new javax.swing.JButton();
         jPanelTableUpdateResults = new javax.swing.JPanel();
         jScrollPaneTableUpdateResults = new javax.swing.JScrollPane();
         jTableUpdateResults = new javax.swing.JTable();
@@ -554,6 +560,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
+        jButtonCsvFromDatabase.setText("csv");
+        jButtonCsvFromDatabase.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonCsvFromDatabaseActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelTableFromDatabaseLayout = new javax.swing.GroupLayout(jPanelTableFromDatabase);
         jPanelTableFromDatabase.setLayout(jPanelTableFromDatabaseLayout);
         jPanelTableFromDatabaseLayout.setHorizontalGroup(
@@ -564,7 +577,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jScrollPaneTableFromDatabase, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(jPanelTableFromDatabaseLayout.createSequentialGroup()
                         .addComponent(jLabel20)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 23, Short.MAX_VALUE)
+                        .addComponent(jButtonCsvFromDatabase)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonDelete)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonAddItem)
@@ -579,7 +594,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jLabel20)
                     .addComponent(jButtonCheck)
                     .addComponent(jButtonAddItem)
-                    .addComponent(jButtonDelete))
+                    .addComponent(jButtonDelete)
+                    .addComponent(jButtonCsvFromDatabase))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPaneTableFromDatabase, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
                 .addContainerGap())
@@ -594,11 +610,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
             },
             new String [] {
-                "Position", "Name", "Repeats", "Rotation", "X", "Y", "Score", "Type", "In PT?", "In KT?", "FullName"
+                "Position", "Name", "Repeats", "Rotation", "X", "Y", "Score", "Type", "In PT?", "In KT?", "FullName", "Query"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Boolean.class, java.lang.Boolean.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Boolean.class, java.lang.Boolean.class, java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -623,6 +639,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
+        jButtonCsv.setText("csv");
+        jButtonCsv.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonCsvActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelTableFromVisionLayout = new javax.swing.GroupLayout(jPanelTableFromVision);
         jPanelTableFromVision.setLayout(jPanelTableFromVisionLayout);
         jPanelTableFromVisionLayout.setHorizontalGroup(
@@ -634,6 +657,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addGroup(jPanelTableFromVisionLayout.createSequentialGroup()
                         .addComponent(jLabel19)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonCsv)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonForceAll)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonForceSingleUpdate)))
@@ -645,7 +670,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addGroup(jPanelTableFromVisionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel19)
                     .addComponent(jButtonForceSingleUpdate)
-                    .addComponent(jButtonForceAll))
+                    .addComponent(jButtonForceAll)
+                    .addComponent(jButtonCsv))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPaneTableFromVision, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                 .addContainerGap())
@@ -1011,7 +1037,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     System.err.println("bad ci fullname " + ci);
                 }
                 if (tm.getRowCount() <= i) {
-                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.score, ci.type, ci.insidePartsTray, ci.insideKitTray, ci.fullName});
+                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.score, ci.type, ci.insidePartsTray, ci.insideKitTray, ci.fullName,ci.setQuery});
                     continue;
                 }
                 tm.setValueAt(ci.index, i, 0);
@@ -1025,6 +1051,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 tm.setValueAt(ci.insidePartsTray, i, 8);
                 tm.setValueAt(ci.insideKitTray, i, 9);
                 tm.setValueAt(ci.fullName, i, 10);
+                tm.setValueAt(ci.setQuery, i, 11);
             }
         }
         if (this.jCheckBoxDebug.isSelected()) {
@@ -1224,6 +1251,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             outItem.name = inItem.name;
             outItem.score = inItem.score;
             outItem.type = inItem.type;
+            outItem.rotation = inItem.rotation;
             out.add(outItem);
         }
         return out;
@@ -1607,6 +1635,47 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         forceAllUpdates();
     }//GEN-LAST:event_jButtonForceAllActionPerformed
 
+    public void saveTableToFile(File f, JTable table) throws IOException {
+        try (CSVPrinter printer = new CSVPrinter(new BufferedWriter(new FileWriter(f)), CSVFormat.DEFAULT)) {
+            List<String> colHeaderList = new ArrayList<>();
+            for (int i = 0; i < table.getColumnCount(); i++) {
+                String colHeader = table.getColumnName(i);
+                colHeaderList.add(colHeader);
+            }
+            printer.printRecord(colHeaderList);
+            for (int i = 0; i < table.getRowCount(); i++) {
+                List<String> rowList = new ArrayList<>();
+                for (int j = 0; j < table.getColumnCount(); j++) {
+                    Object value = table.getValueAt(i, j);
+                    rowList.add(value.toString());
+                }
+                printer.printRecord(rowList);
+            }
+        }
+    }
+
+    public void toCsv(String name, JTable table) throws IOException {
+        File f = File.createTempFile(name, ".csv");
+        saveTableToFile(f, table);
+        Desktop.getDesktop().open(f);
+    }
+    
+    private void jButtonCsvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCsvActionPerformed
+        try {
+            toCsv("FromVision", this.jTableFromVision);
+        } catch (IOException ex) {
+            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonCsvActionPerformed
+
+    private void jButtonCsvFromDatabaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCsvFromDatabaseActionPerformed
+        try {
+            toCsv("FromDatabase", this.jTableFromDatabase);
+        } catch (IOException ex) {
+            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonCsvFromDatabaseActionPerformed
+
     public void forceAllUpdates() throws NumberFormatException {
         try {
             DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
@@ -1658,6 +1727,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JButton jButtonAddItem;
     private javax.swing.JButton jButtonCheck;
     private javax.swing.JButton jButtonConnectVision;
+    private javax.swing.JButton jButtonCsv;
+    private javax.swing.JButton jButtonCsvFromDatabase;
     private javax.swing.JButton jButtonDbSetup;
     private javax.swing.JButton jButtonDelete;
     private javax.swing.JButton jButtonDisconnectVision;

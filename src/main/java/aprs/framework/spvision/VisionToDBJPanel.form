@@ -492,7 +492,9 @@
                           <Component id="jScrollPaneTableFromDatabase" pref="0" max="32767" attributes="0"/>
                           <Group type="102" attributes="0">
                               <Component id="jLabel20" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="32767" attributes="0"/>
+                              <EmptySpace pref="23" max="32767" attributes="0"/>
+                              <Component id="jButtonCsvFromDatabase" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButtonDelete" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButtonAddItem" min="-2" max="-2" attributes="0"/>
@@ -512,6 +514,7 @@
                           <Component id="jButtonCheck" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonAddItem" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonDelete" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonCsvFromDatabase" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jScrollPaneTableFromDatabase" pref="112" max="32767" attributes="0"/>
@@ -570,6 +573,14 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonDeleteActionPerformed"/>
               </Events>
             </Component>
+            <Component class="javax.swing.JButton" name="jButtonCsvFromDatabase">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="csv"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonCsvFromDatabaseActionPerformed"/>
+              </Events>
+            </Component>
           </SubComponents>
         </Container>
         <Container class="javax.swing.JPanel" name="jPanelTableFromVision">
@@ -584,6 +595,8 @@
                           <Group type="102" attributes="0">
                               <Component id="jLabel19" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="32767" attributes="0"/>
+                              <Component id="jButtonCsv" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButtonForceAll" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButtonForceSingleUpdate" min="-2" max="-2" attributes="0"/>
@@ -600,6 +613,7 @@
                           <Component id="jLabel19" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonForceSingleUpdate" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonForceAll" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonCsv" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jScrollPaneTableFromVision" pref="0" max="32767" attributes="0"/>
@@ -625,7 +639,7 @@
                   <Properties>
                     <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                      <Table columnCount="11" rowCount="0">
+                      <Table columnCount="12" rowCount="0">
                         <Column editable="true" title="Position" type="java.lang.Integer"/>
                         <Column editable="true" title="Name" type="java.lang.String"/>
                         <Column editable="true" title="Repeats" type="java.lang.Integer"/>
@@ -637,6 +651,7 @@
                         <Column editable="true" title="In PT?" type="java.lang.Boolean"/>
                         <Column editable="true" title="In KT?" type="java.lang.Boolean"/>
                         <Column editable="true" title="FullName" type="java.lang.String"/>
+                        <Column editable="true" title="Query" type="java.lang.String"/>
                       </Table>
                     </Property>
                   </Properties>
@@ -662,6 +677,14 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonForceAllActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonCsv">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="csv"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonCsvActionPerformed"/>
               </Events>
             </Component>
           </SubComponents>

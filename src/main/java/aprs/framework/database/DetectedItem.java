@@ -30,22 +30,24 @@ import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.vector;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
+import rcs.posemath.PM_CARTESIAN;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 //TODO-zeid
-public class DetectedItem {
+public class DetectedItem extends PM_CARTESIAN {
 
     public String name;
     public String fullName;
     public int repeats;
     public int index;
     public double rotation;
-    public double x;
-    public double y;
-    public double z;
+    // x,y,z now part of PM_CARTESIAN 
+//    public double x;
+//    public double y;
+//    public double z;
     public double vxi = 1;
     public double vxj = 0;
     public double vxk = 0;
@@ -61,6 +63,7 @@ public class DetectedItem {
     public Rectangle2D.Double displayRect;
     public boolean insideKitTray;
     public boolean insidePartsTray;
+    public String setQuery;
     
     public DetectedItem() {
         score = 100.0;
