@@ -1,10 +1,15 @@
 #
-#Thu Jan 12 15:27:21 EST 2017
+#Wed Jan 18 08:33:20 EST 2017
+NEO4J.ying-220_7480.queriesDir=neo4j/v1
 --dbtype=NEO4J
-NEO4J.ying-220.port=7480
-NEO4J.host=ying-220
-NEO4J.ying-220_7480.user=neo4j
 NEO4J.ying-220_7480.name=neo4j
 NEO4J.ying-220_7480.internalQueriesResourceDir=true
 NEO4J.ying-220_7480.passwd=password
-NEO4J.ying-220_7480.queriesDir=neo4j/v1
+NEO4J.ying-220_7496.internalQueriesResourceDir=true
+NEO4J.ying-220_7496.name=neo4j
+NEO4J.ying-220_7480.user=neo4j
+NEO4J.host=ying-220
+NEO4J.ying-220.port=7496
+NEO4J.ying-220_7496.passwd=password
+NEO4J.ying-220_7496.user=neo4j
+NEO4J.ying-220_7496.queriesDir=neo4j/v2
