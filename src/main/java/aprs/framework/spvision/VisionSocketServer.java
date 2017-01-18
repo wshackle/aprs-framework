@@ -174,6 +174,9 @@ public class VisionSocketServer implements AutoCloseable {
             public void run() {
                 for (int i = 0; i < clients.size() && !closing; i++) {
                     Socket client = clients.get(i);
+                    if(Thread.currentThread().isInterrupted()) {
+                        return;
+                    }
                     if (null != client) {
                         try {
                             if (debug) {
@@ -185,6 +188,12 @@ public class VisionSocketServer implements AutoCloseable {
                             }
                             client.getOutputStream().write(bytesToSend);
                         } catch (IOException ex) {
+                            try {
+                                client.close();
+                            } catch (IOException ex1) {
+                                Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex1);
+                            }
+                            clients.remove(i);
                             Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }

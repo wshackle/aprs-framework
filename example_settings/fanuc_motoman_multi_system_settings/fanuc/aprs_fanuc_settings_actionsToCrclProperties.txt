@@ -1,8 +1,8 @@
 #
-#Thu Jan 12 09:26:18 EST 2017
+#Wed Jan 18 11:33:29 EST 2017
 lookDwellTime=3.0
 approachZOffset=50.0
-manualPartNames=[kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear, null]
+manualPartNames=[kit_lg1med2_1_slot_m2, empty_slot_for_medium_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]
 rotSpeed=30.0
 fastTransSpeed=180.0
 slowTransSpeed=75

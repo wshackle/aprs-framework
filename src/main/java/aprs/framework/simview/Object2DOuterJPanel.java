@@ -615,8 +615,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         } else {
             int port = Integer.valueOf(jTextFieldPort.getText());
             String host = jTextFieldHost.getText();
-            if(null != visionSocketClient) {
-                if(visionSocketClient.isConnected() 
+            if (null != visionSocketClient) {
+                if (visionSocketClient.isConnected()
                         && port == visionSocketClient.getPort()
                         && Objects.equals(visionSocketClient.getHost(), host)) {
                     return;
@@ -918,7 +918,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             aprsJFrame.removeCurrentPoseListener(this);
         }
     }
-    
+
     private void jButtonCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCurrentActionPerformed
         List<DetectedItem> items = this.getItems();
         int selectedIndex = object2DJPanel1.getSelectedItemIndex();
@@ -941,7 +941,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             disconnectCurrentPosition();
         }
     }
-    
+
     public void setMinXMinYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
@@ -1095,16 +1095,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             String trackCurrentPosString = props.getProperty("trackcurrentpos");
             if (trackCurrentPosString != null && trackCurrentPosString.length() > 0) {
-               boolean trackCurrentPos = Boolean.valueOf(trackCurrentPosString);
-               jCheckBoxShowCurrent.setSelected(trackCurrentPos);
-               this.setTrackCurrentPos(trackCurrentPos);
+                boolean trackCurrentPos = Boolean.valueOf(trackCurrentPosString);
+                jCheckBoxShowCurrent.setSelected(trackCurrentPos);
+                this.setTrackCurrentPos(trackCurrentPos);
             }
             //showrotations
             String showRotationsString = props.getProperty("showrotations");
             if (showRotationsString != null && showRotationsString.length() > 0) {
-               boolean showRotations = Boolean.valueOf(showRotationsString);
-               jCheckBoxShowRotations.setSelected(showRotations);
-               object2DJPanel1.setViewRotations(showRotations);
+                boolean showRotations = Boolean.valueOf(showRotationsString);
+                jCheckBoxShowRotations.setSelected(showRotations);
+                object2DJPanel1.setViewRotations(showRotations);
             }
         }
     }
@@ -1134,7 +1134,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @Override
     public void accept(PendantClientJPanel panel, PoseType pose) {
         PointType ptIn = pose.getPoint();
-        
+
         PointType uncorrectedPoint = aprsJFrame.reverseCorrectPoint(ptIn);
         currentX = uncorrectedPoint.getX().doubleValue();
         currentY = uncorrectedPoint.getY().doubleValue();
@@ -1143,31 +1143,36 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setCurrentY(currentY);
         boolean isHoldingObjectExpected = panel.isHoldingObjectExpected();
         List<DetectedItem> l = getItems();
-        if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
+        if (this.jCheckBoxSimulated.isSelected()) {
+            
+            if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
 
-            double min_dist = Double.POSITIVE_INFINITY;
-            int min_dist_index = -1;
-            for (int i = 0; i < 10; i++) {
-                DetectedItem item = l.get(i);
-                double dist = item.dist(currentX, currentY);
-                if (dist < min_dist) {
-                    min_dist_index = i;
-                    min_dist = dist;
+                double min_dist = Double.POSITIVE_INFINITY;
+                int min_dist_index = -1;
+                for (int i = 0; i < l.size(); i++) {
+                    DetectedItem item = l.get(i);
+                    double dist = item.dist(currentX, currentY);
+                    if (dist < min_dist) {
+                        min_dist_index = i;
+                        min_dist = dist;
+                    }
                 }
-            }
-            if (min_dist < 3.0 && min_dist_index >= 0) {
-                captured_item_index = min_dist_index;
+                if (min_dist < 3.0 && min_dist_index >= 0) {
+                    captured_item_index = min_dist_index;
+                }
             }
         }
         if (!isHoldingObjectExpected) {
             captured_item_index = -1;
         }
-        if (captured_item_index >= 0 && captured_item_index < l.size()) {
-            DetectedItem item = l.get(captured_item_index);
-            item.x =  currentX;
-            item.y =  currentY;
-            l.set(captured_item_index, item);
-            setItems(l);
+        if (this.jCheckBoxSimulated.isSelected()) {
+            if (captured_item_index >= 0 && captured_item_index < l.size()) {
+                DetectedItem item = l.get(captured_item_index);
+                item.x = currentX;
+                item.y = currentY;
+                l.set(captured_item_index, item);
+                setItems(l);
+            }
         }
     }
 }

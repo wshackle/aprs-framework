@@ -610,11 +610,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
             },
             new String [] {
-                "Position", "Name", "Repeats", "Rotation", "X", "Y", "Score", "Type", "In PT?", "In KT?", "FullName", "Query"
+                "Position", "Name", "Repeats", "Rotation", "X", "Y", "Z", "Score", "Type", "In PT?", "In KT?", "FullName", "Query"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Boolean.class, java.lang.Boolean.class, java.lang.String.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Boolean.class, java.lang.Boolean.class, java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -1037,7 +1037,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     System.err.println("bad ci fullname " + ci);
                 }
                 if (tm.getRowCount() <= i) {
-                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.score, ci.type, ci.insidePartsTray, ci.insideKitTray, ci.fullName,ci.setQuery});
+                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y,ci.z, ci.score, ci.type, ci.insidePartsTray, ci.insideKitTray, ci.fullName, ci.setQuery});
                     continue;
                 }
                 tm.setValueAt(ci.index, i, 0);
@@ -1046,12 +1046,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 tm.setValueAt(ci.rotation, i, 3);
                 tm.setValueAt(ci.x, i, 4);
                 tm.setValueAt(ci.y, i, 5);
-                tm.setValueAt(ci.score, i, 6);
-                tm.setValueAt(ci.type, i, 7);
-                tm.setValueAt(ci.insidePartsTray, i, 8);
-                tm.setValueAt(ci.insideKitTray, i, 9);
-                tm.setValueAt(ci.fullName, i, 10);
-                tm.setValueAt(ci.setQuery, i, 11);
+                tm.setValueAt(ci.z, i, 6);
+                tm.setValueAt(ci.score, i, 7);
+                tm.setValueAt(ci.type, i, 8);
+                tm.setValueAt(ci.insidePartsTray, i, 9);
+                tm.setValueAt(ci.insideKitTray, i, 10);
+                tm.setValueAt(ci.fullName, i, 11);
+                tm.setValueAt(ci.setQuery, i, 12);
             }
         }
         if (this.jCheckBoxDebug.isSelected()) {
@@ -1272,13 +1273,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         PoseType transform = getTransformPose();
         if (null != dpu && null != dpu.getSqlConnection()) {
             dpu.setDisplayInterface(this);
+            List<DetectedItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
             if (null != transform) {
-                transformedVisionList = transformList(visionList, transform);
+                transformedVisionList = transformList(visionListWithEmptySlots, transform);
                 List<DetectedItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames);
                 runOnDispatchThread(() -> this.updateInfo(l, line));
             } else {
-                dpu.updateVisionList(visionList, addRepeatCountsToDatabaseNames);
-                runOnDispatchThread(() -> this.updateInfo(visionList, line));
+                List<DetectedItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCountsToDatabaseNames);
+                runOnDispatchThread(() -> this.updateInfo(l, line));
             }
         }
 
@@ -1659,7 +1661,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         saveTableToFile(f, table);
         Desktop.getDesktop().open(f);
     }
-    
+
     private void jButtonCsvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCsvActionPerformed
         try {
             toCsv("FromVision", this.jTableFromVision);
@@ -1696,11 +1698,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         item.rotation = Double.valueOf(jTableFromVision.getValueAt(row, 3).toString());
         item.x = Double.valueOf(jTableFromVision.getValueAt(row, 4).toString());
         item.y = Double.valueOf(jTableFromVision.getValueAt(row, 5).toString());
-        item.score = Double.valueOf(jTableFromVision.getValueAt(row, 6).toString());
-        item.type = (String) jTableFromVision.getValueAt(row, 7);
-        item.insideKitTray = (Boolean) jTableFromVision.getValueAt(row, 8);
-        item.insidePartsTray = (Boolean) jTableFromVision.getValueAt(row, 9);
-        item.fullName = (String) jTableFromVision.getValueAt(row, 10);
+        item.z = Double.valueOf(jTableFromVision.getValueAt(row, 6).toString());
+        item.score = Double.valueOf(jTableFromVision.getValueAt(row, 7).toString());
+        item.type = (String) jTableFromVision.getValueAt(row, 8);
+        item.insideKitTray = (Boolean) jTableFromVision.getValueAt(row, 9);
+        item.insidePartsTray = (Boolean) jTableFromVision.getValueAt(row, 10);
+        item.fullName = (String) jTableFromVision.getValueAt(row, 11);
         System.out.println("item = " + item);
         List<DetectedItem> singletonList = Collections.singletonList(item);
         System.out.println("singletonList = " + singletonList);
@@ -1708,14 +1711,15 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         dpu.setForceUpdates(true);
         boolean isDebug = jCheckBoxDebug.isSelected();
         jCheckBoxDebug.setSelected(true);
-        PoseType pose = getTransformPose();
-        if (null != pose) {
-            List<DetectedItem> transformedList = transformList(singletonList, pose);
-            System.out.println("transformedList = " + transformedList);
-            dpu.updateVisionList(transformedList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
-        } else {
-            dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
-        }
+//        PoseType pose = getTransformPose();
+//        if (null != pose) {
+//            List<DetectedItem> transformedList = transformList(singletonList, pose);
+//            System.out.println("transformedList = " + transformedList);
+//            dpu.updateVisionList(transformedList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+//        } else {
+//            dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+//        }
+        dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
         dpu.setForceUpdates(origForceUpdates);
         jCheckBoxDebug.setSelected(isDebug);
     }

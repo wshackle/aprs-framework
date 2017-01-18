@@ -1,5 +1,5 @@
 #
-#Thu Jan 12 09:26:18 EST 2017
+#Wed Jan 18 11:33:29 EST 2017
 startup.pddl.objectview=true
 startup.pddl.planner=true
 startup.pddl.objectsp=true
@@ -11,7 +11,7 @@ startup.robotcrclmotomanserver=false
 fanuc.robotHost=129.6.78.111
 startup.crclWebApp=false
 startup.connectvision=true
-aprs.taskName=2 1l2m kits
+aprs.taskName=Fanuc Cart
 crclWebApp.httpPort=8081
 startup.robotcrclsimserver=false
 fanuc.crclLocalPort=64444

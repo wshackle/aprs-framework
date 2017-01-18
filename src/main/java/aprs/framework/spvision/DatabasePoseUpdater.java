@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -777,13 +778,19 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return updateResultsMap;
     }
 
-    public List<DetectedItem> getSlots(DetectedItem tray) {
+    private final ConcurrentHashMap<String, List<DetectedItem>> offsetsMap = new ConcurrentHashMap<>();
+
+    public List<DetectedItem> getSlotOffsets(DetectedItem tray) {
+        String tray_name = tray.name;
+        if (tray_name.startsWith("sku_")) {
+            tray_name = tray_name.substring(4);
+        }
+        return offsetsMap.computeIfAbsent(tray_name, (String name) -> getSlotOffsetsNew(tray));
+    }
+
+    public List<DetectedItem> getSlotOffsetsNew(DetectedItem tray) {
         List<DetectedItem> ret = new ArrayList<>();
         try {
-            String tray_name =tray.name;
-            if(tray_name.startsWith("sku_")) {
-                tray_name = tray_name.substring(4);
-            }
             List<Object> paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
             String updateStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
             boolean exec_result = get_tray_slots_statement.execute();
@@ -811,33 +818,51 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         }
                         String name = resultMap.get("name");
                         String sku_name = resultMap.get("sku_name");
-                        double x = fix(rs,"x")*1000.0;
-                        double y = fix(rs,"y")*1000.0;
-                        
-                        if(sku_name.startsWith("sku_")) {
+                        double x = fix(rs, "x") * 1000.0;
+                        double y = fix(rs, "y") * 1000.0;
+
+                        if (sku_name.startsWith("sku_")) {
                             sku_name = sku_name.substring(4);
                         }
 
-                        if(sku_name.startsWith("part_")) {
+                        if (sku_name.startsWith("part_")) {
                             sku_name = sku_name.substring(5);
                         }
-                        
-                        
-                        DetectedItem item = new DetectedItem("empty_slot_for_"+sku_name+"_in_"+tray_name, 0,
-                                tray.x + x * Math.cos(tray.rotation) - y * Math.sin(tray.rotation),
-                                tray.y + x * Math.sin(tray.rotation) + y * Math.cos(tray.rotation));
-                        item.type = "EMPTY_SLOT";
-                        ret.add(item);
-                        item = new DetectedItem(name, 0,
-                                tray.x + x * Math.cos(tray.rotation) - y * Math.sin(tray.rotation),
-                                tray.y + x * Math.sin(tray.rotation) + y * Math.cos(tray.rotation));
-                        item.type = "SLOT";
+                        DetectedItem item = new DetectedItem(sku_name, 0, x, y);
+                        item.fullName = name;
                         ret.add(item);
                     }
                 }
             }
         } catch (SQLException ex) {
             Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ret;
+    }
+
+    public List<DetectedItem> getSlots(DetectedItem tray) {
+        List<DetectedItem> offsets = getSlotOffsets(tray);
+        List<DetectedItem> ret = new ArrayList<>();
+        String tray_name = tray.name;
+        if (tray_name.startsWith("sku_")) {
+            tray_name = tray_name.substring(4);
+        }
+        for (DetectedItem offsetItem : offsets) {
+
+            String sku_name = offsetItem.name;
+            String name = offsetItem.fullName;
+            double x = offsetItem.x;
+            double y = offsetItem.y;
+            DetectedItem item = new DetectedItem(name, 0,
+                    tray.x + x * Math.cos(tray.rotation) - y * Math.sin(tray.rotation),
+                    tray.y + x * Math.sin(tray.rotation) + y * Math.cos(tray.rotation)
+            );
+            item.type = "SLOT";
+            item = new DetectedItem("empty_slot_for_" + sku_name + "_in_" + tray_name, 0,
+                    tray.x + x * Math.cos(tray.rotation) - y * Math.sin(tray.rotation),
+                    tray.y + x * Math.sin(tray.rotation) + y * Math.cos(tray.rotation));
+            item.type = "EMPTY_SLOT";
+            ret.add(item);
         }
         return ret;
     }
@@ -857,14 +882,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     public List<DetectedItem> findAllEmptyTraySlots(List<DetectedItem> trays, List<DetectedItem> parts) {
         List<DetectedItem> emptySlots = new ArrayList<>();
-        int count =1;
+        int count = 1;
         for (DetectedItem tray : trays) {
 
             tray.fullName = tray.name;
             if (tray.fullName.startsWith("sku_")) {
                 tray.fullName = tray.fullName.substring(4);
             }
-            tray.fullName = tray.fullName+"_"+count;
+            tray.fullName = tray.fullName + "_" + count;
             count++;
             List<DetectedItem> slots = getSlots(tray);
             emptySlots.addAll(findEmptySlots(slots, parts));
@@ -872,8 +897,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return emptySlots;
     }
 
-    public List<DetectedItem> updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
-        List<DetectedItem> itemsToVerify = new ArrayList<>();
+    public List<DetectedItem> addEmptyTraySlots(List<DetectedItem> list) {
         List<DetectedItem> partsTrays
                 = list.stream()
                 .filter((DetectedItem item) -> "PT".equals(item.type))
@@ -890,8 +914,21 @@ public class DatabasePoseUpdater implements AutoCloseable {
         fullList.addAll(list);
         List<DetectedItem> emptySlots = findAllEmptyTraySlots(kitTrays, parts);
         fullList.addAll(emptySlots);
+        return fullList;
+    }
+
+    public List<DetectedItem> updateVisionList(List<DetectedItem> list, boolean addRepeatCountsToName) {
+        List<DetectedItem> itemsToVerify = new ArrayList<>();
         List<DetectedItem> returnedList = new ArrayList<>();
         try {
+            List<DetectedItem> partsTrays
+                    = list.stream()
+                    .filter((DetectedItem item) -> "PT".equals(item.type))
+                    .collect(Collectors.toList());
+            List<DetectedItem> kitTrays
+                    = list.stream()
+                    .filter((DetectedItem item) -> "KT".equals(item.type))
+                    .collect(Collectors.toList());
             long t0_nanos = System.nanoTime();
             long t0_millis = System.currentTimeMillis();
             int updates = 0;
@@ -923,8 +960,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 int updatedCount = -1;
                 List<String> skippedUpdates = new ArrayList<>();
                 Map<String, Integer> repeatsMap = new HashMap<String, Integer>();
-                for (int i = 0; i < fullList.size(); i++) {
-                    DetectedItem ci = fullList.get(i);
+                for (int i = 0; i < list.size(); i++) {
+                    DetectedItem ci = list.get(i);
                     if (null == ci || ci.name.compareTo("*") == 0) {
                         continue;
                     }
