@@ -22,10 +22,10 @@
  */
 package aprs.framework;
 
+import crcl.ui.XFuture;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -52,7 +52,7 @@ public class Utils {
         public void run() throws Exception;
     }
 
-    public static class SwingFuture<T> extends CompletableFuture<T> {
+    public static class SwingFuture<T> extends XFuture<T> {
 
         @Override
         public T get() throws InterruptedException, ExecutionException {
@@ -126,7 +126,7 @@ public class Utils {
         }
     }
 
-    private static <R> R unwrap(CompletableFuture<R> f) {
+    private static <R> R unwrap(XFuture<R> f) {
         try {
             return f.get();
         } catch (InterruptedException | ExecutionException ex) {
@@ -135,8 +135,8 @@ public class Utils {
         }
     }
 
-    public static <R> CompletableFuture<R> composeOnDispatchThread(final Supplier<CompletableFuture<R>> s) {
-        CompletableFuture<CompletableFuture<R>> ret = new SwingFuture<>();
+    public static <R> XFuture<R> composeOnDispatchThread(final Supplier<XFuture<R>> s) {
+        XFuture<XFuture<R>> ret = new SwingFuture<>();
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             return s.get();
         } else {

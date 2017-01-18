@@ -43,6 +43,7 @@ import crcl.base.MessageType;
 import crcl.base.MiddleCommandType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
+import crcl.ui.XFuture;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.utils.CRCLException;
 import static crcl.utils.CRCLPosemath.pose;
@@ -94,9 +95,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
 import java.util.Vector;
-import java.util.concurrent.CompletableFuture;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.ExecutionException;
@@ -116,6 +117,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         initComponents();
         jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
         jCheckBoxDebug.setSelected(debug);
+        progColor = jTableCrclProgram.getBackground();
     }
 
     private static Object[] getTableRow(JTable table, int row) {
@@ -1246,8 +1248,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return in.trim();
         }
     }
+    private Color progColor = Color.white;
 
     private void loadProgramToTable(CRCLProgramType crclProgram) {
+        jTableCrclProgram.setBackground(Color.white);
         DefaultTableModel model = (DefaultTableModel) jTableCrclProgram.getModel();
         jTableCrclProgram.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
@@ -1426,7 +1430,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      *
      * @param crclProgram new value of crclProgram
      */
-    public CompletableFuture<Boolean> startCrclProgram(CRCLProgramType crclProgram) {
+    public XFuture<Boolean> startCrclProgram(CRCLProgramType crclProgram) {
         try {
             this.crclProgram = crclProgram;
             unstartedProgram = null;
@@ -1439,7 +1443,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return aprsJFrame.startCRCLProgram(crclProgram);
 
         } catch (Exception ex) {
-            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            XFuture<Boolean> future = new XFuture<>();
             Logger.getLogger(PddlExecutorJPanel.class
                     .getName()).log(Level.SEVERE, null, ex);
             future.completeExceptionally(ex);
@@ -1638,22 +1642,36 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private int takePartCount = 0;
+
     private void jButtonTakeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonTakeActionPerformed
         try {
+            if (null != currentPart) {
+                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
+            }
+            setReplanFromIndex(0);
+            abortProgram();
             takePartCount++;
             clearAll();
             autoStart = true;
             this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
-            this.takePart(part);
+            if (null != runningProgramFuture) {
+                runningProgramFuture.cancelAll(true);
+            }
+            runningProgramFuture = this.takePart(part);
         } catch (IOException | IllegalStateException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
             abortProgram();
+            showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonTakeActionPerformed
 
     public String getComboPart() {
-        String part = jComboBoxManualObjectName.getSelectedItem().toString();
+        Object object = jComboBoxManualObjectName.getSelectedItem();
+        if(null == object) {
+            return null;
+        }
+        String part = object.toString();
         DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
         boolean partfound = false;
         for (int i = 0; i < cbm.getSize(); i++) {
@@ -1688,28 +1706,46 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private int lookForCount = 0;
     private void jButtonLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLookForActionPerformed
-        lookForCount++;
-        clearAll();
-        autoStart = true;
-        this.jTextFieldLookForCount.setText(Integer.toString(lookForCount));
-        String part = getComboPart();
-        if (null != runningProgramFuture) {
-            runningProgramFuture.cancel(true);
+        try {
+            if (null != currentPart) {
+                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
+            }
+            setReplanFromIndex(0);
+            abortProgram();
+            lookForCount++;
+            clearAll();
+            autoStart = true;
+            this.jTextFieldLookForCount.setText(Integer.toString(lookForCount));
+            String part = getComboPart();
+            if (null != runningProgramFuture) {
+                runningProgramFuture.cancelAll(true);
+            }
+            runningProgramFuture = this.lookFor(part);
+        } catch (Exception e) {
+            showExceptionInProgram(e);
         }
-        runningProgramFuture = this.lookFor(part);
     }//GEN-LAST:event_jButtonLookForActionPerformed
 
     private int returnCount = 0;
     private void jButtonReturnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonReturnActionPerformed
         try {
+            if (null != currentPart) {
+                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
+            }
+            setReplanFromIndex(0);
+            abortProgram();
             returnCount++;
             clearAll();
             autoStart = true;
             this.jTextFieldReturnCount.setText(Integer.toString(returnCount));
             String part = getComboPart();
-            this.returnPart(part);
+            if (null != runningProgramFuture) {
+                runningProgramFuture.cancelAll(true);
+            }
+            runningProgramFuture = this.returnPart(part);
         } catch (IOException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonReturnActionPerformed
 
@@ -1752,7 +1788,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private String recordCsvName = "corrections.csv";
 
-    private CompletableFuture<Boolean> recordAndCompletTestPickup() {
+    private XFuture<Boolean> recordAndCompletTestPickup() {
         try {
             randomPickupCount++;
             this.jTextFieldRandomPickupCount.setText(Integer.toString(randomPickupCount));
@@ -1779,12 +1815,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 }
                 return this.randomPickup();
             }
-            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            XFuture<Boolean> future = new XFuture<>();
             future.complete(false);
             return future;
         } catch (IOException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            XFuture<Boolean> future = new XFuture<>();
             future.completeExceptionally(ex);
             return future;
         }
@@ -1794,7 +1830,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         startRandomTest();
     }//GEN-LAST:event_jButtonContRandomTestActionPerformed
 
-    public CompletableFuture<Boolean> startRandomTest() {
+    public XFuture<Boolean> startRandomTest() {
 //        try {
         clearAll();
         recordCsvName = JOptionPane.showInputDialog("Name of CSV record file");
@@ -1835,7 +1871,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 .thenCompose(x -> recursiveSupplyBoolean(x, () -> this.randomDropOff()));
 //        } catch (IOException ex) {
 //            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//            CompletableFuture<Boolean> ret = new CompletableFuture<>();
+//            XFuture<Boolean> ret = new XFuture<>();
 //            ret.completeExceptionally(ex);
 //            return ret;
 //        }
@@ -2134,7 +2170,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }//GEN-LAST:event_jCheckBoxEnableExternalControlPortActionPerformed
 
-    private volatile CompletableFuture<Boolean> runningProgramFuture = null;
+    private volatile XFuture<Boolean> runningProgramFuture = null;
 
     private void jButtonStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStepActionPerformed
         try {
@@ -2174,8 +2210,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldSafeAbortRequestCount.setText(Integer.toString(safeAbortRequestCount));
     }
 
-    public CompletableFuture<Void> safeAbort() {
-        final CompletableFuture<Void> ret = new CompletableFuture<>();
+    public XFuture<Void> safeAbort() {
+        final XFuture<Void> ret = new XFuture<>();
         if (!runningProgram) {
             ret.complete(null);
             return ret;
@@ -2197,9 +2233,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         continueActionListPrivate();
     }//GEN-LAST:event_jButtonContinueActionPerformed
 
-    public CompletableFuture<Void> continueActionList() {
+    public XFuture<Void> continueActionList() {
 
-        CompletableFuture<Void> ret = new CompletableFuture<>();
+        XFuture<Void> ret = new XFuture<>();
         addProgramCompleteRunnable(() -> {
             ret.complete(null);
         });
@@ -2235,16 +2271,25 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private int placePartCount = 0;
     private void jButtonPlacePartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPlacePartActionPerformed
         try {
+            if (null != currentPart) {
+                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
+            }
+            setReplanFromIndex(0);
+            abortProgram();
             placePartCount++;
             clearAll();
             autoStart = true;
 //            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
             String slot = getComboSlot();
-            this.placePartSlot(part, slot);
+            if(null != runningProgramFuture) {
+                runningProgramFuture.cancelAll(true);
+            }
+            runningProgramFuture = this.placePartSlot(part, slot);
         } catch (IOException | IllegalStateException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
             abortProgram();
+            showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonPlacePartActionPerformed
 
@@ -2316,6 +2361,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         message.setMessage(ex.toString());
         cmds.add(message);
         loadProgramToTable(program);
+        jTableCrclProgram.setBackground(Color.red);
+        
     }
 
     private String crclProgName = null;
@@ -2335,36 +2382,36 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
-    private CompletableFuture<Boolean> recursiveSupplyBoolean(boolean prevSuccess,
-            Supplier<CompletableFuture<Boolean>> supplier) {
+    private XFuture<Boolean> recursiveSupplyBoolean(boolean prevSuccess,
+            Supplier<XFuture<Boolean>> supplier) {
         if (prevSuccess) {
             try {
                 return Utils.composeOnDispatchThread(supplier);
             } catch (Exception ex) {
                 Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                CompletableFuture<Boolean> ret = new CompletableFuture<Boolean>();
+                XFuture<Boolean> ret = new XFuture<Boolean>();
                 ret.completeExceptionally(ex);
                 return ret;
             }
         } else {
-            CompletableFuture<Boolean> ret = new CompletableFuture<Boolean>();
+            XFuture<Boolean> ret = new XFuture<Boolean>();
             ret.complete(false);
             return ret;
         }
     }
 
-    private CompletableFuture<Boolean> recursiveApplyGenerateCrcl(boolean prevSuccess) {
+    private XFuture<Boolean> recursiveApplyGenerateCrcl(boolean prevSuccess) {
         if (prevSuccess) {
             try {
-                return (CompletableFuture<Boolean>) generateCrcl();
+                return (XFuture<Boolean>) generateCrcl();
             } catch (IOException | IllegalStateException | SQLException ex) {
                 Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                CompletableFuture<Boolean> ret = new CompletableFuture<Boolean>();
+                XFuture<Boolean> ret = new XFuture<Boolean>();
                 ret.completeExceptionally(ex);
                 return ret;
             }
         } else {
-            CompletableFuture<Boolean> ret = new CompletableFuture<Boolean>();
+            XFuture<Boolean> ret = new XFuture<Boolean>();
             ret.complete(false);
             return ret;
         }
@@ -2372,9 +2419,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private int crclStartActionIndex = -1;
     private int crclEndActionIndex = -1;
 
-    private CompletableFuture<Boolean> generateCrcl() throws IOException, IllegalStateException, SQLException {
+    private XFuture<Boolean> generateCrcl() throws IOException, IllegalStateException, SQLException {
         boolean doSafeAbort;
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        XFuture<Boolean> future = new XFuture<>();
         synchronized (this) {
             if (safeAbortRequested && null == currentPart) {
                 safeAbortRequested = false;
@@ -2447,14 +2494,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 } catch (Exception ex) {
                     Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     showExceptionInProgram(ex);
-                    CompletableFuture<Boolean> ret = new CompletableFuture<Boolean>();
+                    XFuture<Boolean> ret = new XFuture<Boolean>();
                     ret.completeExceptionally(ex);
                     return ret;
                 } finally {
                     started = autoStart;
                     replanStarted.set(false);
                 }
-                CompletableFuture<Boolean> ret = new CompletableFuture<Boolean>();
+                XFuture<Boolean> ret = new XFuture<Boolean>();
                 ret.complete(false);
                 return ret;
             });
@@ -2474,7 +2521,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
-    public void placePartSlot(String part, String slot) throws IOException, IllegalStateException, SQLException {
+    public XFuture<Boolean> placePartSlot(String part, String slot) throws IOException, IllegalStateException, SQLException {
         clearAll();
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
@@ -2489,7 +2536,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
-        startCrclProgram(program);
+        XFuture<Boolean> ret = startCrclProgram(program);
 
 //        if (null != getPositionMap()) {
 //            PointType offset = getPositionMap().getLastOffset();
@@ -2516,9 +2563,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //            }
 //        }
         replanStarted.set(false);
+        return ret;
     }
 
-    public CompletableFuture<Boolean> takePart(String part) throws IOException, IllegalStateException, SQLException {
+    public XFuture<Boolean> takePart(String part) throws IOException, IllegalStateException, SQLException {
         clearAll();
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
@@ -2533,7 +2581,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
-        
+
         for (PositionMap positionMap : getPositionMaps()) {
             PointType offset = positionMap.getLastOffset();
             if (null != offset) {
@@ -2563,7 +2611,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return startCrclProgram(program);
     }
 
-    public CompletableFuture<Boolean>  returnPart(String part) throws IOException {
+    public XFuture<Boolean> returnPart(String part) throws IOException {
         clearAll();
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
@@ -2575,7 +2623,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
-        
+
         replanStarted.set(false);
         return startCrclProgram(program);
     }
@@ -2604,7 +2652,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         return pout;
     }
-    
+
     public PointType correctPoint(PointType ptIn) {
         PointType pout = ptIn;
         for (PositionMap pm : getPositionMaps()) {
@@ -2621,8 +2669,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         return pout;
     }
-    
-    public CompletableFuture<Boolean> randomDropOff() {
+
+    public XFuture<Boolean> randomDropOff() {
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
         List<MiddleCommandType> cmds = new ArrayList<>();
@@ -2727,7 +2775,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         replanStarted.set(false);
     }
 
-    public CompletableFuture<Boolean> randomPickup() {
+    public XFuture<Boolean> randomPickup() {
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
         List<MiddleCommandType> cmds = new ArrayList<>();
@@ -2742,7 +2790,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return startCrclProgram(program);
     }
 
-    public CompletableFuture<Boolean> lookFor(String part) {
+    public XFuture<Boolean> lookFor(String part) {
         try {
             Map<String, String> options = getTableOptions();
             replanFromIndex = 0;
@@ -2760,14 +2808,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return startCrclProgram(program);
         } catch (IllegalStateException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            XFuture<Boolean> future = new XFuture<>();
             future.completeExceptionally(ex);
             return future;
         }
     }
 
-    private CompletableFuture<Void> checkDbSupplierPublisher() throws IOException {
-        CompletableFuture<Void> ret = new CompletableFuture<>();
+    private XFuture<Void> checkDbSupplierPublisher() throws IOException {
+        XFuture<Void> ret = new XFuture<>();
         if (null != this.pddlActionToCrclGenerator && pddlActionToCrclGenerator.isConnected()) {
             ret.complete(null);
             return ret;
@@ -2785,7 +2833,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != dbSetupPublisher) {
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
-            return CompletableFuture.runAsync(() -> {
+            return XFuture.runAsync(() -> {
                 for (Future<?> f : futures) {
                     if (!f.isDone() && !f.isCancelled()) {
                         try {

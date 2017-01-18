@@ -59,6 +59,7 @@ import crcl.base.CRCLProgramType;
 import crcl.base.CommandStatusType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
+import crcl.ui.XFuture;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.ui.client.UpdateTitleListener;
@@ -70,7 +71,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -173,11 +173,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return taskName;
     }
 
-    public CompletableFuture<Void> safeAbort() {
+    public XFuture<Void> safeAbort() {
         return this.pddlExecutorJInternalFrame1.safeAbort();
     }
 
-    public CompletableFuture<Void> safeAbortAndDisconnectAsync() {
+    public XFuture<Void> safeAbortAndDisconnectAsync() {
         return this.pddlExecutorJInternalFrame1.safeAbort()
                 .thenRunAsync(this::disconnectRobot);
     }
@@ -210,7 +210,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return -1;
     }
 
-    public CompletableFuture<Void> continueActionList() {
+    public XFuture<Void> continueActionList() {
         return pddlExecutorJInternalFrame1.continueActionList();
     }
 
@@ -295,12 +295,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    public synchronized CompletableFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException {
+    public synchronized XFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.setProgram(program);
             return pendantClientJInternalFrame.runCurrentProgram();
         }
-        CompletableFuture<Boolean> ret = new CompletableFuture<>();
+        XFuture<Boolean> ret = new XFuture<>();
         ret.complete(false);
         return ret;
     }

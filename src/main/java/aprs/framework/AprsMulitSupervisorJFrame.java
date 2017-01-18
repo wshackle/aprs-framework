@@ -27,6 +27,7 @@ import aprs.framework.pddl.executor.PositionMapEntry;
 import aprs.framework.pddl.executor.PositionMapJPanel;
 import com.google.common.base.Objects;
 import crcl.base.PoseType;
+import crcl.ui.XFuture;
 import java.awt.Component;
 import java.awt.HeadlessException;
 import java.awt.Point;
@@ -39,7 +40,6 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EventObject;
@@ -47,7 +47,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -433,7 +432,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             robotEnableMap.put(robotName, enabled);
             if (!enabled) {
                 try {
-                    stealRobot(robotName);
+                    if(null != lastFutureReturned) {
+                        lastFutureReturned.cancelAll(true);
+                    }
+                    this.lastFutureReturned = stealRobot(robotName);
                 } catch (IOException | PositionMap.BadErrorMapFormatException ex) {
                     Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -441,16 +443,16 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private CompletableFuture<Void> stealRobot(String robotName) throws IOException, PositionMap.BadErrorMapFormatException {
+    private XFuture<Void> stealRobot(String robotName) throws IOException, PositionMap.BadErrorMapFormatException {
         for (int i = 0; i < aprsSystems.size() - 1; i++) {
             if (aprsSystems.get(i).getRobotName().equals(robotName)) {
                 return stealRobot(aprsSystems.get(i + 1), aprsSystems.get(i));
             }
         }
-        return CompletableFuture.completedFuture(null);
+        return XFuture.completedFuture(null);
     }
 
-    private CompletableFuture<Void> stealRobot(AprsJFrame stealFrom, AprsJFrame stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
+    private XFuture<Void> stealRobot(AprsJFrame stealFrom, AprsJFrame stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
         File f = getPosMapFile(stealFor.getRobotName(), stealFrom.getRobotName());
         PositionMap pm = (f != null && !f.getName().equals("null")) ? new PositionMap(f) : PositionMap.emptyPositionMap();
 
@@ -468,7 +470,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         String stealForRpyOption = stealFor.getExecutorOptions().get("rpy");
         String stealForLookForXYZOption = stealFor.getExecutorOptions().get("lookForXYZ");
 
-        return CompletableFuture.allOf(stealFrom.safeAbortAndDisconnectAsync(), stealFor.safeAbort())
+        return XFuture.allOf(stealFrom.safeAbortAndDisconnectAsync(), stealFor.safeAbort())
                 .thenRun(() -> {
                     stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
                     stealFor.addPositionMap(pm);
@@ -1060,8 +1062,13 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemDeleteSelectedSystemActionPerformed
 
+    private XFuture<?> lastFutureReturned = null;
+    
     private void jMenuItemStartAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartAllActionPerformed
-        startAll();
+        if(null != lastFutureReturned) {
+            lastFutureReturned.cancelAll(true);
+        }
+        lastFutureReturned = startAll();
     }//GEN-LAST:event_jMenuItemStartAllActionPerformed
 
     private void jMenuItemSavePosMapsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePosMapsActionPerformed
@@ -1120,10 +1127,16 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemLoadPosMapsActionPerformed
 
     private void jMenuItemSafeAbortAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSafeAbortAllActionPerformed
-        safeAbortAll();
+        if(null != lastFutureReturned) {
+            lastFutureReturned.cancelAll(true);
+        }
+        lastFutureReturned = safeAbortAll();
     }//GEN-LAST:event_jMenuItemSafeAbortAllActionPerformed
 
     private void jMenuItemImmediateAbortAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImmediateAbortAllActionPerformed
+        if(null != lastFutureReturned) {
+            lastFutureReturned.cancelAll(true);
+        }
         immediateAbortAll();
     }//GEN-LAST:event_jMenuItemImmediateAbortAllActionPerformed
 
@@ -1266,12 +1279,12 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         posTablePopupMenu.setVisible(true);
     }
 
-    public CompletableFuture<Void> startAll() {
-        CompletableFuture futures[] = new CompletableFuture[aprsSystems.size()];
+    public XFuture<Void> startAll() {
+        XFuture futures[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             futures[i] = aprsSystems.get(i).continueActionList();
         }
-        return CompletableFuture.allOf(futures);
+        return XFuture.allOf(futures);
     }
 
     public void immediateAbortAll() {
@@ -1286,12 +1299,12 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    public CompletableFuture<Void> safeAbortAll() {
-        CompletableFuture futures[] = new CompletableFuture[aprsSystems.size()];
+    public XFuture<Void> safeAbortAll() {
+        XFuture futures[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             futures[i] = aprsSystems.get(i).safeAbort();
         }
-        return CompletableFuture.allOf(futures);
+        return XFuture.allOf(futures);
     }
 
     public void saveSetupFile(File f) throws IOException {

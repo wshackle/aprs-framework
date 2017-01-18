@@ -1,5 +1,5 @@
 #
-#Tue Jan 17 16:11:47 EST 2017
+#Wed Jan 18 15:38:25 EST 2017
 NEO4J.host=localhost
 NEO4J.localhost_7486.internalQueriesResourceDir=true
 NEO4J.localhost_7480.internalQueriesResourceDir=true
@@ -15,11 +15,11 @@ NEO4J.localhost_7496.internalQueriesResourceDir=true
 NEO4J.localhost_7486.name=neo4j
 NEO4J.localhost_7486.user=neo4j
 NEO4J.localhost_7496.queriesDir=neo4j/v2
-NEO4J.localhost_7480.user=neo4j
-NEO4J.localhost_7480.name=neo4j
 NEO4J.localhost_4000.internalQueriesResourceDir=true
+NEO4J.localhost_7480.name=neo4j
+NEO4J.localhost_7480.user=neo4j
 NEO4J.localhost_7486.queriesDir=neo4j/v1
-NEO4J.localhost_7496.name=neo4j
 NEO4J.localhost_7496.user=neo4j
-NEO4J.localhost.port=7496
+NEO4J.localhost_7496.name=neo4j
 NEO4J.localhost_7486.passwd=password
+NEO4J.localhost.port=7496

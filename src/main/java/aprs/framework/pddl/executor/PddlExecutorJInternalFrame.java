@@ -27,12 +27,12 @@ import aprs.framework.PddlAction;
 import aprs.framework.database.DbSetupPublisher;
 import crcl.base.PointType;
 import crcl.base.PoseType;
+import crcl.ui.XFuture;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 
 /**
  *
@@ -59,7 +59,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         actionsToCrclJPanel1.abortProgram();
     }
 
-    public CompletableFuture<Void> safeAbort() {
+    public XFuture<Void> safeAbort() {
         return this.actionsToCrclJPanel1.safeAbort();
     }
 
@@ -71,7 +71,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return this.actionsToCrclJPanel1.getActionsList();
     }
 
-    public CompletableFuture<Void> continueActionList() {
+    public XFuture<Void> continueActionList() {
         return this.actionsToCrclJPanel1.continueActionList();
     }
 
