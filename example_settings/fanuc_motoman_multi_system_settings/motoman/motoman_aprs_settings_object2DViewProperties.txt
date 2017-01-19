@@ -1,13 +1,13 @@
 #
-#Thu Jan 12 11:35:17 EST 2017
+#Thu Jan 19 15:46:11 EST 2017
 simulated=true
 --visionport=4001
 showrotations=false
 connected=true
-items=sku_part_large_gear,0.0,547.516,179.732,100.0,P,sku_part_large_gear,0.0,542.51,68.117,100.0,P,sku_part_large_gear,0.0,721.891,-386.044,100.0,P,sku_part_large_gear,0.0,721.488,-280.869,100.0,P,sku_part_small_gear,0.0,576.031,-48.967,100.0,P,sku_part_small_gear,0.0,583.696,-117.212,100.0,P,sku_part_small_gear,0.0,524.205,-49.206,100.0,P,sku_part_small_gear,0.0,526.933,-117.216,100.0,P,kit_lg2small2_2_slot_l1,0.0,680.667,-161.03,100.0,SLOT,kit_lg2small2_2_slot_l2,0.0,677.549,-50.837,100.0,SLOT,kit_lg2small2_2_slot_s2,0.0,755.532,-45.849,100.0,SLOT,kit_lg2small2_2_slot_s1,0.0,760.962,-159.069,100.0,SLOT,kit_lg2small2_1_slot_l2,0.0,675.213,69.636,100.0,SLOT,kit_lg2small2_1_slot_l1,0.0,679.36,187.826,100.0,SLOT,kit_lg2small2_1_slot_s1,0.0,756.305,183.247,100.0,SLOT,kit_lg2small2_1_slot_s2,0.0,755.704,75.504,100.0,SLOT,sku_large_gear_vessel,0.0,545.013,123.9245,100.0,PT,sku_large_gear_vessel,0.0,721.6895,-333.4565,100.0,PT,sku_large_small_vessel,0.0,548.2605,-76.90825,100.0,PT,\n
+items=sku_part_large_gear,0.0,547.516,179.732,100.0,P,sku_part_large_gear,0.0,542.51,68.117,100.0,P,sku_part_large_gear,0.0,721.891,-386.044,100.0,P,sku_part_large_gear,0.0,721.488,-280.869,100.0,P,sku_part_small_gear,0.0,583.347,-58.637,100.0,P,sku_part_small_gear,0.0,583.696,-117.212,100.0,P,sku_part_small_gear,0.0,527.122,-65.035,100.0,P,sku_part_small_gear,0.0,527.216,-116.845,100.0,P,kit_lg2small2_2_slot_l1,0.0,680.667,-161.03,100.0,SLOT,kit_lg2small2_2_slot_l2,0.0,677.549,-50.837,100.0,SLOT,kit_lg2small2_2_slot_s2,0.0,755.532,-45.849,100.0,SLOT,kit_lg2small2_2_slot_s1,0.0,760.962,-159.069,100.0,SLOT,kit_lg2small2_1_slot_l2,0.0,675.213,69.636,100.0,SLOT,kit_lg2small2_1_slot_l1,0.0,679.36,187.826,100.0,SLOT,kit_lg2small2_1_slot_s1,0.0,756.305,183.247,100.0,SLOT,kit_lg2small2_1_slot_s2,0.0,755.704,75.504,100.0,SLOT,sku_large_gear_vessel,0.0,545.013,123.9245,100.0,PT,sku_large_gear_vessel,0.0,721.6895,-333.4565,100.0,PT,sku_large_small_vessel,0.0,548.2605,-76.90825,100.0,PT,\n
 trackcurrentpos=true
 --visionhost=localhost
 displayAxis=NEG_X_NEG_Y
 xminymin=0.0, -500.0
-datafile=C\:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\example_settings\\fanuc_motoman_multi_system_settings\\motoman\\motoman_shared_table_objects.csv
+datafile=motoman_shared_table_objects.csv
 xmaxymax=760.0,500.0

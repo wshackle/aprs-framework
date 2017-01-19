@@ -1,13 +1,13 @@
 #
-#Wed Jan 18 11:33:29 EST 2017
+#Thu Jan 19 15:46:05 EST 2017
 simulated=false
 --visionport=5001
 showrotations=false
 connected=true
-items=sku_part_large_gear,-0.66,408.25,114.55,0.96,P,sku_part_large_gear,-0.76,411.46,-75.37,0.9,P,sku_part_medium_gear,0.0,452.13,-159.74,0.95,P,sku_part_medium_gear,0.0,453.18,19.67,0.82,P,sku_part_medium_gear,0.0,372.18,-159.74,0.71,P,sku_part_medium_gear,0.0,372.39,20.79,0.67,P,sku_large_gear_vessel,-1.63,607.55,172.36,0.75,PT,sku_medium_gear_vessel,0.0,576.41,40.6,0.82,PT,sku_kit_m2l1_vessel,-1.58,415.04,-109.14,0.63,KT,\n
+items=sku_part_large_gear,0.85,660.29,170.86,0.93,P,sku_part_medium_gear,0.0,533.03,-81.45,0.88,P,sku_part_medium_gear,0.0,611.49,-159.36,0.81,P,sku_part_medium_gear,0.0,372.88,-160.43,0.77,P,sku_part_medium_gear,0.0,539.42,78.98,0.5,P,sku_large_gear_vessel,1.52,602.87,170.26,0.68,PT,sku_medium_gear_vessel,0.0,572.05,-119.54,0.69,PT,\n
 trackcurrentpos=true
 --visionhost=ultraman.el.nist.gov
 displayAxis=NEG_Y_POS_X
 xminymin=200.0, -500.0
-datafile=C\:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\example_settings\\fanuc_motoman_multi_system_settings\\fanuc\\fanuc_cart_objects_capture_jan_11_2017_combined_modified.csv
+datafile=fanuc_cart_objects_capture_jan_11_2017_combined_modified.csv
 xmaxymax=700.0, 200.0
