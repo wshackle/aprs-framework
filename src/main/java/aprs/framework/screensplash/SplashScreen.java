@@ -89,6 +89,7 @@ public class SplashScreen extends JFrame {
     }
 
     public SplashScreen(String message, float fontSize, Image image) {
+        this.setUndecorated(true);
         this.panel = new SplashPanel(message, fontSize, image);
         this.add(panel);
     }
@@ -126,7 +127,7 @@ public class SplashScreen extends JFrame {
 
     private static class DisableImageHider {
 
-        public static BufferedImage DISABLED_IMAGE = readImageOrNull("icon-sleep.png");
+        public static BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobot.jpg");
 
     }
 
@@ -152,14 +153,18 @@ public class SplashScreen extends JFrame {
         return ListHider.BLUE_WHITE_GREEN_COLOR_LIST;
     }
 
-    public static XFuture<Void> showMessageFullScreen(String message, float fontSize, Image image, List<Color> colors) {
+    public static XFuture<Void> showMessageFullScreen(String message, float fontSize, Image image, List<Color> colors, GraphicsDevice graphicsDevice) {
         XFuture<Void> returnFuture = new XFuture<>();
         Utils.runOnDispatchThread(() -> {
             SplashScreen ss = new SplashScreen(message, fontSize, image);
             ss.setVisible(true);
-            GraphicsDevice gd = ss.getGraphicsConfiguration().getDevice();
-            gd.setFullScreenWindow(ss);
+            GraphicsDevice gd0 = graphicsDevice;
+            if (null == gd0) {
+                gd0 = ss.getGraphicsConfiguration().getDevice();
+            }
+            graphicsDevice.setFullScreenWindow(ss);
 
+            final GraphicsDevice gd = gd0;
             ss.timer = new javax.swing.Timer(500, new ActionListener() {
                 int colorIndex = 0;
 
@@ -167,7 +172,6 @@ public class SplashScreen extends JFrame {
                 public void actionPerformed(ActionEvent e) {
                     if (colorIndex < colors.size()) {
                         Color color = colors.get(colorIndex);
-                        System.out.println("color = " + color);
                         ss.setBackground(color);
                         ss.panel.setBackground(color);
                         ss.repaint();
@@ -211,8 +215,8 @@ public class SplashScreen extends JFrame {
     }
 
     public static void main(String[] args) throws IOException {
-        showMessageFullScreen("my \nmessage", 160.0f,
+        showMessageFullScreen("my \nmessage", 80.0f,
                 getRobotArmImage(),
-                getBlueWhiteGreenColorList());
+                getBlueWhiteGreenColorList(), null);
     }
 }

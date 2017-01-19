@@ -30,6 +30,7 @@ import com.google.common.base.Objects;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import java.awt.Component;
+import java.awt.GraphicsDevice;
 import java.awt.HeadlessException;
 import java.awt.Point;
 import java.io.BufferedReader;
@@ -123,6 +124,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 }
                 JTextArea area = areas.get(row);
                 if (null != value && null != area) {
+                    area.setFont(table.getFont());
                     area.setText(value.toString());
                 }
                 return area;
@@ -139,6 +141,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 editTableArea.setOpaque(true);
                 editTableArea.setVisible(true);
                 editTableArea.setText(value.toString());
+                editTableArea.setFont(table.getFont());
                 return editTableArea;
             }
 
@@ -477,7 +480,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
         String stealForRpyOption = stealFor.getExecutorOptions().get("rpy");
         String stealForLookForXYZOption = stealFor.getExecutorOptions().get("lookForXYZ");
-
+        final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
         return XFuture.allOf(stealFrom.safeAbortAndDisconnectAsync(), stealFor.safeAbort())
                 .thenRun(() -> {
                     stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
@@ -493,11 +496,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 .thenCompose(x -> {
                     return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
                             SplashScreen.getDisableImageImage(),
-                            SplashScreen.getRedYellowColorList());
+                            SplashScreen.getRedYellowColorList(), gd);
                 })
                 .thenCompose(x -> {
                     return SplashScreen.showMessageFullScreen("Switching to \n" + stealFromRobotName, 80.0f,
-                            SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList());
+                            SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList(), gd);
                 })
                 //                        () -> 
                 .thenCompose(x -> {
@@ -508,7 +511,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 })
                 .thenCompose(x -> {
                     return SplashScreen.showMessageFullScreen("Returning \n" + stealFromRobotName, 80.0f, 
-                            SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList());
+                            SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList(), gd);
                 })
                 .thenRun(() -> {
                     stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
@@ -529,7 +532,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 })
                 .thenCompose(x -> {
                     return SplashScreen.showMessageFullScreen("All \nTasks \nComplete", 80.0f, 
-                            null, SplashScreen.getBlueWhiteGreenColorList());
+                            null, SplashScreen.getBlueWhiteGreenColorList(), gd);
                 });
 
     }
@@ -596,10 +599,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
         jPanelTasks.setBorder(javax.swing.BorderFactory.createTitledBorder("Tasks"));
 
+        jTableTasks.setFont(new java.awt.Font("sansserif", 0, 24)); // NOI18N
         jTableTasks.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                { new Integer(1), "2 2l2s Kits", "Motoman", null, null},
-                { new Integer(2), "2  1l2m Kits", "Fanuc", null, null}
+                { new Integer(1), "Shared Table", "Motoman", null, null},
+                { new Integer(2), "Fanuc Cart", "Fanuc", null, null}
             },
             new String [] {
                 "Priority", "Task(s)", "Robot(s)", "Details", "PropertiesFile"
@@ -620,6 +624,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
+        jTableTasks.setRowHeight(30);
         jScrollPaneTasks.setViewportView(jTableTasks);
 
         javax.swing.GroupLayout jPanelTasksLayout = new javax.swing.GroupLayout(jPanelTasks);
@@ -633,11 +638,12 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         );
         jPanelTasksLayout.setVerticalGroup(
             jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 360, Short.MAX_VALUE)
+            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 411, Short.MAX_VALUE)
         );
 
         jPanelRobots.setBorder(javax.swing.BorderFactory.createTitledBorder("Robots"));
 
+        jTableRobots.setFont(new java.awt.Font("sansserif", 0, 24)); // NOI18N
         jTableRobots.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {"Motoman",  new Boolean(true), "localhost",  new Integer(64445)},
@@ -655,6 +661,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 return types [columnIndex];
             }
         });
+        jTableRobots.setRowHeight(30);
         jScrollPaneRobots.setViewportView(jTableRobots);
 
         javax.swing.GroupLayout jPanelRobotsLayout = new javax.swing.GroupLayout(jPanelRobots);
@@ -663,14 +670,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 815, Short.MAX_VALUE)
+                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 872, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelRobotsLayout.setVerticalGroup(
             jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 77, Short.MAX_VALUE)
+                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 126, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -679,11 +686,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jPanelTasksAndRobotsLayout.setHorizontalGroup(
             jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
-                .addContainerGap()
                 .addGroup(jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanelTasks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
-                        .addGap(6, 6, 6)
+                        .addContainerGap()
                         .addComponent(jPanelRobots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -810,7 +816,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                         .addComponent(jButtonDeleteLine)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonSaveSelectedPosMap)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 132, Short.MAX_VALUE)
                         .addComponent(jButtonSetOutFromCurrent))
                     .addComponent(jTextFieldSelectedPosMapFilename))
                 .addContainerGap())
@@ -826,7 +832,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     .addComponent(jButtonSetOutFromCurrent)
                     .addComponent(jButtonSaveSelectedPosMap))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 181, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextFieldSelectedPosMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
