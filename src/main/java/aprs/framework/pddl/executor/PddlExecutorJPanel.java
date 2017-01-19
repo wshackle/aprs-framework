@@ -100,6 +100,7 @@ import static crcl.utils.CRCLPosemath.vector;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -1097,9 +1098,25 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return ret;
     }
 
+    private static String makeShortPath(File f, String str)  {
+        try {
+            String canString = new File(str).getCanonicalPath();
+            String relString = Paths.get(f.getParentFile().getCanonicalPath()).relativize(Paths.get(canString)).toString();
+            if (relString.length() <= canString.length()) {
+                return relString;
+            }
+            return canString;
+        } catch (IOException iOException) {
+        }
+        return str;
+    }
+
     public void saveProperties() throws IOException {
         Map<String, String> propsMap = new HashMap<>();
-        propsMap.put(PDDLOUTPUT, jTextFieldPddlOutputActions.getText());
+        String txtString = jTextFieldPddlOutputActions.getText();
+        String relPath = makeShortPath(propertiesFile, txtString);
+        System.out.println("relPath = " + relPath);
+        propsMap.put(PDDLOUTPUT, relPath);
 //        propsMap.put(PDDLCRCLAUTOSTART, Boolean.toString(jCheckBoxAutoStartCrcl.isSelected()));
         Properties props = new Properties();
         props.putAll(propsMap);
@@ -1668,7 +1685,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     public String getComboPart() {
         Object object = jComboBoxManualObjectName.getSelectedItem();
-        if(null == object) {
+        if (null == object) {
             return null;
         }
         String part = object.toString();
@@ -2282,7 +2299,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
             String slot = getComboSlot();
-            if(null != runningProgramFuture) {
+            if (null != runningProgramFuture) {
                 runningProgramFuture.cancelAll(true);
             }
             runningProgramFuture = this.placePartSlot(part, slot);
@@ -2362,7 +2379,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         cmds.add(message);
         loadProgramToTable(program);
         jTableCrclProgram.setBackground(Color.red);
-        
+
     }
 
     private String crclProgName = null;
@@ -2982,8 +2999,25 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             if (null != output) {
                 jTextFieldPddlOutputActions.setText(output);
                 File f = new File(output);
-                if (f.canRead()) {
+                if (f.exists() && f.canRead()) {
+                    jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
                     loadActionsFile(f);
+                } else {
+                    String fullPath = propertiesFile.getParentFile().toPath().resolve(output).normalize().toString();
+//                    System.out.println("fullPath = " + fullPath);
+                    f = new File(fullPath);
+                    if (f.exists() && f.canRead()) {
+                        jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
+                        loadActionsFile(f);
+                    } else {
+                        String fullPath2 = propertiesFile.getParentFile().toPath().resolveSibling(output).normalize().toString();
+//                        System.out.println("fullPath = " + fullPath2);
+                        f = new File(fullPath2);
+                        if (f.exists() && f.canRead()) {
+                            jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
+                            loadActionsFile(f);
+                        }
+                    }
                 }
             }
             String autostartString = props.getProperty(PDDLCRCLAUTOSTART);

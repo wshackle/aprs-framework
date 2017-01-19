@@ -1,2 +1,2 @@
-1,2 2L2S Kits,Sim_Motoman,/home/shackle/aprs-framework/example_settings/multiple_simulated_systems_settings/simulated_motoman/simulated_motoman_props.txt,
-2,2 1L2M Kits,Sim_Fanuc,/home/shackle/aprs-framework/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties.txt,
+1,Shared Table,Sim_Motoman,/home/shackle/aprs-framework/example_settings/multiple_simulated_systems_settings/simulated_motoman/simulated_motoman_props.txt,
+2,Fanuc Cart,Sim_Fanuc,/home/shackle/aprs-framework/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties.txt,

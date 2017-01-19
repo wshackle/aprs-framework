@@ -40,6 +40,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -999,6 +1000,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.propertiesFile = f;
     }
 
+    private static String makeShortPath(File f, String str)  {
+        try {
+            String canString = new File(str).getCanonicalPath();
+            String relString = Paths.get(f.getParentFile().getCanonicalPath()).relativize(Paths.get(canString)).toString();
+            if (relString.length() <= canString.length()) {
+                return relString;
+            }
+            return canString;
+        } catch (IOException iOException) {
+        }
+        return str;
+    }
+    
     @Override
     public void saveProperties() throws IOException {
         if (null != propertiesFile) {
@@ -1012,7 +1026,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("showrotations", Boolean.toString(jCheckBoxShowRotations.isSelected()));
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText());
             props.put("xminymin", jTextFieldMinXMinY.getText());
-            props.put("datafile", jTextFieldFilename.getText());
+            String dataFileTxt = jTextFieldFilename.getText();
+            String datafileShort = makeShortPath(propertiesFile, dataFileTxt);
+            props.put("datafile", datafileShort);
             DisplayAxis displayAxis = object2DJPanel1.getDisplayAxis();
             props.put("displayAxis", displayAxis.toString());
             List<DetectedItem> l = getItems();
@@ -1066,7 +1082,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jTextFieldFilename.setText(datafileString);
                 File f = new File(datafileString);
                 if (f.exists() && f.canRead()) {
+                    jTextFieldFilename.setText(f.getCanonicalPath());
                     loadFile(f);
+                } else {
+                    String fullPath = propertiesFile.getParentFile().toPath().resolve(datafileString).normalize().toString();
+//                    System.out.println("fullPath = " + fullPath);
+                    f = new File(fullPath);
+                    if (f.exists() && f.canRead()) {
+                        jTextFieldFilename.setText(f.getCanonicalPath());
+                        loadFile(f);
+                    } else {
+                        String fullPath2 = propertiesFile.getParentFile().toPath().resolveSibling(datafileString).normalize().toString();
+//                        System.out.println("fullPath = " + fullPath2);
+                        f = new File(fullPath2);
+                        if (f.exists() && f.canRead()) {
+                            jTextFieldFilename.setText(f.getCanonicalPath());
+                            loadFile(f);
+                        }
+                    }
                 }
             }
             String xmaxymaxString = props.getProperty("xmaxymax");

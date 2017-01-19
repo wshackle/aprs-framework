@@ -25,6 +25,7 @@ package aprs.framework;
 import aprs.framework.pddl.executor.PositionMap;
 import aprs.framework.pddl.executor.PositionMapEntry;
 import aprs.framework.pddl.executor.PositionMapJPanel;
+import aprs.framework.screensplash.SplashScreen;
 import com.google.common.base.Objects;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
@@ -33,12 +34,15 @@ import java.awt.HeadlessException;
 import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -68,6 +72,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
 /**
@@ -116,8 +121,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     area.setVisible(true);
                     areas.add(area);
                 }
-                areas.get(row).setText(value.toString());
-                return areas.get(row);
+                JTextArea area = areas.get(row);
+                if (null != value && null != area) {
+                    area.setText(value.toString());
+                }
+                return area;
             }
 
         });
@@ -253,7 +261,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             }
         });
         crcl.ui.misc.MultiLineStringJPanel.disableShowText = jCheckBoxMenuItemDisableTextPopups.isSelected();
-        
+
 //        jTablePositionMappings.setDefaultEditor(Object.class, new DefaultCellEditor(new JTextField()));
 //        jTablePositionMappings.setDefaultEditor(Object.class, new TableCellEditor() {
 //
@@ -432,7 +440,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             robotEnableMap.put(robotName, enabled);
             if (!enabled) {
                 try {
-                    if(null != lastFutureReturned) {
+                    if (null != lastFutureReturned) {
                         lastFutureReturned.cancelAll(true);
                     }
                     this.lastFutureReturned = stealRobot(robotName);
@@ -463,7 +471,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         String stealForOrigCrclHost = stealFor.getRobotCrclHost();
         int stealForOrigCrclPort = stealFor.getRobotCrclPort();
         String stealForRobotName = stealFor.getRobotName();
-        
+
         String stealFromRpyOption = stealFrom.getExecutorOptions().get("rpy");
         String stealFromLookForXYZOption = stealFrom.getExecutorOptions().get("lookForXYZ");
 
@@ -482,6 +490,15 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     }
 //                    return null;
                 })
+                .thenCompose(x -> {
+                    return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
+                            SplashScreen.getDisableImageImage(),
+                            SplashScreen.getRedYellowColorList());
+                })
+                .thenCompose(x -> {
+                    return SplashScreen.showMessageFullScreen("Switching to \n" + stealFromRobotName, 80.0f,
+                            SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList());
+                })
                 //                        () -> 
                 .thenCompose(x -> {
                     return stealFor.continueActionList();
@@ -489,9 +506,13 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 .thenCompose(x -> {
                     return stealFor.safeAbortAndDisconnectAsync();
                 })
+                .thenCompose(x -> {
+                    return SplashScreen.showMessageFullScreen("Returning \n" + stealFromRobotName, 80.0f, 
+                            SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList());
+                })
                 .thenRun(() -> {
                     stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
-                    
+
                     if (null != stealForRpyOption) {
                         stealFor.setExecutorOption("rpy", stealForRpyOption);
                     }
@@ -505,6 +526,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 })
                 .thenCompose(x -> {
                     return stealFrom.continueActionList();
+                })
+                .thenCompose(x -> {
+                    return SplashScreen.showMessageFullScreen("All \nTasks \nComplete", 80.0f, 
+                            null, SplashScreen.getBlueWhiteGreenColorList());
                 });
 
     }
@@ -1063,9 +1088,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemDeleteSelectedSystemActionPerformed
 
     private XFuture<?> lastFutureReturned = null;
-    
+
     private void jMenuItemStartAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartAllActionPerformed
-        if(null != lastFutureReturned) {
+        if (null != lastFutureReturned) {
             lastFutureReturned.cancelAll(true);
         }
         lastFutureReturned = startAll();
@@ -1127,14 +1152,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemLoadPosMapsActionPerformed
 
     private void jMenuItemSafeAbortAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSafeAbortAllActionPerformed
-        if(null != lastFutureReturned) {
+        if (null != lastFutureReturned) {
             lastFutureReturned.cancelAll(true);
         }
         lastFutureReturned = safeAbortAll();
     }//GEN-LAST:event_jMenuItemSafeAbortAllActionPerformed
 
     private void jMenuItemImmediateAbortAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImmediateAbortAllActionPerformed
-        if(null != lastFutureReturned) {
+        if (null != lastFutureReturned) {
             lastFutureReturned.cancelAll(true);
         }
         immediateAbortAll();
@@ -1313,24 +1338,27 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private void saveJTable(File f, JTable jtable) throws IOException {
-        try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT)) {
             TableModel tm = jtable.getModel();
             for (int i = 0; i < tm.getRowCount(); i++) {
+                List<Object> l = new ArrayList<>();
                 for (int j = 0; j < tm.getColumnCount(); j++) {
+                    if (j == 3) {
+                        continue;
+                    }
                     Object o = tm.getValueAt(i, j);
                     if (o instanceof File) {
-                        Path rel = f.getParentFile().toPath().toRealPath().relativize(((File) o).toPath());
+                        Path rel = f.getParentFile().toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
                         if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
-                            pw.print(rel);
+                            l.add(rel);
                         } else {
-                            pw.print(o);
+                            l.add(o);
                         }
                     } else {
-                        pw.print(o);
+                        l.add(o);
                     }
-                    pw.print(",");
                 }
-                pw.println();
+                printer.printRecord(l);
             }
         }
     }
@@ -1488,11 +1516,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 int priority = Integer.valueOf(csvRecord.get(0));
                 String fileString = csvRecord.get(3);
                 File propertiesFile = new File(csvRecord.get(3));
-                if (!propertiesFile.exists()) {
-                    File altPropFile = f.toPath().toRealPath().resolve(fileString).toFile();
-                    if (altPropFile.exists()) {
-                        propertiesFile = altPropFile;
-                    }
+                File altPropFile = f.getParentFile().toPath().toRealPath().resolve(fileString).toFile();
+                if (altPropFile.exists()) {
+                    propertiesFile = altPropFile;
                 }
                 AprsJFrame aj = new AprsJFrame(propertiesFile);
                 aj.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

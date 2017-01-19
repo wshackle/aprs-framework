@@ -1,16 +1,15 @@
 #
-#Thu Jan 19 11:37:43 EST 2017
+#Thu Jan 19 12:09:41 EST 2017
 startup.pddl.objectview=true
 startup.pddl.planner=true
 startup.pddl.objectsp=true
+aprs.robotName=Simulated
 startup.pddl.executor=true
-aprs.robotName=Sim_Fanuc
 startup.robotcrclclient=true
 startup.robotcrclmotomanserver=false
 startup.exploreGraphDb=false
 startup.crclWebApp=false
 startup.connectvision=true
-aprs.taskName=Fanuc Cart
 crclWebApp.httpPort=8081
 startup.robotcrclsimserver=true
 startup.robotcrclfanucserver=false

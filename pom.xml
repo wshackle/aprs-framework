@@ -130,6 +130,7 @@
                     <include>**/*.properties</include>
                     <include>**/*.xml</include>
                     <include>**/*.txt</include>
+                    <include>**/*.jpeg</include>
                 </includes>
             </resource>
             <resource>

@@ -1,5 +1,5 @@
 #
-#Wed Jan 18 15:01:18 EST 2017
+#Thu Jan 19 11:29:59 EST 2017
 lookDwellTime=3.0
 approachZOffset=50.0
 manualPartNames=[null, null, null, null, null]
@@ -9,4 +9,4 @@ fastTransSpeed=200.0
 settleDwellTime=0.1
 rpy=175.0,0.0,0.0
 lookForXYZ=0.0,0.0,0.0
-pddl.output=/mnt/ubuntu/home/shackle/aprs-framework/example_pddl/dec_13_2016_motoman_demo_actions.txt
+pddl.output=../../../example_pddl/jan_24_2017_motoman_demo_actions.txt

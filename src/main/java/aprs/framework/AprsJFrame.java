@@ -1718,6 +1718,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     @Override
     public void saveProperties() throws IOException {
         File propsParent = propertiesFile.getParentFile();
+        if(propsParent == null) {
+            System.err.println("propertiesFile.getParentFile() returned null : propertiesFile="+propertiesFile);
+            return;
+        }
         if (!propsParent.exists()) {
             System.out.println("Directory " + propsParent + " does not exist. (Creating it now.)");
             propsParent.mkdirs();
@@ -1906,7 +1910,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     @Override
     public final void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
+        if(null == propertiesFile) {
+            System.err.println("propertiesFile == null");
+            return;
+        }
         propertiesDirectory = propertiesFile.getParentFile();
+        if(null == propertiesDirectory) {
+            System.err.println("propertiesFile.getParentFile() returned null : propertiesFile="+propertiesFile);
+            return;
+        }
         if (!propertiesDirectory.exists()) {
             try {
                 System.out.println("Directory " + propertiesDirectory.getCanonicalPath() + " does not exist. (Creating it now!)");
