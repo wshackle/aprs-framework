@@ -1098,7 +1098,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return ret;
     }
 
-    private static String makeShortPath(File f, String str)  {
+    private static String makeShortPath(File f, String str) {
         try {
             String canString = new File(str).getCanonicalPath();
             String relString = Paths.get(f.getParentFile().getCanonicalPath()).relativize(Paths.get(canString)).toString();
@@ -2417,6 +2417,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
+    public static XFuture<Boolean> ifOk(boolean ok, Supplier<XFuture<Boolean>> thenSupplier) {
+        return ok ? thenSupplier.get() : XFuture.completedFuture(false);
+    }
+
     private XFuture<Boolean> recursiveApplyGenerateCrcl(boolean prevSuccess) {
         if (prevSuccess) {
             try {
@@ -2438,7 +2442,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private XFuture<Boolean> generateCrcl() throws IOException, IllegalStateException, SQLException {
         boolean doSafeAbort;
-        XFuture<Boolean> future = new XFuture<>();
+
         synchronized (this) {
             if (safeAbortRequested && null == currentPart) {
                 safeAbortRequested = false;
@@ -2456,74 +2460,82 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     r.run();
                 }
             }
-            future.complete(false);
-            return future;
+            return XFuture.completedFuture(false);
         }
-        checkDbSupplierPublisher().thenCompose(x -> {
-            return Utils.supplyOnDispatchThread(() -> {
+        return checkDbSupplierPublisher()
+                .thenCompose(x -> {
+                    return Utils.supplyOnDispatchThread(() -> {
+                        return doPddlActionsSection();
+                    });
+                }).thenCompose(x -> x);
+    }
 
-                try {
-                    Map<String, String> options = getTableOptions();
-                    if (replanFromIndex < 0 || replanFromIndex > actionsList.size()) {
-                        replanFromIndex = 0;
-                    }
-                    pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
-                    crclStartActionIndex = this.replanFromIndex;
-                    currentActionIndex = crclStartActionIndex;
-                    if (null != aprsJFrame) {
-                        aprsJFrame.updateTitle();
-                    }
-                    List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(actionsList, this.replanFromIndex, options);
-                    int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
-                    indexes = Arrays.copyOf(indexes, indexes.length);
-                    setCrclIndexes(indexes);
-                    setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
-                    setPddlTakenParts(pddlActionToCrclGenerator.getActionToCrclTakenPartsNames());
-                    CRCLProgramType program = createEmptyProgram();
-                    program.setName("pddl_" + replanFromIndex + "_" + pddlActionToCrclGenerator.getLastIndex());
-                    lastCrclProgName = crclProgName;
-                    crclProgName = program.getName();
-                    boolean replanAfterCrclBlock = false;
-                    crclEndActionIndex = pddlActionToCrclGenerator.getLastIndex();
-                    if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size() - 1) {
-                        setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
-                        replanAfterCrclBlock = jCheckBoxReplan.isSelected();
-                    } else {
-                        setReplanFromIndex(actionsList.size() - 1);
-                    }
-                    jTextFieldIndex.setText(Integer.toString(replanFromIndex));
-                    program.getMiddleCommand().clear();
-                    program.getMiddleCommand().addAll(cmds);
-                    program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
-                    if (autoStart) {
-                        if (replanAfterCrclBlock) {
-                            return startCrclProgram(program)
-                                    .thenCompose(this::recursiveApplyGenerateCrcl);
-                        } else {
-                            return startCrclProgram(program).thenApply(x2 -> {
-                                runProgramCompleteRunnables();
-                                return x2;
-                            });
-                        }
-                    } else {
-                        setCrclProgram(program);
-                    }
-                } catch (Exception ex) {
-                    Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                    showExceptionInProgram(ex);
-                    XFuture<Boolean> ret = new XFuture<Boolean>();
-                    ret.completeExceptionally(ex);
-                    return ret;
-                } finally {
-                    started = autoStart;
-                    replanStarted.set(false);
+    private CRCLProgramType pddlActionSectionToCrcl() throws IllegalStateException, SQLException {
+        Map<String, String> options = getTableOptions();
+        if (replanFromIndex < 0 || replanFromIndex > actionsList.size()) {
+            replanFromIndex = 0;
+        }
+        pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
+        crclStartActionIndex = this.replanFromIndex;
+        currentActionIndex = crclStartActionIndex;
+        if (null != aprsJFrame) {
+            aprsJFrame.updateTitle();
+        }
+        List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(actionsList, this.replanFromIndex, options);
+        int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
+        indexes = Arrays.copyOf(indexes, indexes.length);
+        setCrclIndexes(indexes);
+        setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
+        setPddlTakenParts(pddlActionToCrclGenerator.getActionToCrclTakenPartsNames());
+        CRCLProgramType program = createEmptyProgram();
+        program.setName("pddl_" + replanFromIndex + "_" + pddlActionToCrclGenerator.getLastIndex());
+        lastCrclProgName = crclProgName;
+        crclProgName = program.getName();
+        crclEndActionIndex = pddlActionToCrclGenerator.getLastIndex();
+        if (pddlActionToCrclGenerator.getLastIndex() < actionsList.size() - 1) {
+            setReplanFromIndex(pddlActionToCrclGenerator.getLastIndex() + 1);
+//            replanAfterCrclBlock = jCheckBoxReplan.isSelected();
+        } else {
+            setReplanFromIndex(actionsList.size() - 1);
+        }
+        jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+        program.getMiddleCommand().clear();
+        program.getMiddleCommand().addAll(cmds);
+        program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        return program;
+    }
+
+    private XFuture<Boolean> doPddlActionsSection() {
+        try {
+            CRCLProgramType program = pddlActionSectionToCrcl();
+            
+            if (autoStart) {
+                boolean replanAfterCrclBlock = 
+                    pddlActionToCrclGenerator.getLastIndex() < actionsList.size() - 1
+                    && jCheckBoxReplan.isSelected();
+                if (replanAfterCrclBlock) {
+                    return startCrclProgram(program)
+                            .thenCompose(this::recursiveApplyGenerateCrcl);
+                } else {
+                    return startCrclProgram(program).thenApply(x2 -> {
+                        runProgramCompleteRunnables();
+                        return x2;
+                    });
                 }
-                XFuture<Boolean> ret = new XFuture<Boolean>();
-                ret.complete(false);
-                return ret;
-            });
-        });
-        return future;
+            } else {
+                setCrclProgram(program);
+            }
+        } catch (IllegalStateException | SQLException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            showExceptionInProgram(ex);
+            XFuture<Boolean> ret = new XFuture<>();
+            ret.completeExceptionally(ex);
+            return ret;
+        } finally {
+            started = autoStart;
+            replanStarted.set(false);
+        }
+        return XFuture.completedFuture(false);
     }
 
     private void runProgramCompleteRunnables() {
