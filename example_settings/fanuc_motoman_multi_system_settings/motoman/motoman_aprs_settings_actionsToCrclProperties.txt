@@ -1,5 +1,5 @@
 #
-#Thu Jan 19 15:46:11 EST 2017
+#Mon Jan 23 11:37:12 EST 2017
 lookDwellTime=2.0
 approachZOffset=50.0
 manualPartNames=[kit_lg2small2_2_slot_l2, large_gear_2, large_gear_1, kit_lg2small2_1_slot_s2, small_gear_2, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]
@@ -7,7 +7,7 @@ rotSpeed=30.0
 fastTransSpeed=160
 slowTransSpeed=40
 settleDwellTime=0.2
-rpy=0.0,0.0,0.0
+rpy=180.0,0.0,0.0
 lookDwell=1.0
 defaultDwellTime=0.5
 lookForXYZ=240,435,0
