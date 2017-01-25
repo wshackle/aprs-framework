@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -887,9 +888,26 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 .orElse(Double.POSITIVE_INFINITY);
     }
 
+    private final ArrayList<DetectedItem> prevParts = new ArrayList<>();
+    
     public List<DetectedItem> findEmptySlots(List<DetectedItem> slots, List<DetectedItem> parts) {
+        long timestamp = System.currentTimeMillis();
+        for (int i = 0; i < prevParts.size(); i++) {
+            DetectedItem prevPart = prevParts.get(i);
+            if(timestamp - prevPart.timestamp > 10000) {
+                prevParts.remove(i);
+                i--;
+                continue;
+            }
+            if(closestDist(prevPart, parts) < 25.0) {
+                prevParts.remove(i);
+                i--;
+                continue;
+            }
+        }
+        prevParts.addAll(parts);
         return slots.stream()
-                .filter(slot -> closestDist(slot, parts) > 25.0 || slot.type.equals("SLOT"))
+                .filter(slot -> closestDist(slot, prevParts) > 25.0 || slot.type.equals("SLOT"))
                 .collect(Collectors.toList());
     }
 
