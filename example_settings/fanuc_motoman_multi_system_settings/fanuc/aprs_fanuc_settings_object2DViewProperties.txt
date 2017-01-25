@@ -1,13 +1,13 @@
 #
-#Thu Jan 19 15:46:05 EST 2017
+#Wed Jan 25 09:23:19 EST 2017
 simulated=false
 --visionport=5001
 showrotations=false
 connected=true
-items=sku_part_large_gear,0.85,660.29,170.86,0.93,P,sku_part_medium_gear,0.0,533.03,-81.45,0.88,P,sku_part_medium_gear,0.0,611.49,-159.36,0.81,P,sku_part_medium_gear,0.0,372.88,-160.43,0.77,P,sku_part_medium_gear,0.0,539.42,78.98,0.5,P,sku_large_gear_vessel,1.52,602.87,170.26,0.68,PT,sku_medium_gear_vessel,0.0,572.05,-119.54,0.69,PT,\n
+items=sku_part_large_gear,0.0,408.02,111.82,0.94,P,sku_part_large_gear,0.0,412.81,-79.11,0.76,P,sku_part_medium_gear,0.0,451.65,-162.97,0.75,P,sku_part_medium_gear,0.0,371.32,19.07,0.68,P,sku_part_medium_gear,0.0,371.97,-162.84,0.63,P,sku_large_gear_vessel,0.0,599.53,200.06,1.0,PT,sku_medium_gear_vessel,0.0,570.02,-119.06,1.0,PT,sku_medium_gear_vessel,-0.01,584.0,55.97,0.97,PT,sku_kit_m2l1_vessel,0.0,412.95,-112.33,0.93,KT,\n
 trackcurrentpos=true
---visionhost=ultraman.el.nist.gov
-displayAxis=NEG_Y_POS_X
-xminymin=200.0, -500.0
+--visionhost=agility.el.nist.gov
+displayAxis=POS_Y_NEG_X
+xminymin=200.0, -200.0
 datafile=fanuc_cart_objects_capture_jan_11_2017_combined_modified.csv
-xmaxymax=700.0, 200.0
+xmaxymax=700.0, 500.0

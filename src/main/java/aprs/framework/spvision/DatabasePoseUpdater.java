@@ -839,6 +839,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
         }
         return ret;
     }
+    
+    public double normAngle(double angleIn) {
+        double angleOut = angleIn;
+        if(angleOut > Math.PI) {
+            angleOut -= 2*Math.PI*((int)(angleIn/Math.PI));
+        } else if(angleOut < -Math.PI) {
+            angleOut += 2*Math.PI*((int)(-1.0*angleIn/Math.PI));
+        }
+        return angleOut;
+    }
 
     public List<DetectedItem> getSlots(DetectedItem tray) {
         List<DetectedItem> offsets = getSlotOffsets(tray);
@@ -853,14 +863,17 @@ public class DatabasePoseUpdater implements AutoCloseable {
             String name = offsetItem.fullName;
             double x = offsetItem.x;
             double y = offsetItem.y;
+            double angle = normAngle(tray.rotation+Math.PI/2);
+            
             DetectedItem item = new DetectedItem(name, 0,
-                    tray.x + x * Math.cos(tray.rotation) - y * Math.sin(tray.rotation),
-                    tray.y + x * Math.sin(tray.rotation) + y * Math.cos(tray.rotation)
+                    tray.x + x * Math.cos(angle) - y * Math.sin(angle),
+                    tray.y + x * Math.sin(angle) + y * Math.cos(angle)
             );
             item.type = "SLOT";
+            ret.add(item);
             item = new DetectedItem("empty_slot_for_" + sku_name + "_in_" + tray_name, 0,
-                    tray.x + x * Math.cos(tray.rotation) - y * Math.sin(tray.rotation),
-                    tray.y + x * Math.sin(tray.rotation) + y * Math.cos(tray.rotation));
+                    tray.x + x * Math.cos(angle) - y * Math.sin(angle),
+                    tray.y + x * Math.sin(angle) + y * Math.cos(angle));
             item.type = "EMPTY_SLOT";
             ret.add(item);
         }
@@ -876,7 +889,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     public List<DetectedItem> findEmptySlots(List<DetectedItem> slots, List<DetectedItem> parts) {
         return slots.stream()
-                .filter(slot -> closestDist(slot, parts) > 25.0)
+                .filter(slot -> closestDist(slot, parts) > 25.0 || slot.type.equals("SLOT"))
                 .collect(Collectors.toList());
     }
 

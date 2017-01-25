@@ -1,8 +1,8 @@
 #
-#Thu Jan 19 15:46:05 EST 2017
+#Wed Jan 25 10:19:23 EST 2017
 lookDwellTime=2.0
 approachZOffset=50.0
-manualPartNames=[kit_lg1med2_1_slot_m2, empty_slot_for_medium_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]
+manualPartNames=[empty_slot_for_large_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m2, empty_slot_for_medium_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]
 rotSpeed=30.0
 fastTransSpeed=160.0
 slowTransSpeed=40
@@ -11,4 +11,4 @@ rpy=180.0,0.0,0.0
 lookDwell=1.0
 defaultDwellTime=0.1
 lookForXYZ=190,130,200
-pddl.output=..\\..\\..\\example_pddl\\jan_24_2017_fanuc_demo_actions_in2.txt
+pddl.output=..\\..\\..\\example_pddl\\jan_26_2017_fanuc_demo_actions.txt

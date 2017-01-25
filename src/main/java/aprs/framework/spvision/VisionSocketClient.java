@@ -244,6 +244,7 @@ public class VisionSocketClient implements AutoCloseable {
                     }
                     continue;
                 }
+//                ci.rotation = Math.toRadians(ci.rotation);
                 if (fa[i + 2].length() < 1) {
                     continue;
                 }
