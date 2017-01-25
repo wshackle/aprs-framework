@@ -1740,8 +1740,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         item.z = Double.valueOf(jTableFromVision.getValueAt(row, 6).toString());
         item.score = Double.valueOf(jTableFromVision.getValueAt(row, 7).toString());
         item.type = (String) jTableFromVision.getValueAt(row, 8);
-        item.insideKitTray = (Boolean) jTableFromVision.getValueAt(row, 9);
-        item.insidePartsTray = (Boolean) jTableFromVision.getValueAt(row, 10);
+        item.insidePartsTray = (Boolean) jTableFromVision.getValueAt(row, 9);
+        item.insideKitTray = (Boolean) jTableFromVision.getValueAt(row, 10);
         item.fullName = (String) jTableFromVision.getValueAt(row, 11);
         System.out.println("item = " + item);
         List<DetectedItem> singletonList = Collections.singletonList(item);

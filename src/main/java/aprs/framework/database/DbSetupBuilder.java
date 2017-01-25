@@ -23,6 +23,7 @@
 package aprs.framework.database;
 
 import aprs.framework.spvision.VisionToDBJPanel;
+import crcl.ui.XFuture;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -39,7 +40,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -661,18 +661,18 @@ public class DbSetupBuilder {
         }
     }
 
-    public CompletableFuture<Connection>  connect() throws SQLException {
+    public XFuture<Connection>  connect() throws SQLException {
         return connect(this.build());
     }
 
-    public static CompletableFuture<Connection>  connect(DbSetup setup) throws SQLException {
+    public static XFuture<Connection>  connect(DbSetup setup) throws SQLException {
         return setupConnection(setup.getDbType(), setup.getHost(), setup.getPort(), setup.getDbName(), setup.getDbUser(), new String(setup.getDbPassword()),setup.isDebug(), setup.getLoginTimeout());
     }
 
     public static final int DEFAULT_LOGIN_TIMEOUT = 5; // in seconds 
     
-    public static CompletableFuture<Connection> setupConnection(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) throws SQLException {
-        CompletableFuture<Connection> ret = new CompletableFuture<>();
+    public static XFuture<Connection> setupConnection(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) throws SQLException {
+        XFuture<Connection> ret = new XFuture<>();
         new Thread(() -> {
             Connection conn;
             try {
@@ -684,7 +684,7 @@ public class DbSetupBuilder {
         }, "connectionSetupThread").start();
         return ret;
         
-//        return CompletableFuture. -> {
+//        return XFuture. -> {
 //            try {
 //                return setupConnectionPriv(dbtype,host,port,db,username,password,debug);
 //            } catch (SQLException ex) {

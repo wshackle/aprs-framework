@@ -37,6 +37,7 @@ public enum DbQueryEnum {
     DELETE_SINGLE_POSE,
     SET_SINGLE_PT_POSE,
     SET_SINGLE_KT_POSE,
-    GET_TRAY_SLOTS
+    GET_TRAY_SLOTS,
+    PRE_VISION_CLEAN_DB
     ;
 }

@@ -31,6 +31,7 @@ import static aprs.framework.database.DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.PoseQueryElem;
+import crcl.ui.XFuture;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -45,7 +46,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
@@ -64,6 +64,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private Connection con;
     private PreparedStatement update_statement;
+    private PreparedStatement pre_vision_clean_statement;
     private PreparedStatement get_tray_slots_statement;
     private PreparedStatement update_parts_tray_statement;
     private PreparedStatement update_kit_tray_statement;
@@ -280,6 +281,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private String querySingleString;
     private String queryDeleteSinglePoseString;
     private String updateStatementString;
+    private String preVisionCleanStatementString;
     private String updatePartsTrayStatementString;
     private String updateKitTrayStatementString;
     private String getTraySlotsQueryString;
@@ -311,6 +313,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                + " where _NAME = ? ) )");
 //                mergeStatementString = MYSQL_UPDATE_STRING;
 //                queryAllString = MYSQL_QUERY_ALL_STRING;
+                preVisionCleanStatementString = queriesMap.get(DbQueryEnum.PRE_VISION_CLEAN_DB).getQuery();
+                if(null != preVisionCleanStatementString) {
+                    pre_vision_clean_statement = con.prepareStatement(preVisionCleanStatementString);
+                }
                 updateStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
                 getTraySlotsQueryString = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getQuery();
                 get_tray_slots_statement = con.prepareStatement(getTraySlotsQueryString);
@@ -343,6 +349,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
             case NEO4J:
                 useBatch = false;
+                preVisionCleanStatementString = queriesMap.get(DbQueryEnum.PRE_VISION_CLEAN_DB).getQuery();
+                if(null != preVisionCleanStatementString) {
+                    pre_vision_clean_statement = con.prepareStatement(preVisionCleanStatementString);
+                }
 //                mergeStatementString = NEO4J_MERGE_STATEMENT_STRING;
 //                queryAllString = NEO4J_QUERY_ALL_POSES_QUERY_STRING;
                 updateStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
@@ -414,7 +424,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //            + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
 //            + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy";
 
-    private CompletableFuture<Void> setupConnection(String host, int port, String db, String username, String password, boolean debug) throws SQLException {
+    private XFuture<Void> setupConnection(String host, int port, String db, String username, String password, boolean debug) throws SQLException {
         switch (dbtype) {
             case MYSQL:
                 useBatch = true;
@@ -984,6 +994,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
             long t0_millis = System.currentTimeMillis();
             int updates = 0;
             synchronized (this) {
+//                con.setAutoCommit(false);
+//                if(null != pre_vision_clean_statement) {
+//                    pre_vision_clean_statement.execute();
+//                }
                 if (delOnUpdate) {
                     for (DetectedItem item : list) {
                         deletePose(item.fullName);
@@ -1174,6 +1188,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     poses_updated += updates;
                 }
             }
+//            con.commit();
+//            con.setAutoCommit(true);
             long t1_nanos = System.nanoTime();
             long t1_millis = System.currentTimeMillis();
             long millis_diff = t1_millis - t0_millis;
@@ -1211,7 +1227,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
             if (null != displayInterface) {
                 displayInterface.updateResultsMap(updateResultsMap);
             }
-        }
+        } 
         return returnedList;
     }
 
@@ -1524,8 +1540,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private final ExecutorService pqExecServ = Executors.newSingleThreadExecutor();
 
-    public CompletableFuture<List<PoseQueryElem>> queryDatabase() throws InterruptedException, ExecutionException {
-        return CompletableFuture.supplyAsync(() -> Collections.unmodifiableList(getDirectPoseList()), pqExecServ);
+    public XFuture<List<PoseQueryElem>> queryDatabase() throws InterruptedException, ExecutionException {
+        return XFuture.supplyAsync(() -> Collections.unmodifiableList(getDirectPoseList()), pqExecServ);
 //                    new Runnable() {
 //
 //                @Override
