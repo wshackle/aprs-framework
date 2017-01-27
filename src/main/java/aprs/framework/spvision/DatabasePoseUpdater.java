@@ -296,134 +296,56 @@ public class DatabasePoseUpdater implements AutoCloseable {
         switch (dbtype) {
             case MYSQL:
                 useBatch = true;
-//        con.prepareStatement("update MyTable set questions=? where type = ?").
-//                .setString(1,qs.toString())
-//                .setString(2,type));
-//        update_point_stmt = con.prepareStatement("update Point set hasPoint_X = ?, hasPoint_Y = ?"
-//                + " where _NAME = ("
-//                + " select hasPoseLocation_Point from PoseLocation"
-//                + " where _NAME =  ("
-//                + "  select hasSolidObject_PrimaryLocation from SolidObject"
-//                + " where _NAME = ? ) )");
-//        update_rotation_stmt = con.prepareStatement("update Vector set hasVector_I = ?, hasVector_J = ?"
-//                + " where _NAME = ("
-//                + " select hasPoseLocation_XAxis from PoseLocation "
-//                + " where _NAME =  ("
-//                + " select hasSolidObject_PrimaryLocation from SolidObject"
-//                + " where _NAME = ? ) )");
-//                mergeStatementString = MYSQL_UPDATE_STRING;
-//                queryAllString = MYSQL_QUERY_ALL_STRING;
-                preVisionCleanStatementString = queriesMap.get(DbQueryEnum.PRE_VISION_CLEAN_DB).getQuery();
-                if(null != preVisionCleanStatementString) {
-                    pre_vision_clean_statement = con.prepareStatement(preVisionCleanStatementString);
-                }
-                updateStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
-                getTraySlotsQueryString = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getQuery();
-                get_tray_slots_statement = con.prepareStatement(getTraySlotsQueryString);
-                queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
-                update_statement = con.prepareStatement(updateStatementString);
-                updateKitTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_KT_POSE).getQuery();
-                if (updateKitTrayStatementString != null && updateKitTrayStatementString.length() > 0) {
-                    update_kit_tray_statement = con.prepareStatement(updateKitTrayStatementString);
-                } else {
-                    update_kit_tray_statement = update_statement;
-                    updateKitTrayStatementString = updateStatementString;
-                }
-                updatePartsTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_PT_POSE).getQuery();
-                if (updateKitTrayStatementString != null && updateKitTrayStatementString.length() > 0) {
-                    update_parts_tray_statement = con.prepareStatement(updatePartsTrayStatementString);
-                } else {
-                    update_parts_tray_statement = update_statement;
-                    updatePartsTrayStatementString = updateStatementString;
-                }
-                updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
-                getTraySlotsParamTypes = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getParams();
-                query_all_statement = con.prepareStatement(queryAllString);
-                querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
-                queryDeleteSinglePoseString = queriesMap.get(DbQueryEnum.DELETE_SINGLE_POSE).getQuery();
-                get_single_statement = con.prepareStatement(querySingleString);
-                getSingleParamTypes = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getParams();
-
-//                updateParamTypes = MYSQL_UPDATE_PARAM_TYPES;
                 break;
 
             case NEO4J:
                 useBatch = false;
-                preVisionCleanStatementString = queriesMap.get(DbQueryEnum.PRE_VISION_CLEAN_DB).getQuery();
-                if(null != preVisionCleanStatementString) {
-                    pre_vision_clean_statement = con.prepareStatement(preVisionCleanStatementString);
-                }
-//                mergeStatementString = NEO4J_MERGE_STATEMENT_STRING;
-//                queryAllString = NEO4J_QUERY_ALL_POSES_QUERY_STRING;
-                updateStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
-                //System.out.println("mergeStatementString ---> "+mergeStatementString);
-                queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
-                update_statement = con.prepareStatement(updateStatementString);
-                getTraySlotsParamTypes = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getParams();
-
-                getTraySlotsQueryString = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getQuery();
-                get_tray_slots_statement = con.prepareStatement(getTraySlotsQueryString);
-
-//                addnew_statement = con.prepareStatement(db);
-                query_all_statement = con.prepareStatement(queryAllString);
-                updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
-                querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
-                queryDeleteSinglePoseString = queriesMap.get(DbQueryEnum.DELETE_SINGLE_POSE).getQuery();
-                get_single_statement = con.prepareStatement(querySingleString);
-                getSingleParamTypes = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getParams();
-                updateKitTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_KT_POSE).getQuery();
-                if (updateKitTrayStatementString != null && updateKitTrayStatementString.length() > 0) {
-                    update_kit_tray_statement = con.prepareStatement(updateKitTrayStatementString);
-                } else {
-                    update_kit_tray_statement = update_statement;
-                    updateKitTrayStatementString = updateStatementString;
-                }
-                updatePartsTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_PT_POSE).getQuery();
-                if (updateKitTrayStatementString != null && updateKitTrayStatementString.length() > 0) {
-                    update_parts_tray_statement = con.prepareStatement(updatePartsTrayStatementString);
-                } else {
-                    update_parts_tray_statement = update_statement;
-                    updatePartsTrayStatementString = updateStatementString;
-                }
-//                updateParamTypes = NEO4J_MERGE_STATEMENT_PARAM_TYPES;
                 break;
-
-//            case NEO4J_BOLT:
-//                neo4jJavaDriver = GraphDatabase.driver("bolt://" + host,
-//                        AuthTokens.basic(username, password),
-//                        Config.build().withEncryptionLevel(Config.EncryptionLevel.NONE).toConfig());
-//                
-//                neo4jSession = neo4jJavaDriver.session();
-//                break;
-//            case NEO4J_BOLT:
-//                neo4jJavaDriver = GraphDatabase.driver("bolt://" + host,
-//                        AuthTokens.basic(username, password),
-//                        Config.build().withEncryptionLevel(Config.EncryptionLevel.NONE).toConfig());
-//                
-//                neo4jSession = neo4jJavaDriver.session();
-//                break;
-//            case NEO4J_BOLT:
-//                neo4jJavaDriver = GraphDatabase.driver("bolt://" + host,
-//                        AuthTokens.basic(username, password),
-//                        Config.build().withEncryptionLevel(Config.EncryptionLevel.NONE).toConfig());
-//                
-//                neo4jSession = neo4jJavaDriver.session();
-//                break;
-//            case NEO4J_BOLT:
-//                neo4jJavaDriver = GraphDatabase.driver("bolt://" + host,
-//                        AuthTokens.basic(username, password),
-//                        Config.build().withEncryptionLevel(Config.EncryptionLevel.NONE).toConfig());
-//                
-//                neo4jSession = neo4jJavaDriver.session();
-//                break;
+        }
+        preVisionCleanStatementString = queriesMap.get(DbQueryEnum.PRE_VISION_CLEAN_DB).getQuery();
+        if (null != preVisionCleanStatementString) {
+            pre_vision_clean_statement = con.prepareStatement(preVisionCleanStatementString);
+        }
+        updateStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
+        getTraySlotsQueryString = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getQuery();
+        get_tray_slots_statement = con.prepareStatement(getTraySlotsQueryString);
+        queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
+        update_statement = con.prepareStatement(updateStatementString);
+        updateKitTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_KT_POSE).getQuery();
+        if (updateKitTrayStatementString != null && updateKitTrayStatementString.length() > 0) {
+            update_kit_tray_statement = con.prepareStatement(updateKitTrayStatementString);
+        } else {
+            update_kit_tray_statement = update_statement;
+            updateKitTrayStatementString = updateStatementString;
+        }
+        updatePartsTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_PT_POSE).getQuery();
+        if (updateKitTrayStatementString != null && updateKitTrayStatementString.length() > 0) {
+            update_parts_tray_statement = con.prepareStatement(updatePartsTrayStatementString);
+        } else {
+            update_parts_tray_statement = update_statement;
+            updatePartsTrayStatementString = updateStatementString;
+        }
+        updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
+        
+        getTraySlotsParamTypes = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getParams();
+        
+        query_all_statement = con.prepareStatement(queryAllString);
+        querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
+        queryDeleteSinglePoseString = queriesMap.get(DbQueryEnum.DELETE_SINGLE_POSE).getQuery();
+        get_single_statement = con.prepareStatement(querySingleString);
+        getSingleParamTypes = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getParams();
+        if (null == getSingleParamTypes) {
+            throw new IllegalStateException("Queries Map does not have param types for GET_SINGLE_POSE.");
+        }
+        if (null == updateParamTypes) {
+            throw new IllegalStateException("Queries Map does not have param types for SET_SINGLE_POSE.");
+        }
+        if (null == getTraySlotsParamTypes) {
+            throw new IllegalStateException("Queries Map does not have param types for GET_TRAY_SLOTS.");
         }
     }
-//    private static final String MYSQL_QUERY_ALL_STRING = "select name,X,Y,Z,VXX,VXY from DirectPose";
-//    private static final String NEO4J_QUERY_ALL_POSES_QUERY_STRING = "MATCH pointpath=(source) -[:hasPhysicalLocation_RefObject]-> (n) -[r2] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
-//            + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
-//            + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
-//            + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy";
 
+    
     private XFuture<Void> setupConnection(String host, int port, String db, String username, String password, boolean debug) throws SQLException {
         switch (dbtype) {
             case MYSQL:
@@ -850,18 +772,18 @@ public class DatabasePoseUpdater implements AutoCloseable {
         }
         return ret;
     }
-    
+
     public double normAngle(double angleIn) {
         double angleOut = angleIn;
-        if(angleOut > Math.PI) {
-            angleOut -= 2*Math.PI*((int)(angleIn/Math.PI));
-        } else if(angleOut < -Math.PI) {
-            angleOut += 2*Math.PI*((int)(-1.0*angleIn/Math.PI));
+        if (angleOut > Math.PI) {
+            angleOut -= 2 * Math.PI * ((int) (angleIn / Math.PI));
+        } else if (angleOut < -Math.PI) {
+            angleOut += 2 * Math.PI * ((int) (-1.0 * angleIn / Math.PI));
         }
         return angleOut;
     }
 
-        private double rotationOffset = 0.0;
+    private double rotationOffset = 0.0;
 
     /**
      * Get the value of rotationOffset
@@ -894,8 +816,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
             String name = offsetItem.fullName;
             double x = offsetItem.x;
             double y = offsetItem.y;
-            double angle = normAngle(tray.rotation+rotationOffset);
-            
+            double angle = normAngle(tray.rotation + rotationOffset);
+
             DetectedItem item = new DetectedItem(name, 0,
                     tray.x + x * Math.cos(angle) - y * Math.sin(angle),
                     tray.y + x * Math.sin(angle) + y * Math.cos(angle)
@@ -919,17 +841,17 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     private final ArrayList<DetectedItem> prevParts = new ArrayList<>();
-    
+
     public List<DetectedItem> findEmptySlots(List<DetectedItem> slots, List<DetectedItem> parts) {
         long timestamp = System.currentTimeMillis();
         for (int i = 0; i < prevParts.size(); i++) {
             DetectedItem prevPart = prevParts.get(i);
-            if(timestamp - prevPart.timestamp > 10000) {
+            if (timestamp - prevPart.timestamp > 10000) {
                 prevParts.remove(i);
                 i--;
                 continue;
             }
-            if(closestDist(prevPart, parts) < 25.0) {
+            if (closestDist(prevPart, parts) < 25.0) {
                 prevParts.remove(i);
                 i--;
                 continue;
@@ -961,16 +883,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public List<DetectedItem> addEmptyTraySlots(List<DetectedItem> list) {
         List<DetectedItem> partsTrays
                 = list.stream()
-                .filter((DetectedItem item) -> "PT".equals(item.type))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "PT".equals(item.type))
+                        .collect(Collectors.toList());
         List<DetectedItem> kitTrays
                 = list.stream()
-                .filter((DetectedItem item) -> "KT".equals(item.type))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "KT".equals(item.type))
+                        .collect(Collectors.toList());
         List<DetectedItem> parts
                 = list.stream()
-                .filter((DetectedItem item) -> "P".equals(item.type))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "P".equals(item.type))
+                        .collect(Collectors.toList());
         List<DetectedItem> fullList = new ArrayList<>();
         fullList.addAll(list);
         List<DetectedItem> emptySlots = findAllEmptyTraySlots(kitTrays, parts);
@@ -984,12 +906,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
         try {
             List<DetectedItem> partsTrays
                     = list.stream()
-                    .filter((DetectedItem item) -> "PT".equals(item.type))
-                    .collect(Collectors.toList());
+                            .filter((DetectedItem item) -> "PT".equals(item.type))
+                            .collect(Collectors.toList());
             List<DetectedItem> kitTrays
                     = list.stream()
-                    .filter((DetectedItem item) -> "KT".equals(item.type))
-                    .collect(Collectors.toList());
+                            .filter((DetectedItem item) -> "KT".equals(item.type))
+                            .collect(Collectors.toList());
             long t0_nanos = System.nanoTime();
             long t0_millis = System.currentTimeMillis();
             int updates = 0;
@@ -1227,7 +1149,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
             if (null != displayInterface) {
                 displayInterface.updateResultsMap(updateResultsMap);
             }
-        } 
+        }
         return returnedList;
     }
 
@@ -1449,6 +1371,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     private List<Object> poseParamsToStatement(DetectedItem item, DbParamTypeEnum paramTypes[], PreparedStatement stmnt) throws SQLException {
+        if (null == paramTypes) {
+            throw new IllegalArgumentException("paramTypes is null");
+        }
+        if (null == stmnt) {
+            throw new IllegalArgumentException("stmnt is null");
+        }
         ArrayList<Object> params = new ArrayList<>();
         for (int i = 0; i < paramTypes.length; i++) {
             DbParamTypeEnum paramTypeEnum = paramTypes[i];
