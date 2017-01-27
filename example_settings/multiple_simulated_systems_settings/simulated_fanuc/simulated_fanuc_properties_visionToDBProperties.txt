@@ -1,13 +1,16 @@
 #
-#Fri Jan 27 11:32:15 EST 2017
+#Fri Jan 27 16:46:08 EST 2017
 NEO4J.localhost_4000.name=neo4j
+NEO4J.ying-220.mxnet.mel.nist.gov_7494.passwd=password
 --dbport=7494
+NEO4J.ying-220.mxnet.mel.nist.gov_7494.name=neo4j
 NEO4J.localhost_4000.passwd=
 NEO4J.localhost_7486.passwd=password
 NEO4J.localhost_4000.user=neo4j
 --visionport=4000
 --commandport=4001
 --dbtype=NEO4J
+NEO4J.ying-220.mxnet.mel.nist.gov_7494.user=neo4j
 transform.xaxis.k=0.0
 transform.xaxis.j=0.0
 transform.zaxis.k=1.0
@@ -15,11 +18,12 @@ transform.xaxis.i=1.0
 transform.zaxis.j=0.0
 NEO4J.localhost_7494.passwd=password
 transform.zaxis.i=0.0
---dbhost=localhost
+--dbhost=ying-220.mxnet.mel.nist.gov
 transform.point.z=-146.0
 transform.point.y=0.0
 transform.point.x=0.0
-NEO4J.host=localhost
+NEO4J.ying-220.mxnet.mel.nist.gov.port=7494
+NEO4J.host=ying-220.mxnet.mel.nist.gov
 NEO4J.localhost_7480.name=neo4j
 --visionhost=localhost
 NEO4J.localhost_7494.name=neo4j
