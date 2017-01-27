@@ -851,6 +851,26 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return angleOut;
     }
 
+        private double rotationOffset = 0.0;
+
+    /**
+     * Get the value of rotationOffset
+     *
+     * @return the value of rotationOffset
+     */
+    public double getRotationOffset() {
+        return rotationOffset;
+    }
+
+    /**
+     * Set the value of rotationOffset
+     *
+     * @param rotationOffset new value of rotationOffset
+     */
+    public void setRotationOffset(double rotationOffset) {
+        this.rotationOffset = rotationOffset;
+    }
+
     public List<DetectedItem> getSlots(DetectedItem tray) {
         List<DetectedItem> offsets = getSlotOffsets(tray);
         List<DetectedItem> ret = new ArrayList<>();
@@ -864,7 +884,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
             String name = offsetItem.fullName;
             double x = offsetItem.x;
             double y = offsetItem.y;
-            double angle = normAngle(tray.rotation+Math.PI/2);
+            double angle = normAngle(tray.rotation+rotationOffset);
             
             DetectedItem item = new DetectedItem(name, 0,
                     tray.x + x * Math.cos(angle) - y * Math.sin(angle),

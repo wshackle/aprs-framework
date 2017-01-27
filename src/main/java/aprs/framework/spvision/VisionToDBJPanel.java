@@ -219,6 +219,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jTableTransform = new javax.swing.JTable();
         jLabel3 = new javax.swing.JLabel();
         jTextFieldPerformance = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        jTextFieldRotationOffset = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextAreaLog = new javax.swing.JTextArea();
         jLabel11 = new javax.swing.JLabel();
@@ -373,6 +375,15 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
         jTextFieldPerformance.setEditable(false);
 
+        jLabel4.setText("Rotation Offset");
+
+        jTextFieldRotationOffset.setText("0.0");
+        jTextFieldRotationOffset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldRotationOffsetActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -411,13 +422,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                             .addComponent(jButtonDisconnectVision, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jTextFieldVisionPort)
                             .addComponent(jTextFieldVisionHost)))
+                    .addComponent(jTextFieldPerformance)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jCheckBoxAddRepeatCountsToDatabaseNames)
                             .addComponent(jLabel2)
                             .addComponent(jLabel3))
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jTextFieldPerformance))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
 
@@ -478,8 +493,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel3)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextFieldPerformance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -577,7 +596,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jScrollPaneTableFromDatabase, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(jPanelTableFromDatabaseLayout.createSequentialGroup()
                         .addComponent(jLabel20)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 23, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 31, Short.MAX_VALUE)
                         .addComponent(jButtonCsvFromDatabase)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonDelete)
@@ -816,7 +835,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jSpinnerLogLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 39, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -953,6 +972,15 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 model.setValueAt(zk, 2, 3);
             }
 
+            String rotationOffsetString = _argsMap.get("rotationOffset");
+            if (null != rotationOffsetString) {
+                double ro = Double.valueOf(rotationOffsetString);
+                jTextFieldRotationOffset.setText(Double.toString(ro));
+                if (null != dpu) {
+                    dpu.setRotationOffset(ro);
+                }
+            }
+
         } finally {
             updatingFromArgs = false;
         }
@@ -1037,7 +1065,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     System.err.println("bad ci fullname " + ci);
                 }
                 if (tm.getRowCount() <= i) {
-                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y,ci.z, ci.score, ci.type, ci.insidePartsTray, ci.insideKitTray, ci.fullName, ci.setQuery});
+                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.z, ci.score, ci.type, ci.insidePartsTray, ci.insideKitTray, ci.fullName, ci.setQuery});
                     continue;
                 }
                 tm.setValueAt(ci.index, i, 0);
@@ -1190,6 +1218,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     type,
                     queriesMap,
                     isDebug());
+            double ro = Math.toRadians(Double.valueOf(jTextFieldRotationOffset.getText()));
+            if (null != dpu) {
+                dpu.setRotationOffset(ro);
+            }
             setDBConnected(true);
         } catch (Exception exception) {
 
@@ -1678,6 +1710,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }//GEN-LAST:event_jButtonCsvFromDatabaseActionPerformed
 
+    private void jTextFieldRotationOffsetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldRotationOffsetActionPerformed
+        double ro = Math.toRadians(Double.valueOf(jTextFieldRotationOffset.getText()));
+        if (null != dpu) {
+            dpu.setRotationOffset(ro);
+        }
+    }//GEN-LAST:event_jTextFieldRotationOffsetActionPerformed
+
     public void forceAllUpdates() throws NumberFormatException {
         try {
             DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
@@ -1756,6 +1795,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
@@ -1785,6 +1825,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JTextField jTextFieldPerformance;
     private javax.swing.JTextField jTextFieldPoseUpdatesParsed;
     private javax.swing.JTextField jTextFieldPoseUpdatesProcessed;
+    private javax.swing.JTextField jTextFieldRotationOffset;
     private javax.swing.JTextField jTextFieldVisionHost;
     private javax.swing.JTextField jTextFieldVisionPort;
     // End of variables declaration//GEN-END:variables
@@ -1843,7 +1884,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     Boolean.toString(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected()));
             props.put("--visionport", jTextFieldVisionPort.getText());
             props.put("--visionhost", jTextFieldVisionHost.getText());
-
+            props.put("rotationOffset", jTextFieldRotationOffset.getText());
             try (FileWriter fw = new FileWriter(propertiesFile)) {
                 props.store(fw, "");
             } catch (IOException ex) {

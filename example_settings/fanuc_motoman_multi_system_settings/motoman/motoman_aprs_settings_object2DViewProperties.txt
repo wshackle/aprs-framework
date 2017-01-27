@@ -1,12 +1,12 @@
 #
-#Mon Jan 23 15:28:50 EST 2017
-simulated=true
---visionport=4001
+#Thu Jan 26 15:21:31 EST 2017
+simulated=false
+--visionport=5002
 showrotations=false
 connected=true
-items=sku_part_large_gear,0.0,547.516,179.732,100.0,P,sku_part_large_gear,0.0,545.5431535396489,73.3820438310616,100.0,P,sku_part_large_gear,0.0,721.891,-386.044,100.0,P,sku_part_large_gear,0.0,721.4105528183426,-272.6924579242381,100.0,P,sku_part_small_gear,0.0,583.347,-58.637,100.0,P,sku_part_small_gear,0.0,583.696,-117.212,100.0,P,sku_part_small_gear,0.0,528.276,-60.407,100.0,P,sku_part_small_gear,0.0,527.216,-116.845,100.0,P,kit_lg2small2_2_slot_l1,0.0,680.667,-161.03,100.0,SLOT,kit_lg2small2_2_slot_l2,0.0,677.549,-50.837,100.0,SLOT,kit_lg2small2_2_slot_s2,0.0,755.532,-45.849,100.0,SLOT,kit_lg2small2_2_slot_s1,0.0,760.962,-159.069,100.0,SLOT,kit_lg2small2_1_slot_l2,0.0,675.213,69.636,100.0,SLOT,kit_lg2small2_1_slot_l1,0.0,679.36,187.826,100.0,SLOT,kit_lg2small2_1_slot_s1,0.0,756.305,183.247,100.0,SLOT,kit_lg2small2_1_slot_s2,0.0,755.704,75.504,100.0,SLOT,sku_large_gear_vessel,0.0,545.013,123.9245,100.0,PT,sku_large_gear_vessel,0.0,721.6895,-333.4565,100.0,PT,sku_large_small_vessel,0.0,548.2605,-76.90825,100.0,PT,\n
+items=sku_part_large_gear,-0.05,537.43,172.88,1.0,P,sku_part_large_gear,-0.05,717.25,-274.51,1.0,P,sku_part_large_gear,-0.04,538.07,66.56,1.0,P,sku_part_large_gear,0.0,719.69,-382.57,1.0,P,sku_part_small_gear,0.0,524.73,-119.72,1.0,P,sku_part_small_gear,0.0,579.83,-120.45,0.97,P,sku_part_small_gear,0.0,524.15,-64.36,0.96,P,sku_part_small_gear,0.0,579.27,-62.99,0.93,P,sku_small_gear_vessel,0.0,553.27,-90.5,0.93,PT,sku_large_gear_vessel,0.0,718.3,-325.65,0.99,PT,sku_large_gear_vessel,0.0,539.64,118.63,0.79,PT,sku_kit_s2l2_vessel,-0.01,694.78,123.77,1.0,KT,sku_kit_s2l2_vessel,0.01,697.51,-100.03,0.98,KT,\n
 trackcurrentpos=true
---visionhost=localhost
+--visionhost=agility
 displayAxis=NEG_X_NEG_Y
 xminymin=0.0, -500.0
 datafile=motoman_shared_table_objects.csv
