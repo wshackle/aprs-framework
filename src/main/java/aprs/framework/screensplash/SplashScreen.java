@@ -79,7 +79,7 @@ public class SplashScreen extends JFrame {
 
             }
             if (null != image) {
-                g.drawImage(image, this.getSize().width / 3, this.getSize().height / 2, null);
+                g.drawImage(image, this.getSize().width / 3, this.getSize().height / 3, null);
             }
         }
 
