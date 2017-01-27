@@ -52,6 +52,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -64,7 +65,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private Connection con;
     private PreparedStatement update_statement;
-    private PreparedStatement pre_vision_clean_statement;
+//    private PreparedStatement pre_vision_clean_statement;
     private PreparedStatement get_tray_slots_statement;
     private PreparedStatement update_parts_tray_statement;
     private PreparedStatement update_kit_tray_statement;
@@ -302,10 +303,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 useBatch = false;
                 break;
         }
-        preVisionCleanStatementString = queriesMap.get(DbQueryEnum.PRE_VISION_CLEAN_DB).getQuery();
-        if (null != preVisionCleanStatementString) {
-            pre_vision_clean_statement = con.prepareStatement(preVisionCleanStatementString);
-        }
+//        preVisionCleanStatementString = queriesMap.get(DbQueryEnum.PRE_VISION_CLEAN_DB).getQuery();
+//        if (null != preVisionCleanStatementString) {
+//            pre_vision_clean_statement = con.prepareStatement(preVisionCleanStatementString);
+//        }
         updateStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getQuery();
         getTraySlotsQueryString = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getQuery();
         get_tray_slots_statement = con.prepareStatement(getTraySlotsQueryString);
@@ -326,9 +327,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
             updatePartsTrayStatementString = updateStatementString;
         }
         updateParamTypes = queriesMap.get(DbQueryEnum.SET_SINGLE_POSE).getParams();
-        
+
         getTraySlotsParamTypes = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getParams();
-        
+
         query_all_statement = con.prepareStatement(queryAllString);
         querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
         queryDeleteSinglePoseString = queriesMap.get(DbQueryEnum.DELETE_SINGLE_POSE).getQuery();
@@ -345,7 +346,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
         }
     }
 
-    
     private XFuture<Void> setupConnection(String host, int port, String db, String username, String password, boolean debug) throws SQLException {
         switch (dbtype) {
             case MYSQL:
@@ -379,9 +379,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 .thenRun(() -> {
                     try {
                         setupStatements();
-                    } catch (SQLException ex) {
+                    } catch (Throwable ex) {
+                        Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+                        throw new RuntimeException(ex);
+                    }
+                })
+                .handle((Void x, Throwable ex) -> {
+                    if (null != ex) {
                         Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    return null;
                 });
     }
 
@@ -1294,66 +1301,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 displayInterface.updateResultsMap(updateResultsMap);
             }
         }
-
     }
-    //    private static class IndexSet {
-    //
-    //        int xindexes[];
-    //        int yindexes[];
-    //        int zindexes[];
-    //        int vxiIndexes[];
-    //        int vxjIndexes[];
-    //        int vxkIndexes[];
-    //        int vziIndexes[];
-    //        int vzjIndexes[];
-    //        int vzkIndexes[];
-    //        int nameIndexes[];
-    //        int typeIndexes[];
-    //    }
-    //    private static final IndexSet MYSQL_INDEX_SET = new IndexSet();
-    //    private static final IndexSet NEO4J_INDEX_SET = new IndexSet();
-    //
-    //    private IndexSet curIndexSet = MYSQL_INDEX_SET;
-    //    
-    //    static {
-    //        MYSQL_INDEX_SET.xindexes = new int[]{1};
-    //        MYSQL_INDEX_SET.yindexes = new int[]{2};
-    //        MYSQL_INDEX_SET.zindexes = new int[]{};
-    //        MYSQL_INDEX_SET.vxiIndexes = new int[]{3};
-    //        MYSQL_INDEX_SET.vxjIndexes = new int[]{4};
-    //        MYSQL_INDEX_SET.vxkIndexes = new int[]{};
-    //        MYSQL_INDEX_SET.vziIndexes = new int[]{};
-    //        MYSQL_INDEX_SET.vzjIndexes = new int[]{};
-    //        MYSQL_INDEX_SET.vzkIndexes = new int[]{};
-    //        MYSQL_INDEX_SET.nameIndexes = new int[]{5, 6, 7};
-    //        MYSQL_INDEX_SET.typeIndexes = new int[]{};
-    //        
-    //        NEO4J_INDEX_SET.xindexes = new int[]{1};
-    //        NEO4J_INDEX_SET.yindexes = new int[]{2};
-    //        NEO4J_INDEX_SET.zindexes = new int[]{};
-    //        NEO4J_INDEX_SET.vxiIndexes = new int[]{3};
-    //        NEO4J_INDEX_SET.vxjIndexes = new int[]{4};
-    //        NEO4J_INDEX_SET.vxkIndexes = new int[]{};
-    //        NEO4J_INDEX_SET.vziIndexes = new int[]{};
-    //        NEO4J_INDEX_SET.vzjIndexes = new int[]{};
-    //        NEO4J_INDEX_SET.vzkIndexes = new int[]{};
-    //        NEO4J_INDEX_SET.nameIndexes = new int[]{5, 6, 7};
-    //        NEO4J_INDEX_SET.typeIndexes = new int[]{};
-    //    }
-    //    int xindexes[] = {1};
-    //    int yindexes[] = {2};
-    //    int zindexes[] = {};
-    //    int vxiIndexes[] = {3};
-    //    int vxjIndexes[] = {4};
-    //    int vxkIndexes[] = {};
-    //    int vziIndexes[] = {};
-    //    int vzjIndexes[] = {};
-    //    int vzkIndexes[] = {};
-    //    int nameIndexes[] = {5, 6, 7};
-    //    int typeIndexes[] = {};
-    //    private static enum DbParamTypeEnum {
-    //        TYPE, NAME, X, Y, Z, VXI, VXJ, VXK, VZI, VZJ, VZK;
-    //    }
+    
 
     private String fillQueryString(String parameterizedQueryString, List<Object> paramsList) {
         String queryStringFilled
@@ -1470,84 +1419,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     public XFuture<List<PoseQueryElem>> queryDatabase() throws InterruptedException, ExecutionException {
         return XFuture.supplyAsync(() -> Collections.unmodifiableList(getDirectPoseList()), pqExecServ);
-//                    new Runnable() {
-//
-//                @Override
-//                public void run() {
-//                    updating_pose_query = true;
-//                    //System.out.println("----> updating_pose_query is true");
-//                    final List<PoseQueryElem> l = getDirectPoseList();
-//                    if (null != l && null != displayInterface) {
-//                        java.awt.EventQueue.invokeLater(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                displayInterface.updataPoseQueryInfo(l);
-//                            }
-//                        });
-//                    }
-//                    updating_pose_query = false;
-//                }
-//            });
-//        } else if (!updating_pose_query) {
-//            throw new IllegalStateException("PoseDatabaseUpdater: " + this);
-//        }
     }
 
-    private volatile boolean updating_pose_query = false;
-
-//    private List<Object> poseParamsToStatement(DetectedItem item) throws SQLException {
-//        ArrayList<Object> params = new ArrayList<>();
-//        for (int i : curIndexSet.xindexes) {
-//            update_statement.setDouble(i, item.x);
-//            while (params.size() < i + 1) {
-//                params.add(null);
-//            }
-//            params.set(i, item.x);
-//        }
-//        for (int i : curIndexSet.yindexes) {
-//            update_statement.setDouble(i, item.y);
-//            while (params.size() < i + 1) {
-//                params.add(null);
-//            }
-//            params.set(i, item.y);
-//        }
-//        for (int i : curIndexSet.vxiIndexes) {
-//
-//            double crot = Math.cos(item.rotation);
-//            update_statement.setDouble(i, crot);
-//            while (params.size() < i + 1) {
-//                params.add(null);
-//            }
-//            params.set(i, crot);
-//        }
-//        for (int i : curIndexSet.vxjIndexes) {
-//            double srot = Math.sin(item.rotation);
-//            update_statement.setDouble(i, srot);
-//            while (params.size() < i + 1) {
-//                params.add(null);
-//            }
-//            params.set(i, srot);
-//        }
-//        for (int i : curIndexSet.nameIndexes) {
-//            update_statement.setString(i, item.fullName);
-//            while (params.size() < i + 1) {
-//                params.add(null);
-//            }
-//            params.set(i, item.fullName);
-//        }
-//        return params;
-//    }
-//    public boolean updatePose(String name, double x, double y, double rotation) throws SQLException {
-//        this.poseParamsToStatement(name, x, y, rotation);
-//        VisionToDBJFrameInterface displayInterface = DbMain.getDisplayInterface();
-//        if (null != displayInterface && displayInterface.isDebug()) {
-//            displayInterface.addLogMessage(update_statement.toString());
-//        }
-//        boolean ex_result = update_statement.execute();
-//        if (null != displayInterface && displayInterface.isDebug()) {
-//            displayInterface.addLogMessage("execute() returned   " + ex_result
-//                    + ", update count = " + update_statement.getUpdateCount());
-//        }
-//        return ex_result;
-//    }
 }
