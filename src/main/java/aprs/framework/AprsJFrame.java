@@ -2110,5 +2110,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pddlPlannerJInternalFrame = null;
         }
     }
+    
+    public XFuture<Boolean> continueCurrentProgram() {
+        if(null != pendantClientJInternalFrame) {
+            return pendantClientJInternalFrame.continueCurrentProgram();
+        } else {
+            return XFuture.completedFuture(false);
+        }
+    }
+    
 
 }

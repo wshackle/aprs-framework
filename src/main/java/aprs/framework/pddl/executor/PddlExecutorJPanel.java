@@ -1442,6 +1442,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
+    public XFuture<Boolean> continueCurrentProgram() {
+        return aprsJFrame.continueCurrentProgram();
+    }
+
     /**
      * Set the value of crclProgram
      *
@@ -2271,17 +2275,22 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         jCheckBoxReplan.setSelected(true);
         if (null != runningProgramFuture) {
-            runningProgramFuture.cancel(true);
+            runningProgramFuture.cancelAll(true);
         }
         if (null != unstartedProgram) {
             runningProgramFuture = startCrclProgram(unstartedProgram);
         } else {
-            try {
-                runningProgramFuture = generateCrcl();
-            } catch (IOException | IllegalStateException | SQLException ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                abortProgram();
-            }
+
+            runningProgramFuture
+                    = continueCurrentProgram().thenCompose(x -> {
+                        try {
+                            return generateCrcl();
+                        } catch (IOException | IllegalStateException | SQLException ex) {
+                            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            abortProgram();
+                            return XFuture.completedFuture(false);
+                        }
+                    });
         }
     }
 
@@ -2508,11 +2517,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private XFuture<Boolean> doPddlActionsSection() {
         try {
             CRCLProgramType program = pddlActionSectionToCrcl();
-            
+
             if (autoStart) {
-                boolean replanAfterCrclBlock = 
-                    pddlActionToCrclGenerator.getLastIndex() < actionsList.size() - 1
-                    && jCheckBoxReplan.isSelected();
+                boolean replanAfterCrclBlock
+                        = pddlActionToCrclGenerator.getLastIndex() < actionsList.size() - 1
+                        && jCheckBoxReplan.isSelected();
                 if (replanAfterCrclBlock) {
                     return startCrclProgram(program)
                             .thenCompose(this::recursiveApplyGenerateCrcl);
