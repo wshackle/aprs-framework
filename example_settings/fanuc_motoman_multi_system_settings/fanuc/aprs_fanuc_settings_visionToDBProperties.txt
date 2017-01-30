@@ -1,5 +1,5 @@
 #
-#Mon Jan 30 12:31:24 EST 2017
+#Mon Jan 30 16:46:33 EST 2017
 NEO4J.localhost_4000.name=neo4j
 MYSQL.localhost_7486.name=neo4j
 --aquirestate=ON
@@ -40,8 +40,8 @@ NEO4J.ying-220_7480.passwd=password
 NEO4J.localhost_4000.internalQueriesResourceDir=true
 --visionhost=agility.el.nist.gov
 NEO4J.localhost_7486.internalQueriesResourceDir=true
---dbname=neo4j
 NEO4J.localhost_7486.name=neo4j
+--dbname=neo4j
 NEO4J.ying-220_7480.user=neo4j
 NEO4J.localhost_7486.queriesDir=neo4j/v1
 NEO4J.ying-220_7494.user=neo4j
@@ -52,5 +52,5 @@ AddRepeatCountsToDatabaseNames=false
 --dbpasswd=password
 --showgui=true
 NEO4J.localhost.port=4000
---dbuser=neo4j
 NEO4J.localhost_7486.user=neo4j
+--dbuser=neo4j
