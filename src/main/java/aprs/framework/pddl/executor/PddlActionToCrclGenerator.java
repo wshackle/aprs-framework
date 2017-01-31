@@ -519,6 +519,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addMoveTo(cmds, pose, true);
 
+        addSettleDwell(cmds);
+        
         addCloseGripper(cmds);
 
         addSettleDwell(cmds);
@@ -776,6 +778,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addMoveTo(cmds, pose, true);
 
+        addSettleDwell(cmds);
+        
         addOpenGripper(cmds);
 
         addSettleDwell(cmds);

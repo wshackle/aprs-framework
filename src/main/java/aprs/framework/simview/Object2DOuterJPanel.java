@@ -1222,6 +1222,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 int min_dist_index = -1;
                 for (int i = 0; i < l.size(); i++) {
                     DetectedItem item = l.get(i);
+                    if(!item.type.equals("P")) {
+                        continue;
+                    }
                     double dist = item.dist(currentX, currentY);
                     if (dist < min_dist) {
                         min_dist_index = i;

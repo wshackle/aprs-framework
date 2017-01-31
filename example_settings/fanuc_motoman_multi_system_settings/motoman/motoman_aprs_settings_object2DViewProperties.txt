@@ -1,10 +1,10 @@
 #
-#Mon Jan 30 15:45:13 EST 2017
+#Tue Jan 31 16:22:13 EST 2017
 simulated=true
 --visionport=5002
 showrotations=false
 connected=true
-items=sku_part_large_gear,0.0,541.764,182.218,100.0,P,sku_part_large_gear,0.0,543.339,73.378,100.0,P,sku_part_large_gear,0.0,721.891,-386.044,100.0,P,sku_part_large_gear,0.0,721.4105528183426,-272.6924579242381,100.0,P,sku_part_small_gear,0.0,584.726,-37.729,100.0,P,sku_part_small_gear,0.0,582.203,-89.702,100.0,P,sku_part_small_gear,0.0,527.491,-35.991,100.0,P,sku_part_small_gear,0.0,527.489,-89.702,100.0,P,kit_lg2small2_2_slot_l1,0.0,680.667,-161.03,100.0,SLOT,kit_lg2small2_2_slot_l2,0.0,677.549,-50.837,100.0,SLOT,kit_lg2small2_2_slot_s2,0.0,755.532,-45.849,100.0,SLOT,kit_lg2small2_2_slot_s1,0.0,760.962,-159.069,100.0,SLOT,kit_lg2small2_1_slot_l2,0.0,675.203,74.55,100.0,SLOT,kit_lg2small2_1_slot_l1,0.0,674.536,187.829,100.0,SLOT,kit_lg2small2_1_slot_s1,0.0,756.305,183.247,100.0,SLOT,kit_lg2small2_1_slot_s2,0.0,755.704,75.504,100.0,SLOT,sku_large_gear_vessel,0.0,545.013,123.9245,100.0,PT,sku_large_gear_vessel,0.0,721.6895,-333.4565,100.0,PT,sku_large_small_vessel,0.0,548.2605,-76.90825,100.0,PT,sku_kit_s2l2_vessel,-0.01,700.8783783783783,125.0,1.0,KT,sku_kit_s2l2_vessel,0.01,697.51,-99.9,0.98,KT,\n
+items=sku_part_large_gear,0.0,541.764,182.218,100.0,P,sku_part_large_gear,0.0,543.339,73.378,100.0,P,sku_part_large_gear,0.0,721.891,-386.044,100.0,P,sku_part_large_gear,0.0,721.4105528183426,-272.6924579242381,100.0,P,sku_part_small_gear,0.0,584.726,-37.729,100.0,P,sku_part_small_gear,0.0,582.203,-89.702,100.0,P,sku_part_small_gear,0.0,527.491,-35.991,100.0,P,sku_part_small_gear,0.0,527.489,-89.702,100.0,P,kit_lg2small2_2_slot_l1,0.0,680.667,-161.03,100.0,SLOT,kit_lg2small2_2_slot_l2,0.0,677.549,-50.837,100.0,SLOT,kit_lg2small2_2_slot_s2,0.0,755.532,-45.849,100.0,SLOT,kit_lg2small2_2_slot_s1,0.0,760.962,-159.069,100.0,SLOT,kit_lg2small2_1_slot_l2,0.0,675.203,74.55,100.0,SLOT,kit_lg2small2_1_slot_l1,0.0,674.536,187.829,100.0,SLOT,kit_lg2small2_1_slot_s1,0.0,756.305,183.247,100.0,SLOT,kit_lg2small2_1_slot_s2,0.0,755.704,75.504,100.0,SLOT,sku_large_gear_vessel,0.0,545.013,123.9245,100.0,PT,sku_large_gear_vessel,0.0,721.6895,-333.4565,100.0,PT,sku_large_small_vessel,0.0,548.2605,-76.90825,100.0,PT,sku_kit_s2l2_vessel,0.01,703.0,-99.9,0.98,KT,sku_kit_s2l2_vessel,-0.01,700.8783783783783,125.0,1.0,KT,\n
 trackcurrentpos=true
 --visionhost=agility
 displayAxis=NEG_X_NEG_Y

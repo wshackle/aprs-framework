@@ -18,5 +18,5 @@ kit_lg2small2_1_slot_s2,0.0,755.704,75.504,100.0,SLOT
 sku_large_gear_vessel,0.0,545.013,123.9245,100.0,PT
 sku_large_gear_vessel,0.0,721.6895,-333.4565,100.0,PT
 sku_large_small_vessel,0.0,548.2605,-76.90825,100.0,PT
-sku_kit_s2l2_vessel,-0.01,700.8783783783783,125.0,1.0,KT
-sku_kit_s2l2_vessel,0.01,697.51,-99.9,0.98,KT
+sku_kit_s2l2_vessel,0.01,703.0,-98.0,0.98,KT
+sku_kit_s2l2_vessel,-0.01,700.8783783783783,134.0,1.0,KT
