@@ -1,19 +1,20 @@
 #
-#Thu Jan 26 15:21:39 EST 2017
+#Thu Feb 02 16:10:05 EST 2017
 startup.pddl.objectview=true
-startup.pddl.planner=true
-startup.pddl.objectsp=true
-startup.pddl.executor=true
-aprs.robotName=Fanuc
-startup.robotcrclclient=true
-startup.exploreGraphDb=true
-startup.robotcrclmotomanserver=false
-fanuc.robotHost=129.6.78.111
-startup.crclWebApp=false
-startup.connectvision=true
-aprs.taskName=Fanuc Cart
-crclWebApp.httpPort=8081
-startup.robotcrclsimserver=false
-fanuc.crclLocalPort=64444
 startup.robotcrclfanucserver=true
 startup.connectdatabase=true
+fanuc.crclLocalPort=64444
+aprs.robotName=Fanuc
+startup.robotcrclsimserver=false
+startup.connectvision=true
+startup.crclWebApp=false
+startup.pddl.objectsp=true
+aprs.taskName=Fanuc Cart
+crclWebApp.httpPort=8081
+fanuc.robotHost=129.6.78.111
+startup.robotcrclmotomanserver=false
+startup.robotcrclclient=true
+startup.pddl.planner=true
+startup.exploreGraphDb=true
+STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
+startup.pddl.executor=true

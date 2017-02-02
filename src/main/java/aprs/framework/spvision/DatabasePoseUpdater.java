@@ -854,9 +854,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
         final long timestamp = System.currentTimeMillis();
         prevParts
                 = prevParts.stream()
-                        .filter((DetectedItem prevPart) -> timestamp - prevPart.timestamp < 10000)
-                        .filter((DetectedItem prevPart) -> closestDist(prevPart, parts) < 25.0)
-                        .collect(Collectors.toCollection(() -> new ArrayList<DetectedItem>()));
+                .filter((DetectedItem prevPart) -> timestamp - prevPart.timestamp < 10000)
+                .filter((DetectedItem prevPart) -> closestDist(prevPart, parts) < 25.0)
+                .collect(Collectors.toCollection(() -> new ArrayList<DetectedItem>()));
         prevParts.addAll(parts);
         return slots.stream()
                 .filter(slot -> closestDist(slot, prevParts) > 25.0)
@@ -882,21 +882,20 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     public List<DetectedItem> findBestEmptyTraySlots(List<DetectedItem> kitTrays, List<DetectedItem> parts) {
         List<DetectedItem> emptySlots = findAllEmptyTraySlots(kitTrays, parts);
-        System.out.println("emptySlots = " + emptySlots);
         for (DetectedItem kitTrayItem : kitTrays) {
             kitTrayItem.emptySlotsCount
                     = emptySlots.stream()
-                            .filter((DetectedItem slotItem) -> "EMPTY_SLOT".equals(slotItem.type))
-                            .filter((DetectedItem slotItem) -> slotItem.tray == kitTrayItem)
-                            .count();
+                    .filter((DetectedItem slotItem) -> "EMPTY_SLOT".equals(slotItem.type))
+                    .filter((DetectedItem slotItem) -> slotItem.tray == kitTrayItem)
+                    .count();
         }
         kitTrays.sort((DetectedItem tray1, DetectedItem tray2) -> Long.compare(tray1.emptySlotsCount, tray2.emptySlotsCount));
         int min_non_zero_tray = 0;
         for (int i = 0; i < kitTrays.size(); i++) {
             DetectedItem kitTray = kitTrays.get(i);
             kitTray.kitTrayNum = i;
-            if(kitTray.emptySlotsCount < 1 && i < kitTrays.size()-1) {
-                min_non_zero_tray = i+1;
+            if (kitTray.emptySlotsCount < 1 && i < kitTrays.size() - 1) {
+                min_non_zero_tray = i + 1;
             }
         }
         final int mnzt = min_non_zero_tray;
@@ -916,16 +915,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                        .collect(Collectors.toList());
         List<DetectedItem> kitTrays
                 = itemList.stream()
-                        .filter((DetectedItem item) -> "KT".equals(item.type))
-                        .collect(Collectors.toList());
+                .filter((DetectedItem item) -> "KT".equals(item.type))
+                .collect(Collectors.toList());
         List<DetectedItem> partTrays
                 = itemList.stream()
-                        .filter((DetectedItem item) -> "PT".equals(item.type))
-                        .collect(Collectors.toList());
+                .filter((DetectedItem item) -> "PT".equals(item.type))
+                .collect(Collectors.toList());
         List<DetectedItem> parts
                 = itemList.stream()
-                        .filter((DetectedItem item) -> "P".equals(item.type))
-                        .collect(Collectors.toList());
+                .filter((DetectedItem item) -> "P".equals(item.type))
+                .collect(Collectors.toList());
         List<DetectedItem> fullList = new ArrayList<>();
         List<DetectedItem> bestEmptySlots = findBestEmptyTraySlots(kitTrays, parts);
         fullList.addAll(kitTrays);
@@ -942,12 +941,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
         try {
             List<DetectedItem> partsTrays
                     = inList.stream()
-                            .filter((DetectedItem item) -> "PT".equals(item.type))
-                            .collect(Collectors.toList());
+                    .filter((DetectedItem item) -> "PT".equals(item.type))
+                    .collect(Collectors.toList());
             List<DetectedItem> kitTrays
                     = inList.stream()
-                            .filter((DetectedItem item) -> "KT".equals(item.type))
-                            .collect(Collectors.toList());
+                    .filter((DetectedItem item) -> "KT".equals(item.type))
+                    .collect(Collectors.toList());
 
             List<DetectedItem> list = inList;
             for (int i = 0; i < list.size(); i++) {
@@ -977,12 +976,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                 List<DetectedItem> parts
                         = inList.stream()
-                                .filter((DetectedItem item) -> "P".equals(item.type))
-                                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "P".equals(item.type))
+                        .collect(Collectors.toList());
                 List<DetectedItem> emptySlots
                         = list.stream()
-                                .filter((DetectedItem item) -> "EMPTY_SLOT".equals(item.type))
-                                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "EMPTY_SLOT".equals(item.type))
+                        .collect(Collectors.toList());
 //                Map<String, List<DetectedItem>> nameToItemListMap
 //                        = list.stream()
 //                                .collect(Collectors.groupingBy((DetectedItem item) -> item.fullName));
