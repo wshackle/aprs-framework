@@ -1,5 +1,5 @@
 #
-#Fri Jan 27 16:46:08 EST 2017
+#Thu Feb 02 15:35:44 EST 2017
 NEO4J.localhost_4000.name=neo4j
 NEO4J.ying-220.mxnet.mel.nist.gov_7494.passwd=password
 --dbport=7494
@@ -32,11 +32,11 @@ NEO4J.localhost_7486.name=neo4j
 NEO4J.localhost_7480.passwd=password
 --acquirestate=ON
 rotationOffset=0.0
-AddRepeatCountsToDatabaseNames=false
+AddRepeatCountsToDatabaseNames=true
 --dbpasswd=password
 NEO4J.localhost_7480.user=neo4j
 --showgui=true
 NEO4J.localhost.port=7494
 NEO4J.localhost_7494.user=neo4j
---dbuser=neo4j
 NEO4J.localhost_7486.user=neo4j
+--dbuser=neo4j

@@ -54,6 +54,9 @@ public class Object2DJPanel extends JPanel {
         return displayAxis;
     }
 
+    
+    
+    
     /**
      * Set the value of displayAxis
      *

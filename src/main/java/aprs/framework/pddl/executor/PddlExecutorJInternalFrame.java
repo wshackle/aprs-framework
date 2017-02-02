@@ -162,6 +162,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         this.actionsToCrclJPanel1.saveProperties();
     }
 
+    public XFuture<Boolean> startActions() {
+        return actionsToCrclJPanel1.startActions();
+    }
+    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.framework.pddl.executor.PddlExecutorJPanel actionsToCrclJPanel1;
@@ -182,6 +186,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return actionsToCrclJPanel1.isLoadEnabled();
     }
 
+    public void refresh() {
+        actionsToCrclJPanel1.refresh();
+    }
+    
     @Override
     public void setLoadEnabled(boolean enable) {
         actionsToCrclJPanel1.setLoadEnabled(enable);

@@ -258,19 +258,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public PoseType correctPose(PoseType poseIn) {
-        if(null !=  pddlExecutorJInternalFrame1) {
+        if (null != pddlExecutorJInternalFrame1) {
             return pddlExecutorJInternalFrame1.correctPose(poseIn);
         }
         return poseIn;
     }
-    
-     public PointType reverseCorrectPoint(PointType ptIn) {
-        if(null !=  pddlExecutorJInternalFrame1) {
+
+    public PointType reverseCorrectPoint(PointType ptIn) {
+        if (null != pddlExecutorJInternalFrame1) {
             return pddlExecutorJInternalFrame1.reverseCorrectPoint(ptIn);
         }
         return ptIn;
     }
-     
+
     private final List<PendantClientJPanel.CurrentPoseListener> unaddedPoseListeners = new ArrayList<>();
 
     public void addCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
@@ -708,6 +708,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private void activateFrame(final JInternalFrame frameToShow) {
+        frameToShow.setVisible(true);
+        if (checkInternalFrame(frameToShow)) {
+            jDesktopPane1.getDesktopManager().deiconifyFrame(frameToShow);
+            jDesktopPane1.getDesktopManager().activateFrame(frameToShow);
+            frameToShow.moveToFront();
+            activeWin = stringToWin(frameToShow.getTitle());
+        } else {
+            setupWindowsMenu();
+        }
+    }
+
     private void setupWindowsMenu() {
         jMenuWindow.removeAll();
         int count = 1;
@@ -717,19 +729,44 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             menuItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    frameToShow.setVisible(true);
-                    if (checkInternalFrame(frameToShow)) {
-                        jDesktopPane1.getDesktopManager().deiconifyFrame(frameToShow);
-                        jDesktopPane1.getDesktopManager().activateFrame(frameToShow);
-                        frameToShow.moveToFront();
-                    } else {
-                        setupWindowsMenu();
-                    }
+                    activateFrame(frameToShow);
                 }
             });
             jMenuWindow.add(menuItem);
             count++;
         }
+    }
+
+    private ACTIVE_WINDOW_NAME activeWin = ACTIVE_WINDOW_NAME.OTHER;
+
+    private static enum ACTIVE_WINDOW_NAME {
+        CRCL_CLIENT_WINDOW,
+        PDDL_EXECUTOR_WINDOW,
+        PDDL_PLANNER_WINDOW,
+        SIMVIEW_WINDOW,
+        DATABASE_SETUP_WINDOW,
+        VISION_TO_DB_WINDOW,
+        ERRLOG_WINDOW,
+        OTHER
+    };
+
+    private ACTIVE_WINDOW_NAME stringToWin(String str) {
+        if (str.startsWith("CRCL Client")) {
+            return ACTIVE_WINDOW_NAME.CRCL_CLIENT_WINDOW;
+        }
+        if (str.startsWith("Error")) {
+            return ACTIVE_WINDOW_NAME.ERRLOG_WINDOW;
+        }
+        if (str.startsWith("Object2D")) {
+            return ACTIVE_WINDOW_NAME.SIMVIEW_WINDOW;
+        }
+        if (str.startsWith("[Object SP]")) {
+            return ACTIVE_WINDOW_NAME.VISION_TO_DB_WINDOW;
+        }
+        if (str.startsWith("CRCL Simulation Server")) {
+            return ACTIVE_WINDOW_NAME.CRCL_CLIENT_WINDOW;
+        }
+        return ACTIVE_WINDOW_NAME.OTHER;
     }
 
     private void startObject2DJinternalFrame() {
@@ -964,6 +1001,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenu2 = new javax.swing.JMenu();
         jCheckBoxMenuItemConnectDatabase = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemConnectVision = new javax.swing.JCheckBoxMenuItem();
+        jMenuExecute = new javax.swing.JMenu();
+        jMenuItemStartActionList = new javax.swing.JMenuItem();
+        jMenuItemContinue = new javax.swing.JMenuItem();
+        jMenuItemImmediateAbort = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
@@ -1144,6 +1185,34 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenu2.add(jCheckBoxMenuItemConnectVision);
 
         jMenuBar1.add(jMenu2);
+
+        jMenuExecute.setText("Execute");
+
+        jMenuItemStartActionList.setText("Start Action List");
+        jMenuItemStartActionList.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemStartActionListActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemStartActionList);
+
+        jMenuItemContinue.setText("Continue Actions ");
+        jMenuItemContinue.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemContinueActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemContinue);
+
+        jMenuItemImmediateAbort.setText("Immediate Abort");
+        jMenuItemImmediateAbort.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemImmediateAbortActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemImmediateAbort);
+
+        jMenuBar1.add(jMenuExecute);
 
         setJMenuBar(jMenuBar1);
 
@@ -1424,6 +1493,30 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         }
     }//GEN-LAST:event_jMenuItemSavePropsAsActionPerformed
+
+    private void jMenuItemContinueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemContinueActionPerformed
+        this.continueActionList();
+    }//GEN-LAST:event_jMenuItemContinueActionPerformed
+
+    private void jMenuItemImmediateAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImmediateAbortActionPerformed
+        this.immediateAbort();
+    }//GEN-LAST:event_jMenuItemImmediateAbortActionPerformed
+
+    private void jMenuItemStartActionListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartActionListActionPerformed
+        this.startActions();
+    }//GEN-LAST:event_jMenuItemStartActionListActionPerformed
+
+    public XFuture<Boolean> startActions() {
+        if(null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.refresh();
+        }
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.refresh();
+            return pddlExecutorJInternalFrame1.startActions();
+        } else {
+            return XFuture.completedFuture(false);
+        }
+    }
 
     public void startExploreGraphDb() {
         try {
@@ -1713,13 +1806,54 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != taskNameString) {
             setTaskName(taskNameString);
         }
+        String startupActiveWinString = props.getProperty(STARTUP_ACTIVE_WIN);
+        if (null != startupActiveWinString) {
+            activeWin = ACTIVE_WINDOW_NAME.valueOf(startupActiveWinString);
+            switch (activeWin) {
+                case SIMVIEW_WINDOW:
+                    if (null != object2DViewJInternalFrame) {
+                        activateFrame(object2DViewJInternalFrame);
+                    }
+                    break;
+
+                case CRCL_CLIENT_WINDOW:
+                    if (null != pendantClientJInternalFrame) {
+                        activateFrame(pendantClientJInternalFrame);
+                    }
+                    break;
+
+                case DATABASE_SETUP_WINDOW:
+                    if (null != dbSetupJInternalFrame) {
+                        activateFrame(dbSetupJInternalFrame);
+                    }
+                    break;
+
+                case ERRLOG_WINDOW:
+                    if (null != logDisplayJInternalFrame) {
+                        activateFrame(logDisplayJInternalFrame);
+                    }
+                    break;
+
+                case PDDL_EXECUTOR_WINDOW:
+                    if (null != pddlExecutorJInternalFrame1) {
+                        activateFrame(pddlExecutorJInternalFrame1);
+                    }
+                    break;
+
+                case PDDL_PLANNER_WINDOW:
+                    if (null != pddlPlannerJInternalFrame) {
+                        activateFrame(pddlPlannerJInternalFrame);
+                    }
+                    break;
+            }
+        }
     }
 
     @Override
     public void saveProperties() throws IOException {
         File propsParent = propertiesFile.getParentFile();
-        if(propsParent == null) {
-            System.err.println("propertiesFile.getParentFile() returned null : propertiesFile="+propertiesFile);
+        if (propsParent == null) {
+            System.err.println("propertiesFile.getParentFile() returned null : propertiesFile=" + propertiesFile);
             return;
         }
         if (!propsParent.exists()) {
@@ -1745,6 +1879,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         propsMap.put(STARTUPEXPLOREGRAPHDB, Boolean.toString(jCheckBoxMenuItemExploreGraphDbStartup.isSelected()));
         propsMap.put(STARTUPCRCLWEBAPP, Boolean.toString(jCheckBoxMenuItemStartupCRCLWebApp.isSelected()));
         propsMap.put(CRCLWEBAPPPORT, Integer.toString(crclWebServerHttpPort));
+        propsMap.put(STARTUP_ACTIVE_WIN, activeWin.toString());
         setDefaultRobotName();
         propsMap.put(APRSROBOT_PROPERTY_NAME, robotName);
         if (null != taskName) {
@@ -1797,6 +1932,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             DbSetupBuilder.savePropertiesFile(dbPropsFile, dbSetup);
         }
     }
+    private static final String STARTUP_ACTIVE_WIN = "STARTUP_ACTIVE_WIN";
     private static final String APRSTASK_PROPERTY_NAME = "aprs.taskName";
     private static final String APRSROBOT_PROPERTY_NAME = "aprs.robotName";
 
@@ -1893,11 +2029,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenu jMenuExecute;
+    private javax.swing.JMenuItem jMenuItemContinue;
     private javax.swing.JMenuItem jMenuItemExit;
+    private javax.swing.JMenuItem jMenuItemImmediateAbort;
     private javax.swing.JMenuItem jMenuItemLoadProperties;
     private javax.swing.JMenuItem jMenuItemLoadPropertiesFile;
     private javax.swing.JMenuItem jMenuItemSaveProperties;
     private javax.swing.JMenuItem jMenuItemSavePropsAs;
+    private javax.swing.JMenuItem jMenuItemStartActionList;
     private javax.swing.JMenu jMenuWindow;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     // End of variables declaration//GEN-END:variables
@@ -1910,13 +2050,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     @Override
     public final void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
-        if(null == propertiesFile) {
+        if (null == propertiesFile) {
             System.err.println("propertiesFile == null");
             return;
         }
         propertiesDirectory = propertiesFile.getParentFile();
-        if(null == propertiesDirectory) {
-            System.err.println("propertiesFile.getParentFile() returned null : propertiesFile="+propertiesFile);
+        if (null == propertiesDirectory) {
+            System.err.println("propertiesFile.getParentFile() returned null : propertiesFile=" + propertiesFile);
             return;
         }
         if (!propertiesDirectory.exists()) {
@@ -2110,14 +2250,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pddlPlannerJInternalFrame = null;
         }
     }
-    
+
     public XFuture<Boolean> continueCurrentProgram() {
-        if(null != pendantClientJInternalFrame) {
+        if (null != pendantClientJInternalFrame) {
             return pendantClientJInternalFrame.continueCurrentProgram();
         } else {
             return XFuture.completedFuture(false);
         }
     }
-    
 
 }

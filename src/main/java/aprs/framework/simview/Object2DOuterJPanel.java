@@ -72,6 +72,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private volatile boolean settingItems = false;
 
+    public void refresh() {
+        if (jCheckBoxSimulated.isSelected()) {
+            String fname = jTextFieldFilename.getText();
+            File f = new File(fname);
+            if (f.exists() && f.canRead()) {
+                try {
+                    loadFile(f);
+                } catch (IOException ex) {
+                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            if (null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
+                this.setItems(object2DJPanel1.getItems());
+                visionSocketServer.publishList(this.getItems());
+            }
+        }
+    }
+
     public void setItems(List<DetectedItem> items) {
         try {
             settingItems = true;
@@ -94,7 +112,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int origSelectedRow = jTableItems.getSelectedRow();
         int origSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jTableItems.getRowCount())
-                        ? (int) jTableItems.getValueAt(origSelectedRow, 0) : -1;
+                ? (int) jTableItems.getValueAt(origSelectedRow, 0) : -1;
 
         DefaultTableModel model = (DefaultTableModel) jTableItems.getModel();
         model.setRowCount(0);
@@ -121,13 +139,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         int newSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jTableItems.getRowCount())
-                        ? (int) jTableItems.getValueAt(origSelectedRow, 0) : -1;
+                ? (int) jTableItems.getValueAt(origSelectedRow, 0) : -1;
 //        System.out.println("newSelectedRowIndex = " + newSelectedRowIndex);
 //        System.out.println("origSelectedRowIndex = " + origSelectedRowIndex);
         if (newSelectedRowIndex > 0 && newSelectedRowIndex == origSelectedRowIndex) {
             DefaultListSelectionModel dlsm;
             lsm = jTableItems.getSelectionModel();
-            if(lsm instanceof DefaultListSelectionModel) {
+            if (lsm instanceof DefaultListSelectionModel) {
                 dlsm = (DefaultListSelectionModel) lsm;
             } else {
                 dlsm = new DefaultListSelectionModel();
@@ -1222,7 +1240,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 int min_dist_index = -1;
                 for (int i = 0; i < l.size(); i++) {
                     DetectedItem item = l.get(i);
-                    if(!item.type.equals("P")) {
+                    if (!item.type.equals("P")) {
                         continue;
                     }
                     double dist = item.dist(currentX, currentY);

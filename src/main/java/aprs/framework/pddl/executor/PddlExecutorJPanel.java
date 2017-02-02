@@ -1024,6 +1024,23 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
+    public XFuture<Boolean> startActions() {
+        this.abortProgram();
+        try {
+            setReplanFromIndex(0);
+            autoStart = true;
+            jCheckBoxReplan.setSelected(true);
+            if (null != runningProgramFuture) {
+                runningProgramFuture.cancel(true);
+            }
+            runningProgramFuture = generateCrcl();
+        } catch (IOException | IllegalStateException | SQLException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            abortProgram();
+        }
+        return runningProgramFuture;
+    }
+
     private final PddlActionToCrclGenerator pddlActionToCrclGenerator = new PddlActionToCrclGenerator();
 
     public PddlActionToCrclGenerator getPddlActionToCrclGenerator() {
@@ -1171,6 +1188,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         autoResizeTableColWidths(jTablePddlOutput);
     }
 
+    public void refresh() {
+        String fname = jTextFieldPddlOutputActions.getText();
+        File f = new File(fname);
+        if(f.exists() && f.canRead()) {
+            try {
+                loadActionsFile(f);
+            } catch (IOException ex) {
+                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
     private void jButtonLoadPddlActionsFromFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadPddlActionsFromFileActionPerformed
         try {
             browseActionsFile();

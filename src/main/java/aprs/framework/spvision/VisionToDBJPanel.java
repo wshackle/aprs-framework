@@ -916,6 +916,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 if (jCheckBoxAddRepeatCountsToDatabaseNames.isSelected() != b) {
                     jCheckBoxAddRepeatCountsToDatabaseNames.setSelected(b);
                 }
+                this.addRepeatCountsToDatabaseNames = b;
             }
             String visionPortString = _argsMap.get("--visionport");
             if (visionPortString != null) {

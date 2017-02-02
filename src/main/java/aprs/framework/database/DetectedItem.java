@@ -65,6 +65,9 @@ public class DetectedItem extends PM_CARTESIAN {
     public boolean insidePartsTray;
     public String setQuery;
     public long timestamp;
+    public DetectedItem tray;
+    public long emptySlotsCount;
+    public int kitTrayNum;
     
     public DetectedItem() {
         score = 100.0;
