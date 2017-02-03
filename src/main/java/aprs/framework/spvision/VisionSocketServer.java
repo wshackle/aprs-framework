@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,10 +56,13 @@ public class VisionSocketServer implements AutoCloseable {
 
     private static class DaemonThreadFactory implements ThreadFactory {
 
+        private static AtomicInteger tnum = new AtomicInteger();
+        
         @Override
         public Thread newThread(Runnable r) {
             Thread thread = new Thread(r);
             thread.setDaemon(true);
+            thread.setName("VisionSocketServer_"+tnum.incrementAndGet());
             return thread;
         }
 
@@ -103,7 +107,10 @@ public class VisionSocketServer implements AutoCloseable {
         this.executorService.submit(new Runnable() {
             @Override
             public void run() {
+                String origThreadName = Thread.currentThread().getName();
                 try {
+                    
+                    Thread.currentThread().setName("VisionSocketServer_accepting_for_port_"+serverSocket.getLocalPort());
                     while (!closing && !Thread.currentThread().isInterrupted()) {
                         Socket clientSocket = serverSocket.accept();
                         if (debug) {
@@ -116,6 +123,8 @@ public class VisionSocketServer implements AutoCloseable {
                     }
                 } catch (IOException ex) {
                     Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
+                } finally {
+                    Thread.currentThread().setName(origThreadName);
                 }
             }
         });

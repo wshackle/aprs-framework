@@ -443,9 +443,6 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             robotEnableMap.put(robotName, enabled);
             if (!enabled) {
                 try {
-                    if (null != lastFutureReturned) {
-                        lastFutureReturned.cancelAll(true);
-                    }
                     this.lastFutureReturned = stealRobot(robotName);
                 } catch (IOException | PositionMap.BadErrorMapFormatException ex) {
                     Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -533,6 +530,12 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 .thenCompose(x -> {
                     return SplashScreen.showMessageFullScreen("All \nTasks \nComplete", 80.0f, 
                             null, SplashScreen.getBlueWhiteGreenColorList(), gd);
+                })
+                .handle((x, thrown) -> {
+                    if(null != thrown) {
+                        thrown.printStackTrace();
+                    }
+                    return x;
                 });
 
     }
@@ -590,6 +593,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jMenuItemSavePosMaps = new javax.swing.JMenuItem();
         jMenuItemLoadPosMaps = new javax.swing.JMenuItem();
         jMenuItemConnectAll = new javax.swing.JMenuItem();
+        jMenuItemDbgAction = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         jMenu3 = new javax.swing.JMenu();
         jCheckBoxMenuItemDisableTextPopups = new javax.swing.JCheckBoxMenuItem();
@@ -941,6 +945,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItemConnectAll);
 
+        jMenuItemDbgAction.setText("Dbg Action");
+        jMenuItemDbgAction.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemDbgActionActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemDbgAction);
+
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Edit");
@@ -1260,6 +1272,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         crcl.ui.misc.MultiLineStringJPanel.disableShowText = jCheckBoxMenuItemDisableTextPopups.isSelected();
     }//GEN-LAST:event_jCheckBoxMenuItemDisableTextPopupsActionPerformed
 
+    private void jMenuItemDbgActionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemDbgActionActionPerformed
+        System.out.println("lastFutureReturned = " + lastFutureReturned);
+    }//GEN-LAST:event_jMenuItemDbgActionActionPerformed
+
     private void savePosFile(File f) throws IOException {
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             for (int i = 0; i < jTableSelectedPosMapFile.getColumnCount(); i++) {
@@ -1313,7 +1329,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     public XFuture<Void> startAll() {
         XFuture futures[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            futures[i] = aprsSystems.get(i).continueActionList();
+            futures[i] = aprsSystems.get(i).startActions();
         }
         return XFuture.allOf(futures);
     }
@@ -1640,6 +1656,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItemAddSystem;
     private javax.swing.JMenuItem jMenuItemConnectAll;
+    private javax.swing.JMenuItem jMenuItemDbgAction;
     private javax.swing.JMenuItem jMenuItemDeleteSelectedSystem;
     private javax.swing.JMenuItem jMenuItemImmediateAbortAll;
     private javax.swing.JMenuItem jMenuItemLoadPosMaps;

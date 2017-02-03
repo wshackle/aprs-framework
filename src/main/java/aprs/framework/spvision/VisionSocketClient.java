@@ -156,10 +156,12 @@ public class VisionSocketClient implements AutoCloseable {
         try {
             host = argsMap.get("--visionhost");
             port = Short.valueOf(argsMap.get("--visionport"));
+            final short portf = port;
+            final String hostf = host;
             visionSlr = SocketLineReader.start(true,
                     host,
                     port,
-                    "visionReader", new SocketLineReader.CallBack() {
+                    "visionReader_for_"+hostf+":"+portf, new SocketLineReader.CallBack() {
 
                 private String lastSkippedLine = null;
 
@@ -172,6 +174,8 @@ public class VisionSocketClient implements AutoCloseable {
 
                             @Override
                             public void run() {
+                                String origName = Thread.currentThread().getName();
+                                Thread.currentThread().setName("parsingVisionLine from "+hostf+":"+portf);
                                 //System.out.println("visioncycle="+visioncycle);
                                 parseVisionLine(line);
                                 if (null != lastSkippedLine) {
@@ -181,6 +185,7 @@ public class VisionSocketClient implements AutoCloseable {
                                 }
                                 parsing_line = null;
                                 visioncycle++;
+                                Thread.currentThread().setName(origName);
                             }
                         });
                     } else {

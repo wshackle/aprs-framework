@@ -214,8 +214,10 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         this.positionMaps.remove(positionMap);
         if (pfn != null && pfn.length() > 0) {
             for (int i = 0; i < positionMaps.size(); i++) {
-                if (positionMaps.get(i).getFileName().equals(pfn)) {
+                PositionMap pm = positionMaps.get(i);
+                if (null == pm || null == pm.getFileName() || pm.getFileName().equals(pfn)) {
                     positionMaps.remove(i);
+                    i--;
                 }
             }
         }
