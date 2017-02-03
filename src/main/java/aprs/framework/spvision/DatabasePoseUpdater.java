@@ -1,4 +1,3 @@
-
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
@@ -40,7 +39,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
+import static java.util.Comparator.comparingDouble;
+import static java.util.Comparator.comparingLong;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,7 +54,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.codehaus.jackson.map.util.Comparators;
 
 /**
  *
@@ -484,36 +483,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return Double.valueOf(fixed);
     }
 
-//    private List<PoseQueryElem> getNeo4jBoltDirectPoseList() {
-//        VisionToDBJFrameInterface displayInterface = DbMain.getDisplayInterface();
-//        if (null != displayInterface) {
-//            debug = displayInterface.isDebug();
-//        }
-//        StatementResult result
-//                = neo4jSession.run("MATCH pointpath=(source) -[r0]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
-//                        + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
-//                        + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
-//                        + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,xaxis.hasVector_I as vxx,xaxis.hasVector_J as vxy");
-//        while (result.hasNext()) {
-//            Record record = result.next();
-//            if(debug) {
-//                displayInterface.addLogMessage("record ="+record.asMap());
-//            }
-//            String name = record.get("name").asString();
-//            if(debug) {
-//                displayInterface.addLogMessage("name ="+name);
-//            }
-//        }
-//        return Collections.emptyList();
-//    }
+
     private List<PoseQueryElem> getDirectPoseList() {
         switch (dbtype) {
             case MYSQL:
             case NEO4J:
                 return getJdbcDirectPoseList();
-
-//            case NEO4J_BOLT:
-//                return getNeo4jBoltDirectPoseList();
             default:
                 throw new IllegalStateException("getDirectPoseList not implemented for dbtype=" + dbtype);
         }
@@ -934,6 +909,18 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return fullList;
     }
 
+    
+    
+    private static double distDiff(DetectedItem val, List<DetectedItem> targets) {
+        if(null == targets || targets.size() < 1) {
+            return val.mag();
+        } if(targets.size() == 1) {
+            return val.distFromXY(targets.get(0));
+        } else {
+            return val.distFromXY(targets.get(0)) - val.distFromXY(targets.get(1));
+        }
+    }
+    
     public List<DetectedItem> updateVisionList(List<DetectedItem> inList,
             boolean addRepeatCountsToName) {
         List<DetectedItem> itemsToVerify = new ArrayList<>();
@@ -982,25 +969,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         = list.stream()
                         .filter((DetectedItem item) -> "EMPTY_SLOT".equals(item.type))
                         .collect(Collectors.toList());
-//                Map<String, List<DetectedItem>> nameToItemListMap
-//                        = list.stream()
-//                                .collect(Collectors.groupingBy((DetectedItem item) -> item.fullName));
-////                List<DetectedItem> filteredItemList
-//                        = nameToItemListMap
-//                                .values()
-//                                .stream()
-//                                .map((List<DetectedItem> l) -> {
-//                                    return l.stream()
-//                                            .min((DetectedItem item1, DetectedItem item2) -> {
-//                                                return Double.compare(closestDist(item1, emptySlots), closestDist(item2, emptySlots));
-//                                            }).orElse(null);
-//                                })
-//                                .filter(Objects::nonNull)
-//                                .collect(Collectors.toList());
-//                list = filteredItemList;
-                parts.sort((DetectedItem item1, DetectedItem item2) -> {
-                    return Double.compare(closestDist(item1, emptySlots), closestDist(item2, emptySlots));
-                });
+                kitTrays.sort(comparingLong((DetectedItem kt) -> (kt.emptySlotsCount<1)?Long.MAX_VALUE:kt.emptySlotsCount));
+                parts.sort(comparingDouble((DetectedItem p) -> distDiff(p,kitTrays)));
                 list = new ArrayList<>();
                 list.addAll(parts);
                 list.addAll(partsTrays);
@@ -1011,10 +981,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
             long t0_millis = System.currentTimeMillis();
             int updates = 0;
             synchronized (this) {
-//                con.setAutoCommit(false);
-//                if(null != pre_vision_clean_statement) {
-//                    pre_vision_clean_statement.execute();
-//                }
                 if (delOnUpdate) {
                     for (DetectedItem item : list) {
                         deletePose(item.fullName);
@@ -1180,8 +1146,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     poses_updated += updates;
                 }
             }
-//            con.commit();
-//            con.setAutoCommit(true);
             long t1_nanos = System.nanoTime();
             long t1_millis = System.currentTimeMillis();
             long millis_diff = t1_millis - t0_millis;
