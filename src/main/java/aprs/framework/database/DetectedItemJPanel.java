@@ -164,49 +164,50 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
     }
 
     public static DetectedItem mapToItem(Map<String, Object> map, DetectedItem item) {
-        if (item == null) {
-            item = new DetectedItem();
-        }
+
         if (null != map) {
             String name = (String) map.get("name");
+            if (item == null) {
+                item = new DetectedItem(name);
+            }
             if (null != name && name.length() > 0) {
                 item.name = name;
             } else {
-                throw new IllegalArgumentException("map must have non-null and non-empty entry for name. map="+map);
+                throw new IllegalArgumentException("map must have non-null and non-empty entry for name. map=" + map);
             }
-            Object X =  map.get("x");
+            Object X = map.get("x");
             if (X != null) {
                 item.x = Double.parseDouble(X.toString());
             }
-            Object Y =  map.get("y");
+            Object Y = map.get("y");
             if (Y != null) {
                 item.y = Double.parseDouble(Y.toString());
             }
-            Object Z =  map.get("z");
+            Object Z = map.get("z");
             if (Z != null) {
                 item.z = Double.parseDouble(Z.toString());
             }
-            Object VXI =  map.get("vxi");
+            Object VXI = map.get("vxi");
             if (VXI != null) {
                 item.vxi = Double.parseDouble(VXI.toString());
             }
-            Object VXJ =  map.get("vxj");
+            Object VXJ = map.get("vxj");
             if (VXJ != null) {
                 item.vxj = Double.parseDouble(VXJ.toString());
             }
-            Object VXK =  map.get("vxk");
+            Object VXK = map.get("vxk");
             if (VXK != null) {
                 item.vxk = Double.parseDouble(VXK.toString());
             }
-            Object VZI =  map.get("vzi");
+            Object VZI = map.get("vzi");
             if (VZI != null) {
                 item.vzi = Double.parseDouble(VZI.toString());
             }
-            Object VZJ =  map.get("vzj");
+            Object VZJ = map.get("vzj");
             if (VZJ != null) {
                 item.vzj = Double.parseDouble(VZJ.toString());
             }
-            Object VZK =  map.get("vzk");
+            Object VZK = map.get("vzk");
             if (VZK != null) {
                 item.vzk = Double.parseDouble(VZK.toString());
             }

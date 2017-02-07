@@ -192,10 +192,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             } else {
                                 continue;
                             }
+                            String name = Objects.toString(jTableItems.getValueAt(i, 1));
                             if (item == null) {
-                                item = new DetectedItem();
+                                item = new DetectedItem(Objects.toString(jTableItems.getValueAt(i, 1)));
                             }
-                            item.name = Objects.toString(jTableItems.getValueAt(i, 1));
                             item.x = Double.parseDouble(jTableItems.getValueAt(i, 2).toString());
                             item.y = Double.parseDouble(jTableItems.getValueAt(i, 3).toString());
                             item.rotation = Math.toRadians(Double.parseDouble(jTableItems.getValueAt(i, 4).toString()));
@@ -875,6 +875,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jComboBoxDisplayAxisActionPerformed
 
     private void loadFile(File f) throws IOException {
+        if (f.isDirectory()) {
+            System.err.println("Can not load file \"" + f + "\" : It is a directory when a text/csv file is expected.");
+            return;
+        }
         String line = Files.lines(f.toPath()).skip(1).map(String::trim).collect(Collectors.joining(","));
         this.setItems(VisionSocketClient.lineToList(line));
         jTextFieldFilename.setText(f.getCanonicalPath());
@@ -1083,8 +1087,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText());
             props.put("xminymin", jTextFieldMinXMinY.getText());
             String dataFileTxt = jTextFieldFilename.getText();
-            String datafileShort = makeShortPath(propertiesFile, dataFileTxt);
-            props.put("datafile", datafileShort);
+            if (null != dataFileTxt && dataFileTxt.length() > 0) {
+                String datafileShort = makeShortPath(propertiesFile, dataFileTxt);
+                props.put("datafile", datafileShort);
+            }
             DisplayAxis displayAxis = object2DJPanel1.getDisplayAxis();
             props.put("displayAxis", displayAxis.toString());
             List<DetectedItem> l = getItems();
@@ -1135,9 +1141,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             String datafileString = props.getProperty("datafile");
             if (null != datafileString && datafileString.length() > 0) {
-                jTextFieldFilename.setText(datafileString);
                 File f = new File(datafileString);
-                if (f.exists() && f.canRead()) {
+                if (f.exists() && f.canRead() && !f.isDirectory()) {
                     jTextFieldFilename.setText(f.getCanonicalPath());
                     loadFile(f);
                 } else {

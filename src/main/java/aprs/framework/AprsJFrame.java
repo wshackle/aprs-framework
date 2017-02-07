@@ -486,6 +486,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             Utils.runOnDispatchThread(() -> visionToDbJInternalFrame.connectVision());
         }
     }
+    
+    public void disconnectVision() {
+        if (closing) {
+            throw new IllegalStateException("Attempt to start connect vision when already closing.");
+        }
+        if (null != visionToDbJInternalFrame) {
+            Utils.runOnDispatchThread(() -> visionToDbJInternalFrame.disconnectVision());
+        }
+    }
 
     /**
      * Creates new form AprsPddlWrapperJFrame
@@ -888,20 +897,29 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             return dbSetupJInternalFrame.getDbSetupPublisher();
         }
     };
+    
+    private void updateDbConnectedCheckBox(DbSetup setup) {
+        jCheckBoxMenuItemConnectDatabase.setSelected(setup.isConnected());
+    }
 
     private void createDbSetupFrame() {
         if (null == dbSetupJInternalFrame) {
             dbSetupJInternalFrame = new DbSetupJInternalFrame();
             dbSetupJInternalFrame.pack();
             jDesktopPane1.add(dbSetupJInternalFrame);
+            dbSetupJInternalFrame.getDbSetupPublisher().addDbSetupListener(this::updateDbConnectedCheckBox);
         }
     }
 
+    public void setShowVisionConnected(boolean val) {
+        jCheckBoxMenuItemConnectVision.setSelected(val);
+    }
+    
     private void startVisionToDbJinternalFrame() {
         try {
             visionToDbJInternalFrame = new VisionToDbJInternalFrame();
+            visionToDbJInternalFrame.setAprsJFrame(this);
             updateSubPropertiesFiles();
-//        visionToDbJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "visionToDBProperties.txt"));
             visionToDbJInternalFrame.loadProperties();
             visionToDbJInternalFrame.pack();
             visionToDbJInternalFrame.setVisible(true);
@@ -911,7 +929,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
             if (null != pub) {
                 pub.addDbSetupListener(toDbListener);
-
             }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
@@ -1135,7 +1152,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
         jMenu3.add(jCheckBoxMenuItemStartupMotomanCRCLServer);
 
-        jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(true);
         jCheckBoxMenuItemConnectToDatabaseOnStartup.setText("Connect To Database On Startup");
         jCheckBoxMenuItemConnectToDatabaseOnStartup.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1144,8 +1160,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
         jMenu3.add(jCheckBoxMenuItemConnectToDatabaseOnStartup);
 
-        jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(true);
         jCheckBoxMenuItemConnectToVisionOnStartup.setText("Connect To Vision On Startup");
+        jCheckBoxMenuItemConnectToVisionOnStartup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemConnectToVisionOnStartupActionPerformed(evt);
+            }
+        });
         jMenu3.add(jCheckBoxMenuItemConnectToVisionOnStartup);
 
         jCheckBoxMenuItemExploreGraphDbStartup.setText("Explore Graph Database");
@@ -1172,7 +1192,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenu2.setText("Connections");
 
         jCheckBoxMenuItemConnectDatabase.setText("Database");
-        jCheckBoxMenuItemConnectDatabase.setEnabled(false);
         jCheckBoxMenuItemConnectDatabase.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jCheckBoxMenuItemConnectDatabaseActionPerformed(evt);
@@ -1181,7 +1200,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenu2.add(jCheckBoxMenuItemConnectDatabase);
 
         jCheckBoxMenuItemConnectVision.setText("Vision");
-        jCheckBoxMenuItemConnectVision.setEnabled(false);
+        jCheckBoxMenuItemConnectVision.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemConnectVisionActionPerformed(evt);
+            }
+        });
         jMenu2.add(jCheckBoxMenuItemConnectVision);
 
         jMenuBar1.add(jMenu2);
@@ -1458,7 +1481,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_jCheckBoxMenuItemStartupCRCLWebAppActionPerformed
 
     private void jCheckBoxMenuItemConnectDatabaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectDatabaseActionPerformed
-        if (!this.jCheckBoxMenuItemConnectDatabase.isSelected()) {
+        if (this.jCheckBoxMenuItemConnectDatabase.isSelected()) {
+            startConnectDatabase();
+        } else {
             startDisconnectDatabase();
         }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectDatabaseActionPerformed
@@ -1505,6 +1530,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void jMenuItemStartActionListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartActionListActionPerformed
         this.startActions();
     }//GEN-LAST:event_jMenuItemStartActionListActionPerformed
+
+    private void jCheckBoxMenuItemConnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectVisionActionPerformed
+       if(jCheckBoxMenuItemConnectVision.isSelected()) {
+           connectVision();
+       } else {
+           disconnectVision();
+       }
+    }//GEN-LAST:event_jCheckBoxMenuItemConnectVisionActionPerformed
+
+    private void jCheckBoxMenuItemConnectToVisionOnStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectToVisionOnStartupActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jCheckBoxMenuItemConnectToVisionOnStartupActionPerformed
 
     public XFuture<Boolean> startActions() {
         if(null != object2DViewJInternalFrame) {

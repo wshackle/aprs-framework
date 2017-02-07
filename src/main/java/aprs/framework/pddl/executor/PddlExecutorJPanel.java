@@ -1131,10 +1131,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public void saveProperties() throws IOException {
         Map<String, String> propsMap = new HashMap<>();
         String txtString = jTextFieldPddlOutputActions.getText();
-        String relPath = makeShortPath(propertiesFile, txtString);
-        System.out.println("relPath = " + relPath);
-        propsMap.put(PDDLOUTPUT, relPath);
-//        propsMap.put(PDDLCRCLAUTOSTART, Boolean.toString(jCheckBoxAutoStartCrcl.isSelected()));
+        if (txtString != null && txtString.length() > 0) {
+            String relPath = makeShortPath(propertiesFile, txtString);
+            System.out.println("relPath = " + relPath);
+            File chkFile = new File(relPath);
+            if (!chkFile.isDirectory()) {
+                propsMap.put(PDDLOUTPUT, relPath);
+            }
+        }
         Properties props = new Properties();
         props.putAll(propsMap);
         props.putAll(getTableOptions());
@@ -1168,7 +1172,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public void loadActionsFile(File f) throws IOException {
-        if (null != f && f.canRead()) {
+        if (null != f && f.exists()) {
+            if (f.isDirectory()) {
+                System.err.println("Can not loadActionsFile \"" + f + "\" : it is a directory instead of a text file.");
+                return;
+            }
+            if (!f.canRead()) {
+                System.err.println("Can not loadActionsFile \"" + f + "\" : it is not readable.");
+                return;
+            }
             this.setActionsList(new ArrayList<>());
             try (BufferedReader br = new BufferedReader(new FileReader(f))) {
                 String line;
@@ -1191,7 +1203,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public void refresh() {
         String fname = jTextFieldPddlOutputActions.getText();
         File f = new File(fname);
-        if(f.exists() && f.canRead()) {
+        if (f.exists() && f.canRead()) {
             try {
                 loadActionsFile(f);
             } catch (IOException ex) {
@@ -1199,7 +1211,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         }
     }
-    
+
     private void jButtonLoadPddlActionsFromFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadPddlActionsFromFileActionPerformed
         try {
             browseActionsFile();
@@ -3040,30 +3052,37 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     @Override
     public void loadProperties() throws IOException {
-        if (null != propertiesFile && propertiesFile.canRead()) {
+        if (null != propertiesFile && propertiesFile.exists()) {
+            if (propertiesFile.isDirectory()) {
+                System.err.println("Can not loadProperties file \"" + propertiesFile + "\" : It is a directory instead of text file.");
+                return;
+            }
+            if (!propertiesFile.canRead()) {
+                System.err.println("Can not loadProperties file \"" + propertiesFile + "\" : file is not readable.");
+                return;
+            }
             Properties props = new Properties();
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
             String output = props.getProperty(PDDLOUTPUT);
             if (null != output) {
-                jTextFieldPddlOutputActions.setText(output);
                 File f = new File(output);
-                if (f.exists() && f.canRead()) {
-                    jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
+                if (f.exists() && f.canRead() && !f.isDirectory()) {
                     loadActionsFile(f);
+                    jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
                 } else {
                     String fullPath = propertiesFile.getParentFile().toPath().resolve(output).normalize().toString();
 //                    System.out.println("fullPath = " + fullPath);
                     f = new File(fullPath);
-                    if (f.exists() && f.canRead()) {
-                        jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
+                    if (f.exists() && f.canRead() && !f.isDirectory()) {
                         loadActionsFile(f);
+                        jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
                     } else {
                         String fullPath2 = propertiesFile.getParentFile().toPath().resolveSibling(output).normalize().toString();
 //                        System.out.println("fullPath = " + fullPath2);
                         f = new File(fullPath2);
-                        if (f.exists() && f.canRead()) {
+                        if (f.exists() && f.canRead() && !f.isDirectory()) {
                             jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
                             loadActionsFile(f);
                         }
@@ -3117,7 +3136,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     cbm.addElement(sna[i]);
                 }
             }
-
         }
     }
 

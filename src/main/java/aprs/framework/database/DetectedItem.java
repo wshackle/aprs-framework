@@ -30,15 +30,22 @@ import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.vector;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
 import rcs.posemath.PM_CARTESIAN;
 
 /**
- *
+ * This is a general holder for anything that might have a position associated
+ * with it that comes directly or indirectly from the vision system including
+ * parts, kit trays, parts trays, slots in trays, etc.
+ * 
+ * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 //TODO-zeid
 public class DetectedItem extends PM_CARTESIAN {
 
+    final public String origName;
     public String name;
     public String fullName;
     public int repeats;
@@ -67,15 +74,19 @@ public class DetectedItem extends PM_CARTESIAN {
     public long timestamp;
     public DetectedItem tray;
     public long emptySlotsCount;
+    public long totalSlotsCount;
+    public List<DetectedItem> emptySlotsList = new ArrayList<>();
     public int kitTrayNum;
+    public String slotForSkuName;
     
-    public DetectedItem() {
-        score = 100.0;
+    
+    public DetectedItem(String name) {
+        this.name = name;
+        this.origName = name;
     }
-
     
     public DetectedItem(String name, double rotation, double x, double y) {
-        this.name = name;
+        this(name);
         this.rotation = rotation;
         this.vxi = Math.cos(rotation);
         this.vxj = Math.sin(rotation);
@@ -85,17 +96,13 @@ public class DetectedItem extends PM_CARTESIAN {
     }
 
     public DetectedItem(String name, double rotation, double x, double y, double score, String type) {
-        this.name = name;
-        this.rotation = rotation;
-        this.vxi = Math.cos(rotation);
-        this.vxj = Math.sin(rotation);
-        this.x = x;
-        this.y = y;
+        this(name,rotation,x,y);
         this.score = score;
         this.type = type;
     }
     
     public DetectedItem(String name, PoseType pose, int visioncycle) {
+        this.origName = name;
         this.name = name;
         if (null != pose) {
             VectorType xAxis = pose.getXAxis();

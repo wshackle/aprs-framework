@@ -1212,13 +1212,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
         } finally {
             updatingFromArgs = false;
-        }
-//        props.put(this.getDbType() + ".host", this.jTextFieldDBHost.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".port", this.jTextFieldDBPort.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".name", this.jTextFieldDBName.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".user", this.jTextFieldDBUser.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".passwd", this.jPasswordFieldDBPassword.getPassword());
-//        
+        }        
     }
 
     public void autoResizeTableRowHeights(JTable table) {
@@ -1272,10 +1266,12 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     Set<DbSetupListener> dbSetupListeners = new HashSet<>();
 
+    @Override
     public void addDbSetupListener(DbSetupListener listener) {
         dbSetupListeners.add(listener);
     }
 
+    @Override
     public void removeDbSetupListener(DbSetupListener listener) {
         dbSetupListeners.remove(listener);
     }

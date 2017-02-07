@@ -24,6 +24,7 @@
 package aprs.framework.spvision;
 
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
@@ -54,6 +55,10 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     }
     
 
+     public void setAprsJFrame(AprsJFrame aprsJFrame) {
+         this.visionToDBJPanel.setAprsJFrame(aprsJFrame);
+     }
+     
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -218,6 +223,10 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     @Override
     public void connectVision() {
         visionToDBJPanel.connectVision();
+    }
+    
+    public void disconnectVision() {
+        visionToDBJPanel.disconnectVision();
     }
 
     @Override

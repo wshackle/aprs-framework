@@ -22,6 +22,7 @@
  */
 package aprs.framework.spvision;
 
+import aprs.framework.AprsJFrame;
 import static aprs.framework.Utils.autoResizeTableColWidths;
 import static aprs.framework.Utils.runOnDispatchThread;
 import aprs.framework.database.AcquireEnum;
@@ -841,9 +842,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonDisconnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDisconnectVisionActionPerformed
+        disconnectVision();
+    }//GEN-LAST:event_jButtonDisconnectVisionActionPerformed
+
+    public void disconnectVision() {
         stopVisionStartThread();
         closeVision();
-    }//GEN-LAST:event_jButtonDisconnectVisionActionPerformed
+    }
 
     public void closeVision() {
         if (null != visionClient) {
@@ -1104,17 +1109,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.jButtonDisconnectVision.setEnabled(_val);
         this.jLabelVisionStatus.setText(_val ? "CONNECTED" : "DISCONNECTED");
         this.jLabelVisionStatus.setBackground(_val ? Color.GREEN : Color.RED);
-//        if(_val) {
-//            this.jTableFromCognex.getModel().removeTableModelListener(tableModelListener);
-//        } else {
-//            this.jTableFromCognex.getModel().addTableModelListener(tableModelListener);
-//        }
+        if(null != aprsJFrame) {
+            aprsJFrame.setShowVisionConnected(_val);
+        }
     }
 
     public void setDBConnected(boolean _val) {
         try {
-            //        this.jButtonConnectDB.setEnabled(!_val);
-//        this.jButtonDisconnectDB.setEnabled(_val);
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(_val).build());
             this.jLabelDatabaseStatus.setText(_val ? "CONNECTED" : "DISCONNECTED");
             this.jLabelDatabaseStatus.setBackground(_val ? Color.GREEN : Color.RED);
@@ -1122,7 +1123,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 if (null != visionClient) {
                     visionClient.setDebug(this.jCheckBoxDebug.isSelected());
                     visionClient.setTransform(this.getTransformPose());
-//                    visionClient.publishVisionList(dpu, this);
                     visionClient.updateListeners();
                 }
             }
@@ -1345,9 +1345,30 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             startVisionThread = new Thread(() -> startVisionInternal(argsMap), "startVisionThread");
             startVisionThread.setDaemon(true);
             startVisionThread.start();
+            
         } catch (Exception exception) {
             addLogMessage(exception);
         }
+    }
+
+    private AprsJFrame aprsJFrame = null;
+
+    /**
+     * Get the value of aprsJFrame
+     *
+     * @return the value of aprsJFrame
+     */
+    public AprsJFrame getAprsJFrame() {
+        return aprsJFrame;
+    }
+
+    /**
+     * Set the value of aprsJFrame
+     *
+     * @param aprsJFrame new value of aprsJFrame
+     */
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        this.aprsJFrame = aprsJFrame;
     }
 
     private void finishConnectVision() {
@@ -1358,6 +1379,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         saveProperties();
         updateTransformFromTable();
+        if(null != aprsJFrame) {
+            aprsJFrame.setShowVisionConnected(visionClient.isConnected());
+        }
     }
 
     private void jButtonConnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectVisionActionPerformed
@@ -1732,9 +1756,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public void forceUpdateSingle(int row) throws NumberFormatException {
-        DetectedItem item = new DetectedItem();
-
-        item.name = (String) jTableFromVision.getValueAt(row, 1);
+        String name = (String) jTableFromVision.getValueAt(row, 1);
+        DetectedItem item = new DetectedItem(name);
         item.rotation = Double.valueOf(jTableFromVision.getValueAt(row, 3).toString());
         item.x = Double.valueOf(jTableFromVision.getValueAt(row, 4).toString());
         item.y = Double.valueOf(jTableFromVision.getValueAt(row, 5).toString());

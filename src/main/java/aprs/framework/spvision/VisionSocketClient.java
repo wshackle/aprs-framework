@@ -229,7 +229,7 @@ public class VisionSocketClient implements AutoCloseable {
             int index = 0;
             long timestamp = System.currentTimeMillis();
             for (i = 0; i < fa.length - 5; i += 6) {
-                DetectedItem ci = (listOut.size() > index) ? listOut.get(index) : new DetectedItem();
+                DetectedItem ci = (listOut.size() > index) ? listOut.get(index) : new DetectedItem(fa[i]);
                 ci.timestamp = timestamp;
                 if (fa[i].length() < 1) {
                     continue;
