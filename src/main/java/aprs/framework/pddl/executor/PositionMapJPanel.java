@@ -173,10 +173,12 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     public final List<PositionMap> getReversePositionMaps() {
         if (null == reversePositionMaps) {
             reversePositionMaps = new ArrayList<>();
-            for (int i = positionMaps.size()-1; i >= 0 ; i--) {
+            for (int i = positionMaps.size() - 1; i >= 0; i--) {
                 PositionMap pm = positionMaps.get(i);
-                PositionMap rpm = pm.reverse();
-                reversePositionMaps.add(rpm);
+                if (null != pm && pm.getErrmapList() != null && pm.getErrmapList().size() > 0) {
+                    PositionMap rpm = pm.reverse();
+                    reversePositionMaps.add(rpm);
+                }
             }
         }
         return Collections.unmodifiableList(reversePositionMaps);

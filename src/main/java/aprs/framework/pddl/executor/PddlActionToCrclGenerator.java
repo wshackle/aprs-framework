@@ -322,6 +322,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 case "take-part":
                     takePart(action, cmds);
                     break;
+
+                case "test-part-position":
+                    testPartPosition(action, cmds);
+                    break;
                 case "look-for-part":
                     lookForPart(action, cmds);
                     actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
@@ -475,6 +479,26 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         return pout;
     }
+    
+    public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+        if (null == qs) {
+            throw new IllegalStateException("Database not setup and connected.");
+        }
+        checkSettings();
+        String partName = action.getArgs()[1];
+        MessageType msg = new MessageType();
+        msg.setMessage("take-part " + partName);
+        msg.setCommandID(BigInteger.valueOf(out.size() + 2));
+        out.add(msg);
+
+        PoseType pose = getPartPose(partName);
+        pose = correctPose(pose);
+        returnPosesByName.put(action.getArgs()[1], pose);
+        pose.setXAxis(xAxis);
+        pose.setZAxis(zAxis);
+        testPartPositionPose(out, pose);
+        lastTakenPart = partName;
+    }
 
     public void takePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
@@ -501,6 +525,35 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return pose;
     }
 
+    public void testPartPositionPose(List<MiddleCommandType> cmds, PoseType pose) {
+
+        addOpenGripper(cmds);
+
+        checkSettings();
+        PoseType poseAbove = CRCLPosemath.copy(pose);
+        poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+
+        addSetFastSpeed(cmds);
+
+        addMoveTo(cmds, poseAbove, false);
+
+        addSettleDwell(cmds);
+
+        addSetSlowSpeed(cmds);
+
+        addMoveTo(cmds, pose, true);
+
+        addSettleDwell(cmds);
+
+//        addCloseGripper(cmds);
+//
+//        addSettleDwell(cmds);
+//
+//        addMoveTo(cmds, poseAbove, true);
+//
+//        addSettleDwell(cmds);
+    }
+    
     public void takePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
 
         addOpenGripper(cmds);
@@ -520,7 +573,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addMoveTo(cmds, pose, true);
 
         addSettleDwell(cmds);
-        
+
         addCloseGripper(cmds);
 
         addSettleDwell(cmds);
@@ -779,7 +832,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addMoveTo(cmds, pose, true);
 
         addSettleDwell(cmds);
-        
+
         addOpenGripper(cmds);
 
         addSettleDwell(cmds);
