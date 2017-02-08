@@ -1278,7 +1278,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         for (int i = 0; i < in.size(); i++) {
             DetectedItem inItem = in.get(i);
             PoseType newPose = CRCLPosemath.multiply(transform, inItem.toCrclPose());
-            DetectedItem outItem = new DetectedItem(inItem.name, newPose, inItem.visioncycle);
+            DetectedItem outItem = new DetectedItem(inItem.origName, newPose, inItem.visioncycle);
+            outItem.name = inItem.name;
             outItem.repeats = inItem.repeats;
             outItem.index = inItem.index;
             outItem.fullName = inItem.fullName;
@@ -1286,6 +1287,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             outItem.score = inItem.score;
             outItem.type = inItem.type;
             outItem.rotation = inItem.rotation;
+            outItem.slotForSkuName = inItem.slotForSkuName;
+            outItem.emptySlotsCount = inItem.emptySlotsCount;
+            outItem.tray = inItem.tray;
+            outItem.emptySlotsList = transformList(inItem.emptySlotsList,transform);
+            outItem.totalSlotsCount = inItem.totalSlotsCount;
+            outItem.timestamp = inItem.timestamp;
             out.add(outItem);
         }
         return out;

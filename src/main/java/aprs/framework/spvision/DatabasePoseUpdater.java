@@ -647,16 +647,17 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         String sku_name = resultMap.get("sku_name");
                         double x = fix(rs, "x") * 1000.0;
                         double y = fix(rs, "y") * 1000.0;
-
-                        if (sku_name.startsWith("sku_")) {
-                            sku_name = sku_name.substring(4);
+                        String short_sku_name = sku_name;
+                        if (short_sku_name.startsWith("sku_")) {
+                            short_sku_name = short_sku_name.substring(4);
                         }
 
-                        if (sku_name.startsWith("part_")) {
-                            sku_name = sku_name.substring(5);
+                        if (short_sku_name.startsWith("part_")) {
+                            short_sku_name = short_sku_name.substring(5);
                         }
-                        DetectedItem item = new DetectedItem(sku_name, 0, x, y);
+                        DetectedItem item = new DetectedItem(short_sku_name, 0, x, y);
                         item.fullName = name;
+                        item.slotForSkuName = sku_name;
                         ret.add(item);
                     }
                 }
@@ -719,14 +720,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
             );
             item.type = "SLOT";
             item.tray = tray;
-            item.slotForSkuName = sku_name;
+            item.slotForSkuName = offsetItem.slotForSkuName;
             ret.add(item);
             item = new DetectedItem("empty_slot_for_" + sku_name + "_in_" + tray_name, 0,
                     tray.x + x * Math.cos(angle) - y * Math.sin(angle),
                     tray.y + x * Math.sin(angle) + y * Math.cos(angle));
             item.type = "EMPTY_SLOT";
             item.tray = tray;
-            item.slotForSkuName = sku_name;
+            item.slotForSkuName = offsetItem.slotForSkuName;
             ret.add(item);
         }
         return ret;
@@ -837,19 +838,23 @@ public class DatabasePoseUpdater implements AutoCloseable {
         }
     }
 
-    public int bestIndex(DetectedItem item, List<DetectedItem> list) {
-        int bestIndexRet = 0;
+    public int bestIndex(DetectedItem item, List<DetectedItem> slotList) {
+        int bestIndexRet = Integer.MAX_VALUE;
         double minDist = Double.POSITIVE_INFINITY;
-        for (int i = 0; i < list.size(); i++) {
-            double dist = item.distFromXY(list.get(i));
-            if(dist < minDist) {
+        for (int i = 0; i < slotList.size(); i++) {
+            DetectedItem slot = slotList.get(i);
+            if (!slot.slotForSkuName.equals(item.origName)) {
+                continue;
+            }
+            double dist = item.distFromXY(slot);
+            if (dist < minDist) {
                 minDist = dist;
                 bestIndexRet = i;
             }
         }
         return bestIndexRet;
     }
-    
+
     public List<DetectedItem> updateVisionList(List<DetectedItem> inList,
             boolean addRepeatCountsToName) {
         List<DetectedItem> itemsToVerify = new ArrayList<>();
@@ -916,17 +921,18 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     for (int j = 0; j < kit.emptySlotsList.size(); j++) {
                         DetectedItem slot = kit.emptySlotsList.get(j);
 
-                        DetectedItem bestSlotFiller =
-                                firstSortParts.stream()
-                                .filter((DetectedItem p) -> Objects.equals(p.origName, slot.slotForSkuName))
-                                .findFirst()
-                                .orElse(null);
-                        if(null != bestSlotFiller) {
+                        DetectedItem bestSlotFiller
+                                = firstSortParts.stream()
+                                        .filter((DetectedItem p) -> p.insidePartsTray)
+                                        .filter((DetectedItem p) -> Objects.equals(p.origName, slot.slotForSkuName))
+                                        .findFirst()
+                                        .orElse(null);
+                        if (null != bestSlotFiller) {
                             slotFillers.add(bestSlotFiller);
                             firstSortParts.remove(bestSlotFiller);
                         }
                     }
-                    slotFillers.sort(comparingInt((DetectedItem slotFiller) -> bestIndex(slotFiller,kit.emptySlotsList)));
+                    slotFillers.sort(comparingInt((DetectedItem slotFiller) -> bestIndex(slotFiller, kit.emptySlotsList)));
                     matchedParts.addAll(slotFillers);
                 }
                 list = new ArrayList<>();

@@ -51,10 +51,6 @@ public class DetectedItem extends PM_CARTESIAN {
     public int repeats;
     public int index;
     public double rotation;
-    // x,y,z now part of PM_CARTESIAN 
-//    public double x;
-//    public double y;
-//    public double z;
     public double vxi = 1;
     public double vxj = 0;
     public double vxk = 0;
