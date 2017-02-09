@@ -284,7 +284,7 @@ public class DbSetupBuilder {
 
     }
 
-    public DbSetupBuilder setup(DbSetup setup) throws IOException {
+    public DbSetupBuilder setup(DbSetup setup)  {
         type = setup.getDbType();
         host = setup.getHost();
         dbname = setup.getDbName();
@@ -298,9 +298,17 @@ public class DbSetupBuilder {
         debug = setup.isDebug();
         if (null == queriesMap) {
             if (internalQueriesResourceDir) {
-                queriesMap = readRelResourceQueriesDirectory(queriesDir);
+                try {
+                    queriesMap = readRelResourceQueriesDirectory(queriesDir);
+                } catch (IOException ex) {
+                    Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                }
             } else {
-                queriesMap = readQueriesDirectory(queriesDir);
+                try {
+                    queriesMap = readQueriesDirectory(queriesDir);
+                } catch (IOException ex) {
+                    Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
         return this;

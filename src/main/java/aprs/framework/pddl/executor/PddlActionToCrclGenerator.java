@@ -244,25 +244,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private Map<String, String> options = null;
 
-//    private boolean lookForDone = false;
-//
-//    /**
-//     * Get the value of lookForDone
-//     *
-//     * @return the value of lookForDone
-//     */
-//    public boolean isLookForDone() {
-//        return lookForDone;
-//    }
-//
-//    /**
-//     * Set the value of lookForDone
-//     *
-//     * @param lookForDone new value of lookForDone
-//     */
-//    public void setLookForDone(boolean lookForDone) {
-//        this.lookForDone = lookForDone;
-//    }
     private int lastIndex;
 
     /**

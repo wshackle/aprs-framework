@@ -1,5 +1,5 @@
 #
-#Fri Feb 03 15:49:36 EST 2017
+#Thu Feb 09 15:52:09 EST 2017
 lookDwellTime=3.0
 approachZOffset=50.0
 manualPartNames=[empty_slot_for_large_gear_in_kit_s2l2_vessel, empty_slot_for_small_gear_in_kit_s2l2_vessel, kit_lg2small2_2_slot_l2, large_gear_2, large_gear_1, kit_lg2small2_1_slot_s2, small_gear_2, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]
@@ -11,4 +11,5 @@ rpy=180.0,0.0,0.0
 lookDwell=1.0
 defaultDwellTime=0.5
 lookForXYZ=240,435,0
+manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
 pddl.output=..\\..\\..\\example_pddl\\feb_2_2017_motoman_demo_actions.txt

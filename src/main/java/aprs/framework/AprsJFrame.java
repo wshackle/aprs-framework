@@ -56,6 +56,7 @@ import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
 import crcl.base.CRCLCommandType;
 import crcl.base.CRCLProgramType;
+import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
@@ -417,6 +418,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private String titleErrorString = null;
+
+    public String getTitleErrorString() {
+        return titleErrorString;
+    }
+
+    public void setTitleErrorString(String titleErrorString) {
+        this.titleErrorString = titleErrorString;
+        setTitle(titleErrorString);
+        System.err.println(titleErrorString);
+    }
+
     private void startMotomanCrclServer() {
         try {
             if (null == motomanCrclServerJInternalFrame) {
@@ -429,6 +442,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             addInternalFrame(motomanCrclServerJInternalFrame);
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            setTitleErrorString("Error starting motoman crcl server:" + ex.getMessage());
         }
     }
 
@@ -468,8 +482,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }
             }
             System.out.println("Finished connect to database.");
-        } catch (IOException | InterruptedException | ExecutionException iOException) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, iOException);
+        } catch (Exception ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             if (null != futures) {
                 for (Future<?> f : futures) {
                     f.cancel(true);
@@ -486,7 +500,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             Utils.runOnDispatchThread(() -> visionToDbJInternalFrame.connectVision());
         }
     }
-    
+
     public void disconnectVision() {
         if (closing) {
             throw new IllegalStateException("Attempt to start connect vision when already closing.");
@@ -769,11 +783,20 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (str.startsWith("Object2D")) {
             return ACTIVE_WINDOW_NAME.SIMVIEW_WINDOW;
         }
-        if (str.startsWith("[Object SP]")) {
+        if (str.startsWith("[Object SP]") || str.endsWith("Vision To Database")) {
             return ACTIVE_WINDOW_NAME.VISION_TO_DB_WINDOW;
         }
         if (str.startsWith("CRCL Simulation Server")) {
             return ACTIVE_WINDOW_NAME.CRCL_CLIENT_WINDOW;
+        }
+        if (str.startsWith("Database Setup")) {
+            return ACTIVE_WINDOW_NAME.DATABASE_SETUP_WINDOW;
+        }
+        if (str.startsWith("PDDL Planner")) {
+            return ACTIVE_WINDOW_NAME.PDDL_PLANNER_WINDOW;
+        }
+        if (str.startsWith("PDDL Actions to CRCL") || str.endsWith("(Executor)")) {
+            return ACTIVE_WINDOW_NAME.PDDL_EXECUTOR_WINDOW;
         }
         return ACTIVE_WINDOW_NAME.OTHER;
     }
@@ -806,7 +829,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private void updateTitle(String stateString, String stateDescription) {
         String oldTitle = getTitle();
-        String newTitle = "APRS : " + ((robotName != null) ? robotName : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : " + stateDescription;
+        String newTitle = "APRS : " + ((robotName != null) ? robotName : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : "
+                + stateDescription
+                + ((titleErrorString != null) ? ": " + titleErrorString : "");
         if (newTitle.length() > 70) {
             newTitle = newTitle.substring(0, 70) + " ... ";
         }
@@ -827,6 +852,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             if (null == cs || null == cs.getCommandState()) {
                 updateTitle("", "");
             } else {
+                if (cs.getCommandState() == CommandStateEnumType.CRCL_DONE) {
+                    titleErrorString = null;
+                }
                 updateTitle(cs.getCommandState().toString(), cs.getStateDescription());
             }
         } else {
@@ -897,7 +925,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             return dbSetupJInternalFrame.getDbSetupPublisher();
         }
     };
-    
+
     private void updateDbConnectedCheckBox(DbSetup setup) {
         jCheckBoxMenuItemConnectDatabase.setSelected(setup.isConnected());
     }
@@ -914,7 +942,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void setShowVisionConnected(boolean val) {
         jCheckBoxMenuItemConnectVision.setSelected(val);
     }
-    
+
     private void startVisionToDbJinternalFrame() {
         try {
             visionToDbJInternalFrame = new VisionToDbJInternalFrame();
@@ -1532,11 +1560,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_jMenuItemStartActionListActionPerformed
 
     private void jCheckBoxMenuItemConnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectVisionActionPerformed
-       if(jCheckBoxMenuItemConnectVision.isSelected()) {
-           connectVision();
-       } else {
-           disconnectVision();
-       }
+        if (jCheckBoxMenuItemConnectVision.isSelected()) {
+            connectVision();
+        } else {
+            disconnectVision();
+        }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectVisionActionPerformed
 
     private void jCheckBoxMenuItemConnectToVisionOnStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectToVisionOnStartupActionPerformed
@@ -1544,7 +1572,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_jCheckBoxMenuItemConnectToVisionOnStartupActionPerformed
 
     public XFuture<Boolean> startActions() {
-        if(null != object2DViewJInternalFrame) {
+        if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh();
         }
         if (null != pddlExecutorJInternalFrame1) {
@@ -1882,6 +1910,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         activateFrame(pddlPlannerJInternalFrame);
                     }
                     break;
+
+                case VISION_TO_DB_WINDOW:
+                    if (null != visionToDbJInternalFrame) {
+                        activateFrame(visionToDbJInternalFrame);
+                    }
+                    break;
             }
         }
     }
@@ -2195,9 +2229,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             System.out.println("Finished disconnect from database.");
 
-        } catch (IOException iOException) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class
-                    .getName()).log(Level.SEVERE, null, iOException);
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 

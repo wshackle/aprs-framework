@@ -2693,31 +2693,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getMiddleCommand().addAll(cmds);
         program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
         XFuture<Boolean> ret = startCrclProgram(program);
-
-//        if (null != getPositionMap()) {
-//            PointType offset = getPositionMap().getLastOffset();
-//            if (null != offset) {
-//                jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX().doubleValue(), offset.getY().doubleValue()));
-//            }
-//            PoseType testPose = getPositionMap().getLastPoseOut();
-//            if (null != testPose) {
-//                String testPoseString
-//                        = String.format("%.1f, %.1f, %.1f",
-//                                testPose.getPoint().getX().doubleValue(),
-//                                testPose.getPoint().getY().doubleValue(),
-//                                testPose.getPoint().getZ().doubleValue());
-//                jTextFieldAdjPose.setText(testPoseString);
-//            }
-//            PoseType origPose = getPositionMap().getLastPoseIn();
-//            if (null != origPose) {
-//                String origPoseString
-//                        = String.format("%.1f, %.1f, %.1f",
-//                                origPose.getPoint().getX().doubleValue(),
-//                                origPose.getPoint().getY().doubleValue(),
-//                                origPose.getPoint().getZ().doubleValue());
-//                this.jTextFieldTestPose.setText(origPoseString);
-//            }
-//        }
         replanStarted.set(false);
         return ret;
     }

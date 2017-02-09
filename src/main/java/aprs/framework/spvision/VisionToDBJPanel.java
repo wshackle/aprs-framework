@@ -1997,7 +1997,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     dbSetupPublisher.getDbSetup().getQueriesMap());
             dpu.setVerify(this.jCheckBoxVerifyUpdates.isSelected());
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).type(dbtype).build());
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
             closeDatabasePoseUpdater();
         }
@@ -2012,8 +2012,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 try {
                     this.oldDbType = null;
                     dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(curSetup).type(dupDbType).build());
-//                this.jComboBoxDbType.setSelectedItem(dupDbType);
-                } catch (IOException ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }

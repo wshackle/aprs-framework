@@ -507,7 +507,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     return stealFor.safeAbortAndDisconnectAsync();
                 })
                 .thenCompose(x -> {
-                    return SplashScreen.showMessageFullScreen("Returning \n" + stealFromRobotName, 80.0f, 
+                    return SplashScreen.showMessageFullScreen("Returning \n" + stealFromRobotName, 80.0f,
                             SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList(), gd);
                 })
                 .thenRun(() -> {
@@ -528,16 +528,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     return stealFrom.continueActionList();
                 })
                 .thenCompose(x -> {
-                    return SplashScreen.showMessageFullScreen("All \nTasks \nComplete", 80.0f, 
+                    return SplashScreen.showMessageFullScreen("All \nTasks \nComplete", 80.0f,
                             null, SplashScreen.getBlueWhiteGreenColorList(), gd);
-                })
-                .handle((x, thrown) -> {
-                    if(null != thrown) {
-                        thrown.printStackTrace();
-                    }
-                    return x;
                 });
-
     }
 
     private final Map<String, Boolean> robotEnableMap = new HashMap<>();
@@ -1331,7 +1324,12 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         for (int i = 0; i < aprsSystems.size(); i++) {
             futures[i] = aprsSystems.get(i).startActions();
         }
-        return XFuture.allOf(futures);
+        final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
+        return XFuture.allOf(futures)
+                .thenCompose(x -> {
+                    return SplashScreen.showMessageFullScreen("All \nTasks \nComplete", 80.0f,
+                            null, SplashScreen.getBlueWhiteGreenColorList(), gd);
+                });
     }
 
     public void immediateAbortAll() {

@@ -1,6 +1,6 @@
 #
-#Fri Feb 03 15:49:36 EST 2017
-STARTUP_ACTIVE_WIN=OTHER
+#Thu Feb 09 15:52:09 EST 2017
+STARTUP_ACTIVE_WIN=VISION_TO_DB_WINDOW
 startup.pddl.objectview=true
 startup.pddl.planner=true
 startup.pddl.objectsp=true
