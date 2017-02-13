@@ -88,6 +88,13 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("queriesMap does not contain getPose");
         }
         getPoseStatement = con.prepareStatement(getPoseQueryString);
+        //-- zeid
+        String getPartDesignPartCountQueryString = getQueryInfo.getQuery();
+        if (null == getPartDesignPartCountQueryString) {
+            throw new IllegalArgumentException("queriesMap does not contain getPartDesignPartCountQueryString");
+        }
+        getPartDesignPartCountStatement = con.prepareStatement(getPartDesignPartCountQueryString);
+        
         String setPoseQueryString = setQueryInfo.getQuery();
         if (null == setPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain setPose");
@@ -128,6 +135,7 @@ public class QuerySet implements QuerySetInterface {
     private final DbType dbtype;
     private final Map<DbQueryEnum, DbQueryInfo> queriesMap;
     private java.sql.PreparedStatement getPoseStatement;
+    private java.sql.PreparedStatement getPartDesignPartCountStatement;
     private java.sql.PreparedStatement setPoseStatement;
     private java.sql.PreparedStatement getAllTrayDesignsStatement;
     private java.sql.PreparedStatement getSingleTrayDesignStatement;
@@ -284,6 +292,16 @@ public class QuerySet implements QuerySetInterface {
         this.debug = debug;
     }
 
+    public int getPartDesignPartCount(String name) throws SQLException {
+    if (closed) {
+            throw new IllegalStateException("QuerySet already closed.");
+        }
+    int count=0;
+    Map<Integer, Object> map = new TreeMap<>();
+    DbQueryInfo getCountQueryInfo = queriesMap.get(DbQueryEnum.GET_PARTDESIGN_PART_COUNT);
+    setQueryStringParam(getPartDesignPartCountStatement, getCountQueryInfo, DbParamTypeEnum.NAME, name, map);
+    return count;
+}
     
     @Override
     public PoseType getPose(String name) throws SQLException {
