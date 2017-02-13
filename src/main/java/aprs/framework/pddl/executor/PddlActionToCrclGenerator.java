@@ -299,6 +299,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 case "place-part":
                     placePart(action, cmds);
                     break;
+                    
+                case "end-kit":
+                    endKit(action, cmds);
+                    break;
             }
             actionToCrclIndexes[lastIndex] = cmds.size();
             actionToCrclLabels[lastIndex] = "";
@@ -465,6 +469,21 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         lastTakenPart = partName;
     }
 
+    //-- zeid
+    public void endKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+        if (null == qs) {
+            throw new IllegalStateException("Database not setup and connected.");
+        }
+        checkSettings();
+        String kitName = action.getArgs()[0];
+        MessageType msg = new MessageType();
+        msg.setMessage("end-kit " + kitName);
+        msg.setCommandID(BigInteger.valueOf(out.size() + 2));
+        out.add(msg);
+        
+        int partDesignPartCount = getPartDesignPartCount(kitName);
+    }
+    
     public void takePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
@@ -494,6 +513,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return pose;
     }
 
+    public int getPartDesignPartCount(String kitName)throws SQLException {
+        int count = qs.getPartDesignPartCount(kitName);
+        return count;
+    }
     public void testPartPositionPose(List<MiddleCommandType> cmds, PoseType pose) {
 
         addOpenGripper(cmds);
@@ -786,6 +809,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }));
     }
 
+    
     private VectorType zAxis = vector(0.0, 0.0, -1.0);
 
     public void placePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
