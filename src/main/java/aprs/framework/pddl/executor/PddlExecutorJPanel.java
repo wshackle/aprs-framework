@@ -43,6 +43,7 @@ import crcl.base.MessageType;
 import crcl.base.MiddleCommandType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
+import crcl.utils.CrclCommandWrapper;
 import crcl.ui.XFuture;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.utils.CRCLException;
@@ -101,6 +102,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -1329,8 +1331,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     area.setVisible(true);
                     crclAreas.add(area);
                 }
-                crclAreas.get(row).setText(value.toString());
-                return crclAreas.get(row);
+                JTextArea area = crclAreas.get(row);
+                if(area != null) {
+                    area.setText(Objects.toString(value));
+                }
+                return area;
             }
 
         });
@@ -1412,6 +1417,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         }
         for (MiddleCommandType midCmd : crclProgram.getMiddleCommand()) {
+            if(midCmd instanceof CrclCommandWrapper) {
+                CrclCommandWrapper wrapper = (CrclCommandWrapper) midCmd;
+                midCmd = wrapper.getWrappedCommand();
+            }
             if (null != midCmd) {
                 try {
                     instance.setCRCLCommand(midCmd);

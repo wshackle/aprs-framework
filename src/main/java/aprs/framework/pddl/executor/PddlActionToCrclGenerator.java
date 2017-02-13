@@ -43,6 +43,7 @@ import crcl.base.SetRotSpeedType;
 import crcl.base.SetTransSpeedType;
 import crcl.base.TransSpeedAbsoluteType;
 import crcl.base.VectorType;
+import crcl.utils.CrclCommandWrapper;
 import crcl.utils.CRCLPosemath;
 import static crcl.utils.CRCLPosemath.pose;
 import java.math.BigDecimal;
@@ -60,6 +61,8 @@ import rcs.posemath.PmCartesian;
 import rcs.posemath.PmRpy;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import crcl.utils.CrclCommandWrapper.CRCLCommandWrapperConsumer;
+import java.util.Date;
 
 /**
  *
@@ -150,26 +153,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.qs.setDebug(debug);
     }
 
-//    private Map<DbQueryEnum, String> queriesMap;
-//
-//    {
-//        queriesMap = new EnumMap<DbQueryEnum, String>(DbQueryEnum.class);
-//        queriesMap.put(DbQueryEnum.GET_SINGLE_POSE, "MATCH pointpath=(source { name:{1} } ) -[:hasPhysicalLocation_RefObject]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
-//                + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
-//                + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
-//                + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z, xaxis.hasVector_I as vxi,xaxis.hasVector_J as vxj,xaxis.hasVector_K as vxk, zaxis.hasVector_I as vzi,zaxis.hasVector_J as vzj,zaxis.hasVector_K as vzk");
-//        queriesMap.put(DbQueryEnum.SET_SINGLE_POSE,
-//                "MERGE (thing:SolidObject { name:{1} } )\n"
-//                + "merge (thing) - [:hasPhysicalLocation_RefObject] -> (pl:PhysicalLocation)\n"
-//                + "merge (pl) - [:hasPoseLocation_Pose] -> (pose:PoseLocation)\n"
-//                + "merge (pose) - [:hasPose_Point] -> (pt:Point)\n"
-//                + "merge (pose) - [:hasPose_XAxis] -> (xaxis:Vector)\n"
-//                + "merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)\n"
-//                + "set pt.hasPoint_X= {2},pt.hasPoint_Y= {3},pt.hasPoint_Z= {4}\n"
-//                + "set xaxis.hasVector_I={5}, xaxis.hasVector_J={6}, xaxis.hasVector_K={7}\n"
-//                + "set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}"
-//        );
-//    }
+
     public synchronized void setDbConnection(Connection dbConnection) {
         try {
             if (null != this.dbConnection && dbConnection != this.dbConnection && closeDbConnection) {
@@ -498,6 +482,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
+        String markerMsg = "took part "+partName;
+        addMarkerCommand(out, markerMsg, x -> {
+            System.out.println(markerMsg +" at "+ new Date());
+        });
         lastTakenPart = partName;
     }
 
@@ -790,7 +778,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             PoseType poseOffset = pose(point(tsd.getX_OFFSET(), tsd.getY_OFFSET(), 0.), vector(1., 0., 0.), vector(0., 0., 1.));
             pose = CRCLPosemath.multiply(pose, poseOffset);
         }
+        final String msg = "place part "+getLastTakenPart() +" in "+action.getArgs()[6];
         placePartByPose(out, pose);
+        addMarkerCommand(out,msg , 
+                ((t) -> {
+                    System.out.println(msg +" completed at "+new Date());
+                }));
     }
 
     private VectorType zAxis = vector(0.0, 0.0, -1.0);
@@ -830,6 +823,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         dwellCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         dwellCmd.setDwellTime(settleDwellTime);
         cmds.add(dwellCmd);
+    }
+    
+    private void addMarkerCommand(List<MiddleCommandType> cmds,String message, CRCLCommandWrapperConsumer cb) {
+        MessageType messageCmd = new MessageType();
+        messageCmd.setMessage(message);
+        messageCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        CrclCommandWrapper wrapper = CrclCommandWrapper.wrapWithOnDone(messageCmd, cb);
+        cmds.add(wrapper);
     }
 
     @Override
