@@ -533,6 +533,8 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 });
     }
 
+
+    
     private final Map<String, Boolean> robotEnableMap = new HashMap<>();
 
     private String readFirstLine(File f) throws IOException {
@@ -1325,11 +1327,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             futures[i] = aprsSystems.get(i).startActions();
         }
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
-        return XFuture.allOf(futures)
-                .thenCompose(x -> {
-                    return SplashScreen.showMessageFullScreen("All \nTasks \nComplete", 80.0f,
-                            null, SplashScreen.getBlueWhiteGreenColorList(), gd);
-                });
+        return XFuture.allOf(futures);
+//                .thenCompose(x -> {
+//                    return SplashScreen.showMessageFullScreen("All \nTasks \nComplete", 80.0f,
+//                            null, SplashScreen.getBlueWhiteGreenColorList(), gd);
+//                });
     }
 
     public void immediateAbortAll() {

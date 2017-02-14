@@ -63,6 +63,8 @@ import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import crcl.utils.CrclCommandWrapper.CRCLCommandWrapperConsumer;
 import java.util.Date;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
 
 /**
  *
@@ -152,7 +154,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.debug = debug;
         this.qs.setDebug(debug);
     }
-
 
     public synchronized void setDbConnection(Connection dbConnection) {
         try {
@@ -299,7 +300,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 case "place-part":
                     placePart(action, cmds);
                     break;
-                    
+
                 case "end-kit":
                     endKit(action, cmds);
                     break;
@@ -448,7 +449,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         return pout;
     }
-    
+
     public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
@@ -480,9 +481,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setMessage("end-kit " + kitName);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
-        
+
         int partDesignPartCount = getPartDesignPartCount(kitName);
     }
+
     
     public void takePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
@@ -501,9 +503,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
-        String markerMsg = "took part "+partName;
+        String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
-            System.out.println(markerMsg +" at "+ new Date());
+            System.out.println(markerMsg + " at " + new Date());
         });
         lastTakenPart = partName;
     }
@@ -513,10 +515,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return pose;
     }
 
-    public int getPartDesignPartCount(String kitName)throws SQLException {
+    public int getPartDesignPartCount(String kitName) throws SQLException {
         int count = qs.getPartDesignPartCount(kitName);
         return count;
     }
+
     public void testPartPositionPose(List<MiddleCommandType> cmds, PoseType pose) {
 
         addOpenGripper(cmds);
@@ -545,7 +548,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //
 //        addSettleDwell(cmds);
     }
-    
+
     public void takePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
 
         addOpenGripper(cmds);
@@ -738,12 +741,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         cmds.add(sau);
     }
 
-    private void lookForPart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
-
-        checkSettings();
-        if (null == qs) {
-            throw new IllegalStateException("Database not setup and connected.");
-        }
+    public void addMoveToLookForPosition(List<MiddleCommandType> out) {
         PoseType pose = new PoseType();
         String lookforXYZSring = options.get("lookForXYZ");
         String lookForXYZFields[] = lookforXYZSring.split(",");
@@ -757,14 +755,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addOpenGripper(out, pose);
 
         addMoveTo(out, pose, false);
+    }
+    
+    private void lookForPart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+
+        checkSettings();
+        if (null == qs) {
+            throw new IllegalStateException("Database not setup and connected.");
+        }
+        addMoveToLookForPosition(out);
 
         addLookDwell(out);
-
-        MessageType msg = new MessageType();
-        msg.setMessage("look-for " + action.getArgs()[1] + " from " + lookforXYZSring);
-        msg.setCommandID(BigInteger.valueOf(out.size() + 2));
-        out.add(msg);
-
     }
 
     private void addOpenGripper(List<MiddleCommandType> out, PoseType pose) {
@@ -779,7 +780,59 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         dwellCmd.setDwellTime(lookDwellTime);
         out.add(dwellCmd);
     }
+    
+    public static class PlacePartInfo {
+        private final PddlAction action;
+        private final int pddlActionIndex;
+        private final int outIndex;
+        private CrclCommandWrapper wrapper = null;
+        
 
+        public PlacePartInfo(PddlAction action, int pddlActionIndex, int outIndex) {
+            this.action = action;
+            this.pddlActionIndex = pddlActionIndex;
+            this.outIndex = outIndex;
+        }
+
+        public CrclCommandWrapper getWrapper() {
+            return wrapper;
+        }
+
+        public void setWrapper(CrclCommandWrapper wrapper) {
+            this.wrapper = wrapper;
+        }
+
+        
+        public PddlAction getAction() {
+            return action;
+        }
+
+
+        public int getPddlActionIndex() {
+            return pddlActionIndex;
+        }
+
+        public int getOutIndex() {
+            return outIndex;
+        }
+       
+    }
+    
+    private ConcurrentLinkedQueue<Consumer<PlacePartInfo>> placePartConsumers = new ConcurrentLinkedQueue<>();
+    
+
+    public void addPlacePartConsumer(Consumer<PlacePartInfo> consumer) {
+        placePartConsumers.add(consumer);
+    }
+    
+    public void removePlacePartConsumer(Consumer<PlacePartInfo> consumer) {
+        placePartConsumers.remove(consumer);
+    }
+    
+    public void notifyPlacePartConsumers(PlacePartInfo ppi) {
+        placePartConsumers.forEach(consumer -> consumer.accept(ppi));
+    }
+    
     private void placePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
@@ -801,15 +854,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             PoseType poseOffset = pose(point(tsd.getX_OFFSET(), tsd.getY_OFFSET(), 0.), vector(1., 0., 0.), vector(0., 0., 1.));
             pose = CRCLPosemath.multiply(pose, poseOffset);
         }
-        final String msg = "place part "+getLastTakenPart() +" in "+action.getArgs()[6];
+        final String msg = "place part " + getLastTakenPart() + " in " + action.getArgs()[6];
         placePartByPose(out, pose);
-        addMarkerCommand(out,msg , 
-                ((t) -> {
-                    System.out.println(msg +" completed at "+new Date());
+        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
+        addMarkerCommand(out, msg,
+                ((CrclCommandWrapper wrapper) -> {
+                    System.out.println(msg + " completed at " + new Date());
+                    ppi.setWrapper(wrapper);
+                    notifyPlacePartConsumers(ppi);
                 }));
     }
 
-    
     private VectorType zAxis = vector(0.0, 0.0, -1.0);
 
     public void placePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
@@ -848,8 +903,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         dwellCmd.setDwellTime(settleDwellTime);
         cmds.add(dwellCmd);
     }
-    
-    private void addMarkerCommand(List<MiddleCommandType> cmds,String message, CRCLCommandWrapperConsumer cb) {
+
+    private void addMarkerCommand(List<MiddleCommandType> cmds, String message, CRCLCommandWrapperConsumer cb) {
         MessageType messageCmd = new MessageType();
         messageCmd.setMessage(message);
         messageCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));

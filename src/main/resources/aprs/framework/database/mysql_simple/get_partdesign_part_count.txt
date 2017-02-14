@@ -1,0 +1,3 @@
+#params=PART_DESIGN_NAME(1),TRAY_DESIGN_NAME(1),
+#results={SLOT_DESIGN_ID=ID,X_SLOT_OFFSET=X_OFFSET,Y_SLOT_OFFSET=Y_OFFSET}
+This is a stub which will not work.

@@ -76,7 +76,6 @@ import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -105,13 +104,14 @@ import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecutorDisplayInterface, DbSetupListener, PendantClientJPanel.ProgramLineListener {
+public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecutorDisplayInterface, DbSetupListener, PendantClientJPanel.ProgramLineListener, Consumer<PddlActionToCrclGenerator.PlacePartInfo> {
 
     /**
      * Creates new form ActionsToCrclJPanel
@@ -121,6 +121,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
         jCheckBoxDebug.setSelected(debug);
         progColor = jTableCrclProgram.getBackground();
+        pddlActionToCrclGenerator.addPlacePartConsumer(this);
     }
 
     private static Object[] getTableRow(JTable table, int row) {
@@ -1332,7 +1333,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     crclAreas.add(area);
                 }
                 JTextArea area = crclAreas.get(row);
-                if(area != null) {
+                if (area != null) {
                     area.setText(Objects.toString(value));
                 }
                 return area;
@@ -1417,7 +1418,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         }
         for (MiddleCommandType midCmd : crclProgram.getMiddleCommand()) {
-            if(midCmd instanceof CrclCommandWrapper) {
+            if (midCmd instanceof CrclCommandWrapper) {
                 CrclCommandWrapper wrapper = (CrclCommandWrapper) midCmd;
                 midCmd = wrapper.getWrappedCommand();
             }
@@ -2432,9 +2433,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void newLogFileName() throws HeadlessException {
         recordCsvName = jTextFieldLogFilename.getText();
         JFileChooser chooser = new JFileChooser();
-        if(chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                File f= chooser.getSelectedFile();
+                File f = chooser.getSelectedFile();
                 recordCsvName = f.getCanonicalPath();
                 if (!recordCsvName.endsWith(".csv")) {
                     recordCsvName += ".csv";
@@ -3419,5 +3420,27 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     public List<PositionMap> getReversePositionMaps() {
         return positionMapJPanel1.getReversePositionMaps();
+    }
+
+    @Override
+    public void accept(PddlActionToCrclGenerator.PlacePartInfo ppi) {
+
+        if (safeAbortRequested) {
+            if(null == ppi) {
+                throw new IllegalArgumentException("ppi == null");
+            }
+            if(null == ppi.getWrapper()) {
+                throw new IllegalArgumentException("ppi.getWrapper() == null");
+            }
+            if(null == ppi.getWrapper().getCurProgram()) {
+                throw new IllegalArgumentException(" ppi.getWrapper().getCurProgram() == null");
+            }
+            List<MiddleCommandType> l = ppi.getWrapper().getCurProgram().getMiddleCommand();
+            while(l.size() > ppi.getOutIndex()+1) {
+                l.remove(ppi.getOutIndex()+1);
+            }
+            pddlActionToCrclGenerator.addMoveToLookForPosition(l);
+            this.replanFromIndex = ppi.getPddlActionIndex() + 1;
+        }
     }
 }
