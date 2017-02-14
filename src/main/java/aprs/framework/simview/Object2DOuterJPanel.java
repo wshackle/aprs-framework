@@ -193,7 +193,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 continue;
                             }
                             String name = Objects.toString(jTableItems.getValueAt(i, 1));
-                            if (item == null) {
+                            if (item == null || !item.name.equals(name)) {
                                 item = new DetectedItem(Objects.toString(jTableItems.getValueAt(i, 1)));
                             }
                             item.x = Double.parseDouble(jTableItems.getValueAt(i, 2).toString());
