@@ -57,7 +57,7 @@ public class DetectedItem extends PM_CARTESIAN {
     public double vzi = 0;
     public double vzj = 0;
     public double vzk = 1;
-    public double score;
+    public double score = 100.0;
     public int visioncycle;
     public String type;
     public AffineTransform displayTransform;
@@ -88,7 +88,6 @@ public class DetectedItem extends PM_CARTESIAN {
         this.vxj = Math.sin(rotation);
         this.x = x;
         this.y = y;
-        this.score = 100.0;
     }
 
     public DetectedItem(String name, double rotation, double x, double y, double score, String type) {
@@ -121,7 +120,6 @@ public class DetectedItem extends PM_CARTESIAN {
                 this.z = pt.getZ().doubleValue();
             }
         }
-        this.score = 100.0;
         this.visioncycle = visioncycle;
     }
     
