@@ -118,30 +118,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         model.setRowCount(0);
         for (int i = 0; i < items.size(); i++) {
             DetectedItem item = items.get(i);
-            model.addRow(new Object[]{i, item.name, item.x, item.y, Math.toDegrees(item.rotation), item.type});
-//            model.setValueAt(item.name, i, 0);
-//            model.setValueAt(item.x, i, 1);
-//            model.setValueAt(item.y, i, 2);
-//            model.setValueAt(Math.toDegrees(item.rotation), i, 3);
-//            model.setValueAt(item.type, i, 4);
+            model.addRow(new Object[]{i, item.name, item.x, item.y, Math.toDegrees(item.rotation), item.type,item.score});
         }
         autoResizeTableColWidths(jTableItems);
 
         RowSorter rowSorter = jTableItems.getRowSorter();
         if (null != rowSorter) {
             rowSorter.allRowsChanged();
-//            List<RowSorter.SortKey> keys = rowSorter.getSortKeys();
-//            for(RowSorter.SortKey k : keys) {
-//                rowSorter.toggleSortOrder(k.getColumn());
-//                rowSorter.toggleSortOrder(k.getColumn());
-//                break;
-//            }
         }
         int newSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jTableItems.getRowCount())
                 ? (int) jTableItems.getValueAt(origSelectedRow, 0) : -1;
-//        System.out.println("newSelectedRowIndex = " + newSelectedRowIndex);
-//        System.out.println("origSelectedRowIndex = " + origSelectedRowIndex);
         if (newSelectedRowIndex > 0 && newSelectedRowIndex == origSelectedRowIndex) {
             DefaultListSelectionModel dlsm;
             lsm = jTableItems.getSelectionModel();
@@ -187,7 +174,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                     || !Objects.equals(item.name, jTableItems.getValueAt(i, 1))
                                     || Math.abs(item.x - Double.parseDouble(jTableItems.getValueAt(i, 2).toString())) > 0.001
                                     || Math.abs(item.y - Double.parseDouble(jTableItems.getValueAt(i, 3).toString())) > 0.001
-                                    || Math.abs(item.rotation - Double.parseDouble(jTableItems.getValueAt(i, 4).toString())) > 0.001) {
+                                    || Math.abs(item.rotation - Double.parseDouble(jTableItems.getValueAt(i, 4).toString())) > 0.001
+                                    || Math.abs(item.score - Double.parseDouble(jTableItems.getValueAt(i, 6).toString())) > 0.001) {
                                 changeFound = true;
                             } else {
                                 continue;
@@ -200,6 +188,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             item.y = Double.parseDouble(jTableItems.getValueAt(i, 3).toString());
                             item.rotation = Math.toRadians(Double.parseDouble(jTableItems.getValueAt(i, 4).toString()));
                             item.type = Objects.toString(jTableItems.getValueAt(i, 5));
+                            item.score = Double.parseDouble(jTableItems.getValueAt(i, 6).toString());
                             while (l.size() < listIndex) {
                                 l.add(null);
                             }
@@ -224,7 +213,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
         });
-//        jComboBoxDisplayAxis.setModel( new DefaultComboBoxModel<>(DisplayAxis.values()));
         setMaxXMaxYText(jTextFieldMaxXMaxY.getText());
         setMinXMinYText(jTextFieldMinXMinY.getText());
         object2DJPanel1.setShowCurrentXY(jCheckBoxShowCurrent.isSelected());
@@ -298,20 +286,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTableItems.setAutoCreateRowSorter(true);
         jTableItems.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null}
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
             },
             new String [] {
-                "Index", "Name", "X", "Y", "Rotation", "Type"
+                "Index", "Name", "X", "Y", "Rotation", "Type", "Score"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Double.class
             };
             boolean[] canEdit = new boolean [] {
-                false, true, true, true, true, true
+                false, true, true, true, true, true, true
             };
 
             public Class getColumnClass(int columnIndex) {

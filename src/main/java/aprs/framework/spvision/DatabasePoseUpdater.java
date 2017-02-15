@@ -619,7 +619,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         List<DetectedItem> ret = new ArrayList<>();
         try {
             List<Object> paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
-            String updateStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
+            String getTraySlotsQueryStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
             boolean exec_result = get_tray_slots_statement.execute();
             if (exec_result) {
                 try (ResultSet rs = get_tray_slots_statement.getResultSet()) {
@@ -662,6 +662,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     }
                 }
             }
+            if(ret.size() < 1) {
+                System.err.println("");
+                System.err.println("Can't get items for tray "+tray);
+                System.err.println("getTraySlotsQueryStringFilled=");
+                System.err.println(getTraySlotsQueryStringFilled);
+                System.err.println("Returned 0 items.");
+                System.err.println("");
+            } 
         } catch (SQLException ex) {
             Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
         }

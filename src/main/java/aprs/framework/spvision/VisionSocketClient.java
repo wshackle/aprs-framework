@@ -213,23 +213,20 @@ public class VisionSocketClient implements AutoCloseable {
     }
 
     public static List<DetectedItem> lineToList(String line) {
-        return lineToList(line, null, null);
+        return lineToList(line, null);
     }
 
-    public static List<DetectedItem> lineToList(String line, List<DetectedItem> listIn, final VisionToDBJFrameInterface displayInterface) {
-        List<DetectedItem> listOut = listIn;
+    public static List<DetectedItem> lineToList(String line, final VisionToDBJFrameInterface displayInterface) {
+        List<DetectedItem> listOut = new ArrayList<>();
         String fa[] = null;
         int i = 0;
         try {
-            if (null == listOut) {
-                listOut = new ArrayList<>();
-            }
             fa = line.split(",");
            
             int index = 0;
             long timestamp = System.currentTimeMillis();
             for (i = 0; i < fa.length - 5; i += 6) {
-                DetectedItem ci = (listOut.size() > index) ? listOut.get(index) : new DetectedItem(fa[i]);
+                DetectedItem ci = new DetectedItem(fa[i]);
                 ci.timestamp = timestamp;
                 if (fa[i].length() < 1) {
                     continue;
@@ -251,7 +248,6 @@ public class VisionSocketClient implements AutoCloseable {
                     }
                     continue;
                 }
-//                ci.rotation = Math.toRadians(ci.rotation);
                 if (fa[i + 2].length() < 1) {
                     continue;
                 }
@@ -275,30 +271,20 @@ public class VisionSocketClient implements AutoCloseable {
 
                 ci.visioncycle = visioncycle;
                 //System.out.println("VisionSocketClient visioncycle-----> "+visioncycle);
-
                 if (fa[i + 4].length() > 0) {
-
                     ci.score = Double.valueOf(fa[i + 4]);
-                    if (ci.score < 0.01) {
-                        if (null != displayInterface && displayInterface.isDebug()) {
-                            displayInterface.addLogMessage("Ignoring item with score=" + ci.score + " in field " + (i + 4) + " in " + line + "\n");
-                        }
-                        continue;
-                    }
                 }
 
                 //--getting the type
                 ci.type = String.valueOf(fa[i + 5]);
 
                 ci.index = index;
-//                ci.repeats = (repeatsMap.containsKey(ci.name)) ? repeatsMap.get(ci.name) : 0;
                 if (listOut.size() > index) {
                     listOut.set(index, ci);
                 } else {
                     listOut.add(ci);
                 }
                 index++;
-//                repeatsMap.put(ci.name, ci.repeats + 1);
             }
             while (listOut.size() > index) {
                 listOut.remove(index);
@@ -319,57 +305,16 @@ public class VisionSocketClient implements AutoCloseable {
         return listOut;
     }
 
-//    private boolean addRepeatCountsToDatabaseNames = false;
-//
-//    /**
-//     * Get the value of addRepeatCountsToDatabaseNames
-//     *
-//     * @return the value of addRepeatCountsToDatabaseNames
-//     */
-//    public boolean isAddRepeatCountsToDatabaseNames() {
-//        return addRepeatCountsToDatabaseNames;
-//    }
-//
-//    /**
-//     * Set the value of addRepeatCountsToDatabaseNames
-//     *
-//     * @param addRepeatCountsToDatabaseNames new value of
-//     * addRepeatCountsToDatabaseNames
-//     */
-//    public void setAddRepeatCountsToDatabaseNames(boolean addRepeatCountsToDatabaseNames) {
-//        this.addRepeatCountsToDatabaseNames = addRepeatCountsToDatabaseNames;
-//    }
-//    private DatabasePoseUpdater dpu;
-//
-//    /**
-//     * Get the value of dpu
-//     *
-//     * @return the value of dpu
-//     */
-//    public DatabasePoseUpdater getDpu() {
-//        return dpu;
-//    }
-//
-//    /**
-//     * Set the value of dpu
-//     *
-//     * @param dpu new value of dpu
-//     */
-//    public void setDpu(DatabasePoseUpdater dpu) {
-//        this.dpu = dpu;
-//    }
     public void parseVisionLine(final String line) {
         try {
             long t0 = System.nanoTime();
             this.line = line;
 
-//        System.out.println("line = " + line);
             if (visionList == null) {
                 visionList = new ArrayList<>();
             }
-            visionList = lineToList(line, visionList, displayInterface);
+            visionList = lineToList(line,displayInterface);
             poseUpdatesParsed += visionList.size();
-//            publishVisionList(dpu, displayInterface);
             updateListeners();
             if (debug) {
                 long t1 = System.nanoTime();
