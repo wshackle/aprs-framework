@@ -65,6 +65,9 @@ import crcl.utils.CrclCommandWrapper.CRCLCommandWrapperConsumer;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  *
@@ -301,8 +304,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     placePart(action, cmds);
                     break;
 
-                case "end-kit":
-                    endKit(action, cmds);
+                case "inspect-kit":
+                    inspectKit(action, cmds);
                     break;
             }
             actionToCrclIndexes[lastIndex] = cmds.size();
@@ -471,17 +474,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     //-- zeid
-    public void endKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+    public void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
         checkSettings();
         String kitName = action.getArgs()[0];
         MessageType msg = new MessageType();
-        msg.setMessage("end-kit " + kitName);
+        msg.setMessage("inspect-kit " + kitName);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
-
+        System.out.println("--- inspect kit "+kitName);
         int partDesignPartCount = getPartDesignPartCount(kitName);
     }
 
