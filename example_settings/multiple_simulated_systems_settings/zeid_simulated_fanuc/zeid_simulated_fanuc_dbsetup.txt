@@ -1,0 +1,10 @@
+#
+#Thu Feb 16 09:11:00 EST 2017
+--dbtype=NEO4J
+NEO4J.ying-220.mxnet.mel.nist.gov_7494.user=neo4j
+NEO4J.ying-220.mxnet.mel.nist.gov_7494.internalQueriesResourceDir=true
+NEO4J.ying-220.mxnet.mel.nist.gov_7494.name=neo4j
+NEO4J.host=ying-220.mxnet.mel.nist.gov
+NEO4J.ying-220.mxnet.mel.nist.gov_7494.queriesDir=neo4j/v2
+NEO4J.ying-220.mxnet.mel.nist.gov_7494.passwd=password
+NEO4J.ying-220.mxnet.mel.nist.gov.port=7494

@@ -1,0 +1,13 @@
+#
+#Thu Feb 16 09:05:10 EST 2017
+lookDwellTime=3.0
+approachZOffset=50.0
+manualPartNames=[null, null, null, null, null, null, null, null, null, null]
+rotSpeed=30.0
+slowTransSpeed=75
+fastTransSpeed=200.0
+settleDwellTime=0.1
+rpy=175.0,0.0,0.0
+lookForXYZ=0.0,0.0,0.0
+manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
+pddl.output=../../../example_pddl/feb_2_2017_motoman_demo_actions.txt
