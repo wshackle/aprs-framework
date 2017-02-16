@@ -1,0 +1,2704 @@
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(:=<http://www.nist.gov/el/ontologies/DemoKittingWorkstationClasses.owl#>)
+
+Ontology(<http://www.nist.gov/el/ontologies/DemoKittingWorkstationClasses.owl>
+
+Annotation(rdfs:comment
+  "This kitting ontology models a kitting workstation including objects
+  in the workstation and data associated with the workstation. The
+  ontology assumes coordinate systems are right handed. For objects
+  such as parts vessels or a robot with a preferred orientation with
+  respect to gravity, the Z axis points up (opposite the pull of
+  gravity).")
+Annotation(rdfs:comment
+  "owlPrefix=ktw")
+
+HasKey(:LargeContainer (:hasSkuObject_Sku) (:hasLargeContainer_SerialNumber))
+
+HasKey(:Part (:hasSkuObject_Sku) (:hasPart_SerialNumber))
+
+HasKey(:PartsVessel (:hasSkuObject_Sku) (:hasPartsVessel_SerialNumber))
+
+
+
+DatatypeDefinition(:angleUnit 
+  DataOneOf("degree" "radian"))
+
+DatatypeDefinition(:lengthUnit 
+  DataOneOf("meter" "millimeter" "inch"))
+
+DatatypeDefinition(:nonNegativeDecimal 
+  DatatypeRestriction(xsd:decimal 
+                      xsd:minInclusive "0"^^xsd:decimal))
+
+AnnotationAssertion(rdfs:comment :decimal
+  "The NonNegativeDecimal specifies a non-negative decimal value.")
+
+DatatypeDefinition(:positiveDecimal 
+  DatatypeRestriction(xsd:decimal 
+                      xsd:minExclusive "0"^^xsd:decimal))
+
+DatatypeDefinition(:weightUnit 
+  DataOneOf("kilogram" "gram" "milligram" "ounce" "pound"))
+
+
+
+Declaration(Class(:BoxVolume))
+
+AnnotationAssertion(rdfs:comment :BoxVolume
+  "BoxVolume is derived from DataThing.
+  An instance of BoxVolume has the following:
+    MaximumPoint
+    MinimumPoint.
+ 
+  The MaximumPoint and MinimumPoint are diagonally opposite corner
+  points of a box shaped volume whose edges are aligned with the
+  coordinate system in which the BoxVolume is located. The
+  MinimumPoint has the minimum values of X, Y, and Z. The
+  MaximumPoint has the maximum values of X, Y, and Z.")
+
+Declaration(ObjectProperty(:hasBoxVolume_MaximumPoint))
+ObjectPropertyDomain(:hasBoxVolume_MaximumPoint :BoxVolume)
+ObjectPropertyRange(:hasBoxVolume_MaximumPoint :Point)
+InverseFunctionalObjectProperty(:hasBoxVolume_MaximumPoint)
+FunctionalObjectProperty(:hasBoxVolume_MaximumPoint)
+EquivalentClasses(:BoxVolume ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasBoxVolume_MaximumPoint :Point)
+  ObjectAllValuesFrom (:hasBoxVolume_MaximumPoint :Point)))
+
+Declaration(ObjectProperty(:hadByMaximumPoint_BoxVolume))
+InverseObjectProperties(:hasBoxVolume_MaximumPoint
+                        :hadByMaximumPoint_BoxVolume)
+ObjectPropertyDomain(:hadByMaximumPoint_BoxVolume :Point)
+ObjectPropertyRange(:hadByMaximumPoint_BoxVolume :BoxVolume)
+
+Declaration(ObjectProperty(:hasBoxVolume_MinimumPoint))
+ObjectPropertyDomain(:hasBoxVolume_MinimumPoint :BoxVolume)
+ObjectPropertyRange(:hasBoxVolume_MinimumPoint :Point)
+InverseFunctionalObjectProperty(:hasBoxVolume_MinimumPoint)
+FunctionalObjectProperty(:hasBoxVolume_MinimumPoint)
+EquivalentClasses(:BoxVolume ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasBoxVolume_MinimumPoint :Point)
+  ObjectAllValuesFrom (:hasBoxVolume_MinimumPoint :Point)))
+
+Declaration(ObjectProperty(:hadByMinimumPoint_BoxVolume))
+InverseObjectProperties(:hasBoxVolume_MinimumPoint
+                        :hadByMinimumPoint_BoxVolume)
+ObjectPropertyDomain(:hadByMinimumPoint_BoxVolume :Point)
+ObjectPropertyRange(:hadByMinimumPoint_BoxVolume :BoxVolume)
+
+
+
+Declaration(Class(:BoxyShape))
+
+AnnotationAssertion(rdfs:comment :BoxyShape
+  "BoxyShape is derived from InternalShape.
+  An instance of BoxyShape has the following:
+    Description (inherited)
+    Marking (inherited, optional, multiple)
+    Length
+    Width
+    Height
+    HasTop.
+ 
+  A BoxyShape is box shaped. The Length is larger of the two
+  dimensions that are not the Height. The Width is smaller of the two
+  dimensions that are not the Height. The coordinate system of a
+  BoxyShape (i.e. the thing that is located and oriented by a
+  Pose) has its origin in the middle of the bottom, its Z-axis
+  parallel to the height sides and pointing into the box, and its
+  X-axis parallel to the length sides. If HasTop is true, the top of
+  the box (i.e. the side through which the +Z axis passes) exists and
+  is closed. If HasTop is false, the box has no top.")
+
+Declaration(DataProperty(:hasBoxyShape_Length))
+DataPropertyDomain(:hasBoxyShape_Length :BoxyShape)
+DataPropertyRange(:hasBoxyShape_Length :positiveDecimal)
+FunctionalDataProperty(:hasBoxyShape_Length)
+EquivalentClasses(:BoxyShape ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasBoxyShape_Length :positiveDecimal)
+  DataAllValuesFrom (:hasBoxyShape_Length :positiveDecimal)))
+
+Declaration(DataProperty(:hasBoxyShape_Width))
+DataPropertyDomain(:hasBoxyShape_Width :BoxyShape)
+DataPropertyRange(:hasBoxyShape_Width :positiveDecimal)
+FunctionalDataProperty(:hasBoxyShape_Width)
+EquivalentClasses(:BoxyShape ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasBoxyShape_Width :positiveDecimal)
+  DataAllValuesFrom (:hasBoxyShape_Width :positiveDecimal)))
+
+Declaration(DataProperty(:hasBoxyShape_Height))
+DataPropertyDomain(:hasBoxyShape_Height :BoxyShape)
+DataPropertyRange(:hasBoxyShape_Height :positiveDecimal)
+FunctionalDataProperty(:hasBoxyShape_Height)
+EquivalentClasses(:BoxyShape ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasBoxyShape_Height :positiveDecimal)
+  DataAllValuesFrom (:hasBoxyShape_Height :positiveDecimal)))
+
+Declaration(DataProperty(:hasBoxyShape_HasTop))
+DataPropertyDomain(:hasBoxyShape_HasTop :BoxyShape)
+DataPropertyRange(:hasBoxyShape_HasTop xsd:boolean)
+FunctionalDataProperty(:hasBoxyShape_HasTop)
+EquivalentClasses(:BoxyShape ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasBoxyShape_HasTop xsd:boolean)
+  DataAllValuesFrom (:hasBoxyShape_HasTop xsd:boolean)))
+
+
+
+Declaration(Class(:CylindricalShape))
+
+AnnotationAssertion(rdfs:comment :CylindricalShape
+  "CylindricalShape is derived from InternalShape.
+  An instance of CylindricalShape has the following:
+    Description (inherited)
+    Marking (inherited, optional, multiple)
+    Diameter
+    Height
+    HasTop.
+ 
+  The cylinder is a right circular cylinder with a circular base
+  having the given Diameter. The axis is perpendicular to the base.
+  The base is always a surface that is part of the cylinder. The
+  sides of the cylinder stop at the given Height as if cut by a plane
+  perpendicular to the axis. The coordinate system of a
+  CylindricalShape (i.e. the thing that is located and oriented
+  by a pose) has its origin in the middle of the bottom, and its
+  Z-axis on the axis of the cylinder. If HasTop is true, the top of
+  the cylinder (i.e. the side through which the +Z axis passes)
+  exists and is closed. If HasTop is false, the cylinder has no top.")
+
+Declaration(DataProperty(:hasCylindricalShape_Diameter))
+DataPropertyDomain(:hasCylindricalShape_Diameter :CylindricalShape)
+DataPropertyRange(:hasCylindricalShape_Diameter :positiveDecimal)
+FunctionalDataProperty(:hasCylindricalShape_Diameter)
+EquivalentClasses(:CylindricalShape ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasCylindricalShape_Diameter :positiveDecimal)
+  DataAllValuesFrom (:hasCylindricalShape_Diameter :positiveDecimal)))
+
+Declaration(DataProperty(:hasCylindricalShape_Height))
+DataPropertyDomain(:hasCylindricalShape_Height :CylindricalShape)
+DataPropertyRange(:hasCylindricalShape_Height :positiveDecimal)
+FunctionalDataProperty(:hasCylindricalShape_Height)
+EquivalentClasses(:CylindricalShape ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasCylindricalShape_Height :positiveDecimal)
+  DataAllValuesFrom (:hasCylindricalShape_Height :positiveDecimal)))
+
+Declaration(DataProperty(:hasCylindricalShape_HasTop))
+DataPropertyDomain(:hasCylindricalShape_HasTop :CylindricalShape)
+DataPropertyRange(:hasCylindricalShape_HasTop xsd:boolean)
+FunctionalDataProperty(:hasCylindricalShape_HasTop)
+EquivalentClasses(:CylindricalShape ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasCylindricalShape_HasTop xsd:boolean)
+  DataAllValuesFrom (:hasCylindricalShape_HasTop xsd:boolean)))
+
+
+
+Declaration(Class(:DataThing))
+
+AnnotationAssertion(rdfs:comment :DataThing
+  "An instance of DataThing has the following:
+    .
+  DataThing is an abstract type from which more specific types of
+  data thing are derived. That includes all complex data types such
+  as Vector, PhysicalLocation, etc.")
+
+SubClassOf(:BoxVolume :DataThing)
+SubClassOf(:EndEffectorGrasp :DataThing)
+SubClassOf(:MarkingLayout :DataThing)
+SubClassOf(:MarkingModel :DataThing)
+SubClassOf(:Marking :DataThing)
+SubClassOf(:PartRefAndPose :DataThing)
+SubClassOf(:PartsTrayDesign :DataThing)
+SubClassOf(:PhysicalLocation :DataThing)
+SubClassOf(:Point :DataThing)
+SubClassOf(:Polygon2D :DataThing)
+SubClassOf(:PoseTolerance :DataThing)
+SubClassOf(:Pose :DataThing)
+SubClassOf(:ShapeDesign :DataThing)
+SubClassOf(:Slot :DataThing)
+SubClassOf(:StockKeepingUnit :DataThing)
+SubClassOf(:Vector :DataThing)
+DisjointUnion(:DataThing
+              :BoxVolume
+              :EndEffectorGrasp
+              :MarkingLayout
+              :MarkingModel
+              :Marking
+              :PartRefAndPose
+              :PartsTrayDesign
+              :PhysicalLocation
+              :Point
+              :Polygon2D
+              :PoseTolerance
+              :Pose
+              :ShapeDesign
+              :Slot
+              :StockKeepingUnit
+              :Vector)
+
+
+
+Declaration(Class(:EndEffectorChangingStation))
+
+AnnotationAssertion(rdfs:comment :EndEffectorChangingStation
+  "EndEffectorChangingStation is derived from NoSkuObject.
+  An instance of EndEffectorChangingStation has the
+  following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Base
+    EndEffectorHolder (multiple).
+ 
+  An EndEffectorChangingStation is a place where end effectors
+  are stored and where the robot can change end effectors. The
+  coordinate system of an EndEffectorChangingStation is in the
+  same place as the coordinate system of its Base. The shape of an
+  EndEffectorChangingStation may also be found from the shapes of
+  the Base and the EndEffectorHolders and their relative positions.")
+
+Declaration(ObjectProperty(:hasEndEffectorChangingStation_Base))
+ObjectPropertyDomain(:hasEndEffectorChangingStation_Base :EndEffectorChangingStation)
+ObjectPropertyRange(:hasEndEffectorChangingStation_Base :MechanicalComponent)
+InverseFunctionalObjectProperty(:hasEndEffectorChangingStation_Base)
+FunctionalObjectProperty(:hasEndEffectorChangingStation_Base)
+EquivalentClasses(:EndEffectorChangingStation ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasEndEffectorChangingStation_Base :MechanicalComponent)
+  ObjectAllValuesFrom (:hasEndEffectorChangingStation_Base :MechanicalComponent)))
+
+Declaration(ObjectProperty(:hadByBase_EndEffectorChangingStation))
+InverseObjectProperties(:hasEndEffectorChangingStation_Base
+                        :hadByBase_EndEffectorChangingStation)
+ObjectPropertyDomain(:hadByBase_EndEffectorChangingStation :MechanicalComponent)
+ObjectPropertyRange(:hadByBase_EndEffectorChangingStation :EndEffectorChangingStation)
+
+Declaration(ObjectProperty(:hasEndEffectorChangingStation_EndEffectorHolder))
+ObjectPropertyDomain(:hasEndEffectorChangingStation_EndEffectorHolder :EndEffectorChangingStation)
+ObjectPropertyRange(:hasEndEffectorChangingStation_EndEffectorHolder :EndEffectorHolder)
+InverseFunctionalObjectProperty(:hasEndEffectorChangingStation_EndEffectorHolder)
+
+Declaration(ObjectProperty(:hadByEndEffectorHolder_EndEffectorChangingStation))
+InverseObjectProperties(:hasEndEffectorChangingStation_EndEffectorHolder
+                        :hadByEndEffectorHolder_EndEffectorChangingStation)
+ObjectPropertyDomain(:hadByEndEffectorHolder_EndEffectorChangingStation :EndEffectorHolder)
+ObjectPropertyRange(:hadByEndEffectorHolder_EndEffectorChangingStation :EndEffectorChangingStation)
+
+
+
+Declaration(Class(:EndEffectorGrasp))
+
+AnnotationAssertion(rdfs:comment :EndEffectorGrasp
+  "EndEffectorGrasp is derived from DataThing.
+  An instance of EndEffectorGrasp has the following:
+    .
+  EndEffectorGrasp describes how a particular end effector
+  can grasp a particular stock keeping unit. Instances of
+  EndEffectorGrasp must be instances of one of the derived
+  types: VacuumEffectorSingleGrasp")
+
+SubClassOf(:OtherGripperGrasp :EndEffectorGrasp)
+SubClassOf(:ParallelGripperGrasp :EndEffectorGrasp)
+SubClassOf(:ThreeFingerGrasp :EndEffectorGrasp)
+SubClassOf(:TwoJawsGrasp :EndEffectorGrasp)
+SubClassOf(:VacuumEffectorSingleGrasp :EndEffectorGrasp)
+DisjointUnion(:EndEffectorGrasp
+              :OtherGripperGrasp
+              :ParallelGripperGrasp
+              :ThreeFingerGrasp
+              :TwoJawsGrasp
+              :VacuumEffectorSingleGrasp)
+
+
+
+Declaration(Class(:EndEffectorHolder))
+
+AnnotationAssertion(rdfs:comment :EndEffectorHolder
+  "EndEffectorHolder is derived from NoSkuObject.
+  An instance of EndEffectorHolder has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    EndEffector (optional).
+  An EndEffectorHolder holds zero or one end effector and is part
+  of an EndEffectorChangingStation. The EndEffectorSlot is the
+  name of the effector that should occupy this holder. The
+  EndEffector is an effector that is in this holder.")
+
+Declaration(DataProperty(:hasEndEffectorHolder_EndEffectorSlot))
+DataPropertyDomain(:hasEndEffectorHolder_EndEffectorSlot :EndEffectorHolder)
+DataPropertyRange(:hasEndEffectorHolder_EndEffectorSlot xsd:string)
+FunctionalDataProperty(:hasEndEffectorHolder_EndEffectorSlot)
+EquivalentClasses(:EndEffectorHolder ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasEndEffectorHolder_EndEffectorSlot xsd:string)
+  DataAllValuesFrom (:hasEndEffectorHolder_EndEffectorSlot xsd:string)))
+
+Declaration(ObjectProperty(:hasEndEffectorHolder_EndEffector))
+ObjectPropertyDomain(:hasEndEffectorHolder_EndEffector :EndEffectorHolder)
+ObjectPropertyRange(:hasEndEffectorHolder_EndEffector :EndEffector)
+InverseFunctionalObjectProperty(:hasEndEffectorHolder_EndEffector)
+FunctionalObjectProperty(:hasEndEffectorHolder_EndEffector)
+
+Declaration(ObjectProperty(:hadByEndEffector_EndEffectorHolder))
+InverseObjectProperties(:hasEndEffectorHolder_EndEffector
+                        :hadByEndEffector_EndEffectorHolder)
+ObjectPropertyDomain(:hadByEndEffector_EndEffectorHolder :EndEffector)
+ObjectPropertyRange(:hadByEndEffector_EndEffectorHolder :EndEffectorHolder)
+
+
+
+Declaration(Class(:EndEffector))
+
+AnnotationAssertion(rdfs:comment :EndEffector
+  "EndEffector is derived from NoSkuObject.
+  An instance of EndEffector has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Description
+    MaximumLoadWeight
+    HeldObject (optional).
+ 
+  EndEffector is an abstract type from which more specific types
+  of end effector are derived. An EndEffector is an end effector
+  for a robot. The optional HeldObject is for the object being held
+  by the end effector, if the end effector is holding an object.
+  Every EndEffector is either a GripperEffector or a
+  VacuumEffector. Every EndEffector in a KittingWorkstation
+  is either attached to the end of a robot arm or sitting in an
+  EndEffectorHolder at an EndEffectorChangingStation.")
+
+SubClassOf(:GripperEffector :EndEffector)
+SubClassOf(:VacuumEffector :EndEffector)
+DisjointUnion(:EndEffector
+              :GripperEffector
+              :VacuumEffector)
+
+Declaration(DataProperty(:hasEndEffector_Description))
+DataPropertyDomain(:hasEndEffector_Description :EndEffector)
+DataPropertyRange(:hasEndEffector_Description xsd:string)
+FunctionalDataProperty(:hasEndEffector_Description)
+EquivalentClasses(:EndEffector ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasEndEffector_Description xsd:string)
+  DataAllValuesFrom (:hasEndEffector_Description xsd:string)))
+
+Declaration(DataProperty(:hasEndEffector_MaximumLoadWeight))
+DataPropertyDomain(:hasEndEffector_MaximumLoadWeight :EndEffector)
+DataPropertyRange(:hasEndEffector_MaximumLoadWeight :positiveDecimal)
+FunctionalDataProperty(:hasEndEffector_MaximumLoadWeight)
+EquivalentClasses(:EndEffector ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasEndEffector_MaximumLoadWeight :positiveDecimal)
+  DataAllValuesFrom (:hasEndEffector_MaximumLoadWeight :positiveDecimal)))
+
+Declaration(ObjectProperty(:hasEndEffector_HeldObjectOffset))
+ObjectPropertyDomain(:hasEndEffector_HeldObjectOffset :EndEffector)
+ObjectPropertyRange(:hasEndEffector_HeldObjectOffset :PhysicalLocation)
+InverseFunctionalObjectProperty(:hasEndEffector_HeldObjectOffset)
+FunctionalObjectProperty(:hasEndEffector_HeldObjectOffset)
+EquivalentClasses(:EndEffector ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasEndEffector_HeldObjectOffset :PhysicalLocation)
+  ObjectAllValuesFrom (:hasEndEffector_HeldObjectOffset :PhysicalLocation)))
+
+Declaration(ObjectProperty(:hadByHeldObjectOffset_EndEffector))
+InverseObjectProperties(:hasEndEffector_HeldObjectOffset
+                        :hadByHeldObjectOffset_EndEffector)
+ObjectPropertyDomain(:hadByHeldObjectOffset_EndEffector :PhysicalLocation)
+ObjectPropertyRange(:hadByHeldObjectOffset_EndEffector :EndEffector)
+
+Declaration(ObjectProperty(:hasEndEffector_HeldObject))
+ObjectPropertyDomain(:hasEndEffector_HeldObject :EndEffector)
+ObjectPropertyRange(:hasEndEffector_HeldObject :SolidObject)
+InverseFunctionalObjectProperty(:hasEndEffector_HeldObject)
+FunctionalObjectProperty(:hasEndEffector_HeldObject)
+
+Declaration(ObjectProperty(:hadByHeldObject_EndEffector))
+InverseObjectProperties(:hasEndEffector_HeldObject
+                        :hadByHeldObject_EndEffector)
+ObjectPropertyDomain(:hadByHeldObject_EndEffector :SolidObject)
+ObjectPropertyRange(:hadByHeldObject_EndEffector :EndEffector)
+
+
+
+Declaration(Class(:ExternalShape))
+
+AnnotationAssertion(rdfs:comment :ExternalShape
+  "ExternalShape is derived from ShapeDesign.
+  An instance of ExternalShape has the following:
+    Description (inherited)
+    Marking (inherited, optional, multiple)
+    ModelFormatName
+    ModelFileName
+    ModelName (optional).
+ 
+  An ExternalShape is a shape defined in an external file. The
+  ModelFormatName is the name of the format of model (for example,
+  'STEP Advanced Brep' or 'USARSim'). The ModelFileName is the name
+  of the file containing the model and may include a path (for
+  example 'partFiles/STEP/ANC101.stp'). The model file may contain
+  more than one shape model. The ModelName is optional and is the
+  name of a model within the model file. The ModelName is necessary
+  if the model file contains more than one model.")
+
+Declaration(DataProperty(:hasExternalShape_ModelFormatName))
+DataPropertyDomain(:hasExternalShape_ModelFormatName :ExternalShape)
+DataPropertyRange(:hasExternalShape_ModelFormatName xsd:string)
+FunctionalDataProperty(:hasExternalShape_ModelFormatName)
+EquivalentClasses(:ExternalShape ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasExternalShape_ModelFormatName xsd:string)
+  DataAllValuesFrom (:hasExternalShape_ModelFormatName xsd:string)))
+
+Declaration(DataProperty(:hasExternalShape_ModelFileName))
+DataPropertyDomain(:hasExternalShape_ModelFileName :ExternalShape)
+DataPropertyRange(:hasExternalShape_ModelFileName xsd:string)
+FunctionalDataProperty(:hasExternalShape_ModelFileName)
+EquivalentClasses(:ExternalShape ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasExternalShape_ModelFileName xsd:string)
+  DataAllValuesFrom (:hasExternalShape_ModelFileName xsd:string)))
+
+Declaration(DataProperty(:hasExternalShape_ModelName))
+DataPropertyDomain(:hasExternalShape_ModelName :ExternalShape)
+DataPropertyRange(:hasExternalShape_ModelName xsd:string)
+FunctionalDataProperty(:hasExternalShape_ModelName)
+
+
+
+Declaration(Class(:GripperEffector))
+
+AnnotationAssertion(rdfs:comment :GripperEffector
+  "GripperEffector is derived from EndEffector.
+  An instance of GripperEffector has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Description (inherited)
+    MaximumLoadWeight (inherited)
+    HeldObject (inherited, optional)
+    MaxGripWidth (optional).
+ 
+  A GripperEffector holds an object by gripping
+  it with fingers or jaws. The MaxGripWidth is largest distance
+  between two parallel planes that the gripper can grasp.")
+
+SubClassOf(:GripperOther :GripperEffector)
+SubClassOf(:GripperParallel :GripperEffector)
+SubClassOf(:GripperThreeFinger :GripperEffector)
+SubClassOf(:GripperTwoJaws :GripperEffector)
+DisjointUnion(:GripperEffector
+              :GripperOther
+              :GripperParallel
+              :GripperThreeFinger
+              :GripperTwoJaws)
+
+Declaration(DataProperty(:hasGripperEffector_MaxGripWidth))
+DataPropertyDomain(:hasGripperEffector_MaxGripWidth :GripperEffector)
+DataPropertyRange(:hasGripperEffector_MaxGripWidth :positiveDecimal)
+FunctionalDataProperty(:hasGripperEffector_MaxGripWidth)
+
+
+
+Declaration(Class(:GripperOther))
+
+AnnotationAssertion(rdfs:comment :GripperOther
+  "GripperOther is derived from GripperEffector.
+  An instance of GripperOther has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Description (inherited)
+    MaximumLoadWeight (inherited)
+    HeldObject (inherited, optional)
+    MaxGripWidth (inherited, optional).
+ 
+  A GripperOther is a gripper type that is not any of the other
+  types.")
+
+
+
+Declaration(Class(:GripperParallel))
+
+AnnotationAssertion(rdfs:comment :GripperParallel
+  "GripperParallel is derived from GripperEffector.
+  An instance of GripperParallel has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Description (inherited)
+    MaximumLoadWeight (inherited)
+    HeldObject (inherited, optional)
+    MaxGripWidth (inherited, optional).
+ 
+  A GripperParallel holds an object by gripping it between two
+  parallel plates.")
+
+
+
+Declaration(Class(:GripperThreeFinger))
+
+AnnotationAssertion(rdfs:comment :GripperThreeFinger
+  "GripperThreeFinger is derived from GripperEffector.
+  An instance of GripperThreeFinger has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Description (inherited
+    MaximumLoadWeight (inherited)
+    HeldObject (inherited, optional)
+    MaxGripWidth (inherited, optional).
+ 
+  A GripperThreeFinger holds an object by gripping
+  it with three fingers.")
+
+
+
+Declaration(Class(:GripperTwoJaws))
+
+AnnotationAssertion(rdfs:comment :GripperTwoJaws
+  "GripperTwoJaws is derived from GripperEffector.
+  An instance of GripperTwoJaws has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Description (inherited)
+    MaximumLoadWeight (inherited)
+    HeldObject (inherited, optional)
+    MaxGripWidth (inherited, optional).
+ 
+  A GripperTwoJaws holds an object by gripping it with two jaws.")
+
+
+
+Declaration(Class(:Human))
+
+AnnotationAssertion(rdfs:comment :Human
+  "Human is derived from NoSkuObject.
+  An instance of Human has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple).
+ 
+  A Human is a type representing a human being. The shape of
+  a human is the shape of a bounding box (or other bounding shape)
+  that encloses the human completely.")
+
+
+
+Declaration(Class(:InternalShape))
+
+AnnotationAssertion(rdfs:comment :InternalShape
+  "InternalShape is derived from ShapeDesign.
+  An instance of InternalShape has the following:
+    Description (inherited)
+    Marking (inherited, optional, multiple).
+ 
+  InternalShape is an abstract type from which more specific
+  types of shape are derived. Instances of InternalShape in a
+  instance file contain information about the appearance of the
+  shape without referring to another file.")
+
+SubClassOf(:BoxyShape :InternalShape)
+SubClassOf(:CylindricalShape :InternalShape)
+DisjointUnion(:InternalShape
+              :BoxyShape
+              :CylindricalShape)
+
+
+
+Declaration(Class(:KittingWorkstation))
+
+AnnotationAssertion(rdfs:comment :KittingWorkstation
+  "KittingWorkstation is derived from NoSkuObject.
+  An instance of KittingWorkstation has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    AngleUnit
+    LengthUnit
+    ChangingStation
+    Object (multiple)
+    OtherObstacle (optional, multiple)
+    PartsTrayDesign (multiple)
+    Robot
+    Sku (multiple)
+    WeightUnit.
+ 
+  All angle, length, and weight values related to the workstation
+  use the units implicitly.
+ 
+  The workstation includes one robot and one end effector changing
+  station. There may be many instances of Object in the workstation,
+  including such things as work tables, large boxes with parts trays,
+  large boxes with empty vessels.
+ 
+  The collection of instances of PartsTrayDesign is a library of all
+  parts tray designs known to the workstation, both those that supply
+  parts and those that are kits to be built.
+ 
+  The collection of instances of Sku is a library of all stock
+  keeping units known to the workstation.
+ 
+  The OtherObstacles are obstacles to robot motion of unspecified
+  type.
+ 
+  Containers of various sorts enter and leave the workstation. The
+  robot builds kits of parts by executing kitting plans as directed
+  by a kitting plan execution system.
+ 
+  The location of each instance of KittingWorkstation should be given
+  relative to itself in order to end the chain of relative locations.")
+
+Declaration(DataProperty(:hasKittingWorkstation_AngleUnit))
+DataPropertyDomain(:hasKittingWorkstation_AngleUnit :KittingWorkstation)
+DataPropertyRange(:hasKittingWorkstation_AngleUnit :angleUnit)
+FunctionalDataProperty(:hasKittingWorkstation_AngleUnit)
+EquivalentClasses(:KittingWorkstation ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasKittingWorkstation_AngleUnit :angleUnit)
+  DataAllValuesFrom (:hasKittingWorkstation_AngleUnit :angleUnit)))
+
+Declaration(ObjectProperty(:hasKittingWorkstation_ChangingStation))
+ObjectPropertyDomain(:hasKittingWorkstation_ChangingStation :KittingWorkstation)
+ObjectPropertyRange(:hasKittingWorkstation_ChangingStation :EndEffectorChangingStation)
+InverseFunctionalObjectProperty(:hasKittingWorkstation_ChangingStation)
+FunctionalObjectProperty(:hasKittingWorkstation_ChangingStation)
+
+Declaration(ObjectProperty(:hadByChangingStation_KittingWorkstation))
+InverseObjectProperties(:hasKittingWorkstation_ChangingStation
+                        :hadByChangingStation_KittingWorkstation)
+ObjectPropertyDomain(:hadByChangingStation_KittingWorkstation :EndEffectorChangingStation)
+ObjectPropertyRange(:hadByChangingStation_KittingWorkstation :KittingWorkstation)
+
+Declaration(DataProperty(:hasKittingWorkstation_LengthUnit))
+DataPropertyDomain(:hasKittingWorkstation_LengthUnit :KittingWorkstation)
+DataPropertyRange(:hasKittingWorkstation_LengthUnit :lengthUnit)
+FunctionalDataProperty(:hasKittingWorkstation_LengthUnit)
+EquivalentClasses(:KittingWorkstation ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasKittingWorkstation_LengthUnit :lengthUnit)
+  DataAllValuesFrom (:hasKittingWorkstation_LengthUnit :lengthUnit)))
+
+Declaration(ObjectProperty(:hasKittingWorkstation_Object))
+ObjectPropertyDomain(:hasKittingWorkstation_Object :KittingWorkstation)
+ObjectPropertyRange(:hasKittingWorkstation_Object :SolidObject)
+InverseFunctionalObjectProperty(:hasKittingWorkstation_Object)
+
+Declaration(ObjectProperty(:hadByObject_KittingWorkstation))
+InverseObjectProperties(:hasKittingWorkstation_Object
+                        :hadByObject_KittingWorkstation)
+ObjectPropertyDomain(:hadByObject_KittingWorkstation :SolidObject)
+ObjectPropertyRange(:hadByObject_KittingWorkstation :KittingWorkstation)
+
+Declaration(ObjectProperty(:hasKittingWorkstation_OtherObstacle))
+ObjectPropertyDomain(:hasKittingWorkstation_OtherObstacle :KittingWorkstation)
+ObjectPropertyRange(:hasKittingWorkstation_OtherObstacle :BoxVolume)
+InverseFunctionalObjectProperty(:hasKittingWorkstation_OtherObstacle)
+
+Declaration(ObjectProperty(:hadByOtherObstacle_KittingWorkstation))
+InverseObjectProperties(:hasKittingWorkstation_OtherObstacle
+                        :hadByOtherObstacle_KittingWorkstation)
+ObjectPropertyDomain(:hadByOtherObstacle_KittingWorkstation :BoxVolume)
+ObjectPropertyRange(:hadByOtherObstacle_KittingWorkstation :KittingWorkstation)
+
+Declaration(ObjectProperty(:hasKittingWorkstation_PartsTrayDesign))
+ObjectPropertyDomain(:hasKittingWorkstation_PartsTrayDesign :KittingWorkstation)
+ObjectPropertyRange(:hasKittingWorkstation_PartsTrayDesign :PartsTrayDesign)
+InverseFunctionalObjectProperty(:hasKittingWorkstation_PartsTrayDesign)
+
+Declaration(ObjectProperty(:hadByPartsTrayDesign_KittingWorkstation))
+InverseObjectProperties(:hasKittingWorkstation_PartsTrayDesign
+                        :hadByPartsTrayDesign_KittingWorkstation)
+ObjectPropertyDomain(:hadByPartsTrayDesign_KittingWorkstation :PartsTrayDesign)
+ObjectPropertyRange(:hadByPartsTrayDesign_KittingWorkstation :KittingWorkstation)
+
+Declaration(ObjectProperty(:hasKittingWorkstation_Robot))
+ObjectPropertyDomain(:hasKittingWorkstation_Robot :KittingWorkstation)
+ObjectPropertyRange(:hasKittingWorkstation_Robot :Robot)
+InverseFunctionalObjectProperty(:hasKittingWorkstation_Robot)
+
+Declaration(ObjectProperty(:hadByRobot_KittingWorkstation))
+InverseObjectProperties(:hasKittingWorkstation_Robot
+                        :hadByRobot_KittingWorkstation)
+ObjectPropertyDomain(:hadByRobot_KittingWorkstation :Robot)
+ObjectPropertyRange(:hadByRobot_KittingWorkstation :KittingWorkstation)
+
+Declaration(ObjectProperty(:hasKittingWorkstation_Sku))
+ObjectPropertyDomain(:hasKittingWorkstation_Sku :KittingWorkstation)
+ObjectPropertyRange(:hasKittingWorkstation_Sku :StockKeepingUnit)
+InverseFunctionalObjectProperty(:hasKittingWorkstation_Sku)
+
+Declaration(ObjectProperty(:hadBySku_KittingWorkstation))
+InverseObjectProperties(:hasKittingWorkstation_Sku
+                        :hadBySku_KittingWorkstation)
+ObjectPropertyDomain(:hadBySku_KittingWorkstation :StockKeepingUnit)
+ObjectPropertyRange(:hadBySku_KittingWorkstation :KittingWorkstation)
+
+Declaration(DataProperty(:hasKittingWorkstation_WeightUnit))
+DataPropertyDomain(:hasKittingWorkstation_WeightUnit :KittingWorkstation)
+DataPropertyRange(:hasKittingWorkstation_WeightUnit :weightUnit)
+FunctionalDataProperty(:hasKittingWorkstation_WeightUnit)
+EquivalentClasses(:KittingWorkstation ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasKittingWorkstation_WeightUnit :weightUnit)
+  DataAllValuesFrom (:hasKittingWorkstation_WeightUnit :weightUnit)))
+
+
+
+Declaration(Class(:LargeBoxWithEmptyVessels))
+
+AnnotationAssertion(rdfs:comment :LargeBoxWithEmptyVessels
+  "LargeBoxWithEmptyVessels is derived from NoSkuObject.
+  An instance of LargeBoxWithEmptyVessels has the
+  following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    LargeContainer
+    Vessel (optional, multiple).
+ 
+  The location point of the LargeContainer should be (0,0,0), its Z
+  axis should be (0,0,1), and its X axis should be (1,0,0). The
+  PrimaryLocation of a PartsVessel in a LargeBoxWithEmptyVessels
+  should be given by a PoseLocationIn or RelativeLocationIn
+	that is relative to the LargeContainer. The PartsVessels in a
+  LargeBoxWithEmptyVessels are intended to all be of the same
+  SKU, although there is currently no formal requirement for that.")
+
+Declaration(ObjectProperty(:hasLargeBoxWithEmptyVessels_LargeContainer))
+ObjectPropertyDomain(:hasLargeBoxWithEmptyVessels_LargeContainer :LargeBoxWithEmptyVessels)
+ObjectPropertyRange(:hasLargeBoxWithEmptyVessels_LargeContainer :LargeContainer)
+InverseFunctionalObjectProperty(:hasLargeBoxWithEmptyVessels_LargeContainer)
+FunctionalObjectProperty(:hasLargeBoxWithEmptyVessels_LargeContainer)
+EquivalentClasses(:LargeBoxWithEmptyVessels ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasLargeBoxWithEmptyVessels_LargeContainer :LargeContainer)
+  ObjectAllValuesFrom (:hasLargeBoxWithEmptyVessels_LargeContainer :LargeContainer)))
+
+Declaration(ObjectProperty(:hadByLargeContainer_LargeBoxWithEmptyVessels))
+InverseObjectProperties(:hasLargeBoxWithEmptyVessels_LargeContainer
+                        :hadByLargeContainer_LargeBoxWithEmptyVessels)
+ObjectPropertyDomain(:hadByLargeContainer_LargeBoxWithEmptyVessels :LargeContainer)
+ObjectPropertyRange(:hadByLargeContainer_LargeBoxWithEmptyVessels :LargeBoxWithEmptyVessels)
+
+Declaration(ObjectProperty(:hasLargeBoxWithEmptyVessels_Vessel))
+ObjectPropertyDomain(:hasLargeBoxWithEmptyVessels_Vessel :LargeBoxWithEmptyVessels)
+ObjectPropertyRange(:hasLargeBoxWithEmptyVessels_Vessel :PartsVessel)
+InverseFunctionalObjectProperty(:hasLargeBoxWithEmptyVessels_Vessel)
+
+Declaration(ObjectProperty(:hadByVessel_LargeBoxWithEmptyVessels))
+InverseObjectProperties(:hasLargeBoxWithEmptyVessels_Vessel
+                        :hadByVessel_LargeBoxWithEmptyVessels)
+ObjectPropertyDomain(:hadByVessel_LargeBoxWithEmptyVessels :PartsVessel)
+ObjectPropertyRange(:hadByVessel_LargeBoxWithEmptyVessels :LargeBoxWithEmptyVessels)
+
+
+
+Declaration(Class(:LargeBoxWithPartsTrays))
+
+AnnotationAssertion(rdfs:comment :LargeBoxWithPartsTrays
+  "LargeBoxWithPartsTrays is derived from NoSkuObject. An
+  instance of LargeBoxWithPartsTrays has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    LargeContainer
+    PartsTray (optional, multiple)
+    PartsTrayDesign
+    Capacity.
+ 
+  The coordinate system of a LargeBoxWithPartsTrays is in the same
+  place as the coordinate system of its LargeContainer. The
+  PrimaryLocation of the LargeContainer should be relative to the
+  LargeBoxWithPartsTrays. The PartsTrayDesign is an
+  identifier for a PartsTrayDesign. The PrimaryLocation of a
+  PartsTray in a LargeBoxWithPartsTrays should be given by a
+  PoseLocationIn or RelativeLocationIn that is relative to
+  the LargeContainer.
+ 
+  The Capacity is an xs:positiveInteger giving the maximum number of
+  PartsTrays of the given design that can be held in the box.
+ 
+  The PartsTrays in a LargeBoxWithPartsTrays must all be of the
+  named design.")
+
+Declaration(ObjectProperty(:hasLargeBoxWithPartsTrays_LargeContainer))
+ObjectPropertyDomain(:hasLargeBoxWithPartsTrays_LargeContainer :LargeBoxWithPartsTrays)
+ObjectPropertyRange(:hasLargeBoxWithPartsTrays_LargeContainer :LargeContainer)
+InverseFunctionalObjectProperty(:hasLargeBoxWithPartsTrays_LargeContainer)
+FunctionalObjectProperty(:hasLargeBoxWithPartsTrays_LargeContainer)
+EquivalentClasses(:LargeBoxWithPartsTrays ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasLargeBoxWithPartsTrays_LargeContainer :LargeContainer)
+  ObjectAllValuesFrom (:hasLargeBoxWithPartsTrays_LargeContainer :LargeContainer)))
+
+Declaration(ObjectProperty(:hadByLargeContainer_LargeBoxWithPartsTrays))
+InverseObjectProperties(:hasLargeBoxWithPartsTrays_LargeContainer
+                        :hadByLargeContainer_LargeBoxWithPartsTrays)
+ObjectPropertyDomain(:hadByLargeContainer_LargeBoxWithPartsTrays :LargeContainer)
+ObjectPropertyRange(:hadByLargeContainer_LargeBoxWithPartsTrays :LargeBoxWithPartsTrays)
+
+Declaration(ObjectProperty(:hasLargeBoxWithPartsTrays_PartsTray))
+ObjectPropertyDomain(:hasLargeBoxWithPartsTrays_PartsTray :LargeBoxWithPartsTrays)
+ObjectPropertyRange(:hasLargeBoxWithPartsTrays_PartsTray :PartsTray)
+InverseFunctionalObjectProperty(:hasLargeBoxWithPartsTrays_PartsTray)
+
+Declaration(ObjectProperty(:hadByPartsTray_LargeBoxWithPartsTrays))
+InverseObjectProperties(:hasLargeBoxWithPartsTrays_PartsTray
+                        :hadByPartsTray_LargeBoxWithPartsTrays)
+ObjectPropertyDomain(:hadByPartsTray_LargeBoxWithPartsTrays :PartsTray)
+ObjectPropertyRange(:hadByPartsTray_LargeBoxWithPartsTrays :LargeBoxWithPartsTrays)
+
+
+Declaration(ObjectProperty(:hasLargeBoxWithPartsTrays_PartsTrayDesign))
+ObjectPropertyDomain(:hasLargeBoxWithPartsTrays_PartsTrayDesign :LargeBoxWithPartsTrays)
+ObjectPropertyRange(:hasLargeBoxWithPartsTrays_PartsTrayDesign :PartsTrayDesign)
+FunctionalObjectProperty(:hasLargeBoxWithPartsTrays_PartsTrayDesign)
+EquivalentClasses(:LargeBoxWithPartsTrays ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasLargeBoxWithPartsTrays_PartsTrayDesign :PartsTrayDesign)
+  ObjectAllValuesFrom (:hasLargeBoxWithPartsTrays_PartsTrayDesign :PartsTrayDesign)))
+
+Declaration(ObjectProperty(:hadByPartsTrayDesign_LargeBoxWithPartsTrays))
+InverseObjectProperties(:hasLargeBoxWithPartsTrays_PartsTrayDesign
+                        :hadByPartsTrayDesign_LargeBoxWithPartsTrays)
+ObjectPropertyDomain(:hadByPartsTrayDesign_LargeBoxWithPartsTrays :PartsTrayDesign)
+ObjectPropertyRange(:hadByPartsTrayDesign_LargeBoxWithPartsTrays :LargeBoxWithPartsTrays)
+
+Declaration(DataProperty(:hasLargeBoxWithPartsTrays_Capacity))
+DataPropertyDomain(:hasLargeBoxWithPartsTrays_Capacity :LargeBoxWithPartsTrays)
+DataPropertyRange(:hasLargeBoxWithPartsTrays_Capacity xsd:positiveInteger)
+FunctionalDataProperty(:hasLargeBoxWithPartsTrays_Capacity)
+EquivalentClasses(:LargeBoxWithPartsTrays ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasLargeBoxWithPartsTrays_Capacity xsd:positiveInteger)
+  DataAllValuesFrom (:hasLargeBoxWithPartsTrays_Capacity xsd:positiveInteger)))
+
+
+
+Declaration(Class(:LargeContainer))
+
+AnnotationAssertion(rdfs:comment :LargeContainer
+  "LargeContainer is derived from SkuObject.
+  An instance of LargeContainer has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    Sku (inherited)
+    SerialNumber.
+ 
+  The Sku specifies the SKU of the LargeContainer. A
+  LargeContainer can hold one or more instances of a single type
+  of parts vessel or kit.")
+
+Declaration(DataProperty(:hasLargeContainer_SerialNumber))
+DataPropertyDomain(:hasLargeContainer_SerialNumber :LargeContainer)
+DataPropertyRange(:hasLargeContainer_SerialNumber xsd:NMTOKEN)
+FunctionalDataProperty(:hasLargeContainer_SerialNumber)
+EquivalentClasses(:LargeContainer ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasLargeContainer_SerialNumber xsd:NMTOKEN)
+  DataAllValuesFrom (:hasLargeContainer_SerialNumber xsd:NMTOKEN)))
+
+
+
+Declaration(Class(:MarkingLayout))
+
+AnnotationAssertion(rdfs:comment :MarkingLayout
+  "MarkingLayout is derived from DataThing.
+  An instance of MarkingLayout has the following:
+    Point
+    XAxis
+    YAxis.
+  The MarkingLayout represents the coordinate system of a
+  marking. The coordinate system of the marking is placed in the
+  coordinate system of a shape as given by the Point, XAxis and
+  YAxis. The scale of the XAxis and YAxis vectors (which are not
+  required to be unit vectors) represents the scale of the
+  markings along those axes.")
+
+Declaration(ObjectProperty(:hasMarkingLayout_Point))
+ObjectPropertyDomain(:hasMarkingLayout_Point :MarkingLayout)
+ObjectPropertyRange(:hasMarkingLayout_Point :Point)
+InverseFunctionalObjectProperty(:hasMarkingLayout_Point)
+FunctionalObjectProperty(:hasMarkingLayout_Point)
+EquivalentClasses(:MarkingLayout ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasMarkingLayout_Point :Point)
+  ObjectAllValuesFrom (:hasMarkingLayout_Point :Point)))
+
+Declaration(ObjectProperty(:hadByPoint_MarkingLayout))
+InverseObjectProperties(:hasMarkingLayout_Point
+                        :hadByPoint_MarkingLayout)
+ObjectPropertyDomain(:hadByPoint_MarkingLayout :Point)
+ObjectPropertyRange(:hadByPoint_MarkingLayout :MarkingLayout)
+
+Declaration(ObjectProperty(:hasMarkingLayout_XAxis))
+ObjectPropertyDomain(:hasMarkingLayout_XAxis :MarkingLayout)
+ObjectPropertyRange(:hasMarkingLayout_XAxis :Vector)
+InverseFunctionalObjectProperty(:hasMarkingLayout_XAxis)
+FunctionalObjectProperty(:hasMarkingLayout_XAxis)
+EquivalentClasses(:MarkingLayout ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasMarkingLayout_XAxis :Vector)
+  ObjectAllValuesFrom (:hasMarkingLayout_XAxis :Vector)))
+
+Declaration(ObjectProperty(:hadByXAxis_MarkingLayout))
+InverseObjectProperties(:hasMarkingLayout_XAxis
+                        :hadByXAxis_MarkingLayout)
+ObjectPropertyDomain(:hadByXAxis_MarkingLayout :Vector)
+ObjectPropertyRange(:hadByXAxis_MarkingLayout :MarkingLayout)
+
+Declaration(ObjectProperty(:hasMarkingLayout_YAxis))
+ObjectPropertyDomain(:hasMarkingLayout_YAxis :MarkingLayout)
+ObjectPropertyRange(:hasMarkingLayout_YAxis :Vector)
+InverseFunctionalObjectProperty(:hasMarkingLayout_YAxis)
+FunctionalObjectProperty(:hasMarkingLayout_YAxis)
+EquivalentClasses(:MarkingLayout ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasMarkingLayout_YAxis :Vector)
+  ObjectAllValuesFrom (:hasMarkingLayout_YAxis :Vector)))
+
+Declaration(ObjectProperty(:hadByYAxis_MarkingLayout))
+InverseObjectProperties(:hasMarkingLayout_YAxis
+                        :hadByYAxis_MarkingLayout)
+ObjectPropertyDomain(:hadByYAxis_MarkingLayout :Vector)
+ObjectPropertyRange(:hadByYAxis_MarkingLayout :MarkingLayout)
+
+
+
+Declaration(Class(:MarkingModel))
+
+AnnotationAssertion(rdfs:comment :MarkingModel
+  "MarkingModel is derived from DataThing.
+  An instance of MarkingModel has the following:
+    MarkingFormatName
+    MarkingFileName
+    MarkingName (optional).
+  The marking consists of a format name; e.g. JPEG, a marking
+  file name; i.e., where the particular marking file is stored,
+  and a marking name, i.e., the specific marking if a storage
+  file contains multiple markings.")
+
+Declaration(DataProperty(:hasMarkingModel_MarkingFormatName))
+DataPropertyDomain(:hasMarkingModel_MarkingFormatName :MarkingModel)
+DataPropertyRange(:hasMarkingModel_MarkingFormatName xsd:string)
+FunctionalDataProperty(:hasMarkingModel_MarkingFormatName)
+EquivalentClasses(:MarkingModel ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasMarkingModel_MarkingFormatName xsd:string)
+  DataAllValuesFrom (:hasMarkingModel_MarkingFormatName xsd:string)))
+
+Declaration(DataProperty(:hasMarkingModel_MarkingFileName))
+DataPropertyDomain(:hasMarkingModel_MarkingFileName :MarkingModel)
+DataPropertyRange(:hasMarkingModel_MarkingFileName xsd:string)
+FunctionalDataProperty(:hasMarkingModel_MarkingFileName)
+EquivalentClasses(:MarkingModel ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasMarkingModel_MarkingFileName xsd:string)
+  DataAllValuesFrom (:hasMarkingModel_MarkingFileName xsd:string)))
+
+Declaration(DataProperty(:hasMarkingModel_MarkingName))
+DataPropertyDomain(:hasMarkingModel_MarkingName :MarkingModel)
+DataPropertyRange(:hasMarkingModel_MarkingName xsd:string)
+FunctionalDataProperty(:hasMarkingModel_MarkingName)
+
+
+
+Declaration(Class(:Marking))
+
+AnnotationAssertion(rdfs:comment :Marking
+  "Marking is derived from DataThing.
+  An instance of Marking has the following:
+    MarkingLayout
+    Marking Model.
+  A Marking is an engraved or printed image on a shape. The
+  marking is displayed on an XY Cartesian coordinate system as
+  defined by the MarkingLayout. The actual marking is defined by
+  the MarkingModel.")
+
+Declaration(ObjectProperty(:hasMarking_MarkingLayout))
+ObjectPropertyDomain(:hasMarking_MarkingLayout :Marking)
+ObjectPropertyRange(:hasMarking_MarkingLayout :MarkingLayout)
+InverseFunctionalObjectProperty(:hasMarking_MarkingLayout)
+FunctionalObjectProperty(:hasMarking_MarkingLayout)
+EquivalentClasses(:Marking ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasMarking_MarkingLayout :MarkingLayout)
+  ObjectAllValuesFrom (:hasMarking_MarkingLayout :MarkingLayout)))
+
+Declaration(ObjectProperty(:hadByMarkingLayout_Marking))
+InverseObjectProperties(:hasMarking_MarkingLayout
+                        :hadByMarkingLayout_Marking)
+ObjectPropertyDomain(:hadByMarkingLayout_Marking :MarkingLayout)
+ObjectPropertyRange(:hadByMarkingLayout_Marking :Marking)
+
+Declaration(ObjectProperty(:hasMarking_MarkingModel))
+ObjectPropertyDomain(:hasMarking_MarkingModel :Marking)
+ObjectPropertyRange(:hasMarking_MarkingModel :MarkingModel)
+InverseFunctionalObjectProperty(:hasMarking_MarkingModel)
+FunctionalObjectProperty(:hasMarking_MarkingModel)
+EquivalentClasses(:Marking ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasMarking_MarkingModel :MarkingModel)
+  ObjectAllValuesFrom (:hasMarking_MarkingModel :MarkingModel)))
+
+Declaration(ObjectProperty(:hadByMarkingModel_Marking))
+InverseObjectProperties(:hasMarking_MarkingModel
+                        :hadByMarkingModel_Marking)
+ObjectPropertyDomain(:hadByMarkingModel_Marking :MarkingModel)
+ObjectPropertyRange(:hadByMarkingModel_Marking :Marking)
+
+
+
+Declaration(Class(:MechanicalComponent))
+
+AnnotationAssertion(rdfs:comment :MechanicalComponent
+  "MechanicalComponent is derived from NoSkuObject.
+  An instance of MechanicalComponent has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple).
+ 
+  A MechanicalComponent is a component of kitting workstation
+  device such as a robot or an end effector changing station.")
+
+
+
+Declaration(Class(:NoSkuObject))
+
+AnnotationAssertion(rdfs:comment :NoSkuObject
+  "NoSkuObject is derived from SolidObject.
+  An instance of NoSkuObject has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocations (inherited, optional, multiple)
+    InternalShape (optional)
+    ExternalShape (optional)
+    Weight (optional)
+    EffectorAndGrasp (optional, multiple).
+  A NoSkuObject is an abstract type from which more specific
+  types of solid object are derived. The InternalShape and
+  ExternalShape are not required to represent the same shape,
+  but they should not be inconsistent. In particular, they must
+  use the same coordinate system. If a NoSkuObject consists
+  of components, it may also get its shape from the shape of the
+  components and their relative positions. In this case one of
+  the components should be the root of a tree of reference
+  objects containing all components, and the coordinate system
+  of the object is the coordinate system of the root component.")
+
+SubClassOf(:EndEffectorChangingStation :NoSkuObject)
+SubClassOf(:EndEffectorHolder :NoSkuObject)
+SubClassOf(:EndEffector :NoSkuObject)
+SubClassOf(:Human :NoSkuObject)
+SubClassOf(:KittingWorkstation :NoSkuObject)
+SubClassOf(:LargeBoxWithEmptyVessels :NoSkuObject)
+SubClassOf(:LargeBoxWithPartsTrays :NoSkuObject)
+SubClassOf(:MechanicalComponent :NoSkuObject)
+SubClassOf(:Robot :NoSkuObject)
+SubClassOf(:WorkTable :NoSkuObject)
+DisjointUnion(:NoSkuObject
+              :EndEffectorChangingStation
+              :EndEffectorHolder
+              :EndEffector
+              :Human
+              :KittingWorkstation
+              :LargeBoxWithEmptyVessels
+              :LargeBoxWithPartsTrays
+              :MechanicalComponent
+              :Robot
+              :WorkTable)
+
+Declaration(ObjectProperty(:hasNoSkuObject_InternalShape))
+ObjectPropertyDomain(:hasNoSkuObject_InternalShape :NoSkuObject)
+ObjectPropertyRange(:hasNoSkuObject_InternalShape :InternalShape)
+InverseFunctionalObjectProperty(:hasNoSkuObject_InternalShape)
+FunctionalObjectProperty(:hasNoSkuObject_InternalShape)
+
+Declaration(ObjectProperty(:hadByInternalShape_NoSkuObject))
+InverseObjectProperties(:hasNoSkuObject_InternalShape
+                        :hadByInternalShape_NoSkuObject)
+ObjectPropertyDomain(:hadByInternalShape_NoSkuObject :InternalShape)
+ObjectPropertyRange(:hadByInternalShape_NoSkuObject :NoSkuObject)
+
+Declaration(ObjectProperty(:hasNoSkuObject_ExternalShape))
+ObjectPropertyDomain(:hasNoSkuObject_ExternalShape :NoSkuObject)
+ObjectPropertyRange(:hasNoSkuObject_ExternalShape :ExternalShape)
+InverseFunctionalObjectProperty(:hasNoSkuObject_ExternalShape)
+FunctionalObjectProperty(:hasNoSkuObject_ExternalShape)
+
+Declaration(ObjectProperty(:hadByExternalShape_NoSkuObject))
+InverseObjectProperties(:hasNoSkuObject_ExternalShape
+                        :hadByExternalShape_NoSkuObject)
+ObjectPropertyDomain(:hadByExternalShape_NoSkuObject :ExternalShape)
+ObjectPropertyRange(:hadByExternalShape_NoSkuObject :NoSkuObject)
+
+Declaration(DataProperty(:hasNoSkuObject_Weight))
+DataPropertyDomain(:hasNoSkuObject_Weight :NoSkuObject)
+DataPropertyRange(:hasNoSkuObject_Weight :positiveDecimal)
+FunctionalDataProperty(:hasNoSkuObject_Weight)
+
+Declaration(ObjectProperty(:hasNoSkuObject_EffectorAndGrasp))
+ObjectPropertyDomain(:hasNoSkuObject_EffectorAndGrasp :NoSkuObject)
+ObjectPropertyRange(:hasNoSkuObject_EffectorAndGrasp :EndEffectorGrasp)
+InverseFunctionalObjectProperty(:hasNoSkuObject_EffectorAndGrasp)
+
+Declaration(ObjectProperty(:hadByEffectorAndGrasp_NoSkuObject))
+InverseObjectProperties(:hasNoSkuObject_EffectorAndGrasp
+                        :hadByEffectorAndGrasp_NoSkuObject)
+ObjectPropertyDomain(:hadByEffectorAndGrasp_NoSkuObject :EndEffectorGrasp)
+ObjectPropertyRange(:hadByEffectorAndGrasp_NoSkuObject :NoSkuObject)
+
+
+
+Declaration(Class(:OtherGripperGrasp))
+
+AnnotationAssertion(rdfs:comment :OtherGripperGrasp
+  "OtherGripperGrasp is derived from EndEffectorGrasp.
+  An instance of OtherGripperGrasp has the following:
+    OtherGripper
+    GraspPose (optional, multiple)
+    MaxForce (optional)
+    MinForce (optional).
+  The OtherGripperName identifies an other gripper that can
+  handle an object of a given shape. The GraspPose elements are
+  poses from which an object of a given SKU can be grasped by an
+  other gripper, with some component of the gripper
+  corresponding to each of the poses. The poses are relative to
+  the coordinate system of the SKU's shape (so that the value of
+  the RefObjectName of each pose is irrelevant, as long as it is
+  the name of a SolidObject). The Point in each pose is a point
+  at which a surface of the gripper should make contact with the
+  shape. The axes of each pose may be used to indicate a
+  direction for aligning parts of the gripper. The ZAxis is
+  usually normal to the object having the shape and pointing
+  away from the object. The GraspPoses should not use the
+  optional Timestamp. The MaxForce is the maximum force that the
+  gripper may apply. The MinForce is the minimum force that the
+  gripper must apply at each pose point in order to lift the
+  object. Force is measured in Newtons.")
+
+
+Declaration(ObjectProperty(:hasOtherGripperGrasp_OtherGripper))
+ObjectPropertyDomain(:hasOtherGripperGrasp_OtherGripper :OtherGripperGrasp)
+ObjectPropertyRange(:hasOtherGripperGrasp_OtherGripper :GripperOther)
+FunctionalObjectProperty(:hasOtherGripperGrasp_OtherGripper)
+EquivalentClasses(:OtherGripperGrasp ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasOtherGripperGrasp_OtherGripper :GripperOther)
+  ObjectAllValuesFrom (:hasOtherGripperGrasp_OtherGripper :GripperOther)))
+
+Declaration(ObjectProperty(:hadByOtherGripper_OtherGripperGrasp))
+InverseObjectProperties(:hasOtherGripperGrasp_OtherGripper
+                        :hadByOtherGripper_OtherGripperGrasp)
+ObjectPropertyDomain(:hadByOtherGripper_OtherGripperGrasp :GripperOther)
+ObjectPropertyRange(:hadByOtherGripper_OtherGripperGrasp :OtherGripperGrasp)
+
+Declaration(ObjectProperty(:hasOtherGripperGrasp_GraspPose))
+ObjectPropertyDomain(:hasOtherGripperGrasp_GraspPose :OtherGripperGrasp)
+ObjectPropertyRange(:hasOtherGripperGrasp_GraspPose :PoseOnlyLocation)
+InverseFunctionalObjectProperty(:hasOtherGripperGrasp_GraspPose)
+
+Declaration(ObjectProperty(:hadByGraspPose_OtherGripperGrasp))
+InverseObjectProperties(:hasOtherGripperGrasp_GraspPose
+                        :hadByGraspPose_OtherGripperGrasp)
+ObjectPropertyDomain(:hadByGraspPose_OtherGripperGrasp :PoseOnlyLocation)
+ObjectPropertyRange(:hadByGraspPose_OtherGripperGrasp :OtherGripperGrasp)
+
+Declaration(DataProperty(:hasOtherGripperGrasp_MaxForce))
+DataPropertyDomain(:hasOtherGripperGrasp_MaxForce :OtherGripperGrasp)
+DataPropertyRange(:hasOtherGripperGrasp_MaxForce :positiveDecimal)
+FunctionalDataProperty(:hasOtherGripperGrasp_MaxForce)
+
+Declaration(DataProperty(:hasOtherGripperGrasp_MinForce))
+DataPropertyDomain(:hasOtherGripperGrasp_MinForce :OtherGripperGrasp)
+DataPropertyRange(:hasOtherGripperGrasp_MinForce :positiveDecimal)
+FunctionalDataProperty(:hasOtherGripperGrasp_MinForce)
+
+
+
+Declaration(Class(:ParallelGripperGrasp))
+
+AnnotationAssertion(rdfs:comment :ParallelGripperGrasp
+  "ParallelGrasp is derived from EndEffectorGrasp. An instance
+  of ParallelGrasp has the following: Name (inherited)
+  ParallelGripper GraspPose (1-Many) ApproachSeparation
+  GraspSeparation. The ParallelGripperName identifies a parallel
+  gripper that can handle an object of a given shape. The GraspPose
+  element is a pose from which an object of a given SKU can be
+  grasped by a parallel gripper. The pose is relative to the
+  coordinate system of the SKU's shape (so that the value of the
+  RefObjectName of the pose is irrelevant, as long as it is the name
+  of a SolidObject). The Point in the pose is a point at which the
+  origin of the gripper should be located in order to make contact
+  with the shape when the gripper is closed to the GraspSeparation.
+  The axes of the pose are used to align the plates of the gripper.
+  The ZAxis is usually normal to the object having the shape and
+  pointing away from the object. The GraspPose should not use the
+  optional Timestamp. The ApproachSeparation if the separation
+  between plates necessary for approaching the object. The
+  GraspSeparation is the separation necessary for lifting the object.
+  Separations are measured in mm.")
+
+
+Declaration(ObjectProperty(:hasParallelGripperGrasp_ParallelGripper))
+ObjectPropertyDomain(:hasParallelGripperGrasp_ParallelGripper :ParallelGripperGrasp)
+ObjectPropertyRange(:hasParallelGripperGrasp_ParallelGripper :GripperParallel)
+FunctionalObjectProperty(:hasParallelGripperGrasp_ParallelGripper)
+EquivalentClasses(:ParallelGripperGrasp ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasParallelGripperGrasp_ParallelGripper :GripperParallel)
+  ObjectAllValuesFrom (:hasParallelGripperGrasp_ParallelGripper :GripperParallel)))
+
+Declaration(ObjectProperty(:hadByParallelGripper_ParallelGripperGrasp))
+InverseObjectProperties(:hasParallelGripperGrasp_ParallelGripper
+                        :hadByParallelGripper_ParallelGripperGrasp)
+ObjectPropertyDomain(:hadByParallelGripper_ParallelGripperGrasp :GripperParallel)
+ObjectPropertyRange(:hadByParallelGripper_ParallelGripperGrasp :ParallelGripperGrasp)
+
+Declaration(ObjectProperty(:hasParallelGripperGrasp_GraspPose))
+ObjectPropertyDomain(:hasParallelGripperGrasp_GraspPose :ParallelGripperGrasp)
+ObjectPropertyRange(:hasParallelGripperGrasp_GraspPose :PoseOnlyLocation)
+InverseFunctionalObjectProperty(:hasParallelGripperGrasp_GraspPose)
+FunctionalObjectProperty(:hasParallelGripperGrasp_GraspPose)
+EquivalentClasses(:ParallelGripperGrasp ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasParallelGripperGrasp_GraspPose :PoseOnlyLocation)
+  ObjectAllValuesFrom (:hasParallelGripperGrasp_GraspPose :PoseOnlyLocation)))
+
+Declaration(ObjectProperty(:hadByGraspPose_ParallelGripperGrasp))
+InverseObjectProperties(:hasParallelGripperGrasp_GraspPose
+                        :hadByGraspPose_ParallelGripperGrasp)
+ObjectPropertyDomain(:hadByGraspPose_ParallelGripperGrasp :PoseOnlyLocation)
+ObjectPropertyRange(:hadByGraspPose_ParallelGripperGrasp :ParallelGripperGrasp)
+
+Declaration(DataProperty(:hasParallelGripperGrasp_ApproachSeparation))
+DataPropertyDomain(:hasParallelGripperGrasp_ApproachSeparation :ParallelGripperGrasp)
+DataPropertyRange(:hasParallelGripperGrasp_ApproachSeparation :nonNegativeDecimal)
+FunctionalDataProperty(:hasParallelGripperGrasp_ApproachSeparation)
+EquivalentClasses(:ParallelGripperGrasp ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasParallelGripperGrasp_ApproachSeparation :nonNegativeDecimal)
+  DataAllValuesFrom (:hasParallelGripperGrasp_ApproachSeparation :nonNegativeDecimal)))
+
+Declaration(DataProperty(:hasParallelGripperGrasp_GraspSeparation))
+DataPropertyDomain(:hasParallelGripperGrasp_GraspSeparation :ParallelGripperGrasp)
+DataPropertyRange(:hasParallelGripperGrasp_GraspSeparation :nonNegativeDecimal)
+FunctionalDataProperty(:hasParallelGripperGrasp_GraspSeparation)
+EquivalentClasses(:ParallelGripperGrasp ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasParallelGripperGrasp_GraspSeparation :nonNegativeDecimal)
+  DataAllValuesFrom (:hasParallelGripperGrasp_GraspSeparation :nonNegativeDecimal)))
+
+
+
+Declaration(Class(:PartRefAndPose))
+
+AnnotationAssertion(rdfs:comment :PartRefAndPose
+  "PartRefAndPose is derived from DataThing.
+  An instance of PartRefAndPose has the following:
+    Sku
+    Pose.
+ 
+  The Sku identifies a type of part. The Pose specifies
+  the location and orientation of the part in the coordinate system
+  of the vessel of the PartsTrayDesign to which the
+  PartRefAndPose belongs.")
+
+
+Declaration(ObjectProperty(:hasPartRefAndPose_Sku))
+ObjectPropertyDomain(:hasPartRefAndPose_Sku :PartRefAndPose)
+ObjectPropertyRange(:hasPartRefAndPose_Sku :StockKeepingUnit)
+FunctionalObjectProperty(:hasPartRefAndPose_Sku)
+EquivalentClasses(:PartRefAndPose ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasPartRefAndPose_Sku :StockKeepingUnit)
+  ObjectAllValuesFrom (:hasPartRefAndPose_Sku :StockKeepingUnit)))
+
+Declaration(ObjectProperty(:hadBySku_PartRefAndPose))
+InverseObjectProperties(:hasPartRefAndPose_Sku
+                        :hadBySku_PartRefAndPose)
+ObjectPropertyDomain(:hadBySku_PartRefAndPose :StockKeepingUnit)
+ObjectPropertyRange(:hadBySku_PartRefAndPose :PartRefAndPose)
+
+Declaration(ObjectProperty(:hasPartRefAndPose_Pose))
+ObjectPropertyDomain(:hasPartRefAndPose_Pose :PartRefAndPose)
+ObjectPropertyRange(:hasPartRefAndPose_Pose :Pose)
+InverseFunctionalObjectProperty(:hasPartRefAndPose_Pose)
+FunctionalObjectProperty(:hasPartRefAndPose_Pose)
+EquivalentClasses(:PartRefAndPose ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasPartRefAndPose_Pose :Pose)
+  ObjectAllValuesFrom (:hasPartRefAndPose_Pose :Pose)))
+
+Declaration(ObjectProperty(:hadByPose_PartRefAndPose))
+InverseObjectProperties(:hasPartRefAndPose_Pose
+                        :hadByPose_PartRefAndPose)
+ObjectPropertyDomain(:hadByPose_PartRefAndPose :Pose)
+ObjectPropertyRange(:hadByPose_PartRefAndPose :PartRefAndPose)
+
+
+
+Declaration(Class(:Part))
+
+AnnotationAssertion(rdfs:comment :Part
+  "Part is derived from SkuObject.
+  An instance of Part has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    Sku (inherited)
+    SerialNumber.
+ 
+  The Part represents a part.
+  The Sku specifies the SKU for the part.")
+
+Declaration(DataProperty(:hasPart_SerialNumber))
+DataPropertyDomain(:hasPart_SerialNumber :Part)
+DataPropertyRange(:hasPart_SerialNumber xsd:NMTOKEN)
+FunctionalDataProperty(:hasPart_SerialNumber)
+EquivalentClasses(:Part ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasPart_SerialNumber xsd:NMTOKEN)
+  DataAllValuesFrom (:hasPart_SerialNumber xsd:NMTOKEN)))
+
+
+
+Declaration(Class(:PartsBin))
+
+AnnotationAssertion(rdfs:comment :PartsBin
+  "PartsBin is derived from PartsVessel.
+  An instance of PartsBin has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    Sku (inherited)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Part (inherited, optional, multiple)
+    SerialNumber (inherited)
+    Weight (inherited, optional)
+    PartSku
+    PartQuantity.
+ 
+  A PartsBin holds a number of Parts (PartQuantity) with the
+  same SKU (PartSku)in unknown random positions. Each
+  Part in the bin should be listed explictly and have a
+  RelativeLocationIn with the bin as its RefObject. The
+  value of PartQuantity should be the number of instances of Part.")
+
+
+Declaration(ObjectProperty(:hasPartsBin_PartSku))
+ObjectPropertyDomain(:hasPartsBin_PartSku :PartsBin)
+ObjectPropertyRange(:hasPartsBin_PartSku :StockKeepingUnit)
+FunctionalObjectProperty(:hasPartsBin_PartSku)
+EquivalentClasses(:PartsBin ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasPartsBin_PartSku :StockKeepingUnit)
+  ObjectAllValuesFrom (:hasPartsBin_PartSku :StockKeepingUnit)))
+
+Declaration(ObjectProperty(:hadByPartSku_PartsBin))
+InverseObjectProperties(:hasPartsBin_PartSku
+                        :hadByPartSku_PartsBin)
+ObjectPropertyDomain(:hadByPartSku_PartsBin :StockKeepingUnit)
+ObjectPropertyRange(:hadByPartSku_PartsBin :PartsBin)
+
+Declaration(DataProperty(:hasPartsBin_PartQuantity))
+DataPropertyDomain(:hasPartsBin_PartQuantity :PartsBin)
+DataPropertyRange(:hasPartsBin_PartQuantity xsd:nonNegativeInteger)
+FunctionalDataProperty(:hasPartsBin_PartQuantity)
+EquivalentClasses(:PartsBin ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasPartsBin_PartQuantity xsd:nonNegativeInteger)
+  DataAllValuesFrom (:hasPartsBin_PartQuantity xsd:nonNegativeInteger)))
+
+
+
+Declaration(Class(:PartsTrayDesign))
+
+AnnotationAssertion(rdfs:comment :PartsTrayDesign
+  "PartsTrayDesign is derived from DataThing.
+  An instance of PartsTrayDesign has the following:
+    VesselSku
+    PartRefAndPose (multiple).
+ 
+  The VesselSku identifies a type of parts vessel. The
+  Pose in a PartRefAndPose is the location of the part relative to the
+  the coordinate system of the ShapeDesign of the parts vessel.")
+
+
+Declaration(ObjectProperty(:hasPartsTrayDesign_VesselSku))
+ObjectPropertyDomain(:hasPartsTrayDesign_VesselSku :PartsTrayDesign)
+ObjectPropertyRange(:hasPartsTrayDesign_VesselSku :StockKeepingUnit)
+FunctionalObjectProperty(:hasPartsTrayDesign_VesselSku)
+EquivalentClasses(:PartsTrayDesign ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasPartsTrayDesign_VesselSku :StockKeepingUnit)
+  ObjectAllValuesFrom (:hasPartsTrayDesign_VesselSku :StockKeepingUnit)))
+
+Declaration(ObjectProperty(:hadByVesselSku_PartsTrayDesign))
+InverseObjectProperties(:hasPartsTrayDesign_VesselSku
+                        :hadByVesselSku_PartsTrayDesign)
+ObjectPropertyDomain(:hadByVesselSku_PartsTrayDesign :StockKeepingUnit)
+ObjectPropertyRange(:hadByVesselSku_PartsTrayDesign :PartsTrayDesign)
+
+Declaration(ObjectProperty(:hasPartsTrayDesign_PartRefAndPose))
+ObjectPropertyDomain(:hasPartsTrayDesign_PartRefAndPose :PartsTrayDesign)
+ObjectPropertyRange(:hasPartsTrayDesign_PartRefAndPose :PartRefAndPose)
+InverseFunctionalObjectProperty(:hasPartsTrayDesign_PartRefAndPose)
+
+Declaration(ObjectProperty(:hadByPartRefAndPose_PartsTrayDesign))
+InverseObjectProperties(:hasPartsTrayDesign_PartRefAndPose
+                        :hadByPartRefAndPose_PartsTrayDesign)
+ObjectPropertyDomain(:hadByPartRefAndPose_PartsTrayDesign :PartRefAndPose)
+ObjectPropertyRange(:hadByPartRefAndPose_PartsTrayDesign :PartsTrayDesign)
+
+
+
+Declaration(Class(:PartsTray))
+
+AnnotationAssertion(rdfs:comment :PartsTray
+  "PartsTray is derived from PartsVessel.
+  An instance of Parts has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    Sku (inherited)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Part (inherited, optional, multiple)
+    SerialNumber (inherited)
+    Weight (inherited, optional)
+    Design
+    Complete
+    Slot (optional, multiple).
+ 
+  The DesignName is the name of the design of the PartsTray. This
+  may be the design of a kit to be built or the design of part
+  supply.
+  Complete is a boolean indicator of whether the PartsTray matches
+  the design. For a kit, that occurs when the kit is completely
+  built. For a parts supply, that occurs when it is full, before
+  any parts are removed.
+ 
+  Part may occur several times (once for each part in the PartsTray).
+ 
+  The optional Slots may be used to keep track of whether each place
+  in the PartsTray that may have a part in it does have a part in it.
+  The PartRefAndPose of each Slot should indicate a
+  PartRefAndPose in the design of the PartsTray (different for each
+  slot).")
+
+
+Declaration(ObjectProperty(:hasPartsTray_Design))
+ObjectPropertyDomain(:hasPartsTray_Design :PartsTray)
+ObjectPropertyRange(:hasPartsTray_Design :PartsTrayDesign)
+FunctionalObjectProperty(:hasPartsTray_Design)
+EquivalentClasses(:PartsTray ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasPartsTray_Design :PartsTrayDesign)
+  ObjectAllValuesFrom (:hasPartsTray_Design :PartsTrayDesign)))
+
+Declaration(ObjectProperty(:hadByDesign_PartsTray))
+InverseObjectProperties(:hasPartsTray_Design
+                        :hadByDesign_PartsTray)
+ObjectPropertyDomain(:hadByDesign_PartsTray :PartsTrayDesign)
+ObjectPropertyRange(:hadByDesign_PartsTray :PartsTray)
+
+Declaration(DataProperty(:hasPartsTray_Complete))
+DataPropertyDomain(:hasPartsTray_Complete :PartsTray)
+DataPropertyRange(:hasPartsTray_Complete xsd:boolean)
+FunctionalDataProperty(:hasPartsTray_Complete)
+EquivalentClasses(:PartsTray ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasPartsTray_Complete xsd:boolean)
+  DataAllValuesFrom (:hasPartsTray_Complete xsd:boolean)))
+
+Declaration(ObjectProperty(:hasPartsTray_Slot))
+ObjectPropertyDomain(:hasPartsTray_Slot :PartsTray)
+ObjectPropertyRange(:hasPartsTray_Slot :Slot)
+InverseFunctionalObjectProperty(:hasPartsTray_Slot)
+
+Declaration(ObjectProperty(:hadBySlot_PartsTray))
+InverseObjectProperties(:hasPartsTray_Slot
+                        :hadBySlot_PartsTray)
+ObjectPropertyDomain(:hadBySlot_PartsTray :Slot)
+ObjectPropertyRange(:hadBySlot_PartsTray :PartsTray)
+
+
+
+Declaration(Class(:PartsVessel))
+
+AnnotationAssertion(rdfs:comment :PartsVessel
+  "PartsVessel is derived from SkuObject.
+  An instance of PartsVessel has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    Sku (inherited)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Part (optional, multiple)
+    SerialNumber
+    Weight (optional).
+  PartsVessel is a container with zero to many parts in it.
+	The SkuName identifies the SKU of the PartsVessel.
+  The Weight of a PartsVessel will vary according to the weight of
+  the parts currently in the vessel.")
+
+SubClassOf(:PartsBin :PartsVessel)
+SubClassOf(:PartsTray :PartsVessel)
+DisjointUnion(:PartsVessel
+              :PartsBin
+              :PartsTray)
+
+Declaration(ObjectProperty(:hasPartsVessel_Part))
+ObjectPropertyDomain(:hasPartsVessel_Part :PartsVessel)
+ObjectPropertyRange(:hasPartsVessel_Part :Part)
+InverseFunctionalObjectProperty(:hasPartsVessel_Part)
+
+Declaration(ObjectProperty(:hadByPart_PartsVessel))
+InverseObjectProperties(:hasPartsVessel_Part
+                        :hadByPart_PartsVessel)
+ObjectPropertyDomain(:hadByPart_PartsVessel :Part)
+ObjectPropertyRange(:hadByPart_PartsVessel :PartsVessel)
+
+Declaration(DataProperty(:hasPartsVessel_SerialNumber))
+DataPropertyDomain(:hasPartsVessel_SerialNumber :PartsVessel)
+DataPropertyRange(:hasPartsVessel_SerialNumber xsd:NMTOKEN)
+FunctionalDataProperty(:hasPartsVessel_SerialNumber)
+EquivalentClasses(:PartsVessel ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasPartsVessel_SerialNumber xsd:NMTOKEN)
+  DataAllValuesFrom (:hasPartsVessel_SerialNumber xsd:NMTOKEN)))
+
+Declaration(DataProperty(:hasPartsVessel_Weight))
+DataPropertyDomain(:hasPartsVessel_Weight :PartsVessel)
+DataPropertyRange(:hasPartsVessel_Weight :positiveDecimal)
+FunctionalDataProperty(:hasPartsVessel_Weight)
+
+
+
+Declaration(Class(:PhysicalLocation))
+
+AnnotationAssertion(rdfs:comment :PhysicalLocation
+  "PhysicalLocation is derived from DataThing.
+  An instance of PhysicalLocation has the following:
+    RefObject
+    Timestamp (optional).
+  PhysicalLocation is an abstract type from which more specific
+  types of physical location are derived. A PhysicalLocation says
+  where a SolidObject is relative to its reference object.
+  Timestamp represents the
+  most recent date and time when the location was updated.")
+
+SubClassOf(:PoseLocation :PhysicalLocation)
+SubClassOf(:RelativeLocationIn :PhysicalLocation)
+SubClassOf(:RelativeLocationOn :PhysicalLocation)
+DisjointUnion(:PhysicalLocation
+              :PoseLocation
+              :RelativeLocationIn
+              :RelativeLocationOn)
+
+
+Declaration(ObjectProperty(:hasPhysicalLocation_RefObject))
+ObjectPropertyDomain(:hasPhysicalLocation_RefObject :PhysicalLocation)
+ObjectPropertyRange(:hasPhysicalLocation_RefObject :SolidObject)
+FunctionalObjectProperty(:hasPhysicalLocation_RefObject)
+EquivalentClasses(:PhysicalLocation ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasPhysicalLocation_RefObject :SolidObject)
+  ObjectAllValuesFrom (:hasPhysicalLocation_RefObject :SolidObject)))
+
+Declaration(ObjectProperty(:hadByRefObject_PhysicalLocation))
+InverseObjectProperties(:hasPhysicalLocation_RefObject
+                        :hadByRefObject_PhysicalLocation)
+ObjectPropertyDomain(:hadByRefObject_PhysicalLocation :SolidObject)
+ObjectPropertyRange(:hadByRefObject_PhysicalLocation :PhysicalLocation)
+
+Declaration(DataProperty(:hasPhysicalLocation_Timestamp))
+DataPropertyDomain(:hasPhysicalLocation_Timestamp :PhysicalLocation)
+DataPropertyRange(:hasPhysicalLocation_Timestamp xsd:dateTime)
+FunctionalDataProperty(:hasPhysicalLocation_Timestamp)
+
+
+
+Declaration(Class(:Point))
+
+AnnotationAssertion(rdfs:comment :Point
+  "Point is derived from DataThing.
+  An instance of Point has the following:
+    X
+    Y
+    Z.
+ 
+  X, Y, and Z are the Cartesian coordinates of the Point.")
+
+Declaration(DataProperty(:hasPoint_X))
+DataPropertyDomain(:hasPoint_X :Point)
+DataPropertyRange(:hasPoint_X xsd:decimal)
+FunctionalDataProperty(:hasPoint_X)
+EquivalentClasses(:Point ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasPoint_X xsd:decimal)
+  DataAllValuesFrom (:hasPoint_X xsd:decimal)))
+
+Declaration(DataProperty(:hasPoint_Y))
+DataPropertyDomain(:hasPoint_Y :Point)
+DataPropertyRange(:hasPoint_Y xsd:decimal)
+FunctionalDataProperty(:hasPoint_Y)
+EquivalentClasses(:Point ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasPoint_Y xsd:decimal)
+  DataAllValuesFrom (:hasPoint_Y xsd:decimal)))
+
+Declaration(DataProperty(:hasPoint_Z))
+DataPropertyDomain(:hasPoint_Z :Point)
+DataPropertyRange(:hasPoint_Z xsd:decimal)
+FunctionalDataProperty(:hasPoint_Z)
+EquivalentClasses(:Point ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasPoint_Z xsd:decimal)
+  DataAllValuesFrom (:hasPoint_Z xsd:decimal)))
+
+
+
+Declaration(Class(:Polygon2D))
+
+AnnotationAssertion(rdfs:comment :Polygon2D
+  "Polygon2D is derived from DataThing.
+  An instance of Polygon2D has the following:
+    X (multiple)
+    Y (multiple).
+ 
+  A Polygon2D is a 2D polygon defined by a sequence of points
+  given as pairs of XY coordinates. The number of X elements must be
+  the same as the number of Y elements. The Nth X element matches
+  with the Nth Y element. The last point should not be the same as
+  the first point; the final side of the polygon is from the last
+  point to the first point. The polygon should not be
+  self-intersecting.")
+
+Declaration(DataProperty(:hasPolygon2D_X))
+DataPropertyDomain(:hasPolygon2D_X :Polygon2D)
+DataPropertyRange(:hasPolygon2D_X xsd:decimal)
+
+Declaration(DataProperty(:hasPolygon2D_Y))
+DataPropertyDomain(:hasPolygon2D_Y :Polygon2D)
+DataPropertyRange(:hasPolygon2D_Y xsd:decimal)
+
+
+
+Declaration(Class(:PoseLocationIn))
+
+AnnotationAssertion(rdfs:comment :PoseLocationIn
+  "PoseLocationIn is derived from PoseLocation.
+  An instance of PoseLocationIn has the following:
+    RefObject (inherited)
+    Timestamp (inherited, optional)
+    Pose (inherited)
+    PositionStandardDeviation (inherited, optional)
+    OrientationStandardDeviation (inherited, optional).
+  A PoseLocationIn indicates that the object is inside the
+  RefObject. The notion of 'inside' is vague and might be made
+  more precise.")
+
+
+
+Declaration(Class(:PoseLocationOn))
+
+AnnotationAssertion(rdfs:comment :PoseLocationOn
+  "PoseLocationOn is derived from PoseLocation.
+  An instance of PoseLocationOn has the following:
+    RefObject (inherited)
+    Timestamp (inherited, optional)
+    Pose (inherited)
+    PositionStandardDeviation (inherited, optional)
+    OrientationStandardDeviation (inherited, optional).
+ 
+  A PoseLocationOn indicates that the Object is on top of
+  the RefObject. The notion of 'on top of' is vague and might be
+  made more precise.")
+
+
+
+Declaration(Class(:PoseLocation))
+
+AnnotationAssertion(rdfs:comment :PoseLocation
+  "PoseLocation is derived from PhysicalLocation.
+  An instance of PoseLocation has the following:
+    RefObject (inherited)
+    Timestamp (inherited, optional)
+    Pose
+    PositionStandardDeviation (optional)
+    OrientationStandardDeviation (optional).
+ 
+  An object located by a PoseLocation may or may not be
+  inside or on top of the reference object of the
+  PoseLocation.
+  The Point in the Pose locates the origin of a coordinate
+  system. The XAxis and ZAxis in the Pose give the orientation
+  of the coordinate system. The data for the Point, the ZAxis
+  and the XAxis are expressed relative to the coordinate system
+  of the reference object.
+  The PositionStandardDeviation is based on a normal distribution of
+  actual position about its given value. Thus, for example, the
+  actual position is expected to be within the given
+  PositionStandardDeviation amount 68% of the time and within twice
+  the given amount 95% of the time. The PositionStandardDeviation is
+  measured in the length units being used.
+ 
+  The OrientationStandardDeviation is based on a normal distribution
+  of orientation about its given value. The error is to be measured
+  as the angle of rotation about a single axis needed to rotate a
+  solid object from its stated orientation to its actual orientation.
+  The OrientationStandardDeviation is measured in the angle units
+  being used.")
+
+SubClassOf(:PoseLocationIn :PoseLocation)
+SubClassOf(:PoseLocationOn :PoseLocation)
+SubClassOf(:PoseOnlyLocation :PoseLocation)
+DisjointUnion(:PoseLocation
+              :PoseLocationIn
+              :PoseLocationOn
+              :PoseOnlyLocation)
+
+Declaration(ObjectProperty(:hasPoseLocation_Pose))
+ObjectPropertyDomain(:hasPoseLocation_Pose :PoseLocation)
+ObjectPropertyRange(:hasPoseLocation_Pose :Pose)
+InverseFunctionalObjectProperty(:hasPoseLocation_Pose)
+FunctionalObjectProperty(:hasPoseLocation_Pose)
+EquivalentClasses(:PoseLocation ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasPoseLocation_Pose :Pose)
+  ObjectAllValuesFrom (:hasPoseLocation_Pose :Pose)))
+
+Declaration(ObjectProperty(:hadByPose_PoseLocation))
+InverseObjectProperties(:hasPoseLocation_Pose
+                        :hadByPose_PoseLocation)
+ObjectPropertyDomain(:hadByPose_PoseLocation :Pose)
+ObjectPropertyRange(:hadByPose_PoseLocation :PoseLocation)
+
+Declaration(DataProperty(:hasPoseLocation_PositionStandardDeviation))
+DataPropertyDomain(:hasPoseLocation_PositionStandardDeviation :PoseLocation)
+DataPropertyRange(:hasPoseLocation_PositionStandardDeviation :positiveDecimal)
+FunctionalDataProperty(:hasPoseLocation_PositionStandardDeviation)
+
+Declaration(DataProperty(:hasPoseLocation_OrientationStandardDeviation))
+DataPropertyDomain(:hasPoseLocation_OrientationStandardDeviation :PoseLocation)
+DataPropertyRange(:hasPoseLocation_OrientationStandardDeviation :positiveDecimal)
+FunctionalDataProperty(:hasPoseLocation_OrientationStandardDeviation)
+
+
+
+Declaration(Class(:PoseOnlyLocation))
+
+AnnotationAssertion(rdfs:comment :PoseOnlyLocation
+  "PoseOnlyLocation is derived from PoseLocation.
+  An instance of PoseOnlyLocation has the following:
+    RefObject (inherited)
+    Timestamp (inherited, optional)
+    Pose (inherited)
+    PositionStandardDeviation (inherited,optional)
+    OrientationStandardDeviation (inherited, optional)
+    Tolerance (optional)
+ 
+  An object located by a PoseOnlyLocation may or may not be
+  inside or on top of the reference object of the
+  PoseOnlyLocation.")
+
+Declaration(ObjectProperty(:hasPoseOnlyLocation_Tolerance))
+ObjectPropertyDomain(:hasPoseOnlyLocation_Tolerance :PoseOnlyLocation)
+ObjectPropertyRange(:hasPoseOnlyLocation_Tolerance :PoseTolerance)
+InverseFunctionalObjectProperty(:hasPoseOnlyLocation_Tolerance)
+FunctionalObjectProperty(:hasPoseOnlyLocation_Tolerance)
+
+Declaration(ObjectProperty(:hadByTolerance_PoseOnlyLocation))
+InverseObjectProperties(:hasPoseOnlyLocation_Tolerance
+                        :hadByTolerance_PoseOnlyLocation)
+ObjectPropertyDomain(:hadByTolerance_PoseOnlyLocation :PoseTolerance)
+ObjectPropertyRange(:hadByTolerance_PoseOnlyLocation :PoseOnlyLocation)
+
+
+
+Declaration(Class(:PoseTolerance))
+
+AnnotationAssertion(rdfs:comment :PoseTolerance
+  "PoseTolerance is derived from DataThing. 
+  An instance of PoseTolerance has the following:
+    Name (inherited, optional)
+    XPointTolerance (optional)
+    YPointTolerance (optional)
+    ZPointTolerance (optional)
+    XAxisTolerance (optional)
+    ZAxisTolerance (optional).
+  The XPointTolerance is the distance along the XAxis in current
+  length units within which the controlled point must come from the X
+  value of the point given in the pose with which the pose tolerance
+  is associated. The YPointTolerance and ZPointTolerance are similar.
+  The XAxisTolerance is the angle in current angle units within which
+  the XAxis must come from the given XAxis. The ZAxisTolerance is
+  similar. All five tolerances must be satisfied at the same instant.")
+
+Declaration(DataProperty(:hasPoseTolerance_XPointTolerance))
+DataPropertyDomain(:hasPoseTolerance_XPointTolerance :PoseTolerance)
+DataPropertyRange(:hasPoseTolerance_XPointTolerance xsd:decimal)
+FunctionalDataProperty(:hasPoseTolerance_XPointTolerance)
+
+Declaration(DataProperty(:hasPoseTolerance_YPointTolerance))
+DataPropertyDomain(:hasPoseTolerance_YPointTolerance :PoseTolerance)
+DataPropertyRange(:hasPoseTolerance_YPointTolerance xsd:decimal)
+FunctionalDataProperty(:hasPoseTolerance_YPointTolerance)
+
+Declaration(DataProperty(:hasPoseTolerance_ZPointTolerance))
+DataPropertyDomain(:hasPoseTolerance_ZPointTolerance :PoseTolerance)
+DataPropertyRange(:hasPoseTolerance_ZPointTolerance xsd:decimal)
+FunctionalDataProperty(:hasPoseTolerance_ZPointTolerance)
+
+Declaration(DataProperty(:hasPoseTolerance_XAxisTolerance))
+DataPropertyDomain(:hasPoseTolerance_XAxisTolerance :PoseTolerance)
+DataPropertyRange(:hasPoseTolerance_XAxisTolerance xsd:decimal)
+FunctionalDataProperty(:hasPoseTolerance_XAxisTolerance)
+
+Declaration(DataProperty(:hasPoseTolerance_ZAxisTolerance))
+DataPropertyDomain(:hasPoseTolerance_ZAxisTolerance :PoseTolerance)
+DataPropertyRange(:hasPoseTolerance_ZAxisTolerance xsd:decimal)
+FunctionalDataProperty(:hasPoseTolerance_ZAxisTolerance)
+
+
+
+Declaration(Class(:Pose))
+
+AnnotationAssertion(rdfs:comment :Pose
+  "Pose is derived from DataThing.
+  An instance of Pose has the following:
+    Name (inherited, optional)
+    Point
+    XAxis
+    ZAxis.
+  The Point locates the origin of a coordinate system. The XAxis and
+  ZAxis give the orientation of the coordinate system. The data for
+  the Point, the ZAxis and the XAxis are expressed relative to another
+  coordinate system.")
+
+Declaration(ObjectProperty(:hasPose_Point))
+ObjectPropertyDomain(:hasPose_Point :Pose)
+ObjectPropertyRange(:hasPose_Point :Point)
+InverseFunctionalObjectProperty(:hasPose_Point)
+FunctionalObjectProperty(:hasPose_Point)
+EquivalentClasses(:Pose ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasPose_Point :Point)
+  ObjectAllValuesFrom (:hasPose_Point :Point)))
+
+Declaration(ObjectProperty(:hadByPoint_Pose))
+InverseObjectProperties(:hasPose_Point
+                        :hadByPoint_Pose)
+ObjectPropertyDomain(:hadByPoint_Pose :Point)
+ObjectPropertyRange(:hadByPoint_Pose :Pose)
+
+Declaration(ObjectProperty(:hasPose_XAxis))
+ObjectPropertyDomain(:hasPose_XAxis :Pose)
+ObjectPropertyRange(:hasPose_XAxis :Vector)
+InverseFunctionalObjectProperty(:hasPose_XAxis)
+FunctionalObjectProperty(:hasPose_XAxis)
+EquivalentClasses(:Pose ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasPose_XAxis :Vector)
+  ObjectAllValuesFrom (:hasPose_XAxis :Vector)))
+
+Declaration(ObjectProperty(:hadByXAxis_Pose))
+InverseObjectProperties(:hasPose_XAxis
+                        :hadByXAxis_Pose)
+ObjectPropertyDomain(:hadByXAxis_Pose :Vector)
+ObjectPropertyRange(:hadByXAxis_Pose :Pose)
+
+Declaration(ObjectProperty(:hasPose_ZAxis))
+ObjectPropertyDomain(:hasPose_ZAxis :Pose)
+ObjectPropertyRange(:hasPose_ZAxis :Vector)
+InverseFunctionalObjectProperty(:hasPose_ZAxis)
+FunctionalObjectProperty(:hasPose_ZAxis)
+EquivalentClasses(:Pose ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasPose_ZAxis :Vector)
+  ObjectAllValuesFrom (:hasPose_ZAxis :Vector)))
+
+Declaration(ObjectProperty(:hadByZAxis_Pose))
+InverseObjectProperties(:hasPose_ZAxis
+                        :hadByZAxis_Pose)
+ObjectPropertyDomain(:hadByZAxis_Pose :Vector)
+ObjectPropertyRange(:hadByZAxis_Pose :Pose)
+
+
+
+Declaration(Class(:RelativeLocationIn))
+
+AnnotationAssertion(rdfs:comment :RelativeLocationIn
+  "RelativeLocationIn is derived from PhysicalLocation.
+  An instance of RelativeLocationIn has the following:
+    RefObject (inherited)
+    Timestamp (inherited, optional)
+    Description.
+ 
+  A RelativeLocationIn indicates that the SolidObject that
+  has the RelativeLocation is in the RefObject. The notion of
+  'in' is vague and might be made more precise.")
+
+Declaration(DataProperty(:hasRelativeLocationIn_Description))
+DataPropertyDomain(:hasRelativeLocationIn_Description :RelativeLocationIn)
+DataPropertyRange(:hasRelativeLocationIn_Description xsd:string)
+FunctionalDataProperty(:hasRelativeLocationIn_Description)
+EquivalentClasses(:RelativeLocationIn ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasRelativeLocationIn_Description xsd:string)
+  DataAllValuesFrom (:hasRelativeLocationIn_Description xsd:string)))
+
+
+
+Declaration(Class(:RelativeLocationOn))
+
+AnnotationAssertion(rdfs:comment :RelativeLocationOn
+  "RelativeLocationOn is derived from PhysicalLocation.
+  An instance of RelativeLocationOn has the following:
+    RefObject (inherited)
+    Timestamp (inherited, optional)
+    Description.
+ 
+  A RelativeLocationOn indicates that the SolidObject that
+  has the RelativeLocation is on top of the the RefObject. The
+  notion of 'on top of' is vague and might be made more precise.")
+
+Declaration(DataProperty(:hasRelativeLocationOn_Description))
+DataPropertyDomain(:hasRelativeLocationOn_Description :RelativeLocationOn)
+DataPropertyRange(:hasRelativeLocationOn_Description xsd:string)
+FunctionalDataProperty(:hasRelativeLocationOn_Description)
+EquivalentClasses(:RelativeLocationOn ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasRelativeLocationOn_Description xsd:string)
+  DataAllValuesFrom (:hasRelativeLocationOn_Description xsd:string)))
+
+
+
+Declaration(Class(:Robot))
+
+AnnotationAssertion(rdfs:comment :Robot
+  "Robot is derived from NoSkuObject.
+  An instance of Robot has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Description
+    EndEffector (optional)
+    MaximumLoadWeight
+    WorkVolume (multiple).
+ 
+  The Robot ontology given here might be expanded greatly to include,
+  for example, its kinematic description, the values of joint angles,
+  arm lengths of variable length arms, gripper actuation (open,
+  closed, etc.), ranges, velocities, and accelerations of each joint,
+  etc.")
+
+Declaration(DataProperty(:hasRobot_Description))
+DataPropertyDomain(:hasRobot_Description :Robot)
+DataPropertyRange(:hasRobot_Description xsd:string)
+FunctionalDataProperty(:hasRobot_Description)
+EquivalentClasses(:Robot ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasRobot_Description xsd:string)
+  DataAllValuesFrom (:hasRobot_Description xsd:string)))
+
+Declaration(ObjectProperty(:hasRobot_EndEffector))
+ObjectPropertyDomain(:hasRobot_EndEffector :Robot)
+ObjectPropertyRange(:hasRobot_EndEffector :EndEffector)
+InverseFunctionalObjectProperty(:hasRobot_EndEffector)
+FunctionalObjectProperty(:hasRobot_EndEffector)
+
+Declaration(ObjectProperty(:hadByEndEffector_Robot))
+InverseObjectProperties(:hasRobot_EndEffector
+                        :hadByEndEffector_Robot)
+ObjectPropertyDomain(:hadByEndEffector_Robot :EndEffector)
+ObjectPropertyRange(:hadByEndEffector_Robot :Robot)
+
+Declaration(DataProperty(:hasRobot_MaximumLoadWeight))
+DataPropertyDomain(:hasRobot_MaximumLoadWeight :Robot)
+DataPropertyRange(:hasRobot_MaximumLoadWeight :positiveDecimal)
+FunctionalDataProperty(:hasRobot_MaximumLoadWeight)
+EquivalentClasses(:Robot ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasRobot_MaximumLoadWeight :positiveDecimal)
+  DataAllValuesFrom (:hasRobot_MaximumLoadWeight :positiveDecimal)))
+
+Declaration(ObjectProperty(:hasRobot_WorkVolume))
+ObjectPropertyDomain(:hasRobot_WorkVolume :Robot)
+ObjectPropertyRange(:hasRobot_WorkVolume :BoxVolume)
+InverseFunctionalObjectProperty(:hasRobot_WorkVolume)
+
+Declaration(ObjectProperty(:hadByWorkVolume_Robot))
+InverseObjectProperties(:hasRobot_WorkVolume
+                        :hadByWorkVolume_Robot)
+ObjectPropertyDomain(:hadByWorkVolume_Robot :BoxVolume)
+ObjectPropertyRange(:hadByWorkVolume_Robot :Robot)
+
+
+
+Declaration(Class(:ShapeDesign))
+
+AnnotationAssertion(rdfs:comment :ShapeDesign
+  "ShapeDesign is derived from DataThing.
+  An instance of ShapeDesign has the following:
+    Description (optional)
+    Marking (optional, multiple).
+ 
+  ShapeDesign is an abstract type from which more specific types
+  of shape design are derived. Each ShapeDesign has a coordinate
+  system that is expected to be specified explicitly or implicitly. A
+  shape defined using coordinate values has an implicit coordinate
+  system. A shape may have zero to many markings on it.")
+
+SubClassOf(:ExternalShape :ShapeDesign)
+SubClassOf(:InternalShape :ShapeDesign)
+DisjointUnion(:ShapeDesign
+              :ExternalShape
+              :InternalShape)
+
+Declaration(DataProperty(:hasShapeDesign_Description))
+DataPropertyDomain(:hasShapeDesign_Description :ShapeDesign)
+DataPropertyRange(:hasShapeDesign_Description xsd:string)
+FunctionalDataProperty(:hasShapeDesign_Description)
+EquivalentClasses(:ShapeDesign ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasShapeDesign_Description xsd:string)
+  DataAllValuesFrom (:hasShapeDesign_Description xsd:string)))
+
+Declaration(ObjectProperty(:hasShapeDesign_Marking))
+ObjectPropertyDomain(:hasShapeDesign_Marking :ShapeDesign)
+ObjectPropertyRange(:hasShapeDesign_Marking :Marking)
+InverseFunctionalObjectProperty(:hasShapeDesign_Marking)
+
+Declaration(ObjectProperty(:hadByMarking_ShapeDesign))
+InverseObjectProperties(:hasShapeDesign_Marking
+                        :hadByMarking_ShapeDesign)
+ObjectPropertyDomain(:hadByMarking_ShapeDesign :Marking)
+ObjectPropertyRange(:hadByMarking_ShapeDesign :ShapeDesign)
+
+
+
+Declaration(Class(:SkuObject))
+
+AnnotationAssertion(rdfs:comment :SkuObject
+  "SkuObject is derived from SolidObject.
+  An instance of SkuObject has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocations (inherited, optional, multiple)
+    Sku.
+ 
+  A SkuObject is an abstract type from which more specific types
+  of solid object are derived. A SkuObject is an instance of a
+  stockkeeping unit. The shape and weight of a SkuObject are
+  specified by its stockkeeping unit, as are the grippers and their
+  grasps that can handle the object.")
+
+SubClassOf(:LargeContainer :SkuObject)
+SubClassOf(:Part :SkuObject)
+SubClassOf(:PartsVessel :SkuObject)
+DisjointUnion(:SkuObject
+              :LargeContainer
+              :Part
+              :PartsVessel)
+
+
+Declaration(ObjectProperty(:hasSkuObject_Sku))
+ObjectPropertyDomain(:hasSkuObject_Sku :SkuObject)
+ObjectPropertyRange(:hasSkuObject_Sku :StockKeepingUnit)
+FunctionalObjectProperty(:hasSkuObject_Sku)
+EquivalentClasses(:SkuObject ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasSkuObject_Sku :StockKeepingUnit)
+  ObjectAllValuesFrom (:hasSkuObject_Sku :StockKeepingUnit)))
+
+Declaration(ObjectProperty(:hadBySku_SkuObject))
+InverseObjectProperties(:hasSkuObject_Sku
+                        :hadBySku_SkuObject)
+ObjectPropertyDomain(:hadBySku_SkuObject :StockKeepingUnit)
+ObjectPropertyRange(:hadBySku_SkuObject :SkuObject)
+
+
+
+Declaration(Class(:Slot))
+
+AnnotationAssertion(rdfs:comment :Slot
+  "Slot is derived from DataThing.
+  An instance of Slot has the following:
+    PartRefAndPose
+    Part (optional).
+ 
+  A Slot identifies whether or not a particular PartRefAndPose from a
+  PartsTrayDesign is occupied in an instance of a PartsTray. The
+  PartRefAndPose identifies a PartRefAndPose from the
+  Design of the PartsTray. The Part identifies a Part
+  that occupies the PartRefAndPose. The Sku of the PartRefAndPose
+  should be the Sku of the Part, the PartRefAndPose should be in the
+  PartsTrayDesign, and the Part should be in the PartsTray. The
+  location described by the Pose of the Part in the PartsTray may
+  differ from the location described by the Pose in the
+  PartRefAndPose, but will usually be very close to it. If the
+  Part is not used for a slot, that means the slot is
+  empty.")
+
+
+Declaration(ObjectProperty(:hasSlot_PartRefAndPose))
+ObjectPropertyDomain(:hasSlot_PartRefAndPose :Slot)
+ObjectPropertyRange(:hasSlot_PartRefAndPose :PartRefAndPose)
+FunctionalObjectProperty(:hasSlot_PartRefAndPose)
+EquivalentClasses(:Slot ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasSlot_PartRefAndPose :PartRefAndPose)
+  ObjectAllValuesFrom (:hasSlot_PartRefAndPose :PartRefAndPose)))
+
+Declaration(ObjectProperty(:hadByPartRefAndPose_Slot))
+InverseObjectProperties(:hasSlot_PartRefAndPose
+                        :hadByPartRefAndPose_Slot)
+ObjectPropertyDomain(:hadByPartRefAndPose_Slot :PartRefAndPose)
+ObjectPropertyRange(:hadByPartRefAndPose_Slot :Slot)
+
+
+Declaration(ObjectProperty(:hasSlot_Part))
+ObjectPropertyDomain(:hasSlot_Part :Slot)
+ObjectPropertyRange(:hasSlot_Part :Part)
+FunctionalObjectProperty(:hasSlot_Part)
+
+Declaration(ObjectProperty(:hadByPart_Slot))
+InverseObjectProperties(:hasSlot_Part
+                        :hadByPart_Slot)
+ObjectPropertyDomain(:hadByPart_Slot :Part)
+ObjectPropertyRange(:hadByPart_Slot :Slot)
+
+Declaration(DataProperty(:hasSlot_IsOccupied))
+DataPropertyDomain(:hasSlot_IsOccupied :Slot)
+DataPropertyRange(:hasSlot_IsOccupied xsd:boolean)
+FunctionalDataProperty(:hasSlot_IsOccupied)
+EquivalentClasses(:Slot ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasSlot_IsOccupied xsd:boolean)
+  DataAllValuesFrom (:hasSlot_IsOccupied xsd:boolean)))
+
+
+
+Declaration(Class(:SolidObject))
+
+AnnotationAssertion(rdfs:comment :SolidObject
+  "An instance of SolidObject has the following:
+    PrimaryLocation
+    SecondaryLocation (optional, multiple).
+ 
+  SolidObject is an abstract type from which more specific types
+  of SolidObject are derived. The secondary locations are required to
+  be logically and mathematically consistent with the value of the
+  PrimaryLocation so that all locations of a SolidObject describe
+  (or are consistent with) a single place in space. No
+  SolidObject except the Workstation may be located with respect
+  to itself, and all chains of primary location must end at the
+  Workstation.")
+
+SubClassOf(:NoSkuObject :SolidObject)
+SubClassOf(:SkuObject :SolidObject)
+DisjointUnion(:SolidObject
+              :NoSkuObject
+              :SkuObject)
+
+Declaration(ObjectProperty(:hasSolidObject_PrimaryLocation))
+ObjectPropertyDomain(:hasSolidObject_PrimaryLocation :SolidObject)
+ObjectPropertyRange(:hasSolidObject_PrimaryLocation :PhysicalLocation)
+InverseFunctionalObjectProperty(:hasSolidObject_PrimaryLocation)
+FunctionalObjectProperty(:hasSolidObject_PrimaryLocation)
+EquivalentClasses(:SolidObject ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasSolidObject_PrimaryLocation :PhysicalLocation)
+  ObjectAllValuesFrom (:hasSolidObject_PrimaryLocation :PhysicalLocation)))
+
+Declaration(ObjectProperty(:hadByPrimaryLocation_SolidObject))
+InverseObjectProperties(:hasSolidObject_PrimaryLocation
+                        :hadByPrimaryLocation_SolidObject)
+ObjectPropertyDomain(:hadByPrimaryLocation_SolidObject :PhysicalLocation)
+ObjectPropertyRange(:hadByPrimaryLocation_SolidObject :SolidObject)
+
+Declaration(ObjectProperty(:hasSolidObject_SecondaryLocation))
+ObjectPropertyDomain(:hasSolidObject_SecondaryLocation :SolidObject)
+ObjectPropertyRange(:hasSolidObject_SecondaryLocation :PhysicalLocation)
+InverseFunctionalObjectProperty(:hasSolidObject_SecondaryLocation)
+
+Declaration(ObjectProperty(:hadBySecondaryLocation_SolidObject))
+InverseObjectProperties(:hasSolidObject_SecondaryLocation
+                        :hadBySecondaryLocation_SolidObject)
+ObjectPropertyDomain(:hadBySecondaryLocation_SolidObject :PhysicalLocation)
+ObjectPropertyRange(:hadBySecondaryLocation_SolidObject :SolidObject)
+
+
+
+Declaration(Class(:StockKeepingUnit))
+
+AnnotationAssertion(rdfs:comment :StockKeepingUnit
+  "StockKeepingUnit is derived from DataThing.
+  An instance of StockKeepingUnit has the following:
+    Description
+    InternalShape (optional)
+    ExternalShape (optional)
+    Weight
+    EffectorAndGrasp (optional, multiple).
+ 
+  A StockKeepingUnit is an object type description. SKU is
+  an abbreviation for Stock Keeping Unit. One or both of
+  InternalShape and ExternalShape must be given. The shapes are
+  not required to represent the same shape, but they should not
+  be inconsistent. In particular, they must use the same
+  coordinate system. Each EffectorAndGrasp identifies an
+  instance of EndEffector that can handle the SKU and,
+  optionally, the pose or poses that end effector should use.")
+
+Declaration(DataProperty(:hasStockKeepingUnit_Description))
+DataPropertyDomain(:hasStockKeepingUnit_Description :StockKeepingUnit)
+DataPropertyRange(:hasStockKeepingUnit_Description xsd:string)
+FunctionalDataProperty(:hasStockKeepingUnit_Description)
+EquivalentClasses(:StockKeepingUnit ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasStockKeepingUnit_Description xsd:string)
+  DataAllValuesFrom (:hasStockKeepingUnit_Description xsd:string)))
+
+Declaration(ObjectProperty(:hasStockKeepingUnit_InternalShape))
+ObjectPropertyDomain(:hasStockKeepingUnit_InternalShape :StockKeepingUnit)
+ObjectPropertyRange(:hasStockKeepingUnit_InternalShape :InternalShape)
+InverseFunctionalObjectProperty(:hasStockKeepingUnit_InternalShape)
+FunctionalObjectProperty(:hasStockKeepingUnit_InternalShape)
+
+Declaration(ObjectProperty(:hadByInternalShape_StockKeepingUnit))
+InverseObjectProperties(:hasStockKeepingUnit_InternalShape
+                        :hadByInternalShape_StockKeepingUnit)
+ObjectPropertyDomain(:hadByInternalShape_StockKeepingUnit :InternalShape)
+ObjectPropertyRange(:hadByInternalShape_StockKeepingUnit :StockKeepingUnit)
+
+Declaration(ObjectProperty(:hasStockKeepingUnit_ExternalShape))
+ObjectPropertyDomain(:hasStockKeepingUnit_ExternalShape :StockKeepingUnit)
+ObjectPropertyRange(:hasStockKeepingUnit_ExternalShape :ExternalShape)
+InverseFunctionalObjectProperty(:hasStockKeepingUnit_ExternalShape)
+FunctionalObjectProperty(:hasStockKeepingUnit_ExternalShape)
+
+Declaration(ObjectProperty(:hadByExternalShape_StockKeepingUnit))
+InverseObjectProperties(:hasStockKeepingUnit_ExternalShape
+                        :hadByExternalShape_StockKeepingUnit)
+ObjectPropertyDomain(:hadByExternalShape_StockKeepingUnit :ExternalShape)
+ObjectPropertyRange(:hadByExternalShape_StockKeepingUnit :StockKeepingUnit)
+
+Declaration(DataProperty(:hasStockKeepingUnit_Weight))
+DataPropertyDomain(:hasStockKeepingUnit_Weight :StockKeepingUnit)
+DataPropertyRange(:hasStockKeepingUnit_Weight :positiveDecimal)
+FunctionalDataProperty(:hasStockKeepingUnit_Weight)
+EquivalentClasses(:StockKeepingUnit ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasStockKeepingUnit_Weight :positiveDecimal)
+  DataAllValuesFrom (:hasStockKeepingUnit_Weight :positiveDecimal)))
+
+Declaration(ObjectProperty(:hasStockKeepingUnit_EffectorAndGrasp))
+ObjectPropertyDomain(:hasStockKeepingUnit_EffectorAndGrasp :StockKeepingUnit)
+ObjectPropertyRange(:hasStockKeepingUnit_EffectorAndGrasp :EndEffectorGrasp)
+InverseFunctionalObjectProperty(:hasStockKeepingUnit_EffectorAndGrasp)
+
+Declaration(ObjectProperty(:hadByEffectorAndGrasp_StockKeepingUnit))
+InverseObjectProperties(:hasStockKeepingUnit_EffectorAndGrasp
+                        :hadByEffectorAndGrasp_StockKeepingUnit)
+ObjectPropertyDomain(:hadByEffectorAndGrasp_StockKeepingUnit :EndEffectorGrasp)
+ObjectPropertyRange(:hadByEffectorAndGrasp_StockKeepingUnit :StockKeepingUnit)
+
+
+
+Declaration(Class(:ThreeFingerGrasp))
+
+AnnotationAssertion(rdfs:comment :ThreeFingerGrasp
+  "ThreeFingerGrasp is derived from EndEffectorGrasp.
+  An instance of ThreeFingerGrasp has the following:
+    ThreeFingerGripper
+    GraspPose1 (optional)
+    GraspPose2 (optional)
+    GraspPose3 (optional)
+    MaxForce (optional)
+    MinForce (optional).
+  The ThreeFingerGripperName identifies a three-finger gripper
+  that can handle an object of a given shape. The GraspPose
+  elements are poses from which an object of a given
+  SKU can be grasped by a three finger gripper. The
+  poses are relative to the coordinate system of the
+  SKU's shape (so that the value of the RefObjectName of
+  each pose is irrelevant, as long as it is the name of a
+  SolidObject). The Point in each pose is a point at which a
+  finger of the gripper should make contact with the shape. The
+  axes of each pose may be used to indicate a direction for
+  aligning each finger. The ZAxis is usually normal to the
+  object having the shape and pointing away from the object. The
+  GraspPoses should not use the optional Timestamp.
+  The MaxForce is the maximum force that each finger may apply.
+  The MinForce is the minimum force that each finger must apply in
+  order to lift the object. Force is measured in Newtons.")
+
+
+Declaration(ObjectProperty(:hasThreeFingerGrasp_ThreeFingerGripper))
+ObjectPropertyDomain(:hasThreeFingerGrasp_ThreeFingerGripper :ThreeFingerGrasp)
+ObjectPropertyRange(:hasThreeFingerGrasp_ThreeFingerGripper :GripperThreeFinger)
+FunctionalObjectProperty(:hasThreeFingerGrasp_ThreeFingerGripper)
+EquivalentClasses(:ThreeFingerGrasp ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasThreeFingerGrasp_ThreeFingerGripper :GripperThreeFinger)
+  ObjectAllValuesFrom (:hasThreeFingerGrasp_ThreeFingerGripper :GripperThreeFinger)))
+
+Declaration(ObjectProperty(:hadByThreeFingerGripper_ThreeFingerGrasp))
+InverseObjectProperties(:hasThreeFingerGrasp_ThreeFingerGripper
+                        :hadByThreeFingerGripper_ThreeFingerGrasp)
+ObjectPropertyDomain(:hadByThreeFingerGripper_ThreeFingerGrasp :GripperThreeFinger)
+ObjectPropertyRange(:hadByThreeFingerGripper_ThreeFingerGrasp :ThreeFingerGrasp)
+
+Declaration(ObjectProperty(:hasThreeFingerGrasp_GraspPose1))
+ObjectPropertyDomain(:hasThreeFingerGrasp_GraspPose1 :ThreeFingerGrasp)
+ObjectPropertyRange(:hasThreeFingerGrasp_GraspPose1 :PoseOnlyLocation)
+InverseFunctionalObjectProperty(:hasThreeFingerGrasp_GraspPose1)
+FunctionalObjectProperty(:hasThreeFingerGrasp_GraspPose1)
+
+Declaration(ObjectProperty(:hadByGraspPose1_ThreeFingerGrasp))
+InverseObjectProperties(:hasThreeFingerGrasp_GraspPose1
+                        :hadByGraspPose1_ThreeFingerGrasp)
+ObjectPropertyDomain(:hadByGraspPose1_ThreeFingerGrasp :PoseOnlyLocation)
+ObjectPropertyRange(:hadByGraspPose1_ThreeFingerGrasp :ThreeFingerGrasp)
+
+Declaration(ObjectProperty(:hasThreeFingerGrasp_GraspPose2))
+ObjectPropertyDomain(:hasThreeFingerGrasp_GraspPose2 :ThreeFingerGrasp)
+ObjectPropertyRange(:hasThreeFingerGrasp_GraspPose2 :PoseOnlyLocation)
+InverseFunctionalObjectProperty(:hasThreeFingerGrasp_GraspPose2)
+FunctionalObjectProperty(:hasThreeFingerGrasp_GraspPose2)
+
+Declaration(ObjectProperty(:hadByGraspPose2_ThreeFingerGrasp))
+InverseObjectProperties(:hasThreeFingerGrasp_GraspPose2
+                        :hadByGraspPose2_ThreeFingerGrasp)
+ObjectPropertyDomain(:hadByGraspPose2_ThreeFingerGrasp :PoseOnlyLocation)
+ObjectPropertyRange(:hadByGraspPose2_ThreeFingerGrasp :ThreeFingerGrasp)
+
+Declaration(ObjectProperty(:hasThreeFingerGrasp_GraspPose3))
+ObjectPropertyDomain(:hasThreeFingerGrasp_GraspPose3 :ThreeFingerGrasp)
+ObjectPropertyRange(:hasThreeFingerGrasp_GraspPose3 :PoseOnlyLocation)
+InverseFunctionalObjectProperty(:hasThreeFingerGrasp_GraspPose3)
+FunctionalObjectProperty(:hasThreeFingerGrasp_GraspPose3)
+
+Declaration(ObjectProperty(:hadByGraspPose3_ThreeFingerGrasp))
+InverseObjectProperties(:hasThreeFingerGrasp_GraspPose3
+                        :hadByGraspPose3_ThreeFingerGrasp)
+ObjectPropertyDomain(:hadByGraspPose3_ThreeFingerGrasp :PoseOnlyLocation)
+ObjectPropertyRange(:hadByGraspPose3_ThreeFingerGrasp :ThreeFingerGrasp)
+
+Declaration(DataProperty(:hasThreeFingerGrasp_MaxForce))
+DataPropertyDomain(:hasThreeFingerGrasp_MaxForce :ThreeFingerGrasp)
+DataPropertyRange(:hasThreeFingerGrasp_MaxForce :positiveDecimal)
+FunctionalDataProperty(:hasThreeFingerGrasp_MaxForce)
+
+Declaration(DataProperty(:hasThreeFingerGrasp_MinForce))
+DataPropertyDomain(:hasThreeFingerGrasp_MinForce :ThreeFingerGrasp)
+DataPropertyRange(:hasThreeFingerGrasp_MinForce :positiveDecimal)
+FunctionalDataProperty(:hasThreeFingerGrasp_MinForce)
+
+
+
+Declaration(Class(:TwoJawsGrasp))
+
+AnnotationAssertion(rdfs:comment :TwoJawsGrasp
+  "TwoJawsGrasp is derived from EndEffectorGrasp.
+  An instance of TwoJawsGrasp has the following:
+    TwoJawsGripper
+    GraspPose1 (optional)
+    GraspPose2 (optional)
+    MaxForce (optional)
+    MinForce (optional).
+  The TwoJawsGripperName identifies a two-jaws gripper that can
+  handle an object of a given shape. The GraspPose elements are
+  poses from which an object of a given SKU can be grasped by a
+  two-jaws gripper. The poses are relative to the coordinate
+  system of the SKU's shape (so that the value of the
+  RefObjectName of each pose is irrelevant, as long as it is the
+  name of a SolidObject). The Point in each pose is a point at
+  which a jaw of the gripper should make contact with the shape.
+  The axes of the poses may be used to indicate directions for
+  aligning the jaws. The ZAxis is usually normal to the object
+  having the shape and pointing away from the object. The
+  GraspPoses should not use the optional Timestamp. The MaxForce
+  is the maximum force that each jaw may apply. The MinForce is
+  the minimum force that each jaw must apply in order to lift
+  the object. Force is measured in Newtons.")
+
+
+Declaration(ObjectProperty(:hasTwoJawsGrasp_TwoJawsGripper))
+ObjectPropertyDomain(:hasTwoJawsGrasp_TwoJawsGripper :TwoJawsGrasp)
+ObjectPropertyRange(:hasTwoJawsGrasp_TwoJawsGripper :GripperTwoJaws)
+FunctionalObjectProperty(:hasTwoJawsGrasp_TwoJawsGripper)
+EquivalentClasses(:TwoJawsGrasp ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasTwoJawsGrasp_TwoJawsGripper :GripperTwoJaws)
+  ObjectAllValuesFrom (:hasTwoJawsGrasp_TwoJawsGripper :GripperTwoJaws)))
+
+Declaration(ObjectProperty(:hadByTwoJawsGripper_TwoJawsGrasp))
+InverseObjectProperties(:hasTwoJawsGrasp_TwoJawsGripper
+                        :hadByTwoJawsGripper_TwoJawsGrasp)
+ObjectPropertyDomain(:hadByTwoJawsGripper_TwoJawsGrasp :GripperTwoJaws)
+ObjectPropertyRange(:hadByTwoJawsGripper_TwoJawsGrasp :TwoJawsGrasp)
+
+Declaration(ObjectProperty(:hasTwoJawsGrasp_GraspPose1))
+ObjectPropertyDomain(:hasTwoJawsGrasp_GraspPose1 :TwoJawsGrasp)
+ObjectPropertyRange(:hasTwoJawsGrasp_GraspPose1 :PoseOnlyLocation)
+InverseFunctionalObjectProperty(:hasTwoJawsGrasp_GraspPose1)
+FunctionalObjectProperty(:hasTwoJawsGrasp_GraspPose1)
+
+Declaration(ObjectProperty(:hadByGraspPose1_TwoJawsGrasp))
+InverseObjectProperties(:hasTwoJawsGrasp_GraspPose1
+                        :hadByGraspPose1_TwoJawsGrasp)
+ObjectPropertyDomain(:hadByGraspPose1_TwoJawsGrasp :PoseOnlyLocation)
+ObjectPropertyRange(:hadByGraspPose1_TwoJawsGrasp :TwoJawsGrasp)
+
+Declaration(ObjectProperty(:hasTwoJawsGrasp_GraspPose2))
+ObjectPropertyDomain(:hasTwoJawsGrasp_GraspPose2 :TwoJawsGrasp)
+ObjectPropertyRange(:hasTwoJawsGrasp_GraspPose2 :PoseOnlyLocation)
+InverseFunctionalObjectProperty(:hasTwoJawsGrasp_GraspPose2)
+FunctionalObjectProperty(:hasTwoJawsGrasp_GraspPose2)
+
+Declaration(ObjectProperty(:hadByGraspPose2_TwoJawsGrasp))
+InverseObjectProperties(:hasTwoJawsGrasp_GraspPose2
+                        :hadByGraspPose2_TwoJawsGrasp)
+ObjectPropertyDomain(:hadByGraspPose2_TwoJawsGrasp :PoseOnlyLocation)
+ObjectPropertyRange(:hadByGraspPose2_TwoJawsGrasp :TwoJawsGrasp)
+
+Declaration(DataProperty(:hasTwoJawsGrasp_MaxForce))
+DataPropertyDomain(:hasTwoJawsGrasp_MaxForce :TwoJawsGrasp)
+DataPropertyRange(:hasTwoJawsGrasp_MaxForce :positiveDecimal)
+FunctionalDataProperty(:hasTwoJawsGrasp_MaxForce)
+
+Declaration(DataProperty(:hasTwoJawsGrasp_MinForce))
+DataPropertyDomain(:hasTwoJawsGrasp_MinForce :TwoJawsGrasp)
+DataPropertyRange(:hasTwoJawsGrasp_MinForce :positiveDecimal)
+FunctionalDataProperty(:hasTwoJawsGrasp_MinForce)
+
+
+
+Declaration(Class(:VacuumEffectorMultiCup))
+
+AnnotationAssertion(rdfs:comment :VacuumEffectorMultiCup
+  "VacuumEffectorMultiCup is derived from VacuumEffector. An
+  instance of VacuumEffectorMultiCup has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Description (inherited)
+    MaximumLoadWeight (inherited)
+    CupDiameter (inherited)
+    Length (inherited)
+    ArrayNumber
+    ArrayRadius.
+ 
+  The ArrayNumber is the number of cups, which must be at least 2.
+  The cups are arranged in a circular array spaced evenly apart. The
+  center of the wide end of one cup is on the X-axis of the
+  coordinate system of the VacuumEffectorMultiCup. The center of
+  the circular array is at the origin of the coordinate system. The
+  axis of the array circle is the Z axis of the coordinate system,
+  and the length of the VacuumEffector is measured along that
+  axis. The wide ends of the cups lie on the XY plane of the
+  coordinate system.
+ 
+  Note that a square array can be represented easily as circular
+  array.")
+
+Declaration(DataProperty(:hasVacuumEffectorMultiCup_ArrayNumber))
+DataPropertyDomain(:hasVacuumEffectorMultiCup_ArrayNumber :VacuumEffectorMultiCup)
+DataPropertyRange(:hasVacuumEffectorMultiCup_ArrayNumber xsd:positiveInteger)
+FunctionalDataProperty(:hasVacuumEffectorMultiCup_ArrayNumber)
+EquivalentClasses(:VacuumEffectorMultiCup ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasVacuumEffectorMultiCup_ArrayNumber xsd:positiveInteger)
+  DataAllValuesFrom (:hasVacuumEffectorMultiCup_ArrayNumber xsd:positiveInteger)))
+
+Declaration(DataProperty(:hasVacuumEffectorMultiCup_ArrayRadius))
+DataPropertyDomain(:hasVacuumEffectorMultiCup_ArrayRadius :VacuumEffectorMultiCup)
+DataPropertyRange(:hasVacuumEffectorMultiCup_ArrayRadius :positiveDecimal)
+FunctionalDataProperty(:hasVacuumEffectorMultiCup_ArrayRadius)
+EquivalentClasses(:VacuumEffectorMultiCup ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasVacuumEffectorMultiCup_ArrayRadius :positiveDecimal)
+  DataAllValuesFrom (:hasVacuumEffectorMultiCup_ArrayRadius :positiveDecimal)))
+
+
+
+Declaration(Class(:VacuumEffectorSingleCup))
+
+AnnotationAssertion(rdfs:comment :VacuumEffectorSingleCup
+  "VacuumEffectorSingleCup is derived from VacuumEffector. An
+  instance of VacuumEffectorSingleCup has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Description (inherited)
+    MaximumLoadWeight (inherited)
+    CupDiameter (inherited)
+    Length (inherited).
+  A VacuumEffectorSingleCup has one cup. The center of the wide
+  end of the cup (which is a circle) is at the origin of the
+  coordinate system of the VacuumEffectorSingleCup.  The Z axis
+  of the coordinate system is the axis of that circle, and the length
+  of the VacuumEffector is measured along that axis.")
+
+
+
+Declaration(Class(:VacuumEffectorSingleGrasp))
+
+AnnotationAssertion(rdfs:comment :VacuumEffectorSingleGrasp
+  "VacuumEffectorSingleGrasp is derived from EndEffectorGrasp.
+  An instance of VacuumEffectorSingleGrasp has the following
+  elements:
+    VacuumEffectorSingle
+    GraspPose (optional).
+  The VacuumEffectorSingleName identifies a single cup vaccum
+  effector that can handle an object of a given shape. The GraspPose
+  element is a pose from which an object of a given ShapeDesign
+  can be grasped by a single cup vacuum effector. The pose is
+  relative to the coordinate system of the ShapeDesign (so that
+  the value of the RefObjectName of the pose is irrelevant, as long
+  as it is the name of a SolidObject). The Point in the pose is the
+  point at which a gripper should make contact with the shape. The
+  ZAxis of the pose may be used to indicate a direction for aligning
+  the ZAxis of the gripper (parallel or antiparallel) and is usually
+  normal to the object having the shape and pointing away from the
+  object. The GraspPose should not use the optional Timestamp.")
+
+
+Declaration(ObjectProperty(:hasVacuumEffectorSingleGrasp_VacuumEffectorSingle))
+ObjectPropertyDomain(:hasVacuumEffectorSingleGrasp_VacuumEffectorSingle :VacuumEffectorSingleGrasp)
+ObjectPropertyRange(:hasVacuumEffectorSingleGrasp_VacuumEffectorSingle :VacuumEffectorSingleCup)
+FunctionalObjectProperty(:hasVacuumEffectorSingleGrasp_VacuumEffectorSingle)
+EquivalentClasses(:VacuumEffectorSingleGrasp ObjectIntersectionOf(
+  ObjectSomeValuesFrom(:hasVacuumEffectorSingleGrasp_VacuumEffectorSingle :VacuumEffectorSingleCup)
+  ObjectAllValuesFrom (:hasVacuumEffectorSingleGrasp_VacuumEffectorSingle :VacuumEffectorSingleCup)))
+
+Declaration(ObjectProperty(:hadByVacuumEffectorSingle_VacuumEffectorSingleGrasp))
+InverseObjectProperties(:hasVacuumEffectorSingleGrasp_VacuumEffectorSingle
+                        :hadByVacuumEffectorSingle_VacuumEffectorSingleGrasp)
+ObjectPropertyDomain(:hadByVacuumEffectorSingle_VacuumEffectorSingleGrasp :VacuumEffectorSingleCup)
+ObjectPropertyRange(:hadByVacuumEffectorSingle_VacuumEffectorSingleGrasp :VacuumEffectorSingleGrasp)
+
+Declaration(ObjectProperty(:hasVacuumEffectorSingleGrasp_GraspPose))
+ObjectPropertyDomain(:hasVacuumEffectorSingleGrasp_GraspPose :VacuumEffectorSingleGrasp)
+ObjectPropertyRange(:hasVacuumEffectorSingleGrasp_GraspPose :PoseOnlyLocation)
+InverseFunctionalObjectProperty(:hasVacuumEffectorSingleGrasp_GraspPose)
+FunctionalObjectProperty(:hasVacuumEffectorSingleGrasp_GraspPose)
+
+Declaration(ObjectProperty(:hadByGraspPose_VacuumEffectorSingleGrasp))
+InverseObjectProperties(:hasVacuumEffectorSingleGrasp_GraspPose
+                        :hadByGraspPose_VacuumEffectorSingleGrasp)
+ObjectPropertyDomain(:hadByGraspPose_VacuumEffectorSingleGrasp :PoseOnlyLocation)
+ObjectPropertyRange(:hadByGraspPose_VacuumEffectorSingleGrasp :VacuumEffectorSingleGrasp)
+
+
+
+Declaration(Class(:VacuumEffector))
+
+AnnotationAssertion(rdfs:comment :VacuumEffector
+  "VacuumEffector is derived from EndEffector.
+  An instance of VacuumEffector has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    Description (inherited)
+    MaximumLoadWeight (inherited)
+    CupDiameter
+    Length.
+ 
+  VacuumEffector is an abstract type from which more specific
+  types of VacuumEffector are derived. A VacuumEffector holds
+  an object by putting a cup or cups against the object and applying
+  a vacuum.")
+
+SubClassOf(:VacuumEffectorMultiCup :VacuumEffector)
+SubClassOf(:VacuumEffectorSingleCup :VacuumEffector)
+DisjointUnion(:VacuumEffector
+              :VacuumEffectorMultiCup
+              :VacuumEffectorSingleCup)
+
+Declaration(DataProperty(:hasVacuumEffector_CupDiameter))
+DataPropertyDomain(:hasVacuumEffector_CupDiameter :VacuumEffector)
+DataPropertyRange(:hasVacuumEffector_CupDiameter :positiveDecimal)
+FunctionalDataProperty(:hasVacuumEffector_CupDiameter)
+EquivalentClasses(:VacuumEffector ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasVacuumEffector_CupDiameter :positiveDecimal)
+  DataAllValuesFrom (:hasVacuumEffector_CupDiameter :positiveDecimal)))
+
+Declaration(DataProperty(:hasVacuumEffector_Length))
+DataPropertyDomain(:hasVacuumEffector_Length :VacuumEffector)
+DataPropertyRange(:hasVacuumEffector_Length :positiveDecimal)
+FunctionalDataProperty(:hasVacuumEffector_Length)
+EquivalentClasses(:VacuumEffector ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasVacuumEffector_Length :positiveDecimal)
+  DataAllValuesFrom (:hasVacuumEffector_Length :positiveDecimal)))
+
+
+
+Declaration(Class(:Vector))
+
+AnnotationAssertion(rdfs:comment :Vector
+  "Vector is derived from DataThing.
+  An instance of Vector has the following:
+    I
+    J
+    K.
+ 
+  I, J, and K represent the usual i, j, and k components of a 3D
+  vector.")
+
+Declaration(DataProperty(:hasVector_I))
+DataPropertyDomain(:hasVector_I :Vector)
+DataPropertyRange(:hasVector_I xsd:decimal)
+FunctionalDataProperty(:hasVector_I)
+EquivalentClasses(:Vector ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasVector_I xsd:decimal)
+  DataAllValuesFrom (:hasVector_I xsd:decimal)))
+
+Declaration(DataProperty(:hasVector_J))
+DataPropertyDomain(:hasVector_J :Vector)
+DataPropertyRange(:hasVector_J xsd:decimal)
+FunctionalDataProperty(:hasVector_J)
+EquivalentClasses(:Vector ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasVector_J xsd:decimal)
+  DataAllValuesFrom (:hasVector_J xsd:decimal)))
+
+Declaration(DataProperty(:hasVector_K))
+DataPropertyDomain(:hasVector_K :Vector)
+DataPropertyRange(:hasVector_K xsd:decimal)
+FunctionalDataProperty(:hasVector_K)
+EquivalentClasses(:Vector ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasVector_K xsd:decimal)
+  DataAllValuesFrom (:hasVector_K xsd:decimal)))
+
+
+
+Declaration(Class(:WorkTable))
+
+AnnotationAssertion(rdfs:comment :WorkTable
+  "WorkTable is derived from NoSkuObject.
+  An instance of WorkTable has the following:
+    PrimaryLocation (inherited)
+    SecondaryLocation (inherited, optional, multiple)
+    InternalShape (inherited, optional)
+    ExternalShape (inherited, optional)
+    Weight (inherited, optional)
+    EffectorAndGrasp (inherited, optional, multiple)
+    ObjectOnTable (optional, multiple).
+ 
+  Each ObjectOnTable is a SolidObject located with respect to the
+  WorkTable. The reference object of each ObjectOnTable should be
+  the WorkTable. Typically, those objects will be on top of the
+  WorkTable. Typically, the shape of a WorkTable will be a
+  BoxyShape, so that the table has Length, Width, and Height.")
+
+Declaration(ObjectProperty(:hasWorkTable_ObjectOnTable))
+ObjectPropertyDomain(:hasWorkTable_ObjectOnTable :WorkTable)
+ObjectPropertyRange(:hasWorkTable_ObjectOnTable :SolidObject)
+InverseFunctionalObjectProperty(:hasWorkTable_ObjectOnTable)
+
+Declaration(ObjectProperty(:hadByObjectOnTable_WorkTable))
+InverseObjectProperties(:hasWorkTable_ObjectOnTable
+                        :hadByObjectOnTable_WorkTable)
+ObjectPropertyDomain(:hadByObjectOnTable_WorkTable :SolidObject)
+ObjectPropertyRange(:hadByObjectOnTable_WorkTable :WorkTable)
+
+DisjointClasses(:DataThing
+                :SolidObject)
+)

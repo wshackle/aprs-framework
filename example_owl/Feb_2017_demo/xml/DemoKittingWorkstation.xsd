@@ -1,0 +1,1890 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2008 rel. 2 (http://www.altova.com) by mazuki (darksiderg) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2015Jul25">
+	<xs:element name="KittingWorkstation" type="KittingWorkstationType">
+		<xs:annotation>
+			<xs:documentation>
+        Root element
+      </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:annotation>
+		<xs:documentation>
+      This kitting ontology models a kitting workstation including objects
+      in the workstation and data associated with the workstation. The
+      ontology assumes coordinate systems are right handed. For objects
+      such as parts vessels or a robot with a preferred orientation with
+      respect to gravity, the Z axis points up (opposite the pull of
+      gravity).
+    </xs:documentation>
+		<xs:documentation>
+      owlPrefix=ktw
+    </xs:documentation>
+	</xs:annotation>
+	<xs:simpleType name="AngleUnitType">
+		<xs:restriction base="xs:NMTOKEN">
+			<xs:enumeration value="degree"/>
+			<xs:enumeration value="radian"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="BoxVolumeType">
+		<xs:annotation>
+			<xs:documentation>
+        BoxVolumeType is derived from DataThingType.
+        An instance of BoxVolumeType has the following elements:
+          Name (inherited)
+          MaximumPoint
+          MinimumPoint.
+ 
+        The MaximumPoint and MinimumPoint are diagonally opposite corner
+        points of a box shaped volume whose edges are aligned with the
+        coordinate system in which the BoxVolumeType is located. The
+        MinimumPoint has the minimum values of X, Y, and Z. The
+        MaximumPoint has the maximum values of X, Y, and Z.
+       </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="MaximumPoint" type="PointType"/>
+					<xs:element name="MinimumPoint" type="PointType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="BoxyShapeType">
+		<xs:annotation>
+			<xs:documentation>
+        BoxyShapeType is derived from InternalShapeType.
+        An instance of BoxyShapeType has the following elements:
+          Name (inherited)
+          Description (inherited)
+          Marking (inherited, optional, multiple)
+          Length
+          Width
+          Height
+          HasTop.
+ 
+        A BoxyShapeType is box shaped. The Length is larger of the two
+        dimensions that are not the Height. The Width is smaller of the two
+        dimensions that are not the Height. The coordinate system of a
+        BoxyShapeType (i.e. the thing that is located and oriented by a
+        Pose) has its origin in the middle of the bottom, its Z-axis
+        parallel to the height sides and pointing into the box, and its
+        X-axis parallel to the length sides. If HasTop is true, the top of
+        the box (i.e. the side through which the +Z axis passes) exists and
+        is closed. If HasTop is false, the box has no top.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="InternalShapeType">
+				<xs:sequence>
+					<xs:element name="Length" type="PositiveDecimalType"/>
+					<xs:element name="Width" type="PositiveDecimalType"/>
+					<xs:element name="Height" type="PositiveDecimalType"/>
+					<xs:element name="HasTop" type="xs:boolean"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="CylindricalShapeType">
+		<xs:annotation>
+			<xs:documentation>
+        CylindricalShapeType is derived from InternalShapeType.
+        An instance of CylindricalShapeType has the following elements:
+          Name (inherited)
+          Description (inherited)
+          Marking (inherited, optional, multiple)
+          Diameter
+          Height
+          HasTop.
+ 
+        The cylinder is a right circular cylinder with a circular base
+        having the given Diameter. The axis is perpendicular to the base.
+        The base is always a surface that is part of the cylinder. The
+        sides of the cylinder stop at the given Height as if cut by a plane
+        perpendicular to the axis. The coordinate system of a
+        CylindricalShapeType (i.e. the thing that is located and oriented
+        by a pose) has its origin in the middle of the bottom, and its
+        Z-axis on the axis of the cylinder. If HasTop is true, the top of
+        the cylinder (i.e. the side through which the +Z axis passes)
+        exists and is closed. If HasTop is false, the cylinder has no top.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="InternalShapeType">
+				<xs:sequence>
+					<xs:element name="Diameter" type="PositiveDecimalType"/>
+					<xs:element name="Height" type="PositiveDecimalType"/>
+					<xs:element name="HasTop" type="xs:boolean"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DataThingType" abstract="true">
+		<xs:annotation>
+			<xs:documentation>
+        An instance of DataThingType has the following elements:
+          Name
+          .
+
+        DataThingType is an abstract type from which more specific types of
+        data thing are derived. That includes all complex data types such
+        as Vector, PhysicalLocation, etc.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Name" type="xs:ID"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="EndEffectorType" abstract="true">
+		<xs:annotation>
+			<xs:documentation>
+        EndEffectorType is derived from NoSkuObjectType.
+        An instance of EndEffectorType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Description
+          MaximumLoadWeight
+          HeldObject (optional).
+ 
+        EndEffectorType is an abstract type from which more specific types
+        of end effector are derived. An EndEffectorType is an end effector
+        for a robot. The optional HeldObject is for the object being held
+        by the end effector, if the end effector is holding an object.
+        Every EndEffectorType is either a GripperEffectorType or a
+        VacuumEffectorType. Every EndEffectorType in a KittingWorkstation
+        is either attached to the end of a robot arm or sitting in an
+        EndEffectorHolderType at an EndEffectorChangingStationType.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="NoSkuObjectType">
+				<xs:sequence>
+					<xs:element name="Description" type="xs:string"/>
+					<xs:element name="MaximumLoadWeight" type="PositiveDecimalType"/>
+					<xs:element name="HeldObjectOffset" type="PhysicalLocationType"/>
+					<xs:element name="HeldObject" type="SolidObjectType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="EndEffectorChangingStationType">
+		<xs:annotation>
+			<xs:documentation>
+        EndEffectorChangingStationType is derived from NoSkuObjectType.
+        An instance of EndEffectorChangingStationType has the
+        following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Base
+          EndEffectorHolder (multiple).
+ 
+        An EndEffectorChangingStationType is a place where end effectors
+        are stored and where the robot can change end effectors. The
+        coordinate system of an EndEffectorChangingStationType is in the
+        same place as the coordinate system of its Base. The shape of an
+        EndEffectorChangingStationType may also be found from the shapes of
+        the Base and the EndEffectorHolders and their relative positions.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="NoSkuObjectType">
+				<xs:sequence>
+					<xs:element name="Base" type="MechanicalComponentType"/>
+					<xs:element name="EndEffectorHolder" type="EndEffectorHolderType" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="EndEffectorGraspType">
+		<xs:annotation>
+			<xs:documentation>
+        EndEffectorGraspType is derived from DataThingType.
+        An instance of EndEffectorGraspType has the following elements:
+          Name (inherited)
+          .
+
+        EndEffectorGraspType describes how a particular end effector
+        can grasp a particular stock keeping unit. Instances of
+        EndEffectorGraspType must be instances of one of the derived
+        types: VacuumEffectorSingleGraspType
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="EndEffectorHolderType">
+		<xs:annotation>
+			<xs:documentation>
+        EndEffectorHolderType is derived from NoSkuObjectType.
+        An instance of EndEffectorHolderType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          EndEffector (optional).
+
+        An EndEffectorHolderType holds zero or one end effector and is part
+        of an EndEffectorChangingStationType. The EndEffectorSlot is the
+        name of the effector that should occupy this holder. The
+        EndEffector is an effector that is in this holder.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="NoSkuObjectType">
+				<xs:sequence>
+					<xs:element name="EndEffectorSlot" type="xs:string"/>
+					<xs:element name="EndEffector" type="EndEffectorType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ExternalShapeType">
+		<xs:annotation>
+			<xs:documentation>
+        ExternalShapeType is derived from ShapeDesignType.
+        An instance of ExternalShapeType has the following elements:
+          Name (inherited)
+          Description (inherited)
+          Marking (inherited, optional, multiple)
+          ModelFormatName
+          ModelFileName
+          ModelName (optional).
+ 
+        An ExternalShapeType is a shape defined in an external file. The
+        ModelFormatName is the name of the format of model (for example,
+        'STEP Advanced Brep' or 'USARSim'). The ModelFileName is the name
+        of the file containing the model and may include a path (for
+        example 'partFiles/STEP/ANC101.stp'). The model file may contain
+        more than one shape model. The ModelName is optional and is the
+        name of a model within the model file. The ModelName is necessary
+        if the model file contains more than one model. 
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="ShapeDesignType">
+				<xs:sequence>
+					<xs:element name="ModelFormatName" type="xs:string"/>
+					<xs:element name="ModelFileName" type="xs:string"/>
+					<xs:element name="ModelName" type="xs:string" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="GripperEffectorType">
+		<xs:annotation>
+			<xs:documentation>
+        GripperEffectorType is derived from EndEffectorType.
+        An instance of GripperEffectorType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Description (inherited)
+          MaximumLoadWeight (inherited)
+          HeldObject (inherited, optional)
+          MaxGripWidth (optional).
+ 
+        A GripperEffectorType holds an object by gripping
+        it with fingers or jaws. The MaxGripWidth is largest distance
+        between two parallel planes that the gripper can grasp.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="EndEffectorType">
+				<xs:sequence>
+					<xs:element name="MaxGripWidth" type="PositiveDecimalType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="GripperOtherType">
+		<xs:annotation>
+			<xs:documentation>
+        GripperOtherType is derived from GripperEffectorType.
+        An instance of GripperOtherType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Description (inherited)
+          MaximumLoadWeight (inherited)
+          HeldObject (inherited, optional)
+          MaxGripWidth (inherited, optional).
+ 
+        A GripperOtherType is a gripper type that is not any of the other
+        types.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="GripperEffectorType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="GripperParallelType">
+		<xs:annotation>
+			<xs:documentation>
+        GripperParallelType is derived from GripperEffectorType.
+        An instance of GripperParallelType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Description (inherited)
+          MaximumLoadWeight (inherited)
+          HeldObject (inherited, optional)
+          MaxGripWidth (inherited, optional).
+ 
+        A GripperParallelType holds an object by gripping it between two
+        parallel plates.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="GripperEffectorType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="GripperThreeFingerType">
+		<xs:annotation>
+			<xs:documentation>
+        GripperThreeFingerType is derived from GripperEffectorType.
+        An instance of GripperThreeFingerType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Description (inherited
+          MaximumLoadWeight (inherited)
+          HeldObject (inherited, optional)
+          MaxGripWidth (inherited, optional).
+ 
+        A GripperThreeFingerType holds an object by gripping
+        it with three fingers.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="GripperEffectorType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="GripperTwoJawsType">
+		<xs:annotation>
+			<xs:documentation>
+        GripperTwoJawsType is derived from GripperEffectorType.
+        An instance of GripperTwoJawsType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Description (inherited)
+          MaximumLoadWeight (inherited)
+          HeldObject (inherited, optional)
+          MaxGripWidth (inherited, optional).
+ 
+        A GripperTwoJawsType holds an object by gripping it with two jaws.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="GripperEffectorType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="HumanType">
+		<xs:annotation>
+			<xs:documentation>
+        HumanType is derived from NoSkuObjectType.
+        An instance of HumanType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple).
+ 
+        A HumanType is a type representing a human being. The shape of
+        a human is the shape of a bounding box (or other bounding shape)
+        that encloses the human completely.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="NoSkuObjectType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="InternalShapeType" abstract="true">
+		<xs:annotation>
+			<xs:documentation>
+        InternalShapeType is derived from ShapeDesignType.
+        An instance of InternalShapeType has the following elements:
+          Name (inherited)
+          Description (inherited)
+          Marking (inherited, optional, multiple).
+ 
+        InternalShapeType is an abstract type from which more specific
+        types of shape are derived. Instances of InternalShapeType in a
+        instance file contain information about the appearance of the
+        shape without referring to another file.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="ShapeDesignType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="KittingWorkstationType">
+		<xs:annotation>
+			<xs:documentation>
+        KittingWorkstationType is derived from NoSkuObjectType.
+        An instance of KittingWorkstationType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          AngleUnit
+          LengthUnit
+          ChangingStation
+          Object (multiple)
+          OtherObstacle (optional, multiple)
+          PartsTrayDesign (multiple)
+          Robot
+          Sku (multiple)
+          WeightUnit.
+ 
+        All angle, length, and weight values related to the workstation
+        use the units implicitly.
+ 
+        The workstation includes one robot and one end effector changing
+        station. There may be many instances of Object in the workstation,
+        including such things as work tables, large boxes with parts trays,
+        large boxes with empty vessels.
+ 
+        The collection of instances of PartsTrayDesign is a library of all
+        parts tray designs known to the workstation, both those that supply
+        parts and those that are kits to be built.
+ 
+        The collection of instances of Sku is a library of all stock
+        keeping units known to the workstation.
+ 
+        The OtherObstacles are obstacles to robot motion of unspecified
+        type.
+ 
+        Containers of various sorts enter and leave the workstation. The
+        robot builds kits of parts by executing kitting plans as directed
+        by a kitting plan execution system.
+ 
+        The location of each instance of KittingWorkstation should be given
+        relative to itself in order to end the chain of relative locations.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="NoSkuObjectType">
+				<xs:sequence>
+					<xs:element name="AngleUnit" type="AngleUnitType"/>
+					<xs:element name="ChangingStation" type="EndEffectorChangingStationType" minOccurs="0"/>
+					<xs:element name="LengthUnit" type="LengthUnitType"/>
+					<xs:element name="Object" type="SolidObjectType" maxOccurs="unbounded"/>
+					<xs:element name="OtherObstacle" type="BoxVolumeType" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="PartsTrayDesign" type="PartsTrayDesignType" maxOccurs="unbounded"/>
+					<xs:element name="Robot" type="RobotType" maxOccurs="unbounded"/>
+					<xs:element name="Sku" type="StockKeepingUnitType" maxOccurs="unbounded"/>
+					<xs:element name="WeightUnit" type="WeightUnitType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="LargeBoxWithEmptyVesselsType">
+		<xs:annotation>
+			<xs:documentation>
+        LargeBoxWithEmptyVesselsType is derived from NoSkuObjectType.
+        An instance of LargeBoxWithEmptyVesselsType has the
+        following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          LargeContainer
+          Vessel (optional, multiple).
+ 
+        The location point of the LargeContainer should be (0,0,0), its Z
+        axis should be (0,0,1), and its X axis should be (1,0,0). The
+        PrimaryLocation of a PartsVessel in a LargeBoxWithEmptyVessels
+        should be given by a PoseLocationInType or RelativeLocationInType
+	that is relative to the LargeContainer. The PartsVessels in a
+        LargeBoxWithEmptyVesselsType are intended to all be of the same
+        SKU, although there is currently no formal requirement for that.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="NoSkuObjectType">
+				<xs:sequence>
+					<xs:element name="LargeContainer" type="LargeContainerType"/>
+					<xs:element name="Vessel" type="PartsVesselType" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="LargeBoxWithPartsTraysType">
+		<xs:annotation>
+			<xs:documentation>
+        LargeBoxWithPartsTraysType is derived from NoSkuObjectType. An
+        instance of LargeBoxWithPartsTraysType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          LargeContainer
+          PartsTray (optional, multiple)
+          PartsTrayDesignName (IDREF)
+          Capacity.
+ 
+        The coordinate system of a LargeBoxWithPartsTrays is in the same
+        place as the coordinate system of its LargeContainer. The
+        PrimaryLocation of the LargeContainer should be relative to the
+        LargeBoxWithPartsTraysType. The PartsTrayDesignName (IDREF) is an
+        identifier for a PartsTrayDesign. The PrimaryLocation of a
+        PartsTray in a LargeBoxWithPartsTrays should be given by a
+        PoseLocationInType or RelativeLocationInType that is relative to
+        the LargeContainer.
+ 
+        The Capacity is an xs:positiveInteger giving the maximum number of
+        PartsTrays of the given design that can be held in the box.
+ 
+        The PartsTrays in a LargeBoxWithPartsTraysType must all be of the
+        named design.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="NoSkuObjectType">
+				<xs:sequence>
+					<xs:element name="LargeContainer" type="LargeContainerType"/>
+					<xs:element name="PartsTray" type="PartsTrayType" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="PartsTrayDesignName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>PartsTrayDesignType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Capacity" type="xs:positiveInteger"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="LargeContainerType">
+		<xs:annotation>
+			<xs:documentation>
+        LargeContainerType is derived from SkuObjectType.
+        An instance of LargeContainerType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          SkuName (IDREF, inherited)
+          SerialNumber.
+ 
+        The SkuName (IDREF) specifies the SKU of the LargeContainerType. A
+        LargeContainerType can hold one or more instances of a single type
+        of parts vessel or kit.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="SkuObjectType">
+				<xs:sequence>
+					<xs:element name="SerialNumber" type="xs:NMTOKEN"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="LargeContainer" type="LargeContainerType">
+		<xs:annotation>
+			<xs:documentation>
+        This element exists only to carry the LargeContainerKey. It is
+        not used elsewhere in the model.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:key name="LargeContainerKey">
+			<xs:selector xpath="."/>
+			<xs:field xpath="SkuName"/>
+			<xs:field xpath="SerialNumber"/>
+		</xs:key>
+	</xs:element>
+	<xs:simpleType name="LengthUnitType">
+		<xs:restriction base="xs:NMTOKEN">
+			<xs:enumeration value="meter"/>
+			<xs:enumeration value="millimeter"/>
+			<xs:enumeration value="inch"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="MarkingLayoutType">
+		<xs:annotation>
+			<xs:documentation>
+        MarkingLayoutType is derived from DataThingType.
+        An instance of MarkingLayoutType has the following elements:
+          Name (inherited)
+          Point
+          XAxis
+          YAxis.
+
+        The MarkingLayoutType represents the coordinate system of a
+        marking. The coordinate system of the marking is placed in the
+        coordinate system of a shape as given by the Point, XAxis and
+        YAxis. The scale of the XAxis and YAxis vectors (which are not
+        required to be unit vectors) represents the scale of the
+        markings along those axes.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="Point" type="PointType"/>
+					<xs:element name="XAxis" type="VectorType"/>
+					<xs:element name="YAxis" type="VectorType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="MarkingModelType">
+		<xs:annotation>
+			<xs:documentation>
+        MarkingModelType is derived from DataThingType.
+        An instance of MarkingModelType has the following elements:
+          Name (inherited)
+          MarkingFormatName
+          MarkingFileName
+          MarkingName (optional).
+
+        The marking consists of a format name; e.g. JPEG, a marking
+        file name; i.e., where the particular marking file is stored,
+        and a marking name, i.e., the specific marking if a storage
+        file contains multiple markings.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="MarkingFormatName" type="xs:string"/>
+					<xs:element name="MarkingFileName" type="xs:string"/>
+					<xs:element name="MarkingName" type="xs:string" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="MarkingType">
+		<xs:annotation>
+			<xs:documentation>
+        MarkingType is derived from DataThingType.
+        An instance of MarkingType has the following elements:
+          Name (inherited)
+          MarkingLayout
+          Marking Model.
+
+        A MarkingType is an engraved or printed image on a shape. The
+        marking is displayed on an XY Cartesian coordinate system as
+        defined by the MarkingLayout. The actual marking is defined by
+        the MarkingModel.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="MarkingLayout" type="MarkingLayoutType"/>
+					<xs:element name="MarkingModel" type="MarkingModelType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="MechanicalComponentType">
+		<xs:annotation>
+			<xs:documentation>
+        MechanicalComponentType is derived from NoSkuObjectType.
+        An instance of MechanicalComponentType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple).
+ 
+        A MechanicalComponentType is a component of kitting workstation
+        device such as a robot or an end effector changing station.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="NoSkuObjectType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:simpleType name="NonNegativeDecimalType">
+		<xs:annotation>
+			<xs:documentation>
+        The NonNegativeDecimalType specifies a non-negative decimal value.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:minInclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="NoSkuObjectType" abstract="true">
+		<xs:annotation>
+			<xs:documentation>
+        NoSkuObjectType is derived from SolidObjectType.
+        An instance of NoSkuObjectType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocations (inherited, optional, multiple)
+          InternalShape (optional)
+          ExternalShape (optional)
+          Weight (optional)
+          EffectorAndGrasp (optional, multiple).
+
+        A NoSkuObjectType is an abstract type from which more specific
+        types of solid object are derived. The InternalShape and
+        ExternalShape are not required to represent the same shape,
+        but they should not be inconsistent. In particular, they must
+        use the same coordinate system. If a NoSkuObjectType consists
+        of components, it may also get its shape from the shape of the
+        components and their relative positions. In this case one of
+        the components should be the root of a tree of reference
+        objects containing all components, and the coordinate system
+        of the object is the coordinate system of the root component.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="SolidObjectType">
+				<xs:sequence>
+					<xs:element name="InternalShape" type="InternalShapeType" minOccurs="0"/>
+					<xs:element name="ExternalShape" type="ExternalShapeType" minOccurs="0"/>
+					<xs:element name="Weight" type="PositiveDecimalType" minOccurs="0"/>
+					<xs:element name="EffectorAndGrasp" type="EndEffectorGraspType" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="OtherGripperGraspType">
+		<xs:annotation>
+			<xs:documentation>
+        OtherGripperGraspType is derived from EndEffectorGraspType.
+        An instance of OtherGripperGraspType has the following elements:
+          Name (inherited)
+          OtherGripperName (IDREF)
+          GraspPose (optional, multiple)
+          MaxForce (optional)
+          MinForce (optional).
+
+        The OtherGripperName identifies an other gripper that can
+        handle an object of a given shape. The GraspPose elements are
+        poses from which an object of a given SKU can be grasped by an
+        other gripper, with some component of the gripper
+        corresponding to each of the poses. The poses are relative to
+        the coordinate system of the SKU's shape (so that the value of
+        the RefObjectName of each pose is irrelevant, as long as it is
+        the name of a SolidObject). The Point in each pose is a point
+        at which a surface of the gripper should make contact with the
+        shape. The axes of each pose may be used to indicate a
+        direction for aligning parts of the gripper. The ZAxis is
+        usually normal to the object having the shape and pointing
+        away from the object. The GraspPoses should not use the
+        optional Timestamp. The MaxForce is the maximum force that the
+        gripper may apply. The MinForce is the minimum force that the
+        gripper must apply at each pose point in order to lift the
+        object. Force is measured in Newtons.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="EndEffectorGraspType">
+				<xs:sequence>
+					<xs:element name="OtherGripperName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>GripperOtherType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="GraspPose" type="PoseOnlyLocationType" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="MaxForce" type="PositiveDecimalType" minOccurs="0"/>
+					<xs:element name="MinForce" type="PositiveDecimalType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ParallelGripperGraspType">
+		<xs:annotation>
+			<xs:documentation>
+        ParallelGraspType is derived from EndEffectorGraspType. An instance
+        of ParallelGraspType has the following elements: Name (inherited)
+        ParallelGripperName (IDREF) GraspPose (1-Many) ApproachSeparation
+        GraspSeparation. The ParallelGripperName identifies a parallel
+        gripper that can handle an object of a given shape. The GraspPose
+        element is a pose from which an object of a given SKU can be
+        grasped by a parallel gripper. The pose is relative to the
+        coordinate system of the SKU's shape (so that the value of the
+        RefObjectName of the pose is irrelevant, as long as it is the name
+        of a SolidObject). The Point in the pose is a point at which the
+        origin of the gripper should be located in order to make contact
+        with the shape when the gripper is closed to the GraspSeparation.
+        The axes of the pose are used to align the plates of the gripper.
+        The ZAxis is usually normal to the object having the shape and
+        pointing away from the object. The GraspPose should not use the
+        optional Timestamp. The ApproachSeparation if the separation
+        between plates necessary for approaching the object. The
+        GraspSeparation is the separation necessary for lifting the object.
+        Separations are measured in mm.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="EndEffectorGraspType">
+				<xs:sequence>
+					<xs:element name="ParallelGripperName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>GripperParallelType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="GraspPose" type="PoseOnlyLocationType"/>
+					<xs:element name="ApproachSeparation" type="NonNegativeDecimalType"/>
+					<xs:element name="GraspSeparation" type="NonNegativeDecimalType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="Part" type="PartType">
+		<xs:annotation>
+			<xs:documentation>
+        This element exists only to carry the PartKey. It is not
+        used elsewhere in the model.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:key name="PartKey">
+			<xs:selector xpath="."/>
+			<xs:field xpath="SkuName"/>
+			<xs:field xpath="SerialNumber"/>
+		</xs:key>
+	</xs:element>
+	<xs:complexType name="PartRefAndPoseType">
+		<xs:annotation>
+			<xs:documentation>
+        PartRefAndPoseType is derived from DataThingType.
+        An instance of PartRefAndPoseType has the following elements:
+          Name (inherited)
+          SkuName (IDREF)
+          Pose.
+ 
+        The SkuName (IDREF) identifies a type of part. The Pose specifies
+        the location and orientation of the part in the coordinate system
+        of the vessel of the PartsTrayDesignType to which the
+        PartRefAndPoseType belongs.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="SkuName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>StockKeepingUnitType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Pose" type="PoseType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PartsBinType">
+		<xs:annotation>
+			<xs:documentation>
+        PartsBinType is derived from PartsVesselType.
+        An instance of PartsBinType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          SkuName (IDREF, inherited)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Part (inherited, optional, multiple)
+          SerialNumber (inherited)
+          Weight (inherited, optional)
+          PartSkuName (IDREF)
+          PartQuantity.
+ 
+        A PartsBinType holds a number of PartTypes (PartQuantity) with the
+        same SKU (PartSkuName (IDREF))in unknown random positions. Each
+        PartType in the bin should be listed explictly and have a
+        RelativeLocationIn with the bin as its RefObjectName (IDREF). The
+        value of PartQuantity should be the number of instances of Part.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="PartsVesselType">
+				<xs:sequence>
+					<xs:element name="PartSkuName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>StockKeepingUnitType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="PartQuantity" type="xs:nonNegativeInteger"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PartsTrayDesignType">
+		<xs:annotation>
+			<xs:documentation>
+        PartsTrayDesignType is derived from DataThingType.
+        An instance of PartsTrayDesignType has the following elements:
+          Name (inherited)
+          VesselSkuName (IDREF)
+          PartRefAndPose (multiple).
+ 
+        The VesselSkuName (IDREF) identifies a type of parts vessel. The
+        Pose in a PartRefAndPose is the location of the part relative to the
+        the coordinate system of the ShapeDesign of the parts vessel.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="VesselSkuName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>StockKeepingUnitType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="PartRefAndPose" type="PartRefAndPoseType" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PartsTrayType">
+		<xs:annotation>
+			<xs:documentation>
+        PartsTrayType is derived from PartsVesselType.
+        An instance of PartsType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          SkuName (IDREF, inherited)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Part (inherited, optional, multiple)
+          SerialNumber (inherited)
+          Weight (inherited, optional)
+          DesignName (IDREF)
+          Complete
+          Slot (optional, multiple).
+ 
+        The DesignName is the name of the design of the PartsTray. This
+        may be the design of a kit to be built or the design of part
+        supply.
+
+        Complete is a boolean indicator of whether the PartsTray matches
+        the design. For a kit, that occurs when the kit is completely
+        built. For a parts supply, that occurs when it is full, before
+        any parts are removed.
+ 
+        Part may occur several times (once for each part in the PartsTray).
+ 
+        The optional Slots may be used to keep track of whether each place
+        in the PartsTray that may have a part in it does have a part in it.
+        The PartRefAndPoseName (IDREF) of each Slot should indicate a
+        PartRefAndPose in the design of the PartsTray (different for each
+        slot).
+ 
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="PartsVesselType">
+				<xs:sequence>
+					<xs:element name="DesignName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>PartsTrayDesignType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Complete" type="xs:boolean"/>
+					<xs:element name="Slot" type="SlotType" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PartsVesselType">
+		<xs:annotation>
+			<xs:documentation>
+        PartsVesselType is derived from SkuObjectType.
+        An instance of PartsVesselType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          SkuName (IDREF, inherited)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Part (optional, multiple)
+          SerialNumber
+          Weight (optional).
+
+        PartsVesselType is a container with zero to many parts in it.
+
+	The SkuName identifies the SKU of the PartsVessel.
+
+        The Weight of a PartsVessel will vary according to the weight of
+        the parts currently in the vessel.
+
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="SkuObjectType">
+				<xs:sequence>
+					<xs:element name="Part" type="PartType" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="SerialNumber" type="xs:NMTOKEN"/>
+					<xs:element name="Weight" type="PositiveDecimalType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PartType">
+		<xs:annotation>
+			<xs:documentation>
+        PartType is derived from SkuObjectType.
+        An instance of PartType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          SkuName (IDREF, inherited)
+          SerialNumber.
+ 
+        The PartType represents a part.
+        The SkuName (IDREF) specifies the SKU for the part.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="SkuObjectType">
+				<xs:sequence>
+					<xs:element name="SerialNumber" type="xs:NMTOKEN"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PhysicalLocationType" abstract="true">
+		<xs:annotation>
+			<xs:documentation>
+        PhysicalLocationType is derived from DataThingType.
+        An instance of PhysicalLocationType has the following elements:
+          Name (inherited)
+          RefObjectName (IDREF)
+          Timestamp (optional).
+
+        PhysicalLocationType is an abstract type from which more specific
+        types of physical location are derived. A PhysicalLocationType says
+        where a SolidObjectType is relative to its reference object.
+        Timestamp represents the
+        most recent date and time when the location was updated.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="RefObjectName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>SolidObjectType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Timestamp" type="xs:dateTime" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PointType">
+		<xs:annotation>
+			<xs:documentation>
+        PointType is derived from DataThingType.
+        An instance of PointType has the following elements:
+          Name (inherited)
+          X
+          Y
+          Z.
+ 
+        X, Y, and Z are the Cartesian coordinates of the Point.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="X" type="xs:decimal"/>
+					<xs:element name="Y" type="xs:decimal"/>
+					<xs:element name="Z" type="xs:decimal"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="Polygon2DType">
+		<xs:annotation>
+			<xs:documentation>
+        Polygon2DType is derived from DataThingType.
+        An instance of Polygon2DType has the following elements:
+          Name (inherited)
+          X (multiple)
+          Y (multiple).
+ 
+        A Polygon2DType is a 2D polygon defined by a sequence of points
+        given as pairs of XY coordinates. The number of X elements must be
+        the same as the number of Y elements. The Nth X element matches
+        with the Nth Y element. The last point should not be the same as
+        the first point; the final side of the polygon is from the last
+        point to the first point. The polygon should not be
+        self-intersecting.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="X" type="xs:decimal" minOccurs="3" maxOccurs="unbounded"/>
+					<xs:element name="Y" type="xs:decimal" minOccurs="3" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PoseLocationInType">
+		<xs:annotation>
+			<xs:documentation>
+        PoseLocationInType is derived from PoseLocationType.
+        An instance of PoseLocationInType has the following elements:
+          Name (inherited)
+          RefObjectName (IDREF, inherited)
+          Timestamp (inherited, optional)
+          Pose (inherited)
+          PositionStandardDeviation (inherited, optional)
+          OrientationStandardDeviation (inherited, optional).
+
+        A PoseLocationInType indicates that the object is inside the
+        RefObject. The notion of 'inside' is vague and might be made
+        more precise.
+
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="PoseLocationType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PoseLocationOnType">
+		<xs:annotation>
+			<xs:documentation>
+        PoseLocationOnType is derived from PoseLocationType.
+        An instance of PoseLocationOnType has the following elements:
+          Name (inherited)
+          RefObjectName (IDREF, inherited)
+          Timestamp (inherited, optional)
+          Pose (inherited)
+          PositionStandardDeviation (inherited, optional)
+          OrientationStandardDeviation (inherited, optional).
+ 
+        A PoseLocationOnType indicates that the Object is on top of
+        the RefObject. The notion of 'on top of' is vague and might be
+        made more precise.
+
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="PoseLocationType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PoseLocationType">
+		<xs:annotation>
+			<xs:documentation>
+        PoseLocationType is derived from PhysicalLocationType.
+        An instance of PoseLocationType has the following elements:
+          Name (inherited)
+          RefObjectName (IDREF, inherited)
+          Timestamp (inherited, optional)
+          Pose
+          PositionStandardDeviation (optional)
+          OrientationStandardDeviation (optional).
+ 
+        An object located by a PoseLocationType may or may not be
+        inside or on top of the reference object of the
+        PoseLocationType.
+
+        The Point in the Pose locates the origin of a coordinate
+        system. The XAxis and ZAxis in the Pose give the orientation
+        of the coordinate system. The data for the Point, the ZAxis
+        and the XAxis are expressed relative to the coordinate system
+        of the reference object.
+
+        The PositionStandardDeviation is based on a normal distribution of
+        actual position about its given value. Thus, for example, the
+        actual position is expected to be within the given
+        PositionStandardDeviation amount 68% of the time and within twice
+        the given amount 95% of the time. The PositionStandardDeviation is
+        measured in the length units being used.
+ 
+        The OrientationStandardDeviation is based on a normal distribution
+        of orientation about its given value. The error is to be measured
+        as the angle of rotation about a single axis needed to rotate a
+        solid object from its stated orientation to its actual orientation.
+        The OrientationStandardDeviation is measured in the angle units
+        being used.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="PhysicalLocationType">
+				<xs:sequence>
+					<xs:element name="Pose" type="PoseType"/>
+					<xs:element name="PositionStandardDeviation" type="PositiveDecimalType" minOccurs="0"/>
+					<xs:element name="OrientationStandardDeviation" type="PositiveDecimalType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PoseOnlyLocationType">
+		<xs:annotation>
+			<xs:documentation>
+        PoseOnlyLocationType is derived from PoseLocationType.
+        An instance of PoseOnlyLocationType has the following elements:
+          Name (inherited)
+          RefObjectName (IDREF, inherited)
+          Timestamp (inherited, optional)
+          Pose (inherited)
+          PositionStandardDeviation (inherited,optional)
+          OrientationStandardDeviation (inherited, optional)
+          Tolerance (optional)
+ 
+        An object located by a PoseOnlyLocationType may or may not be
+        inside or on top of the reference object of the
+        PoseOnlyLocationType.
+
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="PoseLocationType">
+				<xs:sequence>
+					<xs:element name="Tolerance" type="PoseToleranceType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PoseType">
+		<xs:annotation>
+			<xs:documentation>
+        PoseType is derived from DataThingType.
+        An instance of PoseType has the following elements:
+          Name (inherited, optional)
+          Point
+          XAxis
+          ZAxis.
+
+        The Point locates the origin of a coordinate system. The XAxis and
+        ZAxis give the orientation of the coordinate system. The data for
+        the Point, the ZAxis and the XAxis are expressed relative to another
+        coordinate system.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="Point" type="PointType"/>
+					<xs:element name="XAxis" type="VectorType"/>
+					<xs:element name="ZAxis" type="VectorType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PoseToleranceType">
+		<xs:annotation>
+			<xs:documentation>
+        PoseToleranceType is derived from DataThingType. 
+        An instance of PoseToleranceType has the following elements:
+          Name (inherited, optional)
+          XPointTolerance (optional)
+          YPointTolerance (optional)
+          ZPointTolerance (optional)
+          XAxisTolerance (optional)
+          ZAxisTolerance (optional).
+
+        The XPointTolerance is the distance along the XAxis in current
+        length units within which the controlled point must come from the X
+        value of the point given in the pose with which the pose tolerance
+        is associated. The YPointTolerance and ZPointTolerance are similar.
+        The XAxisTolerance is the angle in current angle units within which
+        the XAxis must come from the given XAxis. The ZAxisTolerance is
+        similar. All five tolerances must be satisfied at the same instant.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="XPointTolerance" type="xs:decimal" minOccurs="0"/>
+					<xs:element name="YPointTolerance" type="xs:decimal" minOccurs="0"/>
+					<xs:element name="ZPointTolerance" type="xs:decimal" minOccurs="0"/>
+					<xs:element name="XAxisTolerance" type="xs:decimal" minOccurs="0"/>
+					<xs:element name="ZAxisTolerance" type="xs:decimal" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:simpleType name="PositiveDecimalType">
+		<xs:restriction base="xs:decimal">
+			<xs:minExclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="RelativeLocationInType">
+		<xs:annotation>
+			<xs:documentation>
+        RelativeLocationInType is derived from PhysicalLocationType.
+        An instance of RelativeLocationInType has the following elements:
+          Name (inherited)
+          RefObjectName (IDREF, inherited)
+          Timestamp (inherited, optional)
+          Description.
+ 
+        A RelativeLocationInType indicates that the SolidObjectType that
+        has the RelativeLocationType is in the RefObject. The notion of
+        'in' is vague and might be made more precise.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="PhysicalLocationType">
+				<xs:sequence>
+					<xs:element name="Description" type="xs:string"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="RelativeLocationOnType">
+		<xs:annotation>
+			<xs:documentation>
+        RelativeLocationOnType is derived from PhysicalLocationType.
+        An instance of RelativeLocationOnType has the following elements:
+          Name (inherited)
+          RefObjectName (IDREF, inherited)
+          Timestamp (inherited, optional)
+          Description.
+ 
+        A RelativeLocationOnType indicates that the SolidObjectType that
+        has the RelativeLocationType is on top of the the RefObject. The
+        notion of 'on top of' is vague and might be made more precise.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="PhysicalLocationType">
+				<xs:sequence>
+					<xs:element name="Description" type="xs:string"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="RobotType">
+		<xs:annotation>
+			<xs:documentation>
+        RobotType is derived from NoSkuObjectType.
+        An instance of RobotType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Description
+          EndEffector (optional)
+          MaximumLoadWeight
+          WorkVolume (multiple).
+ 
+        The Robot ontology given here might be expanded greatly to include,
+        for example, its kinematic description, the values of joint angles,
+        arm lengths of variable length arms, gripper actuation (open,
+        closed, etc.), ranges, velocities, and accelerations of each joint,
+        etc.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="NoSkuObjectType">
+				<xs:sequence>
+					<xs:element name="Description" type="xs:string"/>
+					<xs:element name="EndEffector" type="EndEffectorType" minOccurs="0"/>
+					<xs:element name="MaximumLoadWeight" type="PositiveDecimalType"/>
+					<xs:element name="WorkVolume" type="BoxVolumeType" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ShapeDesignType" abstract="true">
+		<xs:annotation>
+			<xs:documentation>
+        ShapeDesignType is derived from DataThingType.
+        An instance of ShapeDesignType has the following elements:
+          Name (inherited)
+          Description (optional)
+          Marking (optional, multiple).
+ 
+        ShapeDesignType is an abstract type from which more specific types
+        of shape design are derived. Each ShapeDesignType has a coordinate
+        system that is expected to be specified explicitly or implicitly. A
+        shape defined using coordinate values has an implicit coordinate
+        system. A shape may have zero to many markings on it.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="Description" type="xs:string"/>
+					<xs:element name="Marking" type="MarkingType" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="SkuObjectType" abstract="true">
+		<xs:annotation>
+			<xs:documentation>
+        SkuObjectType is derived from SolidObjectType.
+        An instance of SkuObjectType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocations (inherited, optional, multiple)
+          SkuName (IDREF).
+ 
+        A SkuObjectType is an abstract type from which more specific types
+        of solid object are derived. A SkuObjectType is an instance of a
+        stockkeeping unit. The shape and weight of a SkuObjectType are
+        specified by its stockkeeping unit, as are the grippers and their
+        grasps that can handle the object.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="SolidObjectType">
+				<xs:sequence>
+					<xs:element name="SkuName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>StockKeepingUnitType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="SlotType">
+		<xs:annotation>
+			<xs:documentation>
+        SlotType is derived from DataThingType.
+        An instance of SlotType has the following elements:
+          Name (inherited)
+          PartRefAndPoseName (IDREF)
+          PartName (IDREF, optional).
+ 
+        A Slot identifies whether or not a particular PartRefAndPose from a
+        PartsTrayDesign is occupied in an instance of a PartsTray. The
+        PartRefAndPoseName (IDREF) identifies a PartRefAndPose from the
+        Design of the PartsTray. The PartName (IDREF) identifies a Part
+        that occupies the PartRefAndPose. The Sku of the PartRefAndPose
+        should be the Sku of the Part, the PartRefAndPose should be in the
+        PartsTrayDesign, and the Part should be in the PartsTray. The
+        location described by the Pose of the Part in the PartsTray may
+        differ from the location described by the Pose in the
+        PartRefAndPose, but will usually be very close to it. If the
+        PartName (IDREF) is not used for a slot, that means the slot is
+        empty.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="PartRefAndPoseName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>PartRefAndPoseType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="PartName" type="xs:IDREF" minOccurs="0">
+						<xs:annotation>
+							<xs:appinfo>PartType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="IsOccupied" type="xs:boolean"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="SolidObjectType" abstract="true">
+		<xs:annotation>
+			<xs:documentation>
+        An instance of SolidObjectType has the following elements:
+          Name
+          PrimaryLocation
+          SecondaryLocation (optional, multiple).
+ 
+        SolidObjectType is an abstract type from which more specific types
+        of SolidObject are derived. The secondary locations are required to
+        be logically and mathematically consistent with the value of the
+        PrimaryLocation so that all locations of a SolidObjectType describe
+        (or are consistent with) a single place in space. No
+        SolidObjectType except the Workstation may be located with respect
+        to itself, and all chains of primary location must end at the
+        Workstation.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Name" type="xs:ID"/>
+			<xs:element name="PrimaryLocation" type="PhysicalLocationType"/>
+			<xs:element name="SecondaryLocation" type="PhysicalLocationType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="StockKeepingUnitType">
+		<xs:annotation>
+			<xs:documentation>
+        StockKeepingUnitType is derived from DataThingType.
+        An instance of StockKeepingUnitType has the following elements:
+          Name (inherited)
+          Description
+          InternalShape (optional)
+          ExternalShape (optional)
+          Weight
+          EffectorAndGrasp (optional, multiple).
+ 
+        A StockKeepingUnitType is an object type description. SKU is
+        an abbreviation for Stock Keeping Unit. One or both of
+        InternalShape and ExternalShape must be given. The shapes are
+        not required to represent the same shape, but they should not
+        be inconsistent. In particular, they must use the same
+        coordinate system. Each EffectorAndGrasp identifies an
+        instance of EndEffectorType that can handle the SKU and,
+        optionally, the pose or poses that end effector should use.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="Description" type="xs:string"/>
+					<xs:element name="InternalShape" type="InternalShapeType" minOccurs="0"/>
+					<xs:element name="ExternalShape" type="ExternalShapeType" minOccurs="0"/>
+					<xs:element name="Weight" type="PositiveDecimalType"/>
+					<xs:element name="EffectorAndGrasp" type="EndEffectorGraspType" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ThreeFingerGraspType">
+		<xs:annotation>
+			<xs:documentation>
+        ThreeFingerGraspType is derived from EndEffectorGraspType.
+        An instance of ThreeFingerGraspType has the following elements:
+          Name (inherited)
+          ThreeFingerGripperName (IDREF)
+          GraspPose1 (optional)
+          GraspPose2 (optional)
+          GraspPose3 (optional)
+          MaxForce (optional)
+          MinForce (optional).
+
+        The ThreeFingerGripperName identifies a three-finger gripper
+        that can handle an object of a given shape. The GraspPose
+        elements are poses from which an object of a given
+        SKU can be grasped by a three finger gripper. The
+        poses are relative to the coordinate system of the
+        SKU's shape (so that the value of the RefObjectName of
+        each pose is irrelevant, as long as it is the name of a
+        SolidObject). The Point in each pose is a point at which a
+        finger of the gripper should make contact with the shape. The
+        axes of each pose may be used to indicate a direction for
+        aligning each finger. The ZAxis is usually normal to the
+        object having the shape and pointing away from the object. The
+        GraspPoses should not use the optional Timestamp.
+        The MaxForce is the maximum force that each finger may apply.
+        The MinForce is the minimum force that each finger must apply in
+        order to lift the object. Force is measured in Newtons.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="EndEffectorGraspType">
+				<xs:sequence>
+					<xs:element name="ThreeFingerGripperName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>GripperThreeFingerType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="GraspPose1" type="PoseOnlyLocationType" minOccurs="0"/>
+					<xs:element name="GraspPose2" type="PoseOnlyLocationType" minOccurs="0"/>
+					<xs:element name="GraspPose3" type="PoseOnlyLocationType" minOccurs="0"/>
+					<xs:element name="MaxForce" type="PositiveDecimalType" minOccurs="0"/>
+					<xs:element name="MinForce" type="PositiveDecimalType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="TwoJawsGraspType">
+		<xs:annotation>
+			<xs:documentation>
+        TwoJawsGraspType is derived from EndEffectorGraspType.
+        An instance of TwoJawsGraspType has the following elements:
+          Name (inherited)
+          TwoJawsGripperName (IDREF)
+          GraspPose1 (optional)
+          GraspPose2 (optional)
+          MaxForce (optional)
+          MinForce (optional).
+
+        The TwoJawsGripperName identifies a two-jaws gripper that can
+        handle an object of a given shape. The GraspPose elements are
+        poses from which an object of a given SKU can be grasped by a
+        two-jaws gripper. The poses are relative to the coordinate
+        system of the SKU's shape (so that the value of the
+        RefObjectName of each pose is irrelevant, as long as it is the
+        name of a SolidObject). The Point in each pose is a point at
+        which a jaw of the gripper should make contact with the shape.
+        The axes of the poses may be used to indicate directions for
+        aligning the jaws. The ZAxis is usually normal to the object
+        having the shape and pointing away from the object. The
+        GraspPoses should not use the optional Timestamp. The MaxForce
+        is the maximum force that each jaw may apply. The MinForce is
+        the minimum force that each jaw must apply in order to lift
+        the object. Force is measured in Newtons.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="EndEffectorGraspType">
+				<xs:sequence>
+					<xs:element name="TwoJawsGripperName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>GripperTwoJawsType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="GraspPose1" type="PoseOnlyLocationType" minOccurs="0"/>
+					<xs:element name="GraspPose2" type="PoseOnlyLocationType" minOccurs="0"/>
+					<xs:element name="MaxForce" type="PositiveDecimalType" minOccurs="0"/>
+					<xs:element name="MinForce" type="PositiveDecimalType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="VacuumEffectorType" abstract="true">
+		<xs:annotation>
+			<xs:documentation>
+        VacuumEffectorType is derived from EndEffectorType.
+        An instance of VacuumEffectorType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Description (inherited)
+          MaximumLoadWeight (inherited)
+          CupDiameter
+          Length.
+ 
+        VacuumEffectorType is an abstract type from which more specific
+        types of VacuumEffectorType are derived. A VacuumEffectorType holds
+        an object by putting a cup or cups against the object and applying
+        a vacuum.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="EndEffectorType">
+				<xs:sequence>
+					<xs:element name="CupDiameter" type="PositiveDecimalType"/>
+					<xs:element name="Length" type="PositiveDecimalType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="VacuumEffectorMultiCupType">
+		<xs:annotation>
+			<xs:documentation>
+        VacuumEffectorMultiCupType is derived from VacuumEffectorType. An
+        instance of VacuumEffectorMultiCupType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Description (inherited)
+          MaximumLoadWeight (inherited)
+          CupDiameter (inherited)
+          Length (inherited)
+          ArrayNumber
+          ArrayRadius.
+ 
+        The ArrayNumber is the number of cups, which must be at least 2.
+        The cups are arranged in a circular array spaced evenly apart. The
+        center of the wide end of one cup is on the X-axis of the
+        coordinate system of the VacuumEffectorMultiCupType. The center of
+        the circular array is at the origin of the coordinate system. The
+        axis of the array circle is the Z axis of the coordinate system,
+        and the length of the VacuumEffectorType is measured along that
+        axis. The wide ends of the cups lie on the XY plane of the
+        coordinate system.
+ 
+        Note that a square array can be represented easily as circular
+        array.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="VacuumEffectorType">
+				<xs:sequence>
+					<xs:element name="ArrayNumber" type="xs:positiveInteger"/>
+					<xs:element name="ArrayRadius" type="PositiveDecimalType"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="VacuumEffectorSingleCupType">
+		<xs:annotation>
+			<xs:documentation>
+        VacuumEffectorSingleCupType is derived from VacuumEffectorType. An
+        instance of VacuumEffectorSingleCupType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          Description (inherited)
+          MaximumLoadWeight (inherited)
+          CupDiameter (inherited)
+          Length (inherited).
+
+        A VacuumEffectorSingleCupType has one cup. The center of the wide
+        end of the cup (which is a circle) is at the origin of the
+        coordinate system of the VacuumEffectorSingleCupType.  The Z axis
+        of the coordinate system is the axis of that circle, and the length
+        of the VacuumEffectorType is measured along that axis.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="VacuumEffectorType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="VacuumEffectorSingleGraspType">
+		<xs:annotation>
+			<xs:documentation>
+        VacuumEffectorSingleGraspType is derived from EndEffectorGraspType.
+        An instance of VacuumEffectorSingleGraspType has the following
+        elements:
+          Name (inherited)
+          VacuumEffectorSingleName (IDREF)
+          GraspPose (optional).
+
+        The VacuumEffectorSingleName identifies a single cup vaccum
+        effector that can handle an object of a given shape. The GraspPose
+        element is a pose from which an object of a given ShapeDesignType
+        can be grasped by a single cup vacuum effector. The pose is
+        relative to the coordinate system of the ShapeDesignType (so that
+        the value of the RefObjectName of the pose is irrelevant, as long
+        as it is the name of a SolidObject). The Point in the pose is the
+        point at which a gripper should make contact with the shape. The
+        ZAxis of the pose may be used to indicate a direction for aligning
+        the ZAxis of the gripper (parallel or antiparallel) and is usually
+        normal to the object having the shape and pointing away from the
+        object. The GraspPose should not use the optional Timestamp.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="EndEffectorGraspType">
+				<xs:sequence>
+					<xs:element name="VacuumEffectorSingleName" type="xs:IDREF">
+						<xs:annotation>
+							<xs:appinfo>VacuumEffectorSingleCupType</xs:appinfo>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="GraspPose" type="PoseOnlyLocationType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="VectorType">
+		<xs:annotation>
+			<xs:documentation>
+        VectorType is derived from DataThingType.
+        An instance of VectorType has the following elements:
+          Name (inherited)
+          I
+          J
+          K.
+ 
+        I, J, and K represent the usual i, j, and k components of a 3D
+        vector.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="DataThingType">
+				<xs:sequence>
+					<xs:element name="I" type="xs:decimal"/>
+					<xs:element name="J" type="xs:decimal"/>
+					<xs:element name="K" type="xs:decimal"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="Vessel" type="PartsVesselType">
+		<xs:annotation>
+			<xs:documentation>
+        This element exists only to carry the VesselKey. It is not
+        used elsewhere in the model.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:key name="VesselKey">
+			<xs:selector xpath="."/>
+			<xs:field xpath="SkuName"/>
+			<xs:field xpath="SerialNumber"/>
+		</xs:key>
+	</xs:element>
+	<xs:simpleType name="WeightUnitType">
+		<xs:restriction base="xs:NMTOKEN">
+			<xs:enumeration value="kilogram"/>
+			<xs:enumeration value="gram"/>
+			<xs:enumeration value="milligram"/>
+			<xs:enumeration value="ounce"/>
+			<xs:enumeration value="pound"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="WorkTableType">
+		<xs:annotation>
+			<xs:documentation>
+        WorkTableType is derived from NoSkuObjectType.
+        An instance of WorkTableType has the following elements:
+          Name (inherited)
+          PrimaryLocation (inherited)
+          SecondaryLocation (inherited, optional, multiple)
+          InternalShape (inherited, optional)
+          ExternalShape (inherited, optional)
+          Weight (inherited, optional)
+          EffectorAndGrasp (inherited, optional, multiple)
+          ObjectOnTable (optional, multiple).
+ 
+        Each ObjectOnTable is a SolidObjectType located with respect to the
+        WorkTableType. The reference object of each ObjectOnTable should be
+        the WorkTable. Typically, those objects will be on top of the
+        WorkTable. Typically, the shape of a WorkTableType will be a
+        BoxyShape, so that the table has Length, Width, and Height.
+      </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="NoSkuObjectType">
+				<xs:sequence>
+					<xs:element name="ObjectOnTable" type="SolidObjectType" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+</xs:schema>
