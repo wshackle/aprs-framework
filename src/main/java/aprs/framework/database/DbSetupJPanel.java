@@ -868,9 +868,17 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private List<Future<?>> futures = null;
 
     public List<Future<?>> notifyAllDbSetupListeners() {
+        boolean cancelWarnGiven = false;
         if (null != futures) {
             for (Future f : futures) {
-                f.cancel(false);
+                if(!f.isDone() && !f.isCancelled()) {
+                    if(!cancelWarnGiven) {
+                        cancelWarnGiven = true;
+                        System.err.println("Cancelling a dbSetup notification");
+                        Thread.dumpStack();
+                    }
+                    f.cancel(false);
+                }
             }
         }
         futures = new ArrayList<>();
