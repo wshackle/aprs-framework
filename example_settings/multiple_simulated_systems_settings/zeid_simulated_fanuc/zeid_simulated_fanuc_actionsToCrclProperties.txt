@@ -1,5 +1,5 @@
 #
-#Thu Feb 16 09:04:10 EST 2017
+#Thu Feb 16 11:45:40 EST 2017
 lookDwellTime=3.0
 approachZOffset=50.0
 manualPartNames=[null, null, null, null, null, null, null, null, null, null]
@@ -10,4 +10,4 @@ settleDwellTime=0.1
 rpy=175.0,0.0,0.0
 lookForXYZ=0.0,0.0,0.0
 manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
-pddl.output=../../../example_pddl/feb_2_2017_fanuc_demo_actions.txt
+pddl.output=..\\..\\..\\example_pddl\\fanuc_demo_actions_zeid.txt

@@ -1,10 +1,16 @@
 #
-#Thu Feb 16 09:15:17 EST 2017
-NEO4J.ying-220.mxnet.mel.nist.gov_7496.name=neo4j
+#Thu Feb 16 14:21:26 EST 2017
+NEO4J.hobby-bbhloacijildgbkeambejnol.dbs.graphenedb.com_24789.queriesDir=neo4j/v2
 --dbtype=NEO4J
-NEO4J.ying-220.mxnet.mel.nist.gov_7496.queriesDir=neo4j/v2
-NEO4J.host=ying-220.mxnet.mel.nist.gov
-NEO4J.ying-220.mxnet.mel.nist.gov_7496.passwd=password
+NEO4J.hobby-bbhloacijildgbkeambejnol.dbs.graphenedb.com_24789.passwd=b.ZCI0jB54BtrU.epXLhAsW3JvUsZs3
 NEO4J.ying-220.mxnet.mel.nist.gov.port=7496
-NEO4J.ying-220.mxnet.mel.nist.gov_7496.internalQueriesResourceDir=true
+NEO4J.ying-220.mxnet.mel.nist.gov_7496.queriesDir=neo4j/v2
+NEO4J.ying-220.mxnet.mel.nist.gov_7496.passwd=password
+NEO4J.hobby-bbhloacijildgbkeambejnol.dbs.graphenedb.com_24789.name=motoman-demo
+NEO4J.ying-220.mxnet.mel.nist.gov_7496.name=neo4j
+NEO4J.host=hobby-bbhloacijildgbkeambejnol.dbs.graphenedb.com
+NEO4J.hobby-bbhloacijildgbkeambejnol.dbs.graphenedb.com.port=24789
+NEO4J.hobby-bbhloacijildgbkeambejnol.dbs.graphenedb.com_24789.internalQueriesResourceDir=true
 NEO4J.ying-220.mxnet.mel.nist.gov_7496.user=neo4j
+NEO4J.hobby-bbhloacijildgbkeambejnol.dbs.graphenedb.com_24789.user=motoman-demo
+NEO4J.ying-220.mxnet.mel.nist.gov_7496.internalQueriesResourceDir=true
