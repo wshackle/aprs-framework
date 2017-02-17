@@ -1,5 +1,5 @@
 #
-#Thu Feb 16 09:04:10 EST 2017
+#Thu Feb 16 11:45:40 EST 2017
 simulated=true
 --visionport=4000
 showrotations=false
@@ -9,5 +9,5 @@ trackcurrentpos=true
 --visionhost=agility.el.nist.gov
 displayAxis=POS_Y_NEG_X
 xminymin=200.0, -200.0
-datafile=../simulated_fanuc/fanuc_cart_objects_capture_feb_2_2017.csv
+datafile=..\\simulated_fanuc\\fanuc_cart_objects_capture_feb_2_2017.csv
 xmaxymax=700.0, 500.0

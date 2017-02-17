@@ -1,5 +1,5 @@
 #
-#Thu Feb 16 09:05:10 EST 2017
+#Thu Feb 16 11:26:39 EST 2017
 simulated=true
 --visionport=4001
 showrotations=false
@@ -9,5 +9,5 @@ trackcurrentpos=true
 --visionhost=agility
 displayAxis=NEG_X_NEG_Y
 xminymin=0.0, -500.0
-datafile=../simulated_motoman/capture_feb_2_motoman_shared_table_objects.csv
+datafile=..\\simulated_motoman\\capture_feb_2_motoman_shared_table_objects.csv
 xmaxymax=760.0,500.0
