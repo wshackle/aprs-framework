@@ -22,6 +22,9 @@
  */
 package aprs.framework;
 
+import aprs.framework.colortextdisplay.ColorTextOptionsJPanel;
+import aprs.framework.colortextdisplay.ColorTextOptionsJPanel.ColorTextOptions;
+import aprs.framework.colortextdisplay.ColorTextJFrame;
 import aprs.framework.pddl.executor.PositionMap;
 import aprs.framework.pddl.executor.PositionMapEntry;
 import aprs.framework.pddl.executor.PositionMapJPanel;
@@ -41,6 +44,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.net.Socket;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -491,6 +495,13 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 //                    return null;
                 })
                 .thenCompose(x -> {
+                    if (null != colorTextSocket) {
+                        try {
+                            colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
+                        } catch (IOException ex) {
+                            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
                     return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
                             SplashScreen.getDisableImageImage(),
                             SplashScreen.getRedYellowColorList(), gd);
@@ -533,8 +544,6 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 });
     }
 
-
-    
     private final Map<String, Boolean> robotEnableMap = new HashMap<>();
 
     private String readFirstLine(File f) throws IOException {
@@ -592,9 +601,18 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jMenu2 = new javax.swing.JMenu();
         jMenu3 = new javax.swing.JMenu();
         jCheckBoxMenuItemDisableTextPopups = new javax.swing.JCheckBoxMenuItem();
+        jMenuItemStartColorTextDisplay = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Multi Aprs");
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+        });
 
         jPanelTasks.setBorder(javax.swing.BorderFactory.createTitledBorder("Tasks"));
 
@@ -964,6 +982,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         });
         jMenu3.add(jCheckBoxMenuItemDisableTextPopups);
 
+        jMenuItemStartColorTextDisplay.setText("Start ColorText Display ...");
+        jMenuItemStartColorTextDisplay.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemStartColorTextDisplayActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jMenuItemStartColorTextDisplay);
+
         jMenuBar1.add(jMenu3);
 
         setJMenuBar(jMenuBar1);
@@ -1271,6 +1297,63 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         System.out.println("lastFutureReturned = " + lastFutureReturned);
     }//GEN-LAST:event_jMenuItemDbgActionActionPerformed
 
+    private Socket colorTextSocket = null;
+    private ColorTextJFrame colorTextJFrame = null;
+
+    private void jMenuItemStartColorTextDisplayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartColorTextDisplayActionPerformed
+
+        ColorTextOptions options = ColorTextOptionsJPanel.query(this,true);
+        if (null != options) {
+            try {
+                if (null != colorTextSocket) {
+                    colorTextSocket.close();
+                }
+                if (null != colorTextJFrame) {
+                    colorTextJFrame.setVisible(false);
+                }
+
+                if (options.isStartDisplay()) {
+                    colorTextJFrame = new ColorTextJFrame();
+                    colorTextJFrame.setVisible(true);
+                    colorTextJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                }
+                colorTextSocket = new Socket(options.getHost(), options.getPort());
+            } catch (IOException ex) {
+                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jMenuItemStartColorTextDisplayActionPerformed
+
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        if (null != colorTextJFrame) {
+            colorTextJFrame.setVisible(false);
+            colorTextJFrame = null;
+        }
+        if (null != colorTextSocket) {
+            try {
+                colorTextSocket.close();
+            } catch (IOException ex) {
+                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            colorTextSocket = null;
+        }
+    }//GEN-LAST:event_formWindowClosed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        if (null != colorTextJFrame) {
+            colorTextJFrame.setVisible(false);
+            colorTextJFrame = null;
+        }
+        if (null != colorTextSocket) {
+            try {
+                colorTextSocket.close();
+            } catch (IOException ex) {
+                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            colorTextSocket = null;
+        }
+    }//GEN-LAST:event_formWindowClosing
+
     private void savePosFile(File f) throws IOException {
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             for (int i = 0; i < jTableSelectedPosMapFile.getColumnCount(); i++) {
@@ -1321,7 +1404,23 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         posTablePopupMenu.setVisible(true);
     }
 
+    public void enableAllRobots() {
+        DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
+        for (int i = 0; i < model.getRowCount(); i++) {
+            model.setValueAt(true, i, 1);
+        }
+        if (null != colorTextSocket) {
+            try {
+                colorTextSocket.getOutputStream().write("0x00FF00, 0x00FF000\r\n".getBytes());
+                colorTextSocket.getOutputStream().flush();
+            } catch (IOException ex) {
+                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     public XFuture<Void> startAll() {
+        enableAllRobots();
         XFuture futures[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             futures[i] = aprsSystems.get(i).startActions();
@@ -1665,6 +1764,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemSavePosMaps;
     private javax.swing.JMenuItem jMenuItemSaveSetupAs;
     private javax.swing.JMenuItem jMenuItemStartAll;
+    private javax.swing.JMenuItem jMenuItemStartColorTextDisplay;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanelPosMapFiles;
     private javax.swing.JPanel jPanelPositionMappings;

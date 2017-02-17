@@ -1109,7 +1109,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.jButtonDisconnectVision.setEnabled(_val);
         this.jLabelVisionStatus.setText(_val ? "CONNECTED" : "DISCONNECTED");
         this.jLabelVisionStatus.setBackground(_val ? Color.GREEN : Color.RED);
-        if(null != aprsJFrame) {
+        if (null != aprsJFrame) {
             aprsJFrame.setShowVisionConnected(_val);
         }
     }
@@ -1290,7 +1290,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             outItem.slotForSkuName = inItem.slotForSkuName;
             outItem.emptySlotsCount = inItem.emptySlotsCount;
             outItem.tray = inItem.tray;
-            outItem.emptySlotsList = transformList(inItem.emptySlotsList,transform);
+            outItem.emptySlotsList = transformList(inItem.emptySlotsList, transform);
             outItem.totalSlotsCount = inItem.totalSlotsCount;
             outItem.timestamp = inItem.timestamp;
             out.add(outItem);
@@ -1352,7 +1352,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             startVisionThread = new Thread(() -> startVisionInternal(argsMap), "startVisionThread");
             startVisionThread.setDaemon(true);
             startVisionThread.start();
-            
+
         } catch (Exception exception) {
             addLogMessage(exception);
         }
@@ -1386,7 +1386,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         saveProperties();
         updateTransformFromTable();
-        if(null != aprsJFrame) {
+        if (null != aprsJFrame) {
             aprsJFrame.setShowVisionConnected(visionClient.isConnected());
         }
     }
@@ -1425,16 +1425,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     void startCommand(Map<String, String> argsMap) {
         try {
             closeCommand();
-            commandSlr = SocketLineReader.start(false,
-                    null, // ignored ... argsMap.get("--visionhost"), 
+            commandSlr = SocketLineReader.startServer(
                     Short.valueOf(argsMap.get("--commandport")),
-                    "commandReader", new SocketLineReader.CallBack() {
-
-                @Override
-                public void call(String line, PrintStream os) {
-                    handleCommand(line, os);
-                }
-            });
+                    "commandReader", 
+                    this::handleCommand);
             runOnDispatchThread(() -> setCommandConnected(true));
         } catch (Exception exception) {
             System.err.println(exception.getLocalizedMessage());

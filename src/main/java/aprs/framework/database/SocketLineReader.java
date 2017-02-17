@@ -179,13 +179,19 @@ public class SocketLineReader {
         return this;
     }
 
-    public static SocketLineReader start(boolean isClnt,
+    public static SocketLineReader startServer( int port, final String threadname,
+            SocketLineReader.CallBack _cb) throws IOException {
+        SocketLineReader slr = new SocketLineReader();
+        return slr.privateStart(false, null, port, threadname, _cb);
+    }
+
+    public static SocketLineReader startClient(
             String host, int port, final String threadname,
             SocketLineReader.CallBack _cb) throws IOException {
         SocketLineReader slr = new SocketLineReader();
-        return slr.privateStart(isClnt, host, port, threadname, _cb);
+        return slr.privateStart(true, host, port, threadname, _cb);
     }
-
+    
     public void close() {
         try {
             if (null != t) {
