@@ -132,18 +132,21 @@ public class PositionMap {
         for (int i = 0; i < columnHeaders.length; i++) {
             switch (columnHeaders[i]) {
                 case "X":
+                case "X1":
                 case "Xin":
                 case "Robot_X":
                     robotXIndex = i;
                     break;
 
                 case "Y":
+                case "Y1":
                 case "Yin":
                 case "Robot_Y":
                     robotYIndex = i;
                     break;
 
                 case "Z":
+                case "Z1":
                 case "Zin":
                 case "Robot_Z":
                     robotZIndex = i;
