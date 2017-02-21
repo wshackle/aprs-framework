@@ -1653,13 +1653,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 aj.setRobotName(csvRecord.get(2));
                 aj.setVisible(true);
                 aj.getTitleUpdateRunnables().add(() -> {
-                    try {
-                        updateTasksTable();
-
-                    } catch (IOException ex) {
-                        Logger.getLogger(AprsMulitSupervisorJFrame.class
-                                .getName()).log(Level.SEVERE, null, ex);
-                    }
+                    Utils.runOnDispatchThreadWithCatch(this::updateTasksTable);
                 });
                 aprsSystems.add(aj);
             }

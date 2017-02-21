@@ -104,14 +104,13 @@ import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecutorDisplayInterface, DbSetupListener, PendantClientJPanel.ProgramLineListener, Consumer<PddlActionToCrclGenerator.PlacePartInfo> {
+public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecutorDisplayInterface, DbSetupListener, PendantClientJPanel.ProgramLineListener {
 
     /**
      * Creates new form ActionsToCrclJPanel
@@ -121,7 +120,82 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
         jCheckBoxDebug.setSelected(debug);
         progColor = jTableCrclProgram.getBackground();
-        pddlActionToCrclGenerator.addPlacePartConsumer(this);
+        pddlActionToCrclGenerator.addPlacePartConsumer(this::handlePlacePartCompleted);
+        pddlActionToCrclGenerator.addActionCompletedListener(this::handleActionCompleted);
+        jTablePddlOutput.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if(row == currentActionIndex && isSelected) {
+                    c.setBackground(Color.YELLOW);
+                    c.setForeground(Color.BLACK);
+                } else {
+                    if(!isSelected) {
+                        c.setBackground(Color.GRAY);
+                    } else {
+                        c.setBackground(Color.BLUE);
+                    }
+                }
+                return c;
+            }
+        });
+    }
+
+    private void handlePlacePartCompleted(PddlActionToCrclGenerator.PlacePartInfo ppi) {
+        if (safeAbortRequested) {
+            if (null == ppi) {
+                throw new IllegalArgumentException("ppi == null");
+            }
+            if (null == ppi.getWrapper()) {
+                throw new IllegalArgumentException("ppi.getWrapper() == null");
+            }
+            if (null == ppi.getWrapper().getCurProgram()) {
+                throw new IllegalArgumentException(" ppi.getWrapper().getCurProgram() == null");
+            }
+            List<MiddleCommandType> l = ppi.getWrapper().getCurProgram().getMiddleCommand();
+            while (l.size() > ppi.getOutIndex() + 1) {
+                l.remove(ppi.getOutIndex() + 1);
+            }
+            pddlActionToCrclGenerator.addMoveToLookForPosition(l);
+            this.replanFromIndex = ppi.getPddlActionIndex() + 1;
+        }
+    }
+
+    private boolean stepping;
+
+    /**
+     * Get the value of stepping
+     *
+     * @return the value of stepping
+     */
+    public boolean isStepping() {
+        return stepping;
+    }
+
+    /**
+     * Set the value of stepping
+     *
+     * @param stepping new value of stepping
+     */
+    public void setStepping(boolean stepping) {
+        this.stepping = stepping;
+    }
+
+    private void handleActionCompleted(PddlActionToCrclGenerator.ActionCallbackInfo actionInfo) {
+        currentActionIndex = actionInfo.getActionIndex() + 1;
+        updateSelectionInterval();
+        if (null != aprsJFrame) {
+            aprsJFrame.updateTitle();
+            if (stepping) {
+                aprsJFrame.pauseCrclProgram();
+            }
+        }
+    }
+
+    public void updateSelectionInterval() {
+        int startIndex = Math.max(0, currentActionIndex);
+        int endIndex = Math.max(startIndex, replanFromIndex - 1);
+        jTablePddlOutput.getSelectionModel().setSelectionInterval(startIndex, endIndex);
     }
 
     private static Object[] getTableRow(JTable table, int row) {
@@ -259,6 +333,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldCurrentPart = new javax.swing.JTextField();
         jButtonStep = new javax.swing.JButton();
         jButtonContinue = new javax.swing.JButton();
+        jButtonPause = new javax.swing.JButton();
 
         jLabel6.setText("Pddl Output Actions");
 
@@ -377,6 +452,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 {"slowTransSpeed", "75"},
                 {"lookDwellTime", "3.0"},
                 {"rotSpeed", "30.0"},
+                {"placePartSlotArgIndex", "0"},
+                {"takePartArgIndex", "0"},
                 {"settleDwellTime", "0.1"}
             },
             new String [] {
@@ -781,7 +858,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 894, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 966, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelOuterManualControlLayout.setVerticalGroup(
@@ -800,7 +877,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 894, Short.MAX_VALUE)
+                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 966, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -852,7 +929,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 933, Short.MAX_VALUE)
+                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 945, Short.MAX_VALUE)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel16)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -914,7 +991,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         });
 
-        jButtonGenerateAndRun.setText("Generate and Run");
+        jButtonGenerateAndRun.setText("Run");
         jButtonGenerateAndRun.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonGenerateAndRunActionPerformed(evt);
@@ -939,6 +1016,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         });
 
+        jButtonPause.setText("Pause");
+        jButtonPause.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonPauseActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -947,7 +1031,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1)
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jScrollPane4)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel6)
@@ -964,18 +1048,20 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxReplan)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxNeedLookFor)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel17)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonPause)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonStep)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1007,26 +1093,29 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 156, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel7)
+                        .addComponent(jCheckBoxReplan)
+                        .addComponent(jLabel2)
+                        .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jCheckBoxNeedLookFor)
+                        .addComponent(jLabel17)
+                        .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jButtonGenerateCRCL)
-                        .addComponent(jCheckBoxNeedLookFor)
-                        .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel2)
-                        .addComponent(jCheckBoxReplan)
                         .addComponent(jCheckBoxDebug)
                         .addComponent(jButtonAbort)
                         .addComponent(jButtonGenerateAndRun)
-                        .addComponent(jLabel17)
-                        .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jButtonStep)
-                        .addComponent(jButtonContinue)))
+                        .addComponent(jButtonContinue)
+                        .addComponent(jButtonPause)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 136, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    @Override
     public void browseActionsFile() throws IOException {
         JFileChooser chooser = new JFileChooser(new File(jTextFieldPddlOutputActions.getText()).getParent());
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -1569,7 +1658,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             currentPart = null;
             jTextFieldCurrentPart.setText("");
         }
-        jTablePddlOutput.getSelectionModel().setSelectionInterval(replanFromIndex, replanFromIndex);
+        updateSelectionInterval();
         jTablePddlOutput.scrollRectToVisible(new Rectangle(jTablePddlOutput.getCellRect(replanFromIndex, 0, true)));
         String[] names = this.pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
         if (names != null && names.length >= replanFromIndex && replanFromIndex > 0) {
@@ -1801,7 +1890,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             if (null != runningProgramFuture) {
                 runningProgramFuture.cancelAll(true);
             }
-            runningProgramFuture = this.lookFor(part);
+            runningProgramFuture = this.lookForParts();
         } catch (Exception e) {
             showExceptionInProgram(e);
         }
@@ -1927,7 +2016,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         customRunnables = new ArrayList<>();
         customRunnables.add(() -> {
             System.out.println("Continuing with lookFor");
-            this.lookFor(partName);
+            this.lookForParts();
         });
         customRunnables.add(() -> {
             System.out.println("Continuing with recordAndCompletRandomPickup");
@@ -1940,7 +2029,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         this.customRunnablesIndex = 0;
         this.replanRunnable = this.customReplanRunnable;
         return this.randomDropOff()
-                .thenCompose(x -> recursiveSupplyBoolean(x, () -> this.lookFor(partName)))
+                .thenCompose(x -> recursiveSupplyBoolean(x, () -> this.lookForParts()))
                 .thenCompose(x -> recursiveSupplyBoolean(x, () -> this.recordAndCompletTestPickup()))
                 .thenCompose(x -> recursiveSupplyBoolean(x, () -> this.randomDropOff()));
 //        } catch (IOException ex) {
@@ -1998,7 +2087,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             customRunnables = new ArrayList<>();
             customRunnables.add(() -> {
                 System.out.println("Continuing with lookFor");
-                this.lookFor(partName);
+                this.lookForParts();
             });
             customRunnables.add(() -> {
                 System.out.println("Continuing with recordAndCompletRandomPickup");
@@ -2090,6 +2179,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jButtonGridTestActionPerformed
 
     private void jButtonAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAbortActionPerformed
+        stepping = false;
         if (null != currentPart) {
             this.jComboBoxManualObjectName.setSelectedItem(currentPart);
         }
@@ -2099,6 +2189,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void jButtonGenerateAndRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGenerateAndRunActionPerformed
         try {
+            stepping = false;
             setReplanFromIndex(0);
             autoStart = true;
             jCheckBoxReplan.setSelected(true);
@@ -2244,6 +2335,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void jButtonStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStepActionPerformed
         try {
+            stepping = true;
             autoStart = !started;
             if (null != unstartedProgram) {
                 if (autoStart) {
@@ -2300,6 +2392,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jButtonSafeAbortActionPerformed
 
     private void jButtonContinueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonContinueActionPerformed
+        stepping = false;
         continueActionListPrivate();
     }//GEN-LAST:event_jButtonContinueActionPerformed
 
@@ -2316,6 +2409,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private void continueActionListPrivate() {
+        if (currentActionIndex < replanFromIndex - 1) {
+            runningProgramFuture = continueCurrentProgram();
+        }
         autoStart = true;
         safeAbortRequested = false;
         safeAbortRunnablesVector.clear();
@@ -2423,6 +2519,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         }
     }//GEN-LAST:event_jButtonRecordActionPerformed
+
+    private void jButtonPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPauseActionPerformed
+        aprsJFrame.pauseCrclProgram();
+    }//GEN-LAST:event_jButtonPauseActionPerformed
 
     private void queryLogFileName() {
         if (!new File(recordCsvName).exists()) {
@@ -2693,7 +2793,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         replanFromIndex = 0;
         List<PddlAction> placePartActionsList = new ArrayList<>();
         PddlAction placePartAction = new PddlAction("", "place-part",
-                new String[]{"", part, ""/*2*/, ""/*3*/, ""/*4*/, ""/*5*/, slot}, "cost");
+                new String[]{slot}, "cost");
         placePartActionsList.add(placePartAction);
         pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
         List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(placePartActionsList, this.replanFromIndex, options);
@@ -2713,7 +2813,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         replanFromIndex = 0;
         List<PddlAction> testPartPositionActionList = new ArrayList<>();
         PddlAction takePartAction = new PddlAction("", "test-part-position",
-                new String[]{"", part}, "cost");
+                new String[]{part}, "cost");
         testPartPositionActionList.add(takePartAction);
         pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
         List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(testPartPositionActionList, this.replanFromIndex, options);
@@ -2758,7 +2858,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         replanFromIndex = 0;
         List<PddlAction> takePartActionsList = new ArrayList<>();
         PddlAction takePartAction = new PddlAction("", "take-part",
-                new String[]{"", part}, "cost");
+                new String[]{part}, "cost");
         takePartActionsList.add(takePartAction);
         pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
         List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(takePartActionsList, this.replanFromIndex, options);
@@ -2976,13 +3076,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return startCrclProgram(program);
     }
 
-    public XFuture<Boolean> lookFor(String part) {
+    public XFuture<Boolean> lookForParts() {
         try {
             Map<String, String> options = getTableOptions();
             replanFromIndex = 0;
             List<PddlAction> lookForActionsList = new ArrayList<>();
             PddlAction lookForAction = new PddlAction("", "look-for-part",
-                    new String[]{"", part}, "cost");
+                    new String[]{}, "cost");
             lookForActionsList.add(lookForAction);
             List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(lookForActionsList, this.replanFromIndex, options);
             CRCLProgramType program = createEmptyProgram();
@@ -3077,6 +3177,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonLoadPddlActionsFromFile;
     private javax.swing.JButton jButtonLookFor;
     private javax.swing.JButton jButtonNewLogFile;
+    private javax.swing.JButton jButtonPause;
     private javax.swing.JButton jButtonPddlOutputViewEdit;
     private javax.swing.JButton jButtonPlacePart;
     private javax.swing.JButton jButtonRandDropOff;
@@ -3378,10 +3479,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public void accept(PendantClientJPanel panel, int line, CRCLProgramType program, CRCLStatusType status) {
         CommandStateEnumType state = status.getCommandStatus().getCommandState();
         int sz = program.getMiddleCommand().size();
-        currentActionIndex = actionIndexFromCrclLine(line);
-        if (null != aprsJFrame) {
-            aprsJFrame.updateTitle();
-        }
+//        currentActionIndex = actionIndexFromCrclLine(line);
+//        if (null != aprsJFrame) {
+//            aprsJFrame.updateTitle();
+//        }
         if (this.debug) {
             System.out.println("replanStarted = " + replanStarted);
             System.out.println("replanRunnable = " + replanRunnable);
@@ -3393,22 +3494,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             System.out.println("lastCrclProgName = " + lastCrclProgName);
             System.out.println("program.getName() = " + program.getName());
         }
-
-//        if (line >= sz && state != CommandStateEnumType.CRCL_WORKING
-//                && (Objects.equals(crclProgName, program.getName()) || !Objects.equals(lastCrclProgName, program.getName()))) {
-//            if (jCheckBoxReplan.isSelected()
-//                    && null != replanRunnable) {
-//                if (!replanStarted.getAndSet(true)) {
-//                    replanRunnable.run();
-//                }
-//            } else {
-//                crclProgName = "NOT_RUNNING";
-//                runningProgram = false;
-//                if (!replanStarted.getAndSet(true)) {
-//                    runProgramCompleteRunnables();
-//                }
-//            }
-//        }
     }
 
     /**
@@ -3422,25 +3507,4 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return positionMapJPanel1.getReversePositionMaps();
     }
 
-    @Override
-    public void accept(PddlActionToCrclGenerator.PlacePartInfo ppi) {
-
-        if (safeAbortRequested) {
-            if(null == ppi) {
-                throw new IllegalArgumentException("ppi == null");
-            }
-            if(null == ppi.getWrapper()) {
-                throw new IllegalArgumentException("ppi.getWrapper() == null");
-            }
-            if(null == ppi.getWrapper().getCurProgram()) {
-                throw new IllegalArgumentException(" ppi.getWrapper().getCurProgram() == null");
-            }
-            List<MiddleCommandType> l = ppi.getWrapper().getCurProgram().getMiddleCommand();
-            while(l.size() > ppi.getOutIndex()+1) {
-                l.remove(ppi.getOutIndex()+1);
-            }
-            pddlActionToCrclGenerator.addMoveToLookForPosition(l);
-            this.replanFromIndex = ppi.getPddlActionIndex() + 1;
-        }
-    }
 }

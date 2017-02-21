@@ -5,7 +5,6 @@
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
- * official duties. Pursuant to title 17 Section 105 of the United States
  * Code this software is not subject to copyright protection and is in the
  * public domain.
  * 
@@ -45,7 +44,6 @@ import crcl.base.TransSpeedAbsoluteType;
 import crcl.base.VectorType;
 import crcl.utils.CrclCommandWrapper;
 import crcl.utils.CRCLPosemath;
-import static crcl.utils.CRCLPosemath.pose;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -59,8 +57,6 @@ import java.util.logging.Logger;
 import java.util.Arrays;
 import rcs.posemath.PmCartesian;
 import rcs.posemath.PmRpy;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import crcl.utils.CrclCommandWrapper.CRCLCommandWrapperConsumer;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -68,6 +64,7 @@ import java.util.function.Consumer;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  *
@@ -296,7 +293,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     testPartPosition(action, cmds);
                     break;
                 case "look-for-part":
+                case "look-for-parts":
                     lookForPart(action, cmds);
+                    actionToCrclIndexes[lastIndex] = cmds.size();
+                    actionToCrclLabels[lastIndex] = "";
                     actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
                     return cmds;
 
@@ -308,17 +308,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     inspectKit(action, cmds);
                     break;
             }
+
             actionToCrclIndexes[lastIndex] = cmds.size();
             actionToCrclLabels[lastIndex] = "";
             actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
-//            } catch (Exception ex) {
-//                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-//                MessageType message = new MessageType();
-//                message.setCommandID(BigInteger.valueOf(cmds.size() + 2));
-//                message.setMessage(ex.toString());
-//                cmds.add(message);
-//                actionToCrclLabels[lastIndex] = "Error";
-//            }
+            final int markerIndex = lastIndex;
+            addMarkerCommand(cmds, "end action " + markerIndex + ": " + action.getType(),
+                    (CrclCommandWrapper wrapper) -> {
+                        notifyActionCompletedListeners(markerIndex, action);
+                    });
         }
         return cmds;
     }
@@ -484,17 +482,36 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setMessage("inspect-kit " + kitName);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
-        System.out.println("--- inspect kit "+kitName);
+        System.out.println("--- inspect kit " + kitName);
         int partDesignPartCount = getPartDesignPartCount(kitName);
     }
 
-    
+    private int takePartArgIndex;
+
+    /**
+     * Get the value of takePartArgIndex
+     *
+     * @return the value of takePartArgIndex
+     */
+    public int getTakePartArgIndex() {
+        return takePartArgIndex;
+    }
+
+    /**
+     * Set the value of takePartArgIndex
+     *
+     * @param takePartArgIndex new value of takePartArgIndex
+     */
+    public void setTakePartArgIndex(int takePartArgIndex) {
+        this.takePartArgIndex = takePartArgIndex;
+    }
+
     public void takePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
         checkSettings();
-        String partName = action.getArgs()[1];
+        String partName = action.getArgs()[takePartArgIndex];
         MessageType msg = new MessageType();
         msg.setMessage("take-part " + partName);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
@@ -502,7 +519,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         PoseType pose = getPartPose(partName);
         pose = correctPose(pose);
-        returnPosesByName.put(action.getArgs()[1], pose);
+        returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
@@ -682,6 +699,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 numberFormatException.printStackTrace();
             }
         }
+        String takePartArgIndexString = options.get("takePartArgIndex");
+        if (null != takePartArgIndexString && takePartArgIndexString.length() > 0) {
+            this.takePartArgIndex = Integer.valueOf(takePartArgIndexString);
+        }
+        String placePartSlotArgIndexString = options.get("placePartSlotArgIndex");
+        if (null != placePartSlotArgIndexString && placePartSlotArgIndexString.length() > 0) {
+            this.placePartSlotArgIndex = Integer.valueOf(placePartSlotArgIndexString);
+        }
     }
 
     private void addOpenGripper(List<MiddleCommandType> cmds) {
@@ -759,7 +784,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addMoveTo(out, pose, false);
     }
-    
+
     private void lookForPart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
 
         checkSettings();
@@ -783,13 +808,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         dwellCmd.setDwellTime(lookDwellTime);
         out.add(dwellCmd);
     }
-    
+
     public static class PlacePartInfo {
+
         private final PddlAction action;
         private final int pddlActionIndex;
         private final int outIndex;
         private CrclCommandWrapper wrapper = null;
-        
 
         public PlacePartInfo(PddlAction action, int pddlActionIndex, int outIndex) {
             this.action = action;
@@ -805,11 +830,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             this.wrapper = wrapper;
         }
 
-        
         public PddlAction getAction() {
             return action;
         }
-
 
         public int getPddlActionIndex() {
             return pddlActionIndex;
@@ -818,46 +841,55 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         public int getOutIndex() {
             return outIndex;
         }
-       
+
     }
-    
+
     private ConcurrentLinkedQueue<Consumer<PlacePartInfo>> placePartConsumers = new ConcurrentLinkedQueue<>();
-    
 
     public void addPlacePartConsumer(Consumer<PlacePartInfo> consumer) {
         placePartConsumers.add(consumer);
     }
-    
+
     public void removePlacePartConsumer(Consumer<PlacePartInfo> consumer) {
         placePartConsumers.remove(consumer);
     }
-    
+
     public void notifyPlacePartConsumers(PlacePartInfo ppi) {
         placePartConsumers.forEach(consumer -> consumer.accept(ppi));
     }
-    
+
+    private int placePartSlotArgIndex;
+
+    /**
+     * Get the value of placePartSlotArgIndex
+     *
+     * @return the value of placePartSlotArgIndex
+     */
+    public int getPlacePartSlotArgIndex() {
+        return placePartSlotArgIndex;
+    }
+
+    /**
+     * Set the value of placePartSlotArgIndex
+     *
+     * @param placePartSlotArgIndex new value of placePartSlotArgIndex
+     */
+    public void setPlacePartSlotArgIndex(int placePartSlotArgIndex) {
+        this.placePartSlotArgIndex = placePartSlotArgIndex;
+    }
+
     private void placePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
         checkSettings();
-        PoseType pose = qs.getPose(action.getArgs()[6]);
+        String slotName = action.getArgs()[placePartSlotArgIndex];
+        PoseType pose = qs.getPose(slotName);
         pose = correctPose(pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
 
-        List< TraySlotDesign> l = null;
-        TraySlotDesign tsd = null;
-        // If the tray has a slot for the appropriate type of part then
-        // get the offset from the database and add the offet. Otherwise we
-        // have to assume the tray contains only one slot and its location
-        // is also the location of where parts should be placed.
-        if (false && null != (l = this.getSingleTraySlotDesign(action.getArgs()[2], action.getArgs()[6]))
-                && null != (tsd = l.get(0))) {
-            PoseType poseOffset = pose(point(tsd.getX_OFFSET(), tsd.getY_OFFSET(), 0.), vector(1., 0., 0.), vector(0., 0., 1.));
-            pose = CRCLPosemath.multiply(pose, poseOffset);
-        }
-        final String msg = "place part " + getLastTakenPart() + " in " + action.getArgs()[6];
+        final String msg = "place part " + getLastTakenPart() + " in " + slotName;
         placePartByPose(out, pose);
         final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
         addMarkerCommand(out, msg,
@@ -918,6 +950,42 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     @Override
     public void accept(DbSetup setup) {
         this.setDbSetup(setup);
+    }
+
+    public static class ActionCallbackInfo {
+
+        private final int actionIndex;
+        private final PddlAction action;
+
+        public ActionCallbackInfo(int actionIndex, PddlAction action) {
+            this.actionIndex = actionIndex;
+            this.action = action;
+        }
+
+        public int getActionIndex() {
+            return actionIndex;
+        }
+
+        public PddlAction getAction() {
+            return action;
+        }
+    }
+
+    final private ConcurrentLinkedDeque<Consumer<ActionCallbackInfo>> actionCompletedListeners = new ConcurrentLinkedDeque<>();
+
+    public void addActionCompletedListener(Consumer<ActionCallbackInfo> listener) {
+        actionCompletedListeners.add(listener);
+    }
+
+    public void removeActionCompletedListener(Consumer<ActionCallbackInfo> listeners) {
+        actionCompletedListeners.remove(listeners);
+    }
+
+    private void notifyActionCompletedListeners(int actionIndex, PddlAction action) {
+        ActionCallbackInfo acbi = new ActionCallbackInfo(actionIndex, action);
+        for (Consumer<ActionCallbackInfo> listener : actionCompletedListeners) {
+            listener.accept(acbi);
+        }
     }
 
     @Override
