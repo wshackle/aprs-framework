@@ -89,15 +89,6 @@ import org.xml.sax.SAXException;
  */
 public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, AutoCloseable {
 
-//    private static WeakReference<AprsJFrame> aprsJFrameWeakRef = null;
-//
-//    public static AprsJFrame getCurrentAprsJFrame() {
-//        if (aprsJFrameWeakRef != null) {
-//            return aprsJFrameWeakRef.get();
-//        } else {
-//            return null;
-//        }
-//    }
     private VisionToDbJInternalFrame visionToDbJInternalFrame = null;
     private PddlExecutorJInternalFrame pddlExecutorJInternalFrame1 = null;
     private Object2DViewJInternalFrame object2DViewJInternalFrame = null;
@@ -112,6 +103,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private MotomanCrclServerJInternalFrame motomanCrclServerJInternalFrame = null;
 
     private String taskName;
+    
+    public void pauseCrclProgram() {
+        if(null != pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.pauseCrclProgram();
+        }
+    }
 
     public Map<String, String> getExecutorOptions() {
         if (null == pddlExecutorJInternalFrame1) {

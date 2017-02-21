@@ -137,19 +137,19 @@ public class VisionSocketClient implements AutoCloseable {
     }
 
     public int getPort() {
-        if(null == visionSlr) {
+        if (null == visionSlr) {
             return -1;
         }
         return visionSlr.getPort();
     }
-    
+
     public String getHost() {
-        if(null == visionSlr) {
+        if (null == visionSlr) {
             return null;
         }
         return visionSlr.getHost();
     }
-    
+
     public void start(Map<String, String> argsMap) {
         String host = "HOSTNOTSET";
         short port = -99;
@@ -158,11 +158,11 @@ public class VisionSocketClient implements AutoCloseable {
             port = Short.valueOf(argsMap.get("--visionport"));
             final short portf = port;
             final String hostf = host;
-            visionSlr = SocketLineReader.start(true,
+            visionSlr = SocketLineReader.startClient(
                     host,
                     port,
-                    "visionReader_for_"+hostf+":"+portf, new SocketLineReader.CallBack() {
-
+                    "visionReader_for_" + hostf + ":" + portf,
+                    new SocketLineReader.CallBack() {
                 private String lastSkippedLine = null;
 
                 @Override
@@ -175,7 +175,7 @@ public class VisionSocketClient implements AutoCloseable {
                             @Override
                             public void run() {
                                 String origName = Thread.currentThread().getName();
-                                Thread.currentThread().setName("parsingVisionLine from "+hostf+":"+portf);
+                                Thread.currentThread().setName("parsingVisionLine from " + hostf + ":" + portf);
                                 //System.out.println("visioncycle="+visioncycle);
                                 parseVisionLine(line);
                                 if (null != lastSkippedLine) {
@@ -222,7 +222,7 @@ public class VisionSocketClient implements AutoCloseable {
         int i = 0;
         try {
             fa = line.split(",");
-           
+
             int index = 0;
             long timestamp = System.currentTimeMillis();
             for (i = 0; i < fa.length - 5; i += 6) {
@@ -313,7 +313,7 @@ public class VisionSocketClient implements AutoCloseable {
             if (visionList == null) {
                 visionList = new ArrayList<>();
             }
-            visionList = lineToList(line,displayInterface);
+            visionList = lineToList(line, displayInterface);
             poseUpdatesParsed += visionList.size();
             updateListeners();
             if (debug) {

@@ -20,7 +20,7 @@
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="jScrollPane1" max="32767" attributes="0"/>
-                  <Component id="jTabbedPane1" alignment="1" pref="0" max="32767" attributes="0"/>
+                  <Component id="jTabbedPane1" alignment="1" max="32767" attributes="0"/>
                   <Component id="jScrollPane4" alignment="0" max="32767" attributes="0"/>
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jLabel6" min="-2" max="-2" attributes="0"/>
@@ -38,18 +38,20 @@
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="jCheckBoxReplan" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jTextFieldIndex" min="-2" pref="26" max="-2" attributes="0"/>
+                      <Component id="jTextFieldIndex" min="-2" pref="42" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jCheckBoxNeedLookFor" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jLabel17" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jTextFieldCurrentPart" min="-2" pref="89" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Component id="jButtonPause" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jButtonStep" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
@@ -86,20 +88,23 @@
               <Component id="jTabbedPane1" pref="156" max="32767" attributes="0"/>
               <EmptySpace min="-2" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jLabel7" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Group type="103" alignment="1" groupAlignment="3" attributes="0">
+                      <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jCheckBoxReplan" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldIndex" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jCheckBoxNeedLookFor" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabel17" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldCurrentPart" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
                   <Group type="103" alignment="1" groupAlignment="3" attributes="0">
                       <Component id="jButtonGenerateCRCL" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="jCheckBoxNeedLookFor" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="jTextFieldIndex" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="jCheckBoxReplan" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jCheckBoxDebug" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonAbort" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonGenerateAndRun" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="jLabel17" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="jTextFieldCurrentPart" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonStep" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonContinue" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jButtonPause" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace min="-2" max="-2" attributes="0"/>
@@ -255,7 +260,7 @@
             <Component class="javax.swing.JTable" name="jTableOptions">
               <Properties>
                 <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                  <Table columnCount="2" rowCount="8">
+                  <Table columnCount="2" rowCount="10">
                     <Column editable="false" title="Name" type="java.lang.String">
                       <Data value="rpy"/>
                       <Data value="lookForXYZ"/>
@@ -264,6 +269,8 @@
                       <Data value="slowTransSpeed"/>
                       <Data value="lookDwellTime"/>
                       <Data value="rotSpeed"/>
+                      <Data value="placePartSlotArgIndex"/>
+                      <Data value="takePartArgIndex"/>
                       <Data value="settleDwellTime"/>
                     </Column>
                     <Column editable="true" title="Value" type="java.lang.String">
@@ -274,6 +281,8 @@
                       <Data value="75"/>
                       <Data value="3.0"/>
                       <Data value="30.0"/>
+                      <Data value="0"/>
+                      <Data value="0"/>
                       <Data value="0.1"/>
                     </Column>
                   </Table>
@@ -330,7 +339,7 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jScrollPane2" pref="894" max="32767" attributes="0"/>
+                      <Component id="jScrollPane2" pref="966" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -832,7 +841,7 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="1" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="positionMapJPanel1" pref="894" max="32767" attributes="0"/>
+                      <Component id="positionMapJPanel1" pref="966" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -871,7 +880,7 @@
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="jScrollPane6" pref="933" max="32767" attributes="0"/>
+                              <Component id="jScrollPane6" pref="945" max="32767" attributes="0"/>
                               <Group type="102" attributes="0">
                                   <Component id="jLabel16" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
@@ -1011,7 +1020,7 @@
     </Component>
     <Component class="javax.swing.JButton" name="jButtonGenerateAndRun">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Generate and Run"/>
+        <Property name="text" type="java.lang.String" value="Run"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonGenerateAndRunActionPerformed"/>
@@ -1041,6 +1050,14 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonContinueActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="jButtonPause">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Pause"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonPauseActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

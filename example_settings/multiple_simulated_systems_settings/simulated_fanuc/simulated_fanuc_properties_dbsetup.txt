@@ -1,5 +1,5 @@
 #
-#Thu Feb 16 11:18:33 EST 2017
+#Tue Feb 21 16:29:50 EST 2017
 NEO4J.host=ying-220.mxnet.mel.nist.gov
 NEO4J.ying-220.mxnet.mel.nist.gov_7494.name=neo4j
 NEO4J.localhost_7486.internalQueriesResourceDir=true
@@ -17,15 +17,15 @@ NEO4J.ying-220.mxnet.mel.nist.gov_7494.queriesDir=neo4j/v2
 NEO4J.localhost_7494.passwd=password
 NEO4J.localhost_4000.passwd=
 --dbtype=NEO4J
-NEO4J.localhost_7486.user=neo4j
-NEO4J.localhost_7486.name=neo4j
 NEO4J.localhost_7494.internalQueriesResourceDir=true
+NEO4J.localhost_7486.name=neo4j
+NEO4J.localhost_7486.user=neo4j
 NEO4J.ying-220.mxnet.mel.nist.gov_7494.passwd=password
-NEO4J.localhost_7494.user=neo4j
 NEO4J.localhost_7494.name=neo4j
-NEO4J.localhost_7480.name=neo4j
-NEO4J.localhost_4000.internalQueriesResourceDir=true
+NEO4J.localhost_7494.user=neo4j
 NEO4J.localhost_7480.user=neo4j
+NEO4J.localhost_4000.internalQueriesResourceDir=true
+NEO4J.localhost_7480.name=neo4j
 NEO4J.localhost_7486.queriesDir=neo4j/v1
-NEO4J.localhost_7486.passwd=password
 NEO4J.localhost.port=7494
+NEO4J.localhost_7486.passwd=password
