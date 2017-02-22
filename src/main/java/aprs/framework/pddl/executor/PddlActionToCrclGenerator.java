@@ -82,6 +82,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private DbSetup dbSetup;
     private boolean closeDbConnection = true;
     private QuerySet qs;
+    private List<String> inspectionList=new ArrayList();
 
     private List<PositionMap> positionMaps = null;
 
@@ -490,7 +491,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         out.add(msg);
         
         int partDesignPartCount = getPartDesignPartCount(kitName);
-        System.out.println(kitName+" should have "+partDesignPartCount+" parts.");
+        System.out.println(kitName+" should contain "+partDesignPartCount+" parts.");
+        
+       // for (int i = 0; i < inspectionList.size(); i++) {
+	//	System.out.println("Inside the list: "+inspectionList.get(i));
+	//}
+        
+        inspectionList.clear();
     }
 
     private int takePartArgIndex;
@@ -535,6 +542,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             System.out.println(markerMsg + " at " + new Date());
         });
         lastTakenPart = partName;
+        inspectionList.add(partName);
     }
 
     public PoseType getPartPose(String partname) throws SQLException {
@@ -896,7 +904,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
 
-        final String msg = "place part " + getLastTakenPart() + " in " + slotName;
+        final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         placePartByPose(out, pose);
         final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
         addMarkerCommand(out, msg,
@@ -905,6 +913,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     ppi.setWrapper(wrapper);
                     notifyPlacePartConsumers(ppi);
                 }));
+        inspectionList.add(slotName);
     }
 
     private VectorType zAxis = vector(0.0, 0.0, -1.0);
