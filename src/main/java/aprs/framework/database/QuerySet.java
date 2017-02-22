@@ -83,13 +83,17 @@ public class QuerySet implements QuerySetInterface {
         if (null == getQueryInfo) {
             throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_SINGLE_POSE);
         }
+        this.getPartDesignCountQueryInfo = queriesMap.get(DbQueryEnum.GET_PARTDESIGN_PART_COUNT);
+        if (null == getPartDesignCountQueryInfo) {
+            throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_PARTDESIGN_PART_COUNT);
+        }
         String getPoseQueryString = getQueryInfo.getQuery();
         if (null == getPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain getPose");
         }
         getPoseStatement = con.prepareStatement(getPoseQueryString);
         //-- zeid
-        String getPartDesignPartCountQueryString = getQueryInfo.getQuery();
+        String getPartDesignPartCountQueryString = getPartDesignCountQueryInfo.getQuery();
         if (null == getPartDesignPartCountQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain getPartDesignPartCountQueryString");
         }
@@ -293,15 +297,28 @@ public class QuerySet implements QuerySetInterface {
     }
 
     public int getPartDesignPartCount(String name) throws SQLException {
-    if (closed) {
+        if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-    int count=0;
-    Map<Integer, Object> map = new TreeMap<>();
-    DbQueryInfo getCountQueryInfo = queriesMap.get(DbQueryEnum.GET_PARTDESIGN_PART_COUNT);
-    setQueryStringParam(getPartDesignPartCountStatement, getCountQueryInfo, DbParamTypeEnum.NAME, name, map);
-    return count;
-}
+        int count = 0;
+        Map<Integer, Object> map = new TreeMap<>();
+        DbQueryInfo getCountQueryInfo = queriesMap.get(DbQueryEnum.GET_PARTDESIGN_PART_COUNT);
+        setQueryStringParam(getPartDesignPartCountStatement, getCountQueryInfo, DbParamTypeEnum.NAME, name, map);
+        String simQuery = createExpectedQueryString(getCountQueryInfo, map);
+        //System.out.println("simQuery = " + simQuery);
+        if (debug) {
+            System.out.println("simQuery = " + simQuery);
+        }
+        
+        try (ResultSet rs = getPartDesignPartCountStatement.executeQuery()) {
+            if (rs.next()) {
+                count=rs.getInt(1);
+            } else {
+                throw new IllegalStateException("Database returned empty ResultSet for query to getPartDesignPartCount for name=" + name + ",\n   simQuery=" + simQuery);
+            }
+        }
+        return count;
+    }
     
     @Override
     public PoseType getPose(String name) throws SQLException {
@@ -603,6 +620,7 @@ public class QuerySet implements QuerySetInterface {
 
     private final DbQueryInfo setQueryInfo;
     private final DbQueryInfo getQueryInfo;
+    private final DbQueryInfo getPartDesignCountQueryInfo;
 
     private void setPoseQueryStringParam(DbParamTypeEnum type, String value, Map<Integer, Object> map) throws SQLException {
         setQueryStringParam(setPoseStatement, setQueryInfo, type, value, map);

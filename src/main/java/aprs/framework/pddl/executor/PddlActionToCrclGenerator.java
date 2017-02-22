@@ -471,7 +471,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         lastTakenPart = partName;
     }
 
-    //-- zeid
+    /**
+     * @brief Inspects a finished kit to check if it is complete
+     * @param action
+     * @param out
+     * @throws IllegalStateException
+     * @throws SQLException 
+     */
     public void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
@@ -482,8 +488,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setMessage("inspect-kit " + kitName);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
-        System.out.println("--- inspect kit " + kitName);
+        
         int partDesignPartCount = getPartDesignPartCount(kitName);
+        System.out.println(kitName+" should have "+partDesignPartCount+" parts.");
     }
 
     private int takePartArgIndex;
