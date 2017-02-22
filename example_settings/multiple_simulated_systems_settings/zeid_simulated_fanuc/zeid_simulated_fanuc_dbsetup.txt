@@ -1,5 +1,5 @@
 #
-#Wed Feb 22 14:04:07 EST 2017
+#Wed Feb 22 15:54:02 EST 2017
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.queriesDir=neo4j/v2
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com.port=24789
 --dbtype=NEO4J
@@ -11,6 +11,6 @@ NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.user=fanuc-demo
 NEO4J.host=hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com
 NEO4J.ying-220.mxnet.mel.nist.gov_7494.queriesDir=neo4j/v2
 NEO4J.ying-220.mxnet.mel.nist.gov_7494.passwd=password
-NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.internalQueriesResourceDir=true
 NEO4J.ying-220.mxnet.mel.nist.gov_7494.name=neo4j
+NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.internalQueriesResourceDir=true
 NEO4J.ying-220.mxnet.mel.nist.gov_7494.internalQueriesResourceDir=true

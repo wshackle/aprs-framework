@@ -518,8 +518,21 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             BigDecimal slotX = poseSlot.getPoint().getX();
             BigDecimal slotY = poseSlot.getPoint().getY();
             
+            //-- compute distance between 2 points
+            BigDecimal x = partX.subtract(slotX);
+            BigDecimal y = partY.subtract(slotY);
+            BigDecimal powx = x.pow(2);
+            BigDecimal powy = y.pow(2);
+            BigDecimal addition = powx.add(powy);
+            BigDecimal res = new BigDecimal(Math.sqrt(addition.doubleValue()));
+            BigDecimal finalres=res.add(new BigDecimal(addition.subtract(x.multiply(x)).doubleValue() / (x.doubleValue() * 2.0)));
+            
+            //dist = Math.sqrt(Math.pow((partX - slotX),2) + Math.pow((partY - slotY),2));
+            
             System.out.println("----- Part "+pair.getKey().toString()+" : ("+partX+","+partY+")");
             System.out.println("----- Slot "+pair.getValue().toString()+" : ("+slotX+","+slotY+")");
+            System.out.println("----- Distance : "+finalres);
+            
             it.remove(); // avoids a ConcurrentModificationException
         }
         
