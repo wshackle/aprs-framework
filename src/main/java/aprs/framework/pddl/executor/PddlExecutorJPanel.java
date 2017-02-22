@@ -126,11 +126,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if(row == currentActionIndex && isSelected) {
+                if (row == currentActionIndex && isSelected) {
                     c.setBackground(Color.YELLOW);
                     c.setForeground(Color.BLACK);
                 } else {
-                    if(!isSelected) {
+                    if (!isSelected) {
                         c.setBackground(Color.GRAY);
                     } else {
                         c.setBackground(Color.BLUE);
@@ -182,12 +182,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private void handleActionCompleted(PddlActionToCrclGenerator.ActionCallbackInfo actionInfo) {
-        currentActionIndex = actionInfo.getActionIndex() + 1;
-        updateSelectionInterval();
-        if (null != aprsJFrame) {
-            aprsJFrame.updateTitle();
-            if (stepping) {
-                aprsJFrame.pauseCrclProgram();
+        if (currentActionIndex < actionInfo.getActionIndex() + 1) {
+            currentActionIndex = actionInfo.getActionIndex() + 1;
+            updateSelectionInterval();
+            if (null != aprsJFrame) {
+                aprsJFrame.updateTitle();
+                if (stepping) {
+                    aprsJFrame.pauseCrclProgram();
+                }
             }
         }
     }
@@ -2334,29 +2336,32 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private volatile XFuture<Boolean> runningProgramFuture = null;
 
     private void jButtonStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStepActionPerformed
-        try {
-            stepping = true;
-            autoStart = !started;
-            if (null != unstartedProgram) {
-                if (autoStart) {
-                    if (null != runningProgramFuture) {
-                        runningProgramFuture.cancel(true);
-                    }
-                    runningProgramFuture = startCrclProgram(unstartedProgram);
-                } else {
-                    setCrclProgram(unstartedProgram);
-                }
-            } else {
-                if (null != runningProgramFuture) {
-                    runningProgramFuture.cancel(true);
-                }
-                runningProgramFuture = generateCrcl();
-            }
-            autoStart = false;
-        } catch (IOException | IllegalStateException | SQLException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            abortProgram();
-        }
+
+        stepping = true;
+        continueActionListPrivate();
+//        try {
+//            stepping = true;
+//            autoStart = !started;
+//            if (null != unstartedProgram) {
+//                if (autoStart) {
+//                    if (null != runningProgramFuture) {
+//                        runningProgramFuture.cancel(true);
+//                    }
+//                    runningProgramFuture = startCrclProgram(unstartedProgram);
+//                } else {
+//                    setCrclProgram(unstartedProgram);
+//                }
+//            } else {
+//                if (null != runningProgramFuture) {
+//                    runningProgramFuture.cancel(true);
+//                }
+//                runningProgramFuture = generateCrcl();
+//            }
+//            autoStart = false;
+//        } catch (IOException | IllegalStateException | SQLException ex) {
+//            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//            abortProgram();
+//        }
     }//GEN-LAST:event_jButtonStepActionPerformed
 
     private int safeAboutCount = 0;
@@ -2409,9 +2414,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private void continueActionListPrivate() {
-        if (currentActionIndex < replanFromIndex - 1) {
-            runningProgramFuture = continueCurrentProgram();
-        }
+//        if(aprsJFrame.isCrclProgramPaused() && aprsJFrame.getCrclProgram() != null) {
+//            runningProgramFuture = continueCurrentProgram();
+//            return;
+//        }
         autoStart = true;
         safeAbortRequested = false;
         safeAbortRunnablesVector.clear();

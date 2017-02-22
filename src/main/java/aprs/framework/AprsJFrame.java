@@ -110,6 +110,28 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    public boolean isCrclProgramPaused() {
+        if(null != pendantClientJInternalFrame) {
+            return pendantClientJInternalFrame.isPaused();
+        }
+        return false;
+    }
+    
+    public boolean isRunningCrclProgram() {
+        if(null != pendantClientJInternalFrame) {
+            return pendantClientJInternalFrame.isRunningProgram();
+        }
+        return false;
+    }
+    
+    
+    public CRCLProgramType getCrclProgram() {
+        if(null != pendantClientJInternalFrame) {
+            return pendantClientJInternalFrame.getProgram();
+        }
+        return null;
+    }
+    
     public Map<String, String> getExecutorOptions() {
         if (null == pddlExecutorJInternalFrame1) {
             return null;
@@ -1400,6 +1422,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
+        System.exit(0);
     }//GEN-LAST:event_jMenuItemExitActionPerformed
 
     private void jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed
