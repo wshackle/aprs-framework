@@ -64,7 +64,12 @@ import java.util.function.Consumer;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -82,7 +87,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private DbSetup dbSetup;
     private boolean closeDbConnection = true;
     private QuerySet qs;
-    private List<String> inspectionList=new ArrayList();
+    //private List<String> inspectionList=new ArrayList();
+    Map<String, String> inspectionMap = new HashMap<String, String>();
 
     private List<PositionMap> positionMaps = null;
 
@@ -492,14 +498,43 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         
         int partDesignPartCount = getPartDesignPartCount(kitName);
         System.out.println(kitName+" should contain "+partDesignPartCount+" parts.");
-        
-       // for (int i = 0; i < inspectionList.size(); i++) {
-	//	System.out.println("Inside the list: "+inspectionList.get(i));
-	//}
-        
-        inspectionList.clear();
+        checkPartInSlot(inspectionMap);
+        //printMap(inspectionMap);
+        inspectionMap.clear();
     }
 
+    private  Boolean checkPartInSlot(Map mp) throws SQLException{
+        Boolean partIsInSlot = false;
+        Iterator it = mp.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            PoseType posePart = getPartPose(pair.getKey().toString());
+            posePart = correctPose(posePart);
+            BigDecimal partX = posePart.getPoint().getX();
+            BigDecimal partY = posePart.getPoint().getY();
+            
+            PoseType poseSlot = getPartPose(pair.getValue().toString());
+            poseSlot = correctPose(poseSlot);
+            BigDecimal slotX = poseSlot.getPoint().getX();
+            BigDecimal slotY = poseSlot.getPoint().getY();
+            
+            System.out.println("----- Part "+pair.getKey().toString()+" : ("+partX+","+partY+")");
+            System.out.println("----- Slot "+pair.getValue().toString()+" : ("+slotX+","+slotY+")");
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+        
+        
+        return partIsInSlot;
+    }
+    private static void printMap(Map mp) {
+        Iterator it = mp.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            System.out.println(pair.getKey() + " = " + pair.getValue());
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+    }
+    
     private int takePartArgIndex;
 
     /**
@@ -542,7 +577,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             System.out.println(markerMsg + " at " + new Date());
         });
         lastTakenPart = partName;
-        inspectionList.add(partName);
+        //inspectionList.add(partName);
+        inspectionMap.put(partName, null);
     }
 
     public PoseType getPartPose(String partname) throws SQLException {
@@ -913,9 +949,20 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     ppi.setWrapper(wrapper);
                     notifyPlacePartConsumers(ppi);
                 }));
-        inspectionList.add(slotName);
+        String keyByValue = getKeyByValue(inspectionMap, null);
+        inspectionMap.put(keyByValue,slotName);
+        //inspectionList.add(slotName);
+        //inspectionMap.ge
     }
 
+    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
+        for (Entry<T, E> entry : map.entrySet()) {
+            if (Objects.equals(value, entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
     private VectorType zAxis = vector(0.0, 0.0, -1.0);
 
     public void placePartByPose(List<MiddleCommandType> cmds, PoseType pose) {

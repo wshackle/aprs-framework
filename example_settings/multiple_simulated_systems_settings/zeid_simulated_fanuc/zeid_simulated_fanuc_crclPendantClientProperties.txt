@@ -1,26 +1,21 @@
-boolean connected=false
+boolean connected=true
 boolean monitoringHoldingObject=false
 boolean debugInterrupts=false
 boolean paused=false
-boolean runningProgram=false
+boolean runningProgram=true
 boolean holdingObjectExpected=false
 boolean toolChangerOpen=false
 boolean opaque=true
+boolean validateRoot=false
+boolean paintingForPrint=false
 boolean managingFocus=false
 boolean optimizedDrawingEnabled=true
 boolean paintingTile=false
 boolean requestFocusEnabled=true
 boolean doubleBuffered=true
-boolean validateRoot=false
-boolean paintingForPrint=false
 boolean focusCycleRoot=false
 boolean focusTraversalPolicyProvider=false
 boolean focusTraversalPolicySet=false
-boolean backgroundSet=true
-boolean cursorSet=false
-boolean focusTraversable=true
-boolean fontSet=true
-boolean foregroundSet=true
 boolean displayable=true
 boolean minimumSizeSet=false
 boolean showing=true
@@ -31,175 +26,180 @@ boolean focusable=true
 boolean lightweight=true
 boolean maximumSizeSet=false
 boolean preferredSizeSet=false
-boolean valid=true
+boolean valid=false
+boolean backgroundSet=true
+boolean cursorSet=false
+boolean focusTraversable=true
+boolean fontSet=true
+boolean foregroundSet=true
 java.lang.String host=localhost
 int port=64444
+crcl.base.CRCLStatusType status=crcl.base.CRCLStatusType@5eddad55
 java.io.File propertiesFile=C:\Users\zeid\Documents\NetBeansProjects\aprs-framework\example_settings\multiple_simulated_systems_settings\zeid_simulated_fanuc\zeid_simulated_fanuc_crclPendantClientProperties.txt
-# could not invokegetCurrentPose
-java.util.Optional currentStatus=Optional.empty
-java.util.Optional currentState=Optional.empty
+crcl.base.PoseType currentPose=crcl.base.PoseType@162b3670
+java.util.Optional currentStatus=Optional[crcl.base.CRCLStatusType@5eddad55]
+java.util.Optional currentState=Optional[CRCL_WORKING]
 java.lang.String version=1.4-SNAPSHOT
 Schema versions = {CRCLProgramInstance.xsd=2016Apr15, CRCLStatus.xsd=2016Apr15, CRCLCommands.xsd=2016Apr15, CRCLCommandInstance.xsd=2016Apr15, DataPrimitives.xsd=2016Apr15}
-# could not invokegetStatus
-# could not invokegetCurrentProgramCommand
+crcl.base.MiddleCommandType currentProgramCommand=crcl.base.MoveToType@5d97a688
 # could not invokegetLastOpenedProgramFile
 java.util.Set recentPrograms=[]
-# could not invokegetProgram
-crcl.utils.outer.interfaces.PendantClientMenuOuter menuOuter=crcl.ui.client.PendantClientJInternalFrame[,0,0,1058x725,layout=javax.swing.plaf.basic.BasicInternalFrameUI$Handler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@5122da8f,flags=264,maximumSize=,minimumSize=,preferredSize=,closable=false,defaultCloseOperation=DISPOSE_ON_CLOSE,desktopIcon=javax.swing.JInternalFrame$JDesktopIcon[,0,0,42x27,invalid,layout=java.awt.BorderLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@4f1454b9,flags=0,maximumSize=,minimumSize=,preferredSize=],frameIcon=,iconable=true,isClosed=false,isIcon=false,isMaximum=false,isSelected=false,maximizable=true,opened=true,resizable=true,rootPane=javax.swing.JRootPane[,6,25,1046x694,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@68b514c3,flags=457,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true,title=CRCL Client: Disconnected]
-java.awt.Window outerWindow=aprs.framework.AprsJFrame[frame1,596,139,1086x798,invalid,layout=java.awt.BorderLayout,title=APRS : Sim_Fanuc : Fanuc Cart :  : ,resizable,normal,defaultCloseOperation=DISPOSE_ON_CLOSE,rootPane=javax.swing.JRootPane[,8,30,1070x760,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@2ac5ac71,flags=16777673,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true]
-crcl.ui.client.PendantClientJPanel.PoseDisplayMode currentPoseDisplayMode=XYZ_XAXIS_ZAXIS
-int currentProgramLine=-1
-# could not invokegetSideProgramPlotter
-# could not invokegetOverheadProgramPlotter
-java.awt.Container outerContainer=crcl.ui.client.PendantClientJInternalFrame[,0,0,1058x725,layout=javax.swing.plaf.basic.BasicInternalFrameUI$Handler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@5122da8f,flags=264,maximumSize=,minimumSize=,preferredSize=,closable=false,defaultCloseOperation=DISPOSE_ON_CLOSE,desktopIcon=javax.swing.JInternalFrame$JDesktopIcon[,0,0,42x27,invalid,layout=java.awt.BorderLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@4f1454b9,flags=0,maximumSize=,minimumSize=,preferredSize=],frameIcon=,iconable=true,isClosed=false,isIcon=false,isMaximum=false,isSelected=false,maximizable=true,opened=true,resizable=true,rootPane=javax.swing.JRootPane[,6,25,1046x694,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@68b514c3,flags=457,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true,title=CRCL Client: Disconnected]
+crcl.base.CRCLProgramType program=crcl.base.CRCLProgramType@7411acc8
+crcl.utils.outer.interfaces.PendantClientMenuOuter menuOuter=crcl.ui.client.PendantClientJInternalFrame[,0,0,1058x725,invalid,layout=javax.swing.plaf.basic.BasicInternalFrameUI$Handler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@14a53cb8,flags=264,maximumSize=,minimumSize=,preferredSize=,closable=false,defaultCloseOperation=DISPOSE_ON_CLOSE,desktopIcon=javax.swing.JInternalFrame$JDesktopIcon[,0,0,42x27,invalid,layout=java.awt.BorderLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@7fbe0308,flags=0,maximumSize=,minimumSize=,preferredSize=],frameIcon=,iconable=true,isClosed=false,isIcon=false,isMaximum=false,isSelected=false,maximizable=true,opened=true,resizable=true,rootPane=javax.swing.JRootPane[,6,25,1046x694,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@8d44c98,flags=457,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true,title=CRCL Client: WORKING : Running MoveToType : take-part part_medium_gear_in_pt_1]
+int programRow=7
+int currentProgramLine=7
+crcl.utils.ProgramPlotter sideProgramPlotter=crcl.utils.ProgramPlotter@7ce1cc42
+crcl.utils.ProgramPlotter overheadProgramPlotter=crcl.utils.ProgramPlotter@47a17764
+java.awt.Container outerContainer=crcl.ui.client.PendantClientJInternalFrame[,0,0,1058x725,invalid,layout=javax.swing.plaf.basic.BasicInternalFrameUI$Handler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@14a53cb8,flags=264,maximumSize=,minimumSize=,preferredSize=,closable=false,defaultCloseOperation=DISPOSE_ON_CLOSE,desktopIcon=javax.swing.JInternalFrame$JDesktopIcon[,0,0,42x27,invalid,layout=java.awt.BorderLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@7fbe0308,flags=0,maximumSize=,minimumSize=,preferredSize=],frameIcon=,iconable=true,isClosed=false,isIcon=false,isMaximum=false,isSelected=false,maximizable=true,opened=true,resizable=true,rootPane=javax.swing.JRootPane[,6,25,1046x694,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@8d44c98,flags=457,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true,title=CRCL Client: WORKING : Running MoveToType : take-part part_medium_gear_in_pt_1]
 double rpyJogIncrement=3.0
-int programRow=0
-javax.accessibility.AccessibleContext accessibleContext=javax.swing.JPanel$AccessibleJPanel@6a96b6e6
-javax.swing.plaf.PanelUI uI=javax.swing.plaf.synth.SynthPanelUI@74a9691
+java.awt.Window outerWindow=aprs.framework.AprsJFrame[frame0,343,100,1086x798,invalid,layout=java.awt.BorderLayout,title=APRS : Sim_Fanuc : Fanuc Cart : WORKING : Running MoveToType,resizable,normal,defaultCloseOperation=DISPOSE_ON_CLOSE,rootPane=javax.swing.JRootPane[,8,30,1070x760,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@71bed671,flags=16777673,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true]
+crcl.ui.client.PendantClientJPanel.PoseDisplayMode currentPoseDisplayMode=XYZ_XAXIS_ZAXIS
+javax.accessibility.AccessibleContext accessibleContext=javax.swing.JPanel$AccessibleJPanel@5b24e452
+javax.swing.plaf.PanelUI uI=javax.swing.plaf.synth.SynthPanelUI@548d0a7d
 java.lang.String uIClassID=PanelUI
-javax.swing.ActionMap actionMap=javax.swing.ActionMap@40fbc255
-javax.swing.event.AncestorListener[] ancestorListeners=[Ljavax.swing.event.AncestorListener;@475a481f
-# could not invokegetComponentPopupMenu
-int debugGraphicsOptions=0
-boolean inheritsPopupMenu=false
-javax.swing.InputMap inputMap=javax.swing.InputMap@18a4e794
-# could not invokegetInputVerifier
-javax.swing.KeyStroke[] registeredKeyStrokes=[Ljavax.swing.KeyStroke;@4b09140f
-java.awt.Container topLevelAncestor=aprs.framework.AprsJFrame[frame1,596,139,1086x798,invalid,layout=java.awt.BorderLayout,title=APRS : Sim_Fanuc : Fanuc Cart :  : ,resizable,normal,defaultCloseOperation=DISPOSE_ON_CLOSE,rootPane=javax.swing.JRootPane[,8,30,1070x760,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@2ac5ac71,flags=16777673,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true]
-boolean verifyInputWhenFocusTarget=true
-java.beans.VetoableChangeListener[] vetoableChangeListeners=[Ljava.beans.VetoableChangeListener;@557e8e51
-java.awt.Rectangle visibleRect=java.awt.Rectangle[x=0,y=0,width=1022,height=647]
-java.awt.Component.BaselineResizeBehavior baselineResizeBehavior=OTHER
 java.util.Locale defaultLocale=en_US
 java.awt.Graphics graphics=sun.java2d.SunGraphics2D[font=javax.swing.plaf.FontUIResource[family=SansSerif,name=sansserif,style=plain,size=12],color=java.awt.Color[r=0,g=0,b=0]]
-javax.swing.JRootPane rootPane=javax.swing.JRootPane[,6,25,1046x694,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@68b514c3,flags=457,maximumSize=,minimumSize=,preferredSize=]
+javax.swing.JRootPane rootPane=javax.swing.JRootPane[,6,25,1046x694,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@8d44c98,flags=457,maximumSize=,minimumSize=,preferredSize=]
 # could not invokegetTransferHandler
 int height=647
 java.awt.Dimension minimumSize=java.awt.Dimension[width=764,height=540]
-java.awt.Dimension preferredSize=java.awt.Dimension[width=845,height=685]
+java.awt.Dimension preferredSize=java.awt.Dimension[width=849,height=685]
 int width=1022
 float alignmentX=0.5
 float alignmentY=0.5
 java.awt.Insets insets=java.awt.Insets[top=0,left=0,bottom=0,right=0]
 java.awt.Dimension maximumSize=java.awt.Dimension[width=32767,height=32767]
 boolean autoscrolls=false
-javax.swing.border.Border border=javax.swing.plaf.synth.SynthBorder@40f12e51
+javax.swing.border.Border border=javax.swing.plaf.synth.SynthBorder@69f0bca8
 # could not invokegetNextFocusableComponent
 # could not invokegetToolTipText
+javax.swing.ActionMap actionMap=javax.swing.ActionMap@6e7ae2b9
+javax.swing.event.AncestorListener[] ancestorListeners=[Ljavax.swing.event.AncestorListener;@362a2581
+# could not invokegetComponentPopupMenu
+int debugGraphicsOptions=0
+boolean inheritsPopupMenu=false
+javax.swing.InputMap inputMap=javax.swing.InputMap@2ee2a38f
+# could not invokegetInputVerifier
+javax.swing.KeyStroke[] registeredKeyStrokes=[Ljavax.swing.KeyStroke;@4f24a860
+java.awt.Container topLevelAncestor=aprs.framework.AprsJFrame[frame0,343,100,1086x798,invalid,layout=java.awt.BorderLayout,title=APRS : Sim_Fanuc : Fanuc Cart : WORKING : Running MoveToType,resizable,normal,defaultCloseOperation=DISPOSE_ON_CLOSE,rootPane=javax.swing.JRootPane[,8,30,1070x760,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@71bed671,flags=16777673,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true]
+boolean verifyInputWhenFocusTarget=true
+java.beans.VetoableChangeListener[] vetoableChangeListeners=[Ljava.beans.VetoableChangeListener;@3dd5ee1a
+java.awt.Rectangle visibleRect=java.awt.Rectangle[x=0,y=0,width=1022,height=647]
+java.awt.Component.BaselineResizeBehavior baselineResizeBehavior=OTHER
 int x=6
 int y=6
 int componentCount=3
 # could not invokegetFocusTraversalPolicy
-java.awt.Component[] components=[Ljava.awt.Component;@7fd6e99c
-java.awt.event.ContainerListener[] containerListeners=[Ljava.awt.event.ContainerListener;@7cfc2305
+java.awt.Component[] components=[Ljava.awt.Component;@7103b493
+java.awt.event.ContainerListener[] containerListeners=[Ljava.awt.event.ContainerListener;@16e2911f
 java.awt.LayoutManager layout=HORIZONTAL
-  javax.swing.GroupLayout$SequentialGroup 6b2f445e , size=-2147483648, alignment=null prefs=[764 845 32767]
-    javax.swing.GroupLayout$ParallelGroup 3785f9a5 , size=-2147483648, alignment=null prefs=[764 845 32767]
-      javax.swing.GroupLayout$SequentialGroup 63eabadc , size=-2147483648, alignment=null prefs=[764 845 32767]
-        javax.swing.GroupLayout$ContainerAutoPreferredGapSpring 5cc98996 , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=leading: [javax.swing.GroupLayout$ComponentSpring@5d5136cd, javax.swing.GroupLayout$ComponentSpring@149b1890]]
-        javax.swing.GroupLayout$ParallelGroup 213d704e , size=-2147483648, alignment=null prefs=[758 839 32767]
-          javax.swing.GroupLayout$SequentialGroup 215ae675 , size=-2147483648, alignment=null prefs=[31 244 32767]
-            javax.swing.GroupLayout$ComponentSpring 5d5136cd 0 , size=32767, alignment=null prefs=[25 238 32767]
-            javax.swing.GroupLayout$ContainerAutoPreferredGapSpring 41307d01 , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=trailing: [javax.swing.GroupLayout$ComponentSpring@5d5136cd]]
-          javax.swing.GroupLayout$SequentialGroup 1b98fdc6 , size=-2147483648, alignment=null prefs=[758 839 32767]
-            javax.swing.GroupLayout$ComponentSpring 149b1890 name=, , size=16613, alignment=null prefs=[614 646 32767]
-            javax.swing.GroupLayout$AutoPreferredGapSpring 1503dcb4 , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=[[-null]]]
-            javax.swing.GroupLayout$ComponentSpring 5990191c 16613 , size=16143, alignment=null prefs=[127 176 32767]
-            javax.swing.GroupLayout$GapSpring 4985be81 , size=11, alignment=null prefs=[11 11 11]
+  javax.swing.GroupLayout$SequentialGroup 7001ed43 , size=-2147483648, alignment=null prefs=[764 849 32767]
+    javax.swing.GroupLayout$ParallelGroup 6680add9 , size=-2147483648, alignment=null prefs=[764 849 32767]
+      javax.swing.GroupLayout$SequentialGroup 11ddb1d6 , size=-2147483648, alignment=null prefs=[764 849 32767]
+        javax.swing.GroupLayout$ContainerAutoPreferredGapSpring 3b47bb3a , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=leading: [javax.swing.GroupLayout$ComponentSpring@4e8fccbf, javax.swing.GroupLayout$ComponentSpring@5d47a413]]
+        javax.swing.GroupLayout$ParallelGroup 1112b4c0 , size=-2147483648, alignment=null prefs=[758 843 32767]
+          javax.swing.GroupLayout$SequentialGroup 74b1e337 , size=-2147483648, alignment=null prefs=[31 259 32767]
+            javax.swing.GroupLayout$ComponentSpring 4e8fccbf 0 , size=32767, alignment=null prefs=[25 253 32767]
+            javax.swing.GroupLayout$ContainerAutoPreferredGapSpring 4f570219 , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=trailing: [javax.swing.GroupLayout$ComponentSpring@4e8fccbf]]
+          javax.swing.GroupLayout$SequentialGroup 6c0f4301 , size=-2147483648, alignment=null prefs=[758 843 32767]
+            javax.swing.GroupLayout$ComponentSpring 5d47a413 name=, , size=16615, alignment=null prefs=[614 650 32767]
+            javax.swing.GroupLayout$AutoPreferredGapSpring 7f0dd578 , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=[[-null]]]
+            javax.swing.GroupLayout$ComponentSpring 1f8a91b6 16615 , size=16141, alignment=null prefs=[127 176 32767]
+            javax.swing.GroupLayout$GapSpring 19926716 , size=11, alignment=null prefs=[11 11 11]
 
 VERTICAL
-  javax.swing.GroupLayout$SequentialGroup 339ce4e0 , size=-2147483648, alignment=null prefs=[540 685 32767]
-    javax.swing.GroupLayout$ParallelGroup 374eab6e , size=-2147483648, alignment=null prefs=[540 685 32767]
-      javax.swing.GroupLayout$SequentialGroup 389041ea , size=-2147483648, alignment=null prefs=[540 685 32767]
-        javax.swing.GroupLayout$ContainerAutoPreferredGapSpring 59f32095 , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=leading: [javax.swing.GroupLayout$ComponentSpring@b1f1ac5, javax.swing.GroupLayout$ComponentSpring@f2816e]]
-        javax.swing.GroupLayout$ParallelGroup 10370366 , size=-2147483648, alignment=null prefs=[497 619 32767]
-          javax.swing.GroupLayout$ComponentSpring b1f1ac5 0 , size=16669, alignment=null prefs=[497 619 32767]
-          javax.swing.GroupLayout$ComponentSpring f2816e name=, , size=16669, alignment=null prefs=[427 619 32767]
-        javax.swing.GroupLayout$AutoPreferredGapSpring 3de6ec9c , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=[[-null], [null-null]]]
-        javax.swing.GroupLayout$ComponentSpring 4edc10d7 16669 , size=16098, alignment=null prefs=[25 48 32767]
-        javax.swing.GroupLayout$ContainerAutoPreferredGapSpring 5ab10193 , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=trailing: [javax.swing.GroupLayout$ComponentSpring@4edc10d7]]
+  javax.swing.GroupLayout$SequentialGroup 220aa410 , size=-2147483648, alignment=null prefs=[540 685 32767]
+    javax.swing.GroupLayout$ParallelGroup 4508b8ec , size=-2147483648, alignment=null prefs=[540 685 32767]
+      javax.swing.GroupLayout$SequentialGroup 4bb6daca , size=-2147483648, alignment=null prefs=[540 685 32767]
+        javax.swing.GroupLayout$ContainerAutoPreferredGapSpring 34597e2b , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=leading: [javax.swing.GroupLayout$ComponentSpring@6e22f9f7, javax.swing.GroupLayout$ComponentSpring@7f15475e]]
+        javax.swing.GroupLayout$ParallelGroup 988e878 , size=-2147483648, alignment=null prefs=[497 619 32767]
+          javax.swing.GroupLayout$ComponentSpring 6e22f9f7 0 , size=16669, alignment=null prefs=[497 619 32767]
+          javax.swing.GroupLayout$ComponentSpring 7f15475e name=, , size=16669, alignment=null prefs=[427 619 32767]
+        javax.swing.GroupLayout$AutoPreferredGapSpring 3ef91561 , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=[[-null], [null-null]]]
+        javax.swing.GroupLayout$ComponentSpring 476dae08 16669 , size=16098, alignment=null prefs=[25 48 32767]
+        javax.swing.GroupLayout$ContainerAutoPreferredGapSpring 12172e0c , size=-2147483648, alignment=null prefs=[6 6 6, userCreated=true, matches=trailing: [javax.swing.GroupLayout$ComponentSpring@476dae08]]
 
 # could not invokegetName
 java.awt.Point location=java.awt.Point[x=6,y=6]
-java.awt.Container parent=javax.swing.JPanel[,6,6,1034x659,layout=javax.swing.GroupLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@1a8675d8,flags=9,maximumSize=,minimumSize=,preferredSize=]
+java.awt.Container parent=javax.swing.JPanel[,6,6,1034x659,invalid,layout=javax.swing.GroupLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@6dc0b243,flags=9,maximumSize=,minimumSize=,preferredSize=]
 java.awt.Dimension size=java.awt.Dimension[width=1022,height=647]
-java.awt.image.ColorModel colorModel=DirectColorModel: rmask=ff0000 gmask=ff00 bmask=ff amask=0
-java.awt.event.ComponentListener[] componentListeners=[Ljava.awt.event.ComponentListener;@100ee818
-java.awt.ComponentOrientation componentOrientation=java.awt.ComponentOrientation@3e7a0866
-# could not invokegetDropTarget
-java.awt.event.FocusListener[] focusListeners=[Ljava.awt.event.FocusListener;@6c153ba3
-boolean focusTraversalKeysEnabled=true
-java.awt.Color foreground=DerivedColor(color=0,0,0 parent=text offsets=0.0,0.0,0.0,0 pColor=0,0,0
-java.awt.event.HierarchyBoundsListener[] hierarchyBoundsListeners=[Ljava.awt.event.HierarchyBoundsListener;@4594ab4c
-java.awt.event.HierarchyListener[] hierarchyListeners=[Ljava.awt.event.HierarchyListener;@223dd5ce
-boolean ignoreRepaint=false
-java.awt.event.InputMethodListener[] inputMethodListeners=[Ljava.awt.event.InputMethodListener;@4c6ad0d7
-# could not invokegetInputMethodRequests
-java.awt.event.KeyListener[] keyListeners=[Ljava.awt.event.KeyListener;@96732da
-java.awt.event.MouseListener[] mouseListeners=[Ljava.awt.event.MouseListener;@69c92671
-java.awt.event.MouseMotionListener[] mouseMotionListeners=[Ljava.awt.event.MouseMotionListener;@25960d23
-java.awt.event.MouseWheelListener[] mouseWheelListeners=[Ljava.awt.event.MouseWheelListener;@3f608d2e
-java.beans.PropertyChangeListener[] propertyChangeListeners=[Ljava.beans.PropertyChangeListener;@f2199fa
 java.awt.Color background=DerivedColor(color=214,217,223 parent=control offsets=0.0,0.0,0.0,0 pColor=214,217,223
 java.awt.Cursor cursor=java.awt.Cursor[Default Cursor]
-java.awt.Toolkit toolkit=sun.awt.windows.WToolkit@eecb283
-java.lang.Object treeLock=java.awt.Component$AWTTreeLock@2f7bdcc1
+java.awt.Toolkit toolkit=sun.awt.windows.WToolkit@cd50ab4
+java.lang.Object treeLock=java.awt.Component$AWTTreeLock@1be4e087
 java.awt.Font font=javax.swing.plaf.FontUIResource[family=SansSerif,name=sansserif,style=plain,size=12]
 java.awt.Rectangle bounds=java.awt.Rectangle[x=6,y=6,width=1022,height=647]
-java.awt.Container focusCycleRootAncestor=crcl.ui.client.PendantClientJInternalFrame[,0,0,1058x725,layout=javax.swing.plaf.basic.BasicInternalFrameUI$Handler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@5122da8f,flags=264,maximumSize=,minimumSize=,preferredSize=,closable=false,defaultCloseOperation=DISPOSE_ON_CLOSE,desktopIcon=javax.swing.JInternalFrame$JDesktopIcon[,0,0,42x27,invalid,layout=java.awt.BorderLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@4f1454b9,flags=0,maximumSize=,minimumSize=,preferredSize=],frameIcon=,iconable=true,isClosed=false,isIcon=false,isMaximum=false,isSelected=false,maximizable=true,opened=true,resizable=true,rootPane=javax.swing.JRootPane[,6,25,1046x694,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@68b514c3,flags=457,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true,title=CRCL Client: Disconnected]
-java.awt.im.InputContext inputContext=sun.awt.im.InputMethodContext@3a113318
+java.awt.Container focusCycleRootAncestor=crcl.ui.client.PendantClientJInternalFrame[,0,0,1058x725,invalid,layout=javax.swing.plaf.basic.BasicInternalFrameUI$Handler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@14a53cb8,flags=264,maximumSize=,minimumSize=,preferredSize=,closable=false,defaultCloseOperation=DISPOSE_ON_CLOSE,desktopIcon=javax.swing.JInternalFrame$JDesktopIcon[,0,0,42x27,invalid,layout=java.awt.BorderLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@7fbe0308,flags=0,maximumSize=,minimumSize=,preferredSize=],frameIcon=,iconable=true,isClosed=false,isIcon=false,isMaximum=false,isSelected=false,maximizable=true,opened=true,resizable=true,rootPane=javax.swing.JRootPane[,6,25,1046x694,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@8d44c98,flags=457,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true,title=CRCL Client: WORKING : Running MoveToType : take-part part_medium_gear_in_pt_1]
+java.awt.im.InputContext inputContext=sun.awt.im.InputMethodContext@3153001d
 java.util.Locale locale=en_US
-java.awt.peer.ComponentPeer peer=sun.awt.NullComponentPeer@123d089
+java.awt.peer.ComponentPeer peer=sun.awt.NullComponentPeer@1a1f2f75
 # could not invokegetMousePosition
+java.awt.image.ColorModel colorModel=DirectColorModel: rmask=ff0000 gmask=ff00 bmask=ff amask=0
+java.awt.event.ComponentListener[] componentListeners=[Ljava.awt.event.ComponentListener;@7c6f4c0b
+java.awt.ComponentOrientation componentOrientation=java.awt.ComponentOrientation@4ef9f2d4
+# could not invokegetDropTarget
+java.awt.event.FocusListener[] focusListeners=[Ljava.awt.event.FocusListener;@6ed8d8a2
+boolean focusTraversalKeysEnabled=true
+java.awt.Color foreground=DerivedColor(color=0,0,0 parent=text offsets=0.0,0.0,0.0,0 pColor=0,0,0
+java.awt.event.HierarchyBoundsListener[] hierarchyBoundsListeners=[Ljava.awt.event.HierarchyBoundsListener;@2135ec6
+java.awt.event.HierarchyListener[] hierarchyListeners=[Ljava.awt.event.HierarchyListener;@fb5df2
+boolean ignoreRepaint=false
+java.awt.event.InputMethodListener[] inputMethodListeners=[Ljava.awt.event.InputMethodListener;@6f256f2
+# could not invokegetInputMethodRequests
+java.awt.event.KeyListener[] keyListeners=[Ljava.awt.event.KeyListener;@2e479346
+java.awt.event.MouseListener[] mouseListeners=[Ljava.awt.event.MouseListener;@363a1d26
+java.awt.event.MouseMotionListener[] mouseMotionListeners=[Ljava.awt.event.MouseMotionListener;@6c74d2de
+java.awt.event.MouseWheelListener[] mouseWheelListeners=[Ljava.awt.event.MouseWheelListener;@78254c64
+java.beans.PropertyChangeListener[] propertyChangeListeners=[Ljava.beans.PropertyChangeListener;@6aea2d85
 java.awt.GraphicsConfiguration graphicsConfiguration=D3DGraphicsConfig[dev=D3DGraphicsDevice[screen=0],pixfmt=0]
-java.awt.Point locationOnScreen=java.awt.Point[x=628,y=258]
+java.awt.Point locationOnScreen=java.awt.Point[x=375,y=219]
 java.lang.Class class=class crcl.ui.client.PendantClientJPanel
-boolean internal.connected=false
+boolean internal.connected=true
 boolean internal.quitOnTestCommandFailure=true
 boolean internal.debugInterrupts=false
 boolean internal.paused=false
-boolean internal.runningProgram=false
+boolean internal.runningProgram=true
 boolean internal.holdingObjectExpected=false
-boolean internal.stepMode=false
-boolean internal.printDetailedCommandFailureInfo=false
 boolean internal.holdingErrorOccured=false
-# could not invokegetPoint
-java.util.Optional internal.commandState=Optional.empty
-# could not invokegetStatus
+boolean internal.printDetailedCommandFailureInfo=false
+boolean internal.stepMode=false
+crcl.base.CRCLStatusType internal.status=crcl.base.CRCLStatusType@c5fced3
+crcl.base.PointType internal.point=crcl.base.PointType@46f71fa4
+java.util.Optional internal.commandState=Optional[CRCL_WORKING]
 java.util.Map internal.defaultTestPropertiesMap={xyzAxisIncrement=3.0, jointTol=0.6, jointPosIncrement=3.0, jointMoveSpeed=, jointMoveAccel=, maxJoint=10}
-# could not invokegetProgram
-long internal.runEndMillis=0
-# could not invokegetPose
-# could not invokegetCRCLSocket
+crcl.base.CRCLProgramType internal.program=crcl.base.CRCLProgramType@7411acc8
+long internal.runEndMillis=-1
+crcl.base.PoseType internal.pose=crcl.base.PoseType@14632d72
+crcl.utils.CRCLSocket internal.cRCLSocket=CRCLSocket(localhost/127.0.0.1:64444)
 int internal.poll_ms=50
 double internal.jogIncrement=3.0
 double internal.jogJointSpeed=20.0
 double internal.jogTransSpeed=100.0
 int internal.jogInterval=50
-# could not invokegetLastMessage
-crcl.utils.XpathUtils internal.xpu=crcl.utils.XpathUtils@78933075
-long internal.runStartMillis=0
+java.lang.String internal.lastMessage=take-part part_medium_gear_in_pt_1
+long internal.runStartMillis=1487790244213
 crcl.utils.CRCLSocket internal.tempCRCLSocket=CRCLSocket(null
 double internal.xyzJogIncrement=3.0
-java.lang.ThreadLocal internal.callingRunProgramStackTrace=java.lang.ThreadLocal@6ad2e5c1
+java.lang.ThreadLocal internal.callingRunProgramStackTrace=java.lang.ThreadLocal@49ab3bd3
 # could not invokegetOutgoingProgramFile
-java.util.List internal.recordedCommandsList=[]
-java.io.File[] internal.programSchemaFiles=[Ljava.io.File;@63c2d4ff
-java.util.function.Function internal.checkProgramValidPredicate=crcl.ui.client.PendantClientInner$$Lambda$41/1100475362@68cda0a7
-java.io.File[] internal.cmdSchemaFiles=[Ljava.io.File;@3f40aaa9
-java.util.function.Function internal.checkCommandValidPredicate=crcl.ui.client.PendantClientInner$$Lambda$42/665398832@42c1ac6d
+java.util.List internal.recordedCommandsList=[crcl.base.InitCanonType@147b8fb0, crcl.base.SetLengthUnitsType@68a7511d, crcl.base.SetAngleUnitsType@4096a896, crcl.base.SetRotSpeedType@37292773, crcl.base.SetTransSpeedType@745c49b9, crcl.base.MoveToType@7f17204f, crcl.base.DwellType@70243533, crcl.base.EndCanonType@d03bb23, crcl.base.InitCanonType@1842766b, crcl.base.SetLengthUnitsType@3483be44, crcl.base.SetAngleUnitsType@40677d1b, crcl.base.MessageType@35d68cdc, crcl.base.SetEndEffectorType@3e2c5523, crcl.base.SetRotSpeedType@1774bd3c, crcl.base.SetTransSpeedType@6d31545c, crcl.base.MoveToType@3c757c8, crcl.base.DwellType@b271215, crcl.base.SetTransSpeedType@647c57b, crcl.base.MoveToType@3cb2fda4, crcl.base.DwellType@367c7be7, crcl.base.SetEndEffectorType@2ed21546, crcl.base.DwellType@399293d9, crcl.base.MoveToType@64914aa, crcl.base.DwellType@53bff4c7, crcl.base.MessageType@6df9a3d3, crcl.base.MessageType@4058f9ee, crcl.base.SetRotSpeedType@efa490b, crcl.base.SetTransSpeedType@208557e, crcl.base.MoveToType@5976e8f1, crcl.base.DwellType@24c80141, crcl.base.SetTransSpeedType@363a3c5e, crcl.base.MoveToType@227d5111, crcl.base.DwellType@5795c1ba, crcl.base.SetEndEffectorType@526647ed, crcl.base.DwellType@1c3bc7f5, crcl.base.MoveToType@73197439, crcl.base.DwellType@af8f3f1, crcl.base.MessageType@6ac1846c, crcl.base.MessageType@2887e2ae, crcl.base.MessageType@1087e33b, crcl.base.SetEndEffectorType@5d2deda1, crcl.base.SetRotSpeedType@3ba9e08c, crcl.base.SetTransSpeedType@31d4740, crcl.base.MoveToType@45b6c946, crcl.base.DwellType@2c620891, crcl.base.SetTransSpeedType@40c62840, crcl.base.MoveToType@4b46ddd6, crcl.base.DwellType@705ede84, crcl.base.SetEndEffectorType@38bec893, crcl.base.DwellType@13faf7f3, crcl.base.MoveToType@6b0c72a4, crcl.base.DwellType@6da03bbf, crcl.base.MessageType@23948cc8, crcl.base.MessageType@6715a226, crcl.base.SetRotSpeedType@6f047532, crcl.base.SetTransSpeedType@4e0e8d8, crcl.base.MoveToType@24f3ff2, crcl.base.DwellType@5479ae9f, crcl.base.SetTransSpeedType@451a2c41, crcl.base.MoveToType@6619f8e8, crcl.base.DwellType@17d4cccc, crcl.base.SetEndEffectorType@73b2801c, crcl.base.DwellType@4055400f, crcl.base.MoveToType@61494c9b, crcl.base.DwellType@50ca4ed2, crcl.base.MessageType@371f86b7, crcl.base.MessageType@5da0fd63, crcl.base.MessageType@76264fd8, crcl.base.SetEndEffectorType@74183310, crcl.base.SetRotSpeedType@3f79291a, crcl.base.SetTransSpeedType@21f45b89, crcl.base.MoveToType@6206b66f, crcl.base.DwellType@2d180183, crcl.base.SetTransSpeedType@5255e4d5, crcl.base.MoveToType@16f1b659, crcl.base.DwellType@60d81edd, crcl.base.SetEndEffectorType@52a36a12, crcl.base.DwellType@62e34942, crcl.base.MoveToType@88d7d77, crcl.base.DwellType@2883a44d, crcl.base.MessageType@61b9a8b5, crcl.base.MessageType@19684499, crcl.base.SetRotSpeedType@7a6df406, crcl.base.SetTransSpeedType@63296380, crcl.base.MoveToType@2de6b125, crcl.base.DwellType@28f13608, crcl.base.SetTransSpeedType@110a8753, crcl.base.MoveToType@36a43b5a, crcl.base.DwellType@6b1af787, crcl.base.SetEndEffectorType@304a76a7, crcl.base.DwellType@40a00b7e, crcl.base.MoveToType@6b9e23b5, crcl.base.DwellType@5784578e, crcl.base.MessageType@3498ec97, crcl.base.MessageType@7423fa81, crcl.base.SetRotSpeedType@6ebaec3b, crcl.base.SetTransSpeedType@687855f8, crcl.base.MoveToType@3a86a2e7, crcl.base.DwellType@3b5a9e13, crcl.base.EndCanonType@5a5d30aa, crcl.base.InitCanonType@34888c62, crcl.base.SetLengthUnitsType@536696a9, crcl.base.SetAngleUnitsType@40f85ed6, crcl.base.MessageType@55ba2ac0, crcl.base.MessageType@25a15789, crcl.base.MessageType@42954e4a, crcl.base.SetEndEffectorType@4099a620, crcl.base.SetRotSpeedType@44f168d9, crcl.base.SetTransSpeedType@34c86ed, crcl.base.MoveToType@41918eb6, crcl.base.DwellType@435d45e3, crcl.base.SetTransSpeedType@76f0c2f5, crcl.base.MoveToType@4e5cf655, crcl.base.DwellType@65f20538, crcl.base.SetEndEffectorType@707dbaf0, crcl.base.DwellType@32e257ba, crcl.base.MoveToType@64bb6207, crcl.base.DwellType@1115606d, crcl.base.MessageType@ca2e285, crcl.base.MessageType@2cdd2b2c, crcl.base.SetRotSpeedType@1349cfea, crcl.base.SetTransSpeedType@3248aa85, crcl.base.MoveToType@2a62c42f, crcl.base.DwellType@d283b9e, crcl.base.SetTransSpeedType@713e032a, crcl.base.MoveToType@321845fd, crcl.base.DwellType@7d5b1e79, crcl.base.SetEndEffectorType@32288aa3, crcl.base.DwellType@7182ec91, crcl.base.MoveToType@7e8153b6, crcl.base.DwellType@5b0c22c9, crcl.base.MessageType@2d07c699, crcl.base.MessageType@4b8741cc, crcl.base.MessageType@3fefb7e9, crcl.base.SetEndEffectorType@5cfc0b7, crcl.base.SetRotSpeedType@16effd99, crcl.base.SetTransSpeedType@2505f45d, crcl.base.MoveToType@37de7f48, crcl.base.DwellType@7cd02ffb, crcl.base.SetTransSpeedType@3f479692, crcl.base.MoveToType@7ba45702, crcl.base.DwellType@2b70eb0f, crcl.base.SetEndEffectorType@19ed2434, crcl.base.DwellType@691df91f, crcl.base.MoveToType@6a456a7a, crcl.base.DwellType@46c1dcae, crcl.base.MessageType@367d8cc6, crcl.base.MessageType@30ae4e17, crcl.base.SetRotSpeedType@71f9f4c2, crcl.base.SetTransSpeedType@6354c2a7, crcl.base.MoveToType@1f294923, crcl.base.DwellType@3878c359, crcl.base.SetTransSpeedType@1ba40b2f, crcl.base.MoveToType@67c818c0, crcl.base.DwellType@419344d6, crcl.base.SetEndEffectorType@7434c6f1, crcl.base.DwellType@564c6636, crcl.base.MoveToType@1b187414, crcl.base.DwellType@40f62655, crcl.base.MessageType@12a773f4, crcl.base.MessageType@276fca40, crcl.base.MessageType@7f8fa26d, crcl.base.SetEndEffectorType@e3ae747, crcl.base.SetRotSpeedType@27ab0da7, crcl.base.SetTransSpeedType@7c51a7a6, crcl.base.MoveToType@5ab19097, crcl.base.DwellType@95f40b6, crcl.base.SetTransSpeedType@425e2be, crcl.base.MoveToType@4aa98238, crcl.base.DwellType@1a489a30, crcl.base.SetEndEffectorType@503c9bf2, crcl.base.DwellType@486528d2, crcl.base.MoveToType@2184bff5, crcl.base.DwellType@7fc328ef, crcl.base.MessageType@4b14cfee, crcl.base.MessageType@2ad65de6, crcl.base.SetRotSpeedType@2e29245e, crcl.base.SetTransSpeedType@254d286c, crcl.base.MoveToType@5a00a069, crcl.base.DwellType@65ed4a5c, crcl.base.SetTransSpeedType@5e7ba870, crcl.base.MoveToType@661c5330, crcl.base.DwellType@56e048ae, crcl.base.SetEndEffectorType@69c690d, crcl.base.DwellType@6f662a34, crcl.base.MoveToType@8fdce36, crcl.base.DwellType@5c8c42bf, crcl.base.MessageType@393d9c22, crcl.base.MessageType@675426bb, crcl.base.SetRotSpeedType@1bed819, crcl.base.SetTransSpeedType@6a10ac66, crcl.base.MoveToType@5b3e45fe, crcl.base.DwellType@22c7cf87, crcl.base.EndCanonType@70bbf2d2, crcl.base.InitCanonType@4dd5c985, crcl.base.SetLengthUnitsType@7fe6d93b, crcl.base.SetAngleUnitsType@5c104fc7, crcl.base.MessageType@6d68e413, crcl.base.MessageType@e1291da, crcl.base.EndCanonType@4774ae22, crcl.base.StopMotionType@7061134c, crcl.base.InitCanonType@7fcdefca, crcl.base.SetLengthUnitsType@3200a198, crcl.base.SetAngleUnitsType@7d2c80da, crcl.base.SetRotSpeedType@59ffd0ce, crcl.base.SetTransSpeedType@7e67b356, crcl.base.MoveToType@400a1394, crcl.base.DwellType@3e39f16f, crcl.base.EndCanonType@49cfc0d4, crcl.base.InitCanonType@216df837, crcl.base.SetLengthUnitsType@52f89541, crcl.base.SetAngleUnitsType@4ffa7054, crcl.base.MessageType@3e053703, crcl.base.SetEndEffectorType@70e7ccb4, crcl.base.SetRotSpeedType@66231d74, crcl.base.SetTransSpeedType@6d6d2450, crcl.base.MoveToType@5d97a688]
+java.io.File[] internal.programSchemaFiles=[Ljava.io.File;@2f5eac7e
+java.util.function.Function internal.checkProgramValidPredicate=crcl.ui.client.PendantClientInner$$Lambda$41/1717032521@3931cdad
+java.io.File[] internal.cmdSchemaFiles=[Ljava.io.File;@5d05c610
+java.util.function.Function internal.checkCommandValidPredicate=crcl.ui.client.PendantClientInner$$Lambda$42/680906093@4fc83c44
+crcl.utils.XpathUtils internal.xpu=crcl.utils.XpathUtils@6a37c83e
 double internal.jogRotSpeed=3.0
 java.util.List internal.poseList=[]
-java.math.BigDecimal internal.jointTol=0.6
-crcl.base.AngleUnitEnumType internal.angleType=RADIAN
-crcl.base.LengthUnitEnumType internal.lengthUnit=MILLIMETER
-java.math.BigInteger internal.cmdId=1
-crcl.base.PoseToleranceType internal.expectedIntermediatePoseTolerance=crcl.base.PoseToleranceType@3751fde6
-crcl.base.PoseToleranceType internal.expectedEndPoseTolerance=crcl.base.PoseToleranceType@329cab33
-long internal.waitForDoneDelay=50
 int internal.maxPoseListLength=1000
-# could not invokegetOutgoingProgramIndex
-# could not invokegetOutgoingProgramLength
+java.math.BigInteger internal.outgoingProgramIndex=7
+crcl.base.PoseToleranceType internal.expectedIntermediatePoseTolerance=crcl.base.PoseToleranceType@5ddc2c70
+java.math.BigDecimal internal.jointTol=0.6
+crcl.base.AngleUnitEnumType internal.angleType=DEGREE
+crcl.base.LengthUnitEnumType internal.lengthUnit=MILLIMETER
+java.math.BigInteger internal.outgoingProgramLength=90
 # could not invokegetJointMoveAccel
 # could not invokegetJointMoveSpeed
+java.math.BigInteger internal.cmdId=8
+crcl.base.PoseToleranceType internal.expectedEndPoseTolerance=crcl.base.PoseToleranceType@6d4ffdf3
+long internal.waitForDoneDelay=50
 java.lang.Class internal.class=class crcl.ui.client.PendantClientInner
