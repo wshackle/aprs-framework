@@ -1,5 +1,5 @@
 #
-#Fri Feb 03 10:06:30 EST 2017
+#Tue Feb 21 17:03:56 EST 2017
 startup.pddl.objectview=true
 startup.robotcrclfanucserver=true
 startup.connectdatabase=true
@@ -16,5 +16,5 @@ startup.robotcrclmotomanserver=false
 startup.robotcrclclient=true
 startup.pddl.planner=true
 startup.exploreGraphDb=true
-STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
+STARTUP_ACTIVE_WIN=PDDL_EXECUTOR_WINDOW
 startup.pddl.executor=true

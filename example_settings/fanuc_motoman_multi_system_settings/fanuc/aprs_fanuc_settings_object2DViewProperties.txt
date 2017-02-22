@@ -1,10 +1,10 @@
 #
-#Fri Feb 03 10:06:30 EST 2017
+#Tue Feb 21 17:03:56 EST 2017
 simulated=false
 --visionport=5001
 showrotations=false
 connected=true
-items=sku_part_large_gear,0.0,525.92,144.3,0.97,P,sku_part_large_gear,0.0,569.05,47.96,0.91,P,sku_part_medium_gear,0.0,588.85,-154.16,0.88,P,sku_part_medium_gear,0.0,510.1,-157.63,0.86,P,sku_part_medium_gear,0.0,506.44,-79.28,0.81,P,sku_part_medium_gear,0.0,585.65,-74.89,0.69,P,sku_large_gear_vessel,2.05,548.57,90.05,0.76,PT,sku_medium_gear_vessel,0.05,546.68,-115.11,0.83,PT,sku_kit_m2l1_vessel,-0.03,360.77,-108.0,0.98,KT,sku_kit_m2l1_vessel,-0.01,355.84,109.37,0.88,KT,\n
+items=sku_part_large_gear,0.0,534.32,168.31,0.92,P,sku_part_large_gear,0.0,532.73,60.37,100.0,P,sku_part_medium_gear,0.0,581.08,-74.67,0.78,P,sku_part_medium_gear,0.0,507.16,-72.82,0.72,P,sku_part_medium_gear,0.0,578.77,-149.04,0.6,P,sku_part_medium_gear,0.0,504.94,-147.15,0.58,P,sku_large_gear_vessel,-0.02,531.6,113.34,0.98,PT,sku_medium_gear_vessel,-0.01,541.66,-109.57,0.98,PT,sku_kit_m2l1_vessel,-0.03,354.37,95.91,0.71,KT,sku_kit_m2l1_vessel,-0.03,362.42,-114.64,0.98,KT,\n
 trackcurrentpos=true
 --visionhost=agility.el.nist.gov
 displayAxis=POS_Y_NEG_X
