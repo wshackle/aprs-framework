@@ -2171,6 +2171,14 @@ EquivalentClasses(:Slot ObjectIntersectionOf(
   DataSomeValuesFrom(:hasSlot_IsOccupied xsd:boolean)
   DataAllValuesFrom (:hasSlot_IsOccupied xsd:boolean)))
 
+Declaration(DataProperty(:hasSlot_ID))
+DataPropertyDomain(:hasSlot_ID :Slot)
+DataPropertyRange(:hasSlot_ID xsd:integer)
+FunctionalDataProperty(:hasSlot_ID)
+EquivalentClasses(:Slot ObjectIntersectionOf(
+  DataSomeValuesFrom(:hasSlot_ID xsd:integer)
+  DataAllValuesFrom (:hasSlot_ID xsd:integer)))
+
 
 
 Declaration(Class(:SolidObject))
