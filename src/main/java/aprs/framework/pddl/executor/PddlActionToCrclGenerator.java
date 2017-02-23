@@ -478,6 +478,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         lastTakenPart = partName;
     }
 
+    //-- contains all the slots that do not have a part
+    private ArrayList nonFilledSlotList = new ArrayList();
     /**
      * @brief Inspects a finished kit to check if it is complete
      * @param action
@@ -498,22 +500,54 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         
         int partDesignPartCount = getPartDesignPartCount(kitName);
         System.out.println(kitName+" should contain "+partDesignPartCount+" parts.");
-        checkPartInSlot(inspectionMap);
+        int nbOfPartsInKit=checkPartsInSlot(inspectionMap);
+        
+        if (nbOfPartsInKit==partDesignPartCount)
+            System.out.println("Kit is complete");
+        else {
+            int nbOfMissingParts = partDesignPartCount - nbOfPartsInKit;
+            System.out.println("Kit is missing " + nbOfMissingParts + " part(s)");
+            if (!nonFilledSlotList.isEmpty()) {
+                System.out.println("---The following slots are empty:");
+                System.out.println(nonFilledSlotList);
+            }
+        }
         //printMap(inspectionMap);
         inspectionMap.clear();
+        nonFilledSlotList.clear();
     }
 
-    private  Boolean checkPartInSlot(Map mp) throws SQLException{
-        Boolean partIsInSlot = false;
+    /**
+     * @brief Checks that parts are within the vicinity of their corresponding slots
+     * @param mp A JAVA hashmap that has the part as the key and the slot as the value
+     * @return 
+     * @throws SQLException 
+     */
+    private  int checkPartsInSlot(Map mp) throws SQLException{
+        int numberOfPartsInKitTray = 0;
         Iterator it = mp.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry) it.next();
-            PoseType posePart = getPartPose(pair.getKey().toString());
+            String partName=pair.getKey().toString();
+            String slotName=pair.getValue().toString();
+            if (checkPartInSlot(partName,slotName))
+                numberOfPartsInKitTray++;
+            else
+                nonFilledSlotList.add(slotName);
+            
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+        return numberOfPartsInKitTray;
+    }
+    
+    private  Boolean checkPartInSlot(String partName, String slotName) throws SQLException{
+        Boolean isPartInSlot = false;
+        PoseType posePart = getPartPose(partName);
             posePart = correctPose(posePart);
             BigDecimal partX = posePart.getPoint().getX();
             BigDecimal partY = posePart.getPoint().getY();
             
-            PoseType poseSlot = getPartPose(pair.getValue().toString());
+            PoseType poseSlot = getPartPose(slotName);
             poseSlot = correctPose(poseSlot);
             BigDecimal slotX = poseSlot.getPoint().getX();
             BigDecimal slotY = poseSlot.getPoint().getY();
@@ -527,18 +561,25 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             BigDecimal res = new BigDecimal(Math.sqrt(addition.doubleValue()));
             BigDecimal finalres=res.add(new BigDecimal(addition.subtract(x.multiply(x)).doubleValue() / (x.doubleValue() * 2.0)));
             
-            //dist = Math.sqrt(Math.pow((partX - slotX),2) + Math.pow((partY - slotY),2));
-            
-            System.out.println("----- Part "+pair.getKey().toString()+" : ("+partX+","+partY+")");
-            System.out.println("----- Slot "+pair.getValue().toString()+" : ("+slotX+","+slotY+")");
+            System.out.println("----- Part "+partName+" : ("+partX+","+partY+")");
+            System.out.println("----- Slot "+slotName+" : ("+slotX+","+slotY+")");
             System.out.println("----- Distance : "+finalres);
+            System.out.println();
             
-            it.remove(); // avoids a ConcurrentModificationException
-        }
-        
-        
-        return partIsInSlot;
+            // compare finalres with a specified tolerance value of 5 mm
+            BigDecimal tolerance;
+            tolerance = new BigDecimal("5");
+            //create int object
+            int compresult;
+            compresult = finalres.compareTo(tolerance);
+
+    
+            if( compresult == -1 || compresult == 0)
+                isPartInSlot=true;
+            
+            return isPartInSlot;
     }
+    
     private static void printMap(Map mp) {
         Iterator it = mp.entrySet().iterator();
         while (it.hasNext()) {

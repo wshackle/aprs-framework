@@ -1,5 +1,5 @@
 #
-#Wed Feb 22 15:54:02 EST 2017
+#Thu Feb 23 00:57:33 EST 2017
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.user=fanuc-demo
 NEO4J.localhost_4000.name=neo4j
 NEO4J.ying-220.mxnet.mel.nist.gov_7494.passwd=password
@@ -41,6 +41,6 @@ NEO4J.localhost_7480.user=neo4j
 --showgui=true
 NEO4J.localhost.port=7494
 NEO4J.localhost_7494.user=neo4j
---dbuser=fanuc-demo
 NEO4J.localhost_7486.user=neo4j
+--dbuser=fanuc-demo
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com.port=24789
