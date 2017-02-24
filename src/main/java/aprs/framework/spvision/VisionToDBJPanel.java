@@ -1293,6 +1293,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             outItem.emptySlotsList = transformList(inItem.emptySlotsList, transform);
             outItem.totalSlotsCount = inItem.totalSlotsCount;
             outItem.timestamp = inItem.timestamp;
+            outItem.maxSlotDist = inItem.maxSlotDist;
             out.add(outItem);
         }
         return out;

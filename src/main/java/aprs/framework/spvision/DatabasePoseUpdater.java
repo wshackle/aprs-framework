@@ -66,7 +66,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private Connection con;
     private PreparedStatement update_statement;
-//    private PreparedStatement pre_vision_clean_statement;
+    private PreparedStatement pre_vision_clean_statement;
     private PreparedStatement get_tray_slots_statement;
     private PreparedStatement update_parts_tray_statement;
     private PreparedStatement update_kit_tray_statement;
@@ -310,6 +310,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
         queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
         update_statement = con.prepareStatement(updateStatementString);
         updateKitTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_KT_POSE).getQuery();
+        preVisionCleanStatementString = queriesMap.get(DbQueryEnum.PRE_VISION_CLEAN_DB).getQuery();
+        if(null != preVisionCleanStatementString) {
+            pre_vision_clean_statement = con.prepareStatement(preVisionCleanStatementString);
+        }
         if (updateKitTrayStatementString != null && updateKitTrayStatementString.length() > 0) {
             update_kit_tray_statement = con.prepareStatement(updateKitTrayStatementString);
         } else {
@@ -721,7 +725,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
             double x = offsetItem.x;
             double y = offsetItem.y;
             double angle = normAngle(tray.rotation + rotationOffset);
-
+            double offsetMag = offsetItem.mag();
+            if(tray.maxSlotDist < offsetMag) {
+                tray.maxSlotDist = offsetMag;
+            }
             DetectedItem item = new DetectedItem(name, 0,
                     tray.x + x * Math.cos(angle) - y * Math.sin(angle),
                     tray.y + x * Math.sin(angle) + y * Math.cos(angle)
@@ -863,11 +870,17 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return bestIndexRet;
     }
 
+    private int updateCount = 0;
+    
     public List<DetectedItem> updateVisionList(List<DetectedItem> inList,
             boolean addRepeatCountsToName) {
         List<DetectedItem> itemsToVerify = new ArrayList<>();
         List<DetectedItem> returnedList = new ArrayList<>();
         try {
+            if(updateCount < 2) {
+                pre_vision_clean_statement.execute();
+            }
+            updateCount++;
             List<DetectedItem> partsTrays
                     = inList.stream()
                             .filter((DetectedItem item) -> "PT".equals(item.type))
@@ -887,11 +900,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     ci.name = ci.name.substring(4);
                 }
                 if ("P".equals(ci.type)) {
-                    if (ci.insideKitTray || inside(kitTrays, ci)) {
+                    if (ci.insideKitTray || inside(kitTrays, ci,10)) {
                         ci.name = ci.name + "_in_kt";
                         ci.fullName = ci.name;
                         ci.insideKitTray = true;
-                    } else if (ci.insidePartsTray || inside(partsTrays, ci)) {
+                    } else if (ci.insidePartsTray || inside(partsTrays, ci,68)) {
                         ci.name = ci.name + "_in_pt";
                         ci.fullName = ci.name;
                         ci.insidePartsTray = true;
@@ -1160,8 +1173,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return returnedList;
     }
 
-    private static boolean inside(List<DetectedItem> trays, DetectedItem ci) {
-        return trays.stream().anyMatch((DetectedItem item) -> item.dist(ci) < 65.0);
+    private static boolean inside(List<DetectedItem> trays, DetectedItem ci, double threshhold) {
+        return trays.stream().anyMatch((DetectedItem tray) -> tray.dist(ci) < tray.maxSlotDist + threshhold);
     }
 
     public void deletePose(String name) throws SQLException {

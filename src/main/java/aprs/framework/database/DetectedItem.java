@@ -71,6 +71,7 @@ public class DetectedItem extends PM_CARTESIAN {
     public DetectedItem tray;
     public long emptySlotsCount;
     public long totalSlotsCount;
+    public double maxSlotDist;
     public List<DetectedItem> emptySlotsList = new ArrayList<>();
     public int kitTrayNum;
     public String slotForSkuName;
