@@ -954,12 +954,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
             long t0_millis = System.currentTimeMillis();
             int updates = 0;
             synchronized (this) {
-                if (delOnUpdate) {
-                    for (DetectedItem item : list) {
-                        deletePose(item.fullName);
-                        deletePose(item.name);
-                    }
-                }
+//                if (delOnUpdate) {
+//                    for (DetectedItem item : list) {
+//                        deletePose(item.fullName);
+//                        deletePose(item.name);
+//                    }
+//                }
                 if (null == update_statement) {
                     throw new IllegalStateException("update_statement == null");
                 }
@@ -997,7 +997,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         }
                     }
                     if (addRepeatCountsThisItem) {
-                        ci.repeats = repeatsMap.compute(ci.fullName, (String name, Integer reps) -> (reps != null) ? (reps + 1) : 0);
+                        ci.repeats = repeatsMap.compute(ci.name, (String name, Integer reps) -> (reps != null) ? (reps + 1) : 0);
                         ci.fullName = ci.name + "_" + (ci.repeats + 1);
                     }
                     returnedList.add(ci);
