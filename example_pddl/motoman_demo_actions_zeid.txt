@@ -8,7 +8,7 @@
 (take-part part_large_gear_in_pt_2 part_small_gear)
 (place-part empty_slot_for_large_gear_in_kit_s2l2_vessel_2)
 (look-for-parts)
-(inspect-kit kit_lg2small2_1)
+(inspect-kit kit_s2l2_vessel_1)
 (take-part part_small_gear_in_pt_1)
 (place-part empty_slot_for_small_gear_in_kit_s2l2_vessel_1)
 (take-part part_small_gear_in_pt_2)
@@ -18,5 +18,5 @@
 (take-part part_large_gear_in_pt_2)
 (place-part empty_slot_for_large_gear_in_kit_s2l2_vessel_2)
 (look-for-parts)
-(inspect-kit kit_lg2small2_2)
+(inspect-kit kit_s2l2_vessel_2)
 

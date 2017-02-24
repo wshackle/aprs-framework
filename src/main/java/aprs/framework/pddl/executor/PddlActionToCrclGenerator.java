@@ -64,7 +64,12 @@ import java.util.function.Consumer;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -82,6 +87,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private DbSetup dbSetup;
     private boolean closeDbConnection = true;
     private QuerySet qs;
+    //private List<String> inspectionList=new ArrayList();
+    Map<String, String> inspectionMap = new HashMap<String, String>();
 
     private List<PositionMap> positionMaps = null;
 
@@ -471,7 +478,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         lastTakenPart = partName;
     }
 
-    //-- zeid
+    //-- contains all the slots that do not have a part
+    private ArrayList nonFilledSlotList = new ArrayList();
+    /**
+     * @brief Inspects a finished kit to check if it is complete
+     * @param action
+     * @param out
+     * @throws IllegalStateException
+     * @throws SQLException 
+     */
     public void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
@@ -482,10 +497,98 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setMessage("inspect-kit " + kitName);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
-        System.out.println("--- inspect kit " + kitName);
+        
         int partDesignPartCount = getPartDesignPartCount(kitName);
+        System.out.println(kitName+" should contain "+partDesignPartCount+" parts.");
+        int nbOfPartsInKit=checkPartsInSlot(inspectionMap);
+        
+        if (nbOfPartsInKit==partDesignPartCount)
+            System.out.println("Kit is complete");
+        else {
+            int nbOfMissingParts = partDesignPartCount - nbOfPartsInKit;
+            System.out.println("Kit is missing " + nbOfMissingParts + " part(s)");
+            if (!nonFilledSlotList.isEmpty()) {
+                System.out.println("---The following slots are empty:");
+                System.out.println(nonFilledSlotList);
+            }
+        }
+        //printMap(inspectionMap);
+        inspectionMap.clear();
+        nonFilledSlotList.clear();
     }
 
+    /**
+     * @brief Checks that parts are within the vicinity of their corresponding slots
+     * @param mp A JAVA hashmap that has the part as the key and the slot as the value
+     * @return 
+     * @throws SQLException 
+     */
+    private  int checkPartsInSlot(Map mp) throws SQLException{
+        int numberOfPartsInKitTray = 0;
+        Iterator it = mp.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            String partName=pair.getKey().toString();
+            String slotName=pair.getValue().toString();
+            if (checkPartInSlot(partName,slotName))
+                numberOfPartsInKitTray++;
+            else
+                nonFilledSlotList.add(slotName);
+            
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+        return numberOfPartsInKitTray;
+    }
+    
+    private  Boolean checkPartInSlot(String partName, String slotName) throws SQLException{
+        Boolean isPartInSlot = false;
+        PoseType posePart = getPartPose(partName);
+            posePart = correctPose(posePart);
+            BigDecimal partX = posePart.getPoint().getX();
+            BigDecimal partY = posePart.getPoint().getY();
+            
+            PoseType poseSlot = getPartPose(slotName);
+            poseSlot = correctPose(poseSlot);
+            BigDecimal slotX = poseSlot.getPoint().getX();
+            BigDecimal slotY = poseSlot.getPoint().getY();
+            
+            //-- compute distance between 2 points
+            BigDecimal x = partX.subtract(slotX);
+            BigDecimal y = partY.subtract(slotY);
+            BigDecimal powx = x.pow(2);
+            BigDecimal powy = y.pow(2);
+            BigDecimal addition = powx.add(powy);
+            BigDecimal res = new BigDecimal(Math.sqrt(addition.doubleValue()));
+            BigDecimal finalres=res.add(new BigDecimal(addition.subtract(x.multiply(x)).doubleValue() / (x.doubleValue() * 2.0)));
+            
+            System.out.println("----- Part "+partName+" : ("+partX+","+partY+")");
+            System.out.println("----- Slot "+slotName+" : ("+slotX+","+slotY+")");
+            System.out.println("----- Distance : "+finalres);
+            System.out.println();
+            
+            // compare finalres with a specified tolerance value of 5 mm
+            BigDecimal tolerance;
+            tolerance = new BigDecimal("5");
+            //create int object
+            int compresult;
+            compresult = finalres.compareTo(tolerance);
+
+    
+            if( compresult == -1 || compresult == 0)
+                isPartInSlot=true;
+            
+            return isPartInSlot;
+    }
+    
+    private static void printMap(Map mp) {
+        Iterator it = mp.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            System.out.println(pair.getKey() + " = " + pair.getValue());
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+    }
+    
     private int takePartArgIndex;
 
     /**
@@ -528,6 +631,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             System.out.println(markerMsg + " at " + new Date());
         });
         lastTakenPart = partName;
+        //inspectionList.add(partName);
+        inspectionMap.put(partName, null);
     }
 
     public PoseType getPartPose(String partname) throws SQLException {
@@ -889,7 +994,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
 
-        final String msg = "place part " + getLastTakenPart() + " in " + slotName;
+        final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         placePartByPose(out, pose);
         final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
         addMarkerCommand(out, msg,
@@ -898,8 +1003,20 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     ppi.setWrapper(wrapper);
                     notifyPlacePartConsumers(ppi);
                 }));
+        String keyByValue = getKeyByValue(inspectionMap, null);
+        inspectionMap.put(keyByValue,slotName);
+        //inspectionList.add(slotName);
+        //inspectionMap.ge
     }
 
+    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
+        for (Entry<T, E> entry : map.entrySet()) {
+            if (Objects.equals(value, entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
     private VectorType zAxis = vector(0.0, 0.0, -1.0);
 
     public void placePartByPose(List<MiddleCommandType> cmds, PoseType pose) {

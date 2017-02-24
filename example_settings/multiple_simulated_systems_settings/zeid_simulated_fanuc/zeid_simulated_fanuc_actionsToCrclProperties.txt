@@ -1,11 +1,13 @@
 #
-#Thu Feb 16 11:45:40 EST 2017
+#Thu Feb 23 00:56:33 EST 2017
+takePartArgIndex=0
 lookDwellTime=3.0
 approachZOffset=50.0
 manualPartNames=[null, null, null, null, null, null, null, null, null, null]
 rotSpeed=30.0
-slowTransSpeed=75
 fastTransSpeed=200.0
+slowTransSpeed=75
+placePartSlotArgIndex=0
 settleDwellTime=0.1
 rpy=175.0,0.0,0.0
 lookForXYZ=0.0,0.0,0.0
