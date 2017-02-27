@@ -50,7 +50,7 @@ public class QuerySet implements QuerySetInterface {
     public Connection getDbConnection() {
         return dbConnection;
     }
-    
+
     public boolean isConnected() {
         try {
             return !closed && null != dbConnection && !dbConnection.isClosed();
@@ -59,17 +59,17 @@ public class QuerySet implements QuerySetInterface {
         }
         return false;
     }
-    
+
     public QuerySet(
             DbType dbtype,
             java.sql.Connection con,
             Map<DbQueryEnum, DbQueryInfo> queriesMap) throws SQLException {
         this.dbtype = dbtype;
         this.dbConnection = con;
-        if(null == con) {
+        if (null == con) {
             throw new IllegalArgumentException("connection is null");
         }
-        if(con.isClosed()) {
+        if (con.isClosed()) {
             throw new IllegalArgumentException("connection is already closed");
         }
         if (null == queriesMap) {
@@ -87,6 +87,10 @@ public class QuerySet implements QuerySetInterface {
         if (null == getPartDesignCountQueryInfo) {
             throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_PARTDESIGN_PART_COUNT);
         }
+        this.getAllPartsInKtQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_PARTS_IN_KT);
+        if (null == getAllPartsInKtQueryInfo) {
+            throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_ALL_PARTS_IN_KT);
+        }
         String getPoseQueryString = getQueryInfo.getQuery();
         if (null == getPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain getPose");
@@ -98,7 +102,14 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("queriesMap does not contain getPartDesignPartCountQueryString");
         }
         getPartDesignPartCountStatement = con.prepareStatement(getPartDesignPartCountQueryString);
-        
+
+        //-- getAllPartsInKtStatement
+        String getAllPartsInKtQueryString = getAllPartsInKtQueryInfo.getQuery();
+        if (null == getAllPartsInKtQueryString) {
+            throw new IllegalArgumentException("queriesMap does not contain getAllPartsInKtQueryString");
+        }
+        getAllPartsInKtStatement = con.prepareStatement(getAllPartsInKtQueryString);
+
         String setPoseQueryString = setQueryInfo.getQuery();
         if (null == setPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain setPose");
@@ -111,6 +122,7 @@ public class QuerySet implements QuerySetInterface {
                 this.getAllTrayDesignsStatement = con.prepareStatement(getAllTrayDesignsQueryString);
             }
         }
+
         DbQueryInfo getSingleTraySlogDesignQueryInfo = queriesMap.get(DbQueryEnum.GET_SINGLE_TRAY_SLOT_DESIGN);
         if (null != getSingleTraySlogDesignQueryInfo) {
             String getSingleTrayDesignQueryString = getSingleTraySlogDesignQueryInfo.getQuery();
@@ -145,8 +157,8 @@ public class QuerySet implements QuerySetInterface {
     private java.sql.PreparedStatement getSingleTrayDesignStatement;
     private java.sql.PreparedStatement setSingleTrayDesignStatement;
     private java.sql.PreparedStatement newSingleTrayDesignStatement;
-    
-    
+    private java.sql.PreparedStatement getAllPartsInKtStatement;
+
     private boolean closed = false;
 
     private String getQueryFormat() {
@@ -201,6 +213,7 @@ public class QuerySet implements QuerySetInterface {
         stmnt.setInt(index, value);
 
     }
+
     private void setQueryDoubleParam(java.sql.PreparedStatement stmnt,
             DbQueryInfo queryInfo,
             DbParamTypeEnum type,
@@ -226,7 +239,7 @@ public class QuerySet implements QuerySetInterface {
         String qString = queryInfo.getQuery();
         if (null != paramTypes) {
             for (int i = 0; i < paramTypes.length; i++) {
-                qString = qString.replace(String.format(queryFormat, i+1), map.get(i + 1).toString());
+                qString = qString.replace(String.format(queryFormat, i + 1), map.get(i + 1).toString());
             }
         }
         return qString;
@@ -275,8 +288,11 @@ public class QuerySet implements QuerySetInterface {
         return getQueryResultString(rs, getQueryInfo, type);
     }
 
-    
-        private boolean debug;
+    private String getAllPartsInKtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+        return getQueryResultString(rs, getQueryInfo, type);
+    }
+
+    private boolean debug;
 
     /**
      * Get the value of debug
@@ -296,6 +312,37 @@ public class QuerySet implements QuerySetInterface {
         this.debug = debug;
     }
 
+    /**
+     * @brief get all parts_in_kt from the database
+     * @return a list of all the parts that has "parts_in_kt" in their names
+     */
+    public ArrayList<String> getAllPartsInKt(String name) throws SQLException {
+        ArrayList<String> partsInKtList = new ArrayList();
+        if (closed) {
+            throw new IllegalStateException("QuerySet already closed.");
+        }
+
+        Map<Integer, Object> map = new TreeMap<>();
+        DbQueryInfo getAllPartsInKtQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_PARTS_IN_KT);
+        setQueryStringParam(getAllPartsInKtStatement, getAllPartsInKtQueryInfo, DbParamTypeEnum.NAME, name, map);
+        String simQuery = createExpectedQueryString(getAllPartsInKtQueryInfo, map);
+        //System.out.println("simQuery = " + simQuery);
+        if (debug) {
+            System.out.println("simQuery = " + simQuery);
+        }
+
+        try (ResultSet rs = getAllPartsInKtStatement.executeQuery()) {
+            //int c = 0;
+            while (rs.next()) {
+                //c++;
+                String nameCheckString = getAllPartsInKtQueryResultString(rs, DbParamTypeEnum.NAME);
+                //System.out.println("nameCheckString = " + nameCheckString);
+                partsInKtList.add(nameCheckString);
+            }
+        }
+        return partsInKtList;
+    }
+
     public int getPartDesignPartCount(String name) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
@@ -309,17 +356,17 @@ public class QuerySet implements QuerySetInterface {
         if (debug) {
             System.out.println("simQuery = " + simQuery);
         }
-        
+
         try (ResultSet rs = getPartDesignPartCountStatement.executeQuery()) {
             if (rs.next()) {
-                count=rs.getInt(1);
+                count = rs.getInt(1);
             } else {
                 throw new IllegalStateException("Database returned empty ResultSet for query to getPartDesignPartCount for name=" + name + ",\n   simQuery=" + simQuery);
             }
         }
         return count;
     }
-    
+
     @Override
     public PoseType getPose(String name) throws SQLException {
         if (closed) {
@@ -331,49 +378,49 @@ public class QuerySet implements QuerySetInterface {
         setQueryStringParam(getPoseStatement, getPoseQueryInfo, DbParamTypeEnum.NAME, name, map);
 //        getPoseStatement.setString(1, name);
         String simQuery = createExpectedQueryString(getPoseQueryInfo, map);
-        if(debug) {
+        if (debug) {
             System.out.println("simQuery = " + simQuery);
         }
         try (ResultSet rs = getPoseStatement.executeQuery()) {
             if (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
-                    if(debug) {
+                    if (debug) {
                         System.out.println("j = " + j);
                     }
                     String cname = meta.getColumnName(j);
-                    if(debug) {
+                    if (debug) {
                         System.out.println("cname = " + cname);
                     }
                     String type = meta.getColumnTypeName(j);
-                    if(debug) {
+                    if (debug) {
                         System.out.println("type = " + type);
                     }
                     Object o = rs.getObject(j);
-                    if(debug) {
+                    if (debug) {
                         System.out.println("o = " + o);
                     }
                 }
                 String nameCheckString = getPoseQueryResultString(rs, DbParamTypeEnum.NAME);
-                if(debug) {
+                if (debug) {
                     System.out.println("nameCheckString = " + nameCheckString);
                 }
                 if (!nameCheckString.equals(name)) {
                     throw new IllegalStateException("returned name " + nameCheckString + " does not match requested name " + name);
                 }
                 String xString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.X));
-                if(debug) {
+                if (debug) {
                     System.out.println("xString = " + xString);
                 }
                 PointType point = new PointType();
                 point.setX(new BigDecimal(xString));
                 String yString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Y));
-                if(debug) {
+                if (debug) {
                     System.out.println("yString = " + yString);
                 }
                 point.setY(new BigDecimal(yString));
                 String zString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Z));
-                if(debug) {
+                if (debug) {
                     System.out.println("zString = " + zString);
                 }
                 if (null != zString) {
@@ -384,40 +431,40 @@ public class QuerySet implements QuerySetInterface {
                 pose.setPoint(point);
                 VectorType xAxis = new VectorType();
                 String vxiString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXI));
-                if(debug) {
+                if (debug) {
                     System.out.println("vxiString = " + vxiString);
                 }
                 xAxis.setI(new BigDecimal(vxiString));
                 String vxjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXJ));
-                if(debug) {
+                if (debug) {
                     System.out.println("vxiString = " + vxjString);
                 }
                 xAxis.setJ(new BigDecimal(vxjString));
                 String vxkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXK));
-                if(debug) {
+                if (debug) {
                     System.out.println("vxkString = " + vxkString);
                 }
                 xAxis.setK(new BigDecimal(vxkString));
                 pose.setXAxis(xAxis);
                 VectorType zAxis = new VectorType();
                 String vziString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZI));
-                if(debug) {
+                if (debug) {
                     System.out.println("vziString = " + vziString);
                 }
                 zAxis.setI(new BigDecimal(vziString));
                 String vzjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZJ));
-                if(debug) {
+                if (debug) {
                     System.out.println("vziString = " + vzjString);
                 }
                 zAxis.setJ(new BigDecimal(vzjString));
                 String vzkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZK));
-                if(debug) {
+                if (debug) {
                     System.out.println("vzkString = " + vzkString);
                 }
                 zAxis.setK(new BigDecimal(vzkString));
                 pose.setZAxis(zAxis);
             } else {
-                throw new IllegalStateException("Database returned empty ResultSet for query to getPose for name=" + name+", simQuery="+simQuery);
+                throw new IllegalStateException("Database returned empty ResultSet for query to getPose for name=" + name + ", simQuery=" + simQuery);
             }
 //            if (rs.next()) {
 //                String nameCheckString = rs.getString(1);
@@ -438,7 +485,7 @@ public class QuerySet implements QuerySetInterface {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-        if(null == setSingleTrayDesignStatement) {
+        if (null == setSingleTrayDesignStatement) {
             throw new IllegalStateException("null == getAllTrayDesignsStatement");
         }
         List<TraySlotDesign> list = new ArrayList<>();
@@ -451,12 +498,12 @@ public class QuerySet implements QuerySetInterface {
         setQueryDoubleParam(setSingleTrayDesignStatement, setSingleTraySlotDesignQueryInfo, DbParamTypeEnum.Y_SLOT_OFFSET, tsd.getY_OFFSET(), map);
         setSingleTrayDesignStatement.execute();
     }
-    
+
     public void newSingleTraySlotDesign(TraySlotDesign tsd) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-        if(null == newSingleTrayDesignStatement) {
+        if (null == newSingleTrayDesignStatement) {
             throw new IllegalStateException("null == getAllTrayDesignsStatement");
         }
         List<TraySlotDesign> list = new ArrayList<>();
@@ -471,12 +518,12 @@ public class QuerySet implements QuerySetInterface {
         System.out.println("simQuery = " + newQuery);
         newSingleTrayDesignStatement.execute();
     }
-    
+
     public List<TraySlotDesign> getSingleTraySlotDesign(String partDesignName, String trayDesignName) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-        if(null == getSingleTrayDesignStatement) {
+        if (null == getSingleTrayDesignStatement) {
             throw new IllegalStateException("null == getAllTrayDesignsStatement");
         }
         List<TraySlotDesign> list = new ArrayList<>();
@@ -524,12 +571,11 @@ public class QuerySet implements QuerySetInterface {
         return list;
     }
 
-    
     public List<TraySlotDesign> getAllTraySlotDesigns() throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-        if(null == getAllTrayDesignsStatement) {
+        if (null == getAllTrayDesignsStatement) {
             throw new IllegalStateException("null == getAllTrayDesignsStatement");
         }
         List<TraySlotDesign> list = new ArrayList<>();
@@ -586,23 +632,23 @@ public class QuerySet implements QuerySetInterface {
             getPoseStatement.close();
             getPoseStatement = null;
         }
-        if(null != setPoseStatement) {
+        if (null != setPoseStatement) {
             setPoseStatement.close();
             setPoseStatement = null;
         }
-        if(null != getAllTrayDesignsStatement) {
+        if (null != getAllTrayDesignsStatement) {
             getAllTrayDesignsStatement.close();
             getAllTrayDesignsStatement = null;
         }
-        if(null != getSingleTrayDesignStatement) {
+        if (null != getSingleTrayDesignStatement) {
             getSingleTrayDesignStatement.close();
             getSingleTrayDesignStatement = null;
         }
-        if(null != setSingleTrayDesignStatement) {
+        if (null != setSingleTrayDesignStatement) {
             setSingleTrayDesignStatement.close();
             setSingleTrayDesignStatement = null;
         }
-        if(null != newSingleTrayDesignStatement) {
+        if (null != newSingleTrayDesignStatement) {
             newSingleTrayDesignStatement.close();
             newSingleTrayDesignStatement = null;
         }
@@ -621,6 +667,7 @@ public class QuerySet implements QuerySetInterface {
     private final DbQueryInfo setQueryInfo;
     private final DbQueryInfo getQueryInfo;
     private final DbQueryInfo getPartDesignCountQueryInfo;
+    private final DbQueryInfo getAllPartsInKtQueryInfo;
 
     private void setPoseQueryStringParam(DbParamTypeEnum type, String value, Map<Integer, Object> map) throws SQLException {
         setQueryStringParam(setPoseStatement, setQueryInfo, type, value, map);
@@ -635,12 +682,12 @@ public class QuerySet implements QuerySetInterface {
 
     private static String toSku(String name) {
         String sku = name;
-        if(!sku.startsWith("sku_")) {
-            sku = "sku_"+sku;
+        if (!sku.startsWith("sku_")) {
+            sku = "sku_" + sku;
         }
         return sku;
     }
-    
+
     //TODO-
     @Override
     public void setPose(String name, PoseType pose) throws SQLException {

@@ -1,0 +1,3 @@
+#params=NAME(1),
+#results={PART_IN_KIT}
+MATCH (n:Part) where n.name STARTS WITH {1} RETURN n.name as name

@@ -533,14 +533,37 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private int checkPartsInSlot(Map mp) throws SQLException {
         int numberOfPartsInKitTray = 0;
         Iterator it = mp.entrySet().iterator();
+        Boolean hasAtLeastOnePartInSlot = false;
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry) it.next();
             String partName = pair.getKey().toString();
             String slotName = pair.getValue().toString();
-            if (checkPartInSlot(partName, slotName)) {
+            //-- we need to change part_medium_gear_in_pt_1 to part_medium_gear_in_kt_1, etc
+            //-- search the database for all parts that start with part_medium_gear_in_kt
+            String tmpPartName = partName.replace("in_pt", "in_kt");
+            int indexLastUnderscore = tmpPartName.lastIndexOf("_");
+            String partInKitName = tmpPartName.substring(0, indexLastUnderscore);
+            // System.out.println("----- tmpPartInKitName= " + partInKitName);
+
+            List<String> partsInKtList = new ArrayList<>(getAllPartsInKt(partInKitName));
+
+            //-- read partsInKtList and check if at least one partInKt is in a given slot
+            //System.out.println("--- size: "+partsInKtList.size());
+            for (int i = 0; i < partsInKtList.size(); i++) {
+                //System.out.println("-----partInKt: "+partsInKtList.get(i));
+
+                if (checkPartInSlot(partsInKtList.get(i), slotName)) {
+                    hasAtLeastOnePartInSlot = true;
+                }
+            }
+
+            //-- read the list and apply checkPartInSlot for each element of the list
+            if (hasAtLeastOnePartInSlot) {
                 numberOfPartsInKitTray++;
+
             } else {
                 nonFilledSlotList.add(slotName);
+
             }
 
             it.remove(); // avoids a ConcurrentModificationException
@@ -549,12 +572,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private Boolean checkPartInSlot(String partName, String slotName) throws SQLException {
+        //System.out.println("----- Part " + partName);
+        //System.out.println("----- Slot " + slotName); 
         Boolean isPartInSlot = false;
         PoseType posePart = getPartPose(partName);
         posePart = correctPose(posePart);
         BigDecimal partX = posePart.getPoint().getX();
         BigDecimal partY = posePart.getPoint().getY();
-
         PoseType poseSlot = getPartPose(slotName);
         poseSlot = correctPose(poseSlot);
         BigDecimal slotX = poseSlot.getPoint().getX();
@@ -567,24 +591,22 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         BigDecimal powy = y.pow(2);
         BigDecimal addition = powx.add(powy);
         BigDecimal res = new BigDecimal(Math.sqrt(addition.doubleValue()));
-        BigDecimal finalres = res.add(new BigDecimal(addition.subtract(x.multiply(x)).doubleValue() / (x.doubleValue() * 2.0)));
+        //BigDecimal finalres = res.add(new BigDecimal(addition.subtract(x.multiply(x)).doubleValue() / (x.doubleValue() * 2.0)));
 
         System.out.println("----- Part " + partName + " : (" + partX + "," + partY + ")");
         System.out.println("----- Slot " + slotName + " : (" + slotX + "," + slotY + ")");
-        System.out.println("----- Distance : " + finalres);
+        System.out.println("----- Distance : " + res);
         System.out.println();
 
         // compare finalres with a specified tolerance value of 5 mm
-        BigDecimal tolerance;
-        tolerance = new BigDecimal("5");
-        //create int object
+        BigDecimal threshold;
+        threshold = new BigDecimal("5");
         int compresult;
-        compresult = finalres.compareTo(tolerance);
+        compresult = res.compareTo(threshold);
 
         if (compresult == -1 || compresult == 0) {
             isPartInSlot = true;
         }
-
         return isPartInSlot;
     }
 
@@ -677,6 +699,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public int getPartDesignPartCount(String kitName) throws SQLException {
         int count = qs.getPartDesignPartCount(kitName);
         return count;
+    }
+
+    public List<String> getAllPartsInKt(String name) throws SQLException {
+        List<String> partsInKtList = new ArrayList<>(qs.getAllPartsInKt(name));
+
+        return partsInKtList;
     }
 
     public void testPartPositionPose(List<MiddleCommandType> cmds, PoseType pose) {
