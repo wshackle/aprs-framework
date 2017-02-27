@@ -1247,9 +1247,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         props.putAll(getTableOptions());
         props.put(MANUAL_PART_NAMES, Arrays.toString(getComboPartNames(10)));
         props.put(MANUAL_SLOT_NAMES, Arrays.toString(getComboSlotNames(10)));
-        try (FileWriter fw = new FileWriter(propertiesFile)) {
-            props.store(fw, "");
-        }
+//        try (FileWriter fw = new FileWriter(propertiesFile)) {
+//            props.store(fw, "");
+//        }
+        Utils.saveProperties(propertiesFile, props);
     }
     private static final String MANUAL_PART_NAMES = "manualPartNames";
     private static final String MANUAL_SLOT_NAMES = "manualSlotNames";

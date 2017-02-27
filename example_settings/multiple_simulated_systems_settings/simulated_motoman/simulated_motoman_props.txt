@@ -1,18 +1,17 @@
-#
-#Tue Feb 21 16:24:19 EST 2017
+#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:1996
 STARTUP_ACTIVE_WIN=PDDL_EXECUTOR_WINDOW
-startup.pddl.objectview=true
-startup.pddl.planner=true
-startup.pddl.objectsp=true
-startup.pddl.executor=true
 aprs.robotName=Sim_Motoman
-startup.robotcrclclient=true
-startup.robotcrclmotomanserver=false
-startup.exploreGraphDb=true
-startup.crclWebApp=false
-startup.connectvision=true
 aprs.taskName=Shared Table
 crclWebApp.httpPort=8081
-startup.robotcrclsimserver=true
-startup.robotcrclfanucserver=false
 startup.connectdatabase=true
+startup.connectvision=true
+startup.crclWebApp=false
+startup.exploreGraphDb=true
+startup.pddl.executor=true
+startup.pddl.objectsp=true
+startup.pddl.objectview=true
+startup.pddl.planner=true
+startup.robotcrclclient=true
+startup.robotcrclfanucserver=false
+startup.robotcrclmotomanserver=false
+startup.robotcrclsimserver=true

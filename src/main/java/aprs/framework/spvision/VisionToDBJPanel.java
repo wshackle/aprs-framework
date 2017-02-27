@@ -23,6 +23,7 @@
 package aprs.framework.spvision;
 
 import aprs.framework.AprsJFrame;
+import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
 import static aprs.framework.Utils.runOnDispatchThread;
 import aprs.framework.database.AcquireEnum;
@@ -1136,7 +1137,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             this.jButtonCheck.setEnabled(_val);
             this.jButtonForceAll.setEnabled(_val);
             this.jButtonForceSingleUpdate.setEnabled(_val && jTableFromVision.getSelectedRow() >= 0);
-            this.jCheckBoxForceUpdates.setSelected(dpu.isForceUpdates());
+            if (null != dpu) {
+                this.jCheckBoxForceUpdates.setSelected(dpu.isForceUpdates());
+            }
         } catch (Exception ex) {
             this.jLabelDatabaseStatus.setText("DISCONNECTED");
             this.jLabelDatabaseStatus.setBackground(Color.RED);
@@ -1324,10 +1327,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             List<DetectedItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
             if (null != transform) {
                 transformedVisionList = transformList(visionListWithEmptySlots, transform);
-                List<DetectedItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames,false);
+                List<DetectedItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
                 runOnDispatchThread(() -> this.updateInfo(l, line));
             } else {
-                List<DetectedItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCountsToDatabaseNames,false);
+                List<DetectedItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCountsToDatabaseNames, false);
                 runOnDispatchThread(() -> this.updateInfo(l, line));
             }
         }
@@ -1435,7 +1438,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             closeCommand();
             commandSlr = SocketLineReader.startServer(
                     Short.valueOf(argsMap.get("--commandport")),
-                    "commandReader", 
+                    "commandReader",
                     this::handleCommand);
             runOnDispatchThread(() -> setCommandConnected(true));
         } catch (Exception exception) {
@@ -1561,9 +1564,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (null != pose) {
                 List<DetectedItem> transformedList = transformList(singletonList, pose);
                 System.out.println("transformedList = " + transformedList);
-                dpu.updateVisionList(transformedList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected(),true);
+                dpu.updateVisionList(transformedList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected(), true);
             } else {
-                dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected(),true);
+                dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected(), true);
             }
             this.queryDatabase();
         } catch (InterruptedException | ExecutionException ex) {
@@ -1752,7 +1755,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }//GEN-LAST:event_jTextFieldRotationOffsetActionPerformed
 
     private void jCheckBoxForceUpdatesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxForceUpdatesActionPerformed
-        if(null != dpu) {
+        if (null != dpu) {
             dpu.setForceUpdates(jCheckBoxForceUpdates.isSelected());
         }
     }//GEN-LAST:event_jCheckBoxForceUpdatesActionPerformed
@@ -1797,7 +1800,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //        } else {
 //            dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
 //        }
-        dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected(),true);
+        dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected(), true);
         dpu.setForceUpdates(origForceUpdates);
         jCheckBoxDebug.setSelected(isDebug);
     }
@@ -1924,11 +1927,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             props.put("--visionport", jTextFieldVisionPort.getText());
             props.put("--visionhost", jTextFieldVisionHost.getText());
             props.put("rotationOffset", jTextFieldRotationOffset.getText());
-            try (FileWriter fw = new FileWriter(propertiesFile)) {
-                props.store(fw, "");
-            } catch (IOException ex) {
-                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try (FileWriter fw = new FileWriter(propertiesFile)) {
+//                props.store(fw, "");
+//            } catch (IOException ex) {
+//                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+            Utils.saveProperties(propertiesFile, props);
         } finally {
             savingProperties = false;
         }

@@ -26,6 +26,7 @@ import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.AprsJFrame;
 import aprs.framework.DisplayInterface;
 import aprs.framework.PddlAction;
+import aprs.framework.Utils;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
@@ -1115,9 +1116,10 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         propsMap.put(PDDL_PLANNER_HOST, jTextFieldHost.getText());
         Properties props = new Properties();
         props.putAll(propsMap);
-        try (FileWriter fw = new FileWriter(propertiesFile)) {
-            props.store(fw, "");
-        }
+//        try (FileWriter fw = new FileWriter(propertiesFile)) {
+//            props.store(fw, "");
+//        }
+        Utils.saveProperties(propertiesFile, props);
     }
 
     private volatile boolean closing = false;

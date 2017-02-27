@@ -1990,9 +1990,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         Properties props = new Properties();
         props.putAll(propsMap);
         System.out.println("AprsJFrame saving properties to " + propertiesFile.getCanonicalPath());
-        try (FileWriter fw = new FileWriter(propertiesFile)) {
-            props.store(fw, "");
-        }
+//        try (FileWriter fw = new FileWriter(propertiesFile)) {
+//            props.store(fw, "");
+//        }
+        Utils.saveProperties(propertiesFile, props);
         updateSubPropertiesFiles();
         if (null != this.pddlPlannerJInternalFrame) {
             this.pddlPlannerJInternalFrame.saveProperties();
@@ -2193,9 +2194,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != lastAprsPropertiesFileFile) {
             Properties props = new Properties();
             props.put("lastPropertyFileName", propertiesFile.getCanonicalPath());
-            try (FileWriter fw = new FileWriter(lastAprsPropertiesFileFile)) {
-                props.store(fw, "");
-            }
+//            try (FileWriter fw = new FileWriter(lastAprsPropertiesFileFile)) {
+//                props.store(fw, "");
+//            }
+            Utils.saveProperties(lastAprsPropertiesFileFile, props);
         }
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_crclPendantClientProperties.txt"));

@@ -1,18 +1,17 @@
-#
-#Mon Feb 27 10:55:03 EST 2017
+#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:1996
 STARTUP_ACTIVE_WIN=PDDL_EXECUTOR_WINDOW
-startup.pddl.objectview=true
-startup.pddl.planner=true
-startup.pddl.objectsp=true
-startup.pddl.executor=true
 aprs.robotName=Sim_Fanuc
-startup.robotcrclclient=true
-startup.robotcrclmotomanserver=false
-startup.exploreGraphDb=false
-startup.crclWebApp=false
-startup.connectvision=true
 aprs.taskName=Fanuc Cart
 crclWebApp.httpPort=8081
-startup.robotcrclsimserver=true
-startup.robotcrclfanucserver=false
 startup.connectdatabase=true
+startup.connectvision=true
+startup.crclWebApp=false
+startup.exploreGraphDb=false
+startup.pddl.executor=true
+startup.pddl.objectsp=true
+startup.pddl.objectview=true
+startup.pddl.planner=true
+startup.robotcrclclient=true
+startup.robotcrclfanucserver=false
+startup.robotcrclmotomanserver=false
+startup.robotcrclsimserver=true

@@ -22,6 +22,7 @@
  */
 package aprs.framework.database;
 
+import aprs.framework.Utils;
 import aprs.framework.spvision.VisionToDBJPanel;
 import crcl.ui.XFuture;
 import java.io.BufferedReader;
@@ -661,11 +662,12 @@ public class DbSetupBuilder {
             if (null != queriesDir) {
                 props.put(dbHostPort + ".queriesDir", setup.getQueriesDir());
             }
-            try (FileWriter fw = new FileWriter(propertiesFile)) {
-                props.store(fw, "");
-            } catch (IOException ex) {
-                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try (FileWriter fw = new FileWriter(propertiesFile)) {
+//                props.store(fw, "");
+//            } catch (IOException ex) {
+//                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+            Utils.saveProperties(propertiesFile, props);
         }
     }
 

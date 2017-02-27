@@ -1,15 +1,14 @@
-#
-#Mon Feb 27 10:55:03 EST 2017
-takePartArgIndex=0
-lookDwellTime=3.0
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1253
 approachZOffset=50.0
-manualPartNames=[null, null, null, null, null, null, null, null, null, null]
-rotSpeed=30.0
 fastTransSpeed=200.0
-slowTransSpeed=75
-placePartSlotArgIndex=0
-settleDwellTime=0.1
-rpy=175.0,0.0,0.0
+lookDwellTime=3.0
 lookForXYZ=0.0,0.0,0.0
+manualPartNames=[null, null, null, null, null, null, null, null, null, null]
 manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
 pddl.output=../../../example_pddl/feb_21_2017_fanuc_demo_actions.txt
+placePartSlotArgIndex=0
+rotSpeed=30.0
+rpy=175.0,0.0,0.0
+settleDwellTime=0.1
+slowTransSpeed=75
+takePartArgIndex=0

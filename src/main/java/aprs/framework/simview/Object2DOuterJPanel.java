@@ -23,6 +23,7 @@
 package aprs.framework.simview;
 
 import aprs.framework.AprsJFrame;
+import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.DbSetupBuilder;
@@ -1085,9 +1086,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (null != l && l.size() > 0) {
                 props.put(ITEMS_PROPERTY_NAME, VisionSocketServer.listToLine(l));
             }
-            try (FileWriter fw = new FileWriter(propertiesFile)) {
-                props.store(fw, "");
-            }
+//            try (FileWriter fw = new FileWriter(propertiesFile)) {
+//                props.store(fw, "");
+//            }
+            Utils.saveProperties(propertiesFile, props);
         }
     }
     private static final String ITEMS_PROPERTY_NAME = "items";

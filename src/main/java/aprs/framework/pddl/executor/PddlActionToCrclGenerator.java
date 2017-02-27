@@ -296,6 +296,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     takePart(action, cmds);
                     break;
 
+                case "fake-take-part":
+                    fakeTakePart(action, cmds);
+                    break;
+
                 case "test-part-position":
                     testPartPosition(action, cmds);
                     break;
@@ -480,12 +484,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     //-- contains all the slots that do not have a part
     private ArrayList nonFilledSlotList = new ArrayList();
+
     /**
      * @brief Inspects a finished kit to check if it is complete
      * @param action
      * @param out
      * @throws IllegalStateException
-     * @throws SQLException 
+     * @throws SQLException
      */
     public void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
@@ -497,14 +502,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setMessage("inspect-kit " + kitName);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
-        
+
         int partDesignPartCount = getPartDesignPartCount(kitName);
-        System.out.println(kitName+" should contain "+partDesignPartCount+" parts.");
-        int nbOfPartsInKit=checkPartsInSlot(inspectionMap);
-        
-        if (nbOfPartsInKit==partDesignPartCount)
+        System.out.println(kitName + " should contain " + partDesignPartCount + " parts.");
+        int nbOfPartsInKit = checkPartsInSlot(inspectionMap);
+
+        if (nbOfPartsInKit == partDesignPartCount) {
             System.out.println("Kit is complete");
-        else {
+        } else {
             int nbOfMissingParts = partDesignPartCount - nbOfPartsInKit;
             System.out.println("Kit is missing " + nbOfMissingParts + " part(s)");
             if (!nonFilledSlotList.isEmpty()) {
@@ -518,68 +523,71 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     /**
-     * @brief Checks that parts are within the vicinity of their corresponding slots
-     * @param mp A JAVA hashmap that has the part as the key and the slot as the value
-     * @return 
-     * @throws SQLException 
+     * @brief Checks that parts are within the vicinity of their corresponding
+     * slots
+     * @param mp A JAVA hashmap that has the part as the key and the slot as the
+     * value
+     * @return
+     * @throws SQLException
      */
-    private  int checkPartsInSlot(Map mp) throws SQLException{
+    private int checkPartsInSlot(Map mp) throws SQLException {
         int numberOfPartsInKitTray = 0;
         Iterator it = mp.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry) it.next();
-            String partName=pair.getKey().toString();
-            String slotName=pair.getValue().toString();
-            if (checkPartInSlot(partName,slotName))
+            String partName = pair.getKey().toString();
+            String slotName = pair.getValue().toString();
+            if (checkPartInSlot(partName, slotName)) {
                 numberOfPartsInKitTray++;
-            else
+            } else {
                 nonFilledSlotList.add(slotName);
-            
+            }
+
             it.remove(); // avoids a ConcurrentModificationException
         }
         return numberOfPartsInKitTray;
     }
-    
-    private  Boolean checkPartInSlot(String partName, String slotName) throws SQLException{
+
+    private Boolean checkPartInSlot(String partName, String slotName) throws SQLException {
         Boolean isPartInSlot = false;
         PoseType posePart = getPartPose(partName);
-            posePart = correctPose(posePart);
-            BigDecimal partX = posePart.getPoint().getX();
-            BigDecimal partY = posePart.getPoint().getY();
-            
-            PoseType poseSlot = getPartPose(slotName);
-            poseSlot = correctPose(poseSlot);
-            BigDecimal slotX = poseSlot.getPoint().getX();
-            BigDecimal slotY = poseSlot.getPoint().getY();
-            
-            //-- compute distance between 2 points
-            BigDecimal x = partX.subtract(slotX);
-            BigDecimal y = partY.subtract(slotY);
-            BigDecimal powx = x.pow(2);
-            BigDecimal powy = y.pow(2);
-            BigDecimal addition = powx.add(powy);
-            BigDecimal res = new BigDecimal(Math.sqrt(addition.doubleValue()));
-            BigDecimal finalres=res.add(new BigDecimal(addition.subtract(x.multiply(x)).doubleValue() / (x.doubleValue() * 2.0)));
-            
-            System.out.println("----- Part "+partName+" : ("+partX+","+partY+")");
-            System.out.println("----- Slot "+slotName+" : ("+slotX+","+slotY+")");
-            System.out.println("----- Distance : "+finalres);
-            System.out.println();
-            
-            // compare finalres with a specified tolerance value of 5 mm
-            BigDecimal tolerance;
-            tolerance = new BigDecimal("5");
-            //create int object
-            int compresult;
-            compresult = finalres.compareTo(tolerance);
+        posePart = correctPose(posePart);
+        BigDecimal partX = posePart.getPoint().getX();
+        BigDecimal partY = posePart.getPoint().getY();
 
-    
-            if( compresult == -1 || compresult == 0)
-                isPartInSlot=true;
-            
-            return isPartInSlot;
+        PoseType poseSlot = getPartPose(slotName);
+        poseSlot = correctPose(poseSlot);
+        BigDecimal slotX = poseSlot.getPoint().getX();
+        BigDecimal slotY = poseSlot.getPoint().getY();
+
+        //-- compute distance between 2 points
+        BigDecimal x = partX.subtract(slotX);
+        BigDecimal y = partY.subtract(slotY);
+        BigDecimal powx = x.pow(2);
+        BigDecimal powy = y.pow(2);
+        BigDecimal addition = powx.add(powy);
+        BigDecimal res = new BigDecimal(Math.sqrt(addition.doubleValue()));
+        BigDecimal finalres = res.add(new BigDecimal(addition.subtract(x.multiply(x)).doubleValue() / (x.doubleValue() * 2.0)));
+
+        System.out.println("----- Part " + partName + " : (" + partX + "," + partY + ")");
+        System.out.println("----- Slot " + slotName + " : (" + slotX + "," + slotY + ")");
+        System.out.println("----- Distance : " + finalres);
+        System.out.println();
+
+        // compare finalres with a specified tolerance value of 5 mm
+        BigDecimal tolerance;
+        tolerance = new BigDecimal("5");
+        //create int object
+        int compresult;
+        compresult = finalres.compareTo(tolerance);
+
+        if (compresult == -1 || compresult == 0) {
+            isPartInSlot = true;
+        }
+
+        return isPartInSlot;
     }
-    
+
     private static void printMap(Map mp) {
         Iterator it = mp.entrySet().iterator();
         while (it.hasNext()) {
@@ -588,7 +596,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             it.remove(); // avoids a ConcurrentModificationException
         }
     }
-    
+
     private int takePartArgIndex;
 
     /**
@@ -626,6 +634,32 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
+        String markerMsg = "took part " + partName;
+        addMarkerCommand(out, markerMsg, x -> {
+            System.out.println(markerMsg + " at " + new Date());
+        });
+        lastTakenPart = partName;
+        //inspectionList.add(partName);
+        inspectionMap.put(partName, null);
+    }
+
+    public void fakeTakePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+        if (null == qs) {
+            throw new IllegalStateException("Database not setup and connected.");
+        }
+        checkSettings();
+        String partName = action.getArgs()[takePartArgIndex];
+        MessageType msg = new MessageType();
+        msg.setMessage("take-part " + partName);
+        msg.setCommandID(BigInteger.valueOf(out.size() + 2));
+        out.add(msg);
+
+        PoseType pose = getPartPose(partName);
+        pose = correctPose(pose);
+        returnPosesByName.put(partName, pose);
+        pose.setXAxis(xAxis);
+        pose.setZAxis(zAxis);
+        fakeTakePartByPose(out, pose);
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
@@ -696,6 +730,34 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addCloseGripper(cmds);
 
+        addSettleDwell(cmds);
+
+        addMoveTo(cmds, poseAbove, true);
+
+        addSettleDwell(cmds);
+    }
+
+    public void fakeTakePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
+
+        addOpenGripper(cmds);
+
+        checkSettings();
+        PoseType poseAbove = CRCLPosemath.copy(pose);
+        poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+
+        addSetFastSpeed(cmds);
+
+        addMoveTo(cmds, poseAbove, false);
+
+        addSettleDwell(cmds);
+
+        addSetSlowSpeed(cmds);
+
+        addMoveTo(cmds, pose, true);
+
+        addSettleDwell(cmds);
+
+//       We force a failure by skipping the step that closes the gripper  addCloseGripper(cmds);
         addSettleDwell(cmds);
 
         addMoveTo(cmds, poseAbove, true);
@@ -1004,7 +1066,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     notifyPlacePartConsumers(ppi);
                 }));
         String keyByValue = getKeyByValue(inspectionMap, null);
-        inspectionMap.put(keyByValue,slotName);
+        inspectionMap.put(keyByValue, slotName);
         //inspectionList.add(slotName);
         //inspectionMap.ge
     }

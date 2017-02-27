@@ -991,11 +991,12 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             props.put("useQueriesResource", jRadioButtonResourceDir.isSelected());
             props.put("resDir", jComboBoxResourceDir.getSelectedItem());
             props.put("queryDir", jTextFieldQueriesDirectory.getText());
-            try (FileWriter fw = new FileWriter(propertiesFile)) {
-                props.store(fw, "");
-            } catch (IOException ex) {
-                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try (FileWriter fw = new FileWriter(propertiesFile)) {
+//                props.store(fw, "");
+//            } catch (IOException ex) {
+//                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+            Utils.saveProperties(propertiesFile, props);
         } finally {
             savingProperties = false;
         }
