@@ -87,6 +87,10 @@ public class QuerySet implements QuerySetInterface {
         if (null == getPartDesignCountQueryInfo) {
             throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_PARTDESIGN_PART_COUNT);
         }
+        this.getAllPartsInKtQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_PARTS_IN_KT);
+        if (null == getAllPartsInKtQueryInfo) {
+            throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_ALL_PARTS_IN_KT);
+        }
         String getPoseQueryString = getQueryInfo.getQuery();
         if (null == getPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain getPose");
@@ -99,6 +103,14 @@ public class QuerySet implements QuerySetInterface {
         }
         getPartDesignPartCountStatement = con.prepareStatement(getPartDesignPartCountQueryString);
         
+        //-- getAllPartsInKtStatement
+        String getAllPartsInKtQueryString = getAllPartsInKtQueryInfo.getQuery();
+        if (null == getAllPartsInKtQueryString) {
+            throw new IllegalArgumentException("queriesMap does not contain getAllPartsInKtQueryString");
+        }
+        getAllPartsInKtStatement = con.prepareStatement(getAllPartsInKtQueryString);
+                
+                
         String setPoseQueryString = setQueryInfo.getQuery();
         if (null == setPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain setPose");
@@ -111,6 +123,7 @@ public class QuerySet implements QuerySetInterface {
                 this.getAllTrayDesignsStatement = con.prepareStatement(getAllTrayDesignsQueryString);
             }
         }
+
         DbQueryInfo getSingleTraySlogDesignQueryInfo = queriesMap.get(DbQueryEnum.GET_SINGLE_TRAY_SLOT_DESIGN);
         if (null != getSingleTraySlogDesignQueryInfo) {
             String getSingleTrayDesignQueryString = getSingleTraySlogDesignQueryInfo.getQuery();
@@ -145,6 +158,8 @@ public class QuerySet implements QuerySetInterface {
     private java.sql.PreparedStatement getSingleTrayDesignStatement;
     private java.sql.PreparedStatement setSingleTrayDesignStatement;
     private java.sql.PreparedStatement newSingleTrayDesignStatement;
+        private java.sql.PreparedStatement getAllPartsInKtStatement;
+
     
     
     private boolean closed = false;
@@ -274,7 +289,10 @@ public class QuerySet implements QuerySetInterface {
     private String getPoseQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getQueryInfo, type);
     }
-
+ 
+     private String getAllPartsInKtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+        return getQueryResultString(rs, getQueryInfo, type);
+    }
     
         private boolean debug;
 
@@ -296,6 +314,37 @@ public class QuerySet implements QuerySetInterface {
         this.debug = debug;
     }
 
+    
+ /**
+     * @brief get all parts_in_kt from the database
+     * @return a list of all the parts that has "parts_in_kt" in their names
+     */
+    public ArrayList<String> getAllPartsInKt (String name) throws SQLException{
+        ArrayList<String> partsInKtList = new ArrayList();
+        if (closed) {
+            throw new IllegalStateException("QuerySet already closed.");
+        }
+        
+        Map<Integer, Object> map = new TreeMap<>();
+        DbQueryInfo getAllPartsInKtQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_PARTS_IN_KT);
+        setQueryStringParam(getAllPartsInKtStatement, getAllPartsInKtQueryInfo, DbParamTypeEnum.NAME, name, map);
+        String simQuery = createExpectedQueryString(getAllPartsInKtQueryInfo, map);
+        //System.out.println("simQuery = " + simQuery);
+        if (debug) {
+            System.out.println("simQuery = " + simQuery);
+        }
+        
+        try (ResultSet rs = getAllPartsInKtStatement.executeQuery()) {
+            int c = 0;
+            while (rs.next()) {
+                c++;
+              String nameCheckString = getAllPartsInKtQueryResultString(rs, DbParamTypeEnum.NAME);
+              System.out.println("nameCheckString = " + nameCheckString);
+              partsInKtList.add(nameCheckString);
+            }
+        }
+        return partsInKtList;
+    }
     public int getPartDesignPartCount(String name) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
@@ -621,6 +670,7 @@ public class QuerySet implements QuerySetInterface {
     private final DbQueryInfo setQueryInfo;
     private final DbQueryInfo getQueryInfo;
     private final DbQueryInfo getPartDesignCountQueryInfo;
+     private final DbQueryInfo getAllPartsInKtQueryInfo;
 
     private void setPoseQueryStringParam(DbParamTypeEnum type, String value, Map<Integer, Object> map) throws SQLException {
         setQueryStringParam(setPoseStatement, setQueryInfo, type, value, map);
