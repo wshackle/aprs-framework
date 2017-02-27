@@ -1,5 +1,5 @@
 #
-#Fri Feb 24 12:18:17 EST 2017
+#Mon Feb 27 09:53:45 EST 2017
 NEO4J.localhost_4000.name=neo4j
 MYSQL.localhost_7486.name=neo4j
 --aquirestate=ON
@@ -36,7 +36,7 @@ transform.point.x=0.0
 NEO4J.host=ying-220
 NEO4J.ying-220_7480.passwd=password
 NEO4J.localhost_4000.internalQueriesResourceDir=true
---visionhost=agility
+--visionhost=localhost
 NEO4J.localhost_7486.internalQueriesResourceDir=true
 --dbname=neo4j
 NEO4J.localhost_7486.name=neo4j

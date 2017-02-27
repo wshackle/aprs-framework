@@ -1,8 +1,8 @@
 #params= 
 #results=
-match (n) where n.name =~ '.*empty_slot.*' or n.name =~ '.*_in_pt' or n.name = '.*_in_kt'
-optional match (n) -[r] - () 
-delete n,r
+match (n) where n.visioncycle > 0
+set n.visioncycle=0
+
 
 
 

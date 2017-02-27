@@ -248,7 +248,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jLabel21 = new javax.swing.JLabel();
         jButtonUpdateResultDetails = new javax.swing.JButton();
         jCheckBoxVerifyUpdates = new javax.swing.JCheckBox();
-        jCheckBoxDelOnUpdate = new javax.swing.JCheckBox();
+        jCheckBoxForceUpdates = new javax.swing.JCheckBox();
         jSpinnerLogLines = new javax.swing.JSpinner();
         jLabel1 = new javax.swing.JLabel();
 
@@ -739,7 +739,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
-        jCheckBoxDelOnUpdate.setText("Del on Update");
+        jCheckBoxForceUpdates.setSelected(true);
+        jCheckBoxForceUpdates.setText("Force all updates");
+        jCheckBoxForceUpdates.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxForceUpdatesActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanelTableUpdateResultsLayout = new javax.swing.GroupLayout(jPanelTableUpdateResults);
         jPanelTableUpdateResults.setLayout(jPanelTableUpdateResultsLayout);
@@ -752,7 +758,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addGroup(jPanelTableUpdateResultsLayout.createSequentialGroup()
                         .addComponent(jLabel21)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jCheckBoxDelOnUpdate)
+                        .addComponent(jCheckBoxForceUpdates)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxVerifyUpdates)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -766,7 +772,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jLabel21)
                     .addComponent(jButtonUpdateResultDetails)
                     .addComponent(jCheckBoxVerifyUpdates)
-                    .addComponent(jCheckBoxDelOnUpdate))
+                    .addComponent(jCheckBoxForceUpdates))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPaneTableUpdateResults, javax.swing.GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
                 .addContainerGap())
@@ -1130,6 +1136,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             this.jButtonCheck.setEnabled(_val);
             this.jButtonForceAll.setEnabled(_val);
             this.jButtonForceSingleUpdate.setEnabled(_val && jTableFromVision.getSelectedRow() >= 0);
+            this.jCheckBoxForceUpdates.setSelected(dpu.isForceUpdates());
         } catch (Exception ex) {
             this.jLabelDatabaseStatus.setText("DISCONNECTED");
             this.jLabelDatabaseStatus.setBackground(Color.RED);
@@ -1317,10 +1324,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             List<DetectedItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
             if (null != transform) {
                 transformedVisionList = transformList(visionListWithEmptySlots, transform);
-                List<DetectedItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames);
+                List<DetectedItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames,false);
                 runOnDispatchThread(() -> this.updateInfo(l, line));
             } else {
-                List<DetectedItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCountsToDatabaseNames);
+                List<DetectedItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCountsToDatabaseNames,false);
                 runOnDispatchThread(() -> this.updateInfo(l, line));
             }
         }
@@ -1554,9 +1561,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (null != pose) {
                 List<DetectedItem> transformedList = transformList(singletonList, pose);
                 System.out.println("transformedList = " + transformedList);
-                dpu.updateVisionList(transformedList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+                dpu.updateVisionList(transformedList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected(),true);
             } else {
-                dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+                dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected(),true);
             }
             this.queryDatabase();
         } catch (InterruptedException | ExecutionException ex) {
@@ -1744,6 +1751,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }//GEN-LAST:event_jTextFieldRotationOffsetActionPerformed
 
+    private void jCheckBoxForceUpdatesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxForceUpdatesActionPerformed
+        if(null != dpu) {
+            dpu.setForceUpdates(jCheckBoxForceUpdates.isSelected());
+        }
+    }//GEN-LAST:event_jCheckBoxForceUpdatesActionPerformed
+
     public void forceAllUpdates() throws NumberFormatException {
         try {
             DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
@@ -1784,7 +1797,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //        } else {
 //            dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
 //        }
-        dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
+        dpu.updateVisionList(singletonList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected(),true);
         dpu.setForceUpdates(origForceUpdates);
         jCheckBoxDebug.setSelected(isDebug);
     }
@@ -1806,7 +1819,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JButton jButtonUpdateResultDetails;
     private javax.swing.JCheckBox jCheckBoxAddRepeatCountsToDatabaseNames;
     private javax.swing.JCheckBox jCheckBoxDebug;
-    private javax.swing.JCheckBox jCheckBoxDelOnUpdate;
+    private javax.swing.JCheckBox jCheckBoxForceUpdates;
     private javax.swing.JCheckBox jCheckBoxVerifyUpdates;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;

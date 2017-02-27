@@ -725,7 +725,7 @@
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="jLabel21" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="32767" attributes="0"/>
-                              <Component id="jCheckBoxDelOnUpdate" min="-2" max="-2" attributes="0"/>
+                              <Component id="jCheckBoxForceUpdates" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jCheckBoxVerifyUpdates" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
@@ -743,7 +743,7 @@
                           <Component id="jLabel21" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonUpdateResultDetails" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jCheckBoxVerifyUpdates" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="jCheckBoxDelOnUpdate" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jCheckBoxForceUpdates" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jScrollPaneTableUpdateResults" pref="159" max="32767" attributes="0"/>
@@ -793,10 +793,14 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxVerifyUpdatesActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JCheckBox" name="jCheckBoxDelOnUpdate">
+            <Component class="javax.swing.JCheckBox" name="jCheckBoxForceUpdates">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Del on Update"/>
+                <Property name="selected" type="boolean" value="true"/>
+                <Property name="text" type="java.lang.String" value="Force all updates"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxForceUpdatesActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
