@@ -332,11 +332,11 @@ public class QuerySet implements QuerySetInterface {
         }
 
         try (ResultSet rs = getAllPartsInKtStatement.executeQuery()) {
-            int c = 0;
+            //int c = 0;
             while (rs.next()) {
-                c++;
+                //c++;
                 String nameCheckString = getAllPartsInKtQueryResultString(rs, DbParamTypeEnum.NAME);
-                System.out.println("nameCheckString = " + nameCheckString);
+                //System.out.println("nameCheckString = " + nameCheckString);
                 partsInKtList.add(nameCheckString);
             }
         }
