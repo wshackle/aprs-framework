@@ -39,6 +39,7 @@ import crcl.base.CRCLStatusType;
 import crcl.base.CommandStateEnumType;
 import crcl.base.EndCanonType;
 import crcl.base.InitCanonType;
+import crcl.base.JointStatusType;
 import crcl.base.MessageType;
 import crcl.base.MiddleCommandType;
 import crcl.base.PointType;
@@ -101,10 +102,12 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -313,6 +316,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonPlacePart = new javax.swing.JButton();
         jButtonTest = new javax.swing.JButton();
         jButtonRecord = new javax.swing.JButton();
+        jButtonRecordLookForJoints = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         positionMapJPanel1 = new aprs.framework.pddl.executor.PositionMapJPanel();
         jScrollPane5 = new javax.swing.JScrollPane();
@@ -688,6 +692,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         });
 
+        jButtonRecordLookForJoints.setText("Record LookFor  Joints");
+        jButtonRecordLookForJoints.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonRecordLookForJointsActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelInnerManualControlLayout = new javax.swing.GroupLayout(jPanelInnerManualControl);
         jPanelInnerManualControl.setLayout(jPanelInnerManualControlLayout);
         jPanelInnerManualControlLayout.setHorizontalGroup(
@@ -775,7 +786,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                                 .addGap(6, 6, 6)
                                 .addComponent(jButtonGridTest)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonStopRandomTest))
+                                .addComponent(jButtonStopRandomTest)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonRecordLookForJoints))
                             .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
                                 .addComponent(jLabel12)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -824,7 +837,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jButtonContRandomTest)
                         .addComponent(jButtonStopRandomTest)
                         .addComponent(jLabel9)
-                        .addComponent(jButtonGridTest)))
+                        .addComponent(jButtonGridTest)
+                        .addComponent(jButtonRecordLookForJoints)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -2531,6 +2545,37 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         aprsJFrame.pauseCrclProgram();
     }//GEN-LAST:event_jButtonPauseActionPerformed
 
+    private void updateLookForJoints(CRCLStatusType stat) {
+        if(null != stat && null != stat.getJointStatuses()) {
+            List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
+            String jointVals = 
+                    jointList
+                            .stream()
+                            .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                            .map(JointStatusType::getJointPosition)
+                            .map(Objects::toString)
+                            .collect(Collectors.joining(","));
+            System.out.println("jointVals = " + jointVals);
+            DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
+            boolean keyFound = false;
+            for (int i = 0; i < model.getRowCount(); i++) {
+                if(Objects.equals("lookForJoints",model.getValueAt(i, 0))) {
+                    model.setValueAt(jointVals, i, 1);
+                    keyFound = true;
+                }
+            }
+            if(!keyFound) {
+                model.addRow(new Object[]{"lookForJoints",jointVals});
+            }
+            pddlActionToCrclGenerator.setOptions(getTableOptions());
+        }
+    }
+    
+    private void jButtonRecordLookForJointsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordLookForJointsActionPerformed
+        aprsJFrame.getCurrentStatus()
+                .ifPresent(this::updateLookForJoints);
+    }//GEN-LAST:event_jButtonRecordLookForJointsActionPerformed
+
     private void queryLogFileName() {
         if (!new File(recordCsvName).exists()) {
             newLogFileName();
@@ -3190,6 +3235,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonRandDropOff;
     private javax.swing.JButton jButtonRecord;
     private javax.swing.JButton jButtonRecordFail;
+    private javax.swing.JButton jButtonRecordLookForJoints;
     private javax.swing.JButton jButtonRecordSuccess;
     private javax.swing.JButton jButtonReset;
     private javax.swing.JButton jButtonReturn;

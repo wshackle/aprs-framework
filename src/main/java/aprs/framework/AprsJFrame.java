@@ -56,6 +56,7 @@ import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
 import crcl.base.CRCLCommandType;
 import crcl.base.CRCLProgramType;
+import crcl.base.CRCLStatusType;
 import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
 import crcl.base.PointType;
@@ -71,6 +72,7 @@ import java.awt.Container;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -863,6 +865,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    public Optional<CRCLStatusType> getCurrentStatus() {
+        if(null != pendantClientJInternalFrame) {
+            return pendantClientJInternalFrame.getCurrentStatus();
+        }
+        return Optional.empty();
+    }
+    
+    
     public void updateTitle() {
         if (null != pendantClientJInternalFrame) {
             CommandStatusType cs = pendantClientJInternalFrame.getCurrentStatus()

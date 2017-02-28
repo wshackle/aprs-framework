@@ -453,6 +453,8 @@
                                               <Component id="jButtonGridTest" min="-2" max="-2" attributes="0"/>
                                               <EmptySpace max="-2" attributes="0"/>
                                               <Component id="jButtonStopRandomTest" min="-2" max="-2" attributes="0"/>
+                                              <EmptySpace max="-2" attributes="0"/>
+                                              <Component id="jButtonRecordLookForJoints" min="-2" max="-2" attributes="0"/>
                                           </Group>
                                           <Group type="102" attributes="0">
                                               <Component id="jLabel12" min="-2" max="-2" attributes="0"/>
@@ -508,6 +510,7 @@
                                       <Component id="jButtonStopRandomTest" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="jLabel9" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="jButtonGridTest" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jButtonRecordLookForJoints" alignment="3" min="-2" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
@@ -819,6 +822,14 @@
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonRecordActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="jButtonRecordLookForJoints">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Record LookFor  Joints"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonRecordLookForJointsActionPerformed"/>
                       </Events>
                     </Component>
                   </SubComponents>
