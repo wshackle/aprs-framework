@@ -17,4 +17,4 @@ rpy=180.0,0.0,0.0
 settleDwellTime=0.2
 slowTransSpeed=40
 takePartArgIndex=0
-useJointLookFor=true
+useJointLookFor=false
