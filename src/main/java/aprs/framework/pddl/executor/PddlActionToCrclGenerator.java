@@ -22,6 +22,7 @@
 package aprs.framework.pddl.executor;
 
 import aprs.framework.PddlAction;
+import aprs.framework.kitinspection.KitInspector;
 import aprs.framework.Utils;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
@@ -64,6 +65,8 @@ import java.util.function.Consumer;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -507,16 +510,22 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         System.out.println(kitName + " should contain " + partDesignPartCount + " parts.");
         int nbOfPartsInKit = checkPartsInSlot(inspectionMap);
 
+        String resultString;
         if (nbOfPartsInKit == partDesignPartCount) {
+            resultString="Kit is complete";
             System.out.println("Kit is complete");
         } else {
             int nbOfMissingParts = partDesignPartCount - nbOfPartsInKit;
+            resultString="Kit is missing " + nbOfMissingParts + " part(s)";
             System.out.println("Kit is missing " + nbOfMissingParts + " part(s)");
             if (!nonFilledSlotList.isEmpty()) {
                 System.out.println("---The following slots are empty:");
                 System.out.println(nonFilledSlotList);
             }
         }
+        
+        //KitInspector kitInspector = new KitInspector();
+        //kitInspector.display(kitName,resultString);
         //printMap(inspectionMap);
         inspectionMap.clear();
         nonFilledSlotList.clear();
@@ -593,19 +602,20 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         BigDecimal res = new BigDecimal(Math.sqrt(addition.doubleValue()));
         //BigDecimal finalres = res.add(new BigDecimal(addition.subtract(x.multiply(x)).doubleValue() / (x.doubleValue() * 2.0)));
 
-        System.out.println("----- Part " + partName + " : (" + partX + "," + partY + ")");
-        System.out.println("----- Slot " + slotName + " : (" + slotX + "," + slotY + ")");
-        System.out.println("----- Distance : " + res);
-        System.out.println();
+        
 
         // compare finalres with a specified tolerance value of 5 mm
         BigDecimal threshold;
-        threshold = new BigDecimal("5");
+        threshold = new BigDecimal("6.5");
         int compresult;
         compresult = res.compareTo(threshold);
 
         if (compresult == -1 || compresult == 0) {
             isPartInSlot = true;
+            System.out.println("----- Part " + partName + " : (" + partX.doubleValue() + "," + partY.doubleValue() + ")");
+            System.out.println("----- Slot " + slotName + " : (" + slotX.doubleValue() + "," + slotY.doubleValue() + ")");
+            System.out.println("----- Distance between part and slot = " + res);
+            System.out.println();
         }
         return isPartInSlot;
     }
