@@ -460,7 +460,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 {"rotSpeed", "30.0"},
                 {"placePartSlotArgIndex", "0"},
                 {"takePartArgIndex", "0"},
-                {"settleDwellTime", "0.1"}
+                {"settleDwellTime", "0.1"},
+                {"useJointLookFor", "false"},
+                {"jointSpeed", "5.0"},
+                {"jointAccel", "100.0"}
             },
             new String [] {
                 "Name", "Value"

@@ -260,7 +260,7 @@
             <Component class="javax.swing.JTable" name="jTableOptions">
               <Properties>
                 <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                  <Table columnCount="2" rowCount="10">
+                  <Table columnCount="2" rowCount="13">
                     <Column editable="false" title="Name" type="java.lang.String">
                       <Data value="rpy"/>
                       <Data value="lookForXYZ"/>
@@ -272,6 +272,9 @@
                       <Data value="placePartSlotArgIndex"/>
                       <Data value="takePartArgIndex"/>
                       <Data value="settleDwellTime"/>
+                      <Data value="useJointLookFor"/>
+                      <Data value="jointSpeed"/>
+                      <Data value="jointAccel"/>
                     </Column>
                     <Column editable="true" title="Value" type="java.lang.String">
                       <Data value="175.0,0.0,0.0"/>
@@ -284,6 +287,9 @@
                       <Data value="0"/>
                       <Data value="0"/>
                       <Data value="0.1"/>
+                      <Data value="false"/>
+                      <Data value="5.0"/>
+                      <Data value="100.0"/>
                     </Column>
                   </Table>
                 </Property>

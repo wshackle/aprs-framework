@@ -22,14 +22,17 @@
 package aprs.framework.pddl.executor;
 
 import aprs.framework.PddlAction;
-import aprs.framework.kitinspection.KitInspector;
 import aprs.framework.Utils;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.QuerySet;
+import crcl.base.ActuateJointType;
+import crcl.base.ActuateJointsType;
 import crcl.base.AngleUnitEnumType;
 import crcl.base.DwellType;
+import crcl.base.JointDetailsType;
+import crcl.base.JointSpeedAccelType;
 import crcl.base.LengthUnitEnumType;
 import crcl.base.MessageType;
 import crcl.base.MiddleCommandType;
@@ -62,17 +65,12 @@ import crcl.utils.CrclCommandWrapper.CRCLCommandWrapperConsumer;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
-import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -512,18 +510,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         String resultString;
         if (nbOfPartsInKit == partDesignPartCount) {
-            resultString="Kit is complete";
+            resultString = "Kit is complete";
             System.out.println("Kit is complete");
         } else {
             int nbOfMissingParts = partDesignPartCount - nbOfPartsInKit;
-            resultString="Kit is missing " + nbOfMissingParts + " part(s)";
+            resultString = "Kit is missing " + nbOfMissingParts + " part(s)";
             System.out.println("Kit is missing " + nbOfMissingParts + " part(s)");
             if (!nonFilledSlotList.isEmpty()) {
                 System.out.println("---The following slots are empty:");
                 System.out.println(nonFilledSlotList);
             }
         }
-        
+
         //KitInspector kitInspector = new KitInspector();
         //kitInspector.display(kitName,resultString);
         //printMap(inspectionMap);
@@ -601,8 +599,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         BigDecimal addition = powx.add(powy);
         BigDecimal res = new BigDecimal(Math.sqrt(addition.doubleValue()));
         //BigDecimal finalres = res.add(new BigDecimal(addition.subtract(x.multiply(x)).doubleValue() / (x.doubleValue() * 2.0)));
-
-        
 
         // compare finalres with a specified tolerance value of 5 mm
         BigDecimal threshold;
@@ -895,6 +891,24 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 numberFormatException.printStackTrace();
             }
         }
+        String jointSpeedString = options.get("jointSpeed");
+        if (null != jointSpeedString && jointSpeedString.length() > 0) {
+            try {
+                double val = Double.valueOf(jointSpeedString);
+                jointSpeed = BigDecimal.valueOf(val);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
+        String jointAccelString = options.get("jointAccel");
+        if (null != jointAccelString && jointAccelString.length() > 0) {
+            try {
+                double val = Double.valueOf(jointAccelString);
+                jointAccel = BigDecimal.valueOf(val);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
         String slowTransSpeedString = options.get("slowTransSpeed");
         if (null != slowTransSpeedString && slowTransSpeedString.length() > 0) {
             try {
@@ -975,19 +989,85 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     public void addMoveToLookForPosition(List<MiddleCommandType> out) {
-        PoseType pose = new PoseType();
         String lookforXYZSring = options.get("lookForXYZ");
         String lookForXYZFields[] = lookforXYZSring.split(",");
-
-        pose.setPoint(point(Double.valueOf(lookForXYZFields[0]), Double.valueOf(lookForXYZFields[1]), Double.valueOf(lookForXYZFields[2])));
-        pose.setXAxis(xAxis);
-        pose.setZAxis(zAxis);
-
+        String useLookForJointString = options.get("useJointLookFor");
+        boolean useLookForJoint = (null != useLookForJointString && useLookForJointString.length() > 0 && Boolean.valueOf(useLookForJointString));
+        String lookForJointsString = options.get("lookForJoints");
+        if (null == lookForJointsString || lookForJointsString.length() < 1) {
+            useLookForJoint = false;
+        }
         addSetFastSpeed(out);
 
-        addOpenGripper(out, pose);
+        addOpenGripper(out);
 
-        addMoveTo(out, pose, false);
+        if (!useLookForJoint) {
+            PoseType pose = new PoseType();
+            pose.setPoint(point(Double.valueOf(lookForXYZFields[0]), Double.valueOf(lookForXYZFields[1]), Double.valueOf(lookForXYZFields[2])));
+            pose.setXAxis(xAxis);
+            pose.setZAxis(zAxis);
+            addMoveTo(out, pose, false);
+        } else {
+            addJointMove(out, lookForJointsString);
+        }
+    }
+
+    private BigDecimal jointSpeed = BigDecimal.valueOf(5.0);
+
+    /**
+     * Get the value of jointSpeed
+     *
+     * @return the value of jointSpeed
+     */
+    public BigDecimal getJointSpeed() {
+        return jointSpeed;
+    }
+
+    /**
+     * Set the value of jointSpeed
+     *
+     * @param jointSpeed new value of jointSpeed
+     */
+    public void setJointSpeed(BigDecimal jointSpeed) {
+        this.jointSpeed = jointSpeed;
+    }
+
+    private BigDecimal jointAccel = BigDecimal.valueOf(100.0);
+
+    /**
+     * Get the value of jointAccel
+     *
+     * @return the value of jointAccel
+     */
+    public BigDecimal getJointAccel() {
+        return jointAccel;
+    }
+
+    /**
+     * Set the value of jointAccel
+     *
+     * @param jointAccel new value of jointAccel
+     */
+    public void setJointAccel(BigDecimal jointAccel) {
+        this.jointAccel = jointAccel;
+    }
+
+    private void addJointMove(List<MiddleCommandType> out, String jointVals) {
+        ActuateJointsType ajCmd = new ActuateJointsType();
+        ajCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        ajCmd.getActuateJoint().clear();
+        String jointPosStrings[] = jointVals.split("[,]+");
+        for (int i = 0; i < jointPosStrings.length; i++) {
+            ActuateJointType aj = new ActuateJointType();
+            JointSpeedAccelType jsa = new JointSpeedAccelType();
+            jsa.setJointAccel(jointAccel);
+            jsa.setJointSpeed(jointSpeed);
+            aj.setJointDetails(jsa);
+            aj.setJointNumber(BigInteger.valueOf(i + 1));
+            aj.setJointPosition(BigDecimal.valueOf(Double.valueOf(jointPosStrings[i])));
+            ajCmd.getActuateJoint().add(aj);
+        }
+        out.add(ajCmd);
     }
 
     private void lookForPart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
@@ -1001,12 +1081,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addLookDwell(out);
     }
 
-    private void addOpenGripper(List<MiddleCommandType> out, PoseType pose) {
-        SetEndEffectorType openGripperCmd = new SetEndEffectorType();
-        openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
-        openGripperCmd.setSetting(BigDecimal.ONE);
-    }
-
+//    private void addOpenGripper(List<MiddleCommandType> out, PoseType pose) {
+//        SetEndEffectorType openGripperCmd = new SetEndEffectorType();
+//        openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+//        openGripperCmd.setSetting(BigDecimal.ONE);
+//    }
     private void addLookDwell(List<MiddleCommandType> out) {
         DwellType dwellCmd = new DwellType();
         dwellCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
