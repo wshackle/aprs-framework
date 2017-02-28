@@ -40,6 +40,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableColumnModel;
@@ -221,16 +222,16 @@ public class Utils {
         Collections.sort(names);
         StackTraceElement ste[] = Thread.currentThread().getStackTrace();
         try(PrintWriter pw = new PrintWriter(new FileWriter(file))) {
-//            if(ste.length > 2) {
-//                pw.println("#  Automatically saved by "+ste[2].getClassName()+"."+ste[2].getMethodName()+"() at "+ste[2].getFileName()+":"+ste[2].getLineNumber());
-//            }
-//            for (int i = 0; i < names.size(); i++) {
-//                String name = names.get(i);
-//                String value = props.getProperty(name);
-//                value = value.replaceAll("\\", "\\\\");
-//                pw.println(name+"="+value);
-//            }
-            props.store(pw, "");
+            if(ste.length > 2) {
+                pw.println("#  Automatically saved by "+ste[2].getClassName()+"."+ste[2].getMethodName()+"() at "+ste[2].getFileName()+":"+ste[2].getLineNumber());
+            }
+            for (int i = 0; i < names.size(); i++) {
+                String name = names.get(i);
+                String value = props.getProperty(name);
+                value = value.replaceAll("\\\\", Matcher.quoteReplacement("\\\\"));
+                pw.println(name+"="+value);
+            }
+//            props.store(pw, "");
         } catch (IOException ex) {
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
         }

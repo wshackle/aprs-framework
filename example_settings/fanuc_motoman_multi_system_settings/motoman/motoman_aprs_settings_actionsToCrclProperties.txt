@@ -1,17 +1,16 @@
-#
-#Tue Feb 21 17:04:21 EST 2017
-takePartArgIndex=0
-lookDwellTime=3.0
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1267
 approachZOffset=50.0
-manualPartNames=[empty_slot_for_large_gear_in_kit_s2l2_vessel, empty_slot_for_small_gear_in_kit_s2l2_vessel, kit_lg2small2_2_slot_l2, large_gear_2, large_gear_1, kit_lg2small2_1_slot_s2, small_gear_2, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]
-rotSpeed=30.0
-fastTransSpeed=160
-slowTransSpeed=40
-placePartSlotArgIndex=0
-settleDwellTime=0.2
-rpy=180.0,0.0,0.0
 defaultDwellTime=0.5
+fastTransSpeed=160
 lookDwell=1.0
+lookDwellTime=3.0
 lookForXYZ=240,435,0
+manualPartNames=[empty_slot_for_large_gear_in_kit_s2l2_vessel, empty_slot_for_small_gear_in_kit_s2l2_vessel, kit_lg2small2_2_slot_l2, large_gear_2, large_gear_1, kit_lg2small2_1_slot_s2, small_gear_2, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]
 manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
 pddl.output=..\\..\\..\\example_pddl\\feb_21_2017_motoman_demo_actions.txt
+placePartSlotArgIndex=0
+rotSpeed=30.0
+rpy=180.0,0.0,0.0
+settleDwellTime=0.2
+slowTransSpeed=40
+takePartArgIndex=0

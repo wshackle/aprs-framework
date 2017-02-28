@@ -1,18 +1,17 @@
-#
-#Tue Feb 28 09:43:35 EST 2017
-takePartArgIndex=0
-lookDwellTime=6.0
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1267
 approachZOffset=50.0
-manualPartNames=[empty_slot_for_large_gear_in_kit_m2l1_vessel_1, empty_slot_for_large_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m2, empty_slot_for_medium_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear, null, null]
-rotSpeed=30.0
-fastTransSpeed=160.0
-slowTransSpeed=40
-lookForJoints=21.25100662013839,-35.782544852166005,-2.170889823320318,0.00036661964803159317,-87.82912932490225,-21.25261342214055
-placePartSlotArgIndex=0
-settleDwellTime=0.2
-rpy=180.0,0.0,0.0
-lookDwell=1.0
 defaultDwellTime=0.1
+fastTransSpeed=160.0
+lookDwell=1.0
+lookDwellTime=6.0
+lookForJoints=21.25100662013839,-35.782544852166005,-2.170889823320318,0.00036661964803159317,-87.82912932490225,-21.25261342214055
 lookForXYZ=180,70,210
+manualPartNames=[empty_slot_for_large_gear_in_kit_m2l1_vessel_1, empty_slot_for_large_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m2, empty_slot_for_medium_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear, null, null]
 manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
 pddl.output=..\\..\\..\\example_pddl\\feb_21_2017_fanuc_demo_actions.txt
+placePartSlotArgIndex=0
+rotSpeed=30.0
+rpy=180.0,0.0,0.0
+settleDwellTime=0.2
+slowTransSpeed=40
+takePartArgIndex=0

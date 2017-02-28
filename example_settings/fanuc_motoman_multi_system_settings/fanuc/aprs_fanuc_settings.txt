@@ -1,20 +1,19 @@
-#
-#Tue Feb 28 09:43:35 EST 2017
-startup.pddl.objectview=true
-startup.robotcrclfanucserver=true
-startup.connectdatabase=true
-fanuc.crclLocalPort=64444
+#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:2006
+STARTUP_ACTIVE_WIN=PDDL_EXECUTOR_WINDOW
 aprs.robotName=Fanuc
-startup.robotcrclsimserver=false
-startup.connectvision=true
-startup.crclWebApp=false
-startup.pddl.objectsp=true
 aprs.taskName=Fanuc Cart
 crclWebApp.httpPort=8081
+fanuc.crclLocalPort=64444
 fanuc.robotHost=129.6.78.111
-startup.robotcrclmotomanserver=false
-startup.robotcrclclient=true
-startup.pddl.planner=true
-startup.exploreGraphDb=true
-STARTUP_ACTIVE_WIN=PDDL_EXECUTOR_WINDOW
+startup.connectdatabase=true
+startup.connectvision=true
+startup.crclWebApp=false
+startup.exploreGraphDb=false
 startup.pddl.executor=true
+startup.pddl.objectsp=true
+startup.pddl.objectview=true
+startup.pddl.planner=true
+startup.robotcrclclient=true
+startup.robotcrclfanucserver=true
+startup.robotcrclmotomanserver=false
+startup.robotcrclsimserver=false

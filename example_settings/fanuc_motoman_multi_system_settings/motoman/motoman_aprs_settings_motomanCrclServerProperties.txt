@@ -1,5 +1,4 @@
-#
-#Tue Feb 21 17:04:21 EST 2017
-MOTOPLUS_PORT=11000
-MOTOPLUS_HOST=10.0.0.2
+#  Automatically saved by com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJPanel.saveProperties() at MotomanCrclServerJPanel.java:303
 CRCL_PORT=64445
+MOTOPLUS_HOST=10.0.0.2
+MOTOPLUS_PORT=11000

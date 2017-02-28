@@ -1,0 +1,2 @@
+#  Automatically saved by crcl.ui.server.SimServerJPanel.saveProperties() at SimServerJPanel.java:178
+crcl.port=64444
