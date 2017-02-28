@@ -152,7 +152,7 @@ public class PddlAction {
 
     @Override
     public String toString() {
-        return "PddlAction{" + "label=" + label + ", type=" + type + ", args=" + Arrays.toString(args) + ", cost=" + cost + '}';
+        return type + " : " + Arrays.toString(args);
     }
 
     

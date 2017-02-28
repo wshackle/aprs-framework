@@ -1,10 +1,12 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1267
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1270
 approachZOffset=50.0
 defaultDwellTime=0.1
 fastTransSpeed=160.0
+jointAccel=100.0
+jointSpeed=5.0
 lookDwell=1.0
 lookDwellTime=6.0
-lookForJoints=21.25100662013839,-35.782544852166005,-2.170889823320318,0.00036661964803159317,-87.82912932490225,-21.25261342214055
+lookForJoints=21.25071462955139,-35.78231945592341,-2.170151522559762,0.0004982266878095476,-87.82952547587409,-21.250738535213483
 lookForXYZ=180,70,210
 manualPartNames=[empty_slot_for_large_gear_in_kit_m2l1_vessel_1, empty_slot_for_large_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m2, empty_slot_for_medium_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear, null, null]
 manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
@@ -15,3 +17,4 @@ rpy=180.0,0.0,0.0
 settleDwellTime=0.2
 slowTransSpeed=40
 takePartArgIndex=0
+useJointLookFor=true

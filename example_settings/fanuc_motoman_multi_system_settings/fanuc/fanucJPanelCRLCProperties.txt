@@ -1,0 +1,8 @@
+#  Automatically saved by com.github.wshackle.fanuccrclservermain.FanucCRCLServerJPanel.saveProperties() at FanucCRCLServerJPanel.java:903
+autoStartClient=true
+autoStartPressureSensorServer=true
+fingerSensorServerCmd=C:Program Files
+fingerSensorServerDirectory=C:UsersPublicDocumentsFingerPressureSensorNodeJS
+ode.exe=sensorServer.js
+odejs=
+showPressureOutput=true

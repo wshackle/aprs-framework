@@ -341,9 +341,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             CRCLCommandType cmd = pendantClientJInternalFrame.getCurrentProgramCommand();
             if (null != cmd) {
                 try {
-                    sb.append("cmd=").append(CRCLSocket.getUtilSocket().commandToSimpleString(cmd)).append("\r\n");
+                    sb.append("crcl_cmd=").append(CRCLSocket.getUtilSocket().commandToSimpleString(cmd)).append("\r\n");
                 } catch (ParserConfigurationException | SAXException | IOException ex) {
-                    sb.append("cmd= Exception : ").append(ex).append("\r\n");
+                    sb.append("crcl_cmd= Exception : ").append(ex).append("\r\n");
                     Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -1884,6 +1884,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != this.motomanCrclServerJInternalFrame) {
             motomanCrclServerJInternalFrame.loadProperties();
         }
+        if (null != this.fanucCRCLServerJInternalFrame) {
+            fanucCRCLServerJInternalFrame.loadProperties();
+        }
         String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
         if (null != motomanCrclLocalPortString) {
             this.motomanCrclPort = Integer.valueOf(motomanCrclLocalPortString);
@@ -2025,6 +2028,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         if (null != this.motomanCrclServerJInternalFrame) {
             motomanCrclServerJInternalFrame.saveProperties();
+        }
+        if (null != this.fanucCRCLServerJInternalFrame) {
+            fanucCRCLServerJInternalFrame.saveProperties();
         }
         if (null != dbSetup) {
             File dbPropsFile = new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
@@ -2222,6 +2228,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != dbSetupJInternalFrame) {
             File dbPropsFile = new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
             dbSetupJInternalFrame.setPropertiesFile(dbPropsFile);
+        }
+        if(null != fanucCRCLServerJInternalFrame) {
+            fanucCRCLServerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_fanucCrclServerProperties.txt"));
         }
     }
 
