@@ -464,6 +464,27 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         return XFuture.completedFuture(null);
     }
 
+    final private static  String transferrableOptions[] = new String[] {
+            "rpy",
+            "lookForXYZ",
+            "slowTransSpeed",
+            "jointAccel",
+            "jointSpeed",
+            "rotSpeed",
+            "fastTransSpeed",
+            "settleDwellTime",
+            "lookForJoints",
+            "useJointLookFor"
+        };
+    
+    private void copyOptions(String options[], Map<String,String> mapIn, Map<String,String> mapOut) {
+        for(String opt : options) {
+            if(mapIn.containsKey(opt)) {
+                mapOut.put(opt, mapIn.get(opt));
+            }
+        }
+    }
+    
     private XFuture<Void> stealRobot(AprsJFrame stealFrom, AprsJFrame stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
         File f = getPosMapFile(stealFor.getRobotName(), stealFrom.getRobotName());
         PositionMap pm = (f != null && !f.getName().equals("null")) ? new PositionMap(f) : PositionMap.emptyPositionMap();
@@ -476,22 +497,34 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         int stealForOrigCrclPort = stealFor.getRobotCrclPort();
         String stealForRobotName = stealFor.getRobotName();
 
-        String stealFromRpyOption = stealFrom.getExecutorOptions().get("rpy");
-        String stealFromLookForXYZOption = stealFrom.getExecutorOptions().get("lookForXYZ");
-
-        String stealForRpyOption = stealFor.getExecutorOptions().get("rpy");
-        String stealForLookForXYZOption = stealFor.getExecutorOptions().get("lookForXYZ");
+        
+        Map<String,String> stealFromOptions = new HashMap<>();
+        copyOptions(transferrableOptions,stealFrom.getExecutorOptions(),stealFromOptions);
+        
+        Map<String,String> stealForOptions = new HashMap<>();
+        copyOptions(transferrableOptions,stealFor.getExecutorOptions(),stealForOptions);
+        
+//        String stealFromRpyOption = stealFrom.getExecutorOptions().get("rpy");
+//        String stealFromLookForXYZOption = stealFrom.getExecutorOptions().get("lookForXYZ");
+//
+//        String stealForRpyOption = stealFor.getExecutorOptions().get("rpy");
+//        String stealForLookForXYZOption = stealFor.getExecutorOptions().get("lookForXYZ");
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
         return XFuture.allOf(stealFrom.safeAbortAndDisconnectAsync(), stealFor.safeAbort())
                 .thenRun(() -> {
                     stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
                     stealFor.addPositionMap(pm);
-                    if (null != stealFromRpyOption) {
-                        stealFor.setExecutorOption("rpy", stealFromRpyOption);
+                    for(String opt : transferrableOptions) {
+                        if(stealFromOptions.containsKey(opt)) {
+                            stealFor.setExecutorOption(opt, stealFromOptions.get(opt));
+                        }
                     }
-                    if (null != stealFromLookForXYZOption) {
-                        stealFor.setExecutorOption("lookForXYZ", stealFromLookForXYZOption);
-                    }
+//                    if (null != stealFromRpyOption) {
+//                        stealFor.setExecutorOption("rpy", stealFromRpyOption);
+//                    }
+//                    if (null != stealFromLookForXYZOption) {
+//                        stealFor.setExecutorOption("lookForXYZ", stealFromLookForXYZOption);
+//                    }
 //                    return null;
                 })
                 .thenCompose(x -> {
@@ -524,12 +557,17 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 .thenRun(() -> {
                     stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
 
-                    if (null != stealForRpyOption) {
-                        stealFor.setExecutorOption("rpy", stealForRpyOption);
+                    for(String opt : transferrableOptions) {
+                        if(stealForOptions.containsKey(opt)) {
+                            stealFor.setExecutorOption(opt, stealForOptions.get(opt));
+                        }
                     }
-                    if (null != stealForLookForXYZOption) {
-                        stealFor.setExecutorOption("lookForXYZ", stealForLookForXYZOption);
-                    }
+//                    if (null != stealForRpyOption) {
+//                        stealFor.setExecutorOption("rpy", stealForRpyOption);
+//                    }
+//                    if (null != stealForLookForXYZOption) {
+//                        stealFor.setExecutorOption("lookForXYZ", stealForLookForXYZOption);
+//                    }
                     stealFor.removePositionMap(pm);
                     stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);
                     stealFor.disconnectRobot();
