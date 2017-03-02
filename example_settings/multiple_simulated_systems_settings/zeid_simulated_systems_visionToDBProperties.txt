@@ -3,7 +3,7 @@
 --commandport=4001
 --dbhost=hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com
 --dbname=fanuc-demo
---dbpasswd=b.LpQX1U0EUgja.kazGEa5hKc8wQ6c3
+--dbpasswd=b.ArCiTM1KM91m.iael6i07J5JAXZWo
 --dbport=24789
 --dbtype=NEO4J
 --dbuser=fanuc-demo
@@ -13,7 +13,7 @@
 AddRepeatCountsToDatabaseNames=true
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com.port=24789
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.name=fanuc-demo
-NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.passwd=b.LpQX1U0EUgja.kazGEa5hKc8wQ6c3
+NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.passwd=b.ArCiTM1KM91m.iael6i07J5JAXZWo
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.user=fanuc-demo
 NEO4J.host=hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com
 NEO4J.localhost.port=7494

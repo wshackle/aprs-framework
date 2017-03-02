@@ -11,6 +11,10 @@
 --visionhost=localhost
 --visionport=4000
 AddRepeatCountsToDatabaseNames=true
+NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com.port=24789
+NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.name=fanuc-demo
+NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.passwd=XqL05QDsHL2Th9zNANXK
+NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.user=fanuc-demo
 NEO4J.host=ying-220.mxnet.mel.nist.gov
 NEO4J.localhost.port=7494
 NEO4J.localhost_4000.name=neo4j

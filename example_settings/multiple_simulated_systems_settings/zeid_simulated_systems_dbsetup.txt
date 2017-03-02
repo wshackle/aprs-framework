@@ -3,13 +3,7 @@
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com.port=24789
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.internalQueriesResourceDir=true
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.name=fanuc-demo
-NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.passwd=b.LpQX1U0EUgja.kazGEa5hKc8wQ6c3
+NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.passwd=b.ArCiTM1KM91m.iael6i07J5JAXZWo
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.queriesDir=neo4j/v2
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.user=fanuc-demo
 NEO4J.host=hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com
-NEO4J.ying-220.mxnet.mel.nist.gov.port=7494
-NEO4J.ying-220.mxnet.mel.nist.gov_7494.internalQueriesResourceDir=true
-NEO4J.ying-220.mxnet.mel.nist.gov_7494.name=neo4j
-NEO4J.ying-220.mxnet.mel.nist.gov_7494.passwd=password
-NEO4J.ying-220.mxnet.mel.nist.gov_7494.queriesDir=neo4j/v2
-NEO4J.ying-220.mxnet.mel.nist.gov_7494.user=neo4j

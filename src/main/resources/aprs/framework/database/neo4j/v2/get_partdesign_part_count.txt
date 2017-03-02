@@ -1,3 +1,3 @@
 #params=NAME{1}
-MATCH (n:PartsTray)-[:hasPartsTray_Design]-(pd:PartsTrayDesign)-[hasPartsTrayDesign_PartRefAndPose]-(rap:PartRefAndPose) 
+MATCH (n:StockKeepingUnit)-[:hasPartsTrayDesign_VesselSku]-(pd:PartsTrayDesign)-[hasPartsTrayDesign_PartRefAndPose]-(rap:PartRefAndPose) 
 where n.name={1} RETURN count(rap)
