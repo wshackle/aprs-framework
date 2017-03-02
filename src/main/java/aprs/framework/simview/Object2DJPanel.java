@@ -29,13 +29,17 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -105,16 +109,50 @@ public class Object2DJPanel extends JPanel {
         if (null != pose && null != pose.getPoint()) {
             double x = pose.getPoint().getX().doubleValue();
             double y = pose.getPoint().getY().doubleValue();
+            if (useSeparateNames) {
+                g2d.setColor(Color.BLACK);
+                int i = items.size();
+                double namex = maxX;
+                double namey = minY + ((double) (i + 1)) / (items.size() + 2) * (maxY - minY);
+                switch (displayAxis) {
+                    case POS_X_POS_Y:
+                        break;
+
+                    case POS_Y_NEG_X:
+                        namex = minX + ((double) (i + 1)) / (items.size() + 2) * (maxX - minX);
+                        namey = maxY;
+                        break;
+
+                    case NEG_X_NEG_Y:
+                        namex = minX;
+                        break;
+
+                    case NEG_Y_POS_X:
+                        namex = minX + ((double) (i + 1)) / (items.size() + 2) * (maxX - minX);
+                        namey = minY;
+                        break;
+                }
+                this.translate(g2d, namex, namey);
+                g2d.setColor(Color.GREEN);
+                Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * label.length(), 20);
+                g2d.fill(rect);
+                g2d.setColor(Color.BLACK);
+                g2d.drawString(label, 0, 0);
+                g2d.setTransform(origTransform);
+                g2d.draw(new Line2D.Double(toScreenPoint(namex, namey), toScreenPoint(x, y)));
+            }
             this.translate(g2d, x, y);
             g2d.setColor(Color.GREEN);
-            Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * label.length(), 20);
+            Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : label.length()), 20);
             g2d.fill(rect);
             g2d.setColor(Color.BLACK);
             g2d.draw(rect);
-            g2d.drawString(label, 0, 0);
+            if (!useSeparateNames) {
+                g2d.drawString(label, 0, 0);
+            }
         }
         ImageIO.write(img, type, f);
-        System.out.println("Saved snapshot to "+f.getCanonicalPath());
+        System.out.println("Saved snapshot to " + f.getCanonicalPath());
     }
 
     private int selectedItemIndex = -1;
@@ -214,6 +252,23 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
+    private Point2D.Double toScreenPoint(double itemx, double itemy) {
+        switch (displayAxis) {
+            case POS_X_POS_Y:
+                return new Point2D.Double((itemx - minX) * scale + 15, (maxY - itemy) * scale + 20);
+
+            case POS_Y_NEG_X:
+                return new Point2D.Double((itemy - minY) * scale + 15, (itemx - minX) * scale + 20);
+
+            case NEG_X_NEG_Y:
+                return new Point2D.Double((maxX - itemx) * scale + 15, (itemy - minY) * scale + 20);
+
+            case NEG_Y_POS_X:
+                return new Point2D.Double((maxY - itemy) * scale + 15, (maxX - itemx) * scale + 20);
+        }
+        throw new IllegalStateException("invalid displayAxis");
+    }
+
     private double currentX = 0;
 
     /**
@@ -277,12 +332,55 @@ public class Object2DJPanel extends JPanel {
         this.repaint();
     }
 
+    private boolean useSeparateNames = false;
+
+    /**
+     * Get the value of useSeparateNames
+     *
+     * @return the value of useSeparateNames
+     */
+    public boolean isUseSeparateNames() {
+        return useSeparateNames;
+    }
+
+    /**
+     * Set the value of useSeparateNames
+     *
+     * @param useSeparateNames new value of useSeparateNames
+     */
+    public void setUseSeparateNames(boolean useSeparateNames) {
+        this.useSeparateNames = useSeparateNames;
+        this.repaint();
+    }
+
+    private int namesXPos = 100;
+
+    /**
+     * Get the value of namesXPos
+     *
+     * @return the value of namesXPos
+     */
+    public int getNamesXPos() {
+        return namesXPos;
+    }
+
+    /**
+     * Set the value of namesXPos
+     *
+     * @param namesXPos new value of namesXPos
+     */
+    public void setNamesXPos(int namesXPos) {
+        this.namesXPos = namesXPos;
+    }
+
+    private AffineTransform origTransform = null;
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        AffineTransform origTransform = g2d.getTransform();
+        origTransform = g2d.getTransform();
 //        double min_x = minX;
 //        double min_y = minY;
 //        double max_x = maxX;
@@ -331,17 +429,19 @@ public class Object2DJPanel extends JPanel {
         switch (displayAxis) {
             case POS_X_POS_Y:
             case NEG_X_NEG_Y:
-                scale_x = (this.getSize().width - 30) / (maxX - minX);
-                scale_y = (this.getSize().height - 50) / (maxY - minY);
+                scale_x = (this.getSize().width - 10) / (maxX - minX);
+                scale_y = (this.getSize().height - 10) / (maxY - minY);
                 break;
 
             case POS_Y_NEG_X:
             case NEG_Y_POS_X:
-                scale_x = (this.getSize().width - 30) / (maxY - minY);
-                scale_y = (this.getSize().height - 50) / (maxX - minX);
+                scale_x = (this.getSize().width - 10) / (maxY - minY);
+                scale_y = (this.getSize().height - 10) / (maxX - minX);
                 break;
         }
-
+        if (useSeparateNames) {
+            scale_x = scale_x / 2.0;
+        }
         if (Double.isInfinite(scale_x) || Double.isNaN(scale_x)) {
             return;
         }
@@ -355,8 +455,28 @@ public class Object2DJPanel extends JPanel {
         minCorner.x = minX;
         minCorner.y = minY;
 //        System.out.println("scale = " + scale);
-        for (int i = 0; i < items.size(); i++) {
-            DetectedItem item = items.get(i);
+        List<DetectedItem> displayList = items;
+        if (useSeparateNames) {
+            displayList = new ArrayList<>();
+            displayList.addAll(items);
+            switch (displayAxis) {
+                case POS_X_POS_Y:
+                case NEG_X_NEG_Y:
+                    Collections.sort(displayList, Comparator.comparing((DetectedItem item) -> item.y));
+                    break;
+
+                case POS_Y_NEG_X:
+                case NEG_Y_POS_X:
+                    Collections.sort(displayList, Comparator.comparing((DetectedItem item) -> item.x));
+                    break;
+            }
+        }
+        DetectedItem selectedItem = null;
+        if (selectedItemIndex >= 0 && selectedItemIndex < items.size()) {
+            selectedItem = items.get(selectedItemIndex);
+        }
+        for (int i = 0; i < displayList.size(); i++) {
+            DetectedItem item = displayList.get(i);
             if (null == item) {
                 continue;
             }
@@ -372,12 +492,49 @@ public class Object2DJPanel extends JPanel {
             if (Double.isInfinite(item.rotation) || Double.isNaN(item.rotation)) {
                 continue;
             }
+            if (useSeparateNames) {
+                g2d.setColor(Color.BLACK);
+                double namex = maxX;
+                double namey = minY + ((double) (i + 1)) / (items.size() + 2) * (maxY - minY);
+                switch (displayAxis) {
+                    case POS_X_POS_Y:
+                        break;
+
+                    case POS_Y_NEG_X:
+                        namex = minX + ((double) (i + 1)) / (items.size() + 2) * (maxX - minX);
+                        namey = maxY;
+                        break;
+
+                    case NEG_X_NEG_Y:
+                        namex = minX;
+                        break;
+
+                    case NEG_Y_POS_X:
+                        namex = minX + ((double) (i + 1)) / (items.size() + 2) * (maxX - minX);
+                        namey = minY;
+                        break;
+                }
+                this.translate(g2d, namex, namey);
+                if (item == selectedItem) {
+                    g2d.setColor(Color.WHITE);
+                    Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20);
+                    g2d.fill(rect);
+                }
+                g2d.setColor(Color.BLACK);
+                g2d.drawString(item.name, 0, 0);
+                g2d.setTransform(origTransform);
+                g2d.draw(new Line2D.Double(toScreenPoint(namex, namey), toScreenPoint(item.x, item.y)));
+            }
             this.translate(g2d, item.x, item.y);
             if (viewRotations) {
                 g2d.rotate(item.rotation);
             }
             g2d.setColor(Color.BLACK);
-            g2d.drawString(item.name, 0, 0);
+            if (!useSeparateNames) {
+                g2d.drawString(item.name, 0, 0);
+            } else {
+                g2d.drawString(item.type, 0, 0);
+            }
             item.displayTransform = g2d.getTransform();
             item.origTransform = origTransform;
             try {
@@ -387,7 +544,7 @@ public class Object2DJPanel extends JPanel {
                 Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            item.displayRect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20);
+            item.displayRect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : item.name.length()), 20);
             g2d.setColor(Color.BLACK);
             g2d.draw(item.displayRect);
             g2d.setTransform(origTransform);
@@ -416,11 +573,15 @@ public class Object2DJPanel extends JPanel {
                 g2d.rotate(item.rotation);
             }
             g2d.setColor(Color.WHITE);
-            Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20);
+            Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? item.type.length() : item.name.length()), 20);
             g2d.fill(rect);
             g2d.setColor(Color.BLACK);
             g2d.draw(rect);
-            g2d.drawString(item.name, 0, 0);
+            if (!useSeparateNames) {
+                g2d.drawString(item.name, 0, 0);
+            } else {
+                g2d.drawString(item.type, 0, 0);
+            }
             g2d.setTransform(origTransform);
         }
         if (this.showCurrentXY) {
