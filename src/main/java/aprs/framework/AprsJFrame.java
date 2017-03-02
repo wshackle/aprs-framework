@@ -112,7 +112,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    private int runNumber;
+    private int runNumber = (int) ((System.currentTimeMillis()/10000)%1000);
     
     public String getRunName() {
         return ((this.taskName!=null)?this.taskName.replace(" ", "-"):"")+"-run-"+String.format("%03d",runNumber)+"-";

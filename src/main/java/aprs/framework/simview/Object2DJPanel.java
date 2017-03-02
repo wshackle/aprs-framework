@@ -114,6 +114,7 @@ public class Object2DJPanel extends JPanel {
             g2d.drawString(label, 0, 0);
         }
         ImageIO.write(img, type, f);
+        System.out.println("Saved snapshot to "+f.getCanonicalPath());
     }
 
     private int selectedItemIndex = -1;
