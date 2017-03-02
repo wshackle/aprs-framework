@@ -305,15 +305,32 @@ public class VisionSocketClient implements AutoCloseable {
         return listOut;
     }
 
+    private int prevVisionListSize = -1;
+    private int ignoreCount = 0;
+    private int lineCount = 0;
+
     public void parseVisionLine(final String line) {
         try {
             long t0 = System.nanoTime();
             this.line = line;
-
+            lineCount++;
             if (visionList == null) {
                 visionList = new ArrayList<>();
             }
             visionList = lineToList(line, displayInterface);
+            if (visionList.size() < prevVisionListSize - 2) {
+                if (ignoreCount < 100 || debug) {
+                    System.err.println("ignoring vision list that decreased from " + prevVisionListSize + " to " + visionList.size() + " items");
+                    System.err.println("lineCount=" + lineCount);
+                    System.err.println("ignoreCount=" + ignoreCount);
+                } else if(ignoreCount == 100) {
+                    System.err.println("No more messages about ignored vision lists will be printed");
+                }
+                ignoreCount++;
+                prevVisionListSize--;
+                return;
+            }
+            prevVisionListSize = visionList.size();
             poseUpdatesParsed += visionList.size();
             updateListeners();
             if (debug) {
@@ -321,6 +338,7 @@ public class VisionSocketClient implements AutoCloseable {
                 long time_diff = t1 - t0;
                 System.out.println("line = " + line);
                 System.out.println("visionList = " + visionList);
+                System.out.println("lineCount ="+lineCount);
                 System.out.printf("parseVisionLine time_diff = %.3f\n", (time_diff * 1e-9));
             }
         } catch (Exception ex) {
