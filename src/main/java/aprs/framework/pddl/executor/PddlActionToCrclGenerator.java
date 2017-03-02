@@ -21,6 +21,7 @@
  */
 package aprs.framework.pddl.executor;
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.PddlAction;
 import aprs.framework.Utils;
 import aprs.framework.database.DbSetup;
@@ -31,7 +32,6 @@ import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
 import crcl.base.AngleUnitEnumType;
 import crcl.base.DwellType;
-import crcl.base.JointDetailsType;
 import crcl.base.JointSpeedAccelType;
 import crcl.base.LengthUnitEnumType;
 import crcl.base.MessageType;
@@ -67,6 +67,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -84,12 +86,41 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pickupPose;
 
     }
+
+    public String getRunName() {
+        if (null != aprsJFrame) {
+            return aprsJFrame.getRunName();
+        } else {
+            return "";
+        }
+    }
+
     private java.sql.Connection dbConnection;
     private DbSetup dbSetup;
     private boolean closeDbConnection = true;
     private QuerySet qs;
     //private List<String> inspectionList=new ArrayList();
     Map<String, String> inspectionMap = new HashMap<String, String>();
+
+    private boolean takeSnapshots = false;
+
+    /**
+     * Get the value of takeSnapshots
+     *
+     * @return the value of takeSnapshots
+     */
+    public boolean isTakeSnapshots() {
+        return takeSnapshots;
+    }
+
+    /**
+     * Set the value of takeSnapshots
+     *
+     * @param takeSnapshots new value of takeSnapshots
+     */
+    public void setTakeSnapshots(boolean takeSnapshots) {
+        this.takeSnapshots = takeSnapshots;
+    }
 
     private List<PositionMap> positionMaps = null;
 
@@ -463,6 +494,46 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return pout;
     }
 
+    private AprsJFrame aprsJFrame;
+
+    /**
+     * Get the value of aprsJFrame
+     *
+     * @return the value of aprsJFrame
+     */
+    public AprsJFrame getAprsJFrame() {
+        return aprsJFrame;
+    }
+
+    /**
+     * Set the value of aprsJFrame
+     *
+     * @param aprsJFrame new value of aprsJFrame
+     */
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        this.aprsJFrame = aprsJFrame;
+    }
+
+    public void takeSimViewSnapshot(File f, PoseType pose, String label) throws IOException {
+        if (null != aprsJFrame) {
+            aprsJFrame.takeSimViewSnapshot(f, pose, label);
+        }
+    }
+
+    public void addTakeSimViewSnapshot(List<MiddleCommandType> out,
+            String title, final PoseType pose, String label) {
+        if (takeSnapshots) {
+            final String filename = getRunName() + "action-" + String.format("%03d", lastIndex) + title;
+            addMarkerCommand(out, title, x -> {
+                try {
+                    takeSimViewSnapshot(File.createTempFile(filename, ".PNG"), pose, label);
+                } catch (IOException ex) {
+                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        }
+    }
+
     public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
@@ -657,6 +728,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         out.add(msg);
 
         PoseType pose = getPartPose(partName);
+        if (takeSnapshots) {
+            try {
+                takeSimViewSnapshot(File.createTempFile(getRunName() + "action-" + String.format("%03d", lastIndex) + "-take-part-" + partName + "-", ".PNG"), pose, partName);
+            } catch (IOException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         pose = correctPose(pose);
         returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);
@@ -926,6 +1004,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null != placePartSlotArgIndexString && placePartSlotArgIndexString.length() > 0) {
             this.placePartSlotArgIndex = Integer.valueOf(placePartSlotArgIndexString);
         }
+        String takeSnapshotsString = options.get("takeSnapshots");
+        if (null != takeSnapshotsString && takeSnapshotsString.length() > 0) {
+            takeSnapshots = Boolean.valueOf(takeSnapshotsString);
+        }
     }
 
     private void addOpenGripper(List<MiddleCommandType> cmds) {
@@ -1079,6 +1161,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addMoveToLookForPosition(out);
 
         addLookDwell(out);
+
+        addTakeSimViewSnapshot(out, "-look-for-parts-", null, "");
     }
 
 //    private void addOpenGripper(List<MiddleCommandType> out, PoseType pose) {
@@ -1174,6 +1258,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setZAxis(zAxis);
 
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
+        if (takeSnapshots) {
+            try {
+                takeSimViewSnapshot(File.createTempFile(getRunName() + "action-" + String.format("%03d", lastIndex) + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
+            } catch (IOException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         placePartByPose(out, pose);
         final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
         addMarkerCommand(out, msg,

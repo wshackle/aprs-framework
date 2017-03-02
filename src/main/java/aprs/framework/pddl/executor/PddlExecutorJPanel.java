@@ -463,7 +463,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 {"settleDwellTime", "0.1"},
                 {"useJointLookFor", "false"},
                 {"jointSpeed", "5.0"},
-                {"jointAccel", "100.0"}
+                {"jointAccel", "100.0"},
+                {"takeSnapshots", "false"}
             },
             new String [] {
                 "Name", "Value"
@@ -1589,6 +1590,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      */
     public void setAprsJFrame(AprsJFrame aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
+        if(null != pddlActionToCrclGenerator) {
+            pddlActionToCrclGenerator.setAprsJFrame(aprsJFrame);
+        }
     }
 
     /**

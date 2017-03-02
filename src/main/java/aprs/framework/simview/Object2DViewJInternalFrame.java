@@ -24,6 +24,7 @@ package aprs.framework.simview;
 
 import aprs.framework.AprsJFrame;
 import aprs.framework.database.DetectedItem;
+import crcl.base.PoseType;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -121,6 +122,11 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
 
     public AprsJFrame getAprsJFrame() {
         return object2DOuterJPanel1.getAprsJFrame();
+    }
+
+    @Override
+    public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
+        object2DOuterJPanel1.takeSnapshot(f, pose, label);
     }
     
 }

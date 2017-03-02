@@ -112,6 +112,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private int runNumber;
+    
+    public String getRunName() {
+        return ((this.taskName!=null)?this.taskName.replace(" ", "-"):"")+"-run-"+String.format("%03d",runNumber)+"-";
+    }
+    
     public boolean isCrclProgramPaused() {
         if(null != pendantClientJInternalFrame) {
             return pendantClientJInternalFrame.isPaused();
@@ -1602,6 +1608,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_jCheckBoxMenuItemConnectToVisionOnStartupActionPerformed
 
     public XFuture<Boolean> startActions() {
+        runNumber++;
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh();
         }
@@ -1749,6 +1756,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     };
 
+    
+    public void takeSimViewSnapshot(File f, PoseType pose, String label) throws IOException {
+        if(null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.takeSnapshot(f, pose, label);
+        }
+    }
+    
     DbSetup dbSetup = null;
 
     @Override

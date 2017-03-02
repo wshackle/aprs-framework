@@ -24,6 +24,9 @@ package aprs.framework.simview;
 
 import aprs.framework.database.CommonJFrameInterface;
 import aprs.framework.database.DetectedItem;
+import crcl.base.PoseType;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -35,4 +38,7 @@ public interface Object2DJFrameInterface extends CommonJFrameInterface {
     public List<DetectedItem> getItems();
     
     public void setItems(List<DetectedItem> items);
+    
+    public void takeSnapshot(File f, PoseType pose, String label) throws IOException;
+    
 }

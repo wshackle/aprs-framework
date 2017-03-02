@@ -73,6 +73,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private volatile boolean settingItems = false;
 
+    public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
+        this.object2DJPanel1.takeSnapshot(f, pose, label);
+    }
+    
     public void refresh() {
         if (jCheckBoxSimulated.isSelected()) {
             String fname = jTextFieldFilename.getText();

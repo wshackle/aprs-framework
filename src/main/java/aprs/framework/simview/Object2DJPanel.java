@@ -24,6 +24,7 @@ package aprs.framework.simview;
 
 import aprs.framework.database.DetectedItem;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
+import crcl.base.PoseType;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -31,10 +32,14 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 /**
@@ -54,9 +59,6 @@ public class Object2DJPanel extends JPanel {
         return displayAxis;
     }
 
-    
-    
-    
     /**
      * Set the value of displayAxis
      *
@@ -89,6 +91,29 @@ public class Object2DJPanel extends JPanel {
     public void setItems(List<DetectedItem> items) {
         this.items = items;
         this.repaint();
+    }
+
+    public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
+        BufferedImage img = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+        int pindex = f.getName().lastIndexOf('.');
+        String type = "JPEG";
+        if (pindex > 0) {
+            type = f.getName().substring(pindex + 1);
+        }
+        Graphics2D g2d = img.createGraphics();
+        this.paintComponent(g2d);
+        if (null != pose && null != pose.getPoint()) {
+            double x = pose.getPoint().getX().doubleValue();
+            double y = pose.getPoint().getY().doubleValue();
+            this.translate(g2d, x, y);
+            g2d.setColor(Color.GREEN);
+            Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * label.length(), 20);
+            g2d.fill(rect);
+            g2d.setColor(Color.BLACK);
+            g2d.draw(rect);
+            g2d.drawString(label, 0, 0);
+        }
+        ImageIO.write(img, type, f);
     }
 
     private int selectedItemIndex = -1;
@@ -350,6 +375,7 @@ public class Object2DJPanel extends JPanel {
             if (viewRotations) {
                 g2d.rotate(item.rotation);
             }
+            g2d.setColor(Color.BLACK);
             g2d.drawString(item.name, 0, 0);
             item.displayTransform = g2d.getTransform();
             item.origTransform = origTransform;
@@ -361,9 +387,11 @@ public class Object2DJPanel extends JPanel {
             }
 
             item.displayRect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20);
+            g2d.setColor(Color.BLACK);
             g2d.draw(item.displayRect);
             g2d.setTransform(origTransform);
         }
+        g2d.setColor(Color.BLACK);
         g2d.drawString(String.format("Offset = %.2f,%.2f scale=%.2f", minX, minY, scale), 10, this.getSize().height - 10);
         if (selectedItemIndex >= 0 && selectedItemIndex < items.size()) {
             DetectedItem item = items.get(selectedItemIndex);
