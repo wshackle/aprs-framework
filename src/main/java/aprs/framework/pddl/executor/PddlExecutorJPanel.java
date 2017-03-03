@@ -132,12 +132,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 if (row == currentActionIndex && isSelected) {
                     c.setBackground(Color.YELLOW);
                     c.setForeground(Color.BLACK);
+                } else if (!isSelected) {
+                    c.setBackground(Color.GRAY);
                 } else {
-                    if (!isSelected) {
-                        c.setBackground(Color.GRAY);
-                    } else {
-                        c.setBackground(Color.BLUE);
-                    }
+                    c.setBackground(Color.BLUE);
                 }
                 return c;
             }
@@ -1590,7 +1588,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      */
     public void setAprsJFrame(AprsJFrame aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
-        if(null != pddlActionToCrclGenerator) {
+        if (null != pddlActionToCrclGenerator) {
             pddlActionToCrclGenerator.setAprsJFrame(aprsJFrame);
         }
     }
@@ -2553,31 +2551,31 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jButtonPauseActionPerformed
 
     private void updateLookForJoints(CRCLStatusType stat) {
-        if(null != stat && null != stat.getJointStatuses()) {
+        if (null != stat && null != stat.getJointStatuses()) {
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
-            String jointVals = 
-                    jointList
-                            .stream()
-                            .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                            .map(JointStatusType::getJointPosition)
-                            .map(Objects::toString)
-                            .collect(Collectors.joining(","));
+            String jointVals
+                    = jointList
+                    .stream()
+                    .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                    .map(JointStatusType::getJointPosition)
+                    .map(Objects::toString)
+                    .collect(Collectors.joining(","));
             System.out.println("jointVals = " + jointVals);
             DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
             boolean keyFound = false;
             for (int i = 0; i < model.getRowCount(); i++) {
-                if(Objects.equals("lookForJoints",model.getValueAt(i, 0))) {
+                if (Objects.equals("lookForJoints", model.getValueAt(i, 0))) {
                     model.setValueAt(jointVals, i, 1);
                     keyFound = true;
                 }
             }
-            if(!keyFound) {
-                model.addRow(new Object[]{"lookForJoints",jointVals});
+            if (!keyFound) {
+                model.addRow(new Object[]{"lookForJoints", jointVals});
             }
             pddlActionToCrclGenerator.setOptions(getTableOptions());
         }
     }
-    
+
     private void jButtonRecordLookForJointsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordLookForJointsActionPerformed
         aprsJFrame.getCurrentStatus()
                 .ifPresent(this::updateLookForJoints);
@@ -2736,6 +2734,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private int crclStartActionIndex = -1;
     private int crclEndActionIndex = -1;
 
+    private void takeSimViewSnapshot(File f, PoseType pose, String label) throws IOException {
+        if (null != aprsJFrame) {
+            aprsJFrame.takeSimViewSnapshot(f, pose, label);
+        }
+    }
+
     private XFuture<Boolean> generateCrcl() throws IOException, IllegalStateException, SQLException {
         boolean doSafeAbort;
 
@@ -2755,6 +2759,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 if (null != r) {
                     r.run();
                 }
+            }
+            if (pddlActionToCrclGenerator.isTakeSnapshots()) {
+                takeSimViewSnapshot(File.createTempFile(pddlActionToCrclGenerator.getRunPrefix() + "-safe-abort-", ".PNG"), null, "");
             }
             return XFuture.completedFuture(false);
         }

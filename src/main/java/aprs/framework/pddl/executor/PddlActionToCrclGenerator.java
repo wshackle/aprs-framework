@@ -103,7 +103,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     Map<String, String> inspectionMap = new HashMap<String, String>();
 
     private boolean takeSnapshots = false;
-
+    private int crclNumber = 0;
+    
     /**
      * Get the value of takeSnapshots
      *
@@ -298,6 +299,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options) throws IllegalStateException, SQLException {
         this.options = options;
+        crclNumber++;
         List<MiddleCommandType> cmds = new ArrayList<>();
         if (null == actionToCrclIndexes || actionToCrclIndexes.length != actions.size()) {
             actionToCrclIndexes = new int[actions.size()];
@@ -523,7 +525,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public void addTakeSimViewSnapshot(List<MiddleCommandType> out,
             String title, final PoseType pose, String label) {
         if (takeSnapshots) {
-            final String filename = getRunName() + "action-" + String.format("%03d", lastIndex) + title;
+            final String filename = getRunPrefix() + title;
             addMarkerCommand(out, title, x -> {
                 try {
                     takeSimViewSnapshot(File.createTempFile(filename, ".PNG"), pose, label);
@@ -532,6 +534,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
             });
         }
+    }
+
+    public String getRunPrefix() {
+        return getRunName()  + String.format("%03d", crclNumber) + "-action-" + String.format("%03d", lastIndex);
     }
 
     public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
@@ -730,7 +736,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pose = getPartPose(partName);
         if (takeSnapshots) {
             try {
-                takeSimViewSnapshot(File.createTempFile(getRunName() + "action-" + String.format("%03d", lastIndex) + "-take-part-" + partName + "-", ".PNG"), pose, partName);
+                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-take-part-" + partName + "-", ".PNG"), pose, partName);
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1260,7 +1266,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         if (takeSnapshots) {
             try {
-                takeSimViewSnapshot(File.createTempFile(getRunName() + "action-" + String.format("%03d", lastIndex) + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
+                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }

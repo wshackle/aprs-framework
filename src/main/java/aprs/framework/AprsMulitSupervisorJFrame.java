@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -464,27 +465,36 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         return XFuture.completedFuture(null);
     }
 
-    final private static  String transferrableOptions[] = new String[] {
-            "rpy",
-            "lookForXYZ",
-            "slowTransSpeed",
-            "jointAccel",
-            "jointSpeed",
-            "rotSpeed",
-            "fastTransSpeed",
-            "settleDwellTime",
-            "lookForJoints",
-            "useJointLookFor"
-        };
-    
-    private void copyOptions(String options[], Map<String,String> mapIn, Map<String,String> mapOut) {
-        for(String opt : options) {
-            if(mapIn.containsKey(opt)) {
+    final private static String transferrableOptions[] = new String[]{
+        "rpy",
+        "lookForXYZ",
+        "slowTransSpeed",
+        "jointAccel",
+        "jointSpeed",
+        "rotSpeed",
+        "fastTransSpeed",
+        "settleDwellTime",
+        "lookForJoints",
+        "useJointLookFor"
+    };
+
+    private void copyOptions(String options[], Map<String, String> mapIn, Map<String, String> mapOut) {
+        for (String opt : options) {
+            if (mapIn.containsKey(opt)) {
                 mapOut.put(opt, mapIn.get(opt));
             }
         }
     }
-    
+
+    private final AtomicReference<Runnable> returnRobotRunnable = new AtomicReference<>();
+
+    private void returnRobots() {
+        Runnable r = returnRobotRunnable.getAndSet(null);
+        if (r != null) {
+            r.run();
+        }
+    }
+
     private XFuture<Void> stealRobot(AprsJFrame stealFrom, AprsJFrame stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
         File f = getPosMapFile(stealFor.getRobotName(), stealFrom.getRobotName());
         PositionMap pm = (f != null && !f.getName().equals("null")) ? new PositionMap(f) : PositionMap.emptyPositionMap();
@@ -497,13 +507,32 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         int stealForOrigCrclPort = stealFor.getRobotCrclPort();
         String stealForRobotName = stealFor.getRobotName();
 
-        
-        Map<String,String> stealFromOptions = new HashMap<>();
-        copyOptions(transferrableOptions,stealFrom.getExecutorOptions(),stealFromOptions);
-        
-        Map<String,String> stealForOptions = new HashMap<>();
-        copyOptions(transferrableOptions,stealFor.getExecutorOptions(),stealForOptions);
-        
+        Map<String, String> stealFromOptions = new HashMap<>();
+        copyOptions(transferrableOptions, stealFrom.getExecutorOptions(), stealFromOptions);
+
+        Map<String, String> stealForOptions = new HashMap<>();
+        copyOptions(transferrableOptions, stealFor.getExecutorOptions(), stealForOptions);
+        returnRobotRunnable.set(()  -> {
+            stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
+
+            for (String opt : transferrableOptions) {
+                if (stealForOptions.containsKey(opt)) {
+                    stealFor.setExecutorOption(opt, stealForOptions.get(opt));
+                }
+            }
+//                    if (null != stealForRpyOption) {
+//                        stealFor.setExecutorOption("rpy", stealForRpyOption);
+//                    }
+//                    if (null != stealForLookForXYZOption) {
+//                        stealFor.setExecutorOption("lookForXYZ", stealForLookForXYZOption);
+//                    }
+            stealFor.removePositionMap(pm);
+            stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);
+            stealFor.disconnectRobot();
+            stealFor.setRobotName(stealForRobotName);
+        }
+        );
+
 //        String stealFromRpyOption = stealFrom.getExecutorOptions().get("rpy");
 //        String stealFromLookForXYZOption = stealFrom.getExecutorOptions().get("lookForXYZ");
 //
@@ -514,8 +543,8 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 .thenRun(() -> {
                     stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
                     stealFor.addPositionMap(pm);
-                    for(String opt : transferrableOptions) {
-                        if(stealFromOptions.containsKey(opt)) {
+                    for (String opt : transferrableOptions) {
+                        if (stealFromOptions.containsKey(opt)) {
                             stealFor.setExecutorOption(opt, stealFromOptions.get(opt));
                         }
                     }
@@ -554,25 +583,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     return SplashScreen.showMessageFullScreen("Returning \n" + stealFromRobotName, 80.0f,
                             SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList(), gd);
                 })
-                .thenRun(() -> {
-                    stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
-
-                    for(String opt : transferrableOptions) {
-                        if(stealForOptions.containsKey(opt)) {
-                            stealFor.setExecutorOption(opt, stealForOptions.get(opt));
-                        }
-                    }
-//                    if (null != stealForRpyOption) {
-//                        stealFor.setExecutorOption("rpy", stealForRpyOption);
-//                    }
-//                    if (null != stealForLookForXYZOption) {
-//                        stealFor.setExecutorOption("lookForXYZ", stealForLookForXYZOption);
-//                    }
-                    stealFor.removePositionMap(pm);
-                    stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);
-                    stealFor.disconnectRobot();
-                    stealFor.setRobotName(stealForRobotName);
-                })
+                .thenRun(this::returnRobots)
                 .thenCompose(x -> {
                     return stealFrom.continueActionList();
                 })
@@ -1229,9 +1240,6 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemLoadPosMapsActionPerformed
 
     private void jMenuItemSafeAbortAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSafeAbortAllActionPerformed
-        if (null != lastFutureReturned) {
-            lastFutureReturned.cancelAll(true);
-        }
         lastFutureReturned = safeAbortAll();
     }//GEN-LAST:event_jMenuItemSafeAbortAllActionPerformed
 
@@ -1340,7 +1348,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     private void jMenuItemStartColorTextDisplayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartColorTextDisplayActionPerformed
 
-        ColorTextOptions options = ColorTextOptionsJPanel.query(this,true);
+        ColorTextOptions options = ColorTextOptionsJPanel.query(this, true);
         if (null != options) {
             try {
                 if (null != colorTextSocket) {
@@ -1458,6 +1466,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     public XFuture<Void> startAll() {
+        returnRobots();
         enableAllRobots();
         XFuture futures[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
@@ -1484,11 +1493,16 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     public XFuture<Void> safeAbortAll() {
+        XFuture<?> prevLastFuture = lastFutureReturned;
         XFuture futures[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             futures[i] = aprsSystems.get(i).safeAbort();
         }
-        return XFuture.allOf(futures);
+        return XFuture.allOf(futures).thenRun(() -> {
+            if(null != prevLastFuture) {
+                prevLastFuture.cancelAll(false);
+            }
+        });
     }
 
     public void saveSetupFile(File f) throws IOException {
