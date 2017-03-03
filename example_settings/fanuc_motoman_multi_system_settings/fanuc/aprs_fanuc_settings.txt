@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:2023
+#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:2024
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 aprs.robotName=Fanuc
 aprs.taskName=Fanuc Cart
@@ -8,7 +8,7 @@ fanuc.robotHost=129.6.78.111
 startup.connectdatabase=true
 startup.connectvision=true
 startup.crclWebApp=false
-startup.exploreGraphDb=false
+startup.exploreGraphDb=true
 startup.pddl.executor=true
 startup.pddl.objectsp=true
 startup.pddl.objectview=true

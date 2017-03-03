@@ -1,7 +1,12 @@
 #  Automatically saved by aprs.framework.database.DbSetupBuilder.savePropertiesFile() at DbSetupBuilder.java:670
 --dbtype=NEO4J
-NEO4J.host=ying-220
-NEO4J.localhost.port=7480
+NEO4J.host=localhost
+NEO4J.localhost.port=7474
+NEO4J.localhost_7474.internalQueriesResourceDir=true
+NEO4J.localhost_7474.name=neo4j
+NEO4J.localhost_7474.passwd=password
+NEO4J.localhost_7474.queriesDir=neo4j/v2
+NEO4J.localhost_7474.user=neo4j
 NEO4J.localhost_7480.internalQueriesResourceDir=true
 NEO4J.localhost_7480.name=
 NEO4J.localhost_7480.passwd=password
