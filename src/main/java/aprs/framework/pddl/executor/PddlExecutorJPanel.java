@@ -452,6 +452,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 {"rpy", "175.0,0.0,0.0"},
                 {"lookForXYZ", "0.0,0.0,0.0"},
                 {"approachZOffset", "50.0"},
+                {"placeZOffset", "5.0"},
+                {"takeZOffset", "0.0"},
                 {"fastTransSpeed", "200.0"},
                 {"slowTransSpeed", "75"},
                 {"lookDwellTime", "3.0"},

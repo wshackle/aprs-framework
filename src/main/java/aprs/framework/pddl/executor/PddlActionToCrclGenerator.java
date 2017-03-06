@@ -104,7 +104,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private boolean takeSnapshots = false;
     private int crclNumber = 0;
-    
+
     /**
      * Get the value of takeSnapshots
      *
@@ -247,7 +247,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    BigDecimal approachZOffset = BigDecimal.valueOf(30.0);
+    BigDecimal approachZOffset = BigDecimal.valueOf(50.0);
+    BigDecimal placeZOffset = BigDecimal.valueOf(5.0);
+    BigDecimal takeZOffset = BigDecimal.valueOf(0.0);
 
     private String actionToCrclTakenPartsNames[] = null;
 
@@ -537,7 +539,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     public String getRunPrefix() {
-        return getRunName()  + String.format("%03d", crclNumber) + "-action-" + String.format("%03d", lastIndex);
+        return getRunName() + String.format("%03d", crclNumber) + "-action-" + String.format("%03d", lastIndex);
     }
 
     public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
@@ -802,18 +804,21 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addOpenGripper(cmds);
 
         checkSettings();
-        PoseType poseAbove = CRCLPosemath.copy(pose);
-        poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+        PoseType approachPose = CRCLPosemath.copy(pose);
+        approachPose.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+
+        PoseType takePose = CRCLPosemath.copy(pose);
+        takePose.getPoint().setZ(pose.getPoint().getZ().add(takeZOffset));
 
         addSetFastSpeed(cmds);
 
-        addMoveTo(cmds, poseAbove, false);
+        addMoveTo(cmds, approachPose, false);
 
         addSettleDwell(cmds);
 
         addSetSlowSpeed(cmds);
 
-        addMoveTo(cmds, pose, true);
+        addMoveTo(cmds, takePose, true);
 
         addSettleDwell(cmds);
 
@@ -831,18 +836,21 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addOpenGripper(cmds);
 
         checkSettings();
-        PoseType poseAbove = CRCLPosemath.copy(pose);
-        poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+        PoseType approachPose = CRCLPosemath.copy(pose);
+        approachPose.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+
+        PoseType takePose = CRCLPosemath.copy(pose);
+        takePose.getPoint().setZ(pose.getPoint().getZ().add(takeZOffset));
 
         addSetFastSpeed(cmds);
 
-        addMoveTo(cmds, poseAbove, false);
+        addMoveTo(cmds, approachPose, false);
 
         addSettleDwell(cmds);
 
         addSetSlowSpeed(cmds);
 
-        addMoveTo(cmds, pose, true);
+        addMoveTo(cmds, takePose, true);
 
         addSettleDwell(cmds);
 
@@ -850,7 +858,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addSettleDwell(cmds);
 
-        addMoveTo(cmds, poseAbove, true);
+        addMoveTo(cmds, approachPose, true);
 
         addSettleDwell(cmds);
     }
@@ -860,25 +868,28 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addOpenGripper(cmds);
 
         checkSettings();
-        PoseType poseAbove = CRCLPosemath.copy(pose);
-        poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+        PoseType approachPose = CRCLPosemath.copy(pose);
+        approachPose.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+
+        PoseType takePose = CRCLPosemath.copy(pose);
+        takePose.getPoint().setZ(pose.getPoint().getZ().add(takeZOffset));
 
         addSetFastSpeed(cmds);
 
-        addMoveTo(cmds, poseAbove, false);
+        addMoveTo(cmds, approachPose, false);
 
         addSettleDwell(cmds);
 
         addSetSlowSpeed(cmds);
 
-        addMoveTo(cmds, pose, true);
+        addMoveTo(cmds, takePose, true);
 
         addSettleDwell(cmds);
 
 //       We force a failure by skipping the step that closes the gripper  addCloseGripper(cmds);
         addSettleDwell(cmds);
 
-        addMoveTo(cmds, poseAbove, true);
+        addMoveTo(cmds, approachPose, true);
 
         addSettleDwell(cmds);
     }
@@ -932,6 +943,24 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             try {
                 double val = Double.valueOf(approachZOffsetString);
                 approachZOffset = BigDecimal.valueOf(val);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
+        String placeZOffsetString = options.get("placeZOffset");
+        if (null != placeZOffsetString && placeZOffsetString.length() > 0) {
+            try {
+                double val = Double.valueOf(placeZOffsetString);
+                placeZOffset = BigDecimal.valueOf(val);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
+        String takeZOffsetString = options.get("takeZOffset");
+        if (null != takeZOffsetString && takeZOffsetString.length() > 0) {
+            try {
+                double val = Double.valueOf(takeZOffsetString);
+                takeZOffset = BigDecimal.valueOf(val);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1302,6 +1331,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType poseAbove = CRCLPosemath.copy(pose);
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
 
+        PoseType placePose = CRCLPosemath.copy(pose);
+        placePose.getPoint().setZ(pose.getPoint().getZ().add(placeZOffset));
+
         addSetFastSpeed(cmds);
 
         addMoveTo(cmds, poseAbove, false);
@@ -1310,7 +1342,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addSetSlowSpeed(cmds);
 
-        addMoveTo(cmds, pose, true);
+        addMoveTo(cmds, placePose, true);
 
         addSettleDwell(cmds);
 

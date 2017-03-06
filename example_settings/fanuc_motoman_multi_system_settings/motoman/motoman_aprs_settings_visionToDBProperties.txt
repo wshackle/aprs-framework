@@ -9,7 +9,7 @@
 --dbtype=NEO4J
 --dbuser=neo4j
 --showgui=true
---visionhost=agility
+--visionhost=localhost
 --visionport=5002
 AddRepeatCountsToDatabaseNames=true
 MYSQL.host=localhost
