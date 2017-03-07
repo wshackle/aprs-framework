@@ -108,6 +108,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  *
@@ -1991,7 +1994,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             System.out.println("randomPickupCount = " + randomPickupCount);
             String partName = (String) jComboBoxManualObjectName.getSelectedItem();
             if (null != partName && partName.length() > 0) {
-                PoseType poseFromDb = pddlActionToCrclGenerator.getPartPose(partName);
+                PoseType poseFromDb = pddlActionToCrclGenerator.getPose(partName);
                 if (null != poseFromDb) {
                     String poseFromDbString = poseFromDb.getPoint().getX()
                             + "," + poseFromDb.getPoint().getY()
@@ -2165,7 +2168,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             File f = new File(jTextFieldLogFilename.getText());
             addFailLogCsvHeader(f);
             String partName = (String) jComboBoxManualObjectName.getSelectedItem();
-            PoseType poseFromDb = pddlActionToCrclGenerator.getPartPose(partName);
+            PoseType poseFromDb = pddlActionToCrclGenerator.getPose(partName);
             String poseFromDbString = poseFromDb.getPoint().getX()
                     + "," + poseFromDb.getPoint().getY();
             try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
@@ -2185,7 +2188,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             File f = new File(jTextFieldLogFilename.getText());
             addFailLogCsvHeader(f);
             String partName = (String) jComboBoxManualObjectName.getSelectedItem();
-            PoseType poseFromDb = pddlActionToCrclGenerator.getPartPose(partName);
+            PoseType poseFromDb = pddlActionToCrclGenerator.getPose(partName);
             String poseFromDbString = poseFromDb.getPoint().getX()
                     + "," + poseFromDb.getPoint().getY();
             try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
@@ -2523,7 +2526,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         String partName = (String) jComboBoxManualObjectName.getSelectedItem();
         if (null != partName && partName.length() > 0) {
             try {
-                PoseType poseFromDb = pddlActionToCrclGenerator.getPartPose(partName);
+                PoseType poseFromDb = pddlActionToCrclGenerator.getPose(partName);
                 if (null != poseFromDb) {
                     String poseFromDbString = poseFromDb.getPoint().getX()
                             + "," + poseFromDb.getPoint().getY()

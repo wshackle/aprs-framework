@@ -153,13 +153,16 @@ public class PositionMap {
                     break;
 
                 case "Offset_X":
+                case "X_Offset":
                     offsetXIndex = i;
                     break;
 
+                case "Y_Offset":
                 case "Offset_Y":
                     offsetYIndex = i;
                     break;
 
+                case "Z_Offset":
                 case "Offset_Z":
                     offsetZIndex = i;
                     break;

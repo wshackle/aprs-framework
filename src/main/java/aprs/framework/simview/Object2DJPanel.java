@@ -106,6 +106,12 @@ public class Object2DJPanel extends JPanel {
         }
         Graphics2D g2d = img.createGraphics();
         this.paintComponent(g2d);
+        paintHighlightedPose(pose, g2d, label);
+        ImageIO.write(img, type, f);
+        System.out.println("Saved snapshot to " + f.getCanonicalPath());
+    }
+
+    public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label) {
         if (null != pose && null != pose.getPoint()) {
             double x = pose.getPoint().getX().doubleValue();
             double y = pose.getPoint().getY().doubleValue();
@@ -151,8 +157,6 @@ public class Object2DJPanel extends JPanel {
                 g2d.drawString(label, 0, 0);
             }
         }
-        ImageIO.write(img, type, f);
-        System.out.println("Saved snapshot to " + f.getCanonicalPath());
     }
 
     private int selectedItemIndex = -1;

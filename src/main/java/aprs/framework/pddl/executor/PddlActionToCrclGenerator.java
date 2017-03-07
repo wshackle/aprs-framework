@@ -65,14 +65,17 @@ import crcl.utils.CrclCommandWrapper.CRCLCommandWrapperConsumer;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -104,6 +107,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private boolean takeSnapshots = false;
     private int crclNumber = 0;
+    private final ConcurrentMap<String, PoseType> poseCache = new ConcurrentHashMap<>();
 
     /**
      * Get the value of takeSnapshots
@@ -341,7 +345,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     break;
                 case "look-for-part":
                 case "look-for-parts":
-                    lookForPart(action, cmds);
+                    lookForParts(action, cmds);
                     actionToCrclIndexes[lastIndex] = cmds.size();
                     actionToCrclLabels[lastIndex] = "";
                     actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
@@ -553,7 +557,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
 
-        PoseType pose = getPartPose(partName);
+        PoseType pose = getPose(partName);
         pose = correctPose(pose);
         returnPosesByName.put(action.getArgs()[1], pose);
         pose.setXAxis(xAxis);
@@ -661,11 +665,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         //System.out.println("----- Part " + partName);
         //System.out.println("----- Slot " + slotName); 
         Boolean isPartInSlot = false;
-        PoseType posePart = getPartPose(partName);
+        PoseType posePart = getPose(partName);
         posePart = correctPose(posePart);
         BigDecimal partX = posePart.getPoint().getX();
         BigDecimal partY = posePart.getPoint().getY();
-        PoseType poseSlot = getPartPose(slotName);
+        PoseType poseSlot = getPose(slotName);
         poseSlot = correctPose(poseSlot);
         BigDecimal slotX = poseSlot.getPoint().getX();
         BigDecimal slotY = poseSlot.getPoint().getY();
@@ -735,7 +739,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
 
-        PoseType pose = getPartPose(partName);
+        PoseType pose = getPose(partName);
         if (takeSnapshots) {
             try {
                 takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-take-part-" + partName + "-", ".PNG"), pose, partName);
@@ -768,7 +772,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
 
-        PoseType pose = getPartPose(partName);
+        PoseType pose = getPose(partName);
         pose = correctPose(pose);
         returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);
@@ -783,8 +787,27 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         inspectionMap.put(partName, null);
     }
 
-    public PoseType getPartPose(String partname) throws SQLException {
-        PoseType pose = qs.getPose(partname);
+    public PoseType getPose(String posename) throws SQLException {
+        final AtomicReference<SQLException> getNewPoseFromDbException = new AtomicReference<>();
+        PoseType pose = poseCache.computeIfAbsent(posename,
+                (String key) -> {
+                    try {
+                        return getNewPoseFromDb(key);
+                    } catch (SQLException ex) {
+                        getNewPoseFromDbException.set(ex);
+                    }
+                    return null;
+                }
+        );
+        SQLException ex = getNewPoseFromDbException.getAndSet(null);
+        if (null != ex) {
+            throw ex;
+        }
+        return pose;
+    }
+
+    private PoseType getNewPoseFromDb(String posename) throws SQLException {
+        PoseType pose = qs.getPose(posename);
         return pose;
     }
 
@@ -1187,7 +1210,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         out.add(ajCmd);
     }
 
-    private void lookForPart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+    private void clearPoseCache() {
+        poseCache.clear();
+    }
+
+    private void lookForParts(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
 
         checkSettings();
         if (null == qs) {
@@ -1198,6 +1225,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addLookDwell(out);
 
         addTakeSimViewSnapshot(out, "-look-for-parts-", null, "");
+        addMarkerCommand(out, "clear pose cache", x -> this.clearPoseCache());
     }
 
 //    private void addOpenGripper(List<MiddleCommandType> out, PoseType pose) {
@@ -1287,10 +1315,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         checkSettings();
         String slotName = action.getArgs()[placePartSlotArgIndex];
-        PoseType pose = qs.getPose(slotName);
-        pose = correctPose(pose);
-        pose.setXAxis(xAxis);
-        pose.setZAxis(zAxis);
+        PoseType pose = getPose(slotName);
 
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         if (takeSnapshots) {
@@ -1300,6 +1325,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+
+        pose = correctPose(pose);
+        pose.setXAxis(xAxis);
+        pose.setZAxis(zAxis);
+
         placePartByPose(out, pose);
         final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
         addMarkerCommand(out, msg,
