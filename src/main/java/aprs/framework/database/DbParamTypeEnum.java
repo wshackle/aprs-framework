@@ -29,10 +29,16 @@ package aprs.framework.database;
 public enum DbParamTypeEnum {
     TYPE, NAME, X, Y, Z, VXI, VXJ, VXK, VZI, VZJ, VZK,
     SLOT_DESIGN_ID,
+    SLOT_ID,
     PART_DESIGN_NAME,
     TRAY_DESIGN_NAME,
     X_SLOT_OFFSET,
     Y_SLOT_OFFSET,
     VISIONCYCLE,
+    PART_IN_DESIGN_COUNT,
+    NODE_ID,
+    TRAY_COMPLETE,
+    EXTERNAL_SHAPE,
+    SLOT_OCCUPIED,
     SKU_NAME;
 }

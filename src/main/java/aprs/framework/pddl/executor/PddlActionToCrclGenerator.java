@@ -22,12 +22,18 @@
 package aprs.framework.pddl.executor;
 
 import aprs.framework.AprsJFrame;
+import aprs.framework.spvision.DatabasePoseUpdater;
 import aprs.framework.PddlAction;
 import aprs.framework.Utils;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
+import aprs.framework.database.DetectedItem;
 import aprs.framework.database.QuerySet;
+import aprs.framework.kitinspection.Inspection;
+import aprs.framework.spvision.VisionSocketClient;
+import aprs.framework.spvision.VisionToDBJPanel;
+import aprs.framework.spvision.VisionToDbMainJFrame;
 import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
 import crcl.base.AngleUnitEnumType;
@@ -65,17 +71,34 @@ import crcl.utils.CrclCommandWrapper.CRCLCommandWrapperConsumer;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.vector;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+
 
 /**
  *
@@ -102,8 +125,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private DbSetup dbSetup;
     private boolean closeDbConnection = true;
     private QuerySet qs;
-    //private List<String> inspectionList=new ArrayList();
-    Map<String, String> inspectionMap = new HashMap<String, String>();
+    private List<String> TakenPartList = new ArrayList();
+    private Set<Slot> EmptySlotSet;
+    private Inspection jframe;
+    private JTextArea InspectionResultJTextArea;
 
     private boolean takeSnapshots = false;
     private int crclNumber = 0;
@@ -355,9 +380,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     placePart(action, cmds);
                     break;
 
-                case "inspect-kit":
-                    inspectKit(action, cmds);
-                    break;
+                //case "inspect-kit":
+                    //inspectKit(action, cmds);
+                 //   break;
             }
 
             actionToCrclIndexes[lastIndex] = cmds.size();
@@ -569,6 +594,29 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     //-- contains all the slots that do not have a part
     private ArrayList nonFilledSlotList = new ArrayList();
 
+    public void showInspection(PartsTray kittray) {
+
+        String imageToUse = jframe.getKitImage();
+        String externalShape = kittray.getExternalShape();
+        if (externalShape.contains(".")){
+            int dotIndex = externalShape.indexOf(".");
+            if (dotIndex != -1)
+                externalShape = externalShape.substring(0, dotIndex);
+        }
+        String pathToImage = "/aprs/framework/screensplash/" +externalShape+"/"+imageToUse + ".png";
+        System.out.println("pathToImage " + pathToImage);
+        jframe.setTitle(kittray.getPartsTrayName());
+        jframe.getKitTitleLabel().setText("Inspecting " + kittray.getPartsTrayName());
+        jframe.getKitImageLabel().setIcon(new javax.swing.ImageIcon(getClass().getResource(pathToImage)));
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        jframe.setLocation(screenSize.width / 2 - jframe.getSize().width / 2, screenSize.height / 2 - jframe.getSize().height / 2);
+        jframe.pack();
+        jframe.setVisible(true);
+    }
+
+    private void addToInspectionResultJTextArea(String text) {
+        InspectionResultJTextArea.append(text + "\n");
+    }
     /**
      * @brief Inspects a finished kit to check if it is complete
      * @param action
@@ -576,125 +624,280 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws IllegalStateException
      * @throws SQLException
      */
-    public void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+   public Set<Slot> inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
+        
+        //-- This is a list of parts trays retrieved from a public static variable
+        //-- stored in DatabasePoseUpdater
+        //-- This variable has X,Y, and rotation for all parts trays
+        List<PartsTray> partsTrayList = DatabasePoseUpdater.partsTrayList;
+
         checkSettings();
-        String kitName = action.getArgs()[0];
+
+        String kitSku = action.getArgs()[0];
         MessageType msg = new MessageType();
-        msg.setMessage("inspect-kit " + kitName);
+
+        msg.setMessage("inspect-kit " + kitSku);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
 
-        int partDesignPartCount = getPartDesignPartCount(kitName);
-        System.out.println(kitName + " should contain " + partDesignPartCount + " parts.");
-        int nbOfPartsInKit = checkPartsInSlot(inspectionMap);
+        //-- Get the number of parts expected to be in this kit using the kit part design
 
-        String resultString;
-        if (nbOfPartsInKit == partDesignPartCount) {
-            resultString = "Kit is complete";
-            System.out.println("Kit is complete");
-        } else {
-            int nbOfMissingParts = partDesignPartCount - nbOfPartsInKit;
-            resultString = "Kit is missing " + nbOfMissingParts + " part(s)";
-            System.out.println("Kit is missing " + nbOfMissingParts + " part(s)");
-            if (!nonFilledSlotList.isEmpty()) {
-                System.out.println("---The following slots are empty:");
-                System.out.println(nonFilledSlotList);
-            }
-        }
+        int partDesignPartCount = getPartDesignPartCount(kitSku);
+        System.out.println("\n\n---Inspecting " + kitSku);
+        System.out.println("---" + kitSku + " should contain " + partDesignPartCount + " parts.");
+        //-- Cypher query to retrieve all parts trays with the kit sku
+        List<PartsTray> myPartsTraysList = getPartsTrays(kitSku);
 
-        //KitInspector kitInspector = new KitInspector();
-        //kitInspector.display(kitName,resultString);
-        //printMap(inspectionMap);
-        inspectionMap.clear();
-        nonFilledSlotList.clear();
-    }
-
-    /**
-     * @brief Checks that parts are within the vicinity of their corresponding
-     * slots
-     * @param mp A JAVA hashmap that has the part as the key and the slot as the
-     * value
-     * @return
-     * @throws SQLException
-     */
-    private int checkPartsInSlot(Map mp) throws SQLException {
-        int numberOfPartsInKitTray = 0;
-        Iterator it = mp.entrySet().iterator();
-        Boolean hasAtLeastOnePartInSlot = false;
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry) it.next();
-            String partName = pair.getKey().toString();
-            String slotName = pair.getValue().toString();
-            //-- we need to change part_medium_gear_in_pt_1 to part_medium_gear_in_kt_1, etc
-            //-- search the database for all parts that start with part_medium_gear_in_kt
-            String tmpPartName = partName.replace("in_pt", "in_kt");
+        //-- replace all _pt with _kt in TakenPartList
+        //-- This is to get all part that contains "in_kt" in their names
+        //-- from the database
+        for (int i = 0; i < TakenPartList.size(); i++) {
+            String part_in_pt = TakenPartList.get(i);
+            String tmpPartName = part_in_pt.replace("in_pt", "in_kt");
             int indexLastUnderscore = tmpPartName.lastIndexOf("_");
-            String partInKitName = tmpPartName.substring(0, indexLastUnderscore);
-            // System.out.println("----- tmpPartInKitName= " + partInKitName);
+            String part_in_kt = tmpPartName.substring(0, indexLastUnderscore);
+            TakenPartList.set(i, part_in_kt);
+        }
+        //-- Remove duplicates from TakenPartList
+        //-- TODO: use a hashmap instead of a list
+        //Set<String> hs = new HashSet<>();
+        //hs.addAll(TakenPartList);
+        //TakenPartList.clear();
+        //TakenPartList.addAll(hs);
 
-            List<String> partsInKtList = new ArrayList<>(getAllPartsInKt(partInKitName));
-
-            //-- read partsInKtList and check if at least one partInKt is in a given slot
-            //System.out.println("--- size: "+partsInKtList.size());
-            for (int i = 0; i < partsInKtList.size(); i++) {
-                //System.out.println("-----partInKt: "+partsInKtList.get(i));
-
-                if (checkPartInSlot(partsInKtList.get(i), slotName)) {
-                    hasAtLeastOnePartInSlot = true;
+        //-- Read myPartsTraysList and get their poses
+        for (int i = 0; i < myPartsTraysList.size(); i++) {
+           EmptySlotSet = new HashSet<Slot>();
+            int numberOfPartsInKit = 0;
+            PartsTray myPartsTray = myPartsTraysList.get(i);
+            //-- jframe
+            jframe = new Inspection();  
+            InspectionResultJTextArea = jframe.getInspectionResultJTextArea();
+            PoseType trayPose = qs.getPose(myPartsTray.getPartsTrayName());
+            trayPose = correctPose(trayPose);
+            BigDecimal xbd = trayPose.getPoint().getX();
+            double trayX = xbd.doubleValue();
+            BigDecimal ybd = trayPose.getPoint().getY();
+            double trayY = ybd.doubleValue();
+            System.out.println("+++ partsTray :(" + trayX + "," + trayY + ")");
+           
+            double rotation=0;
+            //-- Read partsTrayList
+            //-- Assign rotation to myPartsTray by comparing poses
+            for (int c = 0; c < partsTrayList.size(); c++) {
+                PartsTray pt = partsTrayList.get(c);
+                double ptX = pt.getX();
+                double ptY = pt.getY();
+                
+                //-- Check if X for parts trays are close enough
+                double diffX = Math.abs(trayX - ptX);
+                //System.out.println("diffX= "+diffX);
+                if (diffX < 1E-7) {
+                    //-- Check if Y for parts trays are close enough
+                    double diffY = Math.abs(trayY - ptY);
+                    //System.out.println("diffY= "+diffY);
+                    if (diffY < 1E-7) {
+                        myPartsTray.setRotation(pt.getRotation());
+                        rotation=pt.getRotation();
+                    }
                 }
             }
+            //double rotation = myPartsTray.getRotation();
+            System.out.println("rotation " + rotation);
+            
+            //-- retrieve the rotationOffset
+            double rotationOffset = DatabasePoseUpdater.myRotationOffset;
+            //System.out.println("rotationOffset " + rotationOffset);
 
-            //-- read the list and apply checkPartInSlot for each element of the list
-            if (hasAtLeastOnePartInSlot) {
-                numberOfPartsInKitTray++;
+            //-- compute the angle
+            double angle = normAngle(rotation + rotationOffset);
+           
+            //-- Get all the slots for the current parts tray
+            List<Slot> slotList = myPartsTray.getSlotList();
+            for (int j = 0; j < slotList.size(); j++) {
+                Slot slot = slotList.get(j);
 
-            } else {
-                nonFilledSlotList.add(slotName);
+                double x_offset = slot.getX_OFFSET() * 1000;
+                double y_offset = slot.getY_OFFSET() * 1000;
+                double slotX = trayX + x_offset * Math.cos(angle) - y_offset * Math.sin(angle);
+                double slotY = trayY + x_offset * Math.sin(angle) + y_offset * Math.cos(angle);
+                slot.setCorrectX(slotX);
+                slot.setCorrectY(slotY);
+                //System.out.println(slot.getSlotName() + ":(" + x_offset + "," + y_offset + ")");
+                System.out.println("++++++ "+slot.getSlotName() + ":(" + slotX + "," + slotY + ")");
 
+                //-- we want to filter out from TakenPartList parts that
+                //-- do not match slot part sku
+                //-- e.g., In TakenPartList keep only parts that contain part_large_gear
+                //-- if part sku for this slot is sku_part_large_gear
+                String partSKU = slot.getPartSKU();
+                if (partSKU.startsWith("sku_")) {
+                    partSKU = partSKU.substring(4).concat("_in_kt");
+                }
+
+                numberOfPartsInKit = numberOfPartsInKit + checkPartsInSlot(partSKU, slot);
             }
 
-            it.remove(); // avoids a ConcurrentModificationException
+            if (numberOfPartsInKit == partDesignPartCount) {
+                System.out.println("Kit is complete\n\n");
+                jframe.setKitImage("complete");
+
+            } else {
+                int missingParts = partDesignPartCount - numberOfPartsInKit;
+                addToInspectionResultJTextArea("Kit is missing " + missingParts + " part(s):");
+                System.out.println("Kit is missing " + missingParts + " part(s):");
+               
+                if (!EmptySlotSet.isEmpty()) {
+                    List<Integer> slotID = new ArrayList();
+                    for (Slot s : EmptySlotSet) {
+                        System.out.println("-------- Slot "+s.getSlotName()+ " is missing a part of type "+s.getPartSKU());
+                        addToInspectionResultJTextArea("Slot "+s.getSlotName()+ " is missing a part of type "+s.getPartSKU());
+                        slotID.add(s.getID());
+                    }
+                    Collections.sort(slotID);
+                    String res="";
+                    for (int a=0; a<slotID.size(); a++)
+                    {
+                        res =res.concat(slotID.get(a).toString());
+                    }
+                    jframe.setKitImage(res);
+                }
+                System.out.println("\n\n");
+            }  
+            showInspection(myPartsTray);
         }
-        return numberOfPartsInKitTray;
+        TakenPartList.clear();
+         return EmptySlotSet;
     }
 
-    private Boolean checkPartInSlot(String partName, String slotName) throws SQLException {
+   
+   
+   public void inspectKitSimulation(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+        if (null == qs) {
+            throw new IllegalStateException("Database not setup and connected.");
+        }
+        
+        //-- This is a list of parts trays retrieved from a public static variable
+        //-- stored in DatabasePoseUpdater
+        //-- This variable has X,Y, and rotation for all parts trays
+        List<PartsTray> partsTrayList = DatabasePoseUpdater.partsTrayList;
+
+        checkSettings();
+
+        String kitSku = action.getArgs()[0];
+        MessageType msg = new MessageType();
+
+        msg.setMessage("inspect-kit " + kitSku);
+        msg.setCommandID(BigInteger.valueOf(out.size() + 2));
+        out.add(msg);        
+        TakenPartList.clear();
+    }
+       public double normAngle(double angleIn) {
+        double angleOut = angleIn;
+        if (angleOut > Math.PI) {
+            angleOut -= 2 * Math.PI * ((int) (angleIn / Math.PI));
+        } else if (angleOut < -Math.PI) {
+            angleOut += 2 * Math.PI * ((int) (-1.0 * angleIn / Math.PI));
+        }
+        return angleOut;
+    }
+       
+    
+private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
+        int nbOfOccupiedSlots = 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        List<String> allPartsInKt = getAllPartsInKt(partInKt);
+
+
+
+
+        for (int i = 0; i < allPartsInKt.size(); i++) {
+
+
+            String newPartInKt = allPartsInKt.get(i);
+            System.out.print("--------- "+newPartInKt);
+
+            if (checkPartInSlot(newPartInKt, slot)) {
+                System.out.println("--------- Located in slot");
+                nbOfOccupiedSlots++;
+
+
+
+
+
+
+
+
+
+            } else
+                EmptySlotSet.add(slot);
+
+
+
+        }
+        return nbOfOccupiedSlots;
+
+
+
+
+    }
+
+
+    private Boolean checkPartInSlot(String partName, Slot slot) throws SQLException {
         //System.out.println("----- Part " + partName);
-        //System.out.println("----- Slot " + slotName); 
+
+        //System.out.println("----- Slot " + slot.getSlotName());
         Boolean isPartInSlot = false;
+
         PoseType posePart = getPose(partName);
         posePart = correctPose(posePart);
-        BigDecimal partX = posePart.getPoint().getX();
-        BigDecimal partY = posePart.getPoint().getY();
-        PoseType poseSlot = getPose(slotName);
-        poseSlot = correctPose(poseSlot);
-        BigDecimal slotX = poseSlot.getPoint().getX();
-        BigDecimal slotY = poseSlot.getPoint().getY();
-
+        double partX = posePart.getPoint().getX().doubleValue();
+        double partY = posePart.getPoint().getY().doubleValue();
+        double slotX = slot.getCorrectX();
+        double slotY = slot.getCorrectY();
+        double x = partX - slotX;
+        double y = partY - slotY;
+        System.out.println(":(" + partX + "," + partY + ")");
+        // System.out.println("----- Slot " + slot.getSlotName() + " : (" + slotX + "," + slotY + ")");
         //-- compute distance between 2 points
-        BigDecimal x = partX.subtract(slotX);
-        BigDecimal y = partY.subtract(slotY);
-        BigDecimal powx = x.pow(2);
-        BigDecimal powy = y.pow(2);
-        BigDecimal addition = powx.add(powy);
-        BigDecimal res = new BigDecimal(Math.sqrt(addition.doubleValue()));
-        //BigDecimal finalres = res.add(new BigDecimal(addition.subtract(x.multiply(x)).doubleValue() / (x.doubleValue() * 2.0)));
+        double powx = Math.pow(x, 2);
+        double powy = Math.pow(y, 2);
+        double dist = Math.sqrt(powx + powy);
+        // compare finalres with a specified tolerance value of 6.5 mm
+        double threshold = 6.5;
+        if (dist < threshold) {
 
-        // compare finalres with a specified tolerance value of 5 mm
-        BigDecimal threshold;
-        threshold = new BigDecimal("6.5");
-        int compresult;
-        compresult = res.compareTo(threshold);
 
-        if (compresult == -1 || compresult == 0) {
+
+
+
+
             isPartInSlot = true;
-            System.out.println("----- Part " + partName + " : (" + partX.doubleValue() + "," + partY.doubleValue() + ")");
-            System.out.println("----- Slot " + slotName + " : (" + slotX.doubleValue() + "," + slotY.doubleValue() + ")");
-            System.out.println("----- Distance between part and slot = " + res);
-            System.out.println();
+
+           // System.out.println("----- Part " + partName + " : (" + partX + "," + partY + ")");
+
+           // System.out.println("----- Slot " + slot.getSlotName() + " : (" + slotX + "," + slotY + ")");
+
+            System.out.println("----- Distance between part and slot = " + dist);
+
+
         }
         return isPartInSlot;
     }
@@ -758,7 +961,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         });
         lastTakenPart = partName;
         //inspectionList.add(partName);
-        inspectionMap.put(partName, null);
+        TakenPartList.add(partName);
     }
 
     public void fakeTakePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
@@ -784,7 +987,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         });
         lastTakenPart = partName;
         //inspectionList.add(partName);
-        inspectionMap.put(partName, null);
+           TakenPartList.add(partName);
     }
 
     public PoseType getPose(String posename) throws SQLException {
@@ -811,6 +1014,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return pose;
     }
 
+    
+    public List<PartsTray> getPartsTrays(String name) throws SQLException {
+        List<PartsTray> list = new ArrayList<>(qs.getPartsTrays(name));
+
+        return list;
+    }
     public int getPartDesignPartCount(String kitName) throws SQLException {
         int count = qs.getPartDesignPartCount(kitName);
         return count;
@@ -1338,10 +1547,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     ppi.setWrapper(wrapper);
                     notifyPlacePartConsumers(ppi);
                 }));
-        String keyByValue = getKeyByValue(inspectionMap, null);
-        inspectionMap.put(keyByValue, slotName);
-        //inspectionList.add(slotName);
-        //inspectionMap.ge
     }
 
     public static <T, E> T getKeyByValue(Map<T, E> map, E value) {

@@ -23,6 +23,8 @@
 package aprs.framework.database;
 
 import aprs.framework.pddl.executor.TraySlotDesign;
+import aprs.framework.pddl.executor.PartsTray;
+import aprs.framework.pddl.executor.Slot;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.VectorType;
@@ -91,24 +93,54 @@ public class QuerySet implements QuerySetInterface {
         if (null == getAllPartsInKtQueryInfo) {
             throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_ALL_PARTS_IN_KT);
         }
-        String getPoseQueryString = getQueryInfo.getQuery();
-        if (null == getPoseQueryString) {
-            throw new IllegalArgumentException("queriesMap does not contain getPose");
+        this.getTraySlotsFromKitSkuQueryInfo = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS_FROM_KIT_SKU);
+        if (null == getTraySlotsFromKitSkuQueryInfo) {
+            throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_TRAY_SLOTS_FROM_KIT_SKU);
         }
-        getPoseStatement = con.prepareStatement(getPoseQueryString);
-        //-- zeid
+        this.getPartsTraysQueryInfo = queriesMap.get(DbQueryEnum.GET_PARTSTRAYS);
+        if (null == getPartsTraysQueryInfo) {
+            throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_PARTSTRAYS);
+        }
+        this.getSlotsQueryInfo = queriesMap.get(DbQueryEnum.GET_SLOTS);
+        if (null == getSlotsQueryInfo) {
+            throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_SLOTS);
+        }
+
         String getPartDesignPartCountQueryString = getPartDesignCountQueryInfo.getQuery();
         if (null == getPartDesignPartCountQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain getPartDesignPartCountQueryString");
         }
         getPartDesignPartCountStatement = con.prepareStatement(getPartDesignPartCountQueryString);
 
-        //-- getAllPartsInKtStatement
         String getAllPartsInKtQueryString = getAllPartsInKtQueryInfo.getQuery();
         if (null == getAllPartsInKtQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain getAllPartsInKtQueryString");
         }
         getAllPartsInKtStatement = con.prepareStatement(getAllPartsInKtQueryString);
+
+        String getTraySlotsFromKitSkuQueryString = getTraySlotsFromKitSkuQueryInfo.getQuery();
+        if (null == getTraySlotsFromKitSkuQueryString) {
+            throw new IllegalArgumentException("queriesMap does not contain getTraySlotsFromKitSkuQueryString");
+        }
+        getTraySlotsFromKitSkuStatement = con.prepareStatement(getTraySlotsFromKitSkuQueryString);
+        String getPoseQueryString = getQueryInfo.getQuery();
+        if (null == getPoseQueryString) {
+            throw new IllegalArgumentException("queriesMap does not contain getPose");
+        }
+        getPoseStatement = con.prepareStatement(getPoseQueryString);
+        //-- zeid
+       // String getPartDesignPartCountQueryString = getPartDesignCountQueryInfo.getQuery();
+        //if (null == getPartDesignPartCountQueryString) {
+       //     throw new IllegalArgumentException("queriesMap does not contain getPartDesignPartCountQueryString");
+       // }
+       // getPartDesignPartCountStatement = con.prepareStatement(getPartDesignPartCountQueryString);
+
+        //-- getAllPartsInKtStatement
+       // String getAllPartsInKtQueryString = getAllPartsInKtQueryInfo.getQuery();
+       // if (null == getAllPartsInKtQueryString) {
+       //    throw new IllegalArgumentException("queriesMap does not contain getAllPartsInKtQueryString");
+       // }
+       // getAllPartsInKtStatement = con.prepareStatement(getAllPartsInKtQueryString);
 
         String setPoseQueryString = setQueryInfo.getQuery();
         if (null == setPoseQueryString) {
@@ -144,6 +176,20 @@ public class QuerySet implements QuerySetInterface {
                 this.newSingleTrayDesignStatement = con.prepareStatement(newSingleTrayDesignQueryString);
             }
         }
+        DbQueryInfo getPartsTraysQueryInfo = queriesMap.get(DbQueryEnum.GET_PARTSTRAYS);
+        if (null != getPartsTraysQueryInfo) {
+            String getPartsTraysQueryString = getPartsTraysQueryInfo.getQuery();
+            if (null != getPartsTraysQueryString) {
+                this.getPartsTraysStatement = con.prepareStatement(getPartsTraysQueryString);
+            }
+        }
+        DbQueryInfo getSlotsQueryInfo = queriesMap.get(DbQueryEnum.GET_SLOTS);
+        if (null != getSlotsQueryInfo) {
+            String getSlotsQueryString = getSlotsQueryInfo.getQuery();
+            if (null != getSlotsQueryString) {
+                this.getSlotsStatement = con.prepareStatement(getSlotsQueryString);
+            }
+        }
         this.queriesMap = queriesMap;
 
     }
@@ -157,7 +203,10 @@ public class QuerySet implements QuerySetInterface {
     private java.sql.PreparedStatement getSingleTrayDesignStatement;
     private java.sql.PreparedStatement setSingleTrayDesignStatement;
     private java.sql.PreparedStatement newSingleTrayDesignStatement;
+    private java.sql.PreparedStatement getTraySlotsFromKitSkuStatement;
     private java.sql.PreparedStatement getAllPartsInKtStatement;
+    private java.sql.PreparedStatement getPartsTraysStatement;
+    private java.sql.PreparedStatement getSlotsStatement;
 
     private boolean closed = false;
 
@@ -291,7 +340,17 @@ public class QuerySet implements QuerySetInterface {
     private String getAllPartsInKtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getQueryInfo, type);
     }
+private String getTraySlotsFromKitSkuQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+        return getQueryResultString(rs, getTraySlotsFromKitSkuQueryInfo, type);
+    }
 
+    private String getPartsTraysQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+        return getQueryResultString(rs, getPartsTraysQueryInfo, type);
+    }
+
+    private String getSlotsQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+        return getQueryResultString(rs, getSlotsQueryInfo, type);
+    }
     private boolean debug;
 
     /**
@@ -366,6 +425,221 @@ public class QuerySet implements QuerySetInterface {
         }
         return count;
     }
+
+public List<PartsTray> getPartsTrays(String name) throws SQLException {
+        if (closed) {
+            throw new IllegalStateException("QuerySet already closed.");
+        }
+        if (null == getPartsTraysStatement) {
+            throw new IllegalStateException("null == getPartsTraysStatement");
+        }
+        List<PartsTray> list = new ArrayList<>();
+        Map<Integer, Object> map = new TreeMap<>();
+        DbQueryInfo getPartsTraysQueryInfo = queriesMap.get(DbQueryEnum.GET_PARTSTRAYS);
+        setQueryStringParam(getPartsTraysStatement, getPartsTraysQueryInfo, DbParamTypeEnum.NAME, name, map);
+        String simQuery = createExpectedQueryString(getPartsTraysQueryInfo, map);
+
+        if (debug) {
+            System.out.println("simQuery = " + simQuery);
+        }
+        //System.out.println("simQuery = " + simQuery);
+
+        try (ResultSet rs = getPartsTraysStatement.executeQuery()) {
+            while (rs.next()) {
+                ResultSetMetaData meta = rs.getMetaData();
+                for (int j = 1; j <= meta.getColumnCount(); j++) {
+                    if (debug) {
+                        System.out.println("j = " + j);
+                    }
+                    String cname = meta.getColumnName(j);
+                    if (debug) {
+                        System.out.println("cname = " + cname);
+                    }
+                    String type = meta.getColumnTypeName(j);
+                    if (debug) {
+                        System.out.println("type = " + type);
+                    }
+                    Object o = rs.getObject(j);
+                    if (debug) {
+                        System.out.println("o = " + o);
+                    }
+                }
+
+                String partsTrayName = getPartsTraysQueryResultString(rs, DbParamTypeEnum.NAME);
+                if (debug) {
+                    System.out.println("partsTrayName = " + partsTrayName);
+                }
+                PartsTray partstray = new PartsTray(partsTrayName);
+                //-- getting node id
+                int id = getQueryResultInt(rs, getPartsTraysQueryInfo, DbParamTypeEnum.NODE_ID);
+                partstray.setNodeID(id);
+                if (debug) {
+                    System.out.println("id = " + id);
+                }
+                //-- getting design
+                String design = getPartsTraysQueryResultString(rs, DbParamTypeEnum.TRAY_DESIGN_NAME);
+                partstray.setPartsTrayDesign(design);
+                if (debug) {
+                    System.out.println("design = " + design);
+                }
+                
+                String externalShape = trimQuotes(getPartsTraysQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE));
+                partstray.setExternalShape(externalShape);
+                if (debug) {
+                    System.out.println("external shape = " + externalShape);
+                }
+                
+                String sku = getPartsTraysQueryResultString(rs, DbParamTypeEnum.SKU_NAME);
+                partstray.setPartsTraySku(sku);
+                if (debug) {
+                    System.out.println("sku = " + sku);
+                }
+                //-- gettig complete
+                String complete = trimQuotes(getPartsTraysQueryResultString(rs, DbParamTypeEnum.TRAY_COMPLETE));
+                partstray.setPartsTrayComplete(Boolean.valueOf(complete));
+                if (debug) {
+                    if (partstray.getPartsTrayComplete()) {
+                        System.out.println("complete = true");
+                    } else {
+                        System.out.println("complete = false");
+                    }
+                }
+                //-- get a list of slots for this parts tray
+                partstray.setSlotList(getSlots(partsTrayName));
+                //displayPartsTray(partstray);
+                list.add(partstray);
+            }
+        }
+        return list;
+    }
+
+public List<Slot> getSlots(String name) throws SQLException {
+        if (closed) {
+            throw new IllegalStateException("QuerySet already closed.");
+        }
+        if (null == getPartsTraysStatement) {
+            throw new IllegalStateException("null == getPartsTraysStatement");
+        }
+        List<Slot> list = new ArrayList<>();
+        Map<Integer, Object> map = new TreeMap<>();
+        DbQueryInfo getSlotsQueryInfo = queriesMap.get(DbQueryEnum.GET_SLOTS);
+        setQueryStringParam(getSlotsStatement, getSlotsQueryInfo, DbParamTypeEnum.NAME, name, map);
+        String simQuery = createExpectedQueryString(getSlotsQueryInfo, map);
+
+        if (debug) {
+            System.out.println("simQuery = " + simQuery);
+        }
+
+        try (ResultSet rs = getSlotsStatement.executeQuery()) {
+            while (rs.next()) {
+                ResultSetMetaData meta = rs.getMetaData();
+                for (int j = 1; j <= meta.getColumnCount(); j++) {
+                    if (debug) {
+                        System.out.println("j = " + j);
+                    }
+                    String cname = meta.getColumnName(j);
+                    if (debug) {
+                        System.out.println("cname = " + cname);
+                    }
+                    String type = meta.getColumnTypeName(j);
+                    if (debug) {
+                        System.out.println("type = " + type);
+                    }
+                    Object o = rs.getObject(j);
+                    if (debug) {
+                        System.out.println("o = " + o);
+                    }
+                }
+
+                //-- slot name
+                String SlotName = getSlotsQueryResultString(rs, DbParamTypeEnum.NAME);
+                if (debug) {
+                    System.out.println("SlotName = " + SlotName);
+                }
+                Slot slot = new Slot(SlotName);
+
+                //-- ID of the slot
+                String slot_id = trimQuotes(getSlotsQueryResultString(rs, DbParamTypeEnum.SLOT_ID));
+                int slotInt = Integer.parseInt(slot_id);
+                slot.setID(slotInt);
+                if (debug) {
+                    System.out.println("slot_id = " + slot_id);
+                }
+
+                //-- is slot occupied?
+                String occupied = trimQuotes(getSlotsQueryResultString(rs, DbParamTypeEnum.SLOT_OCCUPIED));
+                slot.setSlotOccupied(Boolean.valueOf(occupied));
+                if (debug) {
+                    if (slot.getSlotOccupied()) {
+                        System.out.println("occupied = true");
+                    } else {
+                        System.out.println("occupied = false");
+                    }
+                }
+
+                //-- external shape
+                String externalShape = getSlotsQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE);
+                if (debug) {
+                    System.out.println("externalShape = " + externalShape);
+                }
+                slot.setExternalShape(externalShape);
+
+                //-- part sku that goes in this slot
+                String partSku = getSlotsQueryResultString(rs, DbParamTypeEnum.SKU_NAME);
+                if (debug) {
+                    System.out.println("partSku = " + partSku);
+                }
+                slot.setPartSKU(partSku);
+
+                //-- X offset
+                String xString = trimQuotes(getSlotsQueryResultString(rs, DbParamTypeEnum.X));
+                double xDouble = Double.parseDouble(xString);
+                if (debug) {
+                    System.out.println("xString = " + xDouble);
+                }
+                slot.setX_OFFSET(xDouble);
+
+                //-- Y offset
+                String yString = trimQuotes(getSlotsQueryResultString(rs, DbParamTypeEnum.Y));
+                double yDouble = Double.parseDouble(yString);
+                if (debug) {
+                    System.out.println("yString = " + yDouble);
+                }
+                slot.setY_OFFSET(yDouble);
+
+                list.add(slot);
+            }
+        }
+        return list;
+    }
+
+    public void displayPartsTray(PartsTray partsTray) {
+        System.out.println("PartsTray: " + partsTray.getPartsTrayName());
+        System.out.println("node id: " + partsTray.getNodeID());
+        System.out.println("PartsTray design: " + partsTray.getPartsTrayDesign());
+        if (partsTray.getPartsTrayComplete()) {
+            System.out.println("PartsTray is complete");
+        } else {
+            System.out.println("PartsTray is not complete");
+        }
+
+        List<Slot> slots = partsTray.getSlotList();
+        for (int i = 0; i < slots.size(); i++) {
+            Slot slot = slots.get(i);
+            System.out.println("Slot name: " + slot.getSlotName());
+            System.out.println("Slot external shape:" + slot.getExternalShape());
+            System.out.println("Slot part sku:" + slot.getPartSKU());
+            System.out.println("Slot id:" + slot.getID());
+            System.out.println("Slot x offset:" + slot.getX_OFFSET());
+            System.out.println("Slot y offset:" + slot.getY_OFFSET());
+            if (slot.getSlotOccupied()) {
+                System.out.println("Slot is occupied");
+            } else {
+                System.out.println("Slot is not occupied");
+            }
+        }
+    }
+
 
     @Override
     public PoseType getPose(String name) throws SQLException {
@@ -652,6 +926,19 @@ public class QuerySet implements QuerySetInterface {
             newSingleTrayDesignStatement.close();
             newSingleTrayDesignStatement = null;
         }
+        if (null != getTraySlotsFromKitSkuStatement) {
+            getTraySlotsFromKitSkuStatement.close();
+            getTraySlotsFromKitSkuStatement = null;
+        }
+        if (null != getPartsTraysStatement) {
+            getPartsTraysStatement.close();
+            getPartsTraysStatement = null;
+        }
+
+        if (null != getSlotsStatement) {
+            getSlotsStatement.close();
+            getSlotsStatement = null;
+        }
     }
 
     @Override
@@ -668,6 +955,9 @@ public class QuerySet implements QuerySetInterface {
     private final DbQueryInfo getQueryInfo;
     private final DbQueryInfo getPartDesignCountQueryInfo;
     private final DbQueryInfo getAllPartsInKtQueryInfo;
+    private final DbQueryInfo getTraySlotsFromKitSkuQueryInfo;
+    private final DbQueryInfo getPartsTraysQueryInfo;
+    private final DbQueryInfo getSlotsQueryInfo;
 
     private void setPoseQueryStringParam(DbParamTypeEnum type, String value, Map<Integer, Object> map) throws SQLException {
         setQueryStringParam(setPoseStatement, setQueryInfo, type, value, map);

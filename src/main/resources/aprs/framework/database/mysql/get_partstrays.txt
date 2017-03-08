@@ -1,0 +1,3 @@
+#params=NAME,
+#results={NAME=name,EXTERNAL_SHAPE=external_shape, SKU_NAME=sku_name, NODE_ID=id, TRAY_DESIGN_NAME=design,TRAY_COMPLETE=complete,}
+stub that will not work

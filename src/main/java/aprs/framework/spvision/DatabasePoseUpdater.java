@@ -30,7 +30,9 @@ import static aprs.framework.database.DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.PoseQueryElem;
+import aprs.framework.pddl.executor.PartsTray;
 import crcl.ui.XFuture;
+import java.awt.Point;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -82,7 +84,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private boolean verify = false;
 
     private long totalUpdateTimeMillis;
-
+    public static List<PartsTray> partsTrayList;
+    public static double myRotationOffset=0;
     /**
      * Get the value of totalUpdateTimeMillis
      *
@@ -875,6 +878,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public List<DetectedItem> updateVisionList(List<DetectedItem> inList,
             boolean addRepeatCountsToName,
             boolean keepFullNames) {
+        myRotationOffset=getRotationOffset();
+       
+        partsTrayList =  new ArrayList();
         List<DetectedItem> itemsToVerify = new ArrayList<>();
         List<DetectedItem> returnedList = new ArrayList<>();
         try {
@@ -942,6 +948,17 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 List<DetectedItem> matchedParts = new ArrayList<>();
                 for (int i = 0; i < kitTrays.size(); i++) {
                     DetectedItem kit = kitTrays.get(i);
+                    // System.out.println("kit fullname::: "+kit.fullName);
+
+                    //System.out.println("kit x::: "+kit.getX());
+                    //System.out.println("kit y::: "+kit.getY());
+                    //System.out.println("kit rotation::: "+kit.rotation);
+                    PartsTray partstray = new PartsTray(kit.fullName);
+                    partstray.setX(kit.getX());
+                    partstray.setY(kit.getY());
+                    partstray.setRotation(kit.rotation);
+
+                    partsTrayList.add(partstray);
                     if (null == kit.emptySlotsList) {
                         continue;
                     }

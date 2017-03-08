@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1271
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1274
 approachZOffset=50.0
 fastTransSpeed=200.0
 jointAccel=100.0
@@ -7,12 +7,14 @@ lookDwellTime=3.0
 lookForXYZ=0.0,0.0,0.0
 manualPartNames=[null, null, null, null, null, null, null, null, null, null]
 manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
-pddl.output=..\\..\\..\\example_pddl\\fanuc_demo_actions_zeid.txt
+pddl.output=..\\..\\..\\example_pddl\\fanuc_demo_actions_zeid-full.txt
 placePartSlotArgIndex=0
+placeZOffset=5.0
 rotSpeed=30.0
 rpy=175.0,0.0,0.0
 settleDwellTime=0.1
 slowTransSpeed=75
 takePartArgIndex=0
 takeSnapshots=true
+takeZOffset=0.0
 useJointLookFor=false

@@ -1,0 +1,3 @@
+#params= NAME{1}
+#results={NAME=name,SLOT_OCCUPIED=slot_occupied,SLOT_ID=slot_id,EXTERNAL_SHAPE=external_shape,SKU_NAME=sku_name,X=x, Y=y}
+stub that will not work

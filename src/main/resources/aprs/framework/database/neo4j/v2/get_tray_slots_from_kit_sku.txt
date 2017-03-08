@@ -1,0 +1,6 @@
+#params= NAME{1}
+#results={NODE_ID=nodeid, NAME=name,SKU_NAME=skuname,X=x,Y=y,}
+match pointpath=(n:StockKeepingUnit)-[:hasSkuObject_Sku]-(p:PartsTray)-[:hasPartsTray_Slot]-(s:Slot)-[:hasSlot_PartRefAndPose]-(prp:PartRefAndPose)-[:hasPartRefAndPose_Pose]-(pose:Pose)-[:hasPose_Point]-(point:Point),
+partsku=(prp)-[:hasPartRefAndPose_Sku]->(sku:StockKeepingUnit)
+where n.name={1}
+return distinct ID(s) as nodeid, s.name as name, sku.name as skuname, point.hasPoint_X as x, point.hasPoint_Y as y
