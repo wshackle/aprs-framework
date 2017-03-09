@@ -35,15 +35,22 @@ public class PoseQueryElem {
     private double y;
     private double z;
     private double rot;
+    private final int visioncycle;
 
-    public PoseQueryElem(String name, double x, double y, double z, double vxx, double vxy) {
+//    public PoseQueryElem(String name, double x, double y, double z, double vxx, double vxy) {
+//        this(name,x,y,z,vxx,vxy,-1);
+//    }
+
+    public PoseQueryElem(String name, double x, double y, double z, double vxx, double vxy, int visioncycle) {
         this.name = name;
         this.x = x;
         this.y = y;
         this.z = z;
         this.rot = Math.atan2(vxy, vxx);
+        this.visioncycle = visioncycle;
     }
 
+    
     /**
      * @return the name
      */
@@ -107,5 +114,10 @@ public class PoseQueryElem {
     public void setZ(double z) {
         this.z = z;
     }
+
+    public int getVisioncycle() {
+        return visioncycle;
+    }
+    
     
 }

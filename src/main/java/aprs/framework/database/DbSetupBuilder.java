@@ -63,37 +63,37 @@ public class DbSetupBuilder {
     private boolean debug = false;
     private int loginTimeout = DEFAULT_LOGIN_TIMEOUT;
 
-    public static Map<DbQueryEnum, DbQueryInfo> getDefaultQueriesMap(DbType type) {
-        switch (type) {
-            case NEO4J:
-                return NEO4J_DEFAULT_QUERIES_MAP;
-
-            case MYSQL:
-                return MYSQL_DEFAULT_QUERIES_MAP;
-        }
-        throw new IllegalArgumentException("No default queries map for " + type);
-    }
-
-    private static Map<DbQueryEnum, DbQueryInfo> NEO4J_DEFAULT_QUERIES_MAP;
-    private static Map<DbQueryEnum, DbQueryInfo> MYSQL_DEFAULT_QUERIES_MAP;
+//    public static Map<DbQueryEnum, DbQueryInfo> getDefaultQueriesMap(DbType type) {
+//        switch (type) {
+//            case NEO4J:
+//                return NEO4J_DEFAULT_QUERIES_MAP;
+//
+//            case MYSQL:
+//                return MYSQL_DEFAULT_QUERIES_MAP;
+//        }
+//        throw new IllegalArgumentException("No default queries map for " + type);
+//    }
+//
+//    private static Map<DbQueryEnum, DbQueryInfo> NEO4J_DEFAULT_QUERIES_MAP;
+//    private static Map<DbQueryEnum, DbQueryInfo> MYSQL_DEFAULT_QUERIES_MAP;
     private static final String BASE_RESOURCE_DIR = "aprs/framework/database/";
 
-    static {
-        try {
-            String resDir = "neo4j/v1/";
-            Map<DbQueryEnum, DbQueryInfo> map = readRelResourceQueriesDirectory(resDir);
-            NEO4J_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
-        } catch (Exception ex) {
-            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            String resDir = "mysql/";
-            Map<DbQueryEnum, DbQueryInfo> map = readRelResourceQueriesDirectory(resDir);
-            MYSQL_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
-        } catch (Exception ex) {
-            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
+//    static {
+//        try {
+//            String resDir = "neo4j/v1/";
+//            Map<DbQueryEnum, DbQueryInfo> map = readRelResourceQueriesDirectory(resDir);
+//            NEO4J_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
+//        } catch (Exception ex) {
+//            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        try {
+//            String resDir = "mysql/";
+//            Map<DbQueryEnum, DbQueryInfo> map = readRelResourceQueriesDirectory(resDir);
+//            MYSQL_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
+//        } catch (Exception ex) {
+//            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//    }
 
     public static Map<DbQueryEnum, DbQueryInfo> readRelResourceQueriesDirectory(String resDir) throws IOException {
         if (BASE_RESOURCE_DIR.endsWith("/") && resDir.startsWith("/")) {

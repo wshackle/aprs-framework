@@ -43,6 +43,7 @@ public enum DbQueryEnum {
     GET_ALL_PARTS_IN_KT,
     GET_PARTSTRAYS,
     GET_SLOTS,
-    GET_TRAY_SLOTS_FROM_KIT_SKU;
+    GET_TRAY_SLOTS_FROM_KIT_SKU,
+    GET_ALL_NEW_POSE,
     ;
 }

@@ -515,7 +515,7 @@
                           <Component id="jScrollPaneTableFromDatabase" pref="0" max="32767" attributes="0"/>
                           <Group type="102" attributes="0">
                               <Component id="jLabel20" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="31" max="32767" attributes="0"/>
+                              <EmptySpace max="32767" attributes="0"/>
                               <Component id="jButtonCsvFromDatabase" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButtonDelete" min="-2" max="-2" attributes="0"/>
@@ -523,6 +523,8 @@
                               <Component id="jButtonAddItem" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButtonCheck" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonCheckNewItemsOnly" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
@@ -538,6 +540,7 @@
                           <Component id="jButtonAddItem" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonDelete" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonCsvFromDatabase" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonCheckNewItemsOnly" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jScrollPaneTableFromDatabase" pref="112" max="32767" attributes="0"/>
@@ -555,12 +558,13 @@
                   <Properties>
                     <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                      <Table columnCount="5" rowCount="0">
+                      <Table columnCount="6" rowCount="0">
                         <Column editable="false" title="Name" type="java.lang.String"/>
                         <Column editable="false" title="X" type="java.lang.Double"/>
                         <Column editable="false" title="Y" type="java.lang.Double"/>
                         <Column editable="false" title="Z" type="java.lang.Double"/>
                         <Column editable="false" title="Rotation" type="java.lang.Double"/>
+                        <Column editable="false" title="Vision Cycle" type="java.lang.Integer"/>
                       </Table>
                     </Property>
                   </Properties>
@@ -602,6 +606,14 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonCsvFromDatabaseActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonCheckNewItemsOnly">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="New"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonCheckNewItemsOnlyActionPerformed"/>
               </Events>
             </Component>
           </SubComponents>
@@ -662,7 +674,7 @@
                   <Properties>
                     <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                      <Table columnCount="13" rowCount="0">
+                      <Table columnCount="14" rowCount="0">
                         <Column editable="true" title="Position" type="java.lang.Integer"/>
                         <Column editable="true" title="Name" type="java.lang.String"/>
                         <Column editable="true" title="Repeats" type="java.lang.Integer"/>
@@ -675,6 +687,7 @@
                         <Column editable="true" title="In PT?" type="java.lang.Boolean"/>
                         <Column editable="true" title="In KT?" type="java.lang.Boolean"/>
                         <Column editable="true" title="FullName" type="java.lang.String"/>
+                        <Column editable="true" title="VisionCycle" type="java.lang.Integer"/>
                         <Column editable="true" title="Query" type="java.lang.String"/>
                       </Table>
                     </Property>

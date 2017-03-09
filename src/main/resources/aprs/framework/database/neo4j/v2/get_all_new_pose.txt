@@ -1,4 +1,4 @@
-#results={NAME=name,X=x,Y=y,Z=z,VXI=vxi,VXJ=vxj,VZK=vxk,VXI=vxi,VXJ=vxj,VZK=vxk,}
+#results={NAME=name,X=x,Y=y,Z=z,VXI=vxi,VXJ=vxj,VZK=vxk,VXI=vxi,VXJ=vxj,VZK=vxk,VISIONCYCLE=visioncycle}
 MATCH (o)
 with max(o.visioncycle) as maxvisioncycle
 MATCH pointpath=(source)<-[:hasSkuObject_Sku]-(object)-[:hasSolidObject_PrimaryLocation]->(n)-[r2]->(pose:Pose)- [r1:hasPose_Point] -> (p:Point),

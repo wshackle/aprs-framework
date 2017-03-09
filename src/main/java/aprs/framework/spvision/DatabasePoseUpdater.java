@@ -74,6 +74,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private PreparedStatement update_kit_tray_statement;
 //    private PreparedStatement addnew_statement;
     private PreparedStatement query_all_statement;
+    private PreparedStatement query_all_new_statement;
     private PreparedStatement get_single_statement;
 
 //    private org.neo4j.driver.v1.Driver neo4jJavaDriver;
@@ -283,6 +284,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     private String queryAllString;
+    private String queryAllNewString;
     private String querySingleString;
     private String queryDeleteSinglePoseString;
     private String updateStatementString;
@@ -311,6 +313,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         getTraySlotsQueryString = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getQuery();
         get_tray_slots_statement = con.prepareStatement(getTraySlotsQueryString);
         queryAllString = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getQuery();
+        queryAllNewString = queriesMap.get(DbQueryEnum.GET_ALL_NEW_POSE).getQuery();
         update_statement = con.prepareStatement(updateStatementString);
         updateKitTrayStatementString = queriesMap.get(DbQueryEnum.SET_SINGLE_KT_POSE).getQuery();
         preVisionCleanStatementString = queriesMap.get(DbQueryEnum.PRE_VISION_CLEAN_DB).getQuery();
@@ -335,6 +338,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         getTraySlotsParamTypes = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS).getParams();
 
         query_all_statement = con.prepareStatement(queryAllString);
+        query_all_new_statement = con.prepareStatement(queryAllNewString);
         querySingleString = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getQuery();
         queryDeleteSinglePoseString = queriesMap.get(DbQueryEnum.DELETE_SINGLE_POSE).getQuery();
         get_single_statement = con.prepareStatement(querySingleString);
@@ -420,7 +424,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         this.debug = debug;
     }
 
-    private static double fix(ResultSet rs, String colLabel) throws SQLException {
+    private static double fixDouble(ResultSet rs, String colLabel) throws SQLException {
         String s = rs.getString(colLabel);
         if (null == s) {
 //            VisionToDBJFrameInterface displayInterface = DbMain.getDisplayInterface();
@@ -433,7 +437,22 @@ public class DatabasePoseUpdater implements AutoCloseable {
         }
         String peices[] = s.trim().split("[^0-9E+-.]+");
         String fixed = (peices[0].length() > 0 || peices.length < 2) ? s : peices[1];
-        return Double.valueOf(fixed);
+        return Double.parseDouble(fixed);
+    }
+    private static int fixInt(ResultSet rs, String colLabel) throws SQLException {
+        String s = rs.getString(colLabel);
+        if (null == s) {
+//            VisionToDBJFrameInterface displayInterface = DbMain.getDisplayInterface();
+//            if (null != displayInterface) {
+//                displayInterface.addLogMessage("Null return to from rs.getString(\""+colLabel+"\")");
+//            } else {
+//                System.err.println("Null return to from rs.getString(\""+colLabel+"\")");
+//            }
+            return -1;
+        }
+        String peices[] = s.trim().split("[^0-9E+-.]+");
+        String fixed = (peices[0].length() > 0 || peices.length < 2) ? s : peices[1];
+        return Integer.parseInt(fixed);
     }
 
     private List<PoseQueryElem> getDirectPoseList() {
@@ -446,6 +465,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
         }
     }
 
+    private List<PoseQueryElem> getNewDirectPoseList() {
+        switch (dbtype) {
+            case MYSQL:
+            case NEO4J:
+                return getNewJdbcDirectPoseList();
+            default:
+                throw new IllegalStateException("getDirectPoseList not implemented for dbtype=" + dbtype);
+        }
+    }
     private VisionToDBJFrameInterface displayInterface;
 
     /**
@@ -500,11 +528,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     Map<DbParamTypeEnum, String> resultMap
                             = queriesMap.get(DbQueryEnum.GET_ALL_POSE).getResults();
                     l.add(new PoseQueryElem(rs.getString("name"),
-                            fix(rs, resultMap.get(DbParamTypeEnum.X)),
-                            fix(rs, resultMap.get(DbParamTypeEnum.Y)),
-                            fix(rs, resultMap.get(DbParamTypeEnum.Z)),
-                            fix(rs, resultMap.get(DbParamTypeEnum.VXI)),
-                            fix(rs, resultMap.get(DbParamTypeEnum.VXJ))
+                            fixDouble(rs, resultMap.get(DbParamTypeEnum.X)),
+                            fixDouble(rs, resultMap.get(DbParamTypeEnum.Y)),
+                            fixDouble(rs, resultMap.get(DbParamTypeEnum.Z)),
+                            fixDouble(rs, resultMap.get(DbParamTypeEnum.VXI)),
+                            fixDouble(rs, resultMap.get(DbParamTypeEnum.VXJ)),
+                            fixInt(rs, resultMap.get(DbParamTypeEnum.VISIONCYCLE))
                     ));
                 }
             }
@@ -520,6 +549,61 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return l;
     }
 
+    private List<PoseQueryElem> getNewJdbcDirectPoseList() {
+        List<PoseQueryElem> l = new ArrayList<PoseQueryElem>();
+        if (null != displayInterface) {
+            debug = displayInterface.isDebug();
+        }
+        if (debug) {
+            displayInterface.addLogMessage("Sending query:" + System.lineSeparator());
+            displayInterface.addLogMessage(queryAllNewString);
+            displayInterface.addLogMessage("" + System.lineSeparator());
+        }
+        List<String> colNames = null;
+        try (ResultSet rs = query_all_new_statement.executeQuery()) {
+            if (null != rs) {
+                ResultSetMetaData meta = rs.getMetaData();
+                colNames = new ArrayList<>();
+                for (int colIndex = 1; colIndex < meta.getColumnCount(); colIndex++) {
+                    colNames.add(meta.getColumnName(colIndex));
+                }
+                while (rs.next()) {
+                    if (debug) {
+                        StringBuilder sb = new StringBuilder();
+                        for (int j = 1; j <= rs.getMetaData().getColumnCount(); j++) {
+                            String columnName = rs.getMetaData().getColumnName(j);
+                            String val = rs.getString(columnName);
+                            String str = "{ (" + j + "/" + rs.getMetaData().getColumnCount() + ") columnName = " + columnName + ", val = " + val + " }, ";
+                            sb.append(str);
+                        }
+                        if (null != displayInterface) {
+                            displayInterface.addLogMessage(sb.toString());
+                        }
+                    }
+                    Map<DbParamTypeEnum, String> resultMap
+                            = queriesMap.get(DbQueryEnum.GET_ALL_NEW_POSE).getResults();
+                    l.add(new PoseQueryElem(rs.getString("name"),
+                            fixDouble(rs, resultMap.get(DbParamTypeEnum.X)),
+                            fixDouble(rs, resultMap.get(DbParamTypeEnum.Y)),
+                            fixDouble(rs, resultMap.get(DbParamTypeEnum.Z)),
+                            fixDouble(rs, resultMap.get(DbParamTypeEnum.VXI)),
+                            fixDouble(rs, resultMap.get(DbParamTypeEnum.VXJ)),
+                            fixInt(rs, resultMap.get(DbParamTypeEnum.VISIONCYCLE))
+                    ));
+                }
+            }
+        } catch (SQLException sQLException) {
+            sQLException.printStackTrace();
+            if (null != displayInterface) {
+                displayInterface.addLogMessage(sQLException.getMessage() + System.lineSeparator());
+                displayInterface.addLogMessage("colNames = " + colNames + System.lineSeparator());
+            } else {
+                System.err.println("colNames = " + colNames);
+            }
+        }
+        return l;
+    }
+    
     @Override
     public String toString() {
         return "DatabasePoseUpdater{" + "con=" + con + ", dbtype=" + dbtype + ", useBatch=" + useBatch + ", verify=" + verify + ", totalUpdateTimeMillis=" + totalUpdateTimeMillis + ", maxUpdateTimeMillis=" + maxUpdateTimeMillis + ", totalUpdateTimeNanos=" + totalUpdateTimeNanos + ", maxUpdateTimeNanos=" + maxUpdateTimeNanos + ", totalUpdates=" + totalUpdates + ", totalListUpdates=" + totalListUpdates + ", sharedConnection=" + sharedConnection + ", queryAllString=" + queryAllString + ", querySingleString=" + querySingleString + ", mergeStatementString=" + updateStatementString + ", updateParamTypes=" + updateParamTypes + ", getSingleParamTypes=" + getSingleParamTypes + ", debug=" + debug + '}';
@@ -652,8 +736,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         }
                         String name = resultMap.get("name");
                         String sku_name = resultMap.get("sku_name");
-                        double x = fix(rs, "x") * 1000.0;
-                        double y = fix(rs, "y") * 1000.0;
+                        double x = fixDouble(rs, "x") * 1000.0;
+                        double y = fixDouble(rs, "y") * 1000.0;
                         String short_sku_name = sku_name;
                         if (short_sku_name.startsWith("sku_")) {
                             short_sku_name = short_sku_name.substring(4);
@@ -1270,10 +1354,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
                                 Map<DbParamTypeEnum, String> resultParamMap
                                         = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE).getResults();
                                 while (rs.next()) {
-                                    double x = fix(rs, resultParamMap.get(DbParamTypeEnum.X));
-                                    double y = fix(rs, resultParamMap.get(DbParamTypeEnum.Y));
-                                    double vxi = fix(rs, resultParamMap.get(DbParamTypeEnum.VXI));
-                                    double vxj = fix(rs, resultParamMap.get(DbParamTypeEnum.VXJ));
+                                    double x = fixDouble(rs, resultParamMap.get(DbParamTypeEnum.X));
+                                    double y = fixDouble(rs, resultParamMap.get(DbParamTypeEnum.Y));
+                                    double vxi = fixDouble(rs, resultParamMap.get(DbParamTypeEnum.VXI));
+                                    double vxj = fixDouble(rs, resultParamMap.get(DbParamTypeEnum.VXJ));
                                     if (Math.abs(x - ci.x) < 1e-6
                                             && Math.abs(y - ci.y) < 1e-6
                                             && Math.abs(Math.cos(ci.rotation) - vxi) < 1e-6
@@ -1464,4 +1548,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return XFuture.supplyAsync(() -> Collections.unmodifiableList(getDirectPoseList()), pqExecServ);
     }
 
+    public XFuture<List<PoseQueryElem>> queryDatabaseNew() throws InterruptedException, ExecutionException {
+        return XFuture.supplyAsync(() -> Collections.unmodifiableList(getNewDirectPoseList()), pqExecServ);
+    }
 }
