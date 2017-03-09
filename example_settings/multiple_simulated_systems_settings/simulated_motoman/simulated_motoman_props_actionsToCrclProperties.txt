@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1271
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1274
 approachZOffset=50.0
 fastTransSpeed=200.0
 jointAccel=100.0
@@ -9,10 +9,12 @@ manualPartNames=[null, null, null, null, null, null, null, null, null, null]
 manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
 pddl.output=../../../example_pddl/feb_21_2017_motoman_demo_actions.txt
 placePartSlotArgIndex=0
+placeZOffset=5.0
 rotSpeed=30.0
 rpy=175.0,0.0,0.0
 settleDwellTime=0.1
 slowTransSpeed=75
 takePartArgIndex=0
 takeSnapshots=false
+takeZOffset=0.0
 useJointLookFor=false
