@@ -739,12 +739,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
             item.type = "SLOT";
             item.tray = tray;
             item.slotForSkuName = offsetItem.slotForSkuName;
+            item.visioncycle = tray.visioncycle;
             ret.add(item);
             item = new DetectedItem("empty_slot_for_" + sku_name + "_in_" + tray_name, 0,
                     tray.x + x * Math.cos(angle) - y * Math.sin(angle),
                     tray.y + x * Math.sin(angle) + y * Math.cos(angle));
             item.type = "EMPTY_SLOT";
             item.tray = tray;
+            item.visioncycle = tray.visioncycle;
             item.slotForSkuName = offsetItem.slotForSkuName;
             ret.add(item);
         }
