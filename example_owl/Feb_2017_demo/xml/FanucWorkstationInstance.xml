@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- edited with XMLSpy v2010 rel. 3 sp1 (x64) (http://www.altova.com) by Jennifer Peyton (private) -->
+<!-- edited with XMLSpy v2008 rel. 2 (http://www.altova.com) by mazuki (darksiderg) -->
 <KittingWorkstation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xmlSchemas/NISTWorkstation.xsd">
 	<Name>fanuc_workstation</Name>
 	<PrimaryLocation xsi:type="RelativeLocationInType">
@@ -399,8 +399,8 @@
 				<Name>pose_kit_m2l1_mg_1</Name>
 				<Point>
 					<Name>point_kit_m2l1_mg_1</Name>
-					<X>-0.04</X>
-					<Y>0.055</Y>
+					<X>-0.05171</X>
+					<Y>0.03846</Y>
 					<Z>0.000000</Z>
 				</Point>
 				<XAxis>
@@ -424,8 +424,8 @@
 				<Name>pose_kit_m2l1_mg_2</Name>
 				<Point>
 					<Name>point_kit_m2l1_mg_2</Name>
-					<X>0.04</X>
-					<Y>0.055</Y>
+					<X>-0.05171</X>
+					<Y>-0.03846</Y>
 					<Z>0</Z>
 				</Point>
 				<XAxis>
@@ -449,8 +449,8 @@
 				<Name>pose_kit_m2l1_lg_1</Name>
 				<Point>
 					<Name>point_kit_m2l1_lg_1</Name>
-					<X>0</X>
-					<Y>-0.04</Y>
+					<X>0.03897</X>
+					<Y>0.00746</Y>
 					<Z>0.000000</Z>
 				</Point>
 				<XAxis>
@@ -741,8 +741,8 @@
 		<ExternalShape>
 			<Name>external_shape_kit_m2l1</Name>
 			<Description>External shape for kit m2l1</Description>
-			<ModelFormatName>PNG</ModelFormatName>
-			<ModelFileName>kit_tray_m2l1.png</ModelFileName>
+			<ModelFormatName>png</ModelFormatName>
+			<ModelFileName>sku_kit_m2l1_vessel</ModelFileName>
 		</ExternalShape>
 		<Weight>0.200000</Weight>
 	</Sku>
@@ -759,8 +759,8 @@
 		<ExternalShape>
 			<Name>external_shape_part_medium_gear</Name>
 			<Description>External shape for part medium gear</Description>
-			<ModelFormatName>PNG</ModelFormatName>
-			<ModelFileName>part_medium_gear.png</ModelFileName>
+			<ModelFormatName>png</ModelFormatName>
+			<ModelFileName>sku_part_medium_gear</ModelFileName>
 		</ExternalShape>
 		<Weight>0.180000</Weight>
 	</Sku>
@@ -777,8 +777,8 @@
 		<ExternalShape>
 			<Name>external_shape_part_large_gear</Name>
 			<Description>External shape for part large gear</Description>
-			<ModelFormatName>PNG</ModelFormatName>
-			<ModelFileName>part_large_gear.png</ModelFileName>
+			<ModelFormatName>png</ModelFormatName>
+			<ModelFileName>sku_part_large_gear</ModelFileName>
 		</ExternalShape>
 		<Weight>0.180000</Weight>
 	</Sku>
@@ -796,8 +796,8 @@
 		<ExternalShape>
 			<Name>external_shape_medium_gear_vessel</Name>
 			<Description>External shape for medium gear vessel</Description>
-			<ModelFormatName>PNG</ModelFormatName>
-			<ModelFileName>medium_gear_vessel.png</ModelFileName>
+			<ModelFormatName>png</ModelFormatName>
+			<ModelFileName>sku_medium_gear_vessel</ModelFileName>
 		</ExternalShape>
 		<Weight>0.200000</Weight>
 	</Sku>
@@ -815,8 +815,8 @@
 		<ExternalShape>
 			<Name>external_shape_large_gear_vessel</Name>
 			<Description>External shape for large gear vessel</Description>
-			<ModelFormatName>PNG</ModelFormatName>
-			<ModelFileName>large_gear_vessel.png</ModelFileName>
+			<ModelFormatName>png</ModelFormatName>
+			<ModelFileName>sku_large_gear_vessel</ModelFileName>
 		</ExternalShape>
 		<Weight>0.200000</Weight>
 	</Sku>
