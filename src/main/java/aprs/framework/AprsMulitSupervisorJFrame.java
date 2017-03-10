@@ -663,7 +663,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             }
         });
 
-        jPanelTasks.setBorder(javax.swing.BorderFactory.createTitledBorder("Tasks"));
+        jPanelTasks.setBorder(null);
 
         jTableTasks.setFont(new java.awt.Font("sansserif", 0, 24)); // NOI18N
         jTableTasks.setModel(new javax.swing.table.DefaultTableModel(
@@ -704,7 +704,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         );
         jPanelTasksLayout.setVerticalGroup(
             jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 411, Short.MAX_VALUE)
+            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 452, Short.MAX_VALUE)
         );
 
         jPanelRobots.setBorder(javax.swing.BorderFactory.createTitledBorder("Robots"));

@@ -362,20 +362,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }
             });
             pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state=").append(state).append("\r\n"));
-            sb.append("connected=").append(pendantClientJInternalFrame.isConnected()).append("\r\n");
         }
         if (null != pddlExecutorJInternalFrame1) {
             List<PddlAction> actions = pddlExecutorJInternalFrame1.getActionsList();
             int curActionIndex = pddlExecutorJInternalFrame1.getCurrentActionIndex();
             if (null != actions) {
-                sb.append("PDDL curActionIndex=").append(curActionIndex).append("\r\n");
-                sb.append("PDDL actions size=").append(actions.size()).append("\r\n");
+                sb.append("PDDL curActionIndex= ").append(curActionIndex);
+                sb.append(" out of ").append(actions.size()).append("\r\n");
                 if (curActionIndex >= 0 && curActionIndex < actions.size()) {
                     sb.append("PDDL action =").append(actions.get(curActionIndex)).append("\r\n");
                 }
             }
         }
         sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append("\r\n");
+        boolean connected = (null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected());
+        sb.append("connected=").append(connected).append("\r\n");
+        sb.append("                                                                                                                \r\n");
+        
+//        sb.append("1111111111222222222233333333334444444444555555555566666666667777777777788888888899999999990000000000111111111122222222223333333333\r\n");
+//        sb.append("0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\r\n");
         return sb.toString();
     }
 
