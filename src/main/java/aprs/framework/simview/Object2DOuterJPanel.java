@@ -830,8 +830,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void setMaxXMaxYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
-            double newMaxX = Double.valueOf(vals[0]);
-            double newMaxY = Double.valueOf(vals[1]);
+            double newMaxX = Double.parseDouble(vals[0]);
+            double newMaxY = Double.parseDouble(vals[1]);
             object2DJPanel1.setMaxX(newMaxX);
             object2DJPanel1.setMaxY(newMaxY);
         } else {
@@ -1016,8 +1016,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void setMinXMinYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
-            double newMinX = Double.valueOf(vals[0]);
-            double newMinY = Double.valueOf(vals[1]);
+            double newMinX = Double.parseDouble(vals[0]);
+            double newMinY = Double.parseDouble(vals[1]);
             object2DJPanel1.setMinX(newMinX);
             object2DJPanel1.setMinY(newMinY);
         } else {

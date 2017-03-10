@@ -952,53 +952,53 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             DefaultTableModel model = (DefaultTableModel) jTableTransform.getModel();
             String ptXString = _argsMap.get("transform.point.x");
             if (null != ptXString) {
-                double x = Double.valueOf(ptXString);
+                double x = Double.parseDouble(ptXString);
                 model.setValueAt(x, 0, 1);
             }
             String ptYString = _argsMap.get("transform.point.y");
             if (null != ptYString) {
-                double y = Double.valueOf(ptYString);
+                double y = Double.parseDouble(ptYString);
                 model.setValueAt(y, 0, 2);
             }
             String ptZString = _argsMap.get("transform.point.z");
             if (null != ptZString) {
-                double z = Double.valueOf(ptZString);
+                double z = Double.parseDouble(ptZString);
                 model.setValueAt(z, 0, 3);
             }
             String xAxisIStriing = _argsMap.get("transform.xaxis.i");
             if (null != xAxisIStriing) {
-                double xi = Double.valueOf(xAxisIStriing);
+                double xi = Double.parseDouble(xAxisIStriing);
                 model.setValueAt(xi, 1, 1);
             }
             String xAxisJStriing = _argsMap.get("transform.xaxis.j");
             if (null != xAxisJStriing) {
-                double xj = Double.valueOf(xAxisJStriing);
+                double xj = Double.parseDouble(xAxisJStriing);
                 model.setValueAt(xj, 1, 2);
             }
             String xAxisKStriing = _argsMap.get("transform.xaxis.k");
             if (null != xAxisKStriing) {
-                double xk = Double.valueOf(xAxisKStriing);
+                double xk = Double.parseDouble(xAxisKStriing);
                 model.setValueAt(xk, 1, 3);
             }
             String zAxisIStriing = _argsMap.get("transform.zaxis.i");
             if (null != zAxisIStriing) {
-                double zi = Double.valueOf(zAxisIStriing);
+                double zi = Double.parseDouble(zAxisIStriing);
                 model.setValueAt(zi, 2, 1);
             }
             String zAxisJStriing = _argsMap.get("transform.zaxis.j");
             if (null != zAxisJStriing) {
-                double zj = Double.valueOf(zAxisJStriing);
+                double zj = Double.parseDouble(zAxisJStriing);
                 model.setValueAt(zj, 2, 2);
             }
             String zAxisKStriing = _argsMap.get("transform.zaxis.k");
             if (null != zAxisKStriing) {
-                double zk = Double.valueOf(zAxisKStriing);
+                double zk = Double.parseDouble(zAxisKStriing);
                 model.setValueAt(zk, 2, 3);
             }
 
             String rotationOffsetString = _argsMap.get("rotationOffset");
             if (null != rotationOffsetString) {
-                double ro = Double.valueOf(rotationOffsetString);
+                double ro = Double.parseDouble(rotationOffsetString);
                 jTextFieldRotationOffset.setText(Double.toString(ro));
                 if (null != dpu) {
                     dpu.setRotationOffset(ro);
@@ -1243,7 +1243,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     type,
                     queriesMap,
                     isDebug());
-            double ro = Math.toRadians(Double.valueOf(jTextFieldRotationOffset.getText()));
+            double ro = Math.toRadians(Double.parseDouble(jTextFieldRotationOffset.getText()));
             if (null != dpu) {
                 dpu.setRotationOffset(ro);
             }
@@ -1769,7 +1769,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }//GEN-LAST:event_jButtonCsvFromDatabaseActionPerformed
 
     private void jTextFieldRotationOffsetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldRotationOffsetActionPerformed
-        double ro = Math.toRadians(Double.valueOf(jTextFieldRotationOffset.getText()));
+        double ro = Math.toRadians(Double.parseDouble(jTextFieldRotationOffset.getText()));
         if (null != dpu) {
             dpu.setRotationOffset(ro);
         }

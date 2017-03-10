@@ -184,18 +184,18 @@ public class PositionMap {
         errmapList = new ArrayList<>();
         for (int i = 1; i < errmapStringsList.size(); i++) {
             String a[] = errmapStringsList.get(i);
-            double robotX = (robotXIndex >= 0 ? Double.valueOf(a[robotXIndex]) : 0);
-            double robotY = (robotYIndex >= 0 ? Double.valueOf(a[robotYIndex]) : 0);
-            double robotZ = (robotZIndex >= 0 ? Double.valueOf(a[robotZIndex]) : 0);
-            double offsetX = (offsetXIndex >= 0 ? Double.valueOf(a[offsetXIndex]) : 0);
-            double offsetY = (offsetYIndex >= 0 ? Double.valueOf(a[offsetYIndex]) : 0);
-            double offsetZ = (offsetZIndex >= 0 ? Double.valueOf(a[offsetZIndex]) : 0);
+            double robotX = (robotXIndex >= 0 ? Double.parseDouble(a[robotXIndex]) : 0);
+            double robotY = (robotYIndex >= 0 ? Double.parseDouble(a[robotYIndex]) : 0);
+            double robotZ = (robotZIndex >= 0 ? Double.parseDouble(a[robotZIndex]) : 0);
+            double offsetX = (offsetXIndex >= 0 ? Double.parseDouble(a[offsetXIndex]) : 0);
+            double offsetY = (offsetYIndex >= 0 ? Double.parseDouble(a[offsetYIndex]) : 0);
+            double offsetZ = (offsetZIndex >= 0 ? Double.parseDouble(a[offsetZIndex]) : 0);
 
             errmapList.add(PositionMapEntry.pointOffsetEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ));
         }
 //        errmapList = errmapStringsList.stream().map(a -> {
-//            return new PositionMapEntry(Double.valueOf(a[robotXIndex]), Double.valueOf(a[robotYIndex]),
-//                    Double.valueOf(a[robotXIndex]), Double.valueOf(a[robotXIndex]));
+//            return new PositionMapEntry(Double.parseDouble(a[robotXIndex]), Double.parseDouble(a[robotYIndex]),
+//                    Double.parseDouble(a[robotXIndex]), Double.parseDouble(a[robotXIndex]));
 //        }).collect(Collectors.toList());
     }
 

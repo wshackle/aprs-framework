@@ -1139,9 +1139,9 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
                 String rpyFields[] = rpyString.split("[, \t]+");
                 if (rpyFields.length == 3) {
                     rpy = new PmRpy();
-                    rpy.r = Math.toRadians(Double.valueOf(rpyFields[0]));
-                    rpy.p = Math.toRadians(Double.valueOf(rpyFields[1]));
-                    rpy.y = Math.toRadians(Double.valueOf(rpyFields[2]));
+                    rpy.r = Math.toRadians(Double.parseDouble(rpyFields[0]));
+                    rpy.p = Math.toRadians(Double.parseDouble(rpyFields[1]));
+                    rpy.y = Math.toRadians(Double.parseDouble(rpyFields[2]));
                     PoseType pose = CRCLPosemath.toPoseType(new PmCartesian(), rpy);
                     xAxis = pose.getXAxis();
                     zAxis = pose.getZAxis();
@@ -1159,7 +1159,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         String approachZOffsetString = options.get("approachZOffset");
         if (null != approachZOffsetString && approachZOffsetString.length() > 0) {
             try {
-                double val = Double.valueOf(approachZOffsetString);
+                double val = Double.parseDouble(approachZOffsetString);
                 approachZOffset = BigDecimal.valueOf(val);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
@@ -1168,7 +1168,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         String placeZOffsetString = options.get("placeZOffset");
         if (null != placeZOffsetString && placeZOffsetString.length() > 0) {
             try {
-                double val = Double.valueOf(placeZOffsetString);
+                double val = Double.parseDouble(placeZOffsetString);
                 placeZOffset = BigDecimal.valueOf(val);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
@@ -1177,7 +1177,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         String takeZOffsetString = options.get("takeZOffset");
         if (null != takeZOffsetString && takeZOffsetString.length() > 0) {
             try {
-                double val = Double.valueOf(takeZOffsetString);
+                double val = Double.parseDouble(takeZOffsetString);
                 takeZOffset = BigDecimal.valueOf(val);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
@@ -1186,7 +1186,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         String settleDwellTimeString = options.get("settleDwellTime");
         if (null != settleDwellTimeString && settleDwellTimeString.length() > 0) {
             try {
-                double val = Double.valueOf(settleDwellTimeString);
+                double val = Double.parseDouble(settleDwellTimeString);
                 settleDwellTime = BigDecimal.valueOf(val);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
@@ -1196,7 +1196,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         String lookDwellTimeString = options.get("lookDwellTime");
         if (null != lookDwellTimeString && lookDwellTimeString.length() > 0) {
             try {
-                double val = Double.valueOf(lookDwellTimeString);
+                double val = Double.parseDouble(lookDwellTimeString);
                 lookDwellTime = BigDecimal.valueOf(val);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
@@ -1206,7 +1206,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         String fastTransSpeedString = options.get("fastTransSpeed");
         if (null != fastTransSpeedString && fastTransSpeedString.length() > 0) {
             try {
-                double val = Double.valueOf(fastTransSpeedString);
+                double val = Double.parseDouble(fastTransSpeedString);
                 fastTransSpeed = BigDecimal.valueOf(val);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
@@ -1216,7 +1216,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         String rotSpeedString = options.get("rotSpeed");
         if (null != rotSpeedString && rotSpeedString.length() > 0) {
             try {
-                double val = Double.valueOf(rotSpeedString);
+                double val = Double.parseDouble(rotSpeedString);
                 rotSpeed = BigDecimal.valueOf(val);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
@@ -1225,7 +1225,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         String jointSpeedString = options.get("jointSpeed");
         if (null != jointSpeedString && jointSpeedString.length() > 0) {
             try {
-                double val = Double.valueOf(jointSpeedString);
+                double val = Double.parseDouble(jointSpeedString);
                 jointSpeed = BigDecimal.valueOf(val);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
@@ -1234,7 +1234,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         String jointAccelString = options.get("jointAccel");
         if (null != jointAccelString && jointAccelString.length() > 0) {
             try {
-                double val = Double.valueOf(jointAccelString);
+                double val = Double.parseDouble(jointAccelString);
                 jointAccel = BigDecimal.valueOf(val);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
@@ -1243,7 +1243,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         String slowTransSpeedString = options.get("slowTransSpeed");
         if (null != slowTransSpeedString && slowTransSpeedString.length() > 0) {
             try {
-                double val = Double.valueOf(slowTransSpeedString);
+                double val = Double.parseDouble(slowTransSpeedString);
                 slowTransSpeed = BigDecimal.valueOf(val);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
@@ -1338,7 +1338,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
 
         if (!useLookForJoint) {
             PoseType pose = new PoseType();
-            pose.setPoint(point(Double.valueOf(lookForXYZFields[0]), Double.valueOf(lookForXYZFields[1]), Double.valueOf(lookForXYZFields[2])));
+            pose.setPoint(point(Double.parseDouble(lookForXYZFields[0]), Double.parseDouble(lookForXYZFields[1]), Double.parseDouble(lookForXYZFields[2])));
             pose.setXAxis(xAxis);
             pose.setZAxis(zAxis);
             addMoveTo(out, pose, false);
@@ -1399,7 +1399,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
             jsa.setJointSpeed(jointSpeed);
             aj.setJointDetails(jsa);
             aj.setJointNumber(BigInteger.valueOf(i + 1));
-            aj.setJointPosition(BigDecimal.valueOf(Double.valueOf(jointPosStrings[i])));
+            aj.setJointPosition(BigDecimal.valueOf(Double.parseDouble(jointPosStrings[i])));
             ajCmd.getActuateJoint().add(aj);
         }
         out.add(ajCmd);

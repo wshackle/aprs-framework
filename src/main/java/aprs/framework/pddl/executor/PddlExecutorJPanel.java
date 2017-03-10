@@ -3032,13 +3032,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         replanFromIndex = 0;
         List<MiddleCommandType> cmds = new ArrayList<>();
         pddlActionToCrclGenerator.setOptions(options);
-        double xMin = Double.valueOf(jTextFieldTestXMin.getText());
-        double xMax = Double.valueOf(jTextFieldTestXMax.getText());
-        double yMin = Double.valueOf(jTextFieldTestYMin.getText());
-        double yMax = Double.valueOf(jTextFieldTestYMax.getText());
+        double xMin = Double.parseDouble(jTextFieldTestXMin.getText());
+        double xMax = Double.parseDouble(jTextFieldTestXMax.getText());
+        double yMin = Double.parseDouble(jTextFieldTestYMin.getText());
+        double yMax = Double.parseDouble(jTextFieldTestYMax.getText());
         double x = (xMax - xMin) * random.nextDouble() + xMin;
         double y = (yMax - yMin) * random.nextDouble() + yMin;
-        double z = Double.valueOf(jTextFieldTestZ.getText());
+        double z = Double.parseDouble(jTextFieldTestZ.getText());
         jTextFieldTestPose.setText(String.format("%.1f,%.1f,%.1f", x, y, z));
         PoseType origPose = pose(point(x, y, z), vector(1.0, 0.0, 0.0), vector(0.0, 0.0, -1.0));
         PointType offset = getPositionMaps().get(0).getOffset(x, y, 0);
@@ -3091,13 +3091,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         replanFromIndex = 0;
         List<MiddleCommandType> cmds = new ArrayList<>();
         pddlActionToCrclGenerator.setOptions(options);
-        double xMin = Double.valueOf(jTextFieldTestXMin.getText());
-        double xMax = Double.valueOf(jTextFieldTestXMax.getText());
-        double yMin = Double.valueOf(jTextFieldTestYMin.getText());
-        double yMax = Double.valueOf(jTextFieldTestYMax.getText());
+        double xMin = Double.parseDouble(jTextFieldTestXMin.getText());
+        double xMax = Double.parseDouble(jTextFieldTestXMax.getText());
+        double yMin = Double.parseDouble(jTextFieldTestYMin.getText());
+        double yMax = Double.parseDouble(jTextFieldTestYMax.getText());
         double x = (xMax - xMin) * (gridTestCurrentX / gridTestMaxX) + xMin;
         double y = (yMax - yMin) * (gridTestCurrentY / gridTestMaxY) + yMin;
-        double z = Double.valueOf(jTextFieldTestZ.getText());
+        double z = Double.parseDouble(jTextFieldTestZ.getText());
         gridTestCurrentX += 1.0;
         if (gridTestCurrentX > gridTestMaxX + 0.001) {
             gridTestCurrentY += 1.0;

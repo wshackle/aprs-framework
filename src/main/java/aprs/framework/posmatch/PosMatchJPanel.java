@@ -241,8 +241,8 @@ public class PosMatchJPanel extends javax.swing.JPanel {
                     String name = csvRecord.get("name");
                     String xString = csvRecord.get("x");
                     String yString = csvRecord.get("y");
-                    double x = Double.valueOf(xString);
-                    double y = Double.valueOf(yString);
+                    double x = Double.parseDouble(xString);
+                    double y = Double.parseDouble(yString);
                     PmCartesian cart = new PmCartesian(x, y, 0);
                     map.compute(name, (String s, List<PmCartesian> l) -> {
                         if (null == l) {

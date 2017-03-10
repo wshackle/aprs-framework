@@ -241,7 +241,7 @@ public class VisionSocketClient implements AutoCloseable {
                 if (fa[i + 1].length() < 1) {
                     continue;
                 }
-                ci.rotation = Double.valueOf(fa[i + 1]);
+                ci.rotation = Double.parseDouble(fa[i + 1]);
                 if (Double.isInfinite(ci.rotation) || Double.isNaN(ci.rotation)) {
                     if (null != displayInterface && displayInterface.isDebug()) {
                         displayInterface.addLogMessage("Ignoring item with rotation=" + ci.rotation + " in field " + (i + 1) + " in " + line + "\n");
@@ -251,7 +251,7 @@ public class VisionSocketClient implements AutoCloseable {
                 if (fa[i + 2].length() < 1) {
                     continue;
                 }
-                ci.x = Double.valueOf(fa[i + 2]);
+                ci.x = Double.parseDouble(fa[i + 2]);
                 if (Double.isInfinite(ci.x) || Double.isNaN(ci.x)) {
                     if (null != displayInterface && displayInterface.isDebug()) {
                         displayInterface.addLogMessage("Ignoring item with x=" + ci.x + " in field " + (i + 2) + " in " + line + "\n");
@@ -261,7 +261,7 @@ public class VisionSocketClient implements AutoCloseable {
                 if (fa[i + 3].length() < 1) {
                     continue;
                 }
-                ci.y = Double.valueOf(fa[i + 3]);
+                ci.y = Double.parseDouble(fa[i + 3]);
                 if (Double.isInfinite(ci.y) || Double.isNaN(ci.y)) {
                     if (null != displayInterface && displayInterface.isDebug()) {
                         displayInterface.addLogMessage("Ignoring item with y=" + ci.y + " in field " + (i + 3) + " in " + line + "\n");
@@ -272,7 +272,7 @@ public class VisionSocketClient implements AutoCloseable {
                 ci.visioncycle = visioncycle;
                 //System.out.println("VisionSocketClient visioncycle-----> "+visioncycle);
                 if (fa[i + 4].length() > 0) {
-                    ci.score = Double.valueOf(fa[i + 4]);
+                    ci.score = Double.parseDouble(fa[i + 4]);
                 }
 
                 //--getting the type
