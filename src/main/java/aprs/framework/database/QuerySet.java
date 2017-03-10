@@ -301,7 +301,7 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("No entry for type " + type + " in map =" + map);
         }
         if (Character.isDigit(qname.charAt(0))) {
-            int index = Integer.valueOf(qname);
+            int index = Integer.parseInt(qname);
             return rs.getString(index);
         }
         return rs.getString(qname);
@@ -314,7 +314,7 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("No entry for type " + type + " in map =" + map);
         }
         if (Character.isDigit(qname.charAt(0))) {
-            int index = Integer.valueOf(qname);
+            int index = Integer.parseInt(qname);
             return rs.getInt(index);
         }
         return rs.getInt(qname);
@@ -327,7 +327,7 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("No entry for type " + type + " in map =" + map);
         }
         if (Character.isDigit(qname.charAt(0))) {
-            int index = Integer.valueOf(qname);
+            int index = Integer.parseInt(qname);
             return rs.getDouble(index);
         }
         return rs.getDouble(qname);

@@ -676,7 +676,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
-            int port = Integer.valueOf(jTextFieldPort.getText());
+            int port = Integer.parseInt(jTextFieldPort.getText());
             String host = jTextFieldHost.getText();
             if (null != visionSocketClient) {
                 if (visionSocketClient.isConnected()

@@ -28,12 +28,8 @@ import aprs.framework.Utils;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
-import aprs.framework.database.DetectedItem;
 import aprs.framework.database.QuerySet;
 import aprs.framework.kitinspection.Inspection;
-import aprs.framework.spvision.VisionSocketClient;
-import aprs.framework.spvision.VisionToDBJPanel;
-import aprs.framework.spvision.VisionToDbMainJFrame;
 import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
 import crcl.base.AngleUnitEnumType;
@@ -71,16 +67,10 @@ import crcl.utils.CrclCommandWrapper.CRCLCommandWrapperConsumer;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.vector;
-import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Point;
 import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -93,10 +83,6 @@ import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
 
 
@@ -1265,11 +1251,11 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         }
         String takePartArgIndexString = options.get("takePartArgIndex");
         if (null != takePartArgIndexString && takePartArgIndexString.length() > 0) {
-            this.takePartArgIndex = Integer.valueOf(takePartArgIndexString);
+            this.takePartArgIndex = Integer.parseInt(takePartArgIndexString);
         }
         String placePartSlotArgIndexString = options.get("placePartSlotArgIndex");
         if (null != placePartSlotArgIndexString && placePartSlotArgIndexString.length() > 0) {
-            this.placePartSlotArgIndex = Integer.valueOf(placePartSlotArgIndexString);
+            this.placePartSlotArgIndex = Integer.parseInt(placePartSlotArgIndexString);
         }
         String takeSnapshotsString = options.get("takeSnapshots");
         if (null != takeSnapshotsString && takeSnapshotsString.length() > 0) {

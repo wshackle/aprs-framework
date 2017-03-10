@@ -1703,7 +1703,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
 
     private void jTextFieldIndexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldIndexActionPerformed
-        setReplanFromIndex(Integer.valueOf(jTextFieldIndex.getText()));
+        setReplanFromIndex(Integer.parseInt(jTextFieldIndex.getText()));
     }//GEN-LAST:event_jTextFieldIndexActionPerformed
 
     private boolean updatingTraySlotTable = false;
@@ -2078,12 +2078,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 return;
             }
             try {
-                int xmax = Integer.valueOf(fa[0]);
+                int xmax = Integer.parseInt(fa[0]);
                 if (xmax < 1) {
                     System.err.println("Bad gridSizeStrng = " + gridSizeString);
                     return;
                 }
-                int ymax = Integer.valueOf(fa[1]);
+                int ymax = Integer.parseInt(fa[1]);
                 if (ymax < 1) {
                     System.err.println("Bad gridSizeStrng = " + gridSizeString);
                     return;
@@ -2295,7 +2295,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     public void setExternalControlPortEnabled(boolean on) throws IOException {
         closeExternalControlService();
-        externalControlSocket = new ServerSocket(Integer.valueOf(jTextFieldExternalControlPort.getText()));
+        externalControlSocket = new ServerSocket(Integer.parseInt(jTextFieldExternalControlPort.getText()));
         externalControlClientSockets = new ArrayList<>();
         externalControlClientThreads = new ArrayList<>();
         externalControlAcceptThread = new Thread(this::runExternalControlMainServerThread, "externalControlMainServerThread");

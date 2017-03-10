@@ -1686,7 +1686,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     break;
                 }
 //                tm.addRow(fields);
-                int priority = Integer.valueOf(csvRecord.get(0));
+                int priority = Integer.parseInt(csvRecord.get(0));
                 String fileString = csvRecord.get(3);
                 File propertiesFile = new File(csvRecord.get(3));
                 File altPropFile = f.getParentFile().toPath().toRealPath().resolve(fileString).toFile();

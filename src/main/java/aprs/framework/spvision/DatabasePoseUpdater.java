@@ -1182,7 +1182,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                                             String value = rs.getObject(name, Object.class).toString();
                                             if (j == 1 && updatedCount < 0 && name.startsWith("count")) {
                                                 try {
-                                                    updatedCount = Integer.valueOf(value);
+                                                    updatedCount = Integer.parseInt(value);
                                                 } catch (NumberFormatException nfe) {
                                                 }
                                             }
@@ -1386,7 +1386,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                                         }
                                         if (j == 1 && verifiedCount < 0 && name.startsWith("count")) {
                                             try {
-                                                verifiedCount = Integer.valueOf(value);
+                                                verifiedCount = Integer.parseInt(value);
                                             } catch (NumberFormatException nfe) {
                                             }
                                         }

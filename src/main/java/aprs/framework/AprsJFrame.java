@@ -1534,7 +1534,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             stopCrclWebApp();
             if (jCheckBoxMenuItemStartupCRCLWebApp.isSelected()) {
                 String portString = JOptionPane.showInputDialog("Http Port?", crclWebServerHttpPort);
-                crclWebServerHttpPort = Integer.valueOf(portString);
+                crclWebServerHttpPort = Integer.parseInt(portString);
                 startCrclWebApp();
             }
             saveProperties();
@@ -1804,7 +1804,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         String fanucCrclLocalPortString = props.getProperty(FANUC_CRCL_LOCAL_PORT);
         if (null != fanucCrclLocalPortString) {
-            this.fanucCrclPort = Integer.valueOf(fanucCrclLocalPortString);
+            this.fanucCrclPort = Integer.parseInt(fanucCrclLocalPortString);
         }
         String fanucRobotHostString = props.getProperty(FANUC_ROBOT_HOST);
         if (null != fanucRobotHostString) {
@@ -1835,7 +1835,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         String crclWebAppPortString = props.getProperty(CRCLWEBAPPPORT);
         if (null != crclWebAppPortString) {
-            crclWebServerHttpPort = Integer.valueOf(crclWebAppPortString);
+            crclWebServerHttpPort = Integer.parseInt(crclWebAppPortString);
         }
         String startCrclWebAppString = props.getProperty(STARTUPCRCLWEBAPP);
         if (null != startCrclWebAppString) {
@@ -1904,7 +1904,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
         if (null != motomanCrclLocalPortString) {
-            this.motomanCrclPort = Integer.valueOf(motomanCrclLocalPortString);
+            this.motomanCrclPort = Integer.parseInt(motomanCrclLocalPortString);
             if (null != motomanCrclServerJInternalFrame) {
                 motomanCrclServerJInternalFrame.setCrclPort(motomanCrclPort);
             }

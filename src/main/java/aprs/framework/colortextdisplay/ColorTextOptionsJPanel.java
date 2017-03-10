@@ -61,7 +61,7 @@ public class ColorTextOptionsJPanel extends javax.swing.JPanel {
             return null;
         }
         return new ColorTextOptions(
-                Integer.valueOf(jTextFieldPort.getText()), 
+                Integer.parseInt(jTextFieldPort.getText()), 
                 jTextFieldHost.getText(), 
                 jCheckBoxStartDisplay.isSelected());
     }

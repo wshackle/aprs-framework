@@ -832,7 +832,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     private static int parseIntOr(String string, int defaultValue) {
         try {
-            return Integer.valueOf(string);
+            return Integer.parseInt(string);
         } catch(Exception ex) {
             
         }
