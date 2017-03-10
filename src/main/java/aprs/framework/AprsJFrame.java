@@ -358,7 +358,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 if (null != status.getCommandStatus()
                         && null != status.getCommandStatus().getStateDescription()
                         && status.getCommandStatus().getStateDescription().length() > 0) {
-                    sb.append("state description =").append(status.getCommandStatus().getStateDescription()).append("\r\n");
+                    sb.append("state description = ").append(status.getCommandStatus().getStateDescription()).append("\r\n");
                 }
             });
             pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state=").append(state).append("\r\n"));
@@ -377,7 +377,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append("\r\n");
         boolean connected = (null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected());
         sb.append("connected=").append(connected).append("\r\n");
-        sb.append("                                                                                                                \r\n");
+        sb.append("                                                                                                                                                                                                                                                                       \r\n");
         
 //        sb.append("1111111111222222222233333333334444444444555555555566666666667777777777788888888899999999990000000000111111111122222222223333333333\r\n");
 //        sb.append("0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\r\n");

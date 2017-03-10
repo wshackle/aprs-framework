@@ -25,6 +25,7 @@ package aprs.framework;
 import aprs.framework.colortextdisplay.ColorTextOptionsJPanel;
 import aprs.framework.colortextdisplay.ColorTextOptionsJPanel.ColorTextOptions;
 import aprs.framework.colortextdisplay.ColorTextJFrame;
+import aprs.framework.colortextdisplay.ColorTextJPanel;
 import aprs.framework.pddl.executor.PositionMap;
 import aprs.framework.pddl.executor.PositionMapEntry;
 import aprs.framework.pddl.executor.PositionMapJPanel;
@@ -499,6 +500,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         File f = getPosMapFile(stealFor.getRobotName(), stealFrom.getRobotName());
         PositionMap pm = (f != null && !f.getName().equals("null")) ? new PositionMap(f) : PositionMap.emptyPositionMap();
 
+        initColorTextSocket();
         String stealFromOrigCrclHost = stealFrom.getRobotCrclHost();
         int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
         String stealFromRobotName = stealFrom.getRobotName();
@@ -532,6 +534,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             stealFor.setRobotName(stealForRobotName);
         }
         );
+//        if(null == colorTextSocket) {
+//            colorTextSocket = new Socket("localhost",ColorTextJPanel.COLORTEXT_SOCKET_PORT);
+//        }
 
 //        String stealFromRpyOption = stealFrom.getExecutorOptions().get("rpy");
 //        String stealFromLookForXYZOption = stealFrom.getExecutorOptions().get("lookForXYZ");
@@ -593,6 +598,12 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 });
     }
 
+    private void initColorTextSocket() throws IOException {
+        if(null == colorTextSocket) {
+            colorTextSocket = new Socket("localhost",ColorTextJPanel.COLORTEXT_SOCKET_PORT);
+        }
+    }
+
     private final Map<String, Boolean> robotEnableMap = new HashMap<>();
 
     private String readFirstLine(File f) throws IOException {
@@ -621,6 +632,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jPanelRobots = new javax.swing.JPanel();
         jScrollPaneRobots = new javax.swing.JScrollPane();
         jTableRobots = new javax.swing.JTable();
+        colorTextJPanel1 = new aprs.framework.colortextdisplay.ColorTextJPanel();
         jPanelPositionMappings = new javax.swing.JPanel();
         jPanelPosMapFiles = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -665,7 +677,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
         jPanelTasks.setBorder(null);
 
-        jTableTasks.setFont(new java.awt.Font("sansserif", 0, 24)); // NOI18N
+        jTableTasks.setFont(new java.awt.Font("sansserif", 0, 14)); // NOI18N
         jTableTasks.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 { new Integer(1), "Shared Table", "Motoman", null, null},
@@ -704,12 +716,12 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         );
         jPanelTasksLayout.setVerticalGroup(
             jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 452, Short.MAX_VALUE)
+            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE)
         );
 
         jPanelRobots.setBorder(javax.swing.BorderFactory.createTitledBorder("Robots"));
 
-        jTableRobots.setFont(new java.awt.Font("sansserif", 0, 24)); // NOI18N
+        jTableRobots.setFont(new java.awt.Font("sansserif", 0, 14)); // NOI18N
         jTableRobots.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {"Motoman",  new Boolean(true), "localhost",  new Integer(64445)},
@@ -736,14 +748,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 872, Short.MAX_VALUE)
+                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 528, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelRobotsLayout.setVerticalGroup(
             jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 126, Short.MAX_VALUE)
+                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -756,7 +768,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     .addComponent(jPanelTasks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jPanelRobots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(jPanelRobots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(colorTextJPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         jPanelTasksAndRobotsLayout.setVerticalGroup(
@@ -765,7 +779,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jPanelTasks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanelRobots, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(colorTextJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanelRobots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -882,7 +898,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                         .addComponent(jButtonDeleteLine)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonSaveSelectedPosMap)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 132, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 206, Short.MAX_VALUE)
                         .addComponent(jButtonSetOutFromCurrent))
                     .addComponent(jTextFieldSelectedPosMapFilename))
                 .addContainerGap())
@@ -898,7 +914,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     .addComponent(jButtonSetOutFromCurrent)
                     .addComponent(jButtonSaveSelectedPosMap))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextFieldSelectedPosMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -1021,6 +1037,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jMenuBar1.add(jMenu2);
 
         jMenu3.setText("Options");
+        jMenu3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenu3ActionPerformed(evt);
+            }
+        });
 
         jCheckBoxMenuItemDisableTextPopups.setSelected(true);
         jCheckBoxMenuItemDisableTextPopups.setText("Disable Text Popups");
@@ -1049,8 +1070,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTabbedPane2)
-                .addContainerGap())
+                .addComponent(jTabbedPane2))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1400,6 +1420,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_formWindowClosing
 
+    private void jMenu3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenu3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenu3ActionPerformed
+
     private void savePosFile(File f) throws IOException {
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             for (int i = 0; i < jTableSelectedPosMapFile.getColumnCount(); i++) {
@@ -1451,6 +1475,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     public void enableAllRobots() {
+        try {
+            initColorTextSocket();
+        } catch (IOException ex) {
+            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
         DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
             model.setValueAt(true, i, 1);
@@ -1487,6 +1516,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     public void connectAll() {
+        try {
+            initColorTextSocket();
+        } catch (IOException ex) {
+            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
         for (int i = 0; i < aprsSystems.size(); i++) {
             aprsSystems.get(i).setConnected(true);
         }
@@ -1789,6 +1823,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private aprs.framework.colortextdisplay.ColorTextJPanel colorTextJPanel1;
     private javax.swing.JButton jButtonAddLine;
     private javax.swing.JButton jButtonDeleteLine;
     private javax.swing.JButton jButtonSaveSelectedPosMap;

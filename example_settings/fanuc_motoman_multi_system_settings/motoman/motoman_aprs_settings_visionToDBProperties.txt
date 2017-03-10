@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:1935
+#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:1968
 --acquirestate=ON
 --aquirestate=ON
 --commandport=4001
@@ -9,7 +9,7 @@
 --dbtype=NEO4J
 --dbuser=neo4j
 --showgui=true
---visionhost=agility
+--visionhost=localhost
 --visionport=5002
 AddRepeatCountsToDatabaseNames=true
 MYSQL.host=localhost
