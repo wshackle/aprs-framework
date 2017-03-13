@@ -127,7 +127,7 @@ public class SplashScreen extends JFrame {
 
     private static class DisableImageHider {
 
-        public static BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobot.jpg");
+        public static BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobotHalf.jpg");
 
     }
 

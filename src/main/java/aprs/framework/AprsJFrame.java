@@ -358,7 +358,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 if (null != status.getCommandStatus()
                         && null != status.getCommandStatus().getStateDescription()
                         && status.getCommandStatus().getStateDescription().length() > 0) {
-                    sb.append("state description =").append(status.getCommandStatus().getStateDescription()).append("\r\n");
+                    sb.append("state description = ").append(status.getCommandStatus().getStateDescription()).append("\r\n");
                 }
             });
             pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state=").append(state).append("\r\n"));
