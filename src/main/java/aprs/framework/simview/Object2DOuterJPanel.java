@@ -262,6 +262,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldCurrentXY = new javax.swing.JTextField();
         jCheckBoxShowCurrent = new javax.swing.JCheckBox();
         jCheckBoxSeparateNames = new javax.swing.JCheckBox();
+        jCheckBoxAutoscale = new javax.swing.JCheckBox();
 
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
@@ -282,7 +283,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setLayout(object2DJPanel1Layout);
         object2DJPanel1Layout.setHorizontalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 474, Short.MAX_VALUE)
+            .addGap(0, 476, Short.MAX_VALUE)
         );
         object2DJPanel1Layout.setVerticalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -389,7 +390,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jCheckBoxSimulated)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.DEFAULT_SIZE, 117, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxDebug)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -501,10 +502,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jCheckBoxSeparateNames.setSelected(true);
         jCheckBoxSeparateNames.setText("Sep. Names");
         jCheckBoxSeparateNames.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jCheckBoxSeparateNamesActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxAutoscale.setSelected(true);
+        jCheckBoxAutoscale.setText("Auto Scale");
+        jCheckBoxAutoscale.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxAutoscaleActionPerformed(evt);
             }
         });
 
@@ -526,36 +536,39 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(jCheckBoxSeparateNames)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonReset)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonCurrent)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonDelete)
-                                .addGap(4, 4, 4)
-                                .addComponent(jButtonAdd))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addGap(0, 0, Short.MAX_VALUE)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(jCheckBoxShowRotations)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                        .addComponent(jButtonReset)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jComboBoxDisplayAxis, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(jLabel2)
-                                            .addGroup(layout.createSequentialGroup()
-                                                .addComponent(jCheckBoxShowCurrent)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel4))
-                                            .addComponent(jLabel3))
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addComponent(jTextFieldMaxXMaxY, javax.swing.GroupLayout.Alignment.TRAILING)
-                                            .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.Alignment.TRAILING)
-                                            .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)))))
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))))
+                                        .addComponent(jButtonCurrent)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jButtonDelete)
+                                        .addGap(4, 4, 4)
+                                        .addComponent(jButtonAdd))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addGroup(layout.createSequentialGroup()
+                                            .addComponent(jCheckBoxShowRotations)
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                            .addComponent(jComboBoxDisplayAxis, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addGroup(layout.createSequentialGroup()
+                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                .addComponent(jLabel2)
+                                                .addGroup(layout.createSequentialGroup()
+                                                    .addComponent(jCheckBoxShowCurrent)
+                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                    .addComponent(jLabel4))
+                                                .addComponent(jLabel3))
+                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                .addComponent(jTextFieldMaxXMaxY, javax.swing.GroupLayout.Alignment.TRAILING)
+                                                .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.Alignment.TRAILING)
+                                                .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE))))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                        .addComponent(jCheckBoxSeparateNames)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jCheckBoxAutoscale)))))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -569,7 +582,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+                        .addGap(9, 9, 9)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jCheckBoxAutoscale)
+                            .addComponent(jCheckBoxSeparateNames))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jCheckBoxShowRotations)
@@ -592,8 +609,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             .addComponent(jButtonDelete)
                             .addComponent(jButtonAdd)
                             .addComponent(jButtonReset)
-                            .addComponent(jButtonCurrent)
-                            .addComponent(jCheckBoxSeparateNames))
+                            .addComponent(jButtonCurrent))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -1004,6 +1020,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
        object2DJPanel1.setUseSeparateNames(jCheckBoxSeparateNames.isSelected());
     }//GEN-LAST:event_jCheckBoxSeparateNamesActionPerformed
 
+    private void jCheckBoxAutoscaleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAutoscaleActionPerformed
+        object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
+    }//GEN-LAST:event_jCheckBoxAutoscaleActionPerformed
+
     public void setTrackCurrentPos(boolean v) {
         object2DJPanel1.setShowCurrentXY(v);
         if (v) {
@@ -1034,6 +1054,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JButton jButtonRefresh;
     private javax.swing.JButton jButtonReset;
     private javax.swing.JButton jButtonSave;
+    private javax.swing.JCheckBox jCheckBoxAutoscale;
     private javax.swing.JCheckBox jCheckBoxConnected;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxPause;
@@ -1093,6 +1114,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("--visionhost", jTextFieldHost.getText());
             props.put("simulated", Boolean.toString(jCheckBoxSimulated.isSelected()));
             props.put("connected", Boolean.toString(jCheckBoxConnected.isSelected()));
+            props.put("autoscale", Boolean.toString(jCheckBoxAutoscale.isSelected()));
             props.put("trackcurrentpos", Boolean.toString(jCheckBoxShowCurrent.isSelected()));
             props.put("showrotations", Boolean.toString(jCheckBoxShowRotations.isSelected()));
             props.put("separatenames", Boolean.toString(jCheckBoxSeparateNames.isSelected()));
@@ -1151,6 +1173,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             String simulatedString = props.getProperty("simulated");
             if (null != simulatedString && simulatedString.length() > 0) {
                 jCheckBoxSimulated.setSelected(Boolean.valueOf(simulatedString));
+            }
+            String autoscaleString = props.getProperty("autoscale");
+            if (null != autoscaleString && autoscaleString.length() > 0) {
+                boolean autoscale = Boolean.valueOf(autoscaleString);
+                jCheckBoxAutoscale.setSelected(autoscale);
+                object2DJPanel1.setAutoscale(autoscale);
             }
             String datafileString = props.getProperty("datafile");
             if (null != datafileString && datafileString.length() > 0) {
@@ -1291,4 +1319,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
     }
+    
+    public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
+        this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
+    }
+            
 }

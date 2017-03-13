@@ -111,6 +111,47 @@ public class Object2DJPanel extends JPanel {
         System.out.println("Saved snapshot to " + f.getCanonicalPath());
     }
 
+    public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
+        BufferedImage img = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+        int pindex = f.getName().lastIndexOf('.');
+        String type = "JPEG";
+        if (pindex > 0) {
+            type = f.getName().substring(pindex + 1);
+        }
+        Graphics2D g2d = img.createGraphics();
+        g2d.setColor(this.getBackground());
+        g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
+        g2d.setColor(this.getForeground());
+        boolean origUseSepNames = this.useSeparateNames;
+        this.useSeparateNames= true;
+        paintWithAutoScale(itemsToPaint, null, g2d);
+        this.useSeparateNames = origUseSepNames;
+        ImageIO.write(img, type, f);
+        System.out.println("Saved snapshot to " + f.getCanonicalPath());
+    }
+
+    public void paintWithAutoScale(List<DetectedItem> itemsToPaint, DetectedItem selectedItem, Graphics2D g2d) {
+        double minX = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+        for (DetectedItem item : itemsToPaint) {
+            if (minX > item.x) {
+                minX = item.x;
+            }
+            if (minY > item.y) {
+                minY = item.y;
+            }
+            if (maxX < item.x) {
+                maxX = item.x;
+            }
+            if (maxY < item.y) {
+                maxY = item.y;
+            }
+        }
+        this.paintItems(g2d, itemsToPaint, selectedItem, minX, minY, maxX, maxY);
+    }
+
     public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label) {
         if (null != pose && null != pose.getPoint()) {
             double x = pose.getPoint().getX().doubleValue();
@@ -138,16 +179,16 @@ public class Object2DJPanel extends JPanel {
                         namey = minY;
                         break;
                 }
-                this.translate(g2d, namex, namey);
+                this.translate(g2d, namex, namey, minX, minY, maxX, maxY);
                 g2d.setColor(Color.GREEN);
                 Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * label.length(), 20);
                 g2d.fill(rect);
                 g2d.setColor(Color.BLACK);
                 g2d.drawString(label, 0, 0);
                 g2d.setTransform(origTransform);
-                g2d.draw(new Line2D.Double(toScreenPoint(namex, namey), toScreenPoint(x, y)));
+                g2d.draw(new Line2D.Double(toScreenPoint(namex, namey, minX, minY, maxX, maxY), toScreenPoint(x, y, minX, minY, maxX, maxY)));
             }
-            this.translate(g2d, x, y);
+            this.translate(g2d, x, y, minX, minY, maxX, maxY);
             g2d.setColor(Color.GREEN);
             Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : label.length()), 20);
             g2d.fill(rect);
@@ -157,6 +198,27 @@ public class Object2DJPanel extends JPanel {
                 g2d.drawString(label, 0, 0);
             }
         }
+    }
+
+    private boolean autoscale = true;
+
+    /**
+     * Get the value of autoscale
+     *
+     * @return the value of autoscale
+     */
+    public boolean isAutoscale() {
+        return autoscale;
+    }
+
+    /**
+     * Set the value of autoscale
+     *
+     * @param autoscale new value of autoscale
+     */
+    public void setAutoscale(boolean autoscale) {
+        this.autoscale = autoscale;
+        this.repaint();
     }
 
     private int selectedItemIndex = -1;
@@ -236,7 +298,7 @@ public class Object2DJPanel extends JPanel {
     private double maxY = Double.NEGATIVE_INFINITY;
     private double minY = Double.POSITIVE_INFINITY;
 
-    private void translate(Graphics2D g2d, double itemx, double itemy) {
+    private void translate(Graphics2D g2d, double itemx, double itemy, double minX, double minY, double maxX, double maxY) {
         switch (displayAxis) {
             case POS_X_POS_Y:
                 g2d.translate((itemx - minX) * scale + 15, (maxY - itemy) * scale + 20);
@@ -256,7 +318,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    private Point2D.Double toScreenPoint(double itemx, double itemy) {
+    private Point2D.Double toScreenPoint(double itemx, double itemy, double minX, double minY, double maxX, double maxY) {
         switch (displayAxis) {
             case POS_X_POS_Y:
                 return new Point2D.Double((itemx - minX) * scale + 15, (maxY - itemy) * scale + 20);
@@ -336,7 +398,7 @@ public class Object2DJPanel extends JPanel {
         this.repaint();
     }
 
-    private boolean useSeparateNames = false;
+    private boolean useSeparateNames = true;
 
     /**
      * Get the value of useSeparateNames
@@ -383,74 +445,79 @@ public class Object2DJPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+        List<DetectedItem> itemsToPaint = this.items;
+        DetectedItem selectedItem = null;
+        if (selectedItemIndex >= 0 && selectedItemIndex < itemsToPaint.size()) {
+            selectedItem = itemsToPaint.get(selectedItemIndex);
+        }
+        if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
+            if (this.autoscale || !Double.isFinite(this.minX) || !Double.isFinite(this.minY) || !Double.isFinite(maxX) || !Double.isFinite(maxY)) {
+                paintWithAutoScale(itemsToPaint, selectedItem, g2d);
+            } else {
+                paintItems(g2d, itemsToPaint, selectedItem, this.minX, this.minY, this.maxX, this.maxY);
+            }
+        }
+    }
 
+    private static String getItemType(DetectedItem item) {
+        if (item.type != null) {
+            return item.type;
+        } else if (item.name.startsWith("part_")) {
+            return "P";
+        } else if (item.name.startsWith("kit_")) {
+            return "KT";
+        } else if (item.name.startsWith("empty_slot_")) {
+            return "S";
+        } else if (item.name.contains("vessel")) {
+            return "PT";
+        } else {
+            return item.name.substring(0, 1);
+        }
+    }
+
+    private static Color labelColors[] = new Color[]{
+        Color.BLACK,
+        Color.MAGENTA.darker(),
+        Color.BLUE.darker(),
+        Color.RED.darker(),
+        Color.GREEN.darker()
+    };
+
+    public void paintItems(Graphics2D g2d,
+            List<DetectedItem> itemsToPaint,
+            DetectedItem selectedItem,
+            double minX,
+            double minY,
+            double maxX,
+            double maxY) {
         origTransform = g2d.getTransform();
-//        double min_x = minX;
-//        double min_y = minY;
-//        double max_x = maxX;
-//        double max_y = maxY;
+
         if (!Double.isFinite(maxX) || !Double.isFinite(minX) || !Double.isFinite(minY) || !Double.isFinite(maxY)) {
-//            for (int i = 0; i < items.size(); i++) {
-//                DetectedItem item = items.get(i);
-//                if (null == item) {
-//                    continue;
-//                }
-//                if (item.name == null || item.name.length() < 1) {
-//                    continue;
-//                }
-//                if (Double.isInfinite(item.x) || Double.isNaN(item.x)) {
-//                    continue;
-//                }
-//                if (Double.isInfinite(item.y) || Double.isNaN(item.y)) {
-//                    continue;
-//                }
-//                if (Double.isInfinite(item.rotation) || Double.isNaN(item.rotation)) {
-//                    continue;
-//                }
-//                int extra = 10 * item.name.length();
-//                if (max_x < item.x + extra) {
-//                    max_x = item.x + extra;
-//                }
-//                if (min_x > item.x - extra) {
-//                    min_x = item.x - extra;
-//                }
-//                if (max_y < item.y + extra) {
-//                    max_y = item.y + extra;
-//                }
-//                if (min_y > item.y - extra) {
-//                    min_y = item.y - extra;
-//                }
-//            }
-//            maxX = max_x;
-//            minX = min_x;
-//            maxY = max_y;
-//            minY = min_y;
-            g2d.drawString("Limits not set", 0, 0);
-            return;
+            throw new IllegalArgumentException("Limits must be finite: (" + minX + "," + minY + "," + maxX + "," + maxY + ")");
         }
         double scale_x = 1;
         double scale_y = 1;
         switch (displayAxis) {
             case POS_X_POS_Y:
             case NEG_X_NEG_Y:
-                scale_x = (this.getSize().width - 10) / (maxX - minX);
-                scale_y = (this.getSize().height - 10) / (maxY - minY);
+                scale_x = (this.getSize().width/2 - 10) / (maxX - minX);
+                scale_y = (this.getSize().height - 60) / (maxY - minY);
                 break;
 
             case POS_Y_NEG_X:
             case NEG_Y_POS_X:
-                scale_x = (this.getSize().width - 10) / (maxY - minY);
-                scale_y = (this.getSize().height - 10) / (maxX - minX);
+                scale_x = (this.getSize().width/2 - 10) / (maxY - minY);
+                scale_y = (this.getSize().height - 60) / (maxX - minX);
                 break;
         }
-        if (useSeparateNames) {
-            scale_x = scale_x / 2.0;
-        }
+//        if (useSeparateNames) {
+//            scale_x = scale_x / 2.0;
+//        }
         if (Double.isInfinite(scale_x) || Double.isNaN(scale_x)) {
-            return;
+            throw new IllegalStateException("scale_x = " + scale_x);
         }
         if (Double.isInfinite(scale_y) || Double.isNaN(scale_y)) {
-            return;
+            throw new IllegalStateException("scale_y = " + scale_y);
         }
         scale = Math.min(scale_x, scale_y);
         if (null == minCorner) {
@@ -458,26 +525,69 @@ public class Object2DJPanel extends JPanel {
         }
         minCorner.x = minX;
         minCorner.y = minY;
-//        System.out.println("scale = " + scale);
-        List<DetectedItem> displayList = items;
+        double displayMaxY = maxY;
+        double displayMinY = minY;
+        double displayMinX = minX;
+        double displayMaxX = maxX;
+
+        switch (displayAxis) {
+            case POS_X_POS_Y:
+                displayMaxX = (this.getSize().width - 15) / scale + minX;
+                displayMinX = (0 - 15) / scale + minX;
+
+                displayMinY = maxY - (this.getSize().height - 20) / scale;
+                displayMaxY = maxY - (0 - 20) / scale;
+//                g2d.translate((itemx - minX) * scale + 15, (maxY - itemy) * scale + 20);
+                break;
+
+            case POS_Y_NEG_X:
+                displayMaxX = (this.getSize().height - 20) / scale + minX;
+                displayMinX = (0 - 15) / scale + minX;
+
+                displayMinY = (this.getSize().width - 15) / scale + minY;
+                displayMaxY = (0 - 20) / scale + minY;
+//                g2d.translate((itemy - minY) * scale + 15, (itemx - minX) * scale + 20);
+                break;
+
+            case NEG_X_NEG_Y:
+                displayMaxX = maxX - (this.getSize().width - 15) / scale;
+                displayMinX = maxX - (0 - 15) / scale;
+
+                displayMinY = (this.getSize().height - 20) / scale + minY;
+                displayMaxY = (0 - 20) / scale + minY;
+//                g2d.translate((maxX - itemx) * scale + 15, (itemy - minY) * scale + 20);
+                break;
+
+            case NEG_Y_POS_X:
+                displayMaxX = maxX - (this.getSize().height - 20) / scale;
+                displayMinX = maxX - (0 - 15) / scale;
+
+                displayMinY = (this.getSize().width - 15) / scale + minY;
+                displayMaxY = (0 - 20) / scale + minY;
+//                g2d.translate((maxY - itemy) * scale + 15, (maxX - itemx) * scale + 20);
+                break;
+        }
+        g2d.drawString(String.format("MinX,MinY = (%.2f,%.2f), MaxX,MaxY= (%.2f,%.2f), scale=%.2f", minX, minY, maxX, maxY, scale), 10, this.getSize().height - 10);
+        //        System.out.println("scale = " + scale);
+        List<DetectedItem> displayList = itemsToPaint;
         if (useSeparateNames) {
             displayList = new ArrayList<>();
-            displayList.addAll(items);
+            displayList.addAll(itemsToPaint);
             switch (displayAxis) {
                 case POS_X_POS_Y:
-                case NEG_X_NEG_Y:
                     Collections.sort(displayList, Comparator.comparing((DetectedItem item) -> item.y));
+                    break;
+                case NEG_X_NEG_Y:
+                    Collections.sort(displayList, Comparator.comparing((DetectedItem item) -> -item.y));
                     break;
 
                 case POS_Y_NEG_X:
-                case NEG_Y_POS_X:
                     Collections.sort(displayList, Comparator.comparing((DetectedItem item) -> item.x));
                     break;
+                case NEG_Y_POS_X:
+                    Collections.sort(displayList, Comparator.comparing((DetectedItem item) -> -item.x));
+                    break;
             }
-        }
-        DetectedItem selectedItem = null;
-        if (selectedItemIndex >= 0 && selectedItemIndex < items.size()) {
-            selectedItem = items.get(selectedItemIndex);
         }
         for (int i = 0; i < displayList.size(); i++) {
             DetectedItem item = displayList.get(i);
@@ -497,47 +607,48 @@ public class Object2DJPanel extends JPanel {
                 continue;
             }
             if (useSeparateNames) {
-                g2d.setColor(Color.BLACK);
-                double namex = maxX;
-                double namey = minY + ((double) (i + 1)) / (items.size() + 2) * (maxY - minY);
+                item.labelColor = labelColors[i%labelColors.length];
+                g2d.setColor(item.labelColor);
+                double namex = maxX + (maxX - minX) / 10.0;
+                double namey = displayMinY + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxY - displayMinY);
                 switch (displayAxis) {
                     case POS_X_POS_Y:
                         break;
 
                     case POS_Y_NEG_X:
-                        namex = minX + ((double) (i + 1)) / (items.size() + 2) * (maxX - minX);
-                        namey = maxY;
+                        namex = displayMinX + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxX - displayMinX);
+                        namey = maxY + (maxY - minY) / 10.0;
                         break;
 
                     case NEG_X_NEG_Y:
-                        namex = minX;
+                        namex = minX - (maxX - minX) / 10.0;
                         break;
 
                     case NEG_Y_POS_X:
-                        namex = minX + ((double) (i + 1)) / (items.size() + 2) * (maxX - minX);
-                        namey = minY;
+                        namex = displayMinX + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxX - displayMinX);
+                        namey = minY - (maxY - minY) / 10.0;
                         break;
                 }
-                this.translate(g2d, namex, namey);
+                this.translate(g2d, namex, namey, minX, minY, maxX, maxY);
                 if (item == selectedItem) {
                     g2d.setColor(Color.WHITE);
                     Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20);
                     g2d.fill(rect);
                 }
-                g2d.setColor(Color.BLACK);
+                g2d.setColor(item.labelColor);
                 g2d.drawString(item.name, 0, 0);
                 g2d.setTransform(origTransform);
-                g2d.draw(new Line2D.Double(toScreenPoint(namex, namey), toScreenPoint(item.x, item.y)));
+                g2d.draw(new Line2D.Double(toScreenPoint(namex, namey, minX, minY, maxX, maxY), toScreenPoint(item.x, item.y, minX, minY, maxX, maxY)));
             }
-            this.translate(g2d, item.x, item.y);
+        }
+        for (int i = 0; i < displayList.size(); i++) {
+            DetectedItem item = displayList.get(i);
+            if (null == item) {
+                continue;
+            }
+            this.translate(g2d, item.x, item.y, minX, minY, maxX, maxY);
             if (viewRotations) {
                 g2d.rotate(item.rotation);
-            }
-            g2d.setColor(Color.BLACK);
-            if (!useSeparateNames) {
-                g2d.drawString(item.name, 0, 0);
-            } else {
-                g2d.drawString(item.type, 0, 0);
             }
             item.displayTransform = g2d.getTransform();
             item.origTransform = origTransform;
@@ -549,47 +660,88 @@ public class Object2DJPanel extends JPanel {
             }
 
             item.displayRect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : item.name.length()), 20);
+            g2d.setColor(this.getBackground());
+            g2d.fill(item.displayRect);
+            g2d.setTransform(origTransform);
+        }
+        for (int i = 0; i < displayList.size(); i++) {
+            DetectedItem item = displayList.get(i);
+            if (null == item) {
+                continue;
+            }
+            this.translate(g2d, item.x, item.y, minX, minY, maxX, maxY);
+            if (viewRotations) {
+                g2d.rotate(item.rotation);
+            }
             g2d.setColor(Color.BLACK);
+            if (!useSeparateNames) {
+                if (item.name != null) {
+                    g2d.drawString(item.name, 0, 0);
+                }
+            } else {
+                if (item.type != null) {
+                    g2d.drawString(item.type, 0, 0);
+                } else {
+                    if (item.name.startsWith("part_")) {
+                        g2d.drawString("P", 0, 0);
+                    } else if (item.name.startsWith("kit_")) {
+                        g2d.drawString("KT", 0, 0);
+                    } else if (item.name.startsWith("empty_slot_")) {
+                        g2d.drawString("S", 0, 0);
+                    } else if (item.name.contains("vessel")) {
+                        g2d.drawString("PT", 0, 0);
+                    } else {
+                        g2d.drawString(item.name.substring(0, 1), 0, 0);
+                    }
+                }
+            }
+            item.displayTransform = g2d.getTransform();
+            item.origTransform = origTransform;
+            try {
+                item.relTransform = origTransform.createInverse();
+                item.relTransform.concatenate(item.displayTransform);
+            } catch (NoninvertibleTransformException ex) {
+                Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            item.displayRect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : item.name.length()), 20);
+            g2d.setColor(item.labelColor);
             g2d.draw(item.displayRect);
             g2d.setTransform(origTransform);
         }
         g2d.setColor(Color.BLACK);
-        g2d.drawString(String.format("Offset = %.2f,%.2f scale=%.2f", minX, minY, scale), 10, this.getSize().height - 10);
-        if (selectedItemIndex >= 0 && selectedItemIndex < items.size()) {
-            DetectedItem item = items.get(selectedItemIndex);
-            if (null == item) {
+        if (null != selectedItem) {
+            if (selectedItem.name == null || selectedItem.name.length() < 1) {
                 return;
             }
-            if (item.name == null || item.name.length() < 1) {
+            if (Double.isInfinite(selectedItem.x) || Double.isNaN(selectedItem.x)) {
                 return;
             }
-            if (Double.isInfinite(item.x) || Double.isNaN(item.x)) {
+            if (Double.isInfinite(selectedItem.y) || Double.isNaN(selectedItem.y)) {
                 return;
             }
-            if (Double.isInfinite(item.y) || Double.isNaN(item.y)) {
+            if (Double.isInfinite(selectedItem.rotation) || Double.isNaN(selectedItem.rotation)) {
                 return;
             }
-            if (Double.isInfinite(item.rotation) || Double.isNaN(item.rotation)) {
-                return;
-            }
-            this.translate(g2d, item.x, item.y);
+            this.translate(g2d, selectedItem.x, selectedItem.y, minX, minY, maxX, maxY);
             if (viewRotations) {
-                g2d.rotate(item.rotation);
+                g2d.rotate(selectedItem.rotation);
             }
             g2d.setColor(Color.WHITE);
-            Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? item.type.length() : item.name.length()), 20);
+            String typeString = getItemType(selectedItem);
+            Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? typeString.length() : selectedItem.name.length()), 20);
             g2d.fill(rect);
             g2d.setColor(Color.BLACK);
             g2d.draw(rect);
             if (!useSeparateNames) {
-                g2d.drawString(item.name, 0, 0);
+                g2d.drawString(selectedItem.name, 0, 0);
             } else {
-                g2d.drawString(item.type, 0, 0);
+                g2d.drawString(selectedItem.type, 0, 0);
             }
             g2d.setTransform(origTransform);
         }
         if (this.showCurrentXY) {
-            this.translate(g2d, currentX, currentY);
+            this.translate(g2d, currentX, currentY, minX, minY, maxX, maxY);
 //            g2d.drawString(String.format("CurrentXY = %.2f,%.2f", currentX, currentY), 10, this.getSize().height - 10);
             Color origColor = g2d.getColor();
             g2d.setColor(Color.red);

@@ -39,6 +39,7 @@ import aprs.framework.database.DetectedItemJPanel;
 import aprs.framework.database.PoseQueryElem;
 import aprs.framework.database.SocketLineReader;
 import crcl.base.PoseType;
+import crcl.ui.XFuture;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLPosemath;
 import java.awt.Color;
@@ -237,6 +238,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jButtonDelete = new javax.swing.JButton();
         jButtonCsvFromDatabase = new javax.swing.JButton();
         jButtonCheckNewItemsOnly = new javax.swing.JButton();
+        jButtonShowImage = new javax.swing.JButton();
         jPanelTableFromVision = new javax.swing.JPanel();
         jScrollPaneTableFromVision = new javax.swing.JScrollPane();
         jTableFromVision = new javax.swing.JTable();
@@ -596,6 +598,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
+        jButtonShowImage.setText("Image");
+        jButtonShowImage.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonShowImageActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelTableFromDatabaseLayout = new javax.swing.GroupLayout(jPanelTableFromDatabase);
         jPanelTableFromDatabase.setLayout(jPanelTableFromDatabaseLayout);
         jPanelTableFromDatabaseLayout.setHorizontalGroup(
@@ -615,7 +624,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonCheck)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonCheckNewItemsOnly)))
+                        .addComponent(jButtonCheckNewItemsOnly)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonShowImage)))
                 .addContainerGap())
         );
         jPanelTableFromDatabaseLayout.setVerticalGroup(
@@ -627,7 +638,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jButtonAddItem)
                     .addComponent(jButtonDelete)
                     .addComponent(jButtonCsvFromDatabase)
-                    .addComponent(jButtonCheckNewItemsOnly))
+                    .addComponent(jButtonCheckNewItemsOnly)
+                    .addComponent(jButtonShowImage))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPaneTableFromDatabase, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
                 .addContainerGap())
@@ -897,42 +909,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void updateFromArgs(Map<String, String> _argsMap) {
         try {
             updatingFromArgs = true;
-//            String host = _argsMap.get("--dbhost");
-//            int port = Integer.parseInt(_argsMap.get("--dbport"));
-//            String argsMapDbTypeString = _argsMap.get("--dbtype");
-//            DbSetup curSetup = null;
-//            DbType dbtype = null;
-//            if (argsMapDbTypeString == null || argsMapDbTypeString.length() < 1) {
-//                curSetup = dbSetupPublisher.getDbSetup();
-//                dbtype = curSetup.getDbType();
-//            } else {
-//                dbtype = DbType.valueOf(argsMapDbTypeString);
-//            }
-//            DbSetupBuilder builder = new DbSetupBuilder()
-//                    .type(dbtype)
-//                    .host(host)
-//                    .port(port)
-//                    .dbname(_argsMap.get("--dbname"))
-//                    .user(_argsMap.get("--dbuser"))
-//                    .passwd(_argsMap.getOrDefault("--dbpasswd", "").toCharArray());
-////            setText(_argsMap, this.jTextFieldDBHost, "--dbhost");
-////            setText(_argsMap, this.jTextFieldDBPort, "--dbport");
-////            setText(_argsMap, this.jTextFieldDBHost, "--dbhost");
-////            setText(_argsMap, this.jTextFieldDBPort, "--dbport");
-////            this.jComboBoxDbType.setSelectedItem(DbType.valueOf(_argsMap.get("--dbtype")));
-//            String dbSpecificHost = _argsMap.get(dbtype + ".host");
-//            if (null != dbSpecificHost) {
-////                this.jTextFieldDBHost.setText(dbSpecificHost);
-//                builder = builder.host(dbSpecificHost);
-//                host = dbSpecificHost;
-//            }
-//            String dbSpecificPort = _argsMap.get(dbtype + "." + host + ".port");
-//            if (null != dbSpecificPort) {
-////                this.jTextFieldDBPort.setText(dbSpecificPort);
-//                port = Integer.parseInt(dbSpecificPort);
-//                builder = builder.port(port);
-//            }
-//            updateFromArgs(_argsMap, dbtype, host, port, curSetup);
             String addRepeatCountsToDatabaseNamesString = _argsMap.get(ADD_REPEAT_COUNTS_TO_DATABASE_NAMES);
             if (addRepeatCountsToDatabaseNamesString != null) {
                 boolean b = Boolean.valueOf(addRepeatCountsToDatabaseNamesString);
@@ -1556,17 +1532,19 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }//GEN-LAST:event_jButtonCheckActionPerformed
 
-    private void queryDatabase() throws InterruptedException, ExecutionException {
+    private XFuture<Void> queryDatabase() throws InterruptedException, ExecutionException {
         if (null != dpu) {
-            dpu.queryDatabase().thenAccept(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
+            return dpu.queryDatabase().thenCompose(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
+        return XFuture.completedFuture(null);
     }
 
     
-    private void queryDatabaseNew() throws InterruptedException, ExecutionException {
+    private XFuture<Void> queryDatabaseNew() throws InterruptedException, ExecutionException {
         if (null != dpu) {
-            dpu.queryDatabaseNew().thenAccept(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
+            return dpu.queryDatabaseNew().thenCompose(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
+        return XFuture.completedFuture(null);
     }
     
     private void jButtonAddItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddItemActionPerformed
@@ -1781,6 +1759,28 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }//GEN-LAST:event_jCheckBoxForceUpdatesActionPerformed
 
+    private void callShowDatabaseTableImage() {
+        Utils.runOnDispatchThread(this::showDatabaseTableImage);
+    }
+    
+    private void showDatabaseTableImage() {
+        try {
+            List<DetectedItem> list = new ArrayList<>();
+            DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
+            for (int i = 0; i < tm.getRowCount(); i++) {
+                list.add(new DetectedItem(tm.getValueAt(i, 0).toString(),
+                        Double.parseDouble(tm.getValueAt(i, 4).toString()),
+                        Double.parseDouble(tm.getValueAt(i, 1).toString()),
+                        Double.parseDouble(tm.getValueAt(i, 2).toString())));
+            }
+            File f = File.createTempFile("newDataBaseItems_", ".png");
+            aprsJFrame.takeSimViewSnapshot(f, list);
+            Desktop.getDesktop().open(f);
+        } catch (IOException ex) {
+            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     private void jButtonCheckNewItemsOnlyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCheckNewItemsOnlyActionPerformed
         try {
             DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
@@ -1790,6 +1790,18 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonCheckNewItemsOnlyActionPerformed
+
+    private void jButtonShowImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonShowImageActionPerformed
+//        try {
+////            DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
+////            tm.setRowCount(0);
+////            queryDatabaseNew().thenRun(this::callShowDatabaseTableImage);
+//            
+//        } catch (InterruptedException | ExecutionException ex) {
+//            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+        showDatabaseTableImage();
+    }//GEN-LAST:event_jButtonShowImageActionPerformed
 
     public void forceAllUpdates() throws NumberFormatException {
         try {
@@ -1852,6 +1864,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JButton jButtonDisconnectVision;
     private javax.swing.JButton jButtonForceAll;
     private javax.swing.JButton jButtonForceSingleUpdate;
+    private javax.swing.JButton jButtonShowImage;
     private javax.swing.JButton jButtonUpdateResultDetails;
     private javax.swing.JCheckBox jCheckBoxAddRepeatCountsToDatabaseNames;
     private javax.swing.JCheckBox jCheckBoxDebug;

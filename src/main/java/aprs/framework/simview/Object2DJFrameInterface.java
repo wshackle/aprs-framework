@@ -41,4 +41,6 @@ public interface Object2DJFrameInterface extends CommonJFrameInterface {
     
     public void takeSnapshot(File f, PoseType pose, String label) throws IOException;
     
+    public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException;
+    
 }

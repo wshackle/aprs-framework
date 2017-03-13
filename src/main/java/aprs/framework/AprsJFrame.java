@@ -27,6 +27,7 @@ import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupJInternalFrame;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
+import aprs.framework.database.DetectedItem;
 import aprs.framework.database.explore.ExploreGraphDbJInternalFrame;
 import aprs.framework.logdisplay.LogDisplayJInternalFrame;
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
@@ -105,42 +106,41 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private MotomanCrclServerJInternalFrame motomanCrclServerJInternalFrame = null;
 
     private String taskName;
-    
+
     public void pauseCrclProgram() {
-        if(null != pendantClientJInternalFrame) {
+        if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.pauseCrclProgram();
         }
     }
 
-    private int runNumber = (int) ((System.currentTimeMillis()/10000)%1000);
-    
+    private int runNumber = (int) ((System.currentTimeMillis() / 10000) % 1000);
+
     public String getRunName() {
-        return ((this.taskName!=null)?this.taskName.replace(" ", "-"):"")+"-run-"+String.format("%03d",runNumber)+"-"
-                +((this.robotName != null)?this.robotName:"")+"-";
+        return ((this.taskName != null) ? this.taskName.replace(" ", "-") : "") + "-run-" + String.format("%03d", runNumber) + "-"
+                + ((this.robotName != null) ? this.robotName : "") + "-";
     }
-    
+
     public boolean isCrclProgramPaused() {
-        if(null != pendantClientJInternalFrame) {
+        if (null != pendantClientJInternalFrame) {
             return pendantClientJInternalFrame.isPaused();
         }
         return false;
     }
-    
+
     public boolean isRunningCrclProgram() {
-        if(null != pendantClientJInternalFrame) {
+        if (null != pendantClientJInternalFrame) {
             return pendantClientJInternalFrame.isRunningProgram();
         }
         return false;
     }
-    
-    
+
     public CRCLProgramType getCrclProgram() {
-        if(null != pendantClientJInternalFrame) {
+        if (null != pendantClientJInternalFrame) {
             return pendantClientJInternalFrame.getProgram();
         }
         return null;
     }
-    
+
     public Map<String, String> getExecutorOptions() {
         if (null == pddlExecutorJInternalFrame1) {
             return null;
@@ -878,13 +878,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public Optional<CRCLStatusType> getCurrentStatus() {
-        if(null != pendantClientJInternalFrame) {
+        if (null != pendantClientJInternalFrame) {
             return pendantClientJInternalFrame.getCurrentStatus();
         }
         return Optional.empty();
     }
-    
-    
+
     public void updateTitle() {
         if (null != pendantClientJInternalFrame) {
             CommandStatusType cs = pendantClientJInternalFrame.getCurrentStatus()
@@ -1762,10 +1761,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     };
 
-    
     public void takeSimViewSnapshot(File f, PoseType pose, String label) throws IOException {
-        if(null != object2DViewJInternalFrame) {
+        if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.takeSnapshot(f, pose, label);
+        }
+    }
+
+    public void takeSimViewSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
+        if (null != object2DViewJInternalFrame) {
+            this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint);
         }
     }
     
@@ -2249,7 +2253,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             File dbPropsFile = new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
             dbSetupJInternalFrame.setPropertiesFile(dbPropsFile);
         }
-        if(null != fanucCRCLServerJInternalFrame) {
+        if (null != fanucCRCLServerJInternalFrame) {
             fanucCRCLServerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_fanucCrclServerProperties.txt"));
         }
     }
