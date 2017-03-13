@@ -129,4 +129,8 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         object2DOuterJPanel1.takeSnapshot(f, pose, label);
     }
     
+    @Override
+    public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
+        this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint);
+    }
 }

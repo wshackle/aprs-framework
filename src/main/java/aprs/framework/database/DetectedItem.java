@@ -28,6 +28,7 @@ import crcl.base.VectorType;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.vector;
+import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -75,6 +76,7 @@ public class DetectedItem extends PM_CARTESIAN {
     public List<DetectedItem> emptySlotsList = new ArrayList<>();
     public int kitTrayNum;
     public String slotForSkuName;
+    public Color labelColor = Color.BLACK;
     
     
     public DetectedItem(String name) {
