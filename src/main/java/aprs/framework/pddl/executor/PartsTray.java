@@ -22,6 +22,7 @@
  */
 package aprs.framework.pddl.executor;
 
+import crcl.base.PoseType;
 import java.util.List;
 
 /**
@@ -33,13 +34,15 @@ public class PartsTray {
     private int NodeID;
     private String PartsTraySku;
     private String PartsTrayName;
-    private String ExternalShape;
+    private String ExternalShapeModelFileName;
+    private String ExternalShapeModelFormatName;
     private String PartsTrayDesign;
     private Boolean PartsTrayComplete;
     private double Rotation;
     private List<Slot> SlotList;
     private double x;
     private double y;
+    private PoseType PartsTrayPose;
 
     
     public PartsTray(String PartsTrayName) {
@@ -93,14 +96,20 @@ public class PartsTray {
         this.PartsTraySku = PartsTraySku;
     }
     
-    public String getExternalShape() {
-        return this.ExternalShape;
+    public String getExternalShapeModelFileName() {
+        return this.ExternalShapeModelFileName;
     }
 
-    public void setExternalShape(String ExternalShape) {
-        this.ExternalShape = ExternalShape;
+    public void setExternalShapeModelFileName(String ExternalShapeModelFileName) {
+        this.ExternalShapeModelFileName = ExternalShapeModelFileName;
+    }
+public String getExternalShapeModelFormatName() {
+        return this.ExternalShapeModelFormatName;
     }
 
+    public void setExternalShapeModelFormatName(String ExternalShapeModelFormatName) {
+        this.ExternalShapeModelFormatName = ExternalShapeModelFormatName;
+    }
     public Boolean getPartsTrayComplete() {
         return PartsTrayComplete;
     }
@@ -113,7 +122,15 @@ public class PartsTray {
         return SlotList;
     }
     
-    public void setSlotList(List<Slot> SlotList){
-        this.SlotList=SlotList;
+    public void setSlotList(List<Slot> SlotList) {
+        this.SlotList = SlotList;
+    }
+
+    public PoseType getPartsTrayPose() {
+        return this.PartsTrayPose;
+    }
+
+    public void setpartsTrayPose(PoseType PartsTrayPose) {
+        this.PartsTrayPose = PartsTrayPose;
     }
 }

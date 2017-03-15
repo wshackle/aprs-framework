@@ -39,6 +39,7 @@ import crcl.base.LengthUnitEnumType;
 import crcl.base.MessageType;
 import crcl.base.MiddleCommandType;
 import crcl.base.MoveToType;
+import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.RotSpeedAbsoluteType;
 import crcl.base.SetAngleUnitsType;
@@ -84,7 +85,7 @@ import static crcl.utils.CRCLPosemath.vector;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JTextArea;
-
+import javax.swing.text.BadLocationException;
 
 /**
  *
@@ -113,7 +114,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private QuerySet qs;
     private List<String> TakenPartList = new ArrayList();
     private Set<Slot> EmptySlotSet;
-    private Inspection jframe;
+    private List<PoseType> PlacePartSlotPoseList = null;
+    private Inspection inspectionFrame;
     private JTextArea InspectionResultJTextArea;
 
     private boolean takeSnapshots = false;
@@ -366,9 +368,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     placePart(action, cmds);
                     break;
 
-                //case "inspect-kit":
-                    //inspectKit(action, cmds);
-                 //   break;
+                case "inspect-kit": {
+                    try {
+                        inspectKit(action, cmds);
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                break;
             }
 
             actionToCrclIndexes[lastIndex] = cmds.size();
@@ -580,29 +587,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     //-- contains all the slots that do not have a part
     private ArrayList nonFilledSlotList = new ArrayList();
 
-    public void showInspection(PartsTray kittray) {
 
-        String imageToUse = jframe.getKitImage();
-        String externalShape = kittray.getExternalShape();
-        if (externalShape.contains(".")){
-            int dotIndex = externalShape.indexOf(".");
-            if (dotIndex != -1)
-                externalShape = externalShape.substring(0, dotIndex);
-        }
-        String pathToImage = "/aprs/framework/screensplash/" +externalShape+"/"+imageToUse + ".png";
-        System.out.println("pathToImage " + pathToImage);
-        jframe.setTitle(kittray.getPartsTrayName());
-        jframe.getKitTitleLabel().setText("Inspecting " + kittray.getPartsTrayName());
-        jframe.getKitImageLabel().setIcon(new javax.swing.ImageIcon(getClass().getResource(pathToImage)));
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        jframe.setLocation(screenSize.width / 2 - jframe.getSize().width / 2, screenSize.height / 2 - jframe.getSize().height / 2);
-        jframe.pack();
-        jframe.setVisible(true);
-    }
-
-    private void addToInspectionResultJTextArea(String text) {
-        InspectionResultJTextArea.append(text + "\n");
-    }
     /**
      * @brief Inspects a finished kit to check if it is complete
      * @param action
@@ -610,178 +595,238 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws IllegalStateException
      * @throws SQLException
      */
-   public Set<Slot> inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+    public void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
-        
-        //-- This is a list of parts trays retrieved from a public static variable
-        //-- stored in DatabasePoseUpdater
-        //-- This variable has X,Y, and rotation for all parts trays
-        List<PartsTray> partsTrayList = DatabasePoseUpdater.partsTrayList;
-
+        PartsTray correctPartsTray = null;
+        String kitImageResult = "";
         checkSettings();
-
         String kitSku = action.getArgs()[0];
         MessageType msg = new MessageType();
-
         msg.setMessage("inspect-kit " + kitSku);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
 
-        //-- Get the number of parts expected to be in this kit using the kit part design
+        //-- inspect-kit takes an sku as argument
+        //-- We want to identify which was just built
+        //-- To do so, we use the poses stored in PlacePartSlotPoseList and
+        //-- we look for the kit tray in the database for which one of the slots
+        //-- has at least one pose in the list
+        if (null != PlacePartSlotPoseList) {
+            inspectionFrame = new Inspection();
+            correctPartsTray = findCorrectKitTray(kitSku);
+            if (null != correctPartsTray) {
+                EmptySlotSet = new HashSet<Slot>();
+                Set<String> set = new HashSet<String>();
+                int numberOfPartsInKit = 0;
 
-        int partDesignPartCount = getPartDesignPartCount(kitSku);
-        System.out.println("\n\n---Inspecting " + kitSku);
-        System.out.println("---" + kitSku + " should contain " + partDesignPartCount + " parts.");
-        //-- Cypher query to retrieve all parts trays with the kit sku
-        List<PartsTray> myPartsTraysList = getPartsTrays(kitSku);
+                System.out.println("\n\n---Inspecting kit tray " + correctPartsTray.getPartsTrayName());
+                int partDesignPartCount = getPartDesignPartCount(kitSku);
 
-        //-- replace all _pt with _kt in TakenPartList
-        //-- This is to get all part that contains "in_kt" in their names
-        //-- from the database
-        for (int i = 0; i < TakenPartList.size(); i++) {
-            String part_in_pt = TakenPartList.get(i);
-            String tmpPartName = part_in_pt.replace("in_pt", "in_kt");
-            int indexLastUnderscore = tmpPartName.lastIndexOf("_");
-            String part_in_kt = tmpPartName.substring(0, indexLastUnderscore);
-            TakenPartList.set(i, part_in_kt);
+                //-- replace all _pt from TakenPartList with _kt
+                //-- Get all part that contains "in_kt" in their names
+                //-- from the database
+                for (int i = 0; i < TakenPartList.size(); i++) {
+                    String part_in_pt = TakenPartList.get(i);
+                    String tmpPartName = part_in_pt.replace("in_pt", "in_kt");
+                    int indexLastUnderscore = tmpPartName.lastIndexOf("_");
+                    String part_in_kt = tmpPartName.substring(0, indexLastUnderscore);
+                    TakenPartList.set(i, part_in_kt);
+                }
+
+                //-- Get all the slots for the current parts tray
+                List<Slot> slotList = correctPartsTray.getSlotList();
+                for (int j = 0; j < slotList.size(); j++) {
+                    Slot slot = slotList.get(j);
+                    BigDecimal slotx = slot.getSlotPose().getPoint().getX();
+                    BigDecimal sloty = slot.getSlotPose().getPoint().getY();
+                    //System.out.println(slot.getSlotName() + ":(" + x_offset + "," + y_offset + ")");
+                    System.out.println("++++++ " + slot.getSlotName() + ":(" + slotx + "," + sloty + ")");
+
+                    //-- we want to filter out from TakenPartList parts that
+                    //-- do not match slot part sku
+                    //-- e.g., In TakenPartList keep only parts that contain part_large_gear
+                    //-- if part sku for this slot is sku_part_large_gear
+                    String partSKU = slot.getPartSKU();
+                    if (partSKU.startsWith("sku_")) {
+                        partSKU = partSKU.substring(4).concat("_in_kt");
+                    }
+
+                    if (checkPartTypeInSlot(partSKU, slot) == 1) {
+                        numberOfPartsInKit++;
+                    } else {
+                        EmptySlotSet.add(slot);
+                    }
+                }
+
+                if (!EmptySlotSet.isEmpty()) {
+                    inspectionFrame.setKitImage(getKitResultImage(EmptySlotSet));
+                } else {
+                    inspectionFrame.setKitImage("complete");
+                }
+
+                displayInspectionFrame(correctPartsTray);
+                if (numberOfPartsInKit == partDesignPartCount) {
+                    System.out.println("Kit is complete");
+                    inspectionFrame.addToInspectionResultJTextPane("Kit is complete<br>");
+
+                } else {
+                    TakenPartList.clear();
+                    System.out.println("Kit is missing the following parts");
+                    inspectionFrame.addToInspectionResultJTextPane("Kit is missing the following parts<br>");
+                    for (Slot s : EmptySlotSet) {
+                        System.out.println("Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU());
+                        inspectionFrame.addToInspectionResultJTextPane("Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
+
+                    }
+                    inspectionFrame.addToInspectionResultJTextPane("<br>");
+                    inspectionFrame.addToInspectionResultJTextPane("Recovering...<br>");
+                    for (Slot s : EmptySlotSet) {
+                        String partSKU = s.getPartSKU();
+                        if (partSKU.startsWith("sku_")) {
+                            partSKU = partSKU.substring(4).concat("_in_pt");
+                        }
+                        List<String> allPartsInPt = getAllPartsInPt(partSKU);
+                        String partInPt = null;
+                        if (allPartsInPt.size() > 0) {
+                            partInPt = allPartsInPt.get(0);
+                            takePartRecovery(partInPt, out);
+                            PddlAction takepartrecoveryaction = PddlAction.parse("(place-part " + s.getSlotName() + ")");
+                            placePartRecovery(takepartrecoveryaction, s, out);
+                        }
+                    }
+                }
+            } else {
+                System.out.println("The system could not identify the kit tray that was built");
+            }
         }
-        //-- Remove duplicates from TakenPartList
-        //-- TODO: use a hashmap instead of a list
-        //Set<String> hs = new HashSet<>();
-        //hs.addAll(TakenPartList);
-        //TakenPartList.clear();
-        //TakenPartList.addAll(hs);
+        PlacePartSlotPoseList.clear();
+        PlacePartSlotPoseList = null;
+    }
 
-        //-- Read myPartsTraysList and get their poses
-        for (int i = 0; i < myPartsTraysList.size(); i++) {
-           EmptySlotSet = new HashSet<Slot>();
-            int numberOfPartsInKit = 0;
-            PartsTray myPartsTray = myPartsTraysList.get(i);
-            //-- jframe
-            jframe = new Inspection();  
-            InspectionResultJTextArea = jframe.getInspectionResultJTextArea();
-            PoseType trayPose = qs.getPose(myPartsTray.getPartsTrayName());
-            trayPose = correctPose(trayPose);
-            BigDecimal xbd = trayPose.getPoint().getX();
-            double trayX = xbd.doubleValue();
-            BigDecimal ybd = trayPose.getPoint().getY();
-            double trayY = ybd.doubleValue();
-            System.out.println("+++ partsTray :(" + trayX + "," + trayY + ")");
-           
-            double rotation=0;
+    private PartsTray findCorrectKitTray(String kitSku) throws SQLException {
+        PartsTray correctPartsTray = null;
+
+        List<PartsTray> dpuPartsTrayList = DatabasePoseUpdater.partsTrayList;
+        List<PartsTray> partsTraysList = getPartsTrays(kitSku);
+
+        System.out.println("--Checking parts trays");
+        for (int i = 0; i < partsTraysList.size(); i++) {
+            PartsTray partsTray = partsTraysList.get(i);
+            System.out.println("--Parts tray: " + partsTray.getPartsTrayName());
+            PoseType partsTrayPose = qs.getPose(partsTray.getPartsTrayName());
+            partsTrayPose = correctPose(partsTrayPose);
+            partsTray.setpartsTrayPose(partsTrayPose);
+            BigDecimal xbd = partsTrayPose.getPoint().getX();
+            double partsTrayPoseX = xbd.doubleValue();
+            BigDecimal ybd = partsTrayPose.getPoint().getY();
+            double partsTrayPoseY = ybd.doubleValue();
+
+            double rotation = 0;
             //-- Read partsTrayList
             //-- Assign rotation to myPartsTray by comparing poses
-            for (int c = 0; c < partsTrayList.size(); c++) {
-                PartsTray pt = partsTrayList.get(c);
+            System.out.print("--Assigning proper rotation: ");
+            for (int c = 0; c < dpuPartsTrayList.size(); c++) {
+                PartsTray pt = dpuPartsTrayList.get(c);
                 double ptX = pt.getX();
                 double ptY = pt.getY();
-                
                 //-- Check if X for parts trays are close enough
-                double diffX = Math.abs(trayX - ptX);
+                double diffX = Math.abs(partsTrayPoseX - ptX);
                 //System.out.println("diffX= "+diffX);
                 if (diffX < 1E-7) {
                     //-- Check if Y for parts trays are close enough
-                    double diffY = Math.abs(trayY - ptY);
+                    double diffY = Math.abs(partsTrayPoseY - ptY);
                     //System.out.println("diffY= "+diffY);
                     if (diffY < 1E-7) {
-                        myPartsTray.setRotation(pt.getRotation());
-                        rotation=pt.getRotation();
+                        partsTray.setRotation(pt.getRotation());
                     }
                 }
             }
-            //double rotation = myPartsTray.getRotation();
-            System.out.println("rotation " + rotation);
-            
+
+            rotation = partsTray.getRotation();
+            System.out.println(rotation);
             //-- retrieve the rotationOffset
             double rotationOffset = DatabasePoseUpdater.myRotationOffset;
-            //System.out.println("rotationOffset " + rotationOffset);
 
+            //System.out.println("rotationOffset " + rotationOffset);
+            //System.out.println("rotation " + rotation);
             //-- compute the angle
             double angle = normAngle(rotation + rotationOffset);
-           
-            //-- Get all the slots for the current parts tray
-            List<Slot> slotList = myPartsTray.getSlotList();
+
+            //-- Get list of slots for this parts tray
+            System.out.println("--Checking slots");
+            List<Slot> slotList = partsTray.getSlotList();
+            int count = 0;
             for (int j = 0; j < slotList.size(); j++) {
                 Slot slot = slotList.get(j);
-
                 double x_offset = slot.getX_OFFSET() * 1000;
                 double y_offset = slot.getY_OFFSET() * 1000;
-                double slotX = trayX + x_offset * Math.cos(angle) - y_offset * Math.sin(angle);
-                double slotY = trayY + x_offset * Math.sin(angle) + y_offset * Math.cos(angle);
-                slot.setCorrectX(slotX);
-                slot.setCorrectY(slotY);
-                //System.out.println(slot.getSlotName() + ":(" + x_offset + "," + y_offset + ")");
-                System.out.println("++++++ "+slot.getSlotName() + ":(" + slotX + "," + slotY + ")");
+                BigDecimal slotX = BigDecimal.valueOf(partsTrayPoseX + x_offset * Math.cos(angle) - y_offset * Math.sin(angle));
+                BigDecimal slotY = BigDecimal.valueOf(partsTrayPoseY + x_offset * Math.sin(angle) + y_offset * Math.cos(angle));
+                BigDecimal slotZ = BigDecimal.valueOf(-146);
+                PointType slotPoint = new PointType();
+                slotPoint.setX(slotX);
+                slotPoint.setY(slotY);
+                slotPoint.setZ(slotZ);
+                PoseType slotPose = new PoseType();
+                slotPose.setPoint(slotPoint);
+                slot.setSlotPose(slotPose);
 
-                //-- we want to filter out from TakenPartList parts that
-                //-- do not match slot part sku
-                //-- e.g., In TakenPartList keep only parts that contain part_large_gear
-                //-- if part sku for this slot is sku_part_large_gear
-                String partSKU = slot.getPartSKU();
-                if (partSKU.startsWith("sku_")) {
-                    partSKU = partSKU.substring(4).concat("_in_kt");
+                System.out.println("+++ " + slot.getSlotName() + ":(" + slotX + "," + slotY + ")");
+                //-- compare this slot pose with the ones in PlacePartSlotPoseList
+                for (int k = 0; k < PlacePartSlotPoseList.size(); k++) {
+                    PoseType pose = PlacePartSlotPoseList.get(k);
+                    System.out.println("      placepartpose :(" + pose.getPoint().getX() + "," + pose.getPoint().getY() + ")");
+                    double distance = Math.hypot(pose.getPoint().getX().doubleValue() - slotX.doubleValue(), pose.getPoint().getY().doubleValue() - slotY.doubleValue());
+                    System.out.println("         Distance = " + distance);
+                    if (distance < 1.0) {
+                        count++;
+                    }
                 }
-
-                numberOfPartsInKit = numberOfPartsInKit + checkPartsInSlot(partSKU, slot);
             }
-
-            if (numberOfPartsInKit == partDesignPartCount) {
-                System.out.println("Kit is complete\n\n");
-                jframe.setKitImage("complete");
-
-            } else {
-                int missingParts = partDesignPartCount - numberOfPartsInKit;
-                addToInspectionResultJTextArea("Kit is missing " + missingParts + " part(s):");
-                System.out.println("Kit is missing " + missingParts + " part(s):");
-               
-                if (!EmptySlotSet.isEmpty()) {
-                    List<Integer> slotID = new ArrayList();
-                    for (Slot s : EmptySlotSet) {
-                        System.out.println("-------- Slot "+s.getSlotName()+ " is missing a part of type "+s.getPartSKU());
-                        addToInspectionResultJTextArea("Slot "+s.getSlotName()+ " is missing a part of type "+s.getPartSKU());
-                        slotID.add(s.getID());
-                    }
-                    Collections.sort(slotID);
-                    String res="";
-                    for (int a=0; a<slotID.size(); a++)
-                    {
-                        res =res.concat(slotID.get(a).toString());
-                    }
-                    jframe.setKitImage(res);
-                }
-                System.out.println("\n\n");
-            }  
-            showInspection(myPartsTray);
+            if (count == slotList.size()) {
+                correctPartsTray = partsTray;
+            }
         }
-        TakenPartList.clear();
-         return EmptySlotSet;
+        return correctPartsTray;
     }
-
-   
-   
-   public void inspectKitSimulation(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
-        if (null == qs) {
-            throw new IllegalStateException("Database not setup and connected.");
-        }
+    
+    public void displayInspectionFrame(PartsTray kittray) {
         
-        //-- This is a list of parts trays retrieved from a public static variable
-        //-- stored in DatabasePoseUpdater
-        //-- This variable has X,Y, and rotation for all parts trays
-        List<PartsTray> partsTrayList = DatabasePoseUpdater.partsTrayList;
-
-        checkSettings();
-
-        String kitSku = action.getArgs()[0];
-        MessageType msg = new MessageType();
-
-        msg.setMessage("inspect-kit " + kitSku);
-        msg.setCommandID(BigInteger.valueOf(out.size() + 2));
-        out.add(msg);        
-        TakenPartList.clear();
+        String pathToImage = "/aprs/framework/screensplash/" + kittray.getExternalShapeModelFileName() + "/" + inspectionFrame.getKitImage() + ".png";
+        System.out.println("pathToImage " + pathToImage);
+        inspectionFrame.setTitle(kittray.getPartsTrayName());
+        inspectionFrame.getKitTitleLabel().setText("Inspecting " + kittray.getPartsTrayName());
+        inspectionFrame.getKitImageLabel().setIcon(new javax.swing.ImageIcon(getClass().getResource(pathToImage)));
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        inspectionFrame.setLocation(screenSize.width / 2 - inspectionFrame.getSize().width / 2, 
+                screenSize.height / 2 - inspectionFrame.getSize().height / 2);
+        inspectionFrame.pack();
+        inspectionFrame.setVisible(true);
     }
-       public double normAngle(double angleIn) {
+    
+    
+    private String getKitResultImage(Set<Slot> list) {
+        String kitResultImage = "";
+        List<Integer> idList = new ArrayList();
+        for (Slot slot : list) {
+            int id = slot.getID();
+            idList.add(id);
+        }
+        if (!idList.isEmpty()) {
+            Collections.sort(idList);
+        } else {
+            System.out.println("idList is empty");
+        }
+        for (Integer s : idList) {
+            kitResultImage += s;
+        }
+
+        return kitResultImage;
+    }
+
+    public double normAngle(double angleIn) {
         double angleOut = angleIn;
         if (angleOut > Math.PI) {
             angleOut -= 2 * Math.PI * ((int) (angleIn / Math.PI));
@@ -790,111 +835,41 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         return angleOut;
     }
-       
     
-private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
+    private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException {
         int nbOfOccupiedSlots = 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         List<String> allPartsInKt = getAllPartsInKt(partInKt);
-
-
-
-
         for (int i = 0; i < allPartsInKt.size(); i++) {
-
-
             String newPartInKt = allPartsInKt.get(i);
-            System.out.print("--------- "+newPartInKt);
-
+            System.out.print("--------- " + newPartInKt);
             if (checkPartInSlot(newPartInKt, slot)) {
                 System.out.println("--------- Located in slot");
                 nbOfOccupiedSlots++;
-
-
-
-
-
-
-
-
-
-            } else
-                EmptySlotSet.add(slot);
-
-
-
+            }
         }
         return nbOfOccupiedSlots;
-
-
-
-
     }
 
-
     private Boolean checkPartInSlot(String partName, Slot slot) throws SQLException {
-        //System.out.println("----- Part " + partName);
-
-        //System.out.println("----- Slot " + slot.getSlotName());
         Boolean isPartInSlot = false;
-
         PoseType posePart = getPose(partName);
         posePart = correctPose(posePart);
         double partX = posePart.getPoint().getX().doubleValue();
         double partY = posePart.getPoint().getY().doubleValue();
-        double slotX = slot.getCorrectX();
-        double slotY = slot.getCorrectY();
-        double x = partX - slotX;
-        double y = partY - slotY;
+        double slotX = slot.getSlotPose().getPoint().getX().doubleValue();
+        double slotY = slot.getSlotPose().getPoint().getY().doubleValue();
         System.out.println(":(" + partX + "," + partY + ")");
-        // System.out.println("----- Slot " + slot.getSlotName() + " : (" + slotX + "," + slotY + ")");
-        //-- compute distance between 2 points
-        double powx = Math.pow(x, 2);
-        double powy = Math.pow(y, 2);
-        double dist = Math.sqrt(powx + powy);
+        double distance = Math.hypot(partX - slotX, partY - slotY);
+        System.out.println("Distance= " + distance);
         // compare finalres with a specified tolerance value of 6.5 mm
         double threshold = 6.5;
-        if (dist < threshold) {
-
-
-
-
-
-
+        if (distance < threshold) {
             isPartInSlot = true;
-
-           // System.out.println("----- Part " + partName + " : (" + partX + "," + partY + ")");
-
-           // System.out.println("----- Slot " + slot.getSlotName() + " : (" + slotX + "," + slotY + ")");
-
-            System.out.println("----- Distance between part and slot = " + dist);
-
-
+            // System.out.println("----- Part " + partName + " : (" + partX + "," + partY + ")");
+            // System.out.println("----- Slot " + slot.getSlotName() + " : (" + slotX + "," + slotY + ")");
+            // System.out.println("----- Distance between part and slot = " + dist);
         }
         return isPartInSlot;
-    }
-
-    private static void printMap(Map mp) {
-        Iterator it = mp.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry) it.next();
-            System.out.println(pair.getKey() + " = " + pair.getValue());
-            it.remove(); // avoids a ConcurrentModificationException
-        }
     }
 
     private int takePartArgIndex;
@@ -972,8 +947,41 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
             System.out.println(markerMsg + " at " + new Date());
         });
         lastTakenPart = partName;
+        TakenPartList.add(partName);
+    }
+
+    public void takePartRecovery(String partName, List<MiddleCommandType> out) throws SQLException, BadLocationException {
+        if (null == qs) {
+            throw new IllegalStateException("Database not setup and connected.");
+        }
+
+        checkSettings();
+        MessageType msg = new MessageType();
+        msg.setMessage("take-part " + partName);
+        msg.setCommandID(BigInteger.valueOf(out.size() + 2));
+        out.add(msg);
+
+        PoseType pose = getPose(partName);
+        if (takeSnapshots) {
+            try {
+                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-take-part-" + partName + "-", ".PNG"), pose, partName);
+            } catch (IOException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        pose = correctPose(pose);
+        returnPosesByName.put(partName, pose);
+        pose.setXAxis(xAxis);
+        pose.setZAxis(zAxis);
+        takePartByPose(out, pose);
+        inspectionFrame.addToInspectionResultJTextPane("took part " + partName + "<br>");
+        String markerMsg = "took part " + partName;
+        addMarkerCommand(out, markerMsg, x -> {
+            System.out.println(markerMsg + " at " + new Date());
+        });
+        lastTakenPart = partName;
         //inspectionList.add(partName);
-           TakenPartList.add(partName);
+        TakenPartList.add(partName);
     }
 
     public PoseType getPose(String posename) throws SQLException {
@@ -1000,12 +1008,12 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         return pose;
     }
 
-    
     public List<PartsTray> getPartsTrays(String name) throws SQLException {
         List<PartsTray> list = new ArrayList<>(qs.getPartsTrays(name));
 
         return list;
     }
+
     public int getPartDesignPartCount(String kitName) throws SQLException {
         int count = qs.getPartDesignPartCount(kitName);
         return count;
@@ -1017,6 +1025,12 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         return partsInKtList;
     }
 
+    public List<String> getAllPartsInPt(String name) throws SQLException {
+        List<String> partsInPtList = new ArrayList<>(qs.getAllPartsInPt(name));
+
+        return partsInPtList;
+    }
+    
     public void testPartPositionPose(List<MiddleCommandType> cmds, PoseType pose) {
 
         addOpenGripper(cmds);
@@ -1508,6 +1522,9 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
+        if (null == PlacePartSlotPoseList) {
+            PlacePartSlotPoseList = new ArrayList();
+        }
         checkSettings();
         String slotName = action.getArgs()[placePartSlotArgIndex];
         PoseType pose = getPose(slotName);
@@ -1524,7 +1541,41 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         pose = correctPose(pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
+        PlacePartSlotPoseList.add(pose);
+        placePartByPose(out, pose);
+        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
+        addMarkerCommand(out, msg,
+                ((CrclCommandWrapper wrapper) -> {
+                    System.out.println(msg + " completed at " + new Date());
+                    ppi.setWrapper(wrapper);
+                    notifyPlacePartConsumers(ppi);
+                }));
+    }
 
+    private void placePartRecovery(PddlAction action, Slot slot, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException {
+        if (null == qs) {
+            throw new IllegalStateException("Database not setup and connected.");
+        }
+        if (null == PlacePartSlotPoseList) {
+            PlacePartSlotPoseList = new ArrayList();
+        }
+        checkSettings();
+        String slotName = action.getArgs()[0];
+        PoseType pose = slot.getSlotPose();
+
+        final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
+        inspectionFrame.addToInspectionResultJTextPane(msg + "<br>");
+        if (takeSnapshots) {
+            try {
+                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
+            } catch (IOException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        pose = correctPose(pose);
+        pose.setXAxis(xAxis);
+        pose.setZAxis(zAxis);
+        PlacePartSlotPoseList.add(pose);
         placePartByPose(out, pose);
         final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
         addMarkerCommand(out, msg,
@@ -1550,6 +1601,7 @@ private int checkPartsInSlot(String partInKt, Slot slot) throws SQLException {
         checkSettings();
 
         PoseType poseAbove = CRCLPosemath.copy(pose);
+        System.out.println("Z= "+pose.getPoint().getZ());
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
 
         PoseType placePose = CRCLPosemath.copy(pose);

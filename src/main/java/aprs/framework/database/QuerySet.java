@@ -93,6 +93,10 @@ public class QuerySet implements QuerySetInterface {
         if (null == getAllPartsInKtQueryInfo) {
             throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_ALL_PARTS_IN_KT);
         }
+        this.getAllPartsInPtQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_PARTS_IN_PT);
+        if (null == getAllPartsInPtQueryInfo) {
+            throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_ALL_PARTS_IN_PT);
+        }
         this.getTraySlotsFromKitSkuQueryInfo = queriesMap.get(DbQueryEnum.GET_TRAY_SLOTS_FROM_KIT_SKU);
         if (null == getTraySlotsFromKitSkuQueryInfo) {
             throw new IllegalArgumentException("queriesMap has no entry for " + DbQueryEnum.GET_TRAY_SLOTS_FROM_KIT_SKU);
@@ -117,7 +121,13 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("queriesMap does not contain getAllPartsInKtQueryString");
         }
         getAllPartsInKtStatement = con.prepareStatement(getAllPartsInKtQueryString);
-
+        
+        String getAllPartsInPtQueryString = getAllPartsInPtQueryInfo.getQuery();
+        if (null == getAllPartsInPtQueryString) {
+            throw new IllegalArgumentException("queriesMap does not contain getAllPartsInPtQueryString");
+        }
+        getAllPartsInPtStatement = con.prepareStatement(getAllPartsInPtQueryString);
+        
         String getTraySlotsFromKitSkuQueryString = getTraySlotsFromKitSkuQueryInfo.getQuery();
         if (null == getTraySlotsFromKitSkuQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain getTraySlotsFromKitSkuQueryString");
@@ -128,20 +138,17 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("queriesMap does not contain getPose");
         }
         getPoseStatement = con.prepareStatement(getPoseQueryString);
-        //-- zeid
-       // String getPartDesignPartCountQueryString = getPartDesignCountQueryInfo.getQuery();
-        //if (null == getPartDesignPartCountQueryString) {
-       //     throw new IllegalArgumentException("queriesMap does not contain getPartDesignPartCountQueryString");
-       // }
-       // getPartDesignPartCountStatement = con.prepareStatement(getPartDesignPartCountQueryString);
 
-        //-- getAllPartsInKtStatement
-       // String getAllPartsInKtQueryString = getAllPartsInKtQueryInfo.getQuery();
-       // if (null == getAllPartsInKtQueryString) {
-       //    throw new IllegalArgumentException("queriesMap does not contain getAllPartsInKtQueryString");
-       // }
-       // getAllPartsInKtStatement = con.prepareStatement(getAllPartsInKtQueryString);
+        if (null == getAllPartsInKtQueryString) {
+            throw new IllegalArgumentException("queriesMap does not contain getAllPartsInKtQueryString");
+        }
+        getAllPartsInKtStatement = con.prepareStatement(getAllPartsInKtQueryString);
 
+        if (null == getAllPartsInPtQueryString) {
+            throw new IllegalArgumentException("queriesMap does not contain getAllPartsInPtQueryString");
+        }
+        getAllPartsInPtStatement = con.prepareStatement(getAllPartsInPtQueryString);
+        
         String setPoseQueryString = setQueryInfo.getQuery();
         if (null == setPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain setPose");
@@ -205,6 +212,7 @@ public class QuerySet implements QuerySetInterface {
     private java.sql.PreparedStatement newSingleTrayDesignStatement;
     private java.sql.PreparedStatement getTraySlotsFromKitSkuStatement;
     private java.sql.PreparedStatement getAllPartsInKtStatement;
+    private java.sql.PreparedStatement getAllPartsInPtStatement;    
     private java.sql.PreparedStatement getPartsTraysStatement;
     private java.sql.PreparedStatement getSlotsStatement;
 
@@ -340,6 +348,11 @@ public class QuerySet implements QuerySetInterface {
     private String getAllPartsInKtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getQueryInfo, type);
     }
+    
+        private String getAllPartsInPtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+        return getQueryResultString(rs, getQueryInfo, type);
+    }
+        
 private String getTraySlotsFromKitSkuQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getTraySlotsFromKitSkuQueryInfo, type);
     }
@@ -400,6 +413,33 @@ private String getTraySlotsFromKitSkuQueryResultString(ResultSet rs, DbParamType
             }
         }
         return partsInKtList;
+    }
+    
+    public ArrayList<String> getAllPartsInPt(String name) throws SQLException {
+        ArrayList<String> partsInPtList = new ArrayList();
+        if (closed) {
+            throw new IllegalStateException("QuerySet already closed.");
+        }
+
+        Map<Integer, Object> map = new TreeMap<>();
+        DbQueryInfo getAllPartsInPtQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_PARTS_IN_PT);
+        setQueryStringParam(getAllPartsInPtStatement, getAllPartsInPtQueryInfo, DbParamTypeEnum.NAME, name, map);
+        String simQuery = createExpectedQueryString(getAllPartsInPtQueryInfo, map);
+      
+        if (debug) {
+            System.out.println("simQuery = " + simQuery);
+        }
+
+        try (ResultSet rs = getAllPartsInPtStatement.executeQuery()) {
+            //int c = 0;
+            while (rs.next()) {
+                //c++;
+                String nameCheckString = getAllPartsInPtQueryResultString(rs, DbParamTypeEnum.NAME);
+                //System.out.println("nameCheckString = " + nameCheckString);
+                partsInPtList.add(nameCheckString);
+            }
+        }
+        return partsInPtList;
     }
 
     public int getPartDesignPartCount(String name) throws SQLException {
@@ -483,10 +523,16 @@ public List<PartsTray> getPartsTrays(String name) throws SQLException {
                     System.out.println("design = " + design);
                 }
                 
-                String externalShape = trimQuotes(getPartsTraysQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE));
-                partstray.setExternalShape(externalShape);
+                String externalShapeModelFileName = trimQuotes(getPartsTraysQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE_MODEL_FILE_NAME));
+                partstray.setExternalShapeModelFileName(externalShapeModelFileName);
                 if (debug) {
-                    System.out.println("external shape = " + externalShape);
+                    System.out.println("external shape model file name = " + externalShapeModelFileName);
+                }
+
+                String externalShapeModelFormatName = trimQuotes(getPartsTraysQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE_MODEL_FORMAT_NAME));
+                partstray.setExternalShapeModelFormatName(externalShapeModelFormatName);
+                if (debug) {
+                    System.out.println("external shape model format name= " + externalShapeModelFormatName);
                 }
                 
                 String sku = getPartsTraysQueryResultString(rs, DbParamTypeEnum.SKU_NAME);
@@ -578,11 +624,16 @@ public List<Slot> getSlots(String name) throws SQLException {
                 }
 
                 //-- external shape
-                String externalShape = getSlotsQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE);
+                String externalShapeModelFileName = getSlotsQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE_MODEL_FILE_NAME);
                 if (debug) {
-                    System.out.println("externalShape = " + externalShape);
+                    System.out.println("externalShapeModelFileName = " + externalShapeModelFileName);
                 }
-                slot.setExternalShape(externalShape);
+                slot.setExternalShapeModelFileName(externalShapeModelFileName);
+                String externalShapeModelFormatName = getSlotsQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE_MODEL_FORMAT_NAME);
+                if (debug) {
+                    System.out.println("externalShapeModelFormatName = " + externalShapeModelFormatName);
+                }
+                slot.setExternalShapeModelFileName(externalShapeModelFileName);
 
                 //-- part sku that goes in this slot
                 String partSku = getSlotsQueryResultString(rs, DbParamTypeEnum.SKU_NAME);
@@ -613,6 +664,7 @@ public List<Slot> getSlots(String name) throws SQLException {
         return list;
     }
 
+/*
     public void displayPartsTray(PartsTray partsTray) {
         System.out.println("PartsTray: " + partsTray.getPartsTrayName());
         System.out.println("node id: " + partsTray.getNodeID());
@@ -627,7 +679,8 @@ public List<Slot> getSlots(String name) throws SQLException {
         for (int i = 0; i < slots.size(); i++) {
             Slot slot = slots.get(i);
             System.out.println("Slot name: " + slot.getSlotName());
-            System.out.println("Slot external shape:" + slot.getExternalShape());
+            System.out.println("Slot external shape model file name:" + slot.getExternalShapeModelFileName());
+            System.out.println("Slot external shape model format name:" + slot.getExternalShapeModelFormatName());
             System.out.println("Slot part sku:" + slot.getPartSKU());
             System.out.println("Slot id:" + slot.getID());
             System.out.println("Slot x offset:" + slot.getX_OFFSET());
@@ -639,6 +692,7 @@ public List<Slot> getSlots(String name) throws SQLException {
             }
         }
     }
+    */
 
 
     @Override
@@ -939,6 +993,14 @@ public List<Slot> getSlots(String name) throws SQLException {
             getSlotsStatement.close();
             getSlotsStatement = null;
         }
+        if (null != getAllPartsInKtStatement) {
+            getAllPartsInKtStatement.close();
+            getAllPartsInKtStatement = null;
+        }
+        if (null != getAllPartsInPtStatement) {
+            getAllPartsInPtStatement.close();
+            getAllPartsInPtStatement = null;
+        }
     }
 
     @Override
@@ -955,6 +1017,7 @@ public List<Slot> getSlots(String name) throws SQLException {
     private final DbQueryInfo getQueryInfo;
     private final DbQueryInfo getPartDesignCountQueryInfo;
     private final DbQueryInfo getAllPartsInKtQueryInfo;
+    private final DbQueryInfo getAllPartsInPtQueryInfo;
     private final DbQueryInfo getTraySlotsFromKitSkuQueryInfo;
     private final DbQueryInfo getPartsTraysQueryInfo;
     private final DbQueryInfo getSlotsQueryInfo;

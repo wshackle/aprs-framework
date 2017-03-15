@@ -22,7 +22,17 @@
  */
 package aprs.framework.kitinspection;
 
+import java.awt.Color;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JLabel;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
 
 /**
  *
@@ -35,8 +45,12 @@ public class Inspection extends javax.swing.JFrame {
      */
     public Inspection() {
         initComponents();
+        doc = (HTMLDocument) InspectionResultJTextPane.getDocument();
+        editorKit = (HTMLEditorKit) InspectionResultJTextPane.getEditorKit();
+
     }
 
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -51,7 +65,7 @@ public class Inspection extends javax.swing.JFrame {
         jPanel2 = new javax.swing.JPanel();
         kitTitleLabel = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        inspectionResultTextArea = new javax.swing.JTextArea();
+        InspectionResultJTextPane = new javax.swing.JTextPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setBackground(new java.awt.Color(255, 255, 255));
@@ -109,10 +123,10 @@ public class Inspection extends javax.swing.JFrame {
         jScrollPane1.setBackground(new java.awt.Color(255, 255, 255));
         jScrollPane1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        inspectionResultTextArea.setEditable(false);
-        inspectionResultTextArea.setColumns(20);
-        inspectionResultTextArea.setRows(5);
-        jScrollPane1.setViewportView(inspectionResultTextArea);
+        InspectionResultJTextPane.setEditable(false);
+        InspectionResultJTextPane.setBorder(null);
+        InspectionResultJTextPane.setContentType("text/html");
+        jScrollPane1.setViewportView(InspectionResultJTextPane);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -184,8 +198,8 @@ public class Inspection extends javax.swing.JFrame {
         return this.kitImageLabel;
     }
     
-    public javax.swing.JTextArea getInspectionResultJTextArea(){
-        return this.inspectionResultTextArea;
+    public javax.swing.JTextPane getInspectionResultJTextArea(){
+        return this.InspectionResultJTextPane;
     }
     private String kitImage="complete";
     
@@ -196,8 +210,23 @@ public class Inspection extends javax.swing.JFrame {
     public void setKitImage(String kitImage){
         this.kitImage=kitImage;
     }
+    
+    public void addToInspectionResultJTextPane(String text) throws BadLocationException{
+        try {
+            editorKit.insertHTML(doc, doc.getLength(), text, 0, 0, null);
+        } catch (IOException ex) {
+            Logger.getLogger(Inspection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        String oldtext = InspectionResultJTextPane.getText();
+        InspectionResultJTextPane.setText(oldtext.concat(text + "\n"));
+    } 
+    
+    
+    private HTMLEditorKit editorKit;
+    private HTMLDocument doc;
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JTextArea inspectionResultTextArea;
+    private javax.swing.JTextPane InspectionResultJTextPane;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;

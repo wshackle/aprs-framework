@@ -22,6 +22,9 @@
  */
 package aprs.framework.pddl.executor;
 
+import crcl.base.PoseType;
+import java.math.BigDecimal;
+
 /**
  *
  * @author zeid
@@ -31,17 +34,24 @@ public class Slot {
     private int ID;
     private String SlotName;
     private String PartSKU;
-    private String ExternalShape;
+    private String ExternalShapeModelFileName;
+    private String ExternalShapeModelFormatName;
     private double X_OFFSET;
     private double Y_OFFSET;
     private Boolean SlotOccupied;
-    private double CorrectX;
-    private double CorrectY;
+    private PoseType SlotPose;
 
     public Slot(String SlotName) {
         this.SlotName = SlotName;
     }
 
+    public PoseType getSlotPose(){
+        return this.SlotPose;
+    }
+    public void setSlotPose(PoseType SlotPose){
+        this.SlotPose=SlotPose;
+    }
+    
     public int getID() {
         return ID;
     }
@@ -66,14 +76,20 @@ public class Slot {
         this.PartSKU = PartSKU;
     }
 
-    public String getExternalShape() {
-        return ExternalShape;
+    public String getExternalShapeModelFileName() {
+        return ExternalShapeModelFileName;
     }
 
-    public void setExternalShape(String ExternalShape) {
-        this.ExternalShape = ExternalShape;
+    public void setExternalShapeModelFileName(String ExternalShapeModelFileName) {
+        this.ExternalShapeModelFileName = ExternalShapeModelFileName;
+    }
+ public String getExternalShapeModelFormatName() {
+        return ExternalShapeModelFormatName;
     }
 
+    public void setExternalShapeModelFormatName(String ExternalShapeModelFormatName) {
+        this.ExternalShapeModelFormatName = ExternalShapeModelFormatName;
+    }
     public double getX_OFFSET() {
         return X_OFFSET;
     }
@@ -90,21 +106,6 @@ public class Slot {
         this.Y_OFFSET = Y_OFFSET;
     }
     
-      public double getCorrectX() {
-        return CorrectX;
-    }
-
-    public void setCorrectX(double CorrectX) {
-        this.CorrectX = CorrectX;
-    }
-
-       public double getCorrectY() {
-        return CorrectY;
-    }
-
-    public void setCorrectY(double CorrectY) {
-        this.CorrectY = CorrectY;
-    }
     
     public Boolean getSlotOccupied() {
         return SlotOccupied;

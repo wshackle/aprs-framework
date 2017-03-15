@@ -1,0 +1,4 @@
+#params=NAME(1),
+#results={NAME}
+match (v) with max(v.visioncycle)-2 as maxv
+match partinpt = (n:Part) where n.name STARTS WITH {1} and n.visioncycle > maxv RETURN n.name as name
