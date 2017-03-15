@@ -1,1 +1,2 @@
-1,Fanuc Cart,Sim_Fanuc,zeid_fanuc_lab\zeid_fanuc_lab.txt
+1,Shared Table,Sim_Motoman,simulated_motoman\simulated_motoman_props.txt
+2,Fanuc Cart,Sim_Fanuc,simulated_fanuc\simulated_fanuc_properties.txt
