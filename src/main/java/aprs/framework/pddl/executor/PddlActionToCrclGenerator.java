@@ -368,6 +368,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     placePart(action, cmds);
                     break;
 
+                    /*
                 case "inspect-kit": {
                     try {
                         inspectKit(action, cmds);
@@ -376,6 +377,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     }
                 }
                 break;
+                    */
             }
 
             actionToCrclIndexes[lastIndex] = cmds.size();

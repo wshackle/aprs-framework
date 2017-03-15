@@ -1,5 +1,5 @@
 (look-for-parts)
-(take-part part_medium_gear_in_pt_1)
+(fake-take-part part_medium_gear_in_pt_1)
 (place-part empty_slot_for_medium_gear_in_kit_m2l1_vessel_1)
 (take-part  part_medium_gear_in_pt_2)
 (place-part empty_slot_for_medium_gear_in_kit_m2l1_vessel_2)
