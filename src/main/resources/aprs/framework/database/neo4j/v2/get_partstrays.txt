@@ -1,9 +1,8 @@
 #params=NAME,
 #results={NAME=name,EXTERNAL_SHAPE_MODEL_FILE_NAME=external_shape_model_file_name, EXTERNAL_SHAPE_MODEL_FORMAT_NAME=external_shape_model_format_name, SKU_NAME=sku_name, NODE_ID=id, TRAY_DESIGN_NAME=design,TRAY_COMPLETE=complete,}
-match (v) with max(v.visioncycle)-2 as maxv
 match pointpath=(n:StockKeepingUnit)-[:hasSkuObject_Sku]-(pt:PartsTray),
 externalshape=(n)-[:hasStockKeepingUnit_ExternalShape]-(xshape),
 design=(pt)-[:hasPartsTray_Design]->(d:PartsTrayDesign)
-where n.name={1} and pt.visioncycle > maxv
+where n.name={1}
 return pt.name as name, xshape.hasExternalShape_ModelFileName as external_shape_model_file_name, xshape.hasExternalShape_ModelFormatName as external_shape_model_format_name, n.name as sku_name, ID(pt) as id, d.name as design, pt.hasPartsTray_Complete as complete
 

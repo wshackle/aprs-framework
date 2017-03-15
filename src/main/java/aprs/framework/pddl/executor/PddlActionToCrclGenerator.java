@@ -715,6 +715,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         for (int i = 0; i < partsTraysList.size(); i++) {
             PartsTray partsTray = partsTraysList.get(i);
             System.out.println("--Parts tray: " + partsTray.getPartsTrayName());
+        }
+        
+        for (int i = 0; i < partsTraysList.size(); i++) {
+            PartsTray partsTray = partsTraysList.get(i);
+            System.out.println("--Checking parts tray: " + partsTray.getPartsTrayName());
             PoseType partsTrayPose = qs.getPose(partsTray.getPartsTrayName());
             partsTrayPose = correctPose(partsTrayPose);
             partsTray.setpartsTrayPose(partsTrayPose);
@@ -787,6 +792,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
             if (count == slotList.size()) {
                 correctPartsTray = partsTray;
+                System.out.println("Found partstray: "+correctPartsTray.getPartsTrayName());
             }
         }
         return correctPartsTray;
@@ -862,7 +868,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         double distance = Math.hypot(partX - slotX, partY - slotY);
         System.out.println("Distance= " + distance);
         // compare finalres with a specified tolerance value of 6.5 mm
-        double threshold = 6.5;
+        double threshold = 8;
         if (distance < threshold) {
             isPartInSlot = true;
             // System.out.println("----- Part " + partName + " : (" + partX + "," + partY + ")");
