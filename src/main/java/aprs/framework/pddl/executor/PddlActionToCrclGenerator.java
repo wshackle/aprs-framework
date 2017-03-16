@@ -378,6 +378,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
                 break;
                 */
+                
 
             }
 
@@ -730,6 +731,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
          */
         for (int i = 0; i < partsTraysList.size(); i++) {
        
+            if (null == correctPartsTray){
                 PartsTray partsTray = partsTraysList.get(i);
 
                 //-- getting the pose for the parts tray 
@@ -823,7 +825,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     System.out.println("Found partstray: " + correctPartsTray.getPartsTrayName());
 
                 }
-            
+        }
         }
         return correctPartsTray;
     }
@@ -874,15 +876,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException {
         int nbOfOccupiedSlots = 0;
         List<String> allPartsInKt = getAllPartsInKt(partInKt);
-        for (int i = 0; i < allPartsInKt.size(); i++) {
-            String newPartInKt = allPartsInKt.get(i);
-            System.out.print("--------- " + newPartInKt);
-            if (checkPartInSlot(newPartInKt, slot)) {
-                System.out.println("--------- Located in slot");
-                nbOfOccupiedSlots++;
-            } else {
-                System.out.println("--------- Not located in slot");
+        if (!allPartsInKt.isEmpty()) {
+            for (int i = 0; i < allPartsInKt.size(); i++) {
+                String newPartInKt = allPartsInKt.get(i);
+                System.out.print("--------- " + newPartInKt);
+                if (checkPartInSlot(newPartInKt, slot)) {
+                    System.out.println("--------- Located in slot");
+                    nbOfOccupiedSlots++;
+                } else {
+                    System.out.println("--------- Not located in slot");
+                }
             }
+        } else {
+            System.err.println("No part_in_kt was found in the database");
         }
         return nbOfOccupiedSlots;
     }
