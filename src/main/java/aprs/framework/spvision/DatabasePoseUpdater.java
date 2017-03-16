@@ -1034,8 +1034,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 List<DetectedItem> matchedParts = new ArrayList<>();
                 for (int i = 0; i < kitTrays.size(); i++) {
                     DetectedItem kit = kitTrays.get(i);
-                    // System.out.println("kit fullname::: "+kit.fullName);
-
+                    //System.out.println("kit fullname::: "+kit.fullName);
                     //System.out.println("kit x::: "+kit.getX());
                     //System.out.println("kit y::: "+kit.getY());
                     //System.out.println("kit rotation::: "+kit.rotation);

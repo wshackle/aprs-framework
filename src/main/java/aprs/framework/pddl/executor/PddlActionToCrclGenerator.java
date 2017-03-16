@@ -368,7 +368,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     placePart(action, cmds);
                     break;
 
-                    
                     /*
                 case "inspect-kit": {
                     try {
@@ -377,8 +376,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-                break;*/
-                    
+                break;
+                */
+
             }
 
             actionToCrclIndexes[lastIndex] = cmds.size();
@@ -590,7 +590,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     //-- contains all the slots that do not have a part
     private ArrayList nonFilledSlotList = new ArrayList();
 
-
     /**
      * @brief Inspects a finished kit to check if it is complete
      * @param action
@@ -621,7 +620,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             correctPartsTray = findCorrectKitTray(kitSku);
             if (null != correctPartsTray) {
                 EmptySlotSet = new HashSet<Slot>();
-                Set<String> set = new HashSet<String>();
                 int numberOfPartsInKit = 0;
 
                 System.out.println("\n\n---Inspecting kit tray " + correctPartsTray.getPartsTrayName());
@@ -708,114 +706,142 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PlacePartSlotPoseList = null;
     }
 
+    /**
+     * Function that finds the correct kit tray from the database using the sku
+     * kitSku
+     *
+     * @param kitSku
+     * @return
+     * @throws SQLException
+     */
     private PartsTray findCorrectKitTray(String kitSku) throws SQLException {
         PartsTray correctPartsTray = null;
-
+      
         List<PartsTray> dpuPartsTrayList = DatabasePoseUpdater.partsTrayList;
+        //-- retrieveing from the database all the parts trays that have the sku kitSku
         List<PartsTray> partsTraysList = getPartsTrays(kitSku);
 
+        /*
         System.out.println("--Checking parts trays");
         for (int i = 0; i < partsTraysList.size(); i++) {
             PartsTray partsTray = partsTraysList.get(i);
             System.out.println("--Parts tray: " + partsTray.getPartsTrayName());
         }
-        
+         */
         for (int i = 0; i < partsTraysList.size(); i++) {
-            PartsTray partsTray = partsTraysList.get(i);
-            System.out.println("--Checking parts tray: " + partsTray.getPartsTrayName());
-            PoseType partsTrayPose = qs.getPose(partsTray.getPartsTrayName());
-            partsTrayPose = correctPose(partsTrayPose);
-            partsTray.setpartsTrayPose(partsTrayPose);
-            BigDecimal xbd = partsTrayPose.getPoint().getX();
-            double partsTrayPoseX = xbd.doubleValue();
-            BigDecimal ybd = partsTrayPose.getPoint().getY();
-            double partsTrayPoseY = ybd.doubleValue();
+       
+                PartsTray partsTray = partsTraysList.get(i);
 
-            double rotation = 0;
-            //-- Read partsTrayList
-            //-- Assign rotation to myPartsTray by comparing poses
-            System.out.print("--Assigning proper rotation: ");
-            for (int c = 0; c < dpuPartsTrayList.size(); c++) {
-                PartsTray pt = dpuPartsTrayList.get(c);
-                double ptX = pt.getX();
-                double ptY = pt.getY();
-                //-- Check if X for parts trays are close enough
-                double diffX = Math.abs(partsTrayPoseX - ptX);
-                //System.out.println("diffX= "+diffX);
+                //-- getting the pose for the parts tray 
+                PoseType partsTrayPose = qs.getPose(partsTray.getPartsTrayName());
+
+                partsTrayPose = correctPose(partsTrayPose);
+                System.out.println("--Checking parts tray [" + partsTray.getPartsTrayName() + "] :(" + partsTrayPose.getPoint().getX() + "," + partsTrayPose.getPoint().getY() + ")");
+                partsTray.setpartsTrayPose(partsTrayPose);
+                BigDecimal xbd = partsTrayPose.getPoint().getX();
+                double partsTrayPoseX = xbd.doubleValue();
+                BigDecimal ybd = partsTrayPose.getPoint().getY();
+                double partsTrayPoseY = ybd.doubleValue();
+
+                double rotation = 0;
+                //-- Read partsTrayList
+                //-- Assign rotation to myPartsTray by comparing poses from vision vs database
+                //System.out.print("--Assigning proper rotation: ");
+                System.out.println("--Comparing with other parts trays from vision");
+                for (int c = 0; c < dpuPartsTrayList.size(); c++) {
+                    PartsTray pt = dpuPartsTrayList.get(c);
+                    double ptX = pt.getX();
+                    double ptY = pt.getY();
+                    System.out.println("    Parts tray:(" + pt.getX() + "," + pt.getY() + ")");
+                    System.out.println("    Rotation:(" + pt.getRotation() + ")");
+                    //-- Check if X for parts trays are close enough
+                    //double diffX = Math.abs(partsTrayPoseX - ptX);
+                    //System.out.println("diffX= "+diffX);
+                    /*
                 if (diffX < 1E-7) {
                     //-- Check if Y for parts trays are close enough
                     double diffY = Math.abs(partsTrayPoseY - ptY);
                     //System.out.println("diffY= "+diffY);
                     if (diffY < 1E-7) {
+                        rotation=pt.getRotation();
                         partsTray.setRotation(pt.getRotation());
                     }
                 }
-            }
+                     */
 
-            rotation = partsTray.getRotation();
-            System.out.println(rotation);
-            //-- retrieve the rotationOffset
-            double rotationOffset = DatabasePoseUpdater.myRotationOffset;
-
-            //System.out.println("rotationOffset " + rotationOffset);
-            //System.out.println("rotation " + rotation);
-            //-- compute the angle
-            double angle = normAngle(rotation + rotationOffset);
-
-            //-- Get list of slots for this parts tray
-            System.out.println("--Checking slots");
-            List<Slot> slotList = partsTray.getSlotList();
-            int count = 0;
-            for (int j = 0; j < slotList.size(); j++) {
-                Slot slot = slotList.get(j);
-                double x_offset = slot.getX_OFFSET() * 1000;
-                double y_offset = slot.getY_OFFSET() * 1000;
-                BigDecimal slotX = BigDecimal.valueOf(partsTrayPoseX + x_offset * Math.cos(angle) - y_offset * Math.sin(angle));
-                BigDecimal slotY = BigDecimal.valueOf(partsTrayPoseY + x_offset * Math.sin(angle) + y_offset * Math.cos(angle));
-                BigDecimal slotZ = BigDecimal.valueOf(-146);
-                PointType slotPoint = new PointType();
-                slotPoint.setX(slotX);
-                slotPoint.setY(slotY);
-                slotPoint.setZ(slotZ);
-                PoseType slotPose = new PoseType();
-                slotPose.setPoint(slotPoint);
-                slot.setSlotPose(slotPose);
-
-                System.out.println("+++ " + slot.getSlotName() + ":(" + slotX + "," + slotY + ")");
-                //-- compare this slot pose with the ones in PlacePartSlotPoseList
-                for (int k = 0; k < PlacePartSlotPoseList.size(); k++) {
-                    PoseType pose = PlacePartSlotPoseList.get(k);
-                    System.out.println("      placepartpose :(" + pose.getPoint().getX() + "," + pose.getPoint().getY() + ")");
-                    double distance = Math.hypot(pose.getPoint().getX().doubleValue() - slotX.doubleValue(), pose.getPoint().getY().doubleValue() - slotY.doubleValue());
-                    System.out.println("         Distance = " + distance);
-                    if (distance < 1.0) {
-                        count++;
+                    double distance = Math.hypot(partsTrayPoseX - ptX, partsTrayPoseY - ptY);
+                    System.out.println("    Distance = " + distance + "\n");
+                    if (distance < 2) {
+                        rotation = pt.getRotation();
+                        partsTray.setRotation(rotation);
                     }
                 }
-            }
-            if (count == slotList.size()) {
-                correctPartsTray = partsTray;
-                System.out.println("Found partstray: "+correctPartsTray.getPartsTrayName());
-            }
+
+                //rotation = partsTray.getRotation();
+                //System.out.println(rotation);
+                //-- retrieve the rotationOffset
+                double rotationOffset = DatabasePoseUpdater.myRotationOffset;
+
+                System.out.println("rotationOffset " + rotationOffset);
+                System.out.println("rotation " + partsTray.getRotation() );
+                //-- compute the angle
+                double angle = normAngle(partsTray.getRotation() + rotationOffset);
+
+                //-- Get list of slots for this parts tray
+                System.out.println("--Checking slots");
+                List<Slot> slotList = partsTray.getSlotList();
+                int count = 0;
+                for (int j = 0; j < slotList.size(); j++) {
+                    Slot slot = slotList.get(j);
+                    double x_offset = slot.getX_OFFSET() * 1000;
+                    double y_offset = slot.getY_OFFSET() * 1000;
+                    BigDecimal slotX = BigDecimal.valueOf(partsTrayPoseX + x_offset * Math.cos(angle) - y_offset * Math.sin(angle));
+                    BigDecimal slotY = BigDecimal.valueOf(partsTrayPoseY + x_offset * Math.sin(angle) + y_offset * Math.cos(angle));
+                    BigDecimal slotZ = BigDecimal.valueOf(-146);
+                    PointType slotPoint = new PointType();
+                    slotPoint.setX(slotX);
+                    slotPoint.setY(slotY);
+                    slotPoint.setZ(slotZ);
+                    PoseType slotPose = new PoseType();
+                    slotPose.setPoint(slotPoint);
+                    slot.setSlotPose(slotPose);
+
+                    System.out.println("+++ " + slot.getSlotName() + ":(" + slotX + "," + slotY + ")");
+                    //-- compare this slot pose with the ones in PlacePartSlotPoseList
+                    for (int k = 0; k < PlacePartSlotPoseList.size(); k++) {
+                        PoseType pose = PlacePartSlotPoseList.get(k);
+                        System.out.println("      placepartpose :(" + pose.getPoint().getX() + "," + pose.getPoint().getY() + ")");
+                        double distance = Math.hypot(pose.getPoint().getX().doubleValue() - slotX.doubleValue(), pose.getPoint().getY().doubleValue() - slotY.doubleValue());
+                        System.out.println("         Distance = " + distance+"\n");
+                        if (distance < 2.0) {
+                            count++;
+                        }
+                    }
+                }
+                if (count > 0) {
+                    correctPartsTray = partsTray;
+                    System.out.println("Found partstray: " + correctPartsTray.getPartsTrayName());
+
+                }
+            
         }
         return correctPartsTray;
     }
-    
+
     public void displayInspectionFrame(PartsTray kittray) {
-        
+
         String pathToImage = "/aprs/framework/screensplash/" + kittray.getExternalShapeModelFileName() + "/" + inspectionFrame.getKitImage() + ".png";
         System.out.println("pathToImage " + pathToImage);
         inspectionFrame.setTitle(kittray.getPartsTrayName());
         inspectionFrame.getKitTitleLabel().setText("Inspecting " + kittray.getPartsTrayName());
         inspectionFrame.getKitImageLabel().setIcon(new javax.swing.ImageIcon(getClass().getResource(pathToImage)));
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        inspectionFrame.setLocation(screenSize.width / 2 - inspectionFrame.getSize().width / 2, 
+        inspectionFrame.setLocation(screenSize.width / 2 - inspectionFrame.getSize().width / 2,
                 screenSize.height / 2 - inspectionFrame.getSize().height / 2);
         inspectionFrame.pack();
         inspectionFrame.setVisible(true);
     }
-    
-    
+
     private String getKitResultImage(Set<Slot> list) {
         String kitResultImage = "";
         List<Integer> idList = new ArrayList();
@@ -844,7 +870,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         return angleOut;
     }
-    
+
     private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException {
         int nbOfOccupiedSlots = 0;
         List<String> allPartsInKt = getAllPartsInKt(partInKt);
@@ -854,6 +880,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             if (checkPartInSlot(newPartInKt, slot)) {
                 System.out.println("--------- Located in slot");
                 nbOfOccupiedSlots++;
+            } else {
+                System.out.println("--------- Not located in slot");
             }
         }
         return nbOfOccupiedSlots;
@@ -869,9 +897,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         double slotY = slot.getSlotPose().getPoint().getY().doubleValue();
         System.out.println(":(" + partX + "," + partY + ")");
         double distance = Math.hypot(partX - slotX, partY - slotY);
-        System.out.println("Distance= " + distance);
+        System.out.print("--------- Distance = " + distance);
         // compare finalres with a specified tolerance value of 6.5 mm
-        double threshold = 8;
+        double threshold = 20;
         if (distance < threshold) {
             isPartInSlot = true;
             // System.out.println("----- Part " + partName + " : (" + partX + "," + partY + ")");
@@ -1039,7 +1067,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         return partsInPtList;
     }
-    
+
     public void testPartPositionPose(List<MiddleCommandType> cmds, PoseType pose) {
 
         addOpenGripper(cmds);
@@ -1610,7 +1638,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         checkSettings();
 
         PoseType poseAbove = CRCLPosemath.copy(pose);
-        System.out.println("Z= "+pose.getPoint().getZ());
+        System.out.println("Z= " + pose.getPoint().getZ());
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
 
         PoseType placePose = CRCLPosemath.copy(pose);
