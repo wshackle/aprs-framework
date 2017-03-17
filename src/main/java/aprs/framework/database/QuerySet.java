@@ -42,6 +42,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * The query set class implements methods to make various common database
+ * queries.
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
@@ -49,10 +51,20 @@ public class QuerySet implements QuerySetInterface {
 
     private final java.sql.Connection dbConnection;
 
+    /**
+     * Get the database connection being used.
+     *
+     * @return database connection
+     */
     public Connection getDbConnection() {
         return dbConnection;
     }
 
+    /**
+     * Check if currently connected to a database.
+     *
+     * @return if currently connected to database
+     */
     public boolean isConnected() {
         try {
             return !closed && null != dbConnection && !dbConnection.isClosed();
@@ -62,6 +74,14 @@ public class QuerySet implements QuerySetInterface {
         return false;
     }
 
+    /**
+     * Create a new QuerySet.
+     *
+     * @param dbtype database type
+     * @param con database connection
+     * @param queriesMap map of queries info
+     * @throws SQLException if query fails
+     */
     public QuerySet(
             DbType dbtype,
             java.sql.Connection con,
@@ -121,13 +141,13 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("queriesMap does not contain getAllPartsInKtQueryString");
         }
         getAllPartsInKtStatement = con.prepareStatement(getAllPartsInKtQueryString);
-        
+
         String getAllPartsInPtQueryString = getAllPartsInPtQueryInfo.getQuery();
         if (null == getAllPartsInPtQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain getAllPartsInPtQueryString");
         }
         getAllPartsInPtStatement = con.prepareStatement(getAllPartsInPtQueryString);
-        
+
         String getTraySlotsFromKitSkuQueryString = getTraySlotsFromKitSkuQueryInfo.getQuery();
         if (null == getTraySlotsFromKitSkuQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain getTraySlotsFromKitSkuQueryString");
@@ -148,7 +168,7 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("queriesMap does not contain getAllPartsInPtQueryString");
         }
         getAllPartsInPtStatement = con.prepareStatement(getAllPartsInPtQueryString);
-        
+
         String setPoseQueryString = setQueryInfo.getQuery();
         if (null == setPoseQueryString) {
             throw new IllegalArgumentException("queriesMap does not contain setPose");
@@ -212,7 +232,7 @@ public class QuerySet implements QuerySetInterface {
     private java.sql.PreparedStatement newSingleTrayDesignStatement;
     private java.sql.PreparedStatement getTraySlotsFromKitSkuStatement;
     private java.sql.PreparedStatement getAllPartsInKtStatement;
-    private java.sql.PreparedStatement getAllPartsInPtStatement;    
+    private java.sql.PreparedStatement getAllPartsInPtStatement;
     private java.sql.PreparedStatement getPartsTraysStatement;
     private java.sql.PreparedStatement getSlotsStatement;
 
@@ -348,12 +368,12 @@ public class QuerySet implements QuerySetInterface {
     private String getAllPartsInKtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getQueryInfo, type);
     }
-    
-        private String getAllPartsInPtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+
+    private String getAllPartsInPtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getQueryInfo, type);
     }
-        
-private String getTraySlotsFromKitSkuQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+
+    private String getTraySlotsFromKitSkuQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getTraySlotsFromKitSkuQueryInfo, type);
     }
 
@@ -385,8 +405,10 @@ private String getTraySlotsFromKitSkuQueryResultString(ResultSet rs, DbParamType
     }
 
     /**
-     * @brief get all parts_in_kt from the database
+     * Get all parts_in_kt from the database
+     * @param name name of kit tray
      * @return a list of all the parts that has "parts_in_kt" in their names
+     * @throws java.sql.SQLException if query fails
      */
     public ArrayList<String> getAllPartsInKt(String name) throws SQLException {
         ArrayList<String> partsInKtList = new ArrayList();
@@ -414,6 +436,7 @@ private String getTraySlotsFromKitSkuQueryResultString(ResultSet rs, DbParamType
         }
         return partsInKtList;
     }
+
     
     public ArrayList<String> getAllPartsInPt(String name) throws SQLException {
         ArrayList<String> partsInPtList = new ArrayList();
@@ -425,7 +448,7 @@ private String getTraySlotsFromKitSkuQueryResultString(ResultSet rs, DbParamType
         DbQueryInfo getAllPartsInPtQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_PARTS_IN_PT);
         setQueryStringParam(getAllPartsInPtStatement, getAllPartsInPtQueryInfo, DbParamTypeEnum.NAME, name, map);
         String simQuery = createExpectedQueryString(getAllPartsInPtQueryInfo, map);
-      
+
         if (debug) {
             System.out.println("simQuery = " + simQuery);
         }
@@ -466,7 +489,7 @@ private String getTraySlotsFromKitSkuQueryResultString(ResultSet rs, DbParamType
         return count;
     }
 
-public List<PartsTray> getPartsTrays(String name) throws SQLException {
+    public List<PartsTray> getPartsTrays(String name) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
@@ -522,7 +545,7 @@ public List<PartsTray> getPartsTrays(String name) throws SQLException {
                 if (debug) {
                     System.out.println("design = " + design);
                 }
-                
+
                 String externalShapeModelFileName = trimQuotes(getPartsTraysQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE_MODEL_FILE_NAME));
                 partstray.setExternalShapeModelFileName(externalShapeModelFileName);
                 if (debug) {
@@ -534,7 +557,7 @@ public List<PartsTray> getPartsTrays(String name) throws SQLException {
                 if (debug) {
                     System.out.println("external shape model format name= " + externalShapeModelFormatName);
                 }
-                
+
                 String sku = getPartsTraysQueryResultString(rs, DbParamTypeEnum.SKU_NAME);
                 partstray.setPartsTraySku(sku);
                 if (debug) {
@@ -559,7 +582,7 @@ public List<PartsTray> getPartsTrays(String name) throws SQLException {
         return list;
     }
 
-public List<Slot> getSlots(String name) throws SQLException {
+    public List<Slot> getSlots(String name) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
@@ -664,7 +687,7 @@ public List<Slot> getSlots(String name) throws SQLException {
         return list;
     }
 
-/*
+    /*
     public void displayPartsTray(PartsTray partsTray) {
         System.out.println("PartsTray: " + partsTray.getPartsTrayName());
         System.out.println("node id: " + partsTray.getNodeID());
@@ -692,9 +715,7 @@ public List<Slot> getSlots(String name) throws SQLException {
             }
         }
     }
-    */
-
-
+     */
     @Override
     public PoseType getPose(String name) throws SQLException {
         if (closed) {

@@ -521,8 +521,8 @@ public class DbSetupBuilder {
      * Create an initialized builder from a properties file. It will just create
      * a default if the file does not exist or is empty.
      *
-     * @param propertiesFile
-     * @return
+     * @param propertiesFile properties file
+     * @return builder with loaded settings
      */
     public static DbSetupBuilder loadFromPropertiesFile(File propertiesFile) {
         DbSetupBuilder builder = new DbSetupBuilder();
@@ -546,11 +546,11 @@ public class DbSetupBuilder {
      * Create an initialized builder from the PropertiesFile potentially
      * ignoring values in the file in favor the arguments passed instead.
      *
-     * @param propertiesFile
-     * @param dbtype
-     * @param host
-     * @param port
-     * @return
+     * @param propertiesFile properties file
+     * @param dbtype database type
+     * @param host database host
+     * @param port database port
+     * @return builder with given settings
      */
     public static DbSetupBuilder loadFromPropertiesFile(File propertiesFile, DbType dbtype, String host, int port) {
         DbSetupBuilder builder = new DbSetupBuilder();
@@ -615,8 +615,8 @@ public class DbSetupBuilder {
     /**
      * Save the given setup to a properties file.
      *
-     * @param propertiesFile
-     * @param setup
+     * @param propertiesFile properties file
+     * @param setup database setup object
      */
     public static void savePropertiesFile(File propertiesFile, DbSetup setup) {
         savePropertiesFile(propertiesFile, setup, setup.getDbType(), setup.getHost(), setup.getPort());
@@ -626,11 +626,11 @@ public class DbSetupBuilder {
      * Save the given setup to a properties file, possibly replacing some setup
      * values with the passed arguments.
      *
-     * @param propertiesFile
-     * @param setup
-     * @param dbtype
-     * @param host
-     * @param port
+     * @param propertiesFile properties file
+     * @param setup database setup object
+     * @param dbtype database type
+     * @param host database host
+     * @param port database port
      */
     public static void savePropertiesFile(File propertiesFile, DbSetup setup, DbType dbtype, String host, int port) {
         if (null != propertiesFile) {
@@ -671,17 +671,54 @@ public class DbSetupBuilder {
         }
     }
 
-    public XFuture<Connection>  connect() throws SQLException {
+    
+     /**
+     * Setup a connection given the settings.
+     * 
+     * The connection may take some time and will be completed asynchronously in another thread
+     * after this method returns.
+     * The returned future can be used to wait for the connection.
+     * 
+     * @return future for new connection
+     */
+    public XFuture<Connection>  connect() {
         return connect(this.build());
     }
 
-    public static XFuture<Connection>  connect(DbSetup setup) throws SQLException {
+    /**
+     * Setup a connection given the settings.
+     * 
+     * The connection may take some time and will be completed asynchronously in another thread
+     * after this method returns.
+     * The returned future can be used to wait for the connection.
+     * 
+     * @param setup database setup object
+     * @return future for new connection
+     */
+    public static XFuture<Connection>  connect(DbSetup setup)  {
         return setupConnection(setup.getDbType(), setup.getHost(), setup.getPort(), setup.getDbName(), setup.getDbUser(), new String(setup.getDbPassword()),setup.isDebug(), setup.getLoginTimeout());
     }
 
     public static final int DEFAULT_LOGIN_TIMEOUT = 5; // in seconds 
     
-    public static XFuture<Connection> setupConnection(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) throws SQLException {
+    /**
+     * Setup a connection given the settings.
+     * 
+     * The connection may take some time and will be completed asynchronously in another thread
+     * after this method returns.
+     * The returned future can be used to wait for the connection.
+     * 
+     * @param dbtype database type
+     * @param host database host
+     * @param port database port
+     * @param db database name
+     * @param username user's name
+     * @param password user's password
+     * @param debug  enable debugging
+     * @param loginTimeout timeout for login
+     * @return future for new connection
+     */
+    public static XFuture<Connection> setupConnection(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) {
         XFuture<Connection> ret = new XFuture<>();
         new Thread(() -> {
             Connection conn;
