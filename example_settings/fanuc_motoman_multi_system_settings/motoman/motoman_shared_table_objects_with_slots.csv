@@ -7,6 +7,14 @@ sku_part_small_gear,0.0,582.799,-26.0,100.0,P
 sku_part_small_gear,0.0,582.203,-85.0,100.0,P
 sku_part_small_gear,0.0,527.488,-27.0,100.0,P
 sku_part_small_gear,0.0,527.482,-84.987,100.0,P
+kit_lg2small2_2_slot_l1,0.0,680.667,-161.03,100.0,SLOT
+kit_lg2small2_2_slot_l2,0.0,677.549,-50.837,100.0,SLOT
+kit_lg2small2_2_slot_s2,0.0,755.532,-45.849,100.0,SLOT
+kit_lg2small2_2_slot_s1,0.0,760.962,-159.069,100.0,SLOT
+kit_lg2small2_1_slot_l2,0.0,675.203,74.55,100.0,SLOT
+kit_lg2small2_1_slot_l1,0.0,674.536,187.829,100.0,SLOT
+kit_lg2small2_1_slot_s1,0.0,756.305,183.247,100.0,SLOT
+kit_lg2small2_1_slot_s2,0.0,755.704,75.504,100.0,SLOT
 sku_large_gear_vessel,0.0,545.013,129.0,100.0,PT
 sku_large_gear_vessel,0.0,721.6895,-328.0,100.0,PT
 sku_small_gear_vessel,0.0,554.993,-55.74675,100.0,PT
