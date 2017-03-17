@@ -7,6 +7,7 @@
 (place-part empty_slot_for_large_gear_in_kit_m2l1_vessel_1 )
 (look-for-parts)
 (inspect-kit sku_kit_m2l1_vessel)
+(look-for-parts)
 (take-part part_medium_gear_in_pt_1)
 (place-part empty_slot_for_medium_gear_in_kit_m2l1_vessel_1)
 (take-part part_medium_gear_in_pt_2)

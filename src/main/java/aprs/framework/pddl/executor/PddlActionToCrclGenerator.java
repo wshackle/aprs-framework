@@ -1043,13 +1043,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
-        inspectionFrame.addToInspectionResultJTextPane("took part " + partName + "<br>");
+        inspectionFrame.addToInspectionResultJTextPane("taking part " + partName + "<br>");
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
         });
         lastTakenPart = partName;
-        //inspectionList.add(partName);
         TakenPartList.add(partName);
     }
 
@@ -1670,7 +1669,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         checkSettings();
 
         PoseType poseAbove = CRCLPosemath.copy(pose);
-        System.out.println("Z= " + pose.getPoint().getZ());
+        //System.out.println("Z= " + pose.getPoint().getZ());
         poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
 
         PoseType placePose = CRCLPosemath.copy(pose);
