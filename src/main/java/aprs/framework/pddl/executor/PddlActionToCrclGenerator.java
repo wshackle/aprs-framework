@@ -368,7 +368,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     placePart(action, cmds);
                     break;
 
-                    /*
+                    
                 case "inspect-kit": {
                     try {
                         inspectKit(action, cmds);
@@ -377,7 +377,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     }
                 }
                 break;
-                */
+                
                 
 
             }
@@ -684,15 +684,39 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     }
                     inspectionFrame.addToInspectionResultJTextPane("<br>");
                     inspectionFrame.addToInspectionResultJTextPane("Recovering...<br>");
+                    Map<String,List<String>> partSkuMap = new HashMap();
+                    
+                    
+                    
+                    //-- Build a map where the key is the part sku for a slot
+                    //-- and the value is an arraylist of part_in_pt
                     for (Slot s : EmptySlotSet) {
+                        
                         String partSKU = s.getPartSKU();
                         if (partSKU.startsWith("sku_")) {
                             partSKU = partSKU.substring(4).concat("_in_pt");
                         }
                         List<String> allPartsInPt = getAllPartsInPt(partSKU);
-                        String partInPt = null;
-                        if (allPartsInPt.size() > 0) {
-                            partInPt = allPartsInPt.get(0);
+                        partSkuMap.put(partSKU, allPartsInPt);
+                    }
+                    
+                    for (Slot s : EmptySlotSet) {
+                        String partSKU = s.getPartSKU();
+                        if (partSKU.startsWith("sku_")) {
+                            partSKU = partSKU.substring(4).concat("_in_pt");
+                        }
+
+                       
+                        if (!partSkuMap.isEmpty()) {
+                            //-- get list of part_in_pt based on the part sku
+                            List<String> listOfParts = partSkuMap.get(partSKU);
+                            //-- get the first element in this list and then remove it from the list
+                            String partInPt = listOfParts.get(0);
+                            //--remove the first element
+                            listOfParts.remove(0);
+                            //-- update the list in the map with the modified list
+                            partSkuMap.put(partSKU, listOfParts);
+                            //-- perform pick-and-place actions
                             takePartRecovery(partInPt, out);
                             PddlAction takepartrecoveryaction = PddlAction.parse("(place-part " + s.getSlotName() + ")");
                             placePartRecovery(takepartrecoveryaction, s, out);
@@ -706,6 +730,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PlacePartSlotPoseList.clear();
         PlacePartSlotPoseList = null;
     }
+    
+    
 
     /**
      * Function that finds the correct kit tray from the database using the sku
