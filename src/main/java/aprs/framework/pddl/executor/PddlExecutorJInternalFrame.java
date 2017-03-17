@@ -47,10 +47,22 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         initComponents();
     }
 
+    /**
+     * Modify the given pose by applying all of the currently added position maps.
+     * 
+     * @param poseIn the pose to correct or transform
+     * @return pose after being corrected by all currently added position maps
+     */
     public PoseType correctPose(PoseType poseIn) {
         return actionsToCrclJPanel1.correctPose(poseIn);
     }
 
+    
+    /**
+     * Apply inverses of currently added position maps in reverse order.
+     * @param ptIn point to reverse correction
+     * @return point in original vision/database coordinates
+     */
     public PointType reverseCorrectPoint(PointType ptIn) {
         return actionsToCrclJPanel1.reverseCorrectPoint(ptIn);
     }
@@ -75,11 +87,27 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return this.actionsToCrclJPanel1.continueActionList();
     }
 
-    public void addPositionMap(PositionMap pm) {
+    /**
+     * Add a position map.
+     * 
+     * The position map is similar to a transform in that it may offset
+     * positions output by the executor but may also be used to change scaling
+     * or correct for non uniform distortions from the sensor system or 
+     * imperfect kinematic functions in the robot. Multiple position maps may be
+     * stacked to account for different sources of error or transformation.
+     * 
+     * @param pm position map to be added
+     */
+     public void addPositionMap(PositionMap pm) {
         actionsToCrclJPanel1.addPositionMap(pm);
     }
 
-    public void removePositionMap(PositionMap pm) {
+    /**
+     * Remove a previously added position map.
+     * 
+     * @param pm position map to be removed.
+     */
+     public void removePositionMap(PositionMap pm) {
         actionsToCrclJPanel1.removePositionMap(pm);
     }
 
@@ -181,19 +209,11 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         this.actionsToCrclJPanel1.autoResizeTableColWidthsPddlOutput();
     }
 
-    @Override
-    public boolean isLoadEnabled() {
-        return actionsToCrclJPanel1.isLoadEnabled();
-    }
 
     public void refresh() {
         actionsToCrclJPanel1.refresh();
     }
     
-    @Override
-    public void setLoadEnabled(boolean enable) {
-        actionsToCrclJPanel1.setLoadEnabled(enable);
-    }
 
     @Override
     public void close() throws Exception {

@@ -26,14 +26,39 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- *
+ * Common Interface implemented by the JInternalFrame of each submodule.
+ * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public interface DisplayInterface {
     
+    /**
+     * Get the properties file.
+     * @return properties file
+     */
     public File getPropertiesFile();
+
+    /**
+     * Set the properties file   
+     * @param propertiesFile new value of propertiesFile
+     */
     public void setPropertiesFile(File propertiesFile);
+
+    /**
+     * Write current settings to the properties file.
+     * @throws IOException if writing file fails
+     */
     public void saveProperties() throws IOException;
+
+    /**
+     * Read settings from the current properties file.
+     * @throws IOException if reading file fails.
+     */
     public void loadProperties() throws IOException;
+    
+    /**
+     * Close the Frame/Window associated with this interface.
+     * @throws Exception if underlying system fails to close
+     */
     public void close() throws Exception;
 }

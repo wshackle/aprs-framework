@@ -37,24 +37,51 @@ import java.util.List;
  */
 public interface PddlExecutorDisplayInterface extends DisplayInterface {
 
+    /**
+     * Show File chooser to select a new actions file and load it.
+     * @throws IOException if selected file can not be read
+     */
     public void browseActionsFile() throws IOException;
 
+    /**
+     * Get the current list of actions.
+     * @return list of actions
+     */
     public List<PddlAction> getActionsList();
 
+    /**
+     * Set the current list of actions.
+     * @param actionsList new list of actions to use
+     */
     public void setActionsList(List<PddlAction> actionsList);
 
+    /**
+     * Add the action to the list of actions.
+     * @param action action to add.
+     */
     public void addAction(PddlAction action);
 
+    /**
+     * Process the current list of actions.
+     */
     public void processActions();
     
+    /**
+     * Auto resize the columns in the pddl output table.
+     */
     public void autoResizeTableColWidthsPddlOutput();
 
-    public boolean isLoadEnabled();
-
-    public void setLoadEnabled(boolean enable);
     
+    /**
+     * Set the AprsJFrame 
+     * @param aprsJFrame new value of aprsJFrame.
+     */
     public void setAprsJFrame(AprsJFrame aprsJFrame);
     
+    /**
+     * Get the current aprsJFrame
+     * @return aprsJFrame
+     */
     public AprsJFrame getAprsJFrame();
 
 }

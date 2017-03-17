@@ -467,9 +467,6 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     private void jButtonRunOnceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRunOnceActionPerformed
         try {
             runPddlPlannerOnce();
-            if (null != actionsToCrclJInternalFrame1) {
-                actionsToCrclJInternalFrame1.setLoadEnabled(false);
-            }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
