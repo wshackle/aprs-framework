@@ -1,7 +1,7 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1269
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1238
 approachZOffset=50.0
 defaultDwellTime=0.1
-fastTransSpeed=160.0
+fastTransSpeed=200.0
 jointAccel=100.0
 jointSpeed=25.0
 lookDwell=1.0
@@ -12,10 +12,12 @@ manualPartNames=[empty_slot_for_large_gear_in_kit_m2l1_vessel_1, empty_slot_for_
 manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
 pddl.output=..\\..\\..\\example_pddl\\feb_21_2017_fanuc_demo_actions.txt
 placePartSlotArgIndex=0
+placeZOffset=5.0
 rotSpeed=30.0
 rpy=180.0,0.0,0.0
-settleDwellTime=0.2
-slowTransSpeed=40
+settleDwellTime=0.05
+slowTransSpeed=60
 takePartArgIndex=0
 takeSnapshots=true
+takeZOffset=0.0
 useJointLookFor=false
