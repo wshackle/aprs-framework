@@ -126,7 +126,7 @@ public class ExploreGraphDbJFrame extends javax.swing.JFrame {
                             true, DEFAULT_LOGIN_TIMEOUT)
                             .thenAccept(c -> Utils.runOnDispatchThread(() -> frm.setConnection(c)));
                     frm.setVisible(true);
-                } catch (SQLException ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(ExploreGraphDbJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
