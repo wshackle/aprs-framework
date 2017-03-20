@@ -302,7 +302,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         });
                     });
                     System.out.println("PddlActionToCrclGenerator connected to database of type " + dbSetup.getDbType() + " on host " + dbSetup.getHost() + " with port " + dbSetup.getPort());
-                } catch (SQLException ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
