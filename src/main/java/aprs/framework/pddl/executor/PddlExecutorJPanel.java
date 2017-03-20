@@ -177,6 +177,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         this.stepping = stepping;
     }
 
+    private long lastActionMillis = -1;
+    
+    private void setCost(int index, double cost) {
+        DefaultTableModel m = (DefaultTableModel) jTablePddlOutput.getModel();
+        m.setValueAt(cost, index, 5);
+    }
+    
     private void handleActionCompleted(PddlActionToCrclGenerator.ActionCallbackInfo actionInfo) {
         if (currentActionIndex < actionInfo.getActionIndex() + 1) {
             currentActionIndex = actionInfo.getActionIndex() + 1;
@@ -187,6 +194,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     aprsJFrame.pauseCrclProgram();
                 }
             }
+            long nowMillis = System.currentTimeMillis();
+            if(lastActionMillis > 0 && lastActionMillis < nowMillis) {
+                long diff = nowMillis - lastActionMillis;
+                final double cost = diff *1e-3;
+                final int index = actionInfo.getActionIndex();
+                Utils.runOnDispatchThread(() -> this.setCost(index, cost));
+            }
+            lastActionMillis = nowMillis;
         }
     }
 
@@ -343,11 +358,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 {null, null, null, null, null, null, null}
             },
             new String [] {
-                "#", "CRCLIndex", "Label", "Type", "Args", "Cost", "TakenPart"
+                "#", "CRCLIndex", "Label", "Type", "Args", "Time/Cost", "TakenPart"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Double.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
                 false, false, false, false, false, false, false
@@ -1101,6 +1116,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             setReplanFromIndex(0);
             autoStart = true;
+            lastActionMillis = System.currentTimeMillis();
             jCheckBoxReplan.setSelected(true);
             if (null != runningProgramFuture) {
                 runningProgramFuture.cancel(true);
@@ -1756,6 +1772,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         safeAbortRequested = false;
         safeAbortRunnablesVector.clear();
         abortProgram();
+        lastActionMillis = System.currentTimeMillis();
     }
 
     /**
