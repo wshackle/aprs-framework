@@ -22,10 +22,18 @@
  */
 package aprs.framework.kitinspection;
 
+import aprs.framework.Utils;
 import java.awt.Color;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
@@ -38,12 +46,12 @@ import javax.swing.text.html.HTMLEditorKit;
  *
  * @author zeid
  */
-public class Inspection extends javax.swing.JFrame {
+public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
 
     /**
      * Creates new form Test
      */
-    public Inspection() {
+    public KitInspectionJInternalFrame() {
         initComponents();
         doc = (HTMLDocument) InspectionResultJTextPane.getDocument();
         editorKit = (HTMLEditorKit) InspectionResultJTextPane.getEditorKit();
@@ -67,8 +75,11 @@ public class Inspection extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         InspectionResultJTextPane = new javax.swing.JTextPane();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setBackground(new java.awt.Color(255, 255, 255));
+        setIconifiable(true);
+        setMaximizable(true);
+        setResizable(true);
+        setTitle("Kit Inspection");
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
         jPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
@@ -171,21 +182,23 @@ public class Inspection extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Inspection.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(KitInspectionJInternalFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Inspection.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(KitInspectionJInternalFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Inspection.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(KitInspectionJInternalFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Inspection.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(KitInspectionJInternalFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        //</editor-fold>
         //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Inspection().setVisible(true);
+                new KitInspectionJInternalFrame().setVisible(true);
             }
         });
     }
@@ -211,15 +224,124 @@ public class Inspection extends javax.swing.JFrame {
         this.kitImage=kitImage;
     }
     
+ 
     public void addToInspectionResultJTextPane(String text) throws BadLocationException{
         try {
             editorKit.insertHTML(doc, doc.getLength(), text, 0, 0, null);
         } catch (IOException ex) {
-            Logger.getLogger(Inspection.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(KitInspectionJInternalFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
         String oldtext = InspectionResultJTextPane.getText();
         InspectionResultJTextPane.setText(oldtext.concat(text + "\n"));
     } 
+    
+
+    private File propertiesFile = null;
+
+    /**
+     * Get the value of propertiesFile
+     *
+     * @return the value of propertiesFile
+     */
+    public File getPropertiesFile() {
+        return propertiesFile;
+    }
+    
+    /**
+     * Set the value of propertiesFile
+     *
+     * @param propertiesFile new value of propertiesFile
+     */
+    public void setPropertiesFile(File propertiesFile) {
+        this.propertiesFile = propertiesFile;
+    }
+    
+    /** Returns an ImageIcon, or null if the path was invalid. */
+public ImageIcon createImageIcon(String path) {
+    java.net.URL imgURL = getClass().getResource(path);
+    if (imgURL != null) {
+        return new ImageIcon(imgURL);
+    } else {
+        System.err.println("Couldn't find file: " + path);
+        return null;
+    }
+}
+    public void loadProperties() throws IOException {
+        if (null == propertiesFile) {
+            throw new IllegalStateException("propertiesFile not set");
+        }
+        if (propertiesFile.exists()) {
+            Properties props = new Properties();
+            try (FileReader fr = new FileReader(propertiesFile)) {
+                props.load(fr);
+            }
+            
+            kitinspectionImageKitPath = props.getProperty(IMAGE_KIT_PATH);
+            String kitinspectionImageEmptyKit = props.getProperty(IMAGE_EMPTY_KIT);
+            if (null != kitinspectionImageKitPath) {
+                if (null != kitinspectionImageEmptyKit) {
+                    String originalImage = kitinspectionImageKitPath+"/"+kitinspectionImageEmptyKit;
+                kitImageLabel.setIcon(createImageIcon(originalImage)); // NOI18N
+                
+                }
+            }
+            
+            String robot = props.getProperty(ROBOT_NAME);
+            if (null != robot) {
+                //jTextFieldPlannerProgramExecutable.setText(executable);
+
+                String kitsku = props.getProperty(KIT_SKU);
+                if (null != kitsku) {
+                    getKitTitleLabel().setText("Inspecting kit " + kitsku + " built by " + robot);
+                    //getKitImageLabel().setIcon(new javax.swing.ImageIcon(getClass().getResource(kitinspectionImageKitPath+"/"+kitinspectionImageEmptyKit)));
+//                jTextFieldPddlDomainFile.setText(domain);
+                }
+            }
+//            String problem = props.getProperty(PDDL_PROBLEM);
+//            if (null != problem) {
+//                jTextFieldPddlProblem.setText(problem);
+//            }
+//            String useSsh = props.getProperty(PDDL_PLANNER_SSH);
+//            if (null != useSsh) {
+//                jCheckBoxSsh.setSelected(Boolean.valueOf(useSsh));
+//                boolean b = jCheckBoxSsh.isSelected();
+//                jTextFieldSshUser.setEditable(b);
+//                jTextFieldSshUser.setEnabled(b);
+//                jPasswordFieldSshPass.setEditable(b);
+//                jPasswordFieldSshPass.setEnabled(b);
+//                jTextFieldHost.setEditable(b);
+//                jTextFieldHost.setEnabled(b);
+//            }
+//            String host = props.getProperty(PDDL_PLANNER_HOST);
+//            if (null != host) {
+//                jTextFieldHost.setText(host);
+//            }
+////        String output = props.getProperty(PDDLOUTPUT);
+////        if (null != output) {
+////            jTextFieldPddlOutputActions.setText(output);
+////        }
+//            String addargs = props.getProperty(PDDL_ADD_ARGS);
+//            if (null != addargs) {
+//                jTextFieldAdditionalArgs.setText(addargs);
+//            }
+            
+        }
+    }
+    
+
+    private static final String ROBOT_NAME = "kitinspection.robot";
+    private static final String IMAGE_KIT_PATH = "kitinspection.image.kit.path";
+    private static final String IMAGE_EMPTY_KIT = "kitinspection.image.empty.kit";
+    private static final String KIT_SKU = "kitinspection.kit.sku";
+    private static final String BANNER_COLOR = "kitinspection.banner.color";
+    private static final String WARNING_COLOR = "kitinspection.warning.color";
+
+    
+    private String kitinspectionImageKitPath;
+    
+    public String getKitinspectionImageKitPath(){
+        return kitinspectionImageKitPath;
+    }
     
     
     private HTMLEditorKit editorKit;

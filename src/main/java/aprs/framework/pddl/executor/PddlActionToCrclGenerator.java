@@ -29,7 +29,7 @@ import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.QuerySet;
-import aprs.framework.kitinspection.Inspection;
+import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
 import crcl.base.AngleUnitEnumType;
@@ -115,12 +115,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private List<String> TakenPartList = new ArrayList();
     private Set<Slot> EmptySlotSet;
     private List<PoseType> PlacePartSlotPoseList = null;
-    private Inspection inspectionFrame;
-    private JTextArea InspectionResultJTextArea;
-
     private boolean takeSnapshots = false;
     private int crclNumber = 0;
     private final ConcurrentMap<String, PoseType> poseCache = new ConcurrentHashMap<>();
+    private KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
     /**
      * Get the value of takeSnapshots
@@ -403,6 +401,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      */
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options)
             throws IllegalStateException, SQLException {
+
         this.options = options;
         crclNumber++;
         List<MiddleCommandType> cmds = new ArrayList<>();
@@ -461,14 +460,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     placePart(action, cmds);
                     break;
 
-                case "inspect-kit": {
-                    try {
-                        inspectKit(action, cmds);
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                break;
+//                case "inspect-kit": {
+//                    try {
+//                        inspectKit(action, cmds);
+//                    } catch (BadLocationException ex) {
+//                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                }
+//                break;
 
             }
 
@@ -722,6 +721,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     //-- contains all the slots that do not have a part
     private ArrayList nonFilledSlotList = new ArrayList();
 
+    public void setCorrectKitImage() {
+        String kitinspectionImageKitPath = kitInspectionJInternalFrame.getKitinspectionImageKitPath();
+        String kitImage = kitInspectionJInternalFrame.getKitImage();
+        String kitStatusImage = kitinspectionImageKitPath + "/" + kitImage + ".png";
+        System.out.println("kitStatusImage " + kitStatusImage);
+        kitInspectionJInternalFrame.getKitImageLabel().setIcon(kitInspectionJInternalFrame.createImageIcon(kitStatusImage));
+    }
+
     /**
      * Inspects a finished kit to check if it is complete
      *
@@ -736,6 +743,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
+        if (null == kitInspectionJInternalFrame) {
+            kitInspectionJInternalFrame = aprsJFrame.getKitInspectionJInternalFrame();
+        }
+
         PartsTray correctPartsTray = null;
         String kitImageResult = "";
         checkSettings();
@@ -751,7 +762,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         //-- we look for the kit tray in the database for which one of the slots
         //-- has at least one pose in the list
         if (null != PlacePartSlotPoseList) {
-            inspectionFrame = new Inspection();
             correctPartsTray = findCorrectKitTray(kitSku);
             if (null != correctPartsTray) {
                 EmptySlotSet = new HashSet<Slot>();
@@ -797,27 +807,31 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
 
                 if (!EmptySlotSet.isEmpty()) {
-                    inspectionFrame.setKitImage(getKitResultImage(EmptySlotSet));
+                    kitInspectionJInternalFrame.setKitImage(getKitResultImage(EmptySlotSet));
                 } else {
-                    inspectionFrame.setKitImage("complete");
+                    kitInspectionJInternalFrame.setKitImage("complete");
                 }
+                setCorrectKitImage();
 
-                displayInspectionFrame(correctPartsTray);
+                // displayInspectionFrame(correctPartsTray);
                 if (numberOfPartsInKit == partDesignPartCount) {
                     System.out.println("Kit is complete");
-                    inspectionFrame.addToInspectionResultJTextPane("Kit is complete<br>");
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("Kit is complete<br>");
 
                 } else {
                     TakenPartList.clear();
+
                     System.out.println("Kit is missing the following parts");
-                    inspectionFrame.addToInspectionResultJTextPane("Kit is missing the following parts<br>");
+                    int nbofmissingparts = partDesignPartCount - numberOfPartsInKit;
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("Kit is missing " + nbofmissingparts + " part(s)<br>");
                     for (Slot s : EmptySlotSet) {
                         System.out.println("Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU());
-                        inspectionFrame.addToInspectionResultJTextPane("Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
 
                     }
-                    inspectionFrame.addToInspectionResultJTextPane("<br>");
-                    inspectionFrame.addToInspectionResultJTextPane("Recovering...<br>");
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<br>");
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("Recovering...<br>");
+
                     Map<String, List<String>> partSkuMap = new HashMap();
 
                     //-- Build a map where the key is the part sku for a slot
@@ -855,6 +869,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     }
                 }
             } else {
+                kitInspectionJInternalFrame.addToInspectionResultJTextPane("The system could not identify the kit tray that was built");             
                 System.out.println("The system could not identify the kit tray that was built");
             }
         }
@@ -985,18 +1000,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return correctPartsTray;
     }
 
-    public void displayInspectionFrame(PartsTray kittray) {
+    public void updateInspectionFrame() {
 
-        String pathToImage = "/aprs/framework/screensplash/" + kittray.getExternalShapeModelFileName() + "/" + inspectionFrame.getKitImage() + ".png";
-        System.out.println("pathToImage " + pathToImage);
-        inspectionFrame.setTitle(kittray.getPartsTrayName());
-        inspectionFrame.getKitTitleLabel().setText("Inspecting " + kittray.getPartsTrayName());
-        inspectionFrame.getKitImageLabel().setIcon(new javax.swing.ImageIcon(getClass().getResource(pathToImage)));
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        inspectionFrame.setLocation(screenSize.width / 2 - inspectionFrame.getSize().width / 2,
-                screenSize.height / 2 - inspectionFrame.getSize().height / 2);
-        inspectionFrame.pack();
-        inspectionFrame.setVisible(true);
     }
 
     private String getKitResultImage(Set<Slot> list) {
@@ -1123,6 +1128,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
         String markerMsg = "took part " + partName;
+        //try {
+        //    kitInspectionJInternalFrame.addToInspectionResultJTextPane(markerMsg + " at " + new Date());
+        //} catch (BadLocationException ex) {
+        //    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+        //}
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
         });
@@ -1189,7 +1199,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
-        inspectionFrame.addToInspectionResultJTextPane("taking part " + partName + "<br>");
+        kitInspectionJInternalFrame.addToInspectionResultJTextPane("taking part " + partName + "<br>");
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
@@ -1846,7 +1856,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pose = slot.getSlotPose();
 
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
-        inspectionFrame.addToInspectionResultJTextPane(msg + "<br>");
+        kitInspectionJInternalFrame.addToInspectionResultJTextPane(msg + "<br>");
         if (takeSnapshots) {
             try {
                 takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
