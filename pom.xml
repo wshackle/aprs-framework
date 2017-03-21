@@ -131,6 +131,7 @@
                     <include>**/*.xml</include>
                     <include>**/*.txt</include>
                     <include>**/*.jpeg</include>
+                    <include>**/*.png</include>
                 </includes>
             </resource>
             <resource>

@@ -1,6 +1,7 @@
-#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:1115
+#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:1137
 --visionhost=agility.el.nist.gov
 --visionport=4000
+autoscale=true
 connected=true
 datafile=..\\simulated_fanuc\\fanuc_cart_objects_capture_feb_2_2017.csv
 displayAxis=POS_Y_NEG_X
