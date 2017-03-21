@@ -422,6 +422,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         if (startingIndex == 0) {
             this.lastTakenPart = null;
+            this.unitsSet = false;
+            this.rotSpeedSet = false;
         }
         addSetUnits(cmds);
         for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
@@ -447,6 +449,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     actionToCrclIndexes[lastIndex] = cmds.size();
                     actionToCrclLabels[lastIndex] = "";
                     actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
+                    final int markerIndex = lastIndex;
+                    addMarkerCommand(cmds, "end action " + markerIndex + ": " + action.getType() + " " + Arrays.toString(action.getArgs()),
+                            (CrclCommandWrapper wrapper) -> {
+                                notifyActionCompletedListeners(markerIndex, action);
+                            });
                     return cmds;
 
                 case "place-part":
@@ -468,7 +475,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             actionToCrclLabels[lastIndex] = "";
             actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
             final int markerIndex = lastIndex;
-            addMarkerCommand(cmds, "end action " + markerIndex + ": " + action.getType(),
+            addMarkerCommand(cmds, "end action " + markerIndex + ": " + action.getType() + " " + Arrays.toString(action.getArgs()),
                     (CrclCommandWrapper wrapper) -> {
                         notifyActionCompletedListeners(markerIndex, action);
                     });
@@ -824,6 +831,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     }
                     kitInspectionJInternalFrame.addToInspectionResultJTextPane("<br>");
                     kitInspectionJInternalFrame.addToInspectionResultJTextPane("Recovering...<br>");
+
                     Map<String, List<String>> partSkuMap = new HashMap();
 
                     //-- Build a map where the key is the part sku for a slot
@@ -1555,14 +1563,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         cmds.add(stst);
     }
 
+    private boolean rotSpeedSet = false;
+    
     private void addSetFastSpeed(List<MiddleCommandType> cmds) {
 
-        SetRotSpeedType srs = new SetRotSpeedType();
-        RotSpeedAbsoluteType rsa = new RotSpeedAbsoluteType();
-        rsa.setSetting(rotSpeed);
-        srs.setCommandID(BigInteger.valueOf(cmds.size() + 2));
-        srs.setRotSpeed(rsa);
-        cmds.add(srs);
+        if (!rotSpeedSet) {
+            SetRotSpeedType srs = new SetRotSpeedType();
+            RotSpeedAbsoluteType rsa = new RotSpeedAbsoluteType();
+            rsa.setSetting(rotSpeed);
+            srs.setCommandID(BigInteger.valueOf(cmds.size() + 2));
+            srs.setRotSpeed(rsa);
+            cmds.add(srs);
+            rotSpeedSet = true;
+        }
 
         SetTransSpeedType stst = new SetTransSpeedType();
         stst.setCommandID(BigInteger.valueOf(cmds.size() + 2));
@@ -1572,16 +1585,21 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         cmds.add(stst);
     }
 
-    private void addSetUnits(List<MiddleCommandType> cmds) {
-        SetLengthUnitsType slu = new SetLengthUnitsType();
-        slu.setUnitName(LengthUnitEnumType.MILLIMETER);
-        slu.setCommandID(BigInteger.valueOf(cmds.size() + 2));
-        cmds.add(slu);
+    private boolean unitsSet = false;
 
-        SetAngleUnitsType sau = new SetAngleUnitsType();
-        sau.setUnitName(AngleUnitEnumType.DEGREE);
-        sau.setCommandID(BigInteger.valueOf(cmds.size() + 2));
-        cmds.add(sau);
+    private void addSetUnits(List<MiddleCommandType> cmds) {
+        if (!unitsSet) {
+            SetLengthUnitsType slu = new SetLengthUnitsType();
+            slu.setUnitName(LengthUnitEnumType.MILLIMETER);
+            slu.setCommandID(BigInteger.valueOf(cmds.size() + 2));
+            cmds.add(slu);
+
+            SetAngleUnitsType sau = new SetAngleUnitsType();
+            sau.setUnitName(AngleUnitEnumType.DEGREE);
+            sau.setCommandID(BigInteger.valueOf(cmds.size() + 2));
+            cmds.add(sau);
+            unitsSet = true;
+        }
     }
 
     public void addMoveToLookForPosition(List<MiddleCommandType> out) {

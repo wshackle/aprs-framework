@@ -27,7 +27,6 @@ import aprs.framework.database.DbSetupBuilder;
 import static aprs.framework.database.DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT;
 import aprs.framework.database.DbType;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

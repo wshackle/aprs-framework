@@ -141,7 +141,7 @@
                 <Column editable="false" title="Label" type="java.lang.String"/>
                 <Column editable="false" title="Type" type="java.lang.String"/>
                 <Column editable="false" title="Args" type="java.lang.String"/>
-                <Column editable="false" title="Cost" type="java.lang.String"/>
+                <Column editable="false" title="Time/Cost" type="java.lang.Double"/>
                 <Column editable="false" title="TakenPart" type="java.lang.String"/>
               </Table>
             </Property>
