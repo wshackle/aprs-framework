@@ -29,7 +29,7 @@ import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.QuerySet;
-import aprs.framework.kitinspection.Inspection;
+import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
 import crcl.base.AngleUnitEnumType;
@@ -87,9 +87,9 @@ import javax.swing.JTextArea;
 import javax.swing.text.BadLocationException;
 
 /**
- * This class is responsible for generating CRCL Commands and Programs from 
- * PDDL Action(s).
- * 
+ * This class is responsible for generating CRCL Commands and Programs from PDDL
+ * Action(s).
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable {
@@ -97,7 +97,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     /**
      * Returns the run name which is useful for identifying the run in log files
      * or saving snapshot files.
-     * 
+     *
      * @return the run name
      */
     public String getRunName() {
@@ -115,19 +115,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private List<String> TakenPartList = new ArrayList();
     private Set<Slot> EmptySlotSet;
     private List<PoseType> PlacePartSlotPoseList = null;
-    private Inspection inspectionFrame;
-    private JTextArea InspectionResultJTextArea;
-
     private boolean takeSnapshots = false;
     private int crclNumber = 0;
     private final ConcurrentMap<String, PoseType> poseCache = new ConcurrentHashMap<>();
+    private KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
     /**
      * Get the value of takeSnapshots
      *
      * When takeSnaphots is true image files will be saved when most actions are
      * planned and some actions are executed. This may be useful for debugging.
-     * 
+     *
      * @return the value of takeSnapshots
      */
     public boolean isTakeSnapshots() {
@@ -139,7 +137,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * When takeSnaphots is true image files will be saved when most actions are
      * planned and some actions are executed. This may be useful for debugging.
-     * 
+     *
      * @param takeSnapshots new value of takeSnapshots
      */
     public void setTakeSnapshots(boolean takeSnapshots) {
@@ -149,14 +147,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private List<PositionMap> positionMaps = null;
 
     /**
-     * Get the list of PositionMap's used to transform or correct 
-     * poses from the database before generating CRCL Commands to be sent to
-     * the robot.
-     * 
-     * PositionMaps are similar to transforms in that they can represent position offsets
-     *  or rotations. But they can also represent changes in scale or localized corrections
-     * due to distortion or imperfect kinematics.
-     * 
+     * Get the list of PositionMap's used to transform or correct poses from the
+     * database before generating CRCL Commands to be sent to the robot.
+     *
+     * PositionMaps are similar to transforms in that they can represent
+     * position offsets or rotations. But they can also represent changes in
+     * scale or localized corrections due to distortion or imperfect kinematics.
+     *
      * @return list of position maps.
      */
     public List<PositionMap> getPositionMaps() {
@@ -164,14 +161,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     /**
-     * Set the list of PositionMap's used to transform or correct 
-     * poses from the database before generating CRCL Commands to be sent to
-     * the robot.
-     * 
-     * PositionMaps are similar to transforms in that they can represent position offsets
-     *  or rotations. But they can also represent changes in scale or localized corrections
-     * due to distortion or imperfect kinematics.
-     * 
+     * Set the list of PositionMap's used to transform or correct poses from the
+     * database before generating CRCL Commands to be sent to the robot.
+     *
+     * PositionMaps are similar to transforms in that they can represent
+     * position offsets or rotations. But they can also represent changes in
+     * scale or localized corrections due to distortion or imperfect kinematics.
+     *
      * @param errorMap list of position maps.
      */
     public void setPositionMaps(List<PositionMap> errorMap) {
@@ -193,10 +189,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //    public void newSingleTraySlotDesign(TraySlotDesign tsd) throws SQLException {
 //        qs.newSingleTraySlotDesign(tsd);
 //    }
-
     /**
      * Check if this is connected to the database.
-     * 
+     *
      * @return is this generator connected to the database.
      */
     public synchronized boolean isConnected() {
@@ -214,6 +209,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Get the database connection being used.
+     *
      * @return the database connection
      */
     public Connection getDbConnection() {
@@ -226,7 +222,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * Get the value of debug
      *
      * When debug is true additional messages will be printed to the console.
-     * 
+     *
      * @return the value of debug
      */
     public boolean isDebug() {
@@ -237,7 +233,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * Set the value of debug
      *
      * When debug is true additional messages will be printed to the console.
-     * 
+     *
      * @param debug new value of debug
      */
     public void setDebug(boolean debug) {
@@ -247,7 +243,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Set the database connection to use.
-     * 
+     *
      * @param dbConnection new database connection to use
      */
     public synchronized void setDbConnection(Connection dbConnection) {
@@ -280,7 +276,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Get the database setup object.
-     * 
+     *
      * @return database setup object.
      */
     public DbSetup getDbSetup() {
@@ -289,6 +285,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Set the database setup object.
+     *
      * @param dbSetup new database setup object to use.
      */
     public void setDbSetup(DbSetup dbSetup) {
@@ -318,9 +315,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private String actionToCrclTakenPartsNames[] = null;
 
     /**
-     * Get an array of strings and null values relating each action to the 
-     * last part expected to have been taken after that action.
-     * 
+     * Get an array of strings and null values relating each action to the last
+     * part expected to have been taken after that action.
+     *
      * @return array of taken part names
      */
     public String[] getActionToCrclTakenPartsNames() {
@@ -330,9 +327,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private int actionToCrclIndexes[] = null;
 
     /**
-     * Get an array of indexes into the CRCL program associated with each PDDL action.
-     * 
-     * @return  array of indexes into the CRCL program 
+     * Get an array of indexes into the CRCL program associated with each PDDL
+     * action.
+     *
+     * @return array of indexes into the CRCL program
      */
     public int[] getActionToCrclIndexes() {
         return actionToCrclIndexes;
@@ -342,6 +340,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Get an array of strings with labels for each PDDL action.
+     *
      * @return array of labels
      */
     public String[] getActionToCrclLabels() {
@@ -372,8 +371,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Get a map of options as a name to value map.
-     * 
-     * @return options 
+     *
+     * @return options
      */
     public Map<String, String> getOptions() {
         return options;
@@ -381,7 +380,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Set the options with a name to value map.
-     * 
+     *
      * @param options new value of options map
      */
     public void setOptions(Map<String, String> options) {
@@ -391,17 +390,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
-     * 
-     * @param actions   list of PDDL Actions
+     *
+     * @param actions list of PDDL Actions
      * @param startingIndex starting index into list of PDDL actions
-     * @param options   options to use as commands are generated
-     * @return list of CRCL commands 
-     * 
+     * @param options options to use as commands are generated
+     * @return list of CRCL commands
+     *
      * @throws IllegalStateException if database not connected
      * @throws SQLException if query of the database failed
      */
-    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options) 
+    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options)
             throws IllegalStateException, SQLException {
+
         this.options = options;
         crclNumber++;
         List<MiddleCommandType> cmds = new ArrayList<>();
@@ -453,17 +453,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     placePart(action, cmds);
                     break;
 
-                    
-                case "inspect-kit": {
-                    try {
-                        inspectKit(action, cmds);
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                break;
-                
-                
+//                case "inspect-kit": {
+//                    try {
+//                        inspectKit(action, cmds);
+//                    } catch (BadLocationException ex) {
+//                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                }
+//                break;
 
             }
 
@@ -480,7 +477,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private final Map<String, PoseType> returnPosesByName = new HashMap<>();
-    
+
     private String lastTakenPart = null;
 
     private String getLastTakenPart() {
@@ -488,7 +485,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private BigDecimal slowTransSpeed = BigDecimal.valueOf(75.0);
-
 
     /**
      * Get the value of slowTransSpeed
@@ -529,9 +525,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     /**
-     * Adds commands to the list to return a part to the location it was
-     * taken from. The part name must match a name of a part in the returnPosesByName map.
-     * 
+     * Adds commands to the list to return a part to the location it was taken
+     * from. The part name must match a name of a part in the returnPosesByName
+     * map.
+     *
      * @param part name of part to be returned
      * @param out list of commands to append to
      */
@@ -602,8 +599,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     /**
-     * Modify the given pose by applying all of the currently added position maps.
-     * 
+     * Modify the given pose by applying all of the currently added position
+     * maps.
+     *
      * @param poseIn the pose to correct or transform
      * @return pose after being corrected by all currently added position maps
      */
@@ -640,9 +638,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     /**
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
-     * 
-     * @param f     file to save snapshot image to  
-     * @param pose  optional pose to mark or null  
+     *
+     * @param f file to save snapshot image to
+     * @param pose optional pose to mark or null
      * @param label optional label for pose or null
      * @throws IOException if writing the file fails
      */
@@ -655,7 +653,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     /**
      * Add a marker command that will cause a snapshot to be taken when the CRCL
      * command would be executed.
-     * 
+     *
      * @param out list of commands to append to
      * @param title title to add to snapshot filename
      * @param pose optional pose to highlight in snapshot or null
@@ -677,7 +675,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Get a run prefix useful for naming/identifying snapshot files.
-     * 
+     *
      * @return run prefix
      */
     public String getRunPrefix() {
@@ -687,9 +685,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     /**
      * Add commands to the list that will test a given part position by opening
      * the gripper and moving to that position but not actually taking the part.
-     * 
+     *
      * @param action PDDL action
-     * @param out  list of commands to append to
+     * @param out list of commands to append to
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if database query fails
      */
@@ -716,19 +714,32 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     //-- contains all the slots that do not have a part
     private ArrayList nonFilledSlotList = new ArrayList();
 
+    public void setCorrectKitImage() {
+        String kitinspectionImageKitPath = kitInspectionJInternalFrame.getKitinspectionImageKitPath();
+        String kitImage = kitInspectionJInternalFrame.getKitImage();
+        String kitStatusImage = kitinspectionImageKitPath + "/" + kitImage + ".png";
+        System.out.println("kitStatusImage " + kitStatusImage);
+        kitInspectionJInternalFrame.getKitImageLabel().setIcon(kitInspectionJInternalFrame.createImageIcon(kitStatusImage));
+    }
+
     /**
      * Inspects a finished kit to check if it is complete
      *
      * @param action PDDL Action
-     * @param out list of commands to append to 
+     * @param out list of commands to append to
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if query fails
-     * @throws javax.swing.text.BadLocationException when there are bad locations within a document model 
+     * @throws javax.swing.text.BadLocationException when there are bad
+     * locations within a document model
      */
     public void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
+        if (null == kitInspectionJInternalFrame) {
+            kitInspectionJInternalFrame = aprsJFrame.getKitInspectionJInternalFrame();
+        }
+
         PartsTray correctPartsTray = null;
         String kitImageResult = "";
         checkSettings();
@@ -744,7 +755,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         //-- we look for the kit tray in the database for which one of the slots
         //-- has at least one pose in the list
         if (null != PlacePartSlotPoseList) {
-            inspectionFrame = new Inspection();
             correctPartsTray = findCorrectKitTray(kitSku);
             if (null != correctPartsTray) {
                 EmptySlotSet = new HashSet<Slot>();
@@ -790,35 +800,36 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
 
                 if (!EmptySlotSet.isEmpty()) {
-                    inspectionFrame.setKitImage(getKitResultImage(EmptySlotSet));
+                    kitInspectionJInternalFrame.setKitImage(getKitResultImage(EmptySlotSet));
                 } else {
-                    inspectionFrame.setKitImage("complete");
+                    kitInspectionJInternalFrame.setKitImage("complete");
                 }
+                setCorrectKitImage();
 
-                displayInspectionFrame(correctPartsTray);
+                // displayInspectionFrame(correctPartsTray);
                 if (numberOfPartsInKit == partDesignPartCount) {
                     System.out.println("Kit is complete");
-                    inspectionFrame.addToInspectionResultJTextPane("Kit is complete<br>");
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("Kit is complete<br>");
 
                 } else {
                     TakenPartList.clear();
+
                     System.out.println("Kit is missing the following parts");
-                    inspectionFrame.addToInspectionResultJTextPane("Kit is missing the following parts<br>");
+                    int nbofmissingparts = partDesignPartCount - numberOfPartsInKit;
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("Kit is missing " + nbofmissingparts + " part(s)<br>");
                     for (Slot s : EmptySlotSet) {
                         System.out.println("Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU());
-                        inspectionFrame.addToInspectionResultJTextPane("Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
 
                     }
-                    inspectionFrame.addToInspectionResultJTextPane("<br>");
-                    inspectionFrame.addToInspectionResultJTextPane("Recovering...<br>");
-                    Map<String,List<String>> partSkuMap = new HashMap();
-                    
-                    
-                    
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<br>");
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("Recovering...<br>");
+                    Map<String, List<String>> partSkuMap = new HashMap();
+
                     //-- Build a map where the key is the part sku for a slot
                     //-- and the value is an arraylist of part_in_pt
                     for (Slot s : EmptySlotSet) {
-                        
+
                         String partSKU = s.getPartSKU();
                         if (partSKU.startsWith("sku_")) {
                             partSKU = partSKU.substring(4).concat("_in_pt");
@@ -826,14 +837,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         List<String> allPartsInPt = getAllPartsInPt(partSKU);
                         partSkuMap.put(partSKU, allPartsInPt);
                     }
-                    
+
                     for (Slot s : EmptySlotSet) {
                         String partSKU = s.getPartSKU();
                         if (partSKU.startsWith("sku_")) {
                             partSKU = partSKU.substring(4).concat("_in_pt");
                         }
 
-                       
                         if (!partSkuMap.isEmpty()) {
                             //-- get list of part_in_pt based on the part sku
                             List<String> listOfParts = partSkuMap.get(partSKU);
@@ -851,14 +861,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     }
                 }
             } else {
+                kitInspectionJInternalFrame.addToInspectionResultJTextPane("The system could not identify the kit tray that was built");             
                 System.out.println("The system could not identify the kit tray that was built");
             }
         }
         PlacePartSlotPoseList.clear();
         PlacePartSlotPoseList = null;
     }
-    
-    
 
     /**
      * Function that finds the correct kit tray from the database using the sku
@@ -870,7 +879,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      */
     private PartsTray findCorrectKitTray(String kitSku) throws SQLException {
         PartsTray correctPartsTray = null;
-      
+
         List<PartsTray> dpuPartsTrayList = DatabasePoseUpdater.partsTrayList;
         //-- retrieveing from the database all the parts trays that have the sku kitSku
         List<PartsTray> partsTraysList = getPartsTrays(kitSku);
@@ -883,8 +892,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
          */
         for (int i = 0; i < partsTraysList.size(); i++) {
-       
-            if (null == correctPartsTray){
+
+            if (null == correctPartsTray) {
                 PartsTray partsTray = partsTraysList.get(i);
 
                 //-- getting the pose for the parts tray 
@@ -938,7 +947,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 double rotationOffset = DatabasePoseUpdater.myRotationOffset;
 
                 System.out.println("rotationOffset " + rotationOffset);
-                System.out.println("rotation " + partsTray.getRotation() );
+                System.out.println("rotation " + partsTray.getRotation());
                 //-- compute the angle
                 double angle = normAngle(partsTray.getRotation() + rotationOffset);
 
@@ -967,7 +976,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         PoseType pose = PlacePartSlotPoseList.get(k);
                         System.out.println("      placepartpose :(" + pose.getPoint().getX() + "," + pose.getPoint().getY() + ")");
                         double distance = Math.hypot(pose.getPoint().getX().doubleValue() - slotX.doubleValue(), pose.getPoint().getY().doubleValue() - slotY.doubleValue());
-                        System.out.println("         Distance = " + distance+"\n");
+                        System.out.println("         Distance = " + distance + "\n");
                         if (distance < 2.0) {
                             count++;
                         }
@@ -978,23 +987,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     System.out.println("Found partstray: " + correctPartsTray.getPartsTrayName());
 
                 }
-        }
+            }
         }
         return correctPartsTray;
     }
 
-    public void displayInspectionFrame(PartsTray kittray) {
+    public void updateInspectionFrame() {
 
-        String pathToImage = "/aprs/framework/screensplash/" + kittray.getExternalShapeModelFileName() + "/" + inspectionFrame.getKitImage() + ".png";
-        System.out.println("pathToImage " + pathToImage);
-        inspectionFrame.setTitle(kittray.getPartsTrayName());
-        inspectionFrame.getKitTitleLabel().setText("Inspecting " + kittray.getPartsTrayName());
-        inspectionFrame.getKitImageLabel().setIcon(new javax.swing.ImageIcon(getClass().getResource(pathToImage)));
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        inspectionFrame.setLocation(screenSize.width / 2 - inspectionFrame.getSize().width / 2,
-                screenSize.height / 2 - inspectionFrame.getSize().height / 2);
-        inspectionFrame.pack();
-        inspectionFrame.setVisible(true);
     }
 
     private String getKitResultImage(Set<Slot> list) {
@@ -1090,9 +1089,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Add commands to the list that will take a given part.
-     * 
+     *
      * @param action PDDL action
-     * @param out  list of commands to append to
+     * @param out list of commands to append to
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if database query fails
      */
@@ -1121,6 +1120,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
         String markerMsg = "took part " + partName;
+        //try {
+        //    kitInspectionJInternalFrame.addToInspectionResultJTextPane(markerMsg + " at " + new Date());
+        //} catch (BadLocationException ex) {
+        //    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+        //}
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
         });
@@ -1129,11 +1133,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         TakenPartList.add(partName);
     }
 
-     /**
-     * Add commands to the list that will go through the motions to take a given part but skip closing the gripper.
-     * 
+    /**
+     * Add commands to the list that will go through the motions to take a given
+     * part but skip closing the gripper.
+     *
      * @param action PDDL action
-     * @param out  list of commands to append to
+     * @param out list of commands to append to
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if database query fails
      */
@@ -1186,7 +1191,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
-        inspectionFrame.addToInspectionResultJTextPane("taking part " + partName + "<br>");
+        kitInspectionJInternalFrame.addToInspectionResultJTextPane("taking part " + partName + "<br>");
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
@@ -1196,14 +1201,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     /**
-     * Get the pose associated with a given name. 
-     * 
-     * The name could refer to a part, tray or slot.
-     * Poses are also cached until a look-for-parts action clears the cache.
-     * 
+     * Get the pose associated with a given name.
+     *
+     * The name could refer to a part, tray or slot. Poses are also cached until
+     * a look-for-parts action clears the cache.
+     *
      * @param posename name of position to get
      * @return pose of part,tray or slot
-     * 
+     *
      * @throws SQLException if query fails.
      */
     public PoseType getPose(String posename) throws SQLException {
@@ -1256,11 +1261,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     /**
      * Add commands to the list that will test a given part position by opening
      * the gripper and moving to that position but not actually taking the part.
-     * 
-     * @param cmds  list of commands to append to
-     * @param pose  pose to test
+     *
+     * @param cmds list of commands to append to
+     * @param pose pose to test
      */
-     public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) {
+    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) {
 
         addOpenGripper(cmds);
 
@@ -1294,11 +1299,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Add commands to the list that will take a part at a given pose.
-     * 
-     * @param cmds  list of commands to append to
-     * @param pose  pose where part is expected
+     *
+     * @param cmds list of commands to append to
+     * @param pose pose where part is expected
      */
-     public void takePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
+    public void takePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
 
         addOpenGripper(cmds);
 
@@ -1331,13 +1336,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     /**
-     * Add commands to the list that will go through the motions to
-     * take a part at a given pose but not close the gripper to actually take the part.
-     * 
-     * @param cmds  list of commands to append to
-     * @param pose  pose where part is expected
+     * Add commands to the list that will go through the motions to take a part
+     * at a given pose but not close the gripper to actually take the part.
+     *
+     * @param cmds list of commands to append to
+     * @param pose pose where part is expected
      */
-     public void fakeTakePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
+    public void fakeTakePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
 
         addOpenGripper(cmds);
 
@@ -1733,7 +1738,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Register a consumer to be notified when parts are placed.
-     * 
+     *
      * @param consumer consumer to be notified
      */
     public void addPlacePartConsumer(Consumer<PlacePartInfo> consumer) {
@@ -1742,6 +1747,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Remove a previously registered consumer.
+     *
      * @param consumer consumer to be removed
      */
     public void removePlacePartConsumer(Consumer<PlacePartInfo> consumer) {
@@ -1750,6 +1756,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Notify all consumers that a place-part action has been executed.
+     *
      * @param ppi info to be passed to consumers
      */
     public void notifyPlacePartConsumers(PlacePartInfo ppi) {
@@ -1779,9 +1786,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     /**
      * Add commands to the place whatever part is currently in the gripper in a
      * given slot.
-     * 
+     *
      * @param action PDDL action
-     * @param out  list of commands to append to
+     * @param out list of commands to append to
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if database query fails
      */
@@ -1831,7 +1838,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pose = slot.getSlotPose();
 
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
-        inspectionFrame.addToInspectionResultJTextPane(msg + "<br>");
+        kitInspectionJInternalFrame.addToInspectionResultJTextPane(msg + "<br>");
         if (takeSnapshots) {
             try {
                 takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
@@ -1865,10 +1872,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Add commands to the place whatever part is currently in the gripper in a
-     *  slot at the given pose.
-     * 
-     * @param cmds  list of commands to append to
-     * @param pose  pose where part will be placed.
+     * slot at the given pose.
+     *
+     * @param cmds list of commands to append to
+     * @param pose pose where part will be placed.
      */
     public void placePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
 
@@ -1925,8 +1932,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     /**
-     * Class to hold information about a given action to be passed
-     * to callback methods when the action is executed.
+     * Class to hold information about a given action to be passed to callback
+     * methods when the action is executed.
      */
     public static class ActionCallbackInfo {
 
@@ -1951,6 +1958,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Register a listener to be notified when any action is executed.
+     *
      * @param listener listner to be added.
      */
     public void addActionCompletedListener(Consumer<ActionCallbackInfo> listener) {
@@ -1959,6 +1967,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     /**
      * Remove a previously registered listener
+     *
      * @param listener listener to be removed.
      */
     public void removeActionCompletedListener(Consumer<ActionCallbackInfo> listener) {
@@ -1999,7 +2008,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         } catch (Throwable t) {
             // Deliberately ignored.
         }
-        super.finalize(); 
+        super.finalize();
     }
 
 }

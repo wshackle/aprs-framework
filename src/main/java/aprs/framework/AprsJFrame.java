@@ -29,6 +29,7 @@ import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.explore.ExploreGraphDbJInternalFrame;
+import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import aprs.framework.logdisplay.LogDisplayJInternalFrame;
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.pddl.executor.PositionMap;
@@ -109,6 +110,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private FanucCRCLServerJInternalFrame fanucCRCLServerJInternalFrame = null;
     private ExploreGraphDbJInternalFrame exploreGraphDbJInternalFrame = null;
     private MotomanCrclServerJInternalFrame motomanCrclServerJInternalFrame = null;
+    private KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
     private String taskName;
 
@@ -122,6 +124,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.pauseCrclProgram();
         }
+    }
+    
+    public KitInspectionJInternalFrame getKitInspectionJInternalFrame(){
+        return kitInspectionJInternalFrame;
     }
 
     private int runNumber = (int) ((System.currentTimeMillis() / 10000) % 1000);
@@ -589,6 +595,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private PrintStream origOut = null;
     private PrintStream origErr = null;
 
+
     static private class MyPrintStream extends PrintStream {
 
         final private PrintStream ps;
@@ -817,6 +824,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private void startWindowsFromMenuCheckboxes() {
         try {
+            if (jCheckBoxMenuItemKitInspectionStartup.isSelected()) {
+                startKitInspection();
+            }
             if (jCheckBoxMenuItemStartupPDDLPlanner.isSelected()) {
                 startPddlPlanner();
             }
@@ -978,6 +988,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         DATABASE_SETUP_WINDOW,
         VISION_TO_DB_WINDOW,
         ERRLOG_WINDOW,
+        KIT_INSPECTION_WINDOW,
         OTHER
     };
 
@@ -1005,6 +1016,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         if (str.startsWith("PDDL Actions to CRCL") || str.endsWith("(Executor)")) {
             return ACTIVE_WINDOW_NAME.PDDL_EXECUTOR_WINDOW;
+        }
+        if (str.startsWith("Kit") || str.endsWith("(Inspection)")) {
+            return ACTIVE_WINDOW_NAME.KIT_INSPECTION_WINDOW;
         }
         return ACTIVE_WINDOW_NAME.OTHER;
     }
@@ -1232,6 +1246,27 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private void startKitInspection() {
+        try {
+            //        jDesktopPane1.setDesktopManager(d);
+            if (kitInspectionJInternalFrame == null) {
+                kitInspectionJInternalFrame = new KitInspectionJInternalFrame();
+                kitInspectionJInternalFrame.pack();
+            }
+            updateSubPropertiesFiles();
+            kitInspectionJInternalFrame.setVisible(true);
+            jDesktopPane1.add(kitInspectionJInternalFrame);
+            kitInspectionJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(kitInspectionJInternalFrame);
+//            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
+            kitInspectionJInternalFrame.loadProperties();
+            //kitInspectionJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
+
+        } catch (IOException ex) {
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1264,6 +1299,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jCheckBoxMenuItemConnectToVisionOnStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemExploreGraphDbStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupCRCLWebApp = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemKitInspectionStartup = new javax.swing.JCheckBoxMenuItem();
         jMenuWindow = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
         jCheckBoxMenuItemConnectDatabase = new javax.swing.JCheckBoxMenuItem();
@@ -1428,6 +1464,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenu3.add(jCheckBoxMenuItemStartupCRCLWebApp);
+
+        jCheckBoxMenuItemKitInspectionStartup.setSelected(true);
+        jCheckBoxMenuItemKitInspectionStartup.setText("Kit Inspection");
+        jCheckBoxMenuItemKitInspectionStartup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemKitInspectionStartupActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jCheckBoxMenuItemKitInspectionStartup);
 
         jMenuBar1.add(jMenu3);
 
@@ -1756,6 +1801,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectVisionActionPerformed
 
+    private void jCheckBoxMenuItemKitInspectionStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
+        this.showKitInspection();
+    }//GEN-LAST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
+
     /**
      * Start the PDDL actions currently loaded in the executor from the beginning.
      * 
@@ -1779,6 +1828,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    public void showKitInspection(){
+        
+    }
     private void startExploreGraphDb() {
         try {
             if (null == this.exploreGraphDbJInternalFrame) {
@@ -2086,6 +2138,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         activateFrame(visionToDbJInternalFrame);
                     }
                     break;
+
+                case KIT_INSPECTION_WINDOW:
+                    if (null != kitInspectionJInternalFrame) {
+                        activateFrame(kitInspectionJInternalFrame);
+                    }
+                    break;
             }
         }
     }
@@ -2117,6 +2175,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         propsMap.put(STARTUPCRCLWEBAPP, Boolean.toString(jCheckBoxMenuItemStartupCRCLWebApp.isSelected()));
         propsMap.put(CRCLWEBAPPPORT, Integer.toString(crclWebServerHttpPort));
         propsMap.put(STARTUP_ACTIVE_WIN, activeWin.toString());
+        propsMap.put(STARTUPKITINSPECTION, Boolean.toString(jCheckBoxMenuItemKitInspectionStartup.isSelected()));
         setDefaultRobotName();
         propsMap.put(APRSROBOT_PROPERTY_NAME, robotName);
         if (null != taskName) {
@@ -2141,6 +2200,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 //        }
         Utils.saveProperties(propertiesFile, props);
         updateSubPropertiesFiles();
+        if (null != this.kitInspectionJInternalFrame) {
+            //this.kitInspectionJInternalFrame.saveProperties();
+        }
         if (null != this.pddlPlannerJInternalFrame) {
             this.pddlPlannerJInternalFrame.saveProperties();
         }
@@ -2203,7 +2265,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private static final String STARTUPROBOTCRCLSIMSERVER = "startup.robotcrclsimserver";
     private static final String STARTUPROBOTCRCLFANUCSERVER = "startup.robotcrclfanucserver";
     private static final String STARTUPROBOTCRCLMOTOMANSERVER = "startup.robotcrclmotomanserver";
-
+private static final String STARTUPKITINSPECTION = "startup.kitinspection";
     private static final String STARTUPCONNECTDATABASE = "startup.connectdatabase";
     private static final String STARTUPCONNECTVISION = "startup.connectvision";
     private static final String STARTUPEXPLOREGRAPHDB = "startup.exploreGraphDb";
@@ -2255,6 +2317,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToVisionOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVision;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKitInspectionStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupCRCLWebApp;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupFanucCRCLServer;
@@ -2330,6 +2393,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         propertiesFileBaseString = base;
         if (null != this.pddlPlannerJInternalFrame) {
             this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_pddlPlanner.txt"));
+        }
+        if (null != this.kitInspectionJInternalFrame) {
+            this.kitInspectionJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_kitInspection.txt"));
         }
         if (null != this.pddlExecutorJInternalFrame1) {
             this.pddlExecutorJInternalFrame1.setPropertiesFile(new File(propertiesDirectory, base + "_actionsToCrclProperties.txt"));
