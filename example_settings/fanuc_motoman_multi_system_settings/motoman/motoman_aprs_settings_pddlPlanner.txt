@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.planner.PddlPlannerJPanel.saveProperties() at PddlPlannerJPanel.java:1122
+#  Automatically saved by aprs.framework.pddl.planner.PddlPlannerJPanel.saveProperties() at PddlPlannerJPanel.java:1119
 pddl.addargs=-I -n
 pddl.domain=domain-kitting.pddl
 pddl.planner.host=localhost
