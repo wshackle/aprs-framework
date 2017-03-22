@@ -1,7 +1,7 @@
 #  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1238
 approachZOffset=50.0
 defaultDwellTime=0.1
-fastTransSpeed=200.0
+fastTransSpeed=400.0
 jointAccel=100.0
 jointSpeed=25.0
 lookDwell=1.0
@@ -16,7 +16,7 @@ placeZOffset=5.0
 rotSpeed=30.0
 rpy=180.0,0.0,0.0
 settleDwellTime=0.05
-slowTransSpeed=60
+slowTransSpeed=120
 takePartArgIndex=0
 takeSnapshots=true
 takeZOffset=0.0
