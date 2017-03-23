@@ -437,7 +437,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
         Map<String, String> stealForOptions = new HashMap<>();
         copyOptions(transferrableOptions, stealFor.getExecutorOptions(), stealForOptions);
-        returnRobotRunnable.set(()  -> {
+        returnRobotRunnable.set(() -> {
             stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
 
             for (String opt : transferrableOptions) {
@@ -467,7 +467,21 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 //        String stealForRpyOption = stealFor.getExecutorOptions().get("rpy");
 //        String stealForLookForXYZOption = stealFor.getExecutorOptions().get("lookForXYZ");
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
-        return XFuture.allOf(stealFrom.safeAbortAndDisconnectAsync(), stealFor.safeAbort())
+        return XFuture.allOf(
+                stealFrom.safeAbortAndDisconnectAsync(),
+                stealFor.safeAbort()
+                .thenCompose(x -> {
+                    if (null != colorTextSocket) {
+                        try {
+                            colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
+                        } catch (IOException ex) {
+                            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
+                            SplashScreen.getDisableImageImage(),
+                            SplashScreen.getRedYellowColorList(), gd);
+                }))
                 .thenRun(() -> {
                     stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
                     stealFor.addPositionMap(pm);
@@ -483,18 +497,6 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 //                        stealFor.setExecutorOption("lookForXYZ", stealFromLookForXYZOption);
 //                    }
 //                    return null;
-                })
-                .thenCompose(x -> {
-                    if (null != colorTextSocket) {
-                        try {
-                            colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
-                        } catch (IOException ex) {
-                            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
-                            SplashScreen.getDisableImageImage(),
-                            SplashScreen.getRedYellowColorList(), gd);
                 })
                 .thenCompose(x -> {
                     return SplashScreen.showMessageFullScreen("Switching to \n" + stealFromRobotName, 80.0f,
@@ -522,8 +524,8 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private void initColorTextSocket() throws IOException {
-        if(null == colorTextSocket) {
-            colorTextSocket = new Socket("localhost",ColorTextJPanel.COLORTEXT_SOCKET_PORT);
+        if (null == colorTextSocket) {
+            colorTextSocket = new Socket("localhost", ColorTextJPanel.COLORTEXT_SOCKET_PORT);
         }
     }
 
@@ -1468,7 +1470,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             futures[i] = aprsSystems.get(i).safeAbort();
         }
         return XFuture.allOf(futures).thenRun(() -> {
-            if(null != prevLastFuture) {
+            if (null != prevLastFuture) {
                 prevLastFuture.cancelAll(false);
             }
         });
