@@ -133,7 +133,9 @@ public class SocketLineReader {
                             cb.call(line, ps);
                         }
                     } catch (Exception exception) {
-                        exception.printStackTrace();
+                        if(!closing) {
+                            exception.printStackTrace();
+                        }
                     }
                 }
             }, threadname);
@@ -192,7 +194,9 @@ public class SocketLineReader {
         return slr.privateStart(true, host, port, threadname, _cb);
     }
     
+    private volatile boolean closing = false;
     public void close() {
+        closing=true;
         try {
             if (null != t) {
                 t.interrupt();

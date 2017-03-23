@@ -28,6 +28,7 @@ import aprs.framework.Utils;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
+import aprs.framework.database.DbType;
 import aprs.framework.database.QuerySet;
 import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import crcl.base.ActuateJointType;
@@ -289,8 +290,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param dbSetup new database setup object to use.
      */
     public void setDbSetup(DbSetup dbSetup) {
+
         this.dbSetup = dbSetup;
         if (null != this.dbSetup && this.dbSetup.isConnected()) {
+            if (null == dbSetup.getDbType() || DbType.NONE == dbSetup.getDbType()) {
+                throw new IllegalArgumentException("dbSetup.getDbType() =" + dbSetup.getDbType());
+            }
             if (dbConnection == null) {
                 try {
                     DbSetupBuilder.connect(dbSetup).thenAccept(c -> {
@@ -468,7 +473,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //                    }
 //                }
 //                break;
-
             }
 
             actionToCrclIndexes[lastIndex] = cmds.size();
@@ -869,7 +873,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     }
                 }
             } else {
-                kitInspectionJInternalFrame.addToInspectionResultJTextPane("The system could not identify the kit tray that was built");             
+                kitInspectionJInternalFrame.addToInspectionResultJTextPane("The system could not identify the kit tray that was built");
                 System.out.println("The system could not identify the kit tray that was built");
             }
         }
@@ -1564,7 +1568,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private boolean rotSpeedSet = false;
-    
+
     private void addSetFastSpeed(List<MiddleCommandType> cmds) {
 
         if (!rotSpeedSet) {

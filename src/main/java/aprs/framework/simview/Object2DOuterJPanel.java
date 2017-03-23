@@ -1082,7 +1082,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @Override
     public void dispose() {
-        System.err.println("com.github.wshackle.visiontodb.Object2DOuterJPanel.dispose default implementation called.");
+        if(null != this.visionSocketClient) {
+            try {
+                visionSocketClient.close();
+            } catch (Exception ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            visionSocketClient = null;
+        }
+        if(null != this.visionSocketServer) {
+            visionSocketServer.close();
+            visionSocketServer = null;
+        }
     }
 
     private File propertiesFile;

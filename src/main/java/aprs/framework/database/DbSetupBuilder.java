@@ -59,7 +59,7 @@ public class DbSetupBuilder {
     private boolean connected = false;
     private Map<DbQueryEnum, DbQueryInfo> queriesMap;
     private boolean internalQueriesResourceDir = true;
-    private String queriesDir;
+    private String queriesDir = null;
     private boolean debug = false;
     private int loginTimeout = DEFAULT_LOGIN_TIMEOUT;
 
@@ -94,7 +94,6 @@ public class DbSetupBuilder {
 //            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
 //        }
 //    }
-
     public static Map<DbQueryEnum, DbQueryInfo> readRelResourceQueriesDirectory(String resDir) throws IOException {
         if (BASE_RESOURCE_DIR.endsWith("/") && resDir.startsWith("/")) {
             resDir = resDir.substring(1);
@@ -148,8 +147,6 @@ public class DbSetupBuilder {
 //                + "set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}"
 //        );
 //    }
-    
-    
     private static String getStringResource(String name) throws IOException {
         ClassLoader cl = ClassLoader.getSystemClassLoader();
         StringBuilder sb = new StringBuilder();
@@ -285,7 +282,7 @@ public class DbSetupBuilder {
 
     }
 
-    public DbSetupBuilder setup(DbSetup setup)  {
+    public DbSetupBuilder setup(DbSetup setup) {
         type = setup.getDbType();
         host = setup.getHost();
         dbname = setup.getDbName();
@@ -316,6 +313,9 @@ public class DbSetupBuilder {
     }
 
     public DbSetup build() {
+        if (connected && (type == null || type == DbType.NONE)) {
+            throw new IllegalArgumentException("type = " + type);
+        }
         return new DbSetupInternal(
                 type,
                 host,
@@ -392,12 +392,12 @@ public class DbSetupBuilder {
         this.debug = debug;
         return this;
     }
-    
+
     public DbSetupBuilder loginTimeout(int loginTimeout) {
         this.loginTimeout = loginTimeout;
         return this;
     }
-    
+
     public DbSetupBuilder queriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
         this.queriesMap = queriesMap;
         return this;
@@ -516,7 +516,7 @@ public class DbSetupBuilder {
         defaultArgsMap.put("--dbtype", DbType.NEO4J.toString());
         return defaultArgsMap;
     }
-    
+
     /**
      * Create an initialized builder from a properties file. It will just create
      * a default if the file does not exist or is empty.
@@ -633,104 +633,118 @@ public class DbSetupBuilder {
      * @param port database port
      */
     public static void savePropertiesFile(File propertiesFile, DbSetup setup, DbType dbtype, String host, int port) {
-        if (null != propertiesFile) {
-            propertiesFile.getParentFile().mkdirs();
-            Properties props = new Properties();
-            if (propertiesFile.exists()) {
-                try (FileReader fr = new FileReader(propertiesFile)) {
-                    props.load(fr);
-                } catch (IOException ex) {
-                    Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            props.put("--dbtype", dbtype.toString());
-            if (host == null) {
-                host = setup.getHost();
-            }
-            props.put(dbtype + ".host", host);
-            if (port < 1) {
-                port = setup.getPort();
-            }
-            props.put(dbtype + "." + host + ".port", Integer.toString(port));
-            String dbHostPort = String.format("%s.%s_%d", dbtype.toString(), host, port);
-            props.put(dbHostPort + ".name", setup.getDbName());
-            props.put(dbHostPort + ".user", setup.getDbUser());
-            props.put(dbHostPort + ".passwd", new String(setup.getDbPassword()));
-            props.put(dbHostPort + ".internalQueriesResourceDir",
-                    Boolean.toString(setup.isInternalQueriesResourceDir()));
-            String queriesDir = setup.getQueriesDir();
-            if (null != queriesDir) {
-                props.put(dbHostPort + ".queriesDir", setup.getQueriesDir());
-            }
+        if (null == propertiesFile) {
+            throw new IllegalArgumentException("propertiesFile == null");
+        }
+        if(dbtype == null || dbtype == DbType.NONE) {
+            throw new IllegalArgumentException("dbtype = "+dbtype);
+        }
+        if (null == setup) {
+            throw new IllegalArgumentException("setup == null");
+        }
+        try {
+            System.out.println("Saving "+propertiesFile.getCanonicalPath());
+        } catch (IOException ex) {
+            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        propertiesFile.getParentFile().mkdirs();
+        Properties props = new Properties();
+//        if (propertiesFile.exists()) {
+//            try (FileReader fr = new FileReader(propertiesFile)) {
+//                props.load(fr);
+//            } catch (IOException ex) {
+//                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        }
+        props.put("--dbtype", dbtype.toString());
+        if (host == null) {
+            host = setup.getHost();
+        }
+        props.put(dbtype + ".host", host);
+        if (port < 1) {
+            port = setup.getPort();
+        }
+        props.put(dbtype + "." + host + ".port", Integer.toString(port));
+        String dbHostPort = String.format("%s.%s_%d", dbtype.toString(), host, port);
+        props.put(dbHostPort + ".name", setup.getDbName());
+        props.put(dbHostPort + ".user", setup.getDbUser());
+        props.put(dbHostPort + ".passwd", new String(setup.getDbPassword()));
+        props.put(dbHostPort + ".internalQueriesResourceDir",
+                Boolean.toString(setup.isInternalQueriesResourceDir()));
+        String queriesDir = setup.getQueriesDir();
+        if (null != queriesDir) {
+            props.put(dbHostPort + ".queriesDir", setup.getQueriesDir());
+        }
 //            try (FileWriter fw = new FileWriter(propertiesFile)) {
 //                props.store(fw, "");
 //            } catch (IOException ex) {
 //                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
 //            }
-            Utils.saveProperties(propertiesFile, props);
-        }
+        Utils.saveProperties(propertiesFile, props);
     }
 
-    
-     /**
+    /**
      * Setup a connection given the settings.
-     * 
-     * The connection may take some time and will be completed asynchronously in another thread
-     * after this method returns.
-     * The returned future can be used to wait for the connection.
-     * 
+     *
+     * The connection may take some time and will be completed asynchronously in
+     * another thread after this method returns. The returned future can be used
+     * to wait for the connection.
+     *
      * @return future for new connection
      */
-    public XFuture<Connection>  connect() {
+    public XFuture<Connection> connect() {
         return connect(this.build());
     }
 
     /**
      * Setup a connection given the settings.
-     * 
-     * The connection may take some time and will be completed asynchronously in another thread
-     * after this method returns.
-     * The returned future can be used to wait for the connection.
-     * 
+     *
+     * The connection may take some time and will be completed asynchronously in
+     * another thread after this method returns. The returned future can be used
+     * to wait for the connection.
+     *
      * @param setup database setup object
      * @return future for new connection
      */
-    public static XFuture<Connection>  connect(DbSetup setup)  {
-        return setupConnection(setup.getDbType(), setup.getHost(), setup.getPort(), setup.getDbName(), setup.getDbUser(), new String(setup.getDbPassword()),setup.isDebug(), setup.getLoginTimeout());
+    public static XFuture<Connection> connect(DbSetup setup) {
+        return setupConnection(setup.getDbType(), setup.getHost(), setup.getPort(), setup.getDbName(), setup.getDbUser(), new String(setup.getDbPassword()), setup.isDebug(), setup.getLoginTimeout());
     }
 
     public static final int DEFAULT_LOGIN_TIMEOUT = 5; // in seconds 
-    
+
     /**
      * Setup a connection given the settings.
-     * 
-     * The connection may take some time and will be completed asynchronously in another thread
-     * after this method returns.
-     * The returned future can be used to wait for the connection.
-     * 
+     *
+     * The connection may take some time and will be completed asynchronously in
+     * another thread after this method returns. The returned future can be used
+     * to wait for the connection.
+     *
      * @param dbtype database type
      * @param host database host
      * @param port database port
      * @param db database name
      * @param username user's name
      * @param password user's password
-     * @param debug  enable debugging
+     * @param debug enable debugging
      * @param loginTimeout timeout for login
      * @return future for new connection
      */
     public static XFuture<Connection> setupConnection(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) {
+        if (dbtype == null || dbtype == DbType.NONE) {
+            throw new IllegalArgumentException("dbtype = " + dbtype);
+        }
         XFuture<Connection> ret = new XFuture<>();
         new Thread(() -> {
             Connection conn;
             try {
-               ret.complete(setupConnectionPriv(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT));
+                ret.complete(setupConnectionPriv(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT));
             } catch (SQLException ex) {
                 ret.completeExceptionally(ex);
                 Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
             }
         }, "connectionSetupThread").start();
         return ret;
-        
+
 //        return XFuture. -> {
 //            try {
 //                return setupConnectionPriv(dbtype,host,port,db,username,password,debug);
@@ -739,9 +753,10 @@ public class DbSetupBuilder {
 //            }
 //            
 //                });
-    }   
+    }
+
     private static Connection setupConnectionPriv(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) throws SQLException {
-      
+
         switch (dbtype) {
             case MYSQL:
 //                useBatch = true;
@@ -757,7 +772,7 @@ public class DbSetupBuilder {
 //                } catch (ClassNotFoundException classNotFoundException) {
 //                    classNotFoundException.printStackTrace();
 //                }
-                if(loginTimeout > 0) {
+                if (loginTimeout > 0) {
                     DriverManager.setLoginTimeout(loginTimeout);
                 }
                 return DriverManager.getConnection(mysql_url, username, password);
@@ -780,7 +795,7 @@ public class DbSetupBuilder {
                         classNotFoundException.printStackTrace();
                     }
                 }
-                if(loginTimeout > 0) {
+                if (loginTimeout > 0) {
                     DriverManager.setLoginTimeout(loginTimeout);
                 }
                 return DriverManager.getConnection(neo4j_url, properties);

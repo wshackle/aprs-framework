@@ -45,7 +45,7 @@ import java.util.logging.Logger;
  */
 public class VisionSocketServer implements AutoCloseable {
 
-    private ServerSocket serverSocket;
+    private volatile ServerSocket serverSocket;
     private ExecutorService executorService;
     private ExecutorService publishService;
     private final boolean shutdownServiceOnClose;
@@ -122,7 +122,9 @@ public class VisionSocketServer implements AutoCloseable {
                         clients.add(clientSocket);
                     }
                 } catch (IOException ex) {
-                    Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
+                    if(!closing) {
+                        Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 } finally {
                     Thread.currentThread().setName(origThreadName);
                 }

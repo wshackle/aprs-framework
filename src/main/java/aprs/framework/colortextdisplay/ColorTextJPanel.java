@@ -46,18 +46,29 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         } catch(Throwable t) {
             t.printStackTrace();
         }
+        
+    }
+    public static final int COLORTEXT_SOCKET_PORT = 23444;
+
+    private SocketLineReader reader;
+    
+    public void startReader() {
         SocketLineReader readerTmp=null;
         try {
              readerTmp = SocketLineReader.startServer( COLORTEXT_SOCKET_PORT, "ColorTextServer", this::parseSocketLine);
             
         } catch (IOException ex) {
-            Logger.getLogger(ColorTextJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ColorTextJFrame.class.getName()).log(Level.SEVERE, "Failed to bind color text socket port: "+COLORTEXT_SOCKET_PORT, ex);
         }
         this.reader = readerTmp;
     }
-    public static final int COLORTEXT_SOCKET_PORT = 23444;
-
-    private final SocketLineReader reader;
+    
+    public void stopReader() {
+        if(null != reader) {
+            reader.close();
+            reader = null;
+        }
+    }
     
     private void parseSocketLine(String line, PrintStream ps) {
         String colorStrings[] = line.split("[ \t,]+");

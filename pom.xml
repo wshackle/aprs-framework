@@ -9,7 +9,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <main.class>aprs.framework.AprsJFrame</main.class>
+        <main.class>aprs.framework.LauncherJFrame</main.class>
     </properties>
     <name>aprs-framework</name>
     

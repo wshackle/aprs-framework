@@ -1,5 +1,5 @@
-#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:2142
-STARTUP_ACTIVE_WIN=OTHER
+#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:2390
+STARTUP_ACTIVE_WIN=DATABASE_SETUP_WINDOW
 aprs.robotName=Sim_Fanuc
 aprs.taskName=Fanuc Cart
 crclWebApp.httpPort=8081
@@ -7,6 +7,7 @@ startup.connectdatabase=true
 startup.connectvision=true
 startup.crclWebApp=false
 startup.exploreGraphDb=false
+startup.kitinspection=true
 startup.pddl.executor=true
 startup.pddl.objectsp=true
 startup.pddl.objectview=true

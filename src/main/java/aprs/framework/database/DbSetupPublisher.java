@@ -39,5 +39,7 @@ public interface DbSetupPublisher {
 
     public void removeDbSetupListener(DbSetupListener listener);
     
+    public void removeAllDbSetupListeners();
+    
     public List<Future<?>> notifyAllDbSetupListeners();
 }

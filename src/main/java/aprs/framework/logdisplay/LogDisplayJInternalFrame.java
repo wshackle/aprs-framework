@@ -38,7 +38,17 @@ public class LogDisplayJInternalFrame extends javax.swing.JInternalFrame {
     public void appendText(String s) {
         logDisplayJPanel1.appendText(s);
     }
-    
+
+    public void clearText() {
+        logDisplayJPanel1.clearText();
+    }
+
+    @Override
+    public void dispose() {
+        clearText();
+        super.dispose();
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
