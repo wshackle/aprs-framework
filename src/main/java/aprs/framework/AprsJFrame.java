@@ -87,13 +87,13 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
 /**
- * AprsJFrame is the container for one robotic system in the 
- * APRS (Agility Performance of Robotic Systems) framework. 
- * 
- * Internal windows are used to represent each of the modules within the 
- * system. Vision, Sensor Processing, Planning, Execution, and the 
- * CRCL (Canonical Robot Command Language) client and server.
- * 
+ * AprsJFrame is the container for one robotic system in the APRS (Agility
+ * Performance of Robotic Systems) framework.
+ *
+ * Internal windows are used to represent each of the modules within the system.
+ * Vision, Sensor Processing, Planning, Execution, and the CRCL (Canonical Robot
+ * Command Language) client and server.
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, AutoCloseable {
@@ -116,7 +116,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Pause a currently executing CRCL program.
-     * 
+     *
      * No action is taken if the CRCL Client has not been started and connected
      * or not program was currently running.
      */
@@ -125,8 +125,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pendantClientJInternalFrame.pauseCrclProgram();
         }
     }
-    
-    public KitInspectionJInternalFrame getKitInspectionJInternalFrame(){
+
+    public KitInspectionJInternalFrame getKitInspectionJInternalFrame() {
         return kitInspectionJInternalFrame;
     }
 
@@ -134,9 +134,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Creates a run name useful for identifying a run in log files or the names
-     * of snapshot files. The name is composed of the current robot name, 
-     * task name and robot number.
-     * 
+     * of snapshot files. The name is composed of the current robot name, task
+     * name and robot number.
+     *
      * @return current run name.
      */
     public String getRunName() {
@@ -145,8 +145,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
-     * Checks whether there is currently a CRCL program that is loaded but paused.
-     * 
+     * Checks whether there is currently a CRCL program that is loaded but
+     * paused.
+     *
      * @return whether a program is paused
      */
     public boolean isCrclProgramPaused() {
@@ -158,7 +159,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Checks whether there is currently a CRCL program running.
-     * 
+     *
      * @return whether a CRCL program is running.
      */
     public boolean isRunningCrclProgram() {
@@ -170,7 +171,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Get the currently loaded CRCL program.
-     * 
+     *
      * @return current CRCL program or null if no program is loaded.
      */
     public CRCLProgramType getCrclProgram() {
@@ -182,7 +183,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Get the executor options as a map of names to values.
-     * 
+     *
      * @return the current executor options.
      */
     public Map<String, String> getExecutorOptions() {
@@ -194,9 +195,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Set an executor option.
-     * 
-     * @param key       name of option to set
-     * @param value     value option should be set to
+     *
+     * @param key name of option to set
+     * @param value value option should be set to
      */
     public void setExecutorOption(String key, String value) {
         if (null != pddlExecutorJInternalFrame1) {
@@ -206,13 +207,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Add a position map.
-     * 
+     *
      * The position map is similar to a transform in that it may offset
      * positions output by the executor but may also be used to change scaling
-     * or correct for non uniform distortions from the sensor system or 
+     * or correct for non uniform distortions from the sensor system or
      * imperfect kinematic functions in the robot. Multiple position maps may be
      * stacked to account for different sources of error or transformation.
-     * 
+     *
      * @param pm position map to be added
      */
     public void addPositionMap(PositionMap pm) {
@@ -224,7 +225,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Remove a previously added position map.
-     * 
+     *
      * @param pm position map to be removed.
      */
     public void removePositionMap(PositionMap pm) {
@@ -235,7 +236,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Get the current pose of the robot.
-     * 
+     *
      * @return current pose of the robot.
      */
     public PoseType getCurrentPose() {
@@ -246,9 +247,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
-     * Check if the CRCL client is connected to the CRCL Server and therefore
-     * to the robot.
-     * 
+     * Check if the CRCL client is connected to the CRCL Server and therefore to
+     * the robot.
+     *
      * @return if the CRCL client is connected to the server.
      */
     public boolean isConnected() {
@@ -259,15 +260,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
-     * Attempt to connect or disconnect the CRCL client from the 
-     * CRCL server by opening or closed the appropriate socket.
-     * 
+     * Attempt to connect or disconnect the CRCL client from the CRCL server by
+     * opening or closed the appropriate socket.
+     *
      * NOTE: for setConnected(true) to succeed the robot port and host name must
      * have previously been set or read from the property file.
-     * 
-     * NOTE: disconnectRobot() is the same as setConnected(false) except it
-     * also sets the robot name to null.
-     * 
+     *
+     * NOTE: disconnectRobot() is the same as setConnected(false) except it also
+     * sets the robot name to null.
+     *
      * @param connected the new desired connected state.
      */
     public void setConnected(boolean connected) {
@@ -293,27 +294,30 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Attempt to safely abort the current CRCL program in a way that does not
-     * leave the part in the gripper nor in a position obstructing the vision sensor.
-     * If the robot currently has a part in the gripper the program will continue until
-     * the part is placed and the robot is moved out of the way of the vision system.
-     * 
-     * The abort will occur asynchronously in another thread after this method returns.
-     * The status of this action can be monitored with the returned future.
-     * 
-     * @return a future that can be tested or used to wait until the abort is completed.
+     * leave the part in the gripper nor in a position obstructing the vision
+     * sensor. If the robot currently has a part in the gripper the program will
+     * continue until the part is placed and the robot is moved out of the way
+     * of the vision system.
+     *
+     * The abort will occur asynchronously in another thread after this method
+     * returns. The status of this action can be monitored with the returned
+     * future.
+     *
+     * @return a future that can be tested or used to wait until the abort is
+     * completed.
      */
     public XFuture<Void> safeAbort() {
         return this.pddlExecutorJInternalFrame1.safeAbort();
     }
 
     /**
-     * Safely abort the current CRCL program and then disconnect from the robot's 
-     * CRCL server.
-     * 
-     * The abort will occur asynchronously in another thread after this method returns.
-     * The status of this action can be monitored with the returned future.
-     ** 
-     * @return  a future that can be tested or used to wait until the abort and disconnect is completed.
+     * Safely abort the current CRCL program and then disconnect from the
+     * robot's CRCL server.
+     *
+     * The abort will occur asynchronously in another thread after this method
+     * returns. The status of this action can be monitored with the returned
+     * future. * @return a future that can be tested or used to wait until the
+     * abort and disconnect is completed.
      */
     public XFuture<Void> safeAbortAndDisconnectAsync() {
         return this.pddlExecutorJInternalFrame1.safeAbort()
@@ -322,9 +326,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Disconnect from the robot's crcl server and set robotName to null.
-     * 
-     * Note: setConnected(false) also disconnects from the crcl server but leaves 
-     * the robotName unchanged.
+     *
+     * Note: setConnected(false) also disconnects from the crcl server but
+     * leaves the robotName unchanged.
      */
     public void disconnectRobot() {
         if (null != pendantClientJInternalFrame) {
@@ -336,10 +340,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     /**
      * Connect to a given robot with a CRCL server running on the given host and
      * TCP port.
-     * 
+     *
      * @param robotName name of the robot
-     * @param host      host running robot's CRCL server
-     * @param port      (TCP) port robot's CRCL server is bound to
+     * @param host host running robot's CRCL server
+     * @param port (TCP) port robot's CRCL server is bound to
      */
     public void connectRobot(String robotName, String host, int port) {
         if (null != pendantClientJInternalFrame) {
@@ -350,6 +354,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Get robot's CRCL host.
+     *
      * @return robot's CRCL host.
      */
     public String getRobotCrclHost() {
@@ -361,6 +366,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Get robot's CRCL port number.
+     *
      * @return robot's CRCL port number.
      */
     public int getRobotCrclPort() {
@@ -372,12 +378,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Continue or start executing the currently loaded set of PDDL actions.
-     * 
+     *
      * The actions will be executed in another thread after this method returns.
      * The task can be monitored or canceled using the returned future.
-     * 
-     * @return a future that can be used to monitor, extend or cancel the underlying task.
-     * 
+     *
+     * @return a future that can be used to monitor, extend or cancel the
+     * underlying task.
+     *
      */
     public XFuture<Void> continueActionList() {
         return pddlExecutorJInternalFrame1.continueActionList();
@@ -415,9 +422,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
-     * Register a program line listener that will be notified each time a line of
-     * the CRCL program is executed.
-     * 
+     * Register a program line listener that will be notified each time a line
+     * of the CRCL program is executed.
+     *
      * @param l listener to be registered
      */
     public void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
@@ -428,7 +435,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Remove a previously added program line listener.
-     * 
+     *
      * @param l listener to be removed
      */
     public void removeProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
@@ -438,8 +445,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
-     * Modify the given pose by applying all of the currently added position maps.
-     * 
+     * Modify the given pose by applying all of the currently added position
+     * maps.
+     *
      * @param poseIn the pose to correct or transform
      * @return pose after being corrected by all currently added position maps
      */
@@ -452,6 +460,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Apply inverses of currently added position maps in reverse order.
+     *
      * @param ptIn pose to reverse correction
      * @return pose in original vision/database coordinates
      */
@@ -466,6 +475,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Register a listener to be notified of every change in the robots pose.
+     *
      * @param l listener to register
      */
     public void addCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
@@ -478,6 +488,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Remove a previously added listener.
+     *
      * @param l listener to be removed
      */
     public void removeCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
@@ -488,8 +499,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Set the currently loaded CRCL program
+     *
      * @param program CRCL program to load.
-     * @throws JAXBException a command within the program violates a constraint in the schema
+     * @throws JAXBException a command within the program violates a constraint
+     * in the schema
      */
     public synchronized void setCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (null != pendantClientJInternalFrame) {
@@ -501,15 +514,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Load the given program an begin running it.
-     * 
-     * The program will be run asynchronously in another thread after this method
-     * has returned. The task can be modified, canceled or extended with the returned
-     * future. The boolean contained within the future will be true if the program
-     * completed successfully and false for non exceptional errors.
-     * 
+     *
+     * The program will be run asynchronously in another thread after this
+     * method has returned. The task can be modified, canceled or extended with
+     * the returned future. The boolean contained within the future will be true
+     * if the program completed successfully and false for non exceptional
+     * errors.
+     *
      * @param program program to be loaded
-     * @return future that can be used to monitor, cancel or extend the underlying task
-     * @throws JAXBException a command within the program violates a constraint in the schema
+     * @return future that can be used to monitor, cancel or extend the
+     * underlying task
+     * @throws JAXBException a command within the program violates a constraint
+     * in the schema
      */
     public synchronized XFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (null != pendantClientJInternalFrame) {
@@ -522,11 +538,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
-     * Immediately abort the currently running CRCL program and PDDL action list.
-     * 
-     * NOTE: This may leave the robot in a state with the part held in the gripper
-     * or with the robot obstructing the view of the vision system.
-     * 
+     * Immediately abort the currently running CRCL program and PDDL action
+     * list.
+     *
+     * NOTE: This may leave the robot in a state with the part held in the
+     * gripper or with the robot obstructing the view of the vision system.
+     *
      */
     public void immediateAbort() {
         if (null != pddlExecutorJInternalFrame1) {
@@ -538,7 +555,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Create a string with current details for display and/or logging.
-     * 
+     *
      * @return details string
      */
     public String getDetailsString() {
@@ -552,12 +569,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     sb.append("crcl_cmd= Exception : ").append(ex).append("\r\n");
                     Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
+            } else {
+                sb.append("crcl_cmd= \r\n");
             }
             pendantClientJInternalFrame.getCurrentStatus().ifPresent(status -> {
                 if (null != status.getCommandStatus()
                         && null != status.getCommandStatus().getStateDescription()
                         && status.getCommandStatus().getStateDescription().length() > 0) {
                     sb.append("state description = ").append(status.getCommandStatus().getStateDescription()).append("\r\n");
+                } else {
+                    sb.append("state description = \r\n");
                 }
             });
             pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state=").append(state).append("\r\n"));
@@ -570,6 +591,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 sb.append(" out of ").append(actions.size()).append("\r\n");
                 if (curActionIndex >= 0 && curActionIndex < actions.size()) {
                     sb.append("PDDL action =").append(actions.get(curActionIndex)).append("\r\n");
+                } else {
+                    sb.append("PDDL action = \r\n");
                 }
             }
         }
@@ -594,7 +617,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private PrintStream origOut = null;
     private PrintStream origErr = null;
-
 
     static private class MyPrintStream extends PrintStream {
 
@@ -660,6 +682,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Get the title error string, which should be a short string identifying
      * the most critical problem if there is one appropriate for displaying in
      * the title.
+     *
      * @return title error string
      */
     public String getTitleErrorString() {
@@ -670,6 +693,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Set the title error string, which should be a short string identifying
      * the most critical problem if there is one appropriate for displaying in
      * the title.
+     *
      * @param titleErrorString title error string
      */
     public void setTitleErrorString(String titleErrorString) {
@@ -784,6 +808,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Creates new AprsJFrame using a specified properties file.
+     *
      * @param propertiesFile properties file to be read for initial settings
      */
     public AprsJFrame(File propertiesFile) {
@@ -1068,6 +1093,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Get the current status if available
+     *
      * @return current status or null
      */
     public CRCLStatusType getCurrentStatus() {
@@ -1266,7 +1292,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1806,13 +1832,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
 
     /**
-     * Start the PDDL actions currently loaded in the executor from the beginning.
-     * 
+     * Start the PDDL actions currently loaded in the executor from the
+     * beginning.
+     *
      * The actions will be executed in another thread after this method returns.
-     * The returned future can be used to monitor, cancel or extend the underlying task.
-     * The boolean contained in the future will be true only if all actions appear to
-     * succeed.
-     * 
+     * The returned future can be used to monitor, cancel or extend the
+     * underlying task. The boolean contained in the future will be true only if
+     * all actions appear to succeed.
+     *
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startActions() {
@@ -1828,9 +1855,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    public void showKitInspection(){
-        
+    public void showKitInspection() {
+
     }
+
     private void startExploreGraphDb() {
         try {
             if (null == this.exploreGraphDbJInternalFrame) {
@@ -1933,9 +1961,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     /**
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
-     * 
-     * @param f     file to save snapshot image to  
-     * @param pose  optional pose to mark or null  
+     *
+     * @param f file to save snapshot image to
+     * @param pose optional pose to mark or null
      * @param label optional label for pose or null
      * @throws IOException if writing the file fails
      */
@@ -1947,8 +1975,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      ** Take a snapshot of the view of objects positions passed in the list.
-     * 
-     * @param f file to save snapshot image to  
+     *
+     * @param f file to save snapshot image to
      * @param itemsToPaint list of items to paint
      * @throws IOException if writing the file fails
      */
@@ -1957,7 +1985,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint);
         }
     }
-    
+
     DbSetup dbSetup = null;
 
     @Override
@@ -2265,7 +2293,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private static final String STARTUPROBOTCRCLSIMSERVER = "startup.robotcrclsimserver";
     private static final String STARTUPROBOTCRCLFANUCSERVER = "startup.robotcrclfanucserver";
     private static final String STARTUPROBOTCRCLMOTOMANSERVER = "startup.robotcrclmotomanserver";
-private static final String STARTUPKITINSPECTION = "startup.kitinspection";
+    private static final String STARTUPKITINSPECTION = "startup.kitinspection";
     private static final String STARTUPCONNECTDATABASE = "startup.connectdatabase";
     private static final String STARTUPCONNECTVISION = "startup.connectvision";
     private static final String STARTUPEXPLOREGRAPHDB = "startup.exploreGraphDb";
@@ -2564,12 +2592,13 @@ private static final String STARTUPKITINSPECTION = "startup.kitinspection";
 
     /**
      * Continue or start executing the currently loaded CRCL program.
-     * 
+     *
      * The actions will be executed in another thread after this method returns.
      * The task can be monitored or canceled using the returned future.
-     * 
-     * @return a future that can be used to monitor, extend or cancel the underlying task.
-     * 
+     *
+     * @return a future that can be used to monitor, extend or cancel the
+     * underlying task.
+     *
      */
     public XFuture<Boolean> continueCurrentCrclProgram() {
         if (null != pendantClientJInternalFrame) {
