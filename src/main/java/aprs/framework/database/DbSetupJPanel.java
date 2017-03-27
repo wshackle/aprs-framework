@@ -147,7 +147,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jLabel6 = new javax.swing.JLabel();
         jTextFieldDBLoginTimeout = new javax.swing.JTextField();
 
-        jTextFieldDBPort.setText("7486");
+        jTextFieldDBPort.setText("-99");
 
         jComboBoxDbType.setModel(getDbTypeComboModel());
         jComboBoxDbType.addActionListener(new java.awt.event.ActionListener() {
@@ -449,22 +449,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
 
     private void jComboBoxDbTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxDbTypeActionPerformed
-//        try {
-//            if (!savingProperties && !restoringProperties && !updatingFromArgs) {
-//
-//                DbType newDbType = (DbType) jComboBoxDbType.getSelectedItem();
-//                if (oldDbType != newDbType) {
-//                    this.closeDB();
-//                    if(oldDbType != null) {
-//                        saveProperties(oldDbType, jTextFieldDBHost.getText(), Integer.parseInt(jTextFieldDBPort.getText()));
-//                    }
-//                    restoreProperties(newDbType, null, -1);
-//                    oldDbType = newDbType;
-//                }
-//            }
-//        } catch (Exception exception) {
-//            addLogMessage(exception);
-//        }
         updateSettingsFileName();
         if (!updatingFromDbSetup) {
             notifyAllDbSetupListeners();
@@ -1147,12 +1131,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         } finally {
             updatingFromArgs = false;
         }
-//        props.put(this.getDbType() + ".host", this.jTextFieldDBHost.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".port", this.jTextFieldDBPort.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".name", this.jTextFieldDBName.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".user", this.jTextFieldDBUser.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".passwd", this.jPasswordFieldDBPassword.getPassword());
-//        
     }
 
     final String RESOURCE_BASE = "aprs/framework/database";

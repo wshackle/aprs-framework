@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:1981
+#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:1958
 --acquirestate=ON
 --commandport=4001
 --dbhost=ying-220.el.nist.gov
@@ -8,8 +8,8 @@
 --dbtype=NEO4J
 --dbuser=neo4j
 --showgui=true
---visionhost=agility
---visionport=5001
+--visionhost=localhost
+--visionport=4000
 AddRepeatCountsToDatabaseNames=true
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com.port=24789
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.name=fanuc-demo

@@ -215,7 +215,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jTextFieldLastCommand = new javax.swing.JTextField();
         jLabel18 = new javax.swing.JLabel();
         jTextFieldAcquire = new javax.swing.JTextField();
-        jButtonDbSetup = new javax.swing.JButton();
         jCheckBoxAddRepeatCountsToDatabaseNames = new javax.swing.JCheckBox();
         jLabel2 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -333,13 +332,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
-        jButtonDbSetup.setText("Database Setup");
-        jButtonDbSetup.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonDbSetupActionPerformed(evt);
-            }
-        });
-
         jCheckBoxAddRepeatCountsToDatabaseNames.setText("Add Repeat Counts To Database Names");
         jCheckBoxAddRepeatCountsToDatabaseNames.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -397,7 +389,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jButtonDbSetup, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel9, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -447,8 +438,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jButtonDbSetup)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
                     .addComponent(jTextFieldVisionHost, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -1594,17 +1583,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
 
-    private void jButtonDbSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDbSetupActionPerformed
-        if (null != dbSetupSupplier) {
-            try {
-                dbSetupPublisher = dbSetupSupplier.call();
-                dbSetupPublisher.addDbSetupListener(this);
-            } catch (Exception ex) {
-                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }//GEN-LAST:event_jButtonDbSetupActionPerformed
-
     private void jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed
 
         if (null != visionClient) {
@@ -1859,7 +1837,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JButton jButtonConnectVision;
     private javax.swing.JButton jButtonCsv;
     private javax.swing.JButton jButtonCsvFromDatabase;
-    private javax.swing.JButton jButtonDbSetup;
     private javax.swing.JButton jButtonDelete;
     private javax.swing.JButton jButtonDisconnectVision;
     private javax.swing.JButton jButtonForceAll;
@@ -1984,9 +1961,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    public DbSetupPublisher getDbSetupPublisher() {
-        return dbSetupPublisher;
-    }
+//    public DbSetupPublisher getDbSetupPublisher() {
+//        return dbSetupPublisher;
+//    }
 
     private volatile boolean restoringProperties = false;
 

@@ -31,12 +31,12 @@ import java.util.logging.Logger;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class LauncherJFrame extends javax.swing.JFrame {
+public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     /**
      * Creates new form LauncherJFrame
      */
-    public LauncherJFrame() {
+    public LauncherAprsJFrame() {
         initComponents();
     }
 
@@ -153,6 +153,7 @@ public class LauncherJFrame extends javax.swing.JFrame {
         AprsMulitSupervisorJFrame amsFrame = new AprsMulitSupervisorJFrame();
         amsFrame.startColorTextReader();
         amsFrame.loadPrevSetup();
+        amsFrame.loadPrevPosMapFile();
         amsFrame.setVisible(true);
         this.setVisible(false);
         this.dispose();
@@ -164,6 +165,7 @@ public class LauncherJFrame extends javax.swing.JFrame {
         amsFrame.setVisible(true);
         this.setVisible(false);
         this.dispose();
+        amsFrame.browseSaveSetupAs();
     }//GEN-LAST:event_jButtonNewMultiActionPerformed
 
     private void jButtonOpenMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenMultiActionPerformed
@@ -172,6 +174,7 @@ public class LauncherJFrame extends javax.swing.JFrame {
         amsFrame.setVisible(true);
         this.setVisible(false);
         amsFrame.browseOpenSetup();
+        amsFrame.loadPrevPosMapFile();
         this.dispose();
     }//GEN-LAST:event_jButtonOpenMultiActionPerformed
 
@@ -184,7 +187,7 @@ public class LauncherJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonPrevSingleActionPerformed
 
     private void jButtonPrevMulti2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevMulti2ActionPerformed
-       AprsJFrame aFrame = new AprsJFrame();
+        AprsJFrame aFrame = new AprsJFrame();
         aFrame.emptyInit();
         aFrame.setVisible(true);
         this.setVisible(false);
@@ -202,17 +205,34 @@ public class LauncherJFrame extends javax.swing.JFrame {
 
     private void checkFiles() {
         File f = AprsJFrame.getDefaultPropertiesFile();
-        if(f != null && f.exists()) {
+        if (f != null && f.exists()) {
             try {
-                jButtonPrevSingle.setToolTipText("Open "+f.getCanonicalPath()+" . . .");
+                jButtonPrevSingle.setToolTipText("Open " + f.getCanonicalPath() + " ");
                 jButtonPrevSingle.setEnabled(true);
             } catch (IOException ex) {
-                Logger.getLogger(LauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
             jButtonPrevSingle.setEnabled(false);
         }
+        f = null;
+        try {
+            f = AprsMulitSupervisorJFrame.getLastSetupFile();
+        } catch (IOException ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if(f != null && f.exists()) {
+            try {
+                jButtonPrevMulti.setToolTipText("Open " + f.getCanonicalPath() + " ");
+                jButtonPrevMulti.setEnabled(true);
+            } catch (IOException ex) {
+                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            jButtonPrevMulti.setEnabled(false);
+        }
     }
+
     /**
      * @param args the command line arguments
      */
@@ -230,20 +250,21 @@ public class LauncherJFrame extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(LauncherJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(LauncherAprsJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(LauncherJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(LauncherAprsJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(LauncherJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(LauncherAprsJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(LauncherJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(LauncherAprsJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                LauncherJFrame lFrame = new LauncherJFrame();
+                LauncherAprsJFrame lFrame = new LauncherAprsJFrame();
                 lFrame.checkFiles();
                 lFrame.setVisible(true);
             }

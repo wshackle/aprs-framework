@@ -902,11 +902,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(false);
             }
             updateSubPropertiesFiles();
-            DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
-            if (null != pub) {
-                pub.setDbSetup(dbSetup);
-                pub.addDbSetupListener(toVisListener);
-            }
+//            DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+//            if (null != pub) {
+//                pub.setDbSetup(dbSetup);
+//                pub.addDbSetupListener(toVisListener);
+//            }
             if (this.jCheckBoxMenuItemStartupCRCLWebApp.isSelected()) {
                 startCrclWebApp();
             }
@@ -1004,13 +1004,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             this.exploreGraphDbJInternalFrame.dispose();
             this.exploreGraphDbJInternalFrame = null;
         }
-        if(null != this.logDisplayJInternalFrame) {
+        if (null != this.logDisplayJInternalFrame) {
             this.logDisplayJInternalFrame.setVisible(false);
             this.logDisplayJInternalFrame.dispose();
             this.logDisplayJInternalFrame = null;
         }
         this.dbSetup = null;
-        
+
 //        this.pddlExecutorJInternalFrame1 = null;
 //        this.pddlPlannerJInternalFrame = null;
 //        this.object2DViewJInternalFrame = null;
@@ -1298,6 +1298,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             dbSetupJInternalFrame.loadRecent();
             jDesktopPane1.add(dbSetupJInternalFrame, JLayeredPane.DEFAULT_LAYER);
             dbSetupJInternalFrame.getDbSetupPublisher().addDbSetupListener(this::updateDbConnectedCheckBox);
+            if (null != dbSetup) {
+                DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+                if (null != pub) {
+                    pub.setDbSetup(dbSetup);
+                }
+            }
+
         }
     }
 
@@ -1316,10 +1323,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             visionToDbJInternalFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
             jDesktopPane1.add(visionToDbJInternalFrame, JLayeredPane.DEFAULT_LAYER);
             visionToDbJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(visionToDbJInternalFrame);
-            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
-            if (null != pub) {
-                pub.addDbSetupListener(toDbListener);
-            }
+//            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+//            if (null != pub) {
+//                pub.addDbSetupListener(toDbListener);
+//            }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -1761,7 +1768,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     public void browseOpenPropertiesFile() throws HeadlessException {
         JFileChooser chooser = new JFileChooser(propertiesDirectory);
-        chooser.addChoosableFileFilter(new FileNameExtensionFilter("Text properties files.", ".txt"));
+        FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
+        chooser.addChoosableFileFilter(filter);
+        chooser.setFileFilter(filter);
+        chooser.setDialogTitle("Open APRS System properties file.");
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 closeAllWindows();
@@ -1902,19 +1912,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed
 
     private void jMenuItemSavePropsAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePropsAsActionPerformed
+        browseSavePropertiesFileAs();
+    }//GEN-LAST:event_jMenuItemSavePropsAsActionPerformed
+
+    public void browseSavePropertiesFileAs() {
         JFileChooser chooser = new JFileChooser(propertiesDirectory);
+        FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
+        chooser.addChoosableFileFilter(filter);
+        chooser.setFileFilter(filter);
+        chooser.setDialogTitle("Choose new APRS System properties file to create (save as).");
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 setPropertiesFile(chooser.getSelectedFile());
-//                initPropertiesFile();
                 this.saveProperties();
-
             } catch (IOException ex) {
                 Logger.getLogger(AprsJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }//GEN-LAST:event_jMenuItemSavePropsAsActionPerformed
+    }
 
     private void jMenuItemContinueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemContinueActionPerformed
         this.continueActionList();
@@ -2082,33 +2098,31 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         lastAprsPropertiesFileFile = getDefaultLastPropertiesFileFile();
     }
 
-    private final DbSetupListener toVisListener = new DbSetupListener() {
-        @Override
-        public void accept(DbSetup setup) {
-            Utils.runOnDispatchThread(() -> {
-                dbSetup = setup;
-                if (null != visionToDbJInternalFrame) {
-                    DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
-                    publishDbSetup(pub, setup);
-                }
-            });
-        }
-    };
-
-    private final DbSetupListener toDbListener = new DbSetupListener() {
-        @Override
-        public void accept(DbSetup setup) {
-            Utils.runOnDispatchThread(() -> {
-                dbSetup = setup;
-                if (null != dbSetupJInternalFrame) {
-                    DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
-                    publishDbSetup(pub, setup);
-                }
-            });
-        }
-
-    };
-
+//    private final DbSetupListener toVisListener = new DbSetupListener() {
+//        @Override
+//        public void accept(DbSetup setup) {
+//            Utils.runOnDispatchThread(() -> {
+//                dbSetup = setup;
+//                if (null != visionToDbJInternalFrame) {
+//                    DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+//                    publishDbSetup(pub, setup);
+//                }
+//            });
+//        }
+//    };
+//    private final DbSetupListener toDbListener = new DbSetupListener() {
+//        @Override
+//        public void accept(DbSetup setup) {
+//            Utils.runOnDispatchThread(() -> {
+//                dbSetup = setup;
+//                if (null != dbSetupJInternalFrame) {
+//                    DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+//                    publishDbSetup(pub, setup);
+//                }
+//            });
+//        }
+//
+//    };
     private void publishDbSetup(DbSetupPublisher pub, DbSetup setup) {
         if (null != pub && setup.getDbType() != DbType.NONE && setup.getDbType() != null) {
 //            saveDbSetup();
@@ -2116,10 +2130,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    private void saveDbSetup() {
-        DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
-    }
-
+//    private void saveDbSetup() {
+//        DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
+//    }
     /**
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
@@ -2246,10 +2259,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         if (null != visionToDbJInternalFrame) {
             this.visionToDbJInternalFrame.loadProperties();
-            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
-            if (null != pub) {
-                pub.setDbSetup(dbSetup);
-            }
+//            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+//            if (null != pub) {
+//                pub.setDbSetup(dbSetup);
+//            }
         }
         if (null != object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.loadProperties();
@@ -2567,11 +2580,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         try {
             updateSubPropertiesFiles();
-
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
+        updateTitle("", "");
     }
 
     private String propertiesFileBaseString = "";
