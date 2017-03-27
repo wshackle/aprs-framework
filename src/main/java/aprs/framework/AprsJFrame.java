@@ -60,6 +60,9 @@ import crcl.base.CRCLProgramType;
 import crcl.base.CRCLStatusType;
 import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
+import crcl.base.EndCanonType;
+import crcl.base.InitCanonType;
+import crcl.base.MessageType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
@@ -71,9 +74,9 @@ import crcl.utils.CRCLException;
 import crcl.utils.CRCLSocket;
 import java.awt.Container;
 import java.io.PrintStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -1830,6 +1833,39 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void jCheckBoxMenuItemKitInspectionStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
         this.showKitInspection();
     }//GEN-LAST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
+
+    private static final CRCLProgramType emptyProgram = new CRCLProgramType();
+
+    {
+        emptyProgram.setInitCanon(new InitCanonType());
+        emptyProgram.getInitCanon().setCommandID(BigInteger.ONE);
+        MessageType msgCmd = new MessageType();
+        msgCmd.setMessage("empty program");
+        msgCmd.setCommandID(BigInteger.valueOf(2));
+        emptyProgram.getMiddleCommand().add(msgCmd);
+        emptyProgram.setEndCanon(new EndCanonType());
+        emptyProgram.getEndCanon().setCommandID(BigInteger.valueOf(3));
+    }
+
+    /**
+     * Test that the robot can be connected by running an empty program.
+     *
+     * The actions will be executed in another thread after this method returns.
+     * The returned future can be used to monitor, cancel or extend the
+     * underlying task. The boolean contained in the future will be true only if
+     * all actions appear to succeed.
+     *
+     * @return future of the underlying task to execute the actions.
+     */
+    public XFuture<Boolean> checkEnabled() {
+        try {
+            setConnected(true);
+            return startCRCLProgram(emptyProgram);
+        } catch (JAXBException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            return XFuture.completedFuture(false);
+        }
+    }
 
     /**
      * Start the PDDL actions currently loaded in the executor from the
