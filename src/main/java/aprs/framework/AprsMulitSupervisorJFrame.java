@@ -58,6 +58,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -432,6 +434,18 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             r.run();
         }
     }
+    
+    private XFuture<Void> showCheckEnabledErrorSplash() {
+        return showErrorSplash("Not all robots\n could be enabled.");
+    }
+    
+    private XFuture<Void> showErrorSplash(String errMsgString) {
+        final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
+        return SplashScreen.showMessageFullScreen(errMsgString, 80.0f,
+                            null,
+                            SplashScreen.getRedYellowColorList(), gd);
+    }
+    
 
     private XFuture<Void> stealRobot(AprsJFrame stealFrom, AprsJFrame stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
         File f = getPosMapFile(stealFor.getRobotName(), stealFrom.getRobotName());
@@ -1490,19 +1504,39 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    public XFuture<Void> startAll() {
-        returnRobots();
-        enableAllRobots();
-        XFuture futures[] = new XFuture[aprsSystems.size()];
+    public XFuture<Boolean> checkEnabledAll() {
+        XFuture<Boolean> futures[] = new XFuture[aprsSystems.size()];
+        for (int i = 0; i < aprsSystems.size(); i++) {
+            futures[i] = aprsSystems.get(i).checkEnabled();
+        }
+        XFuture<Boolean> ret = XFuture.completedFuture(true);
+        BiFunction<Boolean, Boolean, Boolean> andBiFunction = (Boolean ok1, Boolean ok2) -> ok1 && ok2;
+        for (int i = 0; i < futures.length; i++) {
+            ret = (XFuture<Boolean>) ret.thenCombine(futures[i],andBiFunction);
+        }
+        return ret;
+    }
+    
+     private XFuture<Void> startAllActions() {
+         XFuture futures[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             futures[i] = aprsSystems.get(i).startActions();
         }
-        final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
         return XFuture.allOf(futures);
-//                .thenCompose(x -> {
-//                    return SplashScreen.showMessageFullScreen("All \nTasks \nComplete", 80.0f,
-//                            null, SplashScreen.getBlueWhiteGreenColorList(), gd);
-//                });
+     }
+
+     private XFuture<Void> checkOk(Boolean ok, Supplier<XFuture<Void>> okSupplier, Supplier<XFuture<Void>> notOkSupplier) {
+         if(ok) {
+             return okSupplier.get(); 
+         } else {
+             return notOkSupplier.get();
+         }
+     }
+     
+    public XFuture<Void> startAll() {
+        returnRobots();
+        enableAllRobots();
+        return checkEnabledAll().thenCompose(ok -> checkOk(ok,this::startAllActions,this::showCheckEnabledErrorSplash));
     }
 
     public void immediateAbortAll() {
