@@ -65,10 +65,23 @@ For Windows:
     run.bat
 
 
-Menu
+Launcher
 ====
 
-There are three main menus on the main frame.
+![Screenshot of Launcher](/Screenshots/LauncherAprs.png?raw=true)
+
+When the the program starts the user will be shown a small launcher window. 
+To allow the user to open an existing single or multi workcell system, begin with a
+new system or open the most recently used system if one exists.
+
+
+Single Workcell System
+====
+
+Menu
+----
+
+The GUI for the single workcell system has three main menus on the main frame.
 
  * File -- Allows the properties files to be saved/loaded or exiting the program.
  * Startup -- Includes checkboxes to specify which modules should be started at
@@ -76,15 +89,14 @@ startup. Checking the box for any module that is not already started will start 
 module.
  * Window -- Allows access to any window that has been created by moving that window
 to the front.
+ * Connections -- Allows on to check the status of the connection to the vision system or database.
+ * Execute -- Allows PDDL Action plans to be started, paused or aborted.
+
 
 Code for this should be in following subdirectory:
 
     src/main/java/aprs/framework/
 
-
-
-Views
-=====
 
 Log/Error Display View
 ----------------------

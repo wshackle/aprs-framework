@@ -1450,6 +1450,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemContinue = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
+        jMenuItemReset = new javax.swing.JMenuItem();
+        jMenuItemPause = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
@@ -1666,6 +1668,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenuExecute.add(jMenuItemImmediateAbort);
+
+        jMenuItemReset.setText("Reset");
+        jMenuItemReset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemResetActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemReset);
+
+        jMenuItemPause.setText("Pause");
+        jMenuItemPause.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemPauseActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemPause);
 
         jMenuBar1.add(jMenuExecute);
 
@@ -1964,6 +1982,27 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void jCheckBoxMenuItemKitInspectionStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
         this.showKitInspection();
     }//GEN-LAST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
+
+    private void jMenuItemResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemResetActionPerformed
+        reset();
+    }//GEN-LAST:event_jMenuItemResetActionPerformed
+
+    private void jMenuItemPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemPauseActionPerformed
+        pause();
+    }//GEN-LAST:event_jMenuItemPauseActionPerformed
+
+    public void pause() {
+        this.pauseCrclProgram();
+    }
+
+    public void reset() {
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.refresh();
+        }
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.refresh();
+        }
+    }
 
     private static final CRCLProgramType emptyProgram = new CRCLProgramType();
 
@@ -2586,6 +2625,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JMenuItem jMenuItemImmediateAbort;
     private javax.swing.JMenuItem jMenuItemLoadProperties;
     private javax.swing.JMenuItem jMenuItemLoadPropertiesFile;
+    private javax.swing.JMenuItem jMenuItemPause;
+    private javax.swing.JMenuItem jMenuItemReset;
     private javax.swing.JMenuItem jMenuItemSaveProperties;
     private javax.swing.JMenuItem jMenuItemSavePropsAs;
     private javax.swing.JMenuItem jMenuItemStartActionList;

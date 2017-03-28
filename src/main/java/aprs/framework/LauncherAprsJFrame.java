@@ -49,35 +49,78 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPanel1 = new javax.swing.JPanel();
         jButtonPrevMulti = new javax.swing.JButton();
+        jButtonOpenMulti = new javax.swing.JButton();
         jButtonNewMulti = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
         jButtonPrevMulti2 = new javax.swing.JButton();
         jButtonPrevSingle = new javax.swing.JButton();
         jButtonPrevMulti4 = new javax.swing.JButton();
-        jButtonOpenMulti = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS Launcher");
         setResizable(false);
 
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Multi Workcell Supervisor System", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("DejaVu Sans", 1, 24))); // NOI18N
+
         jButtonPrevMulti.setFont(new java.awt.Font("DejaVu Sans", 0, 18)); // NOI18N
-        jButtonPrevMulti.setText("Previous Multi Workspace Supervisor System");
+        jButtonPrevMulti.setText("Previous ");
         jButtonPrevMulti.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonPrevMultiActionPerformed(evt);
             }
         });
 
+        jButtonOpenMulti.setFont(new java.awt.Font("DejaVu Sans", 0, 18)); // NOI18N
+        jButtonOpenMulti.setText("Open ");
+        jButtonOpenMulti.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonOpenMultiActionPerformed(evt);
+            }
+        });
+
         jButtonNewMulti.setFont(new java.awt.Font("DejaVu Sans", 0, 18)); // NOI18N
-        jButtonNewMulti.setText("New Multi Workspace Supervisor System");
+        jButtonNewMulti.setText("New ");
         jButtonNewMulti.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonNewMultiActionPerformed(evt);
             }
         });
 
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButtonOpenMulti, javax.swing.GroupLayout.PREFERRED_SIZE, 442, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonNewMulti, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jButtonPrevMulti, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jButtonNewMulti, jButtonOpenMulti, jButtonPrevMulti});
+
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButtonPrevMulti)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonNewMulti)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jButtonOpenMulti)
+                .addContainerGap())
+        );
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {jButtonNewMulti, jButtonOpenMulti, jButtonPrevMulti});
+
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Single Workcell System", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("DejaVu Sans", 1, 24))); // NOI18N
+
         jButtonPrevMulti2.setFont(new java.awt.Font("DejaVu Sans", 0, 18)); // NOI18N
-        jButtonPrevMulti2.setText("New Single Workspace System");
+        jButtonPrevMulti2.setText("New ");
         jButtonPrevMulti2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonPrevMulti2ActionPerformed(evt);
@@ -85,7 +128,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         });
 
         jButtonPrevSingle.setFont(new java.awt.Font("DejaVu Sans", 0, 18)); // NOI18N
-        jButtonPrevSingle.setText("Previous Single Workspace System");
+        jButtonPrevSingle.setText("Previous ");
         jButtonPrevSingle.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonPrevSingleActionPerformed(evt);
@@ -93,20 +136,41 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         });
 
         jButtonPrevMulti4.setFont(new java.awt.Font("DejaVu Sans", 0, 18)); // NOI18N
-        jButtonPrevMulti4.setText("Open Single Workspace System");
+        jButtonPrevMulti4.setText("Open ");
         jButtonPrevMulti4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonPrevMulti4ActionPerformed(evt);
             }
         });
 
-        jButtonOpenMulti.setFont(new java.awt.Font("DejaVu Sans", 0, 18)); // NOI18N
-        jButtonOpenMulti.setText("Open Multi Workspace Supervisor System");
-        jButtonOpenMulti.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonOpenMultiActionPerformed(evt);
-            }
-        });
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButtonPrevMulti4, javax.swing.GroupLayout.PREFERRED_SIZE, 442, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonPrevMulti2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jButtonPrevSingle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jButtonPrevMulti2, jButtonPrevMulti4, jButtonPrevSingle});
+
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButtonPrevSingle)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonPrevMulti2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonPrevMulti4)
+                .addContainerGap())
+        );
+
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {jButtonPrevMulti2, jButtonPrevMulti4, jButtonPrevSingle});
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -115,36 +179,19 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButtonPrevMulti4, javax.swing.GroupLayout.PREFERRED_SIZE, 442, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonPrevMulti2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButtonPrevSingle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButtonOpenMulti, javax.swing.GroupLayout.PREFERRED_SIZE, 442, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonNewMulti, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButtonPrevMulti, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jButtonNewMulti, jButtonOpenMulti, jButtonPrevMulti, jButtonPrevMulti2, jButtonPrevMulti4, jButtonPrevSingle});
-
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jButtonPrevMulti)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonNewMulti)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButtonOpenMulti)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonPrevSingle)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonPrevMulti2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonPrevMulti4)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-
-        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {jButtonNewMulti, jButtonOpenMulti, jButtonPrevMulti, jButtonPrevMulti2, jButtonPrevMulti4, jButtonPrevSingle});
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -278,5 +325,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButtonPrevMulti2;
     private javax.swing.JButton jButtonPrevMulti4;
     private javax.swing.JButton jButtonPrevSingle;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     // End of variables declaration//GEN-END:variables
 }
