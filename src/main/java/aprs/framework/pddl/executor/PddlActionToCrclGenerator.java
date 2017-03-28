@@ -707,7 +707,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("Database not setup and connected.");
         }
         checkSettings();
-        String partName = action.getArgs()[1];
+        String partName = action.getArgs()[0];
         MessageType msg = new MessageType();
         msg.setMessage("take-part " + partName);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
@@ -715,7 +715,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         PoseType pose = getPose(partName);
         pose = correctPose(pose);
-        returnPosesByName.put(action.getArgs()[1], pose);
+        returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         testPartPositionByPose(out, pose);
