@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- edited with XMLSpy v2010 rel. 3 sp1 (x64) (http://www.altova.com) by Jennifer Peyton (private) -->
-<KittingWorkstation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xmlSchemas/DemoKittingWorkstation.xsd">
+<KittingWorkstation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xmlSchemas/NISTWorkstation.xsd">
 	<Name>motoman_workstation</Name>
 	<PrimaryLocation xsi:type="RelativeLocationInType">
 		<Name>relative_location_in_1</Name>
@@ -10,7 +10,7 @@
 	<AngleUnit>degree</AngleUnit>
 	<LengthUnit>meter</LengthUnit>
 	<Object xsi:type="PartsTrayType">
-		<Name>kit_tray_s2l2_1</Name>
+		<Name>kit_s2l_vessel_1</Name>
 		<PrimaryLocation xsi:type="PoseOnlyLocationType">
 			<Name>kit_s2l2_location_1</Name>
 			<RefObjectName>motoman_workstation</RefObjectName>
@@ -44,25 +44,29 @@
 			<Name>kit_s2l2_1_slot_sg_1</Name>
 			<PartRefAndPoseName>part_ref_and_pose_kit_s2l2_sg_1</PartRefAndPoseName>
 			<IsOccupied>false</IsOccupied>
+			<ID>1</ID>
 		</Slot>
 		<Slot>
 			<Name>kit_s2l2_1_slot_sg_2</Name>
 			<PartRefAndPoseName>part_ref_and_pose_kit_s2l2_sg_2</PartRefAndPoseName>
 			<IsOccupied>false</IsOccupied>
+			<ID>2</ID>
 		</Slot>
 		<Slot>
 			<Name>kit_s2l2_1_slot_lg_1</Name>
 			<PartRefAndPoseName>part_ref_and_pose_kit_s2l2_lg_1</PartRefAndPoseName>
 			<IsOccupied>false</IsOccupied>
+			<ID>3</ID>
 		</Slot>
 		<Slot>
 			<Name>kit_s2l2_1_slot_lg_2</Name>
 			<PartRefAndPoseName>part_ref_and_pose_kit_s2l2_lg_2</PartRefAndPoseName>
 			<IsOccupied>false</IsOccupied>
+			<ID>4</ID>
 		</Slot>
 	</Object>
 	<Object xsi:type="PartsTrayType">
-		<Name>kit_tray_s2l2_2</Name>
+		<Name>kit_s2l_vessel_2</Name>
 		<PrimaryLocation xsi:type="PoseOnlyLocationType">
 			<Name>kit_s2l2_location_2</Name>
 			<RefObjectName>motoman_workstation</RefObjectName>
@@ -96,21 +100,25 @@
 			<Name>kit_s2l2_2_slot_sg_1</Name>
 			<PartRefAndPoseName>part_ref_and_pose_kit_s2l2_sg_1</PartRefAndPoseName>
 			<IsOccupied>false</IsOccupied>
+			<ID>1</ID>
 		</Slot>
 		<Slot>
 			<Name>kit_s2l2_2_slot_sg_2</Name>
 			<PartRefAndPoseName>part_ref_and_pose_kit_s2l2_sg_2</PartRefAndPoseName>
 			<IsOccupied>false</IsOccupied>
+			<ID>2</ID>
 		</Slot>
 		<Slot>
 			<Name>kit_s2l2_2_slot_lg_1</Name>
 			<PartRefAndPoseName>part_ref_and_pose_kit_s2l2_lg_1</PartRefAndPoseName>
 			<IsOccupied>false</IsOccupied>
+			<ID>3</ID>
 		</Slot>
 		<Slot>
 			<Name>kit_s2l2_2_slot_lg_2</Name>
 			<PartRefAndPoseName>part_ref_and_pose_kit_s2l2_lg_2</PartRefAndPoseName>
 			<IsOccupied>false</IsOccupied>
+			<ID>4</ID>
 		</Slot>
 	</Object>
 	<Object xsi:type="PartsTrayType">
@@ -495,7 +503,7 @@
 				<Name>pose_kit_s2l2_sg_1</Name>
 				<Point>
 					<Name>point_kit_s2l2_sg_1</Name>
-					<X>-0.05</X>
+					<X>-0.032</X>
 					<Y>0.055</Y>
 					<Z>0.000000</Z>
 				</Point>
@@ -520,7 +528,7 @@
 				<Name>pose_kit_s2l2_sg_2</Name>
 				<Point>
 					<Name>point_kit_s2l2_sg_2</Name>
-					<X>0.05</X>
+					<X>0.032</X>
 					<Y>0.055</Y>
 					<Z>0.000100</Z>
 				</Point>
@@ -545,8 +553,8 @@
 				<Name>pose_kit_s2l2_lg_1</Name>
 				<Point>
 					<Name>point_kit_s2l2_lg_1</Name>
-					<X>-0.05</X>
-					<Y>-0.025</Y>
+					<X>-0.054</X>
+					<Y>-0.028</Y>
 					<Z>0.000000</Z>
 				</Point>
 				<XAxis>
@@ -570,8 +578,8 @@
 				<Name>pose_kit_s2l2_lg_2</Name>
 				<Point>
 					<Name>point_kit_s2l2_lg_2</Name>
-					<X>0.05</X>
-					<Y>-0.025</Y>
+					<X>0.054</X>
+					<Y>-0.028</Y>
 					<Z>0.000000</Z>
 				</Point>
 				<XAxis>
@@ -959,6 +967,12 @@
 			<Height>0.04</Height>
 			<HasTop>false</HasTop>
 		</InternalShape>
+		<ExternalShape>
+			<Name>external_shape_part_small_gear</Name>
+			<Description>External shape for part small gear</Description>
+			<ModelFormatName>png</ModelFormatName>
+			<ModelFileName>sku_part_small_gear</ModelFileName>
+		</ExternalShape>
 		<Weight>0.180000</Weight>
 	</Sku>
 	<Sku>
@@ -971,6 +985,12 @@
 			<Height>0.03</Height>
 			<HasTop>false</HasTop>
 		</InternalShape>
+		<ExternalShape>
+			<Name>external_shape_part_large_gear</Name>
+			<Description>External shape for part large gear</Description>
+			<ModelFormatName>png</ModelFormatName>
+			<ModelFileName>sku_part_large_gear</ModelFileName>
+		</ExternalShape>
 		<Weight>0.180000</Weight>
 	</Sku>
 	<Sku>
@@ -984,6 +1004,12 @@
 			<Height>0.02</Height>
 			<HasTop>false</HasTop>
 		</InternalShape>
+		<ExternalShape>
+			<Name>external_shape_kit_s2l2</Name>
+			<Description>External shape for kit s2l2</Description>
+			<ModelFormatName>png</ModelFormatName>
+			<ModelFileName>sku_kit_s2l2_vessel</ModelFileName>
+		</ExternalShape>
 		<Weight>0.200000</Weight>
 	</Sku>
 	<Sku>
@@ -997,6 +1023,12 @@
 			<Height>0.02</Height>
 			<HasTop>false</HasTop>
 		</InternalShape>
+		<ExternalShape>
+			<Name>external_shape_small_gear_vessel</Name>
+			<Description>External shape for small gear vessel</Description>
+			<ModelFormatName>png</ModelFormatName>
+			<ModelFileName>sku_small_gear_vessel</ModelFileName>
+		</ExternalShape>
 		<Weight>0.200000</Weight>
 	</Sku>
 	<Sku>
@@ -1010,6 +1042,12 @@
 			<Height>0.02</Height>
 			<HasTop>false</HasTop>
 		</InternalShape>
+		<ExternalShape>
+			<Name>external_shape_large_gear_vessel</Name>
+			<Description>External shape for large gear vessel</Description>
+			<ModelFormatName>png</ModelFormatName>
+			<ModelFileName>sku_large_gear_vessel</ModelFileName>
+		</ExternalShape>
 		<Weight>0.200000</Weight>
 	</Sku>
 	<WeightUnit>kilogram</WeightUnit>
