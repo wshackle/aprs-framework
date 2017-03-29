@@ -546,18 +546,6 @@ public class QuerySet implements QuerySetInterface {
                     System.out.println("design = " + design);
                 }
 
-                String externalShapeModelFileName = trimQuotes(getPartsTraysQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE_MODEL_FILE_NAME));
-                partstray.setExternalShapeModelFileName(externalShapeModelFileName);
-                if (debug) {
-                    System.out.println("external shape model file name = " + externalShapeModelFileName);
-                }
-
-                String externalShapeModelFormatName = trimQuotes(getPartsTraysQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE_MODEL_FORMAT_NAME));
-                partstray.setExternalShapeModelFormatName(externalShapeModelFormatName);
-                if (debug) {
-                    System.out.println("external shape model format name= " + externalShapeModelFormatName);
-                }
-
                 String sku = getPartsTraysQueryResultString(rs, DbParamTypeEnum.SKU_NAME);
                 partstray.setPartsTraySku(sku);
                 if (debug) {
@@ -645,19 +633,6 @@ public class QuerySet implements QuerySetInterface {
                         System.out.println("occupied = false");
                     }
                 }
-
-                //-- external shape
-                String externalShapeModelFileName = getSlotsQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE_MODEL_FILE_NAME);
-                if (debug) {
-                    System.out.println("externalShapeModelFileName = " + externalShapeModelFileName);
-                }
-                slot.setExternalShapeModelFileName(externalShapeModelFileName);
-                String externalShapeModelFormatName = getSlotsQueryResultString(rs, DbParamTypeEnum.EXTERNAL_SHAPE_MODEL_FORMAT_NAME);
-                if (debug) {
-                    System.out.println("externalShapeModelFormatName = " + externalShapeModelFormatName);
-                }
-                slot.setExternalShapeModelFileName(externalShapeModelFileName);
-
                 //-- part sku that goes in this slot
                 String partSku = getSlotsQueryResultString(rs, DbParamTypeEnum.SKU_NAME);
                 if (debug) {

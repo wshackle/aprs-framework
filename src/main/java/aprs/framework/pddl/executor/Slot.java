@@ -23,7 +23,6 @@
 package aprs.framework.pddl.executor;
 
 import crcl.base.PoseType;
-import java.math.BigDecimal;
 
 /**
  *
@@ -45,13 +44,14 @@ public class Slot {
         this.SlotName = SlotName;
     }
 
-    public PoseType getSlotPose(){
+    public PoseType getSlotPose() {
         return this.SlotPose;
     }
-    public void setSlotPose(PoseType SlotPose){
-        this.SlotPose=SlotPose;
+
+    public void setSlotPose(PoseType SlotPose) {
+        this.SlotPose = SlotPose;
     }
-    
+
     public int getID() {
         return ID;
     }
@@ -76,20 +76,22 @@ public class Slot {
         this.PartSKU = PartSKU;
     }
 
-    public String getExternalShapeModelFileName() {
-        return ExternalShapeModelFileName;
-    }
+//    public String getExternalShapeModelFileName() {
+//        return ExternalShapeModelFileName;
+//    }
+//
+//    public void setExternalShapeModelFileName(String ExternalShapeModelFileName) {
+//        this.ExternalShapeModelFileName = ExternalShapeModelFileName;
+//    }
 
-    public void setExternalShapeModelFileName(String ExternalShapeModelFileName) {
-        this.ExternalShapeModelFileName = ExternalShapeModelFileName;
-    }
- public String getExternalShapeModelFormatName() {
-        return ExternalShapeModelFormatName;
-    }
+//    public String getExternalShapeModelFormatName() {
+//        return ExternalShapeModelFormatName;
+//    }
+//
+//    public void setExternalShapeModelFormatName(String ExternalShapeModelFormatName) {
+//        this.ExternalShapeModelFormatName = ExternalShapeModelFormatName;
+//    }
 
-    public void setExternalShapeModelFormatName(String ExternalShapeModelFormatName) {
-        this.ExternalShapeModelFormatName = ExternalShapeModelFormatName;
-    }
     public double getX_OFFSET() {
         return X_OFFSET;
     }
@@ -105,8 +107,7 @@ public class Slot {
     public void setY_OFFSET(double Y_OFFSET) {
         this.Y_OFFSET = Y_OFFSET;
     }
-    
-    
+
     public Boolean getSlotOccupied() {
         return SlotOccupied;
     }
