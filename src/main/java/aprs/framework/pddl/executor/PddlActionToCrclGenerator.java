@@ -465,14 +465,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     placePart(action, cmds);
                     break;
 
-                case "inspect-kit": {
-                    try {
-                        inspectKit(action, cmds);
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                break;
+//                case "inspect-kit": {
+//                    try {
+//                        inspectKit(action, cmds);
+//                    } catch (BadLocationException ex) {
+//                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                }
+//                break;
 
             }
 
