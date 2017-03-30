@@ -1,11 +1,11 @@
 #  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:1958
 --acquirestate=ON
 --commandport=4001
---dbhost=ying-220.el.nist.gov
+--dbhost=localhost
 --dbname=neo4j
 --dbpasswd=password
---dbport=7496
---dbtype=NEO4J
+--dbport=-99
+--dbtype=NONE
 --dbuser=neo4j
 --showgui=true
 --visionhost=localhost
@@ -45,7 +45,10 @@ NEO4J.ying-220.mxnet.mel.nist.gov_7496.name=neo4j
 NEO4J.ying-220.mxnet.mel.nist.gov_7496.passwd=password
 NEO4J.ying-220.mxnet.mel.nist.gov_7496.user=neo4j
 NONE.host=localhost
-NONE.localhost.port=7480
+NONE.localhost.port=-99
+NONE.localhost_-99.name=neo4j
+NONE.localhost_-99.passwd=password
+NONE.localhost_-99.user=neo4j
 NONE.localhost_7480.name=neo4j
 NONE.localhost_7480.passwd=password
 NONE.localhost_7480.user=neo4j

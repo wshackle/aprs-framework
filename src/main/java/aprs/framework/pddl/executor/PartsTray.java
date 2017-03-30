@@ -44,34 +44,38 @@ public class PartsTray {
     private double y;
     private PoseType PartsTrayPose;
 
-    
     public PartsTray(String PartsTrayName) {
         this.PartsTrayName = PartsTrayName;
     }
 
-    public double getX(){
+    public double getX() {
         return x;
     }
-    public void setX(double x){
-        this.x=x;
+
+    public void setX(double x) {
+        this.x = x;
     }
-    public double getY(){
+
+    public double getY() {
         return y;
     }
-    public void setY(double y){
-        this.y=y;
+
+    public void setY(double y) {
+        this.y = y;
     }
-    public double getRotation(){
+
+    public double getRotation() {
         return Rotation;
     }
-    
-    public void setRotation(double Rotation){
-        this.Rotation=Rotation;
+
+    public void setRotation(double Rotation) {
+        this.Rotation = Rotation;
     }
-    
-    public String getPartsTrayName(){
+
+    public String getPartsTrayName() {
         return PartsTrayName;
     }
+
     public int getNodeID() {
         return NodeID;
     }
@@ -87,29 +91,31 @@ public class PartsTray {
     public void setPartsTrayDesign(String PartsTrayDesign) {
         this.PartsTrayDesign = PartsTrayDesign;
     }
-    
-     public String getPartsTraySku() {
+
+    public String getPartsTraySku() {
         return PartsTraySku;
     }
 
     public void setPartsTraySku(String PartsTraySku) {
         this.PartsTraySku = PartsTraySku;
     }
-    
-    public String getExternalShapeModelFileName() {
-        return this.ExternalShapeModelFileName;
-    }
+//
+//    public String getExternalShapeModelFileName() {
+//        return this.ExternalShapeModelFileName;
+//    }
+//
+//    public void setExternalShapeModelFileName(String ExternalShapeModelFileName) {
+//        this.ExternalShapeModelFileName = ExternalShapeModelFileName;
+//    }
+//
+//    public String getExternalShapeModelFormatName() {
+//        return this.ExternalShapeModelFormatName;
+//    }
+//
+//    public void setExternalShapeModelFormatName(String ExternalShapeModelFormatName) {
+//        this.ExternalShapeModelFormatName = ExternalShapeModelFormatName;
+//    }
 
-    public void setExternalShapeModelFileName(String ExternalShapeModelFileName) {
-        this.ExternalShapeModelFileName = ExternalShapeModelFileName;
-    }
-public String getExternalShapeModelFormatName() {
-        return this.ExternalShapeModelFormatName;
-    }
-
-    public void setExternalShapeModelFormatName(String ExternalShapeModelFormatName) {
-        this.ExternalShapeModelFormatName = ExternalShapeModelFormatName;
-    }
     public Boolean getPartsTrayComplete() {
         return PartsTrayComplete;
     }
@@ -117,11 +123,11 @@ public String getExternalShapeModelFormatName() {
     public void setPartsTrayComplete(Boolean PartsTrayComplete) {
         this.PartsTrayComplete = PartsTrayComplete;
     }
-    
-    public List<Slot> getSlotList(){
+
+    public List<Slot> getSlotList() {
         return SlotList;
     }
-    
+
     public void setSlotList(List<Slot> SlotList) {
         this.SlotList = SlotList;
     }

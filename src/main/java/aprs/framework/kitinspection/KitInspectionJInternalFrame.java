@@ -22,23 +22,15 @@
  */
 package aprs.framework.kitinspection;
 
-import aprs.framework.Utils;
-import java.awt.Color;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
+import javax.swing.text.DefaultCaret;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 
@@ -55,10 +47,10 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
         initComponents();
         doc = (HTMLDocument) InspectionResultJTextPane.getDocument();
         editorKit = (HTMLEditorKit) InspectionResultJTextPane.getEditorKit();
-
+        DefaultCaret caret = (DefaultCaret) InspectionResultJTextPane.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
     }
 
-    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -70,7 +62,7 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
 
         jPanel1 = new javax.swing.JPanel();
         kitImageLabel = new javax.swing.JLabel();
-        jPanel2 = new javax.swing.JPanel();
+        titleJPanel = new javax.swing.JPanel();
         kitTitleLabel = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         InspectionResultJTextPane = new javax.swing.JTextPane();
@@ -105,30 +97,27 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
                     .addGap(0, 0, Short.MAX_VALUE)))
         );
 
-        jPanel2.setBackground(new java.awt.Color(255, 204, 0));
-        jPanel2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        titleJPanel.setBackground(new java.awt.Color(102, 102, 102));
+        titleJPanel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        kitTitleLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        kitTitleLabel.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        kitTitleLabel.setForeground(new java.awt.Color(255, 255, 255));
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanel2Layout.createSequentialGroup()
-                    .addGap(0, 412, Short.MAX_VALUE)
-                    .addComponent(kitTitleLabel)
-                    .addGap(0, 413, Short.MAX_VALUE)))
+        javax.swing.GroupLayout titleJPanelLayout = new javax.swing.GroupLayout(titleJPanel);
+        titleJPanel.setLayout(titleJPanelLayout);
+        titleJPanelLayout.setHorizontalGroup(
+            titleJPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(titleJPanelLayout.createSequentialGroup()
+                .addGap(0, 429, Short.MAX_VALUE)
+                .addComponent(kitTitleLabel)
+                .addGap(0, 430, Short.MAX_VALUE))
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 82, Short.MAX_VALUE)
-            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanel2Layout.createSequentialGroup()
-                    .addGap(0, 32, Short.MAX_VALUE)
-                    .addComponent(kitTitleLabel)
-                    .addGap(0, 33, Short.MAX_VALUE)))
+        titleJPanelLayout.setVerticalGroup(
+            titleJPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(titleJPanelLayout.createSequentialGroup()
+                .addGap(0, 41, Short.MAX_VALUE)
+                .addComponent(kitTitleLabel)
+                .addGap(0, 41, Short.MAX_VALUE))
         );
 
         jScrollPane1.setBackground(new java.awt.Color(255, 255, 255));
@@ -148,13 +137,13 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 861, Short.MAX_VALUE)
                     .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(titleJPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(titleJPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -207,6 +196,10 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
         return this.kitTitleLabel;
     }
     
+    public javax.swing.JPanel getTitleJPanel(){
+        return titleJPanel;
+    }
+    
     public javax.swing.JLabel getKitImageLabel(){
         return this.kitImageLabel;
     }
@@ -256,6 +249,10 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
         this.propertiesFile = propertiesFile;
     }
     
+        public javax.swing.JTextPane getInspectionResultJTextPane(){
+            return InspectionResultJTextPane;
+        }
+    
     /** Returns an ImageIcon, or null if the path was invalid. */
 public ImageIcon createImageIcon(String path) {
     java.net.URL imgURL = getClass().getResource(path);
@@ -292,38 +289,9 @@ public ImageIcon createImageIcon(String path) {
 
                 String kitsku = props.getProperty(KIT_SKU);
                 if (null != kitsku) {
-                    getKitTitleLabel().setText("Inspecting kit " + kitsku + " built by " + robot);
-                    //getKitImageLabel().setIcon(new javax.swing.ImageIcon(getClass().getResource(kitinspectionImageKitPath+"/"+kitinspectionImageEmptyKit)));
-//                jTextFieldPddlDomainFile.setText(domain);
+                    getKitTitleLabel().setText("Waiting for Commands");
                 }
             }
-//            String problem = props.getProperty(PDDL_PROBLEM);
-//            if (null != problem) {
-//                jTextFieldPddlProblem.setText(problem);
-//            }
-//            String useSsh = props.getProperty(PDDL_PLANNER_SSH);
-//            if (null != useSsh) {
-//                jCheckBoxSsh.setSelected(Boolean.valueOf(useSsh));
-//                boolean b = jCheckBoxSsh.isSelected();
-//                jTextFieldSshUser.setEditable(b);
-//                jTextFieldSshUser.setEnabled(b);
-//                jPasswordFieldSshPass.setEditable(b);
-//                jPasswordFieldSshPass.setEnabled(b);
-//                jTextFieldHost.setEditable(b);
-//                jTextFieldHost.setEnabled(b);
-//            }
-//            String host = props.getProperty(PDDL_PLANNER_HOST);
-//            if (null != host) {
-//                jTextFieldHost.setText(host);
-//            }
-////        String output = props.getProperty(PDDLOUTPUT);
-////        if (null != output) {
-////            jTextFieldPddlOutputActions.setText(output);
-////        }
-//            String addargs = props.getProperty(PDDL_ADD_ARGS);
-//            if (null != addargs) {
-//                jTextFieldAdditionalArgs.setText(addargs);
-//            }
             
         }
     }
@@ -343,16 +311,15 @@ public ImageIcon createImageIcon(String path) {
         return kitinspectionImageKitPath;
     }
     
-    
     private HTMLEditorKit editorKit;
     private HTMLDocument doc;
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextPane InspectionResultJTextPane;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel kitImageLabel;
     private javax.swing.JLabel kitTitleLabel;
+    private javax.swing.JPanel titleJPanel;
     // End of variables declaration//GEN-END:variables
 }
