@@ -94,7 +94,6 @@ public class DbSetupBuilder {
 //            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
 //        }
 //    }
-
     public static Map<DbQueryEnum, DbQueryInfo> readRelResourceQueriesDirectory(String resDir) throws IOException {
         if (BASE_RESOURCE_DIR.endsWith("/") && resDir.startsWith("/")) {
             resDir = resDir.substring(1);
@@ -148,8 +147,6 @@ public class DbSetupBuilder {
 //                + "set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}"
 //        );
 //    }
-    
-    
     private static String getStringResource(String name) throws IOException {
         ClassLoader cl = ClassLoader.getSystemClassLoader();
         StringBuilder sb = new StringBuilder();
@@ -285,7 +282,7 @@ public class DbSetupBuilder {
 
     }
 
-    public DbSetupBuilder setup(DbSetup setup)  {
+    public DbSetupBuilder setup(DbSetup setup) {
         type = setup.getDbType();
         host = setup.getHost();
         dbname = setup.getDbName();
@@ -392,12 +389,12 @@ public class DbSetupBuilder {
         this.debug = debug;
         return this;
     }
-    
+
     public DbSetupBuilder loginTimeout(int loginTimeout) {
         this.loginTimeout = loginTimeout;
         return this;
     }
-    
+
     public DbSetupBuilder queriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
         this.queriesMap = queriesMap;
         return this;
@@ -516,7 +513,7 @@ public class DbSetupBuilder {
         defaultArgsMap.put("--dbtype", DbType.NEO4J.toString());
         return defaultArgsMap;
     }
-    
+
     /**
      * Create an initialized builder from a properties file. It will just create
      * a default if the file does not exist or is empty.
@@ -671,50 +668,49 @@ public class DbSetupBuilder {
         }
     }
 
-    
-     /**
+    /**
      * Setup a connection given the settings.
-     * 
-     * The connection may take some time and will be completed asynchronously in another thread
-     * after this method returns.
-     * The returned future can be used to wait for the connection.
-     * 
+     *
+     * The connection may take some time and will be completed asynchronously in
+     * another thread after this method returns. The returned future can be used
+     * to wait for the connection.
+     *
      * @return future for new connection
      */
-    public XFuture<Connection>  connect() {
+    public XFuture<Connection> connect() {
         return connect(this.build());
     }
 
     /**
      * Setup a connection given the settings.
-     * 
-     * The connection may take some time and will be completed asynchronously in another thread
-     * after this method returns.
-     * The returned future can be used to wait for the connection.
-     * 
+     *
+     * The connection may take some time and will be completed asynchronously in
+     * another thread after this method returns. The returned future can be used
+     * to wait for the connection.
+     *
      * @param setup database setup object
      * @return future for new connection
      */
-    public static XFuture<Connection>  connect(DbSetup setup)  {
-        return setupConnection(setup.getDbType(), setup.getHost(), setup.getPort(), setup.getDbName(), setup.getDbUser(), new String(setup.getDbPassword()),setup.isDebug(), setup.getLoginTimeout());
+    public static XFuture<Connection> connect(DbSetup setup) {
+        return setupConnection(setup.getDbType(), setup.getHost(), setup.getPort(), setup.getDbName(), setup.getDbUser(), new String(setup.getDbPassword()), setup.isDebug(), setup.getLoginTimeout());
     }
 
     public static final int DEFAULT_LOGIN_TIMEOUT = 5; // in seconds 
-    
+
     /**
      * Setup a connection given the settings.
-     * 
-     * The connection may take some time and will be completed asynchronously in another thread
-     * after this method returns.
-     * The returned future can be used to wait for the connection.
-     * 
+     *
+     * The connection may take some time and will be completed asynchronously in
+     * another thread after this method returns. The returned future can be used
+     * to wait for the connection.
+     *
      * @param dbtype database type
      * @param host database host
      * @param port database port
      * @param db database name
      * @param username user's name
      * @param password user's password
-     * @param debug  enable debugging
+     * @param debug enable debugging
      * @param loginTimeout timeout for login
      * @return future for new connection
      */
@@ -723,14 +719,14 @@ public class DbSetupBuilder {
         new Thread(() -> {
             Connection conn;
             try {
-               ret.complete(setupConnectionPriv(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT));
+                ret.complete(setupConnectionPriv(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT));
             } catch (SQLException ex) {
                 ret.completeExceptionally(ex);
                 Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
             }
         }, "connectionSetupThread").start();
         return ret;
-        
+
 //        return XFuture. -> {
 //            try {
 //                return setupConnectionPriv(dbtype,host,port,db,username,password,debug);
@@ -739,12 +735,15 @@ public class DbSetupBuilder {
 //            }
 //            
 //                });
-    }   
+    }
+
     private static Connection setupConnectionPriv(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) throws SQLException {
-      
+
         switch (dbtype) {
             case MYSQL:
 //                useBatch = true;
+                Class mysqlDriverClass = com.mysql.jdbc.Driver.class;
+                System.out.println("driverClass = " + mysqlDriverClass);
                 String mysql_url = "jdbc:mysql://" + host + ":" + port + "/" + db;
                 if (debug) {
                     System.out.println("Connection url = " + mysql_url);
@@ -757,12 +756,22 @@ public class DbSetupBuilder {
 //                } catch (ClassNotFoundException classNotFoundException) {
 //                    classNotFoundException.printStackTrace();
 //                }
-                if(loginTimeout > 0) {
+                if (loginTimeout > 0) {
                     DriverManager.setLoginTimeout(loginTimeout);
                 }
                 return DriverManager.getConnection(mysql_url, username, password);
 
             case NEO4J:
+                Class neo4jDriverClass = org.neo4j.jdbc.Driver.class;
+                
+                //System.out.println(" static neo4jDriverClass = " + neo4jDriverClass);
+                try {
+                    neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
+                    //System.out.println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
+                } catch (ClassNotFoundException ex) {
+                    Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
 //                useBatch = false;
                 Properties properties = new Properties();
                 properties.put("user", username);
@@ -780,10 +789,16 @@ public class DbSetupBuilder {
                         classNotFoundException.printStackTrace();
                     }
                 }
-                if(loginTimeout > 0) {
-                    DriverManager.setLoginTimeout(loginTimeout);
+                try {
+                    if (loginTimeout > 0) {
+                        DriverManager.setLoginTimeout(loginTimeout);
+                    }
+                    return DriverManager.getConnection(neo4j_url, properties);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    org.neo4j.jdbc.Driver neo4jDriver = new org.neo4j.jdbc.Driver();
+                    return neo4jDriver.connect(neo4j_url, properties);
                 }
-                return DriverManager.getConnection(neo4j_url, properties);
 
             case NEO4J_BOLT:
                 throw new RuntimeException("Neo4J BOLT driver not supported.");

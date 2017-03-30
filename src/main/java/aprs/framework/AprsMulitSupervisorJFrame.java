@@ -200,6 +200,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             }
         });
         try {
+            System.out.println("lastSetupFileFile = " + lastSetupFileFile);
             if (lastSetupFileFile.exists()) {
                 File setupFile = new File(readFirstLine(lastSetupFileFile));
                 if (setupFile.exists()) {
@@ -216,6 +217,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
         jTablePositionMappings.getSelectionModel().addListSelectionListener(x -> updateSelectedPosMapFileTable());
 
+        System.out.println("lastPosMapFileFile = " + lastPosMapFileFile);
         if (lastPosMapFileFile.exists()) {
             try {
                 File posFile = new File(readFirstLine(lastPosMapFileFile));
