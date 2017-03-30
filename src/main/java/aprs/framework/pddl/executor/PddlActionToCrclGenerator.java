@@ -892,13 +892,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     kitInspectionJInternalFrame.addToInspectionResultJTextPane("<br>");
                 }
             } else {
-<<<<<<< HEAD
-                kitInspectionJInternalFrame.addToInspectionResultJTextPane("The system could not identify the kit tray that was built");
-                System.out.println("The system could not identify the kit tray that was built");
-=======
                 kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;The system could not identify the kit tray that was built</h3><br>");
                 kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
->>>>>>> origin/master
             }
         }
         if (inspectionID.contains("0")) {
