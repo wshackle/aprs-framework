@@ -1,11 +1,11 @@
 #  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:1958
 --acquirestate=ON
 --commandport=4001
---dbhost=localhost
+--dbhost=ying-220.el.nist.gov
 --dbname=neo4j
 --dbpasswd=password
---dbport=-99
---dbtype=NONE
+--dbport=7496
+--dbtype=NEO4J
 --dbuser=neo4j
 --showgui=true
 --visionhost=localhost

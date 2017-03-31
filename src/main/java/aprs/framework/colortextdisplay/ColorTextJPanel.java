@@ -30,6 +30,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.Icon;
 
 /**
  *
@@ -43,33 +44,63 @@ public class ColorTextJPanel extends javax.swing.JPanel {
     public ColorTextJPanel() {
         try {
             initComponents();
-        } catch(Throwable t) {
+        } catch (Throwable t) {
             t.printStackTrace();
         }
-        
     }
+
+    /**
+     * Creates new form ColorTextJPanel
+     */
+    public void setLabelsAndIcons(String label1, Icon img1, String label2, Icon img2) {
+        try {
+            jLabelRobotText1.setText(label1);
+            jLabelRobotText2.setText(label2);
+            jLabelRobotIcon1.setIcon(img1);
+            jLabelRobotIcon2.setIcon(img2);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+    
+    private static final Class THIS_CLASS = aprs.framework.colortextdisplay.ColorTextJPanel.class;
+    
+    public static Icon getRobotIcon(String name) {
+        if(name == null || name.length() < 1) {
+            return null;
+        }
+        if(name.toUpperCase().contains("MOTOMAN")) {
+            return new javax.swing.ImageIcon(THIS_CLASS.getResource("/aprs/framework/screensplash/motoman_small.png"));
+        } else if(name.toUpperCase().contains("FANUC")) {
+            return new javax.swing.ImageIcon(THIS_CLASS.getResource("/aprs/framework/screensplash/fanuc_small.png"));
+        } else {
+            return new javax.swing.ImageIcon(THIS_CLASS.getResource("/aprs/framework/screensplash/"+name.toLowerCase()+"_small.png"));
+        }
+    }
+    
+    
     public static final int COLORTEXT_SOCKET_PORT = 23444;
 
     private SocketLineReader reader;
-    
+
     public void startReader() {
-        SocketLineReader readerTmp=null;
+        SocketLineReader readerTmp = null;
         try {
-             readerTmp = SocketLineReader.startServer( COLORTEXT_SOCKET_PORT, "ColorTextServer", this::parseSocketLine);
-            
+            readerTmp = SocketLineReader.startServer(COLORTEXT_SOCKET_PORT, "ColorTextServer", this::parseSocketLine);
+
         } catch (IOException ex) {
-            Logger.getLogger(ColorTextJFrame.class.getName()).log(Level.SEVERE, "Failed to bind color text socket port: "+COLORTEXT_SOCKET_PORT, ex);
+            Logger.getLogger(ColorTextJFrame.class.getName()).log(Level.SEVERE, "Failed to bind color text socket port: " + COLORTEXT_SOCKET_PORT, ex);
         }
         this.reader = readerTmp;
     }
-    
+
     public void stopReader() {
-        if(null != reader) {
+        if (null != reader) {
             reader.close();
             reader = null;
         }
     }
-    
+
     private void parseSocketLine(String line, PrintStream ps) {
         String colorStrings[] = line.split("[ \t,]+");
         ps.println(Arrays.toString(colorStrings));
@@ -87,6 +118,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
             jPanel2.setBackground(color2);
         });
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -98,19 +130,19 @@ public class ColorTextJPanel extends javax.swing.JPanel {
 
         jPanel3 = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
+        jLabelRobotText1 = new javax.swing.JLabel();
+        jLabelRobotIcon1 = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
+        jLabelRobotText2 = new javax.swing.JLabel();
+        jLabelRobotIcon2 = new javax.swing.JLabel();
 
         jPanel2.setBackground(new java.awt.Color(204, 204, 255));
         jPanel2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        jLabel1.setFont(new java.awt.Font("DejaVu Sans", 0, 36)); // NOI18N
-        jLabel1.setText("Motoman");
+        jLabelRobotText1.setFont(new java.awt.Font("DejaVu Sans", 0, 36)); // NOI18N
+        jLabelRobotText1.setText("Motoman");
 
-        jLabel3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aprs/framework/screensplash/motoman_small.png"))); // NOI18N
+        jLabelRobotIcon1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aprs/framework/screensplash/motoman_small.png"))); // NOI18N
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -120,29 +152,29 @@ public class ColorTextJPanel extends javax.swing.JPanel {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jLabel1))
+                        .addComponent(jLabelRobotText1))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGap(34, 34, 34)
-                        .addComponent(jLabel3)))
+                        .addComponent(jLabelRobotIcon1)))
                 .addContainerGap(14, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1)
+                .addComponent(jLabelRobotText1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel3)
+                .addComponent(jLabelRobotIcon1)
                 .addContainerGap(14, Short.MAX_VALUE))
         );
 
         jPanel1.setBackground(new java.awt.Color(204, 204, 255));
         jPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        jLabel2.setFont(new java.awt.Font("DejaVu Sans", 0, 36)); // NOI18N
-        jLabel2.setText("Fanuc");
+        jLabelRobotText2.setFont(new java.awt.Font("DejaVu Sans", 0, 36)); // NOI18N
+        jLabelRobotText2.setText("Fanuc");
 
-        jLabel4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aprs/framework/screensplash/fanuc_small.png"))); // NOI18N
+        jLabelRobotIcon2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aprs/framework/screensplash/fanuc_small.png"))); // NOI18N
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -151,17 +183,17 @@ public class ColorTextJPanel extends javax.swing.JPanel {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel4))
+                    .addComponent(jLabelRobotText2)
+                    .addComponent(jLabelRobotIcon2))
                 .addContainerGap(55, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(8, 8, 8)
-                .addComponent(jLabel2)
+                .addComponent(jLabelRobotText2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel4)
+                .addComponent(jLabelRobotIcon2)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -209,10 +241,10 @@ public class ColorTextJPanel extends javax.swing.JPanel {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabelRobotIcon1;
+    private javax.swing.JLabel jLabelRobotIcon2;
+    private javax.swing.JLabel jLabelRobotText1;
+    private javax.swing.JLabel jLabelRobotText2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;

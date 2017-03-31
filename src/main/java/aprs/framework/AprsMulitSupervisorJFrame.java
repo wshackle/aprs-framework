@@ -97,195 +97,172 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
      */
     public AprsMulitSupervisorJFrame() {
 
-        initComponents();
-        jTableRobots.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                try {
-                    boolean changeFound = false;
-                    for (int i = 0; i < jTableRobots.getRowCount(); i++) {
-                        String robotName = (String) jTableRobots.getValueAt(i, 0);
-                        Boolean enabled = (Boolean) jTableRobots.getValueAt(i, 1);
-                        Boolean wasEnabled = robotEnableMap.get(robotName);
-
-                        if (!Objects.equal(enabled, wasEnabled)) {
-                            setRobotEnabled(robotName, enabled);
-                        }
-                        Utils.autoResizeTableColWidths(jTablePositionMappings);
-                        Utils.autoResizeTableRowHeights(jTablePositionMappings);
-                    }
-
-                } catch (Exception exception) {
-                    exception.printStackTrace();
-                }
-            }
-        });
-        jTableTasks.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
-
-            private final List<JTextArea> areas = new ArrayList<>();
-
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                while (areas.size() <= row) {
-                    JTextArea area = new JTextArea();
-                    area.setOpaque(true);
-                    area.setVisible(true);
-                    areas.add(area);
-                }
-                JTextArea area = areas.get(row);
-                if (null != value && null != area) {
-                    area.setFont(table.getFont());
-                    area.setText(value.toString());
-                }
-                return area;
-            }
-
-        });
-        jTableTasks.getColumnModel().getColumn(3).setCellEditor(new TableCellEditor() {
-
-            private final JTextArea editTableArea = new JTextArea();
-            private List<CellEditorListener> listeners = new ArrayList<>();
-
-            @Override
-            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-                editTableArea.setOpaque(true);
-                editTableArea.setVisible(true);
-                editTableArea.setText(value.toString());
-                editTableArea.setFont(table.getFont());
-                return editTableArea;
-            }
-
-            @Override
-            public Object getCellEditorValue() {
-                return editTableArea.getText();
-            }
-
-            @Override
-            public boolean isCellEditable(EventObject anEvent) {
-                return true;
-            }
-
-            @Override
-            public boolean shouldSelectCell(EventObject anEvent) {
-                return true;
-            }
-
-            @Override
-            public boolean stopCellEditing() {
-                for (int i = 0; i < listeners.size(); i++) {
-                    CellEditorListener l = listeners.get(i);
-                    if (null != l) {
-                        l.editingStopped(new ChangeEvent(jTableTasks));
-                    }
-                }
-                return true;
-            }
-
-            @Override
-            public void cancelCellEditing() {
-                for (int i = 0; i < listeners.size(); i++) {
-                    CellEditorListener l = listeners.get(i);
-                    if (null != l) {
-                        l.editingCanceled(new ChangeEvent(jTableTasks));
-                    }
-                }
-            }
-
-            @Override
-            public void addCellEditorListener(CellEditorListener l) {
-                listeners.add(l);
-            }
-
-            @Override
-            public void removeCellEditorListener(CellEditorListener l) {
-                listeners.remove(l);
-            }
-        });
         try {
-            System.out.println("lastSetupFileFile = " + lastSetupFileFile);
-            if (lastSetupFileFile.exists()) {
-                File setupFile = new File(readFirstLine(lastSetupFileFile));
-                if (setupFile.exists()) {
-                    loadSetupFile(setupFile);
+            initComponents();
+            jTableRobots.getModel().addTableModelListener(new TableModelListener() {
+                @Override
+                public void tableChanged(TableModelEvent e) {
+                    try {
+                        boolean changeFound = false;
+                        for (int i = 0; i < jTableRobots.getRowCount(); i++) {
+                            String robotName = (String) jTableRobots.getValueAt(i, 0);
+                            Boolean enabled = (Boolean) jTableRobots.getValueAt(i, 1);
+                            Boolean wasEnabled = robotEnableMap.get(robotName);
+                            
+                            if (!Objects.equal(enabled, wasEnabled)) {
+                                setRobotEnabled(robotName, enabled);
+                            }
+                            Utils.autoResizeTableColWidths(jTablePositionMappings);
+                            Utils.autoResizeTableRowHeights(jTablePositionMappings);
+                        }
+                        
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                    }
                 }
+            });
+            jTableTasks.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+                
+                private final List<JTextArea> areas = new ArrayList<>();
+                
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                    while (areas.size() <= row) {
+                        JTextArea area = new JTextArea();
+                        area.setOpaque(true);
+                        area.setVisible(true);
+                        areas.add(area);
+                    }
+                    JTextArea area = areas.get(row);
+                    if (null != value && null != area) {
+                        area.setFont(table.getFont());
+                        area.setText(value.toString());
+                    }
+                    return area;
+                }
+                
+            });
+            jTableTasks.getColumnModel().getColumn(3).setCellEditor(new TableCellEditor() {
+                
+                private final JTextArea editTableArea = new JTextArea();
+                private List<CellEditorListener> listeners = new ArrayList<>();
+                
+                @Override
+                public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                    editTableArea.setOpaque(true);
+                    editTableArea.setVisible(true);
+                    editTableArea.setText(value.toString());
+                    editTableArea.setFont(table.getFont());
+                    return editTableArea;
+                }
+                
+                @Override
+                public Object getCellEditorValue() {
+                    return editTableArea.getText();
+                }
+                
+                @Override
+                public boolean isCellEditable(EventObject anEvent) {
+                    return true;
+                }
+                
+                @Override
+                public boolean shouldSelectCell(EventObject anEvent) {
+                    return true;
+                }
+                
+                @Override
+                public boolean stopCellEditing() {
+                    for (int i = 0; i < listeners.size(); i++) {
+                        CellEditorListener l = listeners.get(i);
+                        if (null != l) {
+                            l.editingStopped(new ChangeEvent(jTableTasks));
+                        }
+                    }
+                    return true;
+                }
+                
+                @Override
+                public void cancelCellEditing() {
+                    for (int i = 0; i < listeners.size(); i++) {
+                        CellEditorListener l = listeners.get(i);
+                        if (null != l) {
+                            l.editingCanceled(new ChangeEvent(jTableTasks));
+                        }
+                    }
+                }
+                
+                @Override
+                public void addCellEditorListener(CellEditorListener l) {
+                    listeners.add(l);
+                }
+                
+                @Override
+                public void removeCellEditorListener(CellEditorListener l) {
+                    listeners.remove(l);
+                }
+            });
+            jTablePositionMappings.getSelectionModel().addListSelectionListener(x -> updateSelectedPosMapFileTable());
+            jTableSelectedPosMapFile.getModel().addTableModelListener(new TableModelListener() {
+                @Override
+                public void tableChanged(TableModelEvent e) {
+                    if (TableModelEvent.UPDATE == e.getType()) {
+                        if (e.getFirstRow() == e.getLastRow()
+                                && e.getLastRow() >= 0
+                                && e.getColumn() >= 0) {
+                            double dval = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), e.getColumn());
+                            double other;
+                            switch (e.getColumn()) {
+                                case 0:
+                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 3);
+                                    jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 6);
+                                    break;
+                                    
+                                case 1:
+                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 4);
+                                    jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 7);
+                                    break;
+                                    
+                                case 2:
+                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 5);
+                                    jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 8);
+                                    break;
+                                    
+                                case 3:
+                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 0);
+                                    jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 6);
+                                    break;
+                                    
+                                case 4:
+                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 1);
+                                    jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 7);
+                                    break;
+                                    
+                                case 5:
+                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 2);
+                                    jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 8);
+                                    break;
+                                    
+                            }
+                        }
+                    }
+                }
+            });
+            crcl.ui.misc.MultiLineStringJPanel.disableShowText = jCheckBoxMenuItemDisableTextPopups.isSelected();
+            Utils.autoResizeTableColWidths(jTablePositionMappings);
+            Utils.autoResizeTableRowHeights(jTablePositionMappings);
+            try {
+                setIconImage(ImageIO.read(AprsMulitSupervisorJFrame.class
+                        .getResource("aprs.png")));
+                
+            } catch (Exception ex) {
+                Logger.getLogger(AprsJFrame.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
+            updateRobotsTable();
+
         } catch (IOException ex) {
             Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
-            try {
-                closeAllAprsSystems();
-            } catch (IOException ex1) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex1);
-            }
-        }
-        jTablePositionMappings.getSelectionModel().addListSelectionListener(x -> updateSelectedPosMapFileTable());
-        System.out.println("lastPosMapFileFile = " + lastPosMapFileFile);
-        if (lastPosMapFileFile.exists()) {
-            try {
-                File posFile = new File(readFirstLine(lastPosMapFileFile));
-                if (posFile.exists()) {
-                    loadPositionMaps(posFile);
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        jTableSelectedPosMapFile.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                if (TableModelEvent.UPDATE == e.getType()) {
-                    if (e.getFirstRow() == e.getLastRow()
-                            && e.getLastRow() >= 0
-                            && e.getColumn() >= 0) {
-                        double dval = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), e.getColumn());
-                        double other;
-                        switch (e.getColumn()) {
-                            case 0:
-                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 3);
-                                jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 6);
-                                break;
-
-                            case 1:
-                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 4);
-                                jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 7);
-                                break;
-
-                            case 2:
-                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 5);
-                                jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 8);
-                                break;
-
-                            case 3:
-                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 0);
-                                jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 6);
-                                break;
-
-                            case 4:
-                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 1);
-                                jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 7);
-                                break;
-
-                            case 5:
-                                other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 2);
-                                jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 8);
-                                break;
-
-                        }
-                    }
-                }
-            }
-        });
-        crcl.ui.misc.MultiLineStringJPanel.disableShowText = jCheckBoxMenuItemDisableTextPopups.isSelected();
-
-        Utils.autoResizeTableColWidths(jTablePositionMappings);
-        Utils.autoResizeTableRowHeights(jTablePositionMappings);
-
-        try {
-            setIconImage(ImageIO.read(AprsMulitSupervisorJFrame.class
-                    .getResource("aprs.png")));
-
-        } catch (Exception ex) {
-            Logger.getLogger(AprsJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -1880,6 +1857,25 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
         robotMap.forEach((robotName, aprs) -> tm.addRow(new Object[]{robotName, true, aprs.getRobotCrclHost(), aprs.getRobotCrclPort()}));
         Utils.autoResizeTableColWidths(jTableRobots);
+        if(aprsSystems.size() >= 2) {
+            colorTextJPanel1.setLabelsAndIcons(
+                    aprsSystems.get(0).getRobotName(), 
+                    ColorTextJPanel.getRobotIcon(aprsSystems.get(0).getRobotName()),
+                    aprsSystems.get(1).getRobotName(), 
+                    ColorTextJPanel.getRobotIcon(aprsSystems.get(1).getRobotName()));
+        } else if(aprsSystems.size() == 1) {
+            colorTextJPanel1.setLabelsAndIcons(
+                    aprsSystems.get(0).getRobotName(), 
+                    ColorTextJPanel.getRobotIcon(aprsSystems.get(0).getRobotName()),
+                    "", 
+                    null);
+        } else {
+            colorTextJPanel1.setLabelsAndIcons(
+                    "", 
+                    null,
+                    "", 
+                    null);
+        }
     }
 
     /**
