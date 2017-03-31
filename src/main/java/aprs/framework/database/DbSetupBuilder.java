@@ -59,7 +59,7 @@ public class DbSetupBuilder {
     private boolean connected = false;
     private Map<DbQueryEnum, DbQueryInfo> queriesMap;
     private boolean internalQueriesResourceDir = true;
-    private String queriesDir;
+    private String queriesDir = null;
     private boolean debug = false;
     private int loginTimeout = DEFAULT_LOGIN_TIMEOUT;
 
@@ -313,6 +313,9 @@ public class DbSetupBuilder {
     }
 
     public DbSetup build() {
+        if (connected && (type == null || type == DbType.NONE)) {
+            throw new IllegalArgumentException("type = " + type);
+        }
         return new DbSetupInternal(
                 type,
                 host,
@@ -630,42 +633,54 @@ public class DbSetupBuilder {
      * @param port database port
      */
     public static void savePropertiesFile(File propertiesFile, DbSetup setup, DbType dbtype, String host, int port) {
-        if (null != propertiesFile) {
-            propertiesFile.getParentFile().mkdirs();
-            Properties props = new Properties();
-            if (propertiesFile.exists()) {
-                try (FileReader fr = new FileReader(propertiesFile)) {
-                    props.load(fr);
-                } catch (IOException ex) {
-                    Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            props.put("--dbtype", dbtype.toString());
-            if (host == null) {
-                host = setup.getHost();
-            }
-            props.put(dbtype + ".host", host);
-            if (port < 1) {
-                port = setup.getPort();
-            }
-            props.put(dbtype + "." + host + ".port", Integer.toString(port));
-            String dbHostPort = String.format("%s.%s_%d", dbtype.toString(), host, port);
-            props.put(dbHostPort + ".name", setup.getDbName());
-            props.put(dbHostPort + ".user", setup.getDbUser());
-            props.put(dbHostPort + ".passwd", new String(setup.getDbPassword()));
-            props.put(dbHostPort + ".internalQueriesResourceDir",
-                    Boolean.toString(setup.isInternalQueriesResourceDir()));
-            String queriesDir = setup.getQueriesDir();
-            if (null != queriesDir) {
-                props.put(dbHostPort + ".queriesDir", setup.getQueriesDir());
-            }
+        if (null == propertiesFile) {
+            throw new IllegalArgumentException("propertiesFile == null");
+        }
+        if(dbtype == null || dbtype == DbType.NONE) {
+            throw new IllegalArgumentException("dbtype = "+dbtype);
+        }
+        if (null == setup) {
+            throw new IllegalArgumentException("setup == null");
+        }
+        try {
+            System.out.println("Saving "+propertiesFile.getCanonicalPath());
+        } catch (IOException ex) {
+            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        propertiesFile.getParentFile().mkdirs();
+        Properties props = new Properties();
+//        if (propertiesFile.exists()) {
+//            try (FileReader fr = new FileReader(propertiesFile)) {
+//                props.load(fr);
+//            } catch (IOException ex) {
+//                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        }
+        props.put("--dbtype", dbtype.toString());
+        if (host == null) {
+            host = setup.getHost();
+        }
+        props.put(dbtype + ".host", host);
+        if (port < 1) {
+            port = setup.getPort();
+        }
+        props.put(dbtype + "." + host + ".port", Integer.toString(port));
+        String dbHostPort = String.format("%s.%s_%d", dbtype.toString(), host, port);
+        props.put(dbHostPort + ".name", setup.getDbName());
+        props.put(dbHostPort + ".user", setup.getDbUser());
+        props.put(dbHostPort + ".passwd", new String(setup.getDbPassword()));
+        props.put(dbHostPort + ".internalQueriesResourceDir",
+                Boolean.toString(setup.isInternalQueriesResourceDir()));
+        String queriesDir = setup.getQueriesDir();
+        if (null != queriesDir) {
+            props.put(dbHostPort + ".queriesDir", setup.getQueriesDir());
+        }
 //            try (FileWriter fw = new FileWriter(propertiesFile)) {
 //                props.store(fw, "");
 //            } catch (IOException ex) {
 //                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
 //            }
-            Utils.saveProperties(propertiesFile, props);
-        }
+        Utils.saveProperties(propertiesFile, props);
     }
 
     /**
@@ -715,12 +730,15 @@ public class DbSetupBuilder {
      * @return future for new connection
      */
     public static XFuture<Connection> setupConnection(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) {
+        if (dbtype == null || dbtype == DbType.NONE) {
+            throw new IllegalArgumentException("dbtype = " + dbtype);
+        }
         XFuture<Connection> ret = new XFuture<>();
         new Thread(() -> {
             Connection conn;
             try {
                 ret.complete(setupConnectionPriv(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT));
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
                 ret.completeExceptionally(ex);
                 Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
             }

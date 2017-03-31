@@ -50,9 +50,9 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
 //        DbMain.setDisplayInterface(this);
     }
     
-    public DbSetupPublisher getDbSetupPublisher() {
-        return this.visionToDBJPanel.getDbSetupPublisher();
-    }
+//    public DbSetupPublisher getDbSetupPublisher() {
+//        return this.visionToDBJPanel.getDbSetupPublisher();
+//    }
     
 
      public void setAprsJFrame(AprsJFrame aprsJFrame) {

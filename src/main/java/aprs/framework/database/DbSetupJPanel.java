@@ -37,6 +37,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EventObject;
 import java.util.HashSet;
@@ -52,6 +53,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
 import javax.swing.JTable;
@@ -76,11 +78,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      */
     public DbSetupJPanel() {
         initComponents();
-        try {
-            loadRecent();
-        } catch (IOException ex) {
-            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
-        }
         editTableArea = new JTextArea();
         viewAreas = new ArrayList<>();
         setupMultiLineTable(jTableQueries, 1, editTableArea, viewAreas);
@@ -150,7 +147,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jLabel6 = new javax.swing.JLabel();
         jTextFieldDBLoginTimeout = new javax.swing.JTextField();
 
-        jTextFieldDBPort.setText("7486");
+        jTextFieldDBPort.setText("-99");
 
         jComboBoxDbType.setModel(getDbTypeComboModel());
         jComboBoxDbType.addActionListener(new java.awt.event.ActionListener() {
@@ -258,7 +255,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jRadioButtonResourceDir.setSelected(true);
         jRadioButtonResourceDir.setText("Resource Directory: ");
 
-        jComboBoxResourceDir.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "mysql", "mysql_simple", "neo4j/v1", "neo4j/v2", " " }));
+        jComboBoxResourceDir.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "none", "mysql", "mysql_simple", "neo4j/v1", "neo4j/v2", " " }));
         jComboBoxResourceDir.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBoxResourceDirActionPerformed(evt);
@@ -431,6 +428,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }// </editor-fold>//GEN-END:initComponents
 
     private void updateSettingsFileName() {
+        if(null != propertiesFile && propertiesFile.exists()) {
+            return;
+        }
         String settingsFileStart = jComboBoxDbType.getSelectedItem().toString();
         if (!propertiesFile.getName().startsWith(settingsFileStart)) {
             if (Objects.toString(jComboBoxPropertiesFiles.getSelectedItem()).startsWith(settingsFileStart)) {
@@ -449,22 +449,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
 
     private void jComboBoxDbTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxDbTypeActionPerformed
-//        try {
-//            if (!savingProperties && !restoringProperties && !updatingFromArgs) {
-//
-//                DbType newDbType = (DbType) jComboBoxDbType.getSelectedItem();
-//                if (oldDbType != newDbType) {
-//                    this.closeDB();
-//                    if(oldDbType != null) {
-//                        saveProperties(oldDbType, jTextFieldDBHost.getText(), Integer.parseInt(jTextFieldDBPort.getText()));
-//                    }
-//                    restoreProperties(newDbType, null, -1);
-//                    oldDbType = newDbType;
-//                }
-//            }
-//        } catch (Exception exception) {
-//            addLogMessage(exception);
-//        }
         updateSettingsFileName();
         if (!updatingFromDbSetup) {
             notifyAllDbSetupListeners();
@@ -476,13 +460,13 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             //        connectDB();
             connected = true;
             DbSetup setup = this.getDbSetup();
-            DbSetupBuilder.connect(setup).handle((c,e) -> Utils.runOnDispatchThread(() -> {
-                if(null != e) {
+            DbSetupBuilder.connect(setup).handle((c, e) -> Utils.runOnDispatchThread(() -> {
+                if (null != e) {
                     connected = false;
                     Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, e);
                 }
                 notifyAllDbSetupListeners();
-                if(null != c) {
+                if (null != c) {
                     jTextAreaConnectErrors.setText("Connected to database of type " + setup.getDbType() + "\n as user " + setup.getDbUser() + " on host " + setup.getHost() + "\n with port " + setup.getPort() + "\n using queries from " + setup.getQueriesDir());
                 }
             }));
@@ -535,27 +519,31 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     private void jComboBoxResourceDirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxResourceDirActionPerformed
         try {
-            String resDirSuffix = this.jComboBoxResourceDir.getSelectedItem().toString();
-            jComboBoxResourceDir.setSelectedItem(resDirSuffix);
+            Object item = this.jComboBoxResourceDir.getSelectedItem();
+            if (null != item) {
+                String resDirSuffix = item.toString();
+                if (null != resDirSuffix && !"none".equals(resDirSuffix)) {
+                    jComboBoxResourceDir.setSelectedItem(resDirSuffix);
 
-            if (resDirSuffix == null) {
-                resDirSuffix = "neo4j/v1/";
-            }
-            if (!resDirSuffix.startsWith("/")) {
-                resDirSuffix = "/" + resDirSuffix;
-            }
-            if (!resDirSuffix.endsWith("/")) {
-                resDirSuffix = resDirSuffix + "/";
-            }
-            String resDir = RESOURCE_BASE + resDirSuffix;
-            Map<DbQueryEnum, DbQueryInfo> queriesMap
-                    = DbSetupBuilder.readResourceQueriesDirectory(resDir);
-            loadQueriesMap(queriesMap, () -> {
-                if (!updatingFromDbSetup) {
-                    notifyAllDbSetupListeners();
+                    if (resDirSuffix == null) {
+                        resDirSuffix = "neo4j/v1/";
+                    }
+                    if (!resDirSuffix.startsWith("/")) {
+                        resDirSuffix = "/" + resDirSuffix;
+                    }
+                    if (!resDirSuffix.endsWith("/")) {
+                        resDirSuffix = resDirSuffix + "/";
+                    }
+                    String resDir = RESOURCE_BASE + resDirSuffix;
+                    Map<DbQueryEnum, DbQueryInfo> queriesMap
+                            = DbSetupBuilder.readResourceQueriesDirectory(resDir);
+                    loadQueriesMap(queriesMap, () -> {
+                        if (!updatingFromDbSetup) {
+                            notifyAllDbSetupListeners();
+                        }
+                    });
                 }
-            });
-
+            }
         } catch (IOException iOException) {
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, iOException);
         }
@@ -602,6 +590,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             if (null == setup) {
                 return;
             }
+            if(setup.isConnected() && (null == setup.getDbType() || setup.getDbType() == DbType.NONE)) {
+                this.connected = false;
+                throw new IllegalArgumentException("setup.getDbType() == "+setup.getDbType());
+            }
             jCheckBoxDebug.setSelected(setup.isDebug());
             updatingFromDbSetup = true;
             DbType dbtype = setup.getDbType();
@@ -646,6 +638,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 this.jTextFieldDBName.setText(dbname);
             }
             this.connected = setup.isConnected();
+            
             if (jButtonConnectDB.isEnabled() != (!connected)) {
                 this.jButtonConnectDB.setEnabled(!connected);
             }
@@ -833,13 +826,17 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private static int parseIntOr(String string, int defaultValue) {
         try {
             return Integer.parseInt(string);
-        } catch(Exception ex) {
-            
+        } catch (Exception ex) {
+
         }
         return defaultValue;
     }
-    
+
     public DbSetup getDbSetup() {
+        DbType dbtype = (DbType) jComboBoxDbType.getSelectedItem();
+        if(null == dbtype || dbtype == DbType.NONE) {
+            connected = false;
+        }
         return new DbSetupBuilder()
                 .connected(connected)
                 .type((DbType) jComboBoxDbType.getSelectedItem())
@@ -848,7 +845,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 .dbname(jTextFieldDBName.getText())
                 .user(jTextFieldDBUser.getText())
                 .port(Integer.parseInt(jTextFieldDBPort.getText()))
-                .loginTimeout(parseIntOr(jTextFieldDBLoginTimeout.getText(),5))
+                .loginTimeout(parseIntOr(jTextFieldDBLoginTimeout.getText(), 5))
                 .queriesMap(getQueriesMap())
                 .internalQueriesResourceDir(jRadioButtonResourceDir.isSelected())
                 .queriesDir(getQueriesDir())
@@ -871,8 +868,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         boolean cancelWarnGiven = false;
         if (null != futures) {
             for (Future f : futures) {
-                if(!f.isDone() && !f.isCancelled()) {
-                    if(!cancelWarnGiven) {
+                if (!f.isDone() && !f.isCancelled()) {
+                    if (!cancelWarnGiven) {
                         cancelWarnGiven = true;
                         System.err.println("Cancelling a dbSetup notification");
                         Thread.dumpStack();
@@ -909,22 +906,33 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jComboBoxPropertiesFiles.addItem(item);
     }
 
-    private void loadRecent() throws IOException {
-        if (null != recentSettingsFile && recentSettingsFile.exists()) {
-            TreeSet<String> set = new TreeSet<>();
-            try (BufferedReader br = new BufferedReader(new FileReader(recentSettingsFile))) {
-                String line;
-                while (null != (line = br.readLine())) {
-                    set.add(line.trim());
+    public void loadRecent() {
+        try {
+            if (null != recentSettingsFile && recentSettingsFile.exists()) {
+                TreeSet<String> set = new TreeSet<>();
+                try (BufferedReader br = new BufferedReader(new FileReader(recentSettingsFile))) {
+                    String line;
+                    while (null != (line = br.readLine())) {
+                        set.add(line.trim());
+                    }
+                }
+                jComboBoxPropertiesFiles.removeAllItems();
+                List<File> files = new ArrayList<>();
+                files.addAll(set.stream().map(File::new)
+                        .filter(File::exists)
+                        .sorted(Comparator.comparing(File::lastModified).reversed())
+                        .limit(3)
+                        .collect(Collectors.toList()));
+                try (PrintWriter pw = new PrintWriter(new FileWriter(recentSettingsFile))) {
+                    for (File f : files) {
+                        String p = f.getCanonicalPath();
+                        pw.println(p);
+                        addComboItemUnique(p);
+                    }
                 }
             }
-            jComboBoxPropertiesFiles.removeAllItems();
-            try (PrintWriter pw = new PrintWriter(new FileWriter(recentSettingsFile))) {
-                for (String p : set) {
-                    pw.println(p);
-                    addComboItemUnique(p);
-                }
-            }
+        } catch (IOException iOException) {
+             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, iOException);
         }
     }
     private File recentSettingsFile = new File(System.getProperty("user.home"), ".dbsetup_recent.txt");
@@ -1123,12 +1131,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         } finally {
             updatingFromArgs = false;
         }
-//        props.put(this.getDbType() + ".host", this.jTextFieldDBHost.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".port", this.jTextFieldDBPort.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".name", this.jTextFieldDBName.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".user", this.jTextFieldDBUser.getText());
-//        props.put(this.getDbType() + "."+this.jTextFieldDBHost.getText()+".passwd", this.jPasswordFieldDBPassword.getPassword());
-//        
     }
 
     final String RESOURCE_BASE = "aprs/framework/database";
@@ -1221,7 +1223,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
         } finally {
             updatingFromArgs = false;
-        }        
+        }
     }
 
     public void autoResizeTableRowHeights(JTable table) {
@@ -1283,6 +1285,11 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     @Override
     public void removeDbSetupListener(DbSetupListener listener) {
         dbSetupListeners.remove(listener);
+    }
+    
+    @Override
+    public void removeAllDbSetupListeners() {
+        dbSetupListeners.clear();
     }
 
     private final DefaultComboBoxModel<DbType> dbTypeComboModel = new DefaultComboBoxModel<>(DbType.values());

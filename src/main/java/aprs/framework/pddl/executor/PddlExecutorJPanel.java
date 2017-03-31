@@ -178,12 +178,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private long lastActionMillis = -1;
-    
+
     private void setCost(int index, double cost) {
         DefaultTableModel m = (DefaultTableModel) jTablePddlOutput.getModel();
         m.setValueAt(cost, index, 5);
     }
-    
+
     private void handleActionCompleted(PddlActionToCrclGenerator.ActionCallbackInfo actionInfo) {
         if (currentActionIndex < actionInfo.getActionIndex() + 1) {
             currentActionIndex = actionInfo.getActionIndex() + 1;
@@ -191,13 +191,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             if (null != aprsJFrame) {
                 aprsJFrame.updateTitle();
                 if (stepping) {
-                    aprsJFrame.pauseCrclProgram();
+                    pause();
                 }
             }
             long nowMillis = System.currentTimeMillis();
-            if(lastActionMillis > 0 && lastActionMillis < nowMillis) {
+            if (lastActionMillis > 0 && lastActionMillis < nowMillis) {
                 long diff = nowMillis - lastActionMillis;
-                final double cost = diff *1e-3;
+                final double cost = diff * 1e-3;
                 final int index = actionInfo.getActionIndex();
                 Utils.runOnDispatchThread(() -> this.setCost(index, cost));
             }
@@ -209,6 +209,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         int startIndex = Math.max(0, currentActionIndex);
         int endIndex = Math.max(startIndex, replanFromIndex - 1);
         jTablePddlOutput.getSelectionModel().setSelectionInterval(startIndex, endIndex);
+        jTablePddlOutput.scrollRectToVisible(new Rectangle(jTablePddlOutput.getCellRect(startIndex, 0, true)));
+        if (currentActionIndex > 0 && currentActionIndex < jTablePddlOutput.getRowCount()) {
+            Object o = jTablePddlOutput.getValueAt(startIndex, 1);
+            if (o instanceof Integer) {
+                int crclIndex = ((Integer) o) - 2;
+                if (crclIndex > 0 && crclIndex < jTableCrclProgram.getRowCount()) {
+                    jTableCrclProgram.getSelectionModel().setSelectionInterval(crclIndex, crclIndex);
+                    jTableCrclProgram.scrollRectToVisible(new Rectangle(jTableCrclProgram.getCellRect(crclIndex, 0, true)));
+                }
+            }
+        }
     }
 
     private static Object[] getTableRow(JTable table, int row) {
@@ -266,8 +277,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonLoad = new javax.swing.JButton();
         jButtonGenerateCRCL = new javax.swing.JButton();
         jButtonPddlOutputViewEdit = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTableCrclProgram = new javax.swing.JTable();
         jCheckBoxNeedLookFor = new javax.swing.JCheckBox();
         jTextFieldIndex = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
@@ -336,6 +345,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jLabel18 = new javax.swing.JLabel();
         jLabel19 = new javax.swing.JLabel();
         jTextFieldSafeAbortRequestCount = new javax.swing.JTextField();
+        jPanelCrcl = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTableCrclProgram = new javax.swing.JTable();
         jButtonClear = new javax.swing.JButton();
         jCheckBoxDebug = new javax.swing.JCheckBox();
         jButtonAbort = new javax.swing.JButton();
@@ -412,34 +424,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 jButtonPddlOutputViewEditActionPerformed(evt);
             }
         });
-
-        jTableCrclProgram.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                { new Integer(1), null},
-                { new Integer(2), null},
-                { new Integer(3), null},
-                { new Integer(4), null}
-            },
-            new String [] {
-                "ID", "Text"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false, true
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        jScrollPane1.setViewportView(jTableCrclProgram);
 
         jCheckBoxNeedLookFor.setText("Skip LookFor");
 
@@ -833,7 +817,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jButtonNewLogFile)
                     .addComponent(jTextFieldRecordFailCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jTextFieldRecordSuccessCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(21, Short.MAX_VALUE))
+                .addContainerGap(104, Short.MAX_VALUE))
         );
 
         jScrollPane2.setViewportView(jPanelInnerManualControl);
@@ -851,7 +835,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -870,7 +854,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE)
+                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -915,7 +899,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 945, Short.MAX_VALUE)
+                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 960, Short.MAX_VALUE)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel16)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -955,6 +939,53 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jScrollPane5.setViewportView(jPanel4);
 
         jTabbedPane1.addTab("External Control", jScrollPane5);
+
+        jTableCrclProgram.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                { new Integer(1), null},
+                { new Integer(2), null},
+                { new Integer(3), null},
+                { new Integer(4), null}
+            },
+            new String [] {
+                "ID", "Text"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, true
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(jTableCrclProgram);
+
+        javax.swing.GroupLayout jPanelCrclLayout = new javax.swing.GroupLayout(jPanelCrcl);
+        jPanelCrcl.setLayout(jPanelCrclLayout);
+        jPanelCrclLayout.setHorizontalGroup(
+            jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelCrclLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1)
+                .addContainerGap())
+        );
+        jPanelCrclLayout.setVerticalGroup(
+            jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelCrclLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("CRCL", jPanelCrcl);
 
         jButtonClear.setText("Clear");
         jButtonClear.addActionListener(new java.awt.event.ActionListener() {
@@ -1013,13 +1044,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane4)
-                    .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jTabbedPane1)
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, 325, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1032,7 +1062,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonClear)
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxReplan)
@@ -1074,9 +1104,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jButtonPddlOutputViewEdit)
                     .addComponent(jButtonClear))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 138, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 156, Short.MAX_VALUE)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -1095,8 +1125,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jButtonStep)
                         .addComponent(jButtonContinue)
                         .addComponent(jButtonPause)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 136, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -1389,12 +1417,21 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     JTextArea editTableArea = new JTextArea();
 
     private String trimXml(String in) {
-        int endHeaderIndex = in.indexOf("?>");
-        if (endHeaderIndex > 0) {
-            return in.substring(endHeaderIndex + 2).trim();
+        int start = in.indexOf("?>");
+        if(start < 0 ) {
+            start = 0;
         } else {
-            return in.trim();
+            start = start+2;
         }
+        int instIndex = in.indexOf("<CRCLCommandInstance>", Math.max(0, start));
+        if(instIndex > 0) {
+            start = instIndex + "<CRCLCommandInstance>".length();
+        }
+        int end = in.indexOf("</CRCLCommandInstance>", Math.max(0, start));
+        if (end <= 0) {
+            end = in.length();
+        }
+        return in.substring(start, end).trim();
     }
     private Color progColor = Color.white;
 
@@ -2512,8 +2549,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jButtonRecordActionPerformed
 
     private void jButtonPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPauseActionPerformed
-        aprsJFrame.pauseCrclProgram();
+        pause();
     }//GEN-LAST:event_jButtonPauseActionPerformed
+
+    public void pause() {
+        aprsJFrame.pauseCrclProgram();
+    }
 
     private void updateLookForJoints(CRCLStatusType stat) {
         if (null != stat && null != stat.getJointStatuses()) {
@@ -2972,7 +3013,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     /**
      * Remove a previously added position map.
-     * 
+     *
      * @param pm position map to be removed.
      */
     public void removePositionMap(PositionMap pm) {
@@ -2981,8 +3022,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     /**
-     * Modify the given pose by applying all of the currently added position maps.
-     * 
+     * Modify the given pose by applying all of the currently added position
+     * maps.
+     *
      * @param poseIn the pose to correct or transform
      * @return pose after being corrected by all currently added position maps
      */
@@ -2995,8 +3037,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     /**
-     * Modify the given point by applying all of the currently added position maps.
-     * 
+     * Modify the given point by applying all of the currently added position
+     * maps.
+     *
      * @param ptIn the point to correct or transform
      * @return point after being corrected by all currently added position maps
      */
@@ -3010,6 +3053,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     /**
      * Apply inverses of currently added position maps in reverse order.
+     *
      * @param ptIn point to reverse correction
      * @return point in original vision/database coordinates
      */
@@ -3286,6 +3330,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanelCrcl;
     private javax.swing.JPanel jPanelInnerManualControl;
     private javax.swing.JPanel jPanelOuterManualControl;
     private javax.swing.JScrollPane jScrollPane1;

@@ -27,6 +27,7 @@ import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupJInternalFrame;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
+import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.explore.ExploreGraphDbJInternalFrame;
 import aprs.framework.kitinspection.KitInspectionJInternalFrame;
@@ -73,6 +74,7 @@ import crcl.ui.server.SimServerJInternalFrame;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLSocket;
 import java.awt.Container;
+import java.awt.HeadlessException;
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -84,7 +86,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
@@ -724,7 +729,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void addInternalFrame(JInternalFrame internalFrame) {
         internalFrame.pack();
         internalFrame.setVisible(true);
-        jDesktopPane1.add(internalFrame);
+        jDesktopPane1.add(internalFrame, JLayeredPane.DEFAULT_LAYER);
         internalFrame.getDesktopPane().getDesktopManager().maximizeFrame(internalFrame);
         setupWindowsMenu();
     }
@@ -739,6 +744,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         System.out.println("Starting connect to database ...");
         jCheckBoxMenuItemConnectDatabase.setSelected(true);
         jCheckBoxMenuItemConnectDatabase.setEnabled(true);
+        DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
+        DbSetup setup = dbSetupPublisher.getDbSetup();
+        if (setup.getDbType() == null || setup.getDbType() == DbType.NONE) {
+            throw new IllegalStateException("Can not connect to database with setup.getDbType() = " + setup.getDbType());
+        }
         connectDatabaseFuture = connectService.submit(this::connectDatabase);
     }
 
@@ -746,6 +756,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         List<Future<?>> futures = null;
         try {
             DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
+            DbSetup setup = dbSetupPublisher.getDbSetup();
+            if (setup.getDbType() == null || setup.getDbType() == DbType.NONE) {
+                throw new IllegalStateException("Can not connect to database with setup.getDbType() = " + setup.getDbType());
+            }
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             futures = dbSetupPublisher.notifyAllDbSetupListeners();
             for (Future<?> f : futures) {
@@ -795,6 +809,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    final public void defaultInit() {
         initLoggerWindow();
         try {
 //            initPropertiesFile();
@@ -806,6 +823,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
+        commonInit();
+    }
+
+    final public void emptyInit() {
+        initLoggerWindow();
         commonInit();
     }
 
@@ -876,8 +898,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             if (jCheckBoxMenuItemExploreGraphDbStartup.isSelected()) {
                 startExploreGraphDb();
             }
-
-            setupWindowsMenu();
             if (jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()) {
                 startFanucCrclServer();
             }
@@ -887,12 +907,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             createDbSetupFrame();
             if (jCheckBoxMenuItemShowDatabaseSetup.isSelected()) {
                 showDatabaseSetupWindow();
+            } else {
+                jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(false);
             }
-            DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
-            if (null != pub) {
-                pub.setDbSetup(dbSetup);
-                pub.addDbSetupListener(toVisListener);
-            }
+            updateSubPropertiesFiles();
+//            DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+//            if (null != pub) {
+//                pub.setDbSetup(dbSetup);
+//                pub.addDbSetupListener(toVisListener);
+//            }
             if (this.jCheckBoxMenuItemStartupCRCLWebApp.isSelected()) {
                 startCrclWebApp();
             }
@@ -916,13 +939,94 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 logDisplayJInternalFrame.pack();
             }
             logDisplayJInternalFrame.setVisible(true);
-            jDesktopPane1.add(logDisplayJInternalFrame);
+            jDesktopPane1.add(logDisplayJInternalFrame, JLayeredPane.DEFAULT_LAYER);
             System.setOut(new MyPrintStream(System.out, logDisplayJInternalFrame));
             System.setErr(new MyPrintStream(System.err, logDisplayJInternalFrame));
             activateInternalFrame(logDisplayJInternalFrame);
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void closeAllWindows() {
+        try {
+            closePddlPlanner();
+
+        } catch (Exception exception) {
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, exception);
+        }
+        try {
+            closeActionsToCrclJInternalFrame();
+
+        } catch (Exception exception) {
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, exception);
+        }
+        try {
+            stopCrclWebApp();
+
+        } catch (Exception exception) {
+            Logger.getLogger(AprsJFrame.class
+                    .getName()).log(Level.SEVERE, null, exception);
+        }
+        if (null != connectDatabaseFuture) {
+            connectDatabaseFuture.cancel(true);
+            connectDatabaseFuture = null;
+        }
+        if (null != disconnectDatabaseFuture) {
+            disconnectDatabaseFuture.cancel(true);
+            disconnectDatabaseFuture = null;
+        }
+        if (null != simServerJInternalFrame) {
+            try {
+                simServerJInternalFrame.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            simServerJInternalFrame.setVisible(false);
+            simServerJInternalFrame = null;
+        }
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.setVisible(false);
+            object2DViewJInternalFrame.dispose();
+            object2DViewJInternalFrame = null;
+        }
+
+        abortCrclProgram();
+        disconnectRobot();
+        disconnectVision();
+        disconnectDatabase();
+        if (null != this.dbSetupJInternalFrame) {
+            this.dbSetupJInternalFrame.getDbSetupPublisher().removeAllDbSetupListeners();
+            this.dbSetupJInternalFrame.setVisible(false);
+            this.dbSetupJInternalFrame.dispose();
+            this.dbSetupJInternalFrame = null;
+        }
+        JInternalFrame frames[] = jDesktopPane1.getAllFrames();
+        for (JInternalFrame f : frames) {
+            jDesktopPane1.getDesktopManager().closeFrame(f);
+            jDesktopPane1.remove(f);
+        }
+        if (null != this.exploreGraphDbJInternalFrame) {
+            this.exploreGraphDbJInternalFrame.setVisible(false);
+            this.exploreGraphDbJInternalFrame.dispose();
+            this.exploreGraphDbJInternalFrame = null;
+        }
+        if (null != this.logDisplayJInternalFrame) {
+            this.logDisplayJInternalFrame.setVisible(false);
+            this.logDisplayJInternalFrame.dispose();
+            this.logDisplayJInternalFrame = null;
+        }
+        this.dbSetup = null;
+
+//        this.pddlExecutorJInternalFrame1 = null;
+//        this.pddlPlannerJInternalFrame = null;
+//        this.object2DViewJInternalFrame = null;
+//        this.dbSetupPublisherSupplier = null;
+//        this.fanucCRCLServerJInternalFrame = null;
+//        this.pendantClientJInternalFrame = null;
+//        this.motomanCrclServerJInternalFrame = null;
     }
 
     private void activateInternalFrame(JInternalFrame internalFrame) {
@@ -942,6 +1046,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private void showDatabaseSetupWindow() {
         createDbSetupFrame();
+        dbSetupJInternalFrame.setPropertiesFile(propertiesFile);
         dbSetupJInternalFrame.setVisible(true);
         if (checkInternalFrame(dbSetupJInternalFrame)) {
             jDesktopPane1.getDesktopManager().deiconifyFrame(dbSetupJInternalFrame);
@@ -1059,7 +1164,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             object2DViewJInternalFrame.loadProperties();
             object2DViewJInternalFrame.pack();
             object2DViewJInternalFrame.setVisible(true);
-            jDesktopPane1.add(object2DViewJInternalFrame);
+            jDesktopPane1.add(object2DViewJInternalFrame, JLayeredPane.DEFAULT_LAYER);
             object2DViewJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(object2DViewJInternalFrame);
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -1136,7 +1241,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 //            pendantClientJInternalFrame.loadProperties();
             pendantClientJInternalFrame.pack();
             pendantClientJInternalFrame.setVisible(true);
-            jDesktopPane1.add(pendantClientJInternalFrame);
+            jDesktopPane1.add(pendantClientJInternalFrame, JLayeredPane.DEFAULT_LAYER);
             pendantClientJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(pendantClientJInternalFrame);
             pendantClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
                 @Override
@@ -1169,7 +1274,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 simServerJInternalFrame.pack();
                 simServerJInternalFrame.setVisible(true);
                 simServerJInternalFrame.restartServer();
-                jDesktopPane1.add(simServerJInternalFrame);
+                jDesktopPane1.add(simServerJInternalFrame, JLayeredPane.DEFAULT_LAYER);
                 simServerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(simServerJInternalFrame);
 
             }
@@ -1199,8 +1304,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null == dbSetupJInternalFrame) {
             dbSetupJInternalFrame = new DbSetupJInternalFrame();
             dbSetupJInternalFrame.pack();
-            jDesktopPane1.add(dbSetupJInternalFrame);
+            dbSetupJInternalFrame.loadRecent();
+            jDesktopPane1.add(dbSetupJInternalFrame, JLayeredPane.DEFAULT_LAYER);
             dbSetupJInternalFrame.getDbSetupPublisher().addDbSetupListener(this::updateDbConnectedCheckBox);
+            if (null != dbSetup) {
+                DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+                if (null != pub) {
+                    pub.setDbSetup(dbSetup);
+                }
+            }
+
         }
     }
 
@@ -1217,12 +1330,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             visionToDbJInternalFrame.pack();
             visionToDbJInternalFrame.setVisible(true);
             visionToDbJInternalFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
-            jDesktopPane1.add(visionToDbJInternalFrame);
+            jDesktopPane1.add(visionToDbJInternalFrame, JLayeredPane.DEFAULT_LAYER);
             visionToDbJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(visionToDbJInternalFrame);
-            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
-            if (null != pub) {
-                pub.addDbSetupListener(toDbListener);
-            }
+//            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+//            if (null != pub) {
+//                pub.addDbSetupListener(toDbListener);
+//            }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -1237,7 +1350,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             this.pddlExecutorJInternalFrame1.setAprsJFrame(this);
             this.pddlExecutorJInternalFrame1.setVisible(true);
-            jDesktopPane1.add(pddlExecutorJInternalFrame1);
+            jDesktopPane1.add(pddlExecutorJInternalFrame1, JLayeredPane.DEFAULT_LAYER);
             pddlExecutorJInternalFrame1.getDesktopPane().getDesktopManager().maximizeFrame(pddlExecutorJInternalFrame1);
             updateSubPropertiesFiles();
 //            this.pddlExecutorJInternalFrame1.setPropertiesFile(new File(propertiesDirectory, "actionsToCrclProperties.txt"));
@@ -1263,7 +1376,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             updateSubPropertiesFiles();
             pddlPlannerJInternalFrame.setVisible(true);
-            jDesktopPane1.add(pddlPlannerJInternalFrame);
+            jDesktopPane1.add(pddlPlannerJInternalFrame, JLayeredPane.DEFAULT_LAYER);
             pddlPlannerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(pddlPlannerJInternalFrame);
 //            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
             pddlPlannerJInternalFrame.loadProperties();
@@ -1284,7 +1397,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             updateSubPropertiesFiles();
             kitInspectionJInternalFrame.setVisible(true);
-            jDesktopPane1.add(kitInspectionJInternalFrame);
+            jDesktopPane1.add(kitInspectionJInternalFrame, JLayeredPane.DEFAULT_LAYER);
             kitInspectionJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(kitInspectionJInternalFrame);
 //            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
             kitInspectionJInternalFrame.loadProperties();
@@ -1337,6 +1450,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemContinue = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
+        jMenuItemReset = new javax.swing.JMenuItem();
+        jMenuItemPause = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
@@ -1554,6 +1669,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
         jMenuExecute.add(jMenuItemImmediateAbort);
 
+        jMenuItemReset.setText("Reset");
+        jMenuItemReset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemResetActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemReset);
+
+        jMenuItemPause.setText("Pause");
+        jMenuItemPause.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemPauseActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemPause);
+
         jMenuBar1.add(jMenuExecute);
 
         setJMenuBar(jMenuBar1);
@@ -1659,9 +1790,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_jMenuItemSavePropertiesActionPerformed
 
     private void jMenuItemLoadPropertiesFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadPropertiesFileActionPerformed
+        browseOpenPropertiesFile();
+    }//GEN-LAST:event_jMenuItemLoadPropertiesFileActionPerformed
+
+    public void browseOpenPropertiesFile() throws HeadlessException {
         JFileChooser chooser = new JFileChooser(propertiesDirectory);
+        FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
+        chooser.addChoosableFileFilter(filter);
+        chooser.setFileFilter(filter);
+        chooser.setDialogTitle("Open APRS System properties file.");
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
+                closeAllWindows();
                 setPropertiesFile(chooser.getSelectedFile());
                 loadProperties();
 //                initPropertiesFile();
@@ -1670,8 +1810,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 Logger.getLogger(AprsJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
+            this.initLoggerWindow();
+            this.commonInit();
         }
-    }//GEN-LAST:event_jMenuItemLoadPropertiesFileActionPerformed
+
+    }
 
 
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
@@ -1796,19 +1939,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed
 
     private void jMenuItemSavePropsAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePropsAsActionPerformed
+        browseSavePropertiesFileAs();
+    }//GEN-LAST:event_jMenuItemSavePropsAsActionPerformed
+
+    public void browseSavePropertiesFileAs() {
         JFileChooser chooser = new JFileChooser(propertiesDirectory);
+        FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
+        chooser.addChoosableFileFilter(filter);
+        chooser.setFileFilter(filter);
+        chooser.setDialogTitle("Choose new APRS System properties file to create (save as).");
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 setPropertiesFile(chooser.getSelectedFile());
-//                initPropertiesFile();
                 this.saveProperties();
-
             } catch (IOException ex) {
                 Logger.getLogger(AprsJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }//GEN-LAST:event_jMenuItemSavePropsAsActionPerformed
+    }
 
     private void jMenuItemContinueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemContinueActionPerformed
         this.continueActionList();
@@ -1833,6 +1982,27 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void jCheckBoxMenuItemKitInspectionStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
         this.showKitInspection();
     }//GEN-LAST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
+
+    private void jMenuItemResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemResetActionPerformed
+        reset();
+    }//GEN-LAST:event_jMenuItemResetActionPerformed
+
+    private void jMenuItemPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemPauseActionPerformed
+        pause();
+    }//GEN-LAST:event_jMenuItemPauseActionPerformed
+
+    public void pause() {
+        this.pauseCrclProgram();
+    }
+
+    public void reset() {
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.refresh();
+        }
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.refresh();
+        }
+    }
 
     private static final CRCLProgramType emptyProgram = new CRCLProgramType();
 
@@ -1930,70 +2100,120 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public static final String APRS_DEFAULT_PROPERTIES_FILENAME = "aprs_properties.txt";
     private File lastAprsPropertiesFileFile;
 
-    private void initPropertiesFileInfo() {
-        String aprsPropsDir = System.getProperty("aprs.properties.dir");
-        if (null != aprsPropsDir) {
-            propertiesDirectory = new File(aprsPropsDir);
-        } else {
-            propertiesDirectory = new File(System.getProperty("user.home"), ".aprs");
-        }
-        lastAprsPropertiesFileFile = new File(propertiesDirectory, "lastPropsFileName.txt");
-        if (lastAprsPropertiesFileFile.exists()) {
-            try {
-                Properties p = new Properties();
-                p.load(new FileReader(lastAprsPropertiesFileFile));
-                String fname = p.getProperty("lastPropertyFileName");
-                if (fname != null && fname.length() > 0) {
-                    File f = new File(fname);
-                    if (f.exists()) {
-                        propertiesFile = f;
-                        propertiesDirectory = propertiesFile.getParentFile();
-                        return;
+    private static class AprsJFramePropDefaults {
 
-                    }
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(AprsJFrame.class
-                        .getName()).log(Level.SEVERE, null, ex);
-            }
+        private final File propDir;
+        private final File propFile;
+        private final File lastAprsPropertiesFileFile;
+
+        private static final AprsJFramePropDefaults single = new AprsJFramePropDefaults();
+
+        public static AprsJFramePropDefaults getSingle() {
+            return single;
         }
-        propertiesDirectory.mkdirs();
-        String aprsPropsFilename = System.getProperty("aprs.properties.filename", APRS_DEFAULT_PROPERTIES_FILENAME);
-        propertiesFile = new File(propertiesDirectory, aprsPropsFilename);
+
+        public File getPropDir() {
+            return propDir;
+        }
+
+        public File getPropFile() {
+            return propFile;
+        }
+
+        public File getLastAprsPropertiesFileFile() {
+            return lastAprsPropertiesFileFile;
+        }
+
+        private AprsJFramePropDefaults() {
+            String aprsPropsDir = System.getProperty("aprs.properties.dir");
+            File tempPropDir = null;
+            File tempPropFile = null;
+            if (null != aprsPropsDir) {
+                tempPropDir = new File(aprsPropsDir);
+            } else {
+                tempPropDir = new File(System.getProperty("user.home"), ".aprs");
+            }
+            lastAprsPropertiesFileFile = new File(tempPropDir, "lastPropsFileName.txt");
+            if (lastAprsPropertiesFileFile.exists()) {
+                try {
+                    Properties p = new Properties();
+                    p.load(new FileReader(lastAprsPropertiesFileFile));
+                    String fname = p.getProperty("lastPropertyFileName");
+                    if (fname != null && fname.length() > 0) {
+                        File f = new File(fname);
+                        if (f.exists()) {
+                            tempPropFile = f;
+                            tempPropDir = tempPropFile.getParentFile();
+                        }
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(AprsJFrame.class
+                            .getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            if (null == tempPropFile || !tempPropFile.exists()) {
+                tempPropDir.mkdirs();
+                String aprsPropsFilename = System.getProperty("aprs.properties.filename", APRS_DEFAULT_PROPERTIES_FILENAME);
+                tempPropFile = new File(tempPropDir, aprsPropsFilename);
+            }
+            this.propDir = tempPropDir;
+            this.propFile = tempPropFile;
+        }
     }
 
-    private final DbSetupListener toVisListener = new DbSetupListener() {
-        @Override
-        public void accept(DbSetup setup) {
-            Utils.runOnDispatchThread(() -> {
-                dbSetup = setup;
-                if (null != visionToDbJInternalFrame) {
-                    DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
-                    if (null != pub) {
-                        DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
-                        pub.setDbSetup(setup);
-                    }
-                }
-            });
-        }
-    };
+    public static File getDefaultPropertiesDir() {
+        return AprsJFramePropDefaults.getSingle().getPropDir();
+    }
 
-    private final DbSetupListener toDbListener = new DbSetupListener() {
-        @Override
-        public void accept(DbSetup setup) {
-            Utils.runOnDispatchThread(() -> {
-                dbSetup = setup;
-                if (null != dbSetupJInternalFrame) {
-                    DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
-                    if (null != pub) {
-                        DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
-                        pub.setDbSetup(setup);
-                    }
-                }
-            });
-        }
-    };
+    public static File getDefaultPropertiesFile() {
+        return AprsJFramePropDefaults.getSingle().getPropFile();
+    }
 
+    public static File getDefaultLastPropertiesFileFile() {
+        return AprsJFramePropDefaults.getSingle().getLastAprsPropertiesFileFile();
+    }
+
+    private void initPropertiesFileInfo() {
+        propertiesDirectory = getDefaultPropertiesDir();
+        propertiesFile = getDefaultPropertiesFile();
+        lastAprsPropertiesFileFile = getDefaultLastPropertiesFileFile();
+    }
+
+//    private final DbSetupListener toVisListener = new DbSetupListener() {
+//        @Override
+//        public void accept(DbSetup setup) {
+//            Utils.runOnDispatchThread(() -> {
+//                dbSetup = setup;
+//                if (null != visionToDbJInternalFrame) {
+//                    DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+//                    publishDbSetup(pub, setup);
+//                }
+//            });
+//        }
+//    };
+//    private final DbSetupListener toDbListener = new DbSetupListener() {
+//        @Override
+//        public void accept(DbSetup setup) {
+//            Utils.runOnDispatchThread(() -> {
+//                dbSetup = setup;
+//                if (null != dbSetupJInternalFrame) {
+//                    DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+//                    publishDbSetup(pub, setup);
+//                }
+//            });
+//        }
+//
+//    };
+    private void publishDbSetup(DbSetupPublisher pub, DbSetup setup) {
+        if (null != pub && setup.getDbType() != DbType.NONE && setup.getDbType() != null) {
+//            saveDbSetup();
+            pub.setDbSetup(setup);
+        }
+    }
+
+//    private void saveDbSetup() {
+//        DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
+//    }
     /**
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
@@ -2120,10 +2340,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         if (null != visionToDbJInternalFrame) {
             this.visionToDbJInternalFrame.loadProperties();
-            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
-            if (null != pub) {
-                pub.setDbSetup(dbSetup);
-            }
+//            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
+//            if (null != pub) {
+//                pub.setDbSetup(dbSetup);
+//            }
         }
         if (null != object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.loadProperties();
@@ -2370,7 +2590,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new AprsJFrame().setVisible(true);
+                AprsJFrame aFrame = new AprsJFrame();
+                aFrame.defaultInit();
+                aFrame.setVisible(true);
             }
         });
     }
@@ -2403,6 +2625,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JMenuItem jMenuItemImmediateAbort;
     private javax.swing.JMenuItem jMenuItemLoadProperties;
     private javax.swing.JMenuItem jMenuItemLoadPropertiesFile;
+    private javax.swing.JMenuItem jMenuItemPause;
+    private javax.swing.JMenuItem jMenuItemReset;
     private javax.swing.JMenuItem jMenuItemSaveProperties;
     private javax.swing.JMenuItem jMenuItemSavePropsAs;
     private javax.swing.JMenuItem jMenuItemStartActionList;
@@ -2439,11 +2663,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         try {
             updateSubPropertiesFiles();
-
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
+        updateTitle("", "");
     }
 
     private String propertiesFileBaseString = "";
@@ -2565,44 +2789,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void close() throws Exception {
         closing = true;
         System.out.println("AprsJFrame.close()");
-        try {
-            closePddlPlanner();
-
-        } catch (Exception exception) {
-            Logger.getLogger(AprsJFrame.class
-                    .getName()).log(Level.SEVERE, null, exception);
-        }
-        try {
-            closeActionsToCrclJInternalFrame();
-
-        } catch (Exception exception) {
-            Logger.getLogger(AprsJFrame.class
-                    .getName()).log(Level.SEVERE, null, exception);
-        }
-        try {
-            stopCrclWebApp();
-
-        } catch (Exception exception) {
-            Logger.getLogger(AprsJFrame.class
-                    .getName()).log(Level.SEVERE, null, exception);
-        }
-        if (null != connectDatabaseFuture) {
-            connectDatabaseFuture.cancel(true);
-            connectDatabaseFuture = null;
-        }
-        if (null != disconnectDatabaseFuture) {
-            disconnectDatabaseFuture.cancel(true);
-            disconnectDatabaseFuture = null;
-        }
-        if (null != simServerJInternalFrame) {
-            simServerJInternalFrame.close();
-            simServerJInternalFrame.setVisible(false);
-            simServerJInternalFrame = null;
-        }
-        disconnectDatabase();
+        closeAllWindows();
         connectService.shutdownNow();
         connectService.awaitTermination(100, TimeUnit.MILLISECONDS);
         this.setVisible(false);
+        this.dispose();
     }
 
     private void closeActionsToCrclJInternalFrame() throws Exception {

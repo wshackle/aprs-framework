@@ -44,7 +44,9 @@ public class ColorTextJFrame extends javax.swing.JFrame {
         initComponents();
     }
 
-    
+    public void startColorTextReader() {
+        colorTextJPanel1.startReader();
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -107,7 +109,9 @@ public class ColorTextJFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new ColorTextJFrame().setVisible(true);
+                ColorTextJFrame ctFrame = new ColorTextJFrame();
+                ctFrame.startColorTextReader();
+                ctFrame.setVisible(true);
             }
         });
     }

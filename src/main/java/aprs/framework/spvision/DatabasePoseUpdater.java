@@ -363,6 +363,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
             case NEO4J:
                 useBatch = false;
                 break;
+                
+            case NONE:
+                throw new IllegalStateException("dbtype = "+dbtype);
         }
         return DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT)
                 .thenAccept(c -> con = c)

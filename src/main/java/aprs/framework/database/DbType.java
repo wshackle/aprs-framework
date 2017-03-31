@@ -29,6 +29,7 @@ package aprs.framework.database;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public enum DbType {
+    NONE,
     MYSQL, NEO4J
     , NEO4J_BOLT
     ;

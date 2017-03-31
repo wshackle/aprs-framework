@@ -222,6 +222,12 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         }
     }
 
+    public void clearText() {
+        logLines.clear();
+        jTextArea1.setText("");
+        jTextArea1.setCaretPosition(0);
+    }
+    
     public void appendText(String text) {
         String txt2 = text.replace("\r\n", "\n");
         String lines[] = txt2.split("\n");

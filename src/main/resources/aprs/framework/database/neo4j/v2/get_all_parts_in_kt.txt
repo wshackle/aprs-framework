@@ -1,4 +1,4 @@
 #params=NAME(1),
 #results={PART_IN_KIT}
-match (v) with max(v.visioncycle)-2 as maxv
+match (v) with max(v.visioncycle)-3 as maxv
 match partinkt = (n:Part) where n.name STARTS WITH {1} and n.visioncycle > maxv RETURN n.name as name

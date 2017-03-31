@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:1981
+#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:1958
 --acquirestate=ON
 --commandport=4001
 --dbhost=ying-220.el.nist.gov
@@ -33,6 +33,9 @@ NEO4J.ying-220.el.nist.gov.port=7494
 NEO4J.ying-220.el.nist.gov_7494.name=neo4j
 NEO4J.ying-220.el.nist.gov_7494.passwd=password
 NEO4J.ying-220.el.nist.gov_7494.user=neo4j
+NEO4J.ying-220.el.nist.gov_7496.name=neo4j
+NEO4J.ying-220.el.nist.gov_7496.passwd=password
+NEO4J.ying-220.el.nist.gov_7496.user=neo4j
 NEO4J.ying-220.mxnet.mel.nist.gov.port=7494
 NEO4J.ying-220.mxnet.mel.nist.gov_7494.name=neo4j
 NEO4J.ying-220.mxnet.mel.nist.gov_7494.passwd=password

@@ -28,6 +28,7 @@ import aprs.framework.Utils;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
+import aprs.framework.database.DbType;
 import aprs.framework.database.QuerySet;
 import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import crcl.base.ActuateJointType;
@@ -68,8 +69,6 @@ import crcl.utils.CrclCommandWrapper.CRCLCommandWrapperConsumer;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -81,9 +80,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.awt.Color;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.swing.JTextArea;
 import javax.swing.text.BadLocationException;
 
 /**
@@ -119,7 +118,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private int crclNumber = 0;
     private final ConcurrentMap<String, PoseType> poseCache = new ConcurrentHashMap<>();
     private KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
-
+    PartsTray correctPartsTray = null;
+    Boolean part_in_pt_found = false;
+    Boolean part_in_kt_found = false;
+    //String messageColorH3 = "#ffcc00";
+    // top panel orange [255,204,0]
+    String messageColorH3 = "#e0e0e0";
+    Color warningColor = new Color(100,71,71);
+    
     /**
      * Get the value of takeSnapshots
      *
@@ -289,8 +295,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param dbSetup new database setup object to use.
      */
     public void setDbSetup(DbSetup dbSetup) {
+
         this.dbSetup = dbSetup;
         if (null != this.dbSetup && this.dbSetup.isConnected()) {
+            if (null == dbSetup.getDbType() || DbType.NONE == dbSetup.getDbType()) {
+                throw new IllegalArgumentException("dbSetup.getDbType() =" + dbSetup.getDbType());
+            }
             if (dbConnection == null) {
                 try {
                     DbSetupBuilder.connect(dbSetup).thenAccept(c -> {
@@ -468,7 +478,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //                    }
 //                }
 //                break;
-
             }
 
             actionToCrclIndexes[lastIndex] = cmds.size();
@@ -743,14 +752,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
-        if (null == kitInspectionJInternalFrame) {
-            kitInspectionJInternalFrame = aprsJFrame.getKitInspectionJInternalFrame();
-        }
-
-        PartsTray correctPartsTray = null;
-        String kitImageResult = "";
         checkSettings();
         String kitSku = action.getArgs()[0];
+        String inspectionID = action.getArgs()[1];
         MessageType msg = new MessageType();
         msg.setMessage("inspect-kit " + kitSku);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
@@ -762,7 +766,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         //-- we look for the kit tray in the database for which one of the slots
         //-- has at least one pose in the list
         if (null != PlacePartSlotPoseList) {
-            correctPartsTray = findCorrectKitTray(kitSku);
+            if (null == correctPartsTray) {
+
+                correctPartsTray = findCorrectKitTray(kitSku);
+            }
             if (null != correctPartsTray) {
                 EmptySlotSet = new HashSet<Slot>();
                 int numberOfPartsInKit = 0;
@@ -798,84 +805,104 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     if (partSKU.startsWith("sku_")) {
                         partSKU = partSKU.substring(4).concat("_in_kt");
                     }
-
                     if (checkPartTypeInSlot(partSKU, slot) == 1) {
                         numberOfPartsInKit++;
                     } else {
                         EmptySlotSet.add(slot);
                     }
                 }
-
                 if (!EmptySlotSet.isEmpty()) {
                     kitInspectionJInternalFrame.setKitImage(getKitResultImage(EmptySlotSet));
                 } else {
                     kitInspectionJInternalFrame.setKitImage("complete");
                 }
                 setCorrectKitImage();
-
-                // displayInspectionFrame(correctPartsTray);
                 if (numberOfPartsInKit == partDesignPartCount) {
-                    System.out.println("Kit is complete");
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("Kit is complete<br>");
-
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #7ef904\">&nbsp;&nbsp;The kit is complete</h3><br>");
                 } else {
+                    //if (part_in_kt_found) {
                     TakenPartList.clear();
-
-                    System.out.println("Kit is missing the following parts");
                     int nbofmissingparts = partDesignPartCount - numberOfPartsInKit;
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("Kit is missing " + nbofmissingparts + " part(s)<br>");
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"background-color: #ffb5b5; color: #ffffff\">&nbsp;&nbsp;The kit is missing " + nbofmissingparts + " part(s)</h3>");
                     for (Slot s : EmptySlotSet) {
-                        System.out.println("Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU());
-                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
-
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
                     }
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<br>");
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("Recovering...<br>");
-
+                    if (nbofmissingparts==1){
+                    kitInspectionJInternalFrame.getKitTitleLabel().setText("Missing "+nbofmissingparts+" part. Getting the new part.");
+                    } else
+                    {
+                        kitInspectionJInternalFrame.getKitTitleLabel().setText("Missing "+nbofmissingparts+" parts. Getting the new parts.");
+                    }
+                    try {
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: "+messageColorH3+"\">&nbsp;&nbsp;Recovering from failures</h2>");
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     Map<String, List<String>> partSkuMap = new HashMap();
 
                     //-- Build a map where the key is the part sku for a slot
                     //-- and the value is an arraylist of part_in_pt
                     for (Slot s : EmptySlotSet) {
 
+                        List<String> allPartsInPt = new ArrayList();
                         String partSKU = s.getPartSKU();
                         if (partSKU.startsWith("sku_")) {
                             partSKU = partSKU.substring(4).concat("_in_pt");
                         }
-                        List<String> allPartsInPt = getAllPartsInPt(partSKU);
+                        //-- Querying the database 20 times for part_in_pt
+                        for (int i = 0; i < 20; i++) {
+                            if (allPartsInPt.isEmpty()) {
+                                allPartsInPt = getAllPartsInPt(partSKU);
+                            }
+                        }
                         partSkuMap.put(partSKU, allPartsInPt);
                     }
 
-                    for (Slot s : EmptySlotSet) {
-                        String partSKU = s.getPartSKU();
-                        if (partSKU.startsWith("sku_")) {
-                            partSKU = partSKU.substring(4).concat("_in_pt");
-                        }
+                    if (partSkuMap.size() > 0) {
+                        for (Slot s : EmptySlotSet) {
+                            String partSKU = s.getPartSKU();
+                            if (partSKU.startsWith("sku_")) {
+                                partSKU = partSKU.substring(4).concat("_in_pt");
+                            }
+                            kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;Getting a list of part_in_pt for sku " + partSKU + "<br>");
 
-                        if (!partSkuMap.isEmpty()) {
                             //-- get list of part_in_pt based on the part sku
                             List<String> listOfParts = partSkuMap.get(partSKU);
                             //-- get the first element in this list and then remove it from the list
-                            String partInPt = listOfParts.get(0);
-                            //--remove the first element
-                            listOfParts.remove(0);
-                            //-- update the list in the map with the modified list
-                            partSkuMap.put(partSKU, listOfParts);
-                            //-- perform pick-and-place actions
-                            takePartRecovery(partInPt, out);
-                            PddlAction takepartrecoveryaction = PddlAction.parse("(place-part " + s.getSlotName() + ")");
-                            placePartRecovery(takepartrecoveryaction, s, out);
+                            if (listOfParts.size() > 0) {
+                                String partInPt = listOfParts.get(0);
+                                //--remove the first element
+                                listOfParts.remove(0);
+                                //-- update the list in the map with the modified list
+                                partSkuMap.put(partSKU, listOfParts);
+                                //-- perform pick-and-place actions
+                                takePartRecovery(partInPt, out);
+                                PddlAction takepartrecoveryaction = PddlAction.parse("(place-part " + s.getSlotName() + ")");
+                                placePartRecovery(takepartrecoveryaction, s, out);
+                            } else {
+                                // kitInspectionJInternalFrame.addToInspectionResultJTextPane("Could not find part_in_pt for sku " + partSKU + " from the database<b
+                                kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Could not find part_in_pt for sku " + partSKU + " from the database</h3><br>");
+                                kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Recovery Aborted</h3><br>");
+                            }
                         }
+                    } else {
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Could not find parts in_pt from the database</h3><br>");
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Recovery Aborted</h3><br>");
                     }
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<br>");
                 }
             } else {
-                kitInspectionJInternalFrame.addToInspectionResultJTextPane("The system could not identify the kit tray that was built");             
-                System.out.println("The system could not identify the kit tray that was built");
+                kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;The system could not identify the kit tray that was built</h3><br>");
+                kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
             }
         }
-        PlacePartSlotPoseList.clear();
-        PlacePartSlotPoseList = null;
+        if (inspectionID.contains("0")) {
+            PlacePartSlotPoseList.clear();
+            PlacePartSlotPoseList = null;
+            correctPartsTray = null;
+        }
     }
+
 
     /**
      * Function that finds the correct kit tray from the database using the sku
@@ -1033,9 +1060,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return angleOut;
     }
 
-    private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException {
+    private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException, BadLocationException {
         int nbOfOccupiedSlots = 0;
-        List<String> allPartsInKt = getAllPartsInKt(partInKt);
+        int counter = 0;
+        List<String> allPartsInKt = new ArrayList();
+        //-- queries the database 10 times to make sure we are not missing some part_in_kt
+        for (int i = 0; i < 20; i++) {
+            if (allPartsInKt.isEmpty()) {
+
+                allPartsInKt = getAllPartsInKt(partInKt);
+            }
+        }
         if (!allPartsInKt.isEmpty()) {
             for (int i = 0; i < allPartsInKt.size(); i++) {
                 String newPartInKt = allPartsInKt.get(i);
@@ -1047,8 +1082,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     System.out.println("--------- Not located in slot");
                 }
             }
+            //part_in_kt_found=true;
         } else {
-            System.err.println("No part_in_kt was found in the database");
+            kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;No part_in_kt of type " + partInKt + " was found in the database<br>");
+            //part_in_kt_found=false;
         }
         return nbOfOccupiedSlots;
     }
@@ -1113,6 +1150,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setMessage("take-part " + partName);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
+        
+        kitInspectionJInternalFrame.setKitImage("init");
+        kitInspectionJInternalFrame.getKitTitleLabel().setText("Building kit");
+        setCorrectKitImage();
 
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
@@ -1128,13 +1169,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
         String markerMsg = "took part " + partName;
-        //try {
-        //    kitInspectionJInternalFrame.addToInspectionResultJTextPane(markerMsg + " at " + new Date());
-        //} catch (BadLocationException ex) {
-        //    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-        //}
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
+                        try {
+                kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
+            } catch (BadLocationException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
         });
         lastTakenPart = partName;
         //inspectionList.add(partName);
@@ -1170,6 +1211,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
+                        try {
+                kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
+            } catch (BadLocationException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
         });
         lastTakenPart = partName;
         TakenPartList.add(partName);
@@ -1199,10 +1245,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
-        kitInspectionJInternalFrame.addToInspectionResultJTextPane("taking part " + partName + "<br>");
+       
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
+                        try {
+                kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
+            } catch (BadLocationException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
         });
         lastTakenPart = partName;
         TakenPartList.add(partName);
@@ -1564,7 +1615,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private boolean rotSpeedSet = false;
-    
+
     private void addSetFastSpeed(List<MiddleCommandType> cmds) {
 
         if (!rotSpeedSet) {
@@ -1694,12 +1745,48 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
+                if (null == kitInspectionJInternalFrame) {
+            kitInspectionJInternalFrame = aprsJFrame.getKitInspectionJInternalFrame();
+        }
         addMoveToLookForPosition(out);
 
         addLookDwell(out);
 
         addTakeSimViewSnapshot(out, "-look-for-parts-", null, "");
         addMarkerCommand(out, "clear pose cache", x -> this.clearPoseCache());
+                if (action.getArgs().length == 1) {
+            if (action.getArgs()[0].startsWith("1")){
+            addMarkerCommand(out, "", x -> {
+                kitInspectionJInternalFrame.getKitTitleLabel().setText("Inspecting kit");
+                try {
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR:"+messageColorH3+"\">&nbsp;&nbsp;Inspecting kit</h2>");
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        
+        } else if (action.getArgs()[0].startsWith("0")){
+            addMarkerCommand(out, "", x -> {
+                kitInspectionJInternalFrame.getKitTitleLabel().setText("Building kit");
+                try {
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: "+messageColorH3+"\">&nbsp;&nbsp;Building kit</h2>");
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        }
+            else if (action.getArgs()[0].startsWith("2")){
+            addMarkerCommand(out, "", x -> {
+                kitInspectionJInternalFrame.getKitTitleLabel().setText("All Tasks Completed");
+                try {
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: "+messageColorH3+"\">&nbsp;&nbsp;All tasks completed</h2>");
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        }
+
+    }
     }
 
 //    private void addOpenGripper(List<MiddleCommandType> out, PoseType pose) {
@@ -1838,9 +1925,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
         addMarkerCommand(out, msg,
                 ((CrclCommandWrapper wrapper) -> {
-                    System.out.println(msg + " completed at " + new Date());
-                    ppi.setWrapper(wrapper);
-                    notifyPlacePartConsumers(ppi);
+                    try {
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
+                        System.out.println(msg + " completed at " + new Date());
+                        ppi.setWrapper(wrapper);
+                        notifyPlacePartConsumers(ppi);
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }));
     }
 
@@ -1856,7 +1948,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pose = slot.getSlotPose();
 
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
-        kitInspectionJInternalFrame.addToInspectionResultJTextPane(msg + "<br>");
         if (takeSnapshots) {
             try {
                 takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
@@ -1875,6 +1966,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     System.out.println(msg + " completed at " + new Date());
                     ppi.setWrapper(wrapper);
                     notifyPlacePartConsumers(ppi);
+                    try {
+
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }));
     }
 

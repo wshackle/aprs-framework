@@ -75,6 +75,8 @@ import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
@@ -216,7 +218,6 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             }
         }
         jTablePositionMappings.getSelectionModel().addListSelectionListener(x -> updateSelectedPosMapFileTable());
-
         System.out.println("lastPosMapFileFile = " + lastPosMapFileFile);
         if (lastPosMapFileFile.exists()) {
             try {
@@ -275,90 +276,6 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         });
         crcl.ui.misc.MultiLineStringJPanel.disableShowText = jCheckBoxMenuItemDisableTextPopups.isSelected();
 
-//        jTablePositionMappings.setDefaultEditor(Object.class, new DefaultCellEditor(new JTextField()));
-//        jTablePositionMappings.setDefaultEditor(Object.class, new TableCellEditor() {
-//
-//            private final JTextArea editorTextArea = new JTextArea();
-//            private Component editorCompent = editorTextArea;
-//            private List<CellEditorListener> listeners = new ArrayList<>();
-//
-//            @Override
-//            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-//                editorCompent = editorTextArea;
-//                if (column > 0) {
-//                    editorCompent = getPositionMap(row, column);
-//                    ((PositionMapJPanel) editorCompent).addPositionMapConsumer(pm -> );
-//                }
-//                Utils.autoResizeTableColWidths(table);
-//                Utils.autoResizeTableRowHeights(table);
-//                return editorCompent;
-//            }
-//
-//            private void updateListeners() {
-//                for(CellEditorListener l : listeners) {
-//                    l.editingStopped(new ChangeEvent(this));
-//                }
-//            }
-//            
-//            @Override
-//            public Object getCellEditorValue() {
-//                if (editorCompent instanceof PositionMapJPanel) {
-//                    return ((PositionMapJPanel)editorCompent).getPositionMapFile();
-//                } else {
-//                    return editorTextArea.getText();
-//                }
-//            }
-//
-//            @Override
-//            public boolean isCellEditable(EventObject anEvent) {
-//                return true;
-//            }
-//
-//            @Override
-//            public boolean shouldSelectCell(EventObject anEvent) {
-//                return true;
-//            }
-//
-//            @Override
-//            public boolean stopCellEditing() {
-//                return true;
-//            }
-//
-//            @Override
-//            public void cancelCellEditing() {
-//
-//            }
-//
-//            @Override
-//            public void addCellEditorListener(CellEditorListener l) {
-//                listeners.add(l);
-//            }
-//
-//            @Override
-//            public void removeCellEditorListener(CellEditorListener l) {
-//                listeners.remove(l);
-//            }
-//        }
-//        );
-//        jTablePositionMappings
-//                .setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-//                    @Override
-//                    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-//                        if (null == value || !(value instanceof File)) {
-//                            return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-//                        }
-//                        PositionMapJPanel panel = getPositionMap(row, column);
-//                        try {
-//                            panel.setPositionMapFile((File) value);
-//
-//                        } catch (IOException | PositionMap.BadErrorMapFormatException ex) {
-//                            Logger.getLogger(AprsMulitSupervisorJFrame.class
-//                                    .getName()).log(Level.SEVERE, null, ex);
-//                        }
-//                        panel.setSelected(isSelected);
-//                        return panel;
-//                    }
-//                });
         Utils.autoResizeTableColWidths(jTablePositionMappings);
         Utils.autoResizeTableRowHeights(jTablePositionMappings);
 
@@ -369,6 +286,51 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void startColorTextReader() {
+        this.colorTextJPanel1.startReader();
+    }
+
+    public static File getLastSetupFile() throws IOException {
+        if (lastSetupFileFile.exists()) {
+            return new File(readFirstLine(lastSetupFileFile));
+        }
+        return null;
+    }
+
+    public static File getLastPosMapFile() throws IOException {
+        if (lastPosMapFileFile.exists()) {
+            return new File(readFirstLine(lastPosMapFileFile));
+        }
+        return null;
+    }
+
+    public void loadPrevSetup() {
+        try {
+            File setupFile = getLastSetupFile();
+            if (null != setupFile && setupFile.exists()) {
+                loadSetupFile(setupFile);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            try {
+                closeAllAprsSystems();
+            } catch (IOException ex1) {
+                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+        }
+    }
+
+    public void loadPrevPosMapFile() {
+        try {
+            File posFile = getLastPosMapFile();
+            if (null != posFile && posFile.exists()) {
+                loadPositionMaps(posFile);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -563,18 +525,18 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         return XFuture.allOf(
                 stealFrom.safeAbortAndDisconnectAsync(),
                 stealFor.safeAbort()
-                .thenCompose(x -> {
-                    if (null != colorTextSocket) {
-                        try {
-                            colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
-                        } catch (IOException ex) {
-                            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
-                            SplashScreen.getDisableImageImage(),
-                            SplashScreen.getRedYellowColorList(), gd);
-                }))
+                        .thenCompose(x -> {
+                            if (null != colorTextSocket) {
+                                try {
+                                    colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
+                                } catch (IOException ex) {
+                                    Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                            return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
+                                    SplashScreen.getDisableImageImage(),
+                                    SplashScreen.getRedYellowColorList(), gd);
+                        }))
                 .thenRun(() -> {
                     stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
                     stealFor.addPositionMap(pm);
@@ -624,14 +586,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     private final Map<String, Boolean> robotEnableMap = new HashMap<>();
 
-    private String readFirstLine(File f) throws IOException {
+    private static String readFirstLine(File f) throws IOException {
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             return br.readLine();
         }
     }
 
-    private final File lastSetupFileFile = new File(System.getProperty("aprsLastMultiSystemSetupFile", System.getProperty("user.home") + File.separator + ".lastAprsSetupFile.txt"));
-    private final File lastPosMapFileFile = new File(System.getProperty("aprsLastMultiSystemPosMapFile", System.getProperty("user.home") + File.separator + ".lastAprsPosMapFile.txt"));
+    private final static File lastSetupFileFile = new File(System.getProperty("aprsLastMultiSystemSetupFile", System.getProperty("user.home") + File.separator + ".lastAprsSetupFile.txt"));
+    private final static File lastPosMapFileFile = new File(System.getProperty("aprsLastMultiSystemPosMapFile", System.getProperty("user.home") + File.separator + ".lastAprsPosMapFile.txt"));
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -665,25 +627,27 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jButtonSaveSelectedPosMap = new javax.swing.JButton();
         jTextFieldSelectedPosMapFilename = new javax.swing.JTextField();
         jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu1 = new javax.swing.JMenu();
+        jMenuFile = new javax.swing.JMenu();
+        jMenuItemSaveSetup = new javax.swing.JMenuItem();
         jMenuItemSaveSetupAs = new javax.swing.JMenuItem();
         jMenuItemLoadSetup = new javax.swing.JMenuItem();
-        jMenuItemAddSystem = new javax.swing.JMenuItem();
-        jMenuItemDeleteSelectedSystem = new javax.swing.JMenuItem();
+        jMenuItemAddExistingSystem = new javax.swing.JMenuItem();
+        jMenuItemAddNewSystem = new javax.swing.JMenuItem();
+        jMenuItemRemoveSelectedSystem = new javax.swing.JMenuItem();
+        jMenuItemSavePosMaps = new javax.swing.JMenuItem();
+        jMenuItemLoadPosMaps = new javax.swing.JMenuItem();
+        jMenuActions = new javax.swing.JMenu();
         jMenuItemStartAll = new javax.swing.JMenuItem();
         jMenuItemSafeAbortAll = new javax.swing.JMenuItem();
         jMenuItemImmediateAbortAll = new javax.swing.JMenuItem();
-        jMenuItemSavePosMaps = new javax.swing.JMenuItem();
-        jMenuItemLoadPosMaps = new javax.swing.JMenuItem();
         jMenuItemConnectAll = new javax.swing.JMenuItem();
         jMenuItemDbgAction = new javax.swing.JMenuItem();
-        jMenu2 = new javax.swing.JMenu();
-        jMenu3 = new javax.swing.JMenu();
+        jMenuOptions = new javax.swing.JMenu();
         jCheckBoxMenuItemDisableTextPopups = new javax.swing.JCheckBoxMenuItem();
         jMenuItemStartColorTextDisplay = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Multi Aprs");
+        setTitle("Multi Aprs Supervisor");
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
@@ -698,8 +662,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jTableTasks.setFont(new java.awt.Font("sansserif", 0, 14)); // NOI18N
         jTableTasks.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                { new Integer(1), "Shared Table", "Motoman", null, null},
-                { new Integer(2), "Fanuc Cart", "Fanuc", null, null}
+
             },
             new String [] {
                 "Priority", "Task(s)", "Robot(s)", "Details", "PropertiesFile"
@@ -742,8 +705,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jTableRobots.setFont(new java.awt.Font("sansserif", 0, 14)); // NOI18N
         jTableRobots.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {"Motoman",  new Boolean(true), "localhost",  new Integer(64445)},
-                {"Fanuc",  new Boolean(true), "localhost",  new Integer(64444)}
+
             },
             new String [] {
                 "Robot", "Enabled", "Host", "Port"
@@ -959,7 +921,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
         jTabbedPane2.addTab("Position Mapping", jPanelPositionMappings);
 
-        jMenu1.setText("File");
+        jMenuFile.setText("File");
+
+        jMenuItemSaveSetup.setText("Save Setup");
+        jMenuItemSaveSetup.setEnabled(false);
+        jMenuFile.add(jMenuItemSaveSetup);
 
         jMenuItemSaveSetupAs.setText("Save Setup As ...");
         jMenuItemSaveSetupAs.addActionListener(new java.awt.event.ActionListener() {
@@ -967,7 +933,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 jMenuItemSaveSetupAsActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItemSaveSetupAs);
+        jMenuFile.add(jMenuItemSaveSetupAs);
 
         jMenuItemLoadSetup.setText("Load Setup ...");
         jMenuItemLoadSetup.addActionListener(new java.awt.event.ActionListener() {
@@ -975,47 +941,31 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 jMenuItemLoadSetupActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItemLoadSetup);
+        jMenuFile.add(jMenuItemLoadSetup);
 
-        jMenuItemAddSystem.setText("Add System ...");
-        jMenuItemAddSystem.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItemAddExistingSystem.setText("Add Existing System ...");
+        jMenuItemAddExistingSystem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemAddSystemActionPerformed(evt);
+                jMenuItemAddExistingSystemActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItemAddSystem);
+        jMenuFile.add(jMenuItemAddExistingSystem);
 
-        jMenuItemDeleteSelectedSystem.setText("Delete Selected System");
-        jMenuItemDeleteSelectedSystem.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItemAddNewSystem.setText("Add New System ...");
+        jMenuItemAddNewSystem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemDeleteSelectedSystemActionPerformed(evt);
+                jMenuItemAddNewSystemActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItemDeleteSelectedSystem);
+        jMenuFile.add(jMenuItemAddNewSystem);
 
-        jMenuItemStartAll.setText("Start All");
-        jMenuItemStartAll.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItemRemoveSelectedSystem.setText("Remove Selected System");
+        jMenuItemRemoveSelectedSystem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemStartAllActionPerformed(evt);
+                jMenuItemRemoveSelectedSystemActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItemStartAll);
-
-        jMenuItemSafeAbortAll.setText("Safe Abort All");
-        jMenuItemSafeAbortAll.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemSafeAbortAllActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItemSafeAbortAll);
-
-        jMenuItemImmediateAbortAll.setText("Immediate Abort All");
-        jMenuItemImmediateAbortAll.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemImmediateAbortAllActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItemImmediateAbortAll);
+        jMenuFile.add(jMenuItemRemoveSelectedSystem);
 
         jMenuItemSavePosMaps.setText("Save Position Maps as ...");
         jMenuItemSavePosMaps.addActionListener(new java.awt.event.ActionListener() {
@@ -1023,7 +973,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 jMenuItemSavePosMapsActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItemSavePosMaps);
+        jMenuFile.add(jMenuItemSavePosMaps);
 
         jMenuItemLoadPosMaps.setText("Load Position Maps ...");
         jMenuItemLoadPosMaps.addActionListener(new java.awt.event.ActionListener() {
@@ -1031,7 +981,35 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 jMenuItemLoadPosMapsActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItemLoadPosMaps);
+        jMenuFile.add(jMenuItemLoadPosMaps);
+
+        jMenuBar1.add(jMenuFile);
+
+        jMenuActions.setText("Actions");
+
+        jMenuItemStartAll.setText("Start All");
+        jMenuItemStartAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemStartAllActionPerformed(evt);
+            }
+        });
+        jMenuActions.add(jMenuItemStartAll);
+
+        jMenuItemSafeAbortAll.setText("Safe Abort All");
+        jMenuItemSafeAbortAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSafeAbortAllActionPerformed(evt);
+            }
+        });
+        jMenuActions.add(jMenuItemSafeAbortAll);
+
+        jMenuItemImmediateAbortAll.setText("Immediate Abort All");
+        jMenuItemImmediateAbortAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemImmediateAbortAllActionPerformed(evt);
+            }
+        });
+        jMenuActions.add(jMenuItemImmediateAbortAll);
 
         jMenuItemConnectAll.setText("Connect All ...");
         jMenuItemConnectAll.addActionListener(new java.awt.event.ActionListener() {
@@ -1039,7 +1017,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 jMenuItemConnectAllActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItemConnectAll);
+        jMenuActions.add(jMenuItemConnectAll);
 
         jMenuItemDbgAction.setText("Dbg Action");
         jMenuItemDbgAction.addActionListener(new java.awt.event.ActionListener() {
@@ -1047,19 +1025,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 jMenuItemDbgActionActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItemDbgAction);
+        jMenuActions.add(jMenuItemDbgAction);
 
-        jMenuBar1.add(jMenu1);
+        jMenuBar1.add(jMenuActions);
 
-        jMenu2.setText("Edit");
-        jMenuBar1.add(jMenu2);
-
-        jMenu3.setText("Options");
-        jMenu3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenu3ActionPerformed(evt);
-            }
-        });
+        jMenuOptions.setText("Options");
 
         jCheckBoxMenuItemDisableTextPopups.setSelected(true);
         jCheckBoxMenuItemDisableTextPopups.setText("Disable Text Popups");
@@ -1068,7 +1038,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 jCheckBoxMenuItemDisableTextPopupsActionPerformed(evt);
             }
         });
-        jMenu3.add(jCheckBoxMenuItemDisableTextPopups);
+        jMenuOptions.add(jCheckBoxMenuItemDisableTextPopups);
 
         jMenuItemStartColorTextDisplay.setText("Start ColorText Display ...");
         jMenuItemStartColorTextDisplay.addActionListener(new java.awt.event.ActionListener() {
@@ -1076,9 +1046,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 jMenuItemStartColorTextDisplayActionPerformed(evt);
             }
         });
-        jMenu3.add(jMenuItemStartColorTextDisplay);
+        jMenuOptions.add(jMenuItemStartColorTextDisplay);
 
-        jMenuBar1.add(jMenu3);
+        jMenuBar1.add(jMenuOptions);
 
         setJMenuBar(jMenuBar1);
 
@@ -1137,7 +1107,15 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private void jMenuItemSaveSetupAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveSetupAsActionPerformed
+        browseSaveSetupAs();
+    }//GEN-LAST:event_jMenuItemSaveSetupAsActionPerformed
+
+    public void browseSaveSetupAs() throws HeadlessException {
         JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
+        chooser.setDialogTitle("Choose APRS Multi Supervisor CSV to create (save as).");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
+        chooser.addChoosableFileFilter(filter);
+        chooser.setFileFilter(filter);
         if (lastSetupFile != null) {
             chooser.setCurrentDirectory(lastSetupFile.getParentFile());
             chooser.setSelectedFile(lastSetupFile);
@@ -1151,10 +1129,18 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }//GEN-LAST:event_jMenuItemSaveSetupAsActionPerformed
+    }
 
     private void jMenuItemLoadSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadSetupActionPerformed
+        browseOpenSetup();
+    }//GEN-LAST:event_jMenuItemLoadSetupActionPerformed
+
+    public void browseOpenSetup() throws HeadlessException {
         JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
+        chooser.setDialogTitle("Choose APRS Multi Supervisor CSV to Open.");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
+        chooser.addChoosableFileFilter(filter);
+        chooser.setFileFilter(filter);
         if (lastSetupFile != null) {
             chooser.setCurrentDirectory(lastSetupFile.getParentFile());
             chooser.setSelectedFile(lastSetupFile);
@@ -1162,36 +1148,46 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
             try {
                 loadSetupFile(chooser.getSelectedFile());
-
             } catch (IOException ex) {
                 Logger.getLogger(AprsMulitSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }//GEN-LAST:event_jMenuItemLoadSetupActionPerformed
+    }
 
-    private void jMenuItemAddSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAddSystemActionPerformed
+    private void jMenuItemAddExistingSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAddExistingSystemActionPerformed
         JFileChooser chooser = new JFileChooser();
+        FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
+        chooser.addChoosableFileFilter(filter);
+        chooser.setFileFilter(filter);
+        chooser.setDialogTitle("Open APRS System properties file to be added to multi-system supervisor.");
         if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
             try {
                 File propertiesFile = chooser.getSelectedFile();
                 AprsJFrame aj = new AprsJFrame(propertiesFile);
-                aj.setPropertiesFile(propertiesFile);
-                aj.setPriority(aprsSystems.size() + 1);
-                aj.setVisible(true);
-                aj.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                aprsSystems.add(aj);
-                updateTasksTable();
-                updateRobotsTable();
-
+//                aj.setPropertiesFile(propertiesFile);
+                addAprsSystem(aj);
+                saveCurrentSetup();
             } catch (IOException ex) {
                 Logger.getLogger(AprsMulitSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }//GEN-LAST:event_jMenuItemAddSystemActionPerformed
+    }//GEN-LAST:event_jMenuItemAddExistingSystemActionPerformed
 
-    private void jMenuItemDeleteSelectedSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemDeleteSelectedSystemActionPerformed
+    public void addAprsSystem(AprsJFrame aj) throws IOException {
+        aj.setPriority(aprsSystems.size() + 1);
+        aj.setVisible(true);
+        aj.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        aprsSystems.add(aj);
+        aj.getTitleUpdateRunnables().add(() -> {
+            Utils.runOnDispatchThreadWithCatch(this::updateTasksTable);
+        });
+        updateTasksTable();
+        updateRobotsTable();
+    }
+
+    private void jMenuItemRemoveSelectedSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemRemoveSelectedSystemActionPerformed
         int selectedIndex = jTableTasks.getSelectedRow();
         if (selectedIndex >= 0 && selectedIndex < aprsSystems.size()) {
             try {
@@ -1205,13 +1201,13 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 }
                 updateTasksTable();
                 updateRobotsTable();
-
+                saveCurrentSetup();
             } catch (IOException ex) {
                 Logger.getLogger(AprsMulitSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }//GEN-LAST:event_jMenuItemDeleteSelectedSystemActionPerformed
+    }//GEN-LAST:event_jMenuItemRemoveSelectedSystemActionPerformed
 
     private XFuture<?> lastFutureReturned = null;
 
@@ -1228,6 +1224,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     private void browseAndSavePositionMappings() throws HeadlessException {
         JFileChooser chooser = new JFileChooser();
+        FileFilter filter = new FileNameExtensionFilter("Comma-separated values", "csv");
+        chooser.addChoosableFileFilter(filter);
+        chooser.setFileFilter(filter);
+        chooser.setDialogTitle("Choose APRS position mappings csv file to create (save as)");
         if (null != lastPosMapFile) {
             chooser.setCurrentDirectory(lastPosMapFile.getParentFile());
             chooser.setSelectedFile(lastPosMapFile);
@@ -1261,7 +1261,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jTablePositionMappingsMouseClicked
 
     private void jMenuItemLoadPosMapsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadPosMapsActionPerformed
+        browseOpenPosMapsFile();
+    }//GEN-LAST:event_jMenuItemLoadPosMapsActionPerformed
+
+    public void browseOpenPosMapsFile() {
         JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Choose APRS Position Maps CSV to Open.");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
+        chooser.addChoosableFileFilter(filter);
         if (lastPosMapFile != null) {
             chooser.setCurrentDirectory(lastPosMapFile.getParentFile());
             chooser.setSelectedFile(lastPosMapFile);
@@ -1275,7 +1282,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }//GEN-LAST:event_jMenuItemLoadPosMapsActionPerformed
+    }
 
     private void jMenuItemSafeAbortAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSafeAbortAllActionPerformed
         lastFutureReturned = safeAbortAll();
@@ -1350,6 +1357,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         try {
             File f = resolveFile(jTextFieldSelectedPosMapFilename.getText(), lastPosMapFile.getParentFile());
             JFileChooser chooser = new JFileChooser();
+            FileFilter filter = new FileNameExtensionFilter("Comma-separated values", "csv");
+            chooser.addChoosableFileFilter(filter);
+            chooser.setFileFilter(filter);
+            chooser.setDialogTitle("Choose APRS position mapping csv file to create (save as)");
             if (null != f) {
                 chooser.setCurrentDirectory(f.getParentFile());
                 chooser.setSelectedFile(f);
@@ -1438,9 +1449,17 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_formWindowClosing
 
-    private void jMenu3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenu3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jMenu3ActionPerformed
+    private void jMenuItemAddNewSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAddNewSystemActionPerformed
+        try {
+            AprsJFrame aj = new AprsJFrame();
+            aj.emptyInit();
+            addAprsSystem(aj);
+            aj.browseSavePropertiesFileAs();
+            saveCurrentSetup();
+        } catch (IOException ex) {
+            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jMenuItemAddNewSystemActionPerformed
 
     private void savePosFile(File f) throws IOException {
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
@@ -1577,9 +1596,54 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         });
     }
 
+    private File setupFile;
+
+    /**
+     * Get the value of setupFile
+     *
+     * @return the value of setupFile
+     */
+    public File getSetupFile() {
+        return setupFile;
+    }
+
+    /**
+     * Set the value of setupFile
+     *
+     * @param f new value of setupFile
+     */
+    public void setSetupFile(File f) throws IOException {
+        if (!Objects.equal(this.setupFile,f)) {
+            if (null != f) {
+                Utils.runOnDispatchThread(() -> setTitle("Multi Aprs Supervisor : " + f));
+            } else {
+                Utils.runOnDispatchThread(() -> setTitle("Multi Aprs Supervisor"));
+            }
+        }
+        if(null != f) {
+            saveLastSetupFile(f);
+        }
+        this.setupFile = f;
+        this.jMenuItemSaveSetup.setEnabled(f != null);
+    }
+
+    public void saveCurrentSetup() {
+        try {
+            if(null != setupFile) {
+                int response = 
+                        JOptionPane.showConfirmDialog(this, "Save Current APRS Supervisor file : "+setupFile);
+                if(response == JOptionPane.YES_OPTION) {
+                    saveSetupFile(setupFile);   
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public void saveSetupFile(File f) throws IOException {
         saveJTable(f, jTableTasks);
-        saveLastSetupFile(f);
+        setSetupFile(f);
     }
 
     private void saveJTable(File f, JTable jtable) throws IOException {
@@ -1790,8 +1854,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         });
         updateTasksTable();
         updateRobotsTable();
-        saveLastSetupFile(f);
+        
         clearPosTable();
+        setSetupFile(f);
     }
 
     public void updateTasksTable() throws IOException {
@@ -1851,11 +1916,18 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new AprsMulitSupervisorJFrame().setVisible(true);
+                AprsMulitSupervisorJFrame amsFrame = new AprsMulitSupervisorJFrame();
+                amsFrame.startColorTextReader();
+                amsFrame.loadPrevSetup();
+                amsFrame.loadPrevPosMapFile();
+                amsFrame.setVisible(true);
             }
         });
     }
@@ -1868,22 +1940,24 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButtonSetInFromCurrent;
     private javax.swing.JButton jButtonSetOutFromCurrent;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDisableTextPopups;
-    private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
-    private javax.swing.JMenu jMenu3;
+    private javax.swing.JMenu jMenuActions;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItemAddSystem;
+    private javax.swing.JMenu jMenuFile;
+    private javax.swing.JMenuItem jMenuItemAddExistingSystem;
+    private javax.swing.JMenuItem jMenuItemAddNewSystem;
     private javax.swing.JMenuItem jMenuItemConnectAll;
     private javax.swing.JMenuItem jMenuItemDbgAction;
-    private javax.swing.JMenuItem jMenuItemDeleteSelectedSystem;
     private javax.swing.JMenuItem jMenuItemImmediateAbortAll;
     private javax.swing.JMenuItem jMenuItemLoadPosMaps;
     private javax.swing.JMenuItem jMenuItemLoadSetup;
+    private javax.swing.JMenuItem jMenuItemRemoveSelectedSystem;
     private javax.swing.JMenuItem jMenuItemSafeAbortAll;
     private javax.swing.JMenuItem jMenuItemSavePosMaps;
+    private javax.swing.JMenuItem jMenuItemSaveSetup;
     private javax.swing.JMenuItem jMenuItemSaveSetupAs;
     private javax.swing.JMenuItem jMenuItemStartAll;
     private javax.swing.JMenuItem jMenuItemStartColorTextDisplay;
+    private javax.swing.JMenu jMenuOptions;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanelPosMapFiles;
     private javax.swing.JPanel jPanelPositionMappings;
