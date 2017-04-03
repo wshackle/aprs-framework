@@ -1051,7 +1051,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (checkInternalFrame(dbSetupJInternalFrame)) {
             jDesktopPane1.getDesktopManager().deiconifyFrame(dbSetupJInternalFrame);
             jDesktopPane1.getDesktopManager().activateFrame(dbSetupJInternalFrame);
+            jDesktopPane1.getDesktopManager().maximizeFrame(dbSetupJInternalFrame);
         }
+        
         setupWindowsMenu();
     }
 
@@ -1433,10 +1435,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jCheckBoxMenuItemStartupObjectSP = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupObject2DView = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupRobotCrclGUI = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemStartupRobtCRCLSimServer = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemShowDatabaseSetup = new javax.swing.JCheckBoxMenuItem();
+        jSeparator2 = new javax.swing.JPopupMenu.Separator();
+        jCheckBoxMenuItemStartupRobtCRCLSimServer = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupFanucCRCLServer = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupMotomanCRCLServer = new javax.swing.JCheckBoxMenuItem();
+        jSeparator3 = new javax.swing.JPopupMenu.Separator();
         jCheckBoxMenuItemConnectToDatabaseOnStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemConnectToVisionOnStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemExploreGraphDbStartup = new javax.swing.JCheckBoxMenuItem();
@@ -1548,15 +1552,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
         jMenu3.add(jCheckBoxMenuItemStartupRobotCrclGUI);
 
-        jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(true);
-        jCheckBoxMenuItemStartupRobtCRCLSimServer.setText("Robot CRCL SimServer");
-        jCheckBoxMenuItemStartupRobtCRCLSimServer.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemStartupRobtCRCLSimServer);
-
         jCheckBoxMenuItemShowDatabaseSetup.setSelected(true);
         jCheckBoxMenuItemShowDatabaseSetup.setText("Database Setup");
         jCheckBoxMenuItemShowDatabaseSetup.addActionListener(new java.awt.event.ActionListener() {
@@ -1565,6 +1560,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenu3.add(jCheckBoxMenuItemShowDatabaseSetup);
+        jMenu3.add(jSeparator2);
+
+        jCheckBoxMenuItemStartupRobtCRCLSimServer.setText("Robot CRCL SimServer");
+        jCheckBoxMenuItemStartupRobtCRCLSimServer.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jCheckBoxMenuItemStartupRobtCRCLSimServer);
 
         jCheckBoxMenuItemStartupFanucCRCLServer.setText("Fanuc CRCL Server");
         jCheckBoxMenuItemStartupFanucCRCLServer.addActionListener(new java.awt.event.ActionListener() {
@@ -1581,6 +1585,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenu3.add(jCheckBoxMenuItemStartupMotomanCRCLServer);
+        jMenu3.add(jSeparator3);
 
         jCheckBoxMenuItemConnectToDatabaseOnStartup.setText("Connect To Database On Startup");
         jCheckBoxMenuItemConnectToDatabaseOnStartup.addActionListener(new java.awt.event.ActionListener() {
@@ -2632,6 +2637,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JMenuItem jMenuItemStartActionList;
     private javax.swing.JMenu jMenuWindow;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JPopupMenu.Separator jSeparator2;
+    private javax.swing.JPopupMenu.Separator jSeparator3;
     // End of variables declaration//GEN-END:variables
 
     @Override
