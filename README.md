@@ -30,6 +30,20 @@ The programming language independent documentation and XML Schema files for
 validation are stored in the main crcl repository:  https://github.com/ros-industrial/crcl
 
 
+Supervisor
+-----
+
+Multiple such system each with its own separate database, vision system(s), robot(s), PDDL planners and executors and
+separate unrelated tasks to perform can be coordinated by a supervisor that allows them to all 
+be started/stopped simultaneously or for robots to be transferred between the systems.
+
+![Supervisor of two systems](/Diagrams/supervisor_over_fanuc_motoman.png?raw=true)
+
+The supervisor and each subsystem is implemented in a separate window.
+
+![Supervisor Screenshot](/Screenshots/Multi_Aprs_Simulation_Screenshot.png?raw=true)
+
+
 Build
 -----
 

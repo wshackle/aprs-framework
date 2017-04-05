@@ -926,11 +926,13 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 .filter((DetectedItem item) -> "P".equals(item.type))
                 .collect(Collectors.toList());
         List<DetectedItem> fullList = new ArrayList<>();
-        List<DetectedItem> bestEmptySlots = findBestEmptyTraySlots(kitTrays, parts);
+        List<DetectedItem> bestKitTrayEmptySlots = findBestEmptyTraySlots(kitTrays, parts);
+        List<DetectedItem> bestPartTrayEmptySlots = findBestEmptyTraySlots(partTrays, parts);
         fullList.addAll(kitTrays);
         fullList.addAll(partTrays);
         fullList.addAll(parts);
-        fullList.addAll(bestEmptySlots);
+        fullList.addAll(bestKitTrayEmptySlots);
+        fullList.addAll(bestPartTrayEmptySlots);
         return fullList;
     }
 
