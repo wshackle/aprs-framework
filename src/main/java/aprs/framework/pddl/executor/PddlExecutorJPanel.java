@@ -1418,13 +1418,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private String trimXml(String in) {
         int start = in.indexOf("?>");
-        if(start < 0 ) {
+        if (start < 0) {
             start = 0;
         } else {
-            start = start+2;
+            start = start + 2;
         }
         int instIndex = in.indexOf("<CRCLCommandInstance>", Math.max(0, start));
-        if(instIndex > 0) {
+        if (instIndex > 0) {
             start = instIndex + "<CRCLCommandInstance>".length();
         }
         int end = in.indexOf("</CRCLCommandInstance>", Math.max(0, start));
@@ -1810,6 +1810,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         safeAbortRunnablesVector.clear();
         abortProgram();
         lastActionMillis = System.currentTimeMillis();
+        setErrorString(null);
+        aprsJFrame.setTitleErrorString(null);
     }
 
     /**
@@ -2672,6 +2674,26 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
+    private String errorString;
+
+    /**
+     * Get the value of errorString
+     *
+     * @return the value of errorString
+     */
+    public String getErrorString() {
+        return errorString != null?errorString:"";
+    }
+
+    /**
+     * Set the value of errorString
+     *
+     * @param errorString new value of errorString
+     */
+    public void setErrorString(String errorString) {
+        this.errorString = errorString;
+    }
+
     private void showExceptionInProgram(final java.lang.Exception ex) {
         CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds = program.getMiddleCommand();
@@ -2681,7 +2703,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         cmds.add(message);
         loadProgramToTable(program);
         jTableCrclProgram.setBackground(Color.red);
-
+        jTabbedPane1.setSelectedComponent(jPanelCrcl);
+        setErrorString(ex.toString());
+        if(null != aprsJFrame) {
+            aprsJFrame.setTitleErrorString(errorString);
+        }
     }
 
     private String crclProgName = null;

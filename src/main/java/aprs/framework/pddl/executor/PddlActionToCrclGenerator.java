@@ -124,8 +124,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     //String messageColorH3 = "#ffcc00";
     // top panel orange [255,204,0]
     String messageColorH3 = "#e0e0e0";
-    Color warningColor = new Color(100,71,71);
-    
+    Color warningColor = new Color(100, 71, 71);
+
     /**
      * Get the value of takeSnapshots
      *
@@ -303,10 +303,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
             if (dbConnection == null) {
                 try {
-                    DbSetupBuilder.connect(dbSetup).thenAccept(c -> {
-                        Utils.runOnDispatchThread(() -> {
-                            setDbConnection(c);
-                        });
+                    DbSetupBuilder.connect(dbSetup).handle((c, ex) -> {
+                        if (null != c) {
+                            Utils.runOnDispatchThread(() -> {
+                                setDbConnection(c);
+                            });
+                        } 
+                        if(null != ex) {
+                            aprsJFrame.setTitleErrorString("Database error: "+ex.toString());
+                        }
+                        return c;
                     });
                     System.out.println("PddlActionToCrclGenerator connected to database of type " + dbSetup.getDbType() + " on host " + dbSetup.getHost() + " with port " + dbSetup.getPort());
                 } catch (Exception ex) {
@@ -827,14 +833,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     for (Slot s : EmptySlotSet) {
                         kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
                     }
-                    if (nbofmissingparts==1){
-                    kitInspectionJInternalFrame.getKitTitleLabel().setText("Missing "+nbofmissingparts+" part. Getting the new part.");
-                    } else
-                    {
-                        kitInspectionJInternalFrame.getKitTitleLabel().setText("Missing "+nbofmissingparts+" parts. Getting the new parts.");
+                    if (nbofmissingparts == 1) {
+                        kitInspectionJInternalFrame.getKitTitleLabel().setText("Missing " + nbofmissingparts + " part. Getting the new part.");
+                    } else {
+                        kitInspectionJInternalFrame.getKitTitleLabel().setText("Missing " + nbofmissingparts + " parts. Getting the new parts.");
                     }
                     try {
-                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: "+messageColorH3+"\">&nbsp;&nbsp;Recovering from failures</h2>");
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;Recovering from failures</h2>");
                     } catch (BadLocationException ex) {
                         Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -902,7 +907,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             correctPartsTray = null;
         }
     }
-
 
     /**
      * Function that finds the correct kit tray from the database using the sku
@@ -1150,7 +1154,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setMessage("take-part " + partName);
         msg.setCommandID(BigInteger.valueOf(out.size() + 2));
         out.add(msg);
-        
+
         kitInspectionJInternalFrame.setKitImage("init");
         kitInspectionJInternalFrame.getKitTitleLabel().setText("Building kit");
         setCorrectKitImage();
@@ -1171,7 +1175,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
-                        try {
+            try {
                 kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
             } catch (BadLocationException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -1211,7 +1215,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
-                        try {
+            try {
                 kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
             } catch (BadLocationException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -1245,11 +1249,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         takePartByPose(out, pose);
-       
+
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
-                        try {
+            try {
                 kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
             } catch (BadLocationException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -1745,7 +1749,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
-                if (null == kitInspectionJInternalFrame) {
+        if (null == kitInspectionJInternalFrame) {
             kitInspectionJInternalFrame = aprsJFrame.getKitInspectionJInternalFrame();
         }
         addMoveToLookForPosition(out);
@@ -1754,39 +1758,38 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addTakeSimViewSnapshot(out, "-look-for-parts-", null, "");
         addMarkerCommand(out, "clear pose cache", x -> this.clearPoseCache());
-                if (action.getArgs().length == 1) {
-            if (action.getArgs()[0].startsWith("1")){
-            addMarkerCommand(out, "", x -> {
-                kitInspectionJInternalFrame.getKitTitleLabel().setText("Inspecting kit");
-                try {
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR:"+messageColorH3+"\">&nbsp;&nbsp;Inspecting kit</h2>");
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            });
-        
-        } else if (action.getArgs()[0].startsWith("0")){
-            addMarkerCommand(out, "", x -> {
-                kitInspectionJInternalFrame.getKitTitleLabel().setText("Building kit");
-                try {
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: "+messageColorH3+"\">&nbsp;&nbsp;Building kit</h2>");
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            });
-        }
-            else if (action.getArgs()[0].startsWith("2")){
-            addMarkerCommand(out, "", x -> {
-                kitInspectionJInternalFrame.getKitTitleLabel().setText("All Tasks Completed");
-                try {
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: "+messageColorH3+"\">&nbsp;&nbsp;All tasks completed</h2>");
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            });
-        }
+        if (action.getArgs().length == 1) {
+            if (action.getArgs()[0].startsWith("1")) {
+                addMarkerCommand(out, "", x -> {
+                    kitInspectionJInternalFrame.getKitTitleLabel().setText("Inspecting kit");
+                    try {
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR:" + messageColorH3 + "\">&nbsp;&nbsp;Inspecting kit</h2>");
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
 
-    }
+            } else if (action.getArgs()[0].startsWith("0")) {
+                addMarkerCommand(out, "", x -> {
+                    kitInspectionJInternalFrame.getKitTitleLabel().setText("Building kit");
+                    try {
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;Building kit</h2>");
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
+            } else if (action.getArgs()[0].startsWith("2")) {
+                addMarkerCommand(out, "", x -> {
+                    kitInspectionJInternalFrame.getKitTitleLabel().setText("All Tasks Completed");
+                    try {
+                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;All tasks completed</h2>");
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
+            }
+
+        }
     }
 
 //    private void addOpenGripper(List<MiddleCommandType> out, PoseType pose) {

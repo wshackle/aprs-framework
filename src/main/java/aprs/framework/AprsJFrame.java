@@ -603,12 +603,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     sb.append("PDDL action = \r\n");
                 }
             }
+            String pddlErrorString = this.pddlExecutorJInternalFrame1.getErrorString();
+            if (null != pddlErrorString && pddlErrorString.length() > 0) {
+                sb.append("pddlExecutorError=").append(pddlErrorString).append("\r\n");
+            }
         }
         sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append("\r\n");
         boolean connected = (null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected());
         sb.append("connected=").append(connected).append("\r\n");
         sb.append("                                                                                                                                                                                                                                                                                        \r\n");
 
+        if (null != titleErrorString && titleErrorString.length() > 0) {
+            sb.append("titleErrorString=").append(titleErrorString).append("\r\n");
+        }
 //        sb.append("1111111111222222222233333333334444444444555555555566666666667777777777788888888899999999990000000000111111111122222222223333333333\r\n");
 //        sb.append("0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\r\n");
         return sb.toString();
@@ -705,6 +712,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param titleErrorString title error string
      */
     public void setTitleErrorString(String titleErrorString) {
+        updateTitle();
         this.titleErrorString = titleErrorString;
         setTitle(titleErrorString);
         System.err.println(titleErrorString);
@@ -1053,7 +1061,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             jDesktopPane1.getDesktopManager().activateFrame(dbSetupJInternalFrame);
             jDesktopPane1.getDesktopManager().maximizeFrame(dbSetupJInternalFrame);
         }
-        
+
         setupWindowsMenu();
     }
 

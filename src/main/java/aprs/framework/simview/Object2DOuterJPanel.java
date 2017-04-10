@@ -113,12 +113,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void setItemsInternal(List<DetectedItem> items) {
         object2DJPanel1.setItems(items);
-        ListSelectionModel lsm = jTableItems.getSelectionModel();
+        
         int origSelectedRow = jTableItems.getSelectedRow();
         int origSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jTableItems.getRowCount())
                 ? (int) jTableItems.getValueAt(origSelectedRow, 0) : -1;
 
+        RowSorter rowSorter = jTableItems.getRowSorter();
+        if(null != rowSorter) {
+            jTableItems.setRowSorter(null);
+        }
         DefaultTableModel model = (DefaultTableModel) jTableItems.getModel();
         model.setRowCount(0);
         for (int i = 0; i < items.size(); i++) {
@@ -126,9 +130,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             model.addRow(new Object[]{i, item.name, item.x, item.y, Math.toDegrees(item.rotation), item.type,item.score});
         }
         autoResizeTableColWidths(jTableItems);
-
-        RowSorter rowSorter = jTableItems.getRowSorter();
         if (null != rowSorter) {
+            jTableItems.setRowSorter(rowSorter);
             rowSorter.allRowsChanged();
         }
         int newSelectedRowIndex
@@ -136,7 +139,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 ? (int) jTableItems.getValueAt(origSelectedRow, 0) : -1;
         if (newSelectedRowIndex > 0 && newSelectedRowIndex == origSelectedRowIndex) {
             DefaultListSelectionModel dlsm;
-            lsm = jTableItems.getSelectionModel();
+            ListSelectionModel lsm = jTableItems.getSelectionModel();
             if (lsm instanceof DefaultListSelectionModel) {
                 dlsm = (DefaultListSelectionModel) lsm;
             } else {

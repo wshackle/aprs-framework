@@ -91,6 +91,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         this.actionsToCrclJPanel1.pause();
     }
     
+    public String getErrorString() {
+        return this.actionsToCrclJPanel1.getErrorString();
+    }
+    
     /**
      * Add a position map.
      * 
