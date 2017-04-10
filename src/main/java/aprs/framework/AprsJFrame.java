@@ -314,8 +314,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return a future that can be tested or used to wait until the abort is
      * completed.
      */
-    public XFuture<Void> safeAbort() {
-        return this.pddlExecutorJInternalFrame1.safeAbort();
+    public XFuture<Void> startSafeAbort() {
+        return this.pddlExecutorJInternalFrame1.startSafeAbort();
     }
 
     /**
@@ -327,8 +327,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * future. * @return a future that can be tested or used to wait until the
      * abort and disconnect is completed.
      */
-    public XFuture<Void> safeAbortAndDisconnectAsync() {
-        return this.pddlExecutorJInternalFrame1.safeAbort()
+    public XFuture<Void> startSafeAbortAndDisconnectAsync() {
+        return this.pddlExecutorJInternalFrame1.startSafeAbort()
                 .thenRunAsync(this::disconnectRobot);
     }
 
@@ -2040,7 +2040,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return future of the underlying task to execute the actions.
      */
-    public XFuture<Boolean> checkEnabled() {
+    public XFuture<Boolean> startCheckEnabled() {
         try {
             setConnected(true);
             return startCRCLProgram(emptyProgram);

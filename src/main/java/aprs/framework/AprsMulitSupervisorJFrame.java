@@ -500,8 +500,8 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 //        String stealForLookForXYZOption = stealFor.getExecutorOptions().get("lookForXYZ");
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
         return XFuture.allOf(
-                stealFrom.safeAbortAndDisconnectAsync(),
-                stealFor.safeAbort()
+                stealFrom.startSafeAbortAndDisconnectAsync(),
+                stealFor.startSafeAbort()
                         .thenCompose(x -> {
                             if (null != colorTextSocket) {
                                 try {
@@ -539,7 +539,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     return stealFor.continueActionList();
                 })
                 .thenCompose(x -> {
-                    return stealFor.safeAbortAndDisconnectAsync();
+                    return stealFor.startSafeAbortAndDisconnectAsync();
                 })
                 .thenCompose(x -> {
                     return SplashScreen.showMessageFullScreen("Returning \n" + stealFromRobotName, 80.0f,
@@ -1511,7 +1511,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     public XFuture<Boolean> checkEnabledAll() {
         XFuture<Boolean> futures[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            futures[i] = aprsSystems.get(i).checkEnabled();
+            futures[i] = aprsSystems.get(i).startCheckEnabled();
         }
         XFuture<Boolean> ret = XFuture.completedFuture(true);
         BiFunction<Boolean, Boolean, Boolean> andBiFunction = (Boolean ok1, Boolean ok2) -> ok1 && ok2;
@@ -1564,7 +1564,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         XFuture<?> prevLastFuture = lastFutureReturned;
         XFuture futures[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            futures[i] = aprsSystems.get(i).safeAbort();
+            futures[i] = aprsSystems.get(i).startSafeAbort();
         }
         return XFuture.allOf(futures).thenRun(() -> {
             if (null != prevLastFuture) {

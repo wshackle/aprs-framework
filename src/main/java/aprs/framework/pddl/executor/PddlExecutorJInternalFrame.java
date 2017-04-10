@@ -71,8 +71,8 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         actionsToCrclJPanel1.abortProgram();
     }
 
-    public XFuture<Void> safeAbort() {
-        return this.actionsToCrclJPanel1.safeAbort();
+    public XFuture<Void> startSafeAbort() {
+        return this.actionsToCrclJPanel1.startSafeAbort();
     }
 
     public int getCurrentActionIndex() {
