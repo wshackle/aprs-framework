@@ -1,0 +1,14 @@
+name,rotation,x,y,score,type
+sku_part_large_gear,0.0,673.419,193.277,100.0,P
+sku_part_large_gear,0.0,672.339,85.282,100.0,P
+sku_part_large_gear,0.0,675.541,-147.277,100.0,P
+sku_part_large_gear,0.0,674.461,-39.282,100.0,P
+sku_part_small_gear,0.0,756.195,170.448,100.0,P
+sku_part_small_gear,0.0,758.317,-124.448,100.0,P
+sku_part_small_gear,0.0,755.555,106.451,100.0,P
+sku_part_small_gear,0.0,757.677,-60.451,100.0,P
+sku_large_gear_vessel,0.0,545.013,129.0,100.0,PT
+sku_large_gear_vessel,0.0,721.6895,-328.0,100.0,PT
+sku_small_gear_vessel,0.0,554.993,-55.74675,100.0,PT
+sku_kit_s2l2_vessel,0.01,703.0,-93.0,0.98,KT
+sku_kit_s2l2_vessel,-0.01,700.8783783783783,139.0,1.0,KT

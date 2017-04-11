@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1238
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1311
 approachZOffset=50.0
 defaultDwellTime=0.1
 fastTransSpeed=400.0
@@ -10,7 +10,7 @@ lookForJoints=21.25071462955139,-35.78231945592341,-2.170151522559762,0.00049822
 lookForXYZ=180,70,210
 manualPartNames=[empty_slot_for_large_gear_in_kit_m2l1_vessel_1, empty_slot_for_large_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m2, empty_slot_for_medium_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear, null, null]
 manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
-pddl.output=..\\..\\..\\example_pddl\\feb_21_2017_fanuc_demo_actions.txt
+pddl.output=..\\..\\..\\example_pddl\\reverse_fanuc_demo_actions.txt
 placePartSlotArgIndex=0
 placeZOffset=5.0
 rotSpeed=30.0
