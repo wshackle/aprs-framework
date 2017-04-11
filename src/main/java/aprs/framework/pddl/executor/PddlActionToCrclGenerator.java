@@ -685,6 +685,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             aprsJFrame.takeSimViewSnapshot(f, pose, label);
         }
     }
+    
+    /**
+     * Take a snapshot of the view of objects positions and save it in the
+     * specified file, optionally highlighting a pose with a label.
+     *
+     * @param f file to save snapshot image to
+     * @throws IOException if writing the file fails
+     */
+    public void takeDatabaseViewSnapshot(File f) throws IOException {
+        if (null != aprsJFrame) {
+            aprsJFrame.startVisionToDbNewItemsImageSave(f);
+        }
+    }
 
     /**
      * Add a marker command that will cause a snapshot to be taken when the CRCL
@@ -702,6 +715,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             addMarkerCommand(out, title, x -> {
                 try {
                     takeSimViewSnapshot(File.createTempFile(filename, ".PNG"), pose, label);
+                    takeDatabaseViewSnapshot(File.createTempFile(filename+"_new_database_items", ".PNG"));
                 } catch (IOException ex) {
                     Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }

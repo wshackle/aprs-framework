@@ -112,13 +112,24 @@ public class Utils {
     public static SwingFuture<Void> runOnDispatchThread(final Runnable r) {
         SwingFuture<Void> ret = new SwingFuture<>();
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
-            r.run();
-            ret.complete(null);
+            try {
+                r.run();
+                ret.complete(null);
+            } catch (Exception e) {
+                e.printStackTrace();
+                ret.completeExceptionally(e);
+            }
+
             return ret;
         } else {
             javax.swing.SwingUtilities.invokeLater(() -> {
-                r.run();
-                ret.complete(null);
+                try {
+                    r.run();
+                    ret.complete(null);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    ret.completeExceptionally(e);
+                }
             });
             return ret;
         }
@@ -213,28 +224,28 @@ public class Utils {
             }
         }
     }
-    
+
     public static void saveProperties(File file, Properties props) {
         List<String> names = new ArrayList<String>();
-        for(Object key : props.keySet()) {
+        for (Object key : props.keySet()) {
             names.add(key.toString());
         }
         Collections.sort(names);
         StackTraceElement ste[] = Thread.currentThread().getStackTrace();
-        try(PrintWriter pw = new PrintWriter(new FileWriter(file))) {
-            if(ste.length > 2) {
-                pw.println("#  Automatically saved by "+ste[2].getClassName()+"."+ste[2].getMethodName()+"() at "+ste[2].getFileName()+":"+ste[2].getLineNumber());
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
+            if (ste.length > 2) {
+                pw.println("#  Automatically saved by " + ste[2].getClassName() + "." + ste[2].getMethodName() + "() at " + ste[2].getFileName() + ":" + ste[2].getLineNumber());
             }
             for (int i = 0; i < names.size(); i++) {
                 String name = names.get(i);
                 String value = props.getProperty(name);
                 value = value.replaceAll("\\\\", Matcher.quoteReplacement("\\\\"));
-                pw.println(name+"="+value);
+                pw.println(name + "=" + value);
             }
 //            props.store(pw, "");
         } catch (IOException ex) {
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
 }

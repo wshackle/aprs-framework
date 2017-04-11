@@ -25,10 +25,12 @@ package aprs.framework.spvision;
 
 
 import aprs.framework.AprsJFrame;
+import aprs.framework.Utils;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.PoseQueryElem;
+import crcl.ui.XFuture;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -54,6 +56,17 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
 //        return this.visionToDBJPanel.getDbSetupPublisher();
 //    }
     
+    public XFuture<Void> startNewItemsImageSave(File f) {
+        return this.visionToDBJPanel.startNewItemsImageSave(f);
+    }
+    
+    public List<DetectedItem> getSlotOffsets(String name) {
+        return this.visionToDBJPanel.getSlotOffsets(name);
+    }
+
+    public List<DetectedItem> getSlots(DetectedItem item) {
+        return this.visionToDBJPanel.getSlots(item);
+    }
 
      public void setAprsJFrame(AprsJFrame aprsJFrame) {
          this.visionToDBJPanel.setAprsJFrame(aprsJFrame);

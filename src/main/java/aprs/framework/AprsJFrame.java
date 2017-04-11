@@ -122,6 +122,27 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private String taskName;
 
+    public List<DetectedItem> getSlotOffsets(String name) {
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("visionToDbJInternalFrame == null");
+        }
+        return this.visionToDbJInternalFrame.getSlotOffsets(name);
+    }
+
+    public XFuture<Void> startVisionToDbNewItemsImageSave(File f) {
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("visionToDbJInternalFrame == null");
+        }
+        return this.visionToDbJInternalFrame.startNewItemsImageSave(f);
+    }
+
+    public List<DetectedItem> getSlots(DetectedItem item) {
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("visionToDbJInternalFrame == null");
+        }
+        return this.visionToDbJInternalFrame.getSlots(item);
+    }
+
     /**
      * Pause a currently executing CRCL program.
      *

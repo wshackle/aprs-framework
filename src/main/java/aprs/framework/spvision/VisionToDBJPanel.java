@@ -1019,7 +1019,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         for (int i = 0; i < _list.size(); i++) {
             PoseQueryElem pqe = _list.get(i);
             if (tm.getRowCount() <= i) {
-                tm.addRow(new Object[]{pqe.getName(), pqe.getX(), pqe.getY(), pqe.getZ(), pqe.getRot(),pqe.getVisioncycle()});
+                tm.addRow(new Object[]{pqe.getName(), pqe.getX(), pqe.getY(), pqe.getZ(), pqe.getRot(), pqe.getVisioncycle()});
                 continue;
             }
             tm.setValueAt(pqe.getName(), i, 0);
@@ -1077,7 +1077,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     System.err.println("bad ci fullname " + ci);
                 }
                 if (tm.getRowCount() <= i) {
-                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.z, ci.score, ci.type, ci.insidePartsTray, ci.insideKitTray, ci.fullName,ci.visioncycle, ci.setQuery});
+                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.z, ci.score, ci.type, ci.insidePartsTray, ci.insideKitTray, ci.fullName, ci.visioncycle, ci.setQuery});
                     continue;
                 }
                 tm.setValueAt(ci.index, i, 0);
@@ -1309,6 +1309,20 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return out;
     }
     private volatile boolean addRepeatCountsToDatabaseNames = false;
+
+    public List<DetectedItem> getSlotOffsets(String name) {
+        if (null == dpu) {
+            return null;
+        }
+        return dpu.getSlotOffsets(name);
+    }
+
+    public List<DetectedItem> getSlots(DetectedItem item) {
+        if (null == dpu) {
+            return null;
+        }
+        return dpu.getSlots(item);
+    }
 
     @Override
     public void visionClientUpdateRecieved(List<DetectedItem> visionList, String line) {
@@ -1549,14 +1563,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return XFuture.completedFuture(null);
     }
 
-    
-    private XFuture<Void> queryDatabaseNew() throws InterruptedException, ExecutionException {
+    private XFuture<Void> startQueryDatabaseNew()  {
         if (null != dpu) {
             return dpu.queryDatabaseNew().thenCompose(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
         return XFuture.completedFuture(null);
     }
-    
+
     private void jButtonAddItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddItemActionPerformed
         try {
             Window parentWindow = getParentWindow();
@@ -1761,8 +1774,18 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private void callShowDatabaseTableImage() {
         Utils.runOnDispatchThread(this::showDatabaseTableImage);
     }
-    
+
     private void showDatabaseTableImage() {
+        try {
+            File f = File.createTempFile("newDataBaseItems_", ".png");
+            takeSnapshot(f);
+            Desktop.getDesktop().open(f);
+        } catch (IOException ex) {
+            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void takeSnapshot(File f) {
         try {
             List<DetectedItem> list = new ArrayList<>();
             DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
@@ -1772,23 +1795,40 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         Double.parseDouble(tm.getValueAt(i, 1).toString()),
                         Double.parseDouble(tm.getValueAt(i, 2).toString())));
             }
-            File f = File.createTempFile("newDataBaseItems_", ".png");
+            if (list.isEmpty()) {
+                System.err.println("takeSnapshot(" + f + ") called when table is empty");
+                return;
+            }
             aprsJFrame.takeSimViewSnapshot(f, list);
-            Desktop.getDesktop().open(f);
         } catch (IOException ex) {
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
+    private void takeNewItemsSnapshot(File f) {
+        startNewItemsCheck()
+                .thenRun(() -> takeSnapshot(f));
+    }
+
+    public XFuture<Void> startTakeSnapshot(File f) {
+        return Utils.runOnDispatchThread(() -> takeSnapshot(f));
+    }
+
+
+    public XFuture<Void> startNewItemsImageSave(File f) {
+        return Utils.runOnDispatchThread(() -> takeNewItemsSnapshot(f));
+    }
+
     private void jButtonCheckNewItemsOnlyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCheckNewItemsOnlyActionPerformed
-        try {
-            DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
-            tm.setRowCount(0);
-            queryDatabaseNew();
-        } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        startNewItemsCheck();
     }//GEN-LAST:event_jButtonCheckNewItemsOnlyActionPerformed
+
+    private XFuture<Void> startNewItemsCheck() {
+
+        DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
+        tm.setRowCount(0);
+        return startQueryDatabaseNew();
+    }
 
     private void jButtonShowImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonShowImageActionPerformed
 //        try {
@@ -1985,7 +2025,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //    public DbSetupPublisher getDbSetupPublisher() {
 //        return dbSetupPublisher;
 //    }
-
     private volatile boolean restoringProperties = false;
 
     public final void restoreProperties(DbType dbtype, String host, int port) {

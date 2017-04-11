@@ -22,13 +22,16 @@
  */
 package aprs.framework.simview;
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.database.DetectedItem;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
 import crcl.base.PoseType;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Arc2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
@@ -131,16 +134,16 @@ public class Object2DJPanel extends JPanel {
             if (null != pose && null != pose.getPoint()) {
                 double x = pose.getPoint().getX().doubleValue();
                 double y = pose.getPoint().getY().doubleValue();
-                if(minX > x) {
+                if (minX > x) {
                     minX = x;
                 }
-                if(maxX < x) {
+                if (maxX < x) {
                     maxX = x;
                 }
-                if(minY > y) {
+                if (minY > y) {
                     minY = y;
                 }
-                if(maxY < y) {
+                if (maxY < y) {
                     maxY = y;
                 }
             }
@@ -167,7 +170,11 @@ public class Object2DJPanel extends JPanel {
         g2d.setColor(this.getForeground());
         boolean origUseSepNames = this.useSeparateNames;
         this.useSeparateNames = true;
-        paintWithAutoScale(itemsToPaint, null, g2d);
+        if (autoscale) {
+            paintWithAutoScale(itemsToPaint, null, g2d);
+        } else {
+            paintItems(g2d, itemsToPaint, null, minX, minY, maxX, maxY);
+        }
         this.useSeparateNames = origUseSepNames;
         ImageIO.write(img, type, f);
         System.out.println("Saved snapshot to " + f.getCanonicalPath());
@@ -178,6 +185,9 @@ public class Object2DJPanel extends JPanel {
         double maxX = Double.NEGATIVE_INFINITY;
         double minY = Double.POSITIVE_INFINITY;
         double maxY = Double.NEGATIVE_INFINITY;
+        if (itemsToPaint.isEmpty()) {
+            throw new IllegalArgumentException("itemsToPaint is empty.");
+        }
         for (DetectedItem item : itemsToPaint) {
             if (minX > item.x) {
                 minX = item.x;
@@ -569,6 +579,26 @@ public class Object2DJPanel extends JPanel {
         Color.GREEN.darker()
     };
 
+    private AprsJFrame aprsJFrame;
+
+    /**
+     * Get the value of aprsJFrame
+     *
+     * @return the value of aprsJFrame
+     */
+    public AprsJFrame getAprsJFrame() {
+        return aprsJFrame;
+    }
+
+    /**
+     * Set the value of aprsJFrame
+     *
+     * @param aprsJFrame new value of aprsJFrame
+     */
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        this.aprsJFrame = aprsJFrame;
+    }
+
     public void paintItems(Graphics2D g2d,
             List<DetectedItem> itemsToPaint,
             DetectedItem selectedItem,
@@ -577,6 +607,10 @@ public class Object2DJPanel extends JPanel {
             double maxX,
             double maxY) {
         origTransform = g2d.getTransform();
+
+        int maxNameLength = itemsToPaint.stream()
+                .mapToInt((DetectedItem item) -> item.name.length())
+                .max().orElse(1);
 
         if (!Double.isFinite(maxX) || !Double.isFinite(minX) || !Double.isFinite(minY) || !Double.isFinite(maxY)) {
             throw new IllegalArgumentException("Limits must be finite: (" + minX + "," + minY + "," + maxX + "," + maxY + ")");
@@ -675,6 +709,21 @@ public class Object2DJPanel extends JPanel {
                     break;
             }
         }
+
+        Font origFont = g2d.getFont();
+
+        float fsize = this.getWidth() / (2.0f * maxNameLength);
+        if (fsize > 24.f) {
+            fsize = 24.f;
+        }
+        if (fsize < 8.f) {
+            fsize = 8.f;
+        }
+        if (origFont.getSize() != fsize) {
+            Font newFont = origFont.deriveFont(fsize);
+            g2d.setFont(newFont);
+        }
+        float newFontSize = g2d.getFont().getSize2D();
         for (int i = 0; i < displayList.size(); i++) {
             DetectedItem item = displayList.get(i);
             if (null == item) {
@@ -727,6 +776,8 @@ public class Object2DJPanel extends JPanel {
                 g2d.draw(new Line2D.Double(toScreenPoint(namex, namey, minX, minY, maxX, maxY), toScreenPoint(item.x, item.y, minX, minY, maxX, maxY)));
             }
         }
+        g2d.setFont(origFont);
+
         for (int i = 0; i < displayList.size(); i++) {
             DetectedItem item = displayList.get(i);
             if (null == item) {
@@ -789,6 +840,20 @@ public class Object2DJPanel extends JPanel {
             item.displayRect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : item.name.length()), 20);
             g2d.setColor(item.labelColor);
             g2d.draw(item.displayRect);
+            if (null != aprsJFrame && ("PT".equals(item.type) || "KT".equals(item.type))) {
+                List<DetectedItem> offsets = aprsJFrame.getSlotOffsets(item.name);
+                if (null != offsets) {
+                    for (DetectedItem offset : offsets) {
+                        double mag = offset.mag();
+                        if (item.maxSlotDist < mag) {
+                            item.maxSlotDist = mag;
+                        }
+                    }
+                }
+            }
+            if (item.maxSlotDist > 0) {
+                g2d.draw(new Arc2D.Double(-item.maxSlotDist / 2.0, -item.maxSlotDist / 2.0, item.maxSlotDist, item.maxSlotDist, 0.0, 360.0, Arc2D.OPEN));
+            }
             g2d.setTransform(origTransform);
         }
         g2d.setColor(Color.BLACK);
@@ -832,6 +897,7 @@ public class Object2DJPanel extends JPanel {
             g2d.setColor(origColor);
             g2d.setTransform(origTransform);
         }
+
     }
 
     public double getMaxX() {

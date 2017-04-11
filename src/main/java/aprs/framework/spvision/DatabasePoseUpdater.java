@@ -86,7 +86,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private long totalUpdateTimeMillis;
     public static List<PartsTray> partsTrayList;
-    public static double myRotationOffset=0;
+    public static double myRotationOffset = 0;
+
     /**
      * Get the value of totalUpdateTimeMillis
      *
@@ -363,9 +364,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
             case NEO4J:
                 useBatch = false;
                 break;
-                
+
             case NONE:
-                throw new IllegalStateException("dbtype = "+dbtype);
+                throw new IllegalStateException("dbtype = " + dbtype);
         }
         return DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT)
                 .thenAccept(c -> con = c)
@@ -442,6 +443,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         String fixed = (peices[0].length() > 0 || peices.length < 2) ? s : peices[1];
         return Double.parseDouble(fixed);
     }
+
     private static int fixInt(ResultSet rs, String colLabel) throws SQLException {
         String s = rs.getString(colLabel);
         if (null == s) {
@@ -606,7 +608,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         }
         return l;
     }
-    
+
     @Override
     public String toString() {
         return "DatabasePoseUpdater{" + "con=" + con + ", dbtype=" + dbtype + ", useBatch=" + useBatch + ", verify=" + verify + ", totalUpdateTimeMillis=" + totalUpdateTimeMillis + ", maxUpdateTimeMillis=" + maxUpdateTimeMillis + ", totalUpdateTimeNanos=" + totalUpdateTimeNanos + ", maxUpdateTimeNanos=" + maxUpdateTimeNanos + ", totalUpdates=" + totalUpdates + ", totalListUpdates=" + totalListUpdates + ", sharedConnection=" + sharedConnection + ", queryAllString=" + queryAllString + ", querySingleString=" + querySingleString + ", mergeStatementString=" + updateStatementString + ", updateParamTypes=" + updateParamTypes + ", getSingleParamTypes=" + getSingleParamTypes + ", debug=" + debug + '}';
@@ -701,6 +703,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private final ConcurrentHashMap<String, List<DetectedItem>> offsetsMap = new ConcurrentHashMap<>();
 
+    public List<DetectedItem> getSlotOffsets(String name) {
+        return getSlotOffsets(new DetectedItem(name));
+    }
+    
     public List<DetectedItem> getSlotOffsets(DetectedItem tray) {
         String tray_name = tray.name;
         if (tray_name.startsWith("sku_")) {
@@ -712,6 +718,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public List<DetectedItem> getSlotOffsetsNew(DetectedItem tray) {
         List<DetectedItem> ret = new ArrayList<>();
         try {
+            if(null == tray.fullName) {
+                tray.fullName = tray.name+"_1";
+                if(tray.fullName.startsWith("sku_")) {
+                    tray.fullName = tray.fullName.substring(4);
+                }
+            }
             List<Object> paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
             String getTraySlotsQueryStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
             boolean exec_result = get_tray_slots_statement.execute();
@@ -853,9 +865,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
         final long timestamp = System.currentTimeMillis();
         prevParts
                 = prevParts.stream()
-                .filter((DetectedItem prevPart) -> timestamp - prevPart.timestamp < 10000)
-                .filter((DetectedItem prevPart) -> closestDist(prevPart, parts) < 25.0)
-                .collect(Collectors.toCollection(() -> new ArrayList<DetectedItem>()));
+                        .filter((DetectedItem prevPart) -> timestamp - prevPart.timestamp < 10000)
+                        .filter((DetectedItem prevPart) -> closestDist(prevPart, parts) < 25.0)
+                        .collect(Collectors.toCollection(() -> new ArrayList<DetectedItem>()));
         prevParts.addAll(parts);
         return slots.stream()
                 .filter(slot -> closestDist(slot, prevParts) > 25.0)
@@ -864,9 +876,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private List<DetectedItem> findAllEmptyTraySlots(List<DetectedItem> trays, List<DetectedItem> parts) {
         List<DetectedItem> emptySlots = new ArrayList<>();
-        int count = 1;
+        ConcurrentHashMap<String, Integer> nameCountMap = new ConcurrentHashMap<>();
         for (DetectedItem tray : trays) {
-
+            int count = nameCountMap.compute(tray.name, (name, value) -> {
+                if (null == value) {
+                    return Integer.valueOf(1);
+                } else {
+                    return value + 1;
+                }
+            });
             tray.fullName = tray.name;
             if (tray.fullName.startsWith("sku_")) {
                 tray.fullName = tray.fullName.substring(4);
@@ -884,9 +902,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
         for (DetectedItem kitTrayItem : kitTrays) {
             kitTrayItem.emptySlotsList
                     = emptySlots.stream()
-                    .filter((DetectedItem slotItem) -> "EMPTY_SLOT".equals(slotItem.type))
-                    .filter((DetectedItem slotItem) -> slotItem.tray == kitTrayItem)
-                    .collect(Collectors.toList());
+                            .filter((DetectedItem slotItem) -> "EMPTY_SLOT".equals(slotItem.type))
+                            .filter((DetectedItem slotItem) -> slotItem.tray == kitTrayItem)
+                            .collect(Collectors.toList());
             kitTrayItem.emptySlotsCount = kitTrayItem.emptySlotsList.size();
         }
         kitTrays.sort((DetectedItem tray1, DetectedItem tray2) -> Long.compare(tray1.emptySlotsCount, tray2.emptySlotsCount));
@@ -899,11 +917,20 @@ public class DatabasePoseUpdater implements AutoCloseable {
             }
         }
         final int mnzt = min_non_zero_tray;
-        return emptySlots
+        List<DetectedItem> firstTraySlots = emptySlots
                 .stream()
                 .filter((DetectedItem slotItem) -> "EMPTY_SLOT".equals(slotItem.type))
                 .filter((DetectedItem slotItem) -> slotItem.tray != null && slotItem.tray.kitTrayNum == mnzt)
                 .collect(Collectors.toList());
+        List<DetectedItem> otherTraySlots = emptySlots
+                .stream()
+                .filter((DetectedItem slotItem) -> "EMPTY_SLOT".equals(slotItem.type))
+                .filter((DetectedItem slotItem) -> slotItem.tray == null || slotItem.tray.kitTrayNum != mnzt)
+                .collect(Collectors.toList());
+        List<DetectedItem> orderedEmptySlots = new ArrayList<>();
+        orderedEmptySlots.addAll(firstTraySlots);
+        orderedEmptySlots.addAll(otherTraySlots);
+        return orderedEmptySlots;
     }
 
     private boolean doPrefEmptySlotsFiltering = true;
@@ -915,16 +942,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                        .collect(Collectors.toList());
         List<DetectedItem> kitTrays
                 = itemList.stream()
-                .filter((DetectedItem item) -> "KT".equals(item.type))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "KT".equals(item.type))
+                        .collect(Collectors.toList());
         List<DetectedItem> partTrays
                 = itemList.stream()
-                .filter((DetectedItem item) -> "PT".equals(item.type))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "PT".equals(item.type))
+                        .collect(Collectors.toList());
         List<DetectedItem> parts
                 = itemList.stream()
-                .filter((DetectedItem item) -> "P".equals(item.type))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "P".equals(item.type))
+                        .collect(Collectors.toList());
         List<DetectedItem> fullList = new ArrayList<>();
         List<DetectedItem> bestKitTrayEmptySlots = findBestEmptyTraySlots(kitTrays, parts);
         List<DetectedItem> bestPartTrayEmptySlots = findBestEmptyTraySlots(partTrays, parts);
@@ -969,9 +996,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public List<DetectedItem> updateVisionList(List<DetectedItem> inList,
             boolean addRepeatCountsToName,
             boolean keepFullNames) {
-        myRotationOffset=getRotationOffset();
-       
-        partsTrayList =  new ArrayList();
+        myRotationOffset = getRotationOffset();
+
+        partsTrayList = new ArrayList();
         List<DetectedItem> itemsToVerify = new ArrayList<>();
         List<DetectedItem> returnedList = new ArrayList<>();
         try {
@@ -981,12 +1008,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
             updateCount++;
             List<DetectedItem> partsTrays
                     = inList.stream()
-                    .filter((DetectedItem item) -> "PT".equals(item.type))
-                    .collect(Collectors.toList());
+                            .filter((DetectedItem item) -> "PT".equals(item.type))
+                            .collect(Collectors.toList());
             List<DetectedItem> kitTrays
                     = inList.stream()
-                    .filter((DetectedItem item) -> "KT".equals(item.type))
-                    .collect(Collectors.toList());
+                            .filter((DetectedItem item) -> "KT".equals(item.type))
+                            .collect(Collectors.toList());
 
             List<DetectedItem> list = inList;
             for (int i = 0; i < list.size(); i++) {
@@ -1004,7 +1031,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             ci.fullName = ci.name;
                         }
                         ci.insideKitTray = true;
-                    } else if (ci.insidePartsTray || inside(partsTrays, ci, 68)) {
+                    } else if (ci.insidePartsTray || inside(partsTrays, ci, 10)) {
                         ci.name = ci.name + "_in_pt";
                         if (!keepFullNames) {
                             ci.fullName = ci.name;
@@ -1022,12 +1049,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                 List<DetectedItem> parts
                         = inList.stream()
-                        .filter((DetectedItem item) -> "P".equals(item.type))
-                        .collect(Collectors.toList());
+                                .filter((DetectedItem item) -> "P".equals(item.type))
+                                .collect(Collectors.toList());
                 List<DetectedItem> emptySlots
                         = list.stream()
-                        .filter((DetectedItem item) -> "EMPTY_SLOT".equals(item.type))
-                        .collect(Collectors.toList());
+                                .filter((DetectedItem item) -> "EMPTY_SLOT".equals(item.type))
+                                .collect(Collectors.toList());
                 Comparator<DetectedItem> kitComparator
                         = comparingLong((DetectedItem kt) -> (kt.emptySlotsCount < 1) ? Long.MAX_VALUE : kt.emptySlotsCount);
                 kitTrays.sort(kitComparator);
@@ -1058,10 +1085,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                         DetectedItem bestSlotFiller
                                 = firstSortParts.stream()
-                                .filter((DetectedItem p) -> p.insidePartsTray)
-                                .filter((DetectedItem p) -> Objects.equals(p.origName, slot.slotForSkuName))
-                                .findFirst()
-                                .orElse(null);
+                                        .filter((DetectedItem p) -> p.insidePartsTray)
+                                        .filter((DetectedItem p) -> Objects.equals(p.origName, slot.slotForSkuName))
+                                        .findFirst()
+                                        .orElse(null);
                         if (null != bestSlotFiller) {
                             slotFillers.add(bestSlotFiller);
                             firstSortParts.remove(bestSlotFiller);
@@ -1128,7 +1155,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     }
                     if (addRepeatCountsThisItem) {
                         ci.repeats = repeatsMap.compute(ci.name, (String name, Integer reps) -> (reps != null) ? (reps + 1) : 0);
-                        if(!keepFullNames) {
+                        if (!keepFullNames) {
                             ci.fullName = ci.name + "_" + (ci.repeats + 1);
                         }
                     }
@@ -1548,11 +1575,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private final ExecutorService pqExecServ = Executors.newSingleThreadExecutor();
 
-    public XFuture<List<PoseQueryElem>> queryDatabase() throws InterruptedException, ExecutionException {
+    public XFuture<List<PoseQueryElem>> queryDatabase()  {
         return XFuture.supplyAsync(() -> Collections.unmodifiableList(getDirectPoseList()), pqExecServ);
     }
 
-    public XFuture<List<PoseQueryElem>> queryDatabaseNew() throws InterruptedException, ExecutionException {
+    public XFuture<List<PoseQueryElem>> queryDatabaseNew()  {
         return XFuture.supplyAsync(() -> Collections.unmodifiableList(getNewDirectPoseList()), pqExecServ);
     }
 }

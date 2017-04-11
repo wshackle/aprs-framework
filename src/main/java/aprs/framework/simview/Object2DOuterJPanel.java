@@ -991,6 +991,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      */
     public void setAprsJFrame(AprsJFrame aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
+        this.object2DJPanel1.setAprsJFrame(aprsJFrame);
     }
 
     public void connectCurrentPosition() {
