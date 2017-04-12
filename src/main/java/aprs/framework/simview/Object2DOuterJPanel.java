@@ -76,7 +76,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
         this.object2DJPanel1.takeSnapshot(f, pose, label);
     }
-    
+
     public void refresh() {
         if (jCheckBoxSimulated.isSelected()) {
             String fname = jTextFieldFilename.getText();
@@ -113,21 +113,21 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void setItemsInternal(List<DetectedItem> items) {
         object2DJPanel1.setItems(items);
-        
+
         int origSelectedRow = jTableItems.getSelectedRow();
         int origSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jTableItems.getRowCount())
                 ? (int) jTableItems.getValueAt(origSelectedRow, 0) : -1;
 
         RowSorter rowSorter = jTableItems.getRowSorter();
-        if(null != rowSorter) {
+        if (null != rowSorter) {
             jTableItems.setRowSorter(null);
         }
         DefaultTableModel model = (DefaultTableModel) jTableItems.getModel();
         model.setRowCount(0);
         for (int i = 0; i < items.size(); i++) {
             DetectedItem item = items.get(i);
-            model.addRow(new Object[]{i, item.name, item.x, item.y, Math.toDegrees(item.rotation), item.type,item.score});
+            model.addRow(new Object[]{i, item.name, item.x, item.y, Math.toDegrees(item.rotation), item.type, item.score});
         }
         autoResizeTableColWidths(jTableItems);
         if (null != rowSorter) {
@@ -1021,7 +1021,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jCheckBoxShowCurrentActionPerformed
 
     private void jCheckBoxSeparateNamesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxSeparateNamesActionPerformed
-       object2DJPanel1.setUseSeparateNames(jCheckBoxSeparateNames.isSelected());
+        object2DJPanel1.setUseSeparateNames(jCheckBoxSeparateNames.isSelected());
     }//GEN-LAST:event_jCheckBoxSeparateNamesActionPerformed
 
     private void jCheckBoxAutoscaleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAutoscaleActionPerformed
@@ -1086,7 +1086,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @Override
     public void dispose() {
-        if(null != this.visionSocketClient) {
+        if (null != this.visionSocketClient) {
             try {
                 visionSocketClient.close();
             } catch (Exception ex) {
@@ -1094,7 +1094,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             visionSocketClient = null;
         }
-        if(null != this.visionSocketServer) {
+        if (null != this.visionSocketServer) {
             visionSocketServer.close();
             visionSocketServer = null;
         }
@@ -1109,7 +1109,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private static String makeShortPath(File f, String str) {
         try {
-            String canString = new File(str).getCanonicalPath();
+            if(str.startsWith("..")) {
+                return str;
+            }
+            File strFile = new File(str);
+            if(!strFile.exists()) {
+                return str;
+            }
+            String canString = strFile.getCanonicalPath();
             String relString = Paths.get(f.getParentFile().getCanonicalPath()).relativize(Paths.get(canString)).toString();
             if (relString.length() <= canString.length()) {
                 return relString;
@@ -1135,11 +1142,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("separatenames", Boolean.toString(jCheckBoxSeparateNames.isSelected()));
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText());
             props.put("xminymin", jTextFieldMinXMinY.getText());
-            String dataFileTxt = jTextFieldFilename.getText();
-            if (null != dataFileTxt && dataFileTxt.length() > 0) {
-                String datafileShort = makeShortPath(propertiesFile, dataFileTxt);
+            if(reverseFlag) {
+                this.reverseDataFileString = jTextFieldFilename.getText();
+            } else {
+                this.dataFileString = jTextFieldFilename.getText();
+            }
+            if (null != reverseDataFileString && reverseDataFileString.length() > 0) {
+                String datafileShort = makeShortPath(propertiesFile, reverseDataFileString);
+                props.put("reverse_datafile", datafileShort);
+            }
+             if (null != dataFileString && dataFileString.length() > 0) {
+                String datafileShort = makeShortPath(propertiesFile, dataFileString);
                 props.put("datafile", datafileShort);
             }
+            props.put("reverseFlag", Boolean.toString(reverseFlag));
             DisplayAxis displayAxis = object2DJPanel1.getDisplayAxis();
             props.put("displayAxis", displayAxis.toString());
             List<DetectedItem> l = getItems();
@@ -1153,6 +1169,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
     private static final String ITEMS_PROPERTY_NAME = "items";
+
+    private boolean reverseFlag = false;
+
+    /**
+     * Get the value of reverseFlag
+     *
+     * @return the value of reverseFlag
+     */
+    public boolean isReverseFlag() {
+        return reverseFlag;
+    }
+
+    /**
+     * Set the value of reverseFlag
+     *
+     * @param reverseFlag new value of reverseFlag
+     */
+    public void setReverseFlag(boolean reverseFlag) {
+        this.reverseFlag = reverseFlag;
+    }
 
     @Override
     public void loadProperties() throws IOException {
@@ -1195,30 +1231,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jCheckBoxAutoscale.setSelected(autoscale);
                 object2DJPanel1.setAutoscale(autoscale);
             }
-            String datafileString = props.getProperty("datafile");
-            if (null != datafileString && datafileString.length() > 0) {
-                File f = new File(datafileString);
-                if (f.exists() && f.canRead() && !f.isDirectory()) {
-                    jTextFieldFilename.setText(f.getCanonicalPath());
-                    loadFile(f);
-                } else {
-                    String fullPath = propertiesFile.getParentFile().toPath().resolve(datafileString).normalize().toString();
-//                    System.out.println("fullPath = " + fullPath);
-                    f = new File(fullPath);
-                    if (f.exists() && f.canRead()) {
-                        jTextFieldFilename.setText(f.getCanonicalPath());
-                        loadFile(f);
-                    } else {
-                        String fullPath2 = propertiesFile.getParentFile().toPath().resolveSibling(datafileString).normalize().toString();
-//                        System.out.println("fullPath = " + fullPath2);
-                        f = new File(fullPath2);
-                        if (f.exists() && f.canRead()) {
-                            jTextFieldFilename.setText(f.getCanonicalPath());
-                            loadFile(f);
-                        }
-                    }
-                }
-            }
+            reverseDataFileString = props.getProperty("reverse_datafile");
+            dataFileString = props.getProperty("datafile");
+            reloadDataFile();
             String xmaxymaxString = props.getProperty("xmaxymax");
             if (null != xmaxymaxString) {
                 setMaxXMaxYText(xmaxymaxString);
@@ -1261,6 +1276,34 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 boolean useSeparateNames = Boolean.valueOf(useSeparateNamesString);
                 jCheckBoxSeparateNames.setSelected(useSeparateNames);
                 object2DJPanel1.setUseSeparateNames(useSeparateNames);
+            }
+        }
+    }
+
+    private String dataFileString = null;
+    private String reverseDataFileString = null;
+    
+    public void reloadDataFile() throws IOException {
+        String currentDataFileString = reverseFlag?this.reverseDataFileString:this.dataFileString;
+        if (null != currentDataFileString && currentDataFileString.length() > 0) {
+            File f = new File(currentDataFileString);
+            if (f.exists() && f.canRead() && !f.isDirectory()) {
+                jTextFieldFilename.setText(f.getCanonicalPath());
+                loadFile(f);
+            } else {
+                String fullPath = propertiesFile.getParentFile().toPath().resolve(currentDataFileString).normalize().toString();
+                f = new File(fullPath);
+                if (f.exists() && f.canRead()) {
+                    jTextFieldFilename.setText(f.getCanonicalPath());
+                    loadFile(f);
+                } else {
+                    String fullPath2 = propertiesFile.getParentFile().toPath().resolveSibling(currentDataFileString).normalize().toString();
+                    f = new File(fullPath2);
+                    if (f.exists() && f.canRead()) {
+                        jTextFieldFilename.setText(f.getCanonicalPath());
+                        loadFile(f);
+                    }
+                }
             }
         }
     }
@@ -1334,9 +1377,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
     }
-    
+
     public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
     }
-            
+
 }

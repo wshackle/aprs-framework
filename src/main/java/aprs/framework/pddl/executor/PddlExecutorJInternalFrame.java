@@ -57,6 +57,13 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return actionsToCrclJPanel1.correctPose(poseIn);
     }
 
+    public void reloadActionsFile() throws IOException { 
+        this.actionsToCrclJPanel1.reloadActionsFile();
+    }
+    
+    public void setReverseFlag(boolean reverseFlag) {
+        this.actionsToCrclJPanel1.setReverseFlag(reverseFlag);
+    }
     
     /**
      * Apply inverses of currently added position maps in reverse order.

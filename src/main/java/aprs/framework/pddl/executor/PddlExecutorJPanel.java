@@ -103,51 +103,6 @@ import java.util.stream.Collectors;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 
 /**
  *
@@ -180,6 +135,26 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 return c;
             }
         });
+    }
+
+    private boolean reverseFlag = false;
+
+    /**
+     * Get the value of reverseFlag
+     *
+     * @return the value of reverseFlag
+     */
+    public boolean isReverseFlag() {
+        return reverseFlag;
+    }
+
+    /**
+     * Set the value of reverseFlag
+     *
+     * @param reverseFlag new value of reverseFlag
+     */
+    public void setReverseFlag(boolean reverseFlag) {
+        this.reverseFlag = reverseFlag;
     }
 
     private void handlePlacePartCompleted(PddlActionToCrclGenerator.PlacePartInfo ppi) {
@@ -1254,6 +1229,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private static final String PDDLOUTPUT = "pddl.output";
+    private static final String REVERSE_PDDLOUTPUT = "pddl.reverse_output";
     private static final String PDDLCRCLAUTOSTART = "pddl.crcl.autostart";
 
     public String[] getComboPartNames(int maxlen) {
@@ -1278,7 +1254,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private static String makeShortPath(File f, String str) {
         try {
-            String canString = new File(str).getCanonicalPath();
+            if(str.startsWith("..")) {
+                return str;
+            }
+            File strFile = new File(str);
+            if(!strFile.exists()) {
+                return str;
+            }
+            String canString = strFile.getCanonicalPath();
             String relString = Paths.get(f.getParentFile().getCanonicalPath()).relativize(Paths.get(canString)).toString();
             if (relString.length() <= canString.length()) {
                 return relString;
@@ -1289,17 +1272,33 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return str;
     }
 
+    private String actionsFileString = null;
+    private String reverseActionsFileString = null;
+
     public void saveProperties() throws IOException {
         Map<String, String> propsMap = new HashMap<>();
-        String txtString = jTextFieldPddlOutputActions.getText();
-        if (txtString != null && txtString.length() > 0) {
-            String relPath = makeShortPath(propertiesFile, txtString);
+        if (reverseFlag) {
+            this.reverseActionsFileString = jTextFieldPddlOutputActions.getText();
+        } else {
+            this.actionsFileString = jTextFieldPddlOutputActions.getText();
+        }
+        if (reverseActionsFileString != null && reverseActionsFileString.length() > 0) {
+            String relPath = makeShortPath(propertiesFile, reverseActionsFileString);
+            System.out.println("relPath = " + relPath);
+            File chkFile = new File(relPath);
+            if (!chkFile.isDirectory()) {
+                propsMap.put(REVERSE_PDDLOUTPUT, relPath);
+            }
+        }
+        if (actionsFileString != null && actionsFileString.length() > 0) {
+            String relPath = makeShortPath(propertiesFile, actionsFileString);
             System.out.println("relPath = " + relPath);
             File chkFile = new File(relPath);
             if (!chkFile.isDirectory()) {
                 propsMap.put(PDDLOUTPUT, relPath);
             }
         }
+        propsMap.put("reverseFlag", Boolean.toString(reverseFlag));
         Properties props = new Properties();
         props.putAll(propsMap);
         props.putAll(getTableOptions());
@@ -2727,7 +2726,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      * @return the value of errorString
      */
     public String getErrorString() {
-        return errorString != null?errorString:"";
+        return errorString != null ? errorString : "";
     }
 
     /**
@@ -2750,7 +2749,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTableCrclProgram.setBackground(Color.red);
         jTabbedPane1.setSelectedComponent(jPanelCrcl);
         setErrorString(ex.toString());
-        if(null != aprsJFrame) {
+        if (null != aprsJFrame) {
             aprsJFrame.setTitleErrorString(errorString);
         }
     }
@@ -3453,30 +3452,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
-            String output = props.getProperty(PDDLOUTPUT);
-            if (null != output) {
-                File f = new File(output);
-                if (f.exists() && f.canRead() && !f.isDirectory()) {
-                    loadActionsFile(f);
-                    jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
-                } else {
-                    String fullPath = propertiesFile.getParentFile().toPath().resolve(output).normalize().toString();
-//                    System.out.println("fullPath = " + fullPath);
-                    f = new File(fullPath);
-                    if (f.exists() && f.canRead() && !f.isDirectory()) {
-                        loadActionsFile(f);
-                        jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
-                    } else {
-                        String fullPath2 = propertiesFile.getParentFile().toPath().resolveSibling(output).normalize().toString();
-//                        System.out.println("fullPath = " + fullPath2);
-                        f = new File(fullPath2);
-                        if (f.exists() && f.canRead() && !f.isDirectory()) {
-                            jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
-                            loadActionsFile(f);
-                        }
-                    }
-                }
-            }
+            this.actionsFileString = props.getProperty(PDDLOUTPUT);
+            this.reverseActionsFileString = props.getProperty(REVERSE_PDDLOUTPUT);
+            reloadActionsFile();
             String autostartString = props.getProperty(PDDLCRCLAUTOSTART);
             if (null != autostartString) {
                 this.autoStart = Boolean.valueOf(autostartString);
@@ -3522,6 +3500,33 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 if (null != sna[i] && sna[i].length() > 0
                         && !sna[i].equals("null")) {
                     cbm.addElement(sna[i]);
+                }
+            }
+        }
+    }
+
+    public void reloadActionsFile() throws IOException {
+        String output = reverseFlag ? reverseActionsFileString : actionsFileString;
+        if (null != output) {
+            File f = new File(output);
+            if (f.exists() && f.canRead() && !f.isDirectory()) {
+                loadActionsFile(f);
+                jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
+            } else {
+                String fullPath = propertiesFile.getParentFile().toPath().resolve(output).normalize().toString();
+//                    System.out.println("fullPath = " + fullPath);
+                f = new File(fullPath);
+                if (f.exists() && f.canRead() && !f.isDirectory()) {
+                    loadActionsFile(f);
+                    jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
+                } else {
+                    String fullPath2 = propertiesFile.getParentFile().toPath().resolveSibling(output).normalize().toString();
+//                        System.out.println("fullPath = " + fullPath2);
+                    f = new File(fullPath2);
+                    if (f.exists() && f.canRead() && !f.isDirectory()) {
+                        jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
+                        loadActionsFile(f);
+                    }
                 }
             }
         }

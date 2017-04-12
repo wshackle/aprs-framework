@@ -336,9 +336,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * completed.
      */
     public XFuture<Void> startSafeAbort() {
-        return this.pddlExecutorJInternalFrame1.startSafeAbort();
+        return this.pddlExecutorJInternalFrame1.startSafeAbort()
+                .thenRun(() -> {
+                   if(null != continousDemoFuture) {
+                       continousDemoFuture.cancelAll(true);
+                       continousDemoFuture = null;
+                   } 
+                });
     }
 
+    
     /**
      * Safely abort the current CRCL program and then disconnect from the
      * robot's CRCL server.
@@ -575,6 +582,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      */
     public void immediateAbort() {
+        if(null != this.continousDemoFuture) {
+            this.continousDemoFuture.cancelAll(true);
+            this.continousDemoFuture = null;
+        }
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.abortProgram();
         } else {
@@ -1457,6 +1468,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenuItemSavePropsAs = new javax.swing.JMenuItem();
         jMenuItemLoadPropertiesFile = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        jCheckBoxMenuItemReverse = new javax.swing.JCheckBoxMenuItem();
         jMenuItemExit = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
         jCheckBoxMenuItemStartupPDDLPlanner = new javax.swing.JCheckBoxMenuItem();
@@ -1485,6 +1497,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
         jMenuItemReset = new javax.swing.JMenuItem();
         jMenuItemPause = new javax.swing.JMenuItem();
+        jCheckBoxMenuItemContinousDemo = new javax.swing.JCheckBoxMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
@@ -1523,6 +1536,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
         jMenu1.add(jMenuItemLoadPropertiesFile);
         jMenu1.add(jSeparator1);
+
+        jCheckBoxMenuItemReverse.setText("Reverse");
+        jCheckBoxMenuItemReverse.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemReverseActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jCheckBoxMenuItemReverse);
 
         jMenuItemExit.setText("Exit");
         jMenuItemExit.addActionListener(new java.awt.event.ActionListener() {
@@ -1718,6 +1739,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenuExecute.add(jMenuItemPause);
+
+        jCheckBoxMenuItemContinousDemo.setText("Continous Demo");
+        jCheckBoxMenuItemContinousDemo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemContinousDemoActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jCheckBoxMenuItemContinousDemo);
 
         jMenuBar1.add(jMenuExecute);
 
@@ -2024,6 +2053,49 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void jMenuItemPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemPauseActionPerformed
         pause();
     }//GEN-LAST:event_jMenuItemPauseActionPerformed
+
+    private void jCheckBoxMenuItemReverseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemReverseActionPerformed
+
+        boolean reverseFlag = jCheckBoxMenuItemReverse.isSelected();
+        setReverseFlag(reverseFlag);
+    }//GEN-LAST:event_jCheckBoxMenuItemReverseActionPerformed
+
+    private void jCheckBoxMenuItemContinousDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinousDemoActionPerformed
+        immediateAbort();
+        setReverseFlag(false);
+        if(jCheckBoxMenuItemConnectDatabase.isSelected()) {
+            continousDemoFuture = startContinousDemo();
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemContinousDemoActionPerformed
+
+    private XFuture<Void> continousDemoFuture = null;
+    
+    public XFuture<Void> startContinousDemo() {
+        this.setReverseFlag(false);
+        return startActions()
+                .thenRun(() -> setReverseFlag(true))
+                .thenCompose(x -> startActions())
+                .thenCompose(x -> startContinousDemo());
+    }
+    
+    public void setReverseFlag(boolean reverseFlag) {
+        if (null != object2DViewJInternalFrame) {
+            try {
+                object2DViewJInternalFrame.setReverseFlag(reverseFlag);
+                object2DViewJInternalFrame.reloadDataFile();
+            } catch (IOException ex) {
+                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        if (null != pddlExecutorJInternalFrame1) {
+            try {
+                pddlExecutorJInternalFrame1.setReverseFlag(reverseFlag);
+                pddlExecutorJInternalFrame1.reloadActionsFile();
+            } catch (IOException ex) {
+                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
 
     public void pause() {
         this.pauseCrclProgram();
@@ -2636,8 +2708,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToDatabaseOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToVisionOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVision;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKitInspectionStartup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupCRCLWebApp;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupFanucCRCLServer;

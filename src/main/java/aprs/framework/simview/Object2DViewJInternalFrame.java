@@ -28,6 +28,7 @@ import crcl.base.PoseType;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 
 /**
  *
@@ -44,6 +45,15 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
 
     public void refresh() {
         object2DOuterJPanel1.refresh();
+    }
+    
+    
+    public void setReverseFlag(boolean reverseFlag) {
+        this.object2DOuterJPanel1.setReverseFlag(reverseFlag);
+    }
+    
+    public void reloadDataFile() throws IOException {
+        this.object2DOuterJPanel1.reloadDataFile();
     }
     
     /**
