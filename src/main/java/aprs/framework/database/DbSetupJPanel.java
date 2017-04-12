@@ -22,6 +22,7 @@
  */
 package aprs.framework.database;
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.spvision.VisionToDBJPanel;
 import aprs.framework.DisplayInterface;
 import aprs.framework.Utils;
@@ -428,7 +429,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }// </editor-fold>//GEN-END:initComponents
 
     private void updateSettingsFileName() {
-        if(null != propertiesFile && propertiesFile.exists()) {
+        if (null != propertiesFile && propertiesFile.exists()) {
             return;
         }
         String settingsFileStart = jComboBoxDbType.getSelectedItem().toString();
@@ -455,15 +456,45 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }//GEN-LAST:event_jComboBoxDbTypeActionPerformed
 
+        private AprsJFrame aprsJFrame = null;
+
+    /**
+     * Get the value of aprsJFrame
+     *
+     * @return the value of aprsJFrame
+     */
+    public AprsJFrame getAprsJFrame() {
+        return aprsJFrame;
+    }
+
+    /**
+     * Set the value of aprsJFrame
+     *
+     * @param aprsJFrame new value of aprsJFrame
+     */
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        this.aprsJFrame = aprsJFrame;
+    }
+
     private void jButtonConnectDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectDBActionPerformed
         try {
             //        connectDB();
             connected = true;
             DbSetup setup = this.getDbSetup();
+            final StackTraceElement stackTraceElemArray[] = Thread.currentThread().getStackTrace();
             DbSetupBuilder.connect(setup).handle((c, e) -> Utils.runOnDispatchThread(() -> {
                 if (null != e) {
                     connected = false;
                     Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, e);
+                    System.err.println("Called from :");
+                    for (int i = 0; i < stackTraceElemArray.length; i++) {
+                        System.err.println(stackTraceElemArray[i]);
+                    }
+                    System.err.println("Exception handled at ");
+                    Thread.dumpStack();
+                    if (null != aprsJFrame) {
+                        aprsJFrame.setTitleErrorString("Database error: " + e.toString());
+                    }
                 }
                 notifyAllDbSetupListeners();
                 if (null != c) {
@@ -590,9 +621,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             if (null == setup) {
                 return;
             }
-            if(setup.isConnected() && (null == setup.getDbType() || setup.getDbType() == DbType.NONE)) {
+            if (setup.isConnected() && (null == setup.getDbType() || setup.getDbType() == DbType.NONE)) {
                 this.connected = false;
-                throw new IllegalArgumentException("setup.getDbType() == "+setup.getDbType());
+                throw new IllegalArgumentException("setup.getDbType() == " + setup.getDbType());
             }
             jCheckBoxDebug.setSelected(setup.isDebug());
             updatingFromDbSetup = true;
@@ -638,7 +669,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 this.jTextFieldDBName.setText(dbname);
             }
             this.connected = setup.isConnected();
-            
+
             if (jButtonConnectDB.isEnabled() != (!connected)) {
                 this.jButtonConnectDB.setEnabled(!connected);
             }
@@ -834,7 +865,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     public DbSetup getDbSetup() {
         DbType dbtype = (DbType) jComboBoxDbType.getSelectedItem();
-        if(null == dbtype || dbtype == DbType.NONE) {
+        if (null == dbtype || dbtype == DbType.NONE) {
             connected = false;
         }
         return new DbSetupBuilder()
@@ -932,7 +963,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 }
             }
         } catch (IOException iOException) {
-             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, iOException);
+            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, iOException);
         }
     }
     private File recentSettingsFile = new File(System.getProperty("user.home"), ".dbsetup_recent.txt");
@@ -1286,7 +1317,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     public void removeDbSetupListener(DbSetupListener listener) {
         dbSetupListeners.remove(listener);
     }
-    
+
     @Override
     public void removeAllDbSetupListeners() {
         dbSetupListeners.clear();

@@ -22,6 +22,7 @@
  */
 package aprs.framework.database;
 
+import aprs.framework.AprsJFrame;
 import java.io.File;
 
 /**
@@ -39,6 +40,10 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
 
     public void loadRecent() {
         dbSetupJPanel1.loadRecent();
+    }
+    
+    public void setAprsJframe(AprsJFrame aprsJframe) {
+        dbSetupJPanel1.setAprsJFrame(aprsJframe);
     }
     
     /**

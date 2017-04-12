@@ -27,6 +27,7 @@ import aprs.framework.PddlAction;
 import aprs.framework.Utils;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
+import aprs.framework.database.DbSetupJPanel;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbType;
 import aprs.framework.database.QuerySet;
@@ -317,14 +318,25 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
             if (dbConnection == null) {
                 try {
+                    final StackTraceElement stackTraceElemArray[] = Thread.currentThread().getStackTrace();
                     DbSetupBuilder.connect(dbSetup).handle((c, ex) -> {
                         if (null != c) {
                             Utils.runOnDispatchThread(() -> {
                                 setDbConnection(c);
                             });
-                        } 
-                        if(null != ex) {
-                            aprsJFrame.setTitleErrorString("Database error: "+ex.toString());
+                        }
+                        if (null != ex) {
+                            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            System.err.println("Called from :");
+                            for (int i = 0; i < stackTraceElemArray.length; i++) {
+                                System.err.println(stackTraceElemArray[i]);
+                            }
+                            System.err.println("");
+                            System.err.println("Exception handled at ");
+                            Thread.dumpStack();
+                            if (null != aprsJFrame) {
+                                aprsJFrame.setTitleErrorString("Database error: " + ex.toString());
+                            }
                         }
                         return c;
                     });
@@ -685,7 +697,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             aprsJFrame.takeSimViewSnapshot(f, pose, label);
         }
     }
-    
+
     /**
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
@@ -715,7 +727,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             addMarkerCommand(out, title, x -> {
                 try {
                     takeSimViewSnapshot(File.createTempFile(filename, ".PNG"), pose, label);
-                    takeDatabaseViewSnapshot(File.createTempFile(filename+"_new_database_items", ".PNG"));
+                    takeDatabaseViewSnapshot(File.createTempFile(filename + "_new_database_items", ".PNG"));
                 } catch (IOException ex) {
                     Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }

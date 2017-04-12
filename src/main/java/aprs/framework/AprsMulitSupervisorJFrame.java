@@ -1469,10 +1469,29 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         return startAll()
                 .thenRun(() -> setReverseFlag(true))
                 .thenRun(this::enableAllRobots)
-                .thenCompose(x -> startAll())
-                .thenCompose(x -> startContinousDemo());
+                .thenCompose(x -> checkEnabledAll())
+                .thenCompose(x -> checkedStartAll(x))
+                .thenRun(this::enableAllRobots)
+                .thenCompose(x -> checkEnabledAll())
+                .thenCompose(x -> checkedStartContinousDemo(x));
+    }
+    
+    private XFuture<Void> checkedStartAll(boolean input) {
+        if(input) {
+            return startAll();
+        } else {
+            return XFuture.completedFuture(null);
+        }
     }
 
+    private XFuture<Void> checkedStartContinousDemo(boolean input) {
+        if(input) {
+            return startContinousDemo();
+        } else {
+            return XFuture.completedFuture(null);
+        }
+    }
+    
     private void savePosFile(File f) throws IOException {
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             for (int i = 0; i < jTableSelectedPosMapFile.getColumnCount(); i++) {

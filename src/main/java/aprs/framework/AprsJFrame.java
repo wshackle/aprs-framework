@@ -1345,6 +1345,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void createDbSetupFrame() {
         if (null == dbSetupJInternalFrame) {
             dbSetupJInternalFrame = new DbSetupJInternalFrame();
+            dbSetupJInternalFrame.setAprsJframe(this);
             dbSetupJInternalFrame.pack();
             dbSetupJInternalFrame.loadRecent();
             jDesktopPane1.add(dbSetupJInternalFrame, JLayeredPane.DEFAULT_LAYER);
@@ -2079,6 +2080,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
     
     public void setReverseFlag(boolean reverseFlag) {
+        if(jCheckBoxMenuItemReverse.isSelected() != reverseFlag) {
+            jCheckBoxMenuItemReverse.setSelected(reverseFlag);
+        }
         if (null != object2DViewJInternalFrame) {
             try {
                 object2DViewJInternalFrame.setReverseFlag(reverseFlag);
@@ -2175,6 +2179,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         try {
             if (null == this.exploreGraphDbJInternalFrame) {
                 this.exploreGraphDbJInternalFrame = new ExploreGraphDbJInternalFrame();
+                this.exploreGraphDbJInternalFrame.setAprsJFrame(this);
                 DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
                 dbSetupPublisher.addDbSetupListener(exploreGraphDbJInternalFrame);
                 exploreGraphDbJInternalFrame.accept(dbSetupPublisher.getDbSetup());

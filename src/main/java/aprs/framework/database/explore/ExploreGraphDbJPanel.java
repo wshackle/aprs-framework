@@ -22,10 +22,12 @@
  */
 package aprs.framework.database.explore;
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
+import aprs.framework.database.DbSetupJPanel;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbType;
 //import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,7 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -110,7 +111,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     private void updatePropsRels() {
         try {
             int index = this.jTableNodes.getSelectedRow();
-            if(jTableNodes.getColumnCount() < 1) {
+            if (jTableNodes.getColumnCount() < 1) {
                 return;
             }
             if (index < 0 || index >= this.jTableNodes.getRowCount()) {
@@ -939,7 +940,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             }
             String str = rs.getString(index);
             result = rs.getObject(index, Map.class);//stringToMap(str);
-        } catch(ClassCastException cce) {
+        } catch (ClassCastException cce) {
             try {
                 List l = rs.getObject(index, List.class);
                 result = Collections.singletonMap("", l);
@@ -1103,12 +1104,56 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     private javax.swing.JTextField jTextFieldSelectedNodeName;
     // End of variables declaration//GEN-END:variables
 
+    private AprsJFrame aprsJFrame = null;
+
+    /**
+     * Get the value of aprsJFrame
+     *
+     * @return the value of aprsJFrame
+     */
+    public AprsJFrame getAprsJFrame() {
+        return aprsJFrame;
+    }
+
+    /**
+     * Set the value of aprsJFrame
+     *
+     * @param aprsJFrame new value of aprsJFrame
+     */
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        this.aprsJFrame = aprsJFrame;
+    }
+
     @Override
     public void accept(DbSetup setup) {
         try {
             if (setup.isConnected()) {
                 if (setup.getDbType() == DbType.NEO4J || setup.getDbType() == DbType.NEO4J_BOLT) {
-                    DbSetupBuilder.connect(setup).thenAccept(conn -> Utils.runOnDispatchThread(() -> setConnection(conn)));
+                    final StackTraceElement stackTraceElemArray[] = Thread.currentThread().getStackTrace();
+                    DbSetupBuilder.connect(setup)
+                            .handle((c, ex) -> {
+                        if (null != c) {
+                            Utils.runOnDispatchThread(() -> {
+                                setConnection(c);
+                            });
+                        }
+                        if (null != ex) {
+                            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            System.err.println("Called from :");
+                            for (int i = 0; i < stackTraceElemArray.length; i++) {
+                                System.err.println(stackTraceElemArray[i]);
+                            }
+                            System.err.println("");
+                            System.err.println("Exception handled at ");
+                            Thread.dumpStack();
+                            if (null != aprsJFrame) {
+                                aprsJFrame.setTitleErrorString("Database error: " + ex.toString());
+                            }
+                        }
+                        return c;
+                    });
+                            
+                            //.thenAccept(conn -> Utils.runOnDispatchThread(() -> setConnection(conn)));
                     System.out.println("ExploreGraph connected to database of on host " + setup.getHost() + " with port " + setup.getPort());
                 } else {
                     closeConnection();

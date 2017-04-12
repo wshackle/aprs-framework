@@ -22,6 +22,7 @@
  */
 package aprs.framework.database.explore;
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupListener;
 import java.sql.SQLException;
@@ -103,6 +104,9 @@ public class ExploreGraphDbJInternalFrame extends javax.swing.JInternalFrame imp
     }//GEN-LAST:event_formInternalFrameClosed
 
 
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        this.exploreGraphDbJPanel1.setAprsJFrame(aprsJFrame);
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.framework.database.explore.ExploreGraphDbJPanel exploreGraphDbJPanel1;
     // End of variables declaration//GEN-END:variables
