@@ -1856,6 +1856,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         lastActionMillis = System.currentTimeMillis();
         setErrorString(null);
         aprsJFrame.setTitleErrorString(null);
+        pddlActionToCrclGenerator.clearPoseCache();
     }
 
     /**

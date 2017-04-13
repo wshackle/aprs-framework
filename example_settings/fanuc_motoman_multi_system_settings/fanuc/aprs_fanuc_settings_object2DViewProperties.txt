@@ -3,9 +3,9 @@
 --visionport=5001
 autoscale=false
 connected=true
-datafile=fanuc_cart_objects_capture_jan_11_2017_combined_modified.csv
+datafile=fanuc_cart_objects_capture_april_13_2017.csv
 displayAxis=POS_Y_NEG_X
-items=sku_part_large_gear,-0.81,548.9268798828125,11.790214538574219,0.98,P,sku_part_large_gear,0.5,550.9423828125,121.09027862548828,0.8,P,sku_part_medium_gear,0.0,616.464599609375,-83.38497161865234,0.85,P,sku_part_medium_gear,0.0,533.18,-81.07,0.78,P,sku_part_medium_gear,0.0,615.7434692382812,-164.73358154296875,0.76,P,sku_part_medium_gear,0.0,533.56,-160.09,0.76,P,sku_large_gear_vessel,3.11,550.45,65.16,0.8,PT,sku_medium_gear_vessel,0.01,571.9,-119.9,0.92,PT,sku_kit_m2l1_vessel,-1.57,414.84,-108.16,0.63,KT,kit_lg1med2_1_slot_l1,0.1,411.89,-77.14,0.98,SLOT,kit_lg1med2_2_slot_l1,0.14,410.61,115.14,0.65,SLOT,kit_lg1med2_1_slot_m1,0.0,453.08,-159.38,0.78,SLOT,kit_lg1med2_1_slot_m2,0.0,454.76,19.36,0.73,SLOT,kit_lg1med2_2_slot_m1,0.0,373.57,19.89,0.72,SLOT,kit_lg1med2_2_slot_m2,0.0,372.16,-159.7,0.69,SLOT,
+items=sku_part_large_gear,0.0,558.77,55.97,0.93,P,sku_part_large_gear,0.0,559.32,163.18,100.0,P,sku_part_medium_gear,0.0,565.23,-66.79,0.81,P,sku_part_medium_gear,0.0,490.53,-68.4,0.71,P,sku_part_medium_gear,0.0,490.42,-141.8,0.7,P,sku_part_medium_gear,0.0,565.08,-140.85,0.67,P,sku_large_gear_vessel,3.14,557.84,108.32,1.0,PT,sku_medium_gear_vessel,0.01,527.16,-103.11,0.99,PT,sku_kit_m2l1_vessel,2.84,322.87,-86.74,0.71,KT,sku_kit_m2l1_vessel,-2.17,360.1,135.77,0.71,KT,
 
 reverseFlag=false
 reverse_datafile=fanuc_cart_objects_capture_jan_11_2017_combined_modified.csv

@@ -775,9 +775,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 System.err.println(getTraySlotsQueryStringFilled);
                 System.err.println("Returned 0 items.");
                 System.err.println("");
+                return null;
             }
         } catch (SQLException ex) {
             Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
         }
         return ret;
     }

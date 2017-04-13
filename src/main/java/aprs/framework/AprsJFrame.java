@@ -643,6 +643,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append("\r\n");
         boolean connected = (null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected());
         sb.append("connected=").append(connected).append("\r\n");
+        sb.append("reverseFlag=").append(jCheckBoxMenuItemReverse.isSelected()).append("\r\n");
         sb.append("                                                                                                                                                                                                                                                                                        \r\n");
 
         if (null != titleErrorString && titleErrorString.length() > 0) {

@@ -429,6 +429,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.options = options;
     }
 
+    
     /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
@@ -487,7 +488,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     break;
                 case "look-for-part":
                 case "look-for-parts":
-                    lookForParts(action, cmds);
+                    lookForParts(action, cmds,(lastIndex == 0), (lastIndex == actions.size()-1));
                     actionToCrclIndexes[lastIndex] = cmds.size();
                     actionToCrclLabels[lastIndex] = "";
                     actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
@@ -1779,11 +1780,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         out.add(ajCmd);
     }
 
-    private void clearPoseCache() {
+    public void clearPoseCache() {
         poseCache.clear();
     }
 
-    private void lookForParts(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+    private void lookForParts(PddlAction action, List<MiddleCommandType> out, boolean firstAction, boolean lastAction) throws IllegalStateException, SQLException {
 
         checkSettings();
         if (null == qs) {
@@ -1794,8 +1795,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         addMoveToLookForPosition(out);
 
-        addLookDwell(out);
-
+        if(lastAction || firstAction) {
+            addSettleDwell(out);
+        } else {
+            addLookDwell(out);
+        }
+        
         addTakeSimViewSnapshot(out, "-look-for-parts-", null, "");
         addMarkerCommand(out, "clear pose cache", x -> this.clearPoseCache());
         if (action.getArgs().length == 1) {

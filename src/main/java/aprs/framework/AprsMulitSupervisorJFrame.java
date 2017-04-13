@@ -387,12 +387,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         return lrow.get(col);
     }
 
+    private volatile XFuture<Void> stealRobotFuture = null;
+
     private void setRobotEnabled(String robotName, Boolean enabled) {
         if (null != robotName && null != enabled) {
             robotEnableMap.put(robotName, enabled);
             if (!enabled) {
                 try {
-                    this.lastFutureReturned = stealRobot(robotName);
+                    this.lastFutureReturned = this.stealRobotFuture = stealRobot(robotName);
                 } catch (IOException | PositionMap.BadErrorMapFormatException ex) {
                     Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -440,7 +442,17 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private XFuture<Void> showCheckEnabledErrorSplash() {
-        return showErrorSplash("Not all robots\n could be enabled.");
+
+        return showErrorSplash("Not all robots\n could be enabled.")
+                .thenRun(() -> {
+                    Utils.runOnDispatchThread(() -> {
+                        jCheckBoxMenuItemContinousDemo.setSelected(false);
+                        if (null != continousDemoFuture) {
+                            continousDemoFuture.cancelAll(true);
+                            continousDemoFuture = null;
+                        }
+                    });
+                });
     }
 
     private XFuture<Void> showErrorSplash(String errMsgString) {
@@ -476,43 +488,30 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     stealFor.setExecutorOption(opt, stealForOptions.get(opt));
                 }
             }
-//                    if (null != stealForRpyOption) {
-//                        stealFor.setExecutorOption("rpy", stealForRpyOption);
-//                    }
-//                    if (null != stealForLookForXYZOption) {
-//                        stealFor.setExecutorOption("lookForXYZ", stealForLookForXYZOption);
-//                    }
             stealFor.removePositionMap(pm);
             stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);
             stealFor.disconnectRobot();
             stealFor.setRobotName(stealForRobotName);
         }
         );
-//        if(null == colorTextSocket) {
-//            colorTextSocket = new Socket("localhost",ColorTextJPanel.COLORTEXT_SOCKET_PORT);
-//        }
-
-//        String stealFromRpyOption = stealFrom.getExecutorOptions().get("rpy");
-//        String stealFromLookForXYZOption = stealFrom.getExecutorOptions().get("lookForXYZ");
-//
-//        String stealForRpyOption = stealFor.getExecutorOptions().get("rpy");
-//        String stealForLookForXYZOption = stealFor.getExecutorOptions().get("lookForXYZ");
+        
+        
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
         return XFuture.allOf(
                 stealFrom.startSafeAbortAndDisconnectAsync(),
                 stealFor.startSafeAbort()
-                        .thenCompose(x -> {
-                            if (null != colorTextSocket) {
-                                try {
-                                    colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
-                                } catch (IOException ex) {
-                                    Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                                }
-                            }
-                            return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
-                                    SplashScreen.getDisableImageImage(),
-                                    SplashScreen.getRedYellowColorList(), gd);
-                        }))
+                .thenCompose(x -> {
+                    if (null != colorTextSocket) {
+                        try {
+                            colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
+                        } catch (IOException ex) {
+                            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
+                            SplashScreen.getDisableImageImage(),
+                            SplashScreen.getRedYellowColorList(), gd);
+                }))
                 .thenRun(() -> {
                     stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
                     stealFor.addPositionMap(pm);
@@ -521,19 +520,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                             stealFor.setExecutorOption(opt, stealFromOptions.get(opt));
                         }
                     }
-//                    if (null != stealFromRpyOption) {
-//                        stealFor.setExecutorOption("rpy", stealFromRpyOption);
-//                    }
-//                    if (null != stealFromLookForXYZOption) {
-//                        stealFor.setExecutorOption("lookForXYZ", stealFromLookForXYZOption);
-//                    }
-//                    return null;
                 })
                 .thenCompose(x -> {
                     return SplashScreen.showMessageFullScreen("Switching to \n" + stealFromRobotName, 80.0f,
                             SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList(), gd);
                 })
-                //                        () -> 
                 .thenCompose(x -> {
                     return stealFor.continueActionList();
                 })
@@ -547,11 +538,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 .thenRun(this::returnRobots)
                 .thenCompose(x -> {
                     return stealFrom.continueActionList();
-                })
-                .thenCompose(x -> {
-                    return SplashScreen.showMessageFullScreen("All \nTasks \nComplete", 80.0f,
-                            null, SplashScreen.getBlueWhiteGreenColorList(), gd);
                 });
+//                .thenCompose(x -> {
+//                    return SplashScreen.showMessageFullScreen("All \nTasks \nComplete", 80.0f,
+//                            null, SplashScreen.getBlueWhiteGreenColorList(), gd);
+//                });
     }
 
     private void initColorTextSocket() throws IOException {
@@ -961,6 +952,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jMenuBar1.add(jMenuFile);
 
         jMenuActions.setText("Actions");
+        jMenuActions.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuActionsActionPerformed(evt);
+            }
+        });
 
         jMenuItemStartAll.setText("Start All");
         jMenuItemStartAll.addActionListener(new java.awt.event.ActionListener() {
@@ -1192,7 +1188,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemRemoveSelectedSystemActionPerformed
 
-    private XFuture<?> lastFutureReturned = null;
+    private volatile XFuture<?> lastFutureReturned = null;
 
     private void jMenuItemStartAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartAllActionPerformed
         if (null != lastFutureReturned) {
@@ -1444,7 +1440,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemAddNewSystemActionPerformed
 
-    private XFuture<Void> continousDemoFuture = null;
+    private volatile XFuture<Void> continousDemoFuture = null;
 
     private void jCheckBoxMenuItemContinousDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinousDemoActionPerformed
         immediateAbortAll();
@@ -1456,6 +1452,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemContinousDemoActionPerformed
 
+    private void jMenuActionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuActionsActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuActionsActionPerformed
+
     public void setReverseFlag(boolean reverseFlag) {
         for (int i = 0; i < aprsSystems.size(); i++) {
             aprsSystems.get(i).setReverseFlag(reverseFlag);
@@ -1464,34 +1464,29 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 
     public XFuture<Void> startContinousDemo() {
         connectAll();
-        setReverseFlag(false);
-        enableAllRobots();
-        return startAll()
-                .thenRun(() -> setReverseFlag(true))
-                .thenRun(this::enableAllRobots)
-                .thenCompose(x -> checkEnabledAll())
-                .thenCompose(x -> checkedStartAll(x))
-                .thenRun(this::enableAllRobots)
-                .thenCompose(x -> checkEnabledAll())
-                .thenCompose(x -> checkedStartContinousDemo(x));
-    }
-    
-    private XFuture<Void> checkedStartAll(boolean input) {
-        if(input) {
-            return startAll();
-        } else {
-            return XFuture.completedFuture(null);
-        }
+        return checkEnabledAll()
+                .thenCompose(ok -> checkOk(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
     }
 
-    private XFuture<Void> checkedStartContinousDemo(boolean input) {
-        if(input) {
-            return startContinousDemo();
-        } else {
-            return XFuture.completedFuture(null);
-        }
+    private XFuture<Void> continueContinousDemo() {
+        connectAll();
+        setReverseFlag(false);
+        enableAllRobots();
+        return startAllActions()
+                .thenCompose(x -> (null != stealRobotFuture) ? stealRobotFuture : XFuture.completedFuture(null))
+                .thenCompose(x -> startReverseActions())
+                .thenCompose(x -> (null != stealRobotFuture) ? stealRobotFuture : XFuture.completedFuture(null))
+                .thenCompose(x -> checkEnabledAll())
+                .thenCompose(ok -> checkOk(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
     }
-    
+
+    public XFuture<Void> startReverseActions() {
+        setReverseFlag(true);
+        enableAllRobots();
+        return checkEnabledAll()
+                .thenCompose(ok -> checkOk(ok, this::startAllActions, this::showCheckEnabledErrorSplash));
+    }
+
     private void savePosFile(File f) throws IOException {
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             for (int i = 0; i < jTableSelectedPosMapFile.getColumnCount(); i++) {
@@ -1576,10 +1571,12 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private XFuture<Void> startAllActions() {
+
         XFuture futures[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             futures[i] = aprsSystems.get(i).startActions();
         }
+        final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
         return XFuture.allOf(futures);
     }
 
@@ -1604,6 +1601,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         if (null != continousDemoFuture) {
             continousDemoFuture.cancelAll(true);
             continousDemoFuture = null;
+        }
+        if (null != lastFutureReturned) {
+            lastFutureReturned.cancelAll(true);
+            lastFutureReturned = null;
         }
     }
 
