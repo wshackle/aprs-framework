@@ -321,6 +321,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return taskName;
     }
 
+    private volatile XFuture<Void> safeAbortFuture = null;
+    
     /**
      * Attempt to safely abort the current CRCL program in a way that does not
      * leave the part in the gripper nor in a position obstructing the vision
@@ -336,15 +338,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * completed.
      */
     public XFuture<Void> startSafeAbort() {
-        return this.pddlExecutorJInternalFrame1.startSafeAbort()
+        safeAbortFuture = this.pddlExecutorJInternalFrame1.startSafeAbort()
                 .thenRun(() -> {
-                   if(null != continousDemoFuture) {
-                       continousDemoFuture.cancelAll(true);
-                       continousDemoFuture = null;
-                   } 
+                    if (null != continousDemoFuture) {
+                        continousDemoFuture.cancelAll(true);
+                        continousDemoFuture = null;
+                    }
                 });
+        return safeAbortFuture;
     }
 
+    
+    private volatile  XFuture<Void> startSafeAbortAndDisconnectAsyncFuture = null;
     
     /**
      * Safely abort the current CRCL program and then disconnect from the
@@ -356,8 +361,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * abort and disconnect is completed.
      */
     public XFuture<Void> startSafeAbortAndDisconnectAsync() {
-        return this.pddlExecutorJInternalFrame1.startSafeAbort()
+        startSafeAbortAndDisconnectAsyncFuture =
+                this.pddlExecutorJInternalFrame1.startSafeAbort()
                 .thenRunAsync(this::disconnectRobot);
+        return startSafeAbortAndDisconnectAsyncFuture;
     }
 
     /**
@@ -371,6 +378,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pendantClientJInternalFrame.disconnect();
         }
         this.setRobotName(null);
+        System.out.println("disconnectRobot completed");
     }
 
     /**
@@ -423,6 +431,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      */
     public XFuture<Void> continueActionList() {
+        if (jCheckBoxMenuItemPause.isSelected()) {
+            jCheckBoxMenuItemPause.setSelected(false);
+        }
         return pddlExecutorJInternalFrame1.continueActionList();
     }
 
@@ -582,7 +593,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      */
     public void immediateAbort() {
-        if(null != this.continousDemoFuture) {
+        if (null != this.continousDemoFuture) {
             this.continousDemoFuture.cancelAll(true);
             this.continousDemoFuture = null;
         }
@@ -644,6 +655,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         boolean connected = (null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected());
         sb.append("connected=").append(connected).append("\r\n");
         sb.append("reverseFlag=").append(jCheckBoxMenuItemReverse.isSelected()).append("\r\n");
+        sb.append("paused=").append(jCheckBoxMenuItemPause.isSelected()).append("\r\n");
         sb.append("                                                                                                                                                                                                                                                                                        \r\n");
 
         if (null != titleErrorString && titleErrorString.length() > 0) {
@@ -1495,11 +1507,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jCheckBoxMenuItemConnectVision = new javax.swing.JCheckBoxMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
-        jMenuItemContinue = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
         jMenuItemReset = new javax.swing.JMenuItem();
-        jMenuItemPause = new javax.swing.JMenuItem();
         jCheckBoxMenuItemContinousDemo = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemPause = new javax.swing.JCheckBoxMenuItem();
+        jMenuItemDebugAction = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
@@ -1710,14 +1722,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
         jMenuExecute.add(jMenuItemStartActionList);
 
-        jMenuItemContinue.setText("Continue Actions ");
-        jMenuItemContinue.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemContinueActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jMenuItemContinue);
-
         jMenuItemImmediateAbort.setText("Immediate Abort");
         jMenuItemImmediateAbort.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1734,14 +1738,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
         jMenuExecute.add(jMenuItemReset);
 
-        jMenuItemPause.setText("Pause");
-        jMenuItemPause.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemPauseActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jMenuItemPause);
-
         jCheckBoxMenuItemContinousDemo.setText("Continous Demo");
         jCheckBoxMenuItemContinousDemo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1749,6 +1745,23 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenuExecute.add(jCheckBoxMenuItemContinousDemo);
+
+        jCheckBoxMenuItemPause.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PAUSE, 0));
+        jCheckBoxMenuItemPause.setText("Pause");
+        jCheckBoxMenuItemPause.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemPauseActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jCheckBoxMenuItemPause);
+
+        jMenuItemDebugAction.setText("Debug Action");
+        jMenuItemDebugAction.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemDebugActionActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemDebugAction);
 
         jMenuBar1.add(jMenuExecute);
 
@@ -2024,15 +2037,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    private void jMenuItemContinueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemContinueActionPerformed
-        this.continueActionList();
-    }//GEN-LAST:event_jMenuItemContinueActionPerformed
-
     private void jMenuItemImmediateAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImmediateAbortActionPerformed
         this.immediateAbort();
     }//GEN-LAST:event_jMenuItemImmediateAbortActionPerformed
 
     private void jMenuItemStartActionListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartActionListActionPerformed
+        jCheckBoxMenuItemPause.setSelected(false);
         this.startActions();
     }//GEN-LAST:event_jMenuItemStartActionListActionPerformed
 
@@ -2052,36 +2062,76 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         reset();
     }//GEN-LAST:event_jMenuItemResetActionPerformed
 
-    private void jMenuItemPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemPauseActionPerformed
-        pause();
-    }//GEN-LAST:event_jMenuItemPauseActionPerformed
-
     private void jCheckBoxMenuItemReverseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemReverseActionPerformed
-
-        boolean reverseFlag = jCheckBoxMenuItemReverse.isSelected();
+         boolean reverseFlag = jCheckBoxMenuItemReverse.isSelected();
         setReverseFlag(reverseFlag);
     }//GEN-LAST:event_jCheckBoxMenuItemReverseActionPerformed
 
     private void jCheckBoxMenuItemContinousDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinousDemoActionPerformed
         immediateAbort();
         setReverseFlag(false);
-        if(jCheckBoxMenuItemConnectDatabase.isSelected()) {
+        if (jCheckBoxMenuItemContinousDemo.isSelected()) {
             continousDemoFuture = startContinousDemo();
+        } else {
+            immediateAbort();
         }
     }//GEN-LAST:event_jCheckBoxMenuItemContinousDemoActionPerformed
 
-    private XFuture<Void> continousDemoFuture = null;
-    
-    public XFuture<Void> startContinousDemo() {
-        this.setReverseFlag(false);
-        return startActions()
-                .thenRun(() -> setReverseFlag(true))
-                .thenCompose(x -> startActions())
-                .thenCompose(x -> startContinousDemo());
+    private void jCheckBoxMenuItemPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseActionPerformed
+        System.out.println("jCheckBoxMenuItemPause.isSelected() = " + jCheckBoxMenuItemPause.isSelected());
+        if (null != continousDemoFuture) {
+            System.out.println("continousDemoFuture.isDone() = " + continousDemoFuture.isDone());
+            System.out.println("continousDemoFuture.isCancelled() = " + continousDemoFuture.isCancelled());
+        }
+        if (jCheckBoxMenuItemPause.isSelected()) {
+            pause();
+        } else {
+            resume();
+        }
+        if (null != continousDemoFuture) {
+            System.out.println("continousDemoFuture.isDone() = " + continousDemoFuture.isDone());
+            System.out.println("continousDemoFuture.isCancelled() = " + continousDemoFuture.isCancelled());
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemPauseActionPerformed
+
+    private void jMenuItemDebugActionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemDebugActionActionPerformed
+        debugAction();
+    }//GEN-LAST:event_jMenuItemDebugActionActionPerformed
+
+    public XFuture<Boolean> resume() {
+        return continueCrclProgram();
+    }
+
+    public void debugAction() {
+        String details = getDetailsString();
+        System.out.println("details = " + details);
+        System.out.println("continousDemoFuture = " + continousDemoFuture);
+        System.out.println("safeAbortFuture = " + safeAbortFuture);
+        System.out.println("startSafeAbortAndDisconnectAsyncFuture = " + startSafeAbortAndDisconnectAsyncFuture);
+        if(null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.debugAction();
+        }
     }
     
+    private XFuture<Void> continousDemoFuture = null;
+
+    public XFuture<Void> startContinousDemo() {
+        this.setReverseFlag(false);
+        return startCheckEnabled()
+                .thenCompose(x -> {
+                    if (x) {
+                        return startActions()
+                                .thenRun(() -> setReverseFlag(true))
+                                .thenCompose(x2 -> startActions())
+                                .thenCompose(x2 -> x ? startContinousDemo() : XFuture.completedFuture(null));
+                    } else {
+                        return Utils.runOnDispatchThread(() -> jCheckBoxMenuItemContinousDemo.setSelected(false));
+                    }
+                });
+    }
+
     public void setReverseFlag(boolean reverseFlag) {
-        if(jCheckBoxMenuItemReverse.isSelected() != reverseFlag) {
+        if (jCheckBoxMenuItemReverse.isSelected() != reverseFlag) {
             jCheckBoxMenuItemReverse.setSelected(reverseFlag);
         }
         if (null != object2DViewJInternalFrame) {
@@ -2103,6 +2153,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public void pause() {
+        if (!jCheckBoxMenuItemPause.isSelected()) {
+            jCheckBoxMenuItemPause.setSelected(true);
+        }
         this.pauseCrclProgram();
     }
 
@@ -2161,6 +2214,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public XFuture<Boolean> startActions() {
         runNumber++;
+        if (jCheckBoxMenuItemPause.isSelected()) {
+            jCheckBoxMenuItemPause.setSelected(false);
+        }
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh();
         }
@@ -2717,6 +2773,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKitInspectionStartup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupCRCLWebApp;
@@ -2734,12 +2791,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenu jMenuExecute;
-    private javax.swing.JMenuItem jMenuItemContinue;
+    private javax.swing.JMenuItem jMenuItemDebugAction;
     private javax.swing.JMenuItem jMenuItemExit;
     private javax.swing.JMenuItem jMenuItemImmediateAbort;
     private javax.swing.JMenuItem jMenuItemLoadProperties;
     private javax.swing.JMenuItem jMenuItemLoadPropertiesFile;
-    private javax.swing.JMenuItem jMenuItemPause;
     private javax.swing.JMenuItem jMenuItemReset;
     private javax.swing.JMenuItem jMenuItemSaveProperties;
     private javax.swing.JMenuItem jMenuItemSavePropsAs;
@@ -2943,7 +2999,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * underlying task.
      *
      */
-    public XFuture<Boolean> continueCurrentCrclProgram() {
+    public XFuture<Boolean> continueCrclProgram() {
         if (null != pendantClientJInternalFrame) {
             return pendantClientJInternalFrame.continueCurrentProgram();
         } else {

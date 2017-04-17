@@ -99,6 +99,22 @@ import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL

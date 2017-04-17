@@ -94,6 +94,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return this.actionsToCrclJPanel1.continueActionList();
     }
 
+    public void debugAction() {
+        this.actionsToCrclJPanel1.debugAction();
+    }
+    
     public void pause() {
         this.actionsToCrclJPanel1.pause();
     }

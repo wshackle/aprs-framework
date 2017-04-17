@@ -462,6 +462,8 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 SplashScreen.getRedYellowColorList(), gd);
     }
 
+    private XFuture<Void> stealAbortFuture = null;
+    
     private XFuture<Void> stealRobot(AprsJFrame stealFrom, AprsJFrame stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
         File f = getPosMapFile(stealFor.getRobotName(), stealFrom.getRobotName());
         PositionMap pm = (f != null && !f.getName().equals("null")) ? new PositionMap(f) : PositionMap.emptyPositionMap();
@@ -494,10 +496,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             stealFor.setRobotName(stealForRobotName);
         }
         );
-        
-        
+
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
-        return XFuture.allOf(
+        stealAbortFuture =  XFuture.allOf(
                 stealFrom.startSafeAbortAndDisconnectAsync(),
                 stealFor.startSafeAbort()
                 .thenCompose(x -> {
@@ -511,7 +512,8 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
                             SplashScreen.getDisableImageImage(),
                             SplashScreen.getRedYellowColorList(), gd);
-                }))
+                }));
+        return stealAbortFuture
                 .thenRun(() -> {
                     stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
                     stealFor.addPositionMap(pm);
@@ -610,6 +612,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         jMenuItemConnectAll = new javax.swing.JMenuItem();
         jMenuItemDbgAction = new javax.swing.JMenuItem();
         jCheckBoxMenuItemContinousDemo = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemPause = new javax.swing.JCheckBoxMenuItem();
         jMenuOptions = new javax.swing.JMenu();
         jCheckBoxMenuItemDisableTextPopups = new javax.swing.JCheckBoxMenuItem();
         jMenuItemStartColorTextDisplay = new javax.swing.JMenuItem();
@@ -1006,6 +1009,15 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         });
         jMenuActions.add(jCheckBoxMenuItemContinousDemo);
 
+        jCheckBoxMenuItemPause.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PAUSE, 0));
+        jCheckBoxMenuItemPause.setText("Pause");
+        jCheckBoxMenuItemPause.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemPauseActionPerformed(evt);
+            }
+        });
+        jMenuActions.add(jCheckBoxMenuItemPause);
+
         jMenuBar1.add(jMenuActions);
 
         jMenuOptions.setText("Options");
@@ -1368,8 +1380,18 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBoxMenuItemDisableTextPopupsActionPerformed
 
     private void jMenuItemDbgActionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemDbgActionActionPerformed
-        System.out.println("lastFutureReturned = " + lastFutureReturned);
+        debugAction();
     }//GEN-LAST:event_jMenuItemDbgActionActionPerformed
+
+    private void debugAction() {
+        System.out.println("lastFutureReturned = " + lastFutureReturned);
+        System.out.println("continousDemoFuture = " + continousDemoFuture);
+        System.out.println("stealRobotFuture = " + stealRobotFuture);
+        System.out.println("stealAbortFuture = "+ stealAbortFuture);
+        for (int i = 0; i < aprsSystems.size(); i++) {
+            aprsSystems.get(i).debugAction();
+        }
+    }
 
     private Socket colorTextSocket = null;
     private ColorTextJFrame colorTextJFrame = null;
@@ -1455,6 +1477,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     private void jMenuActionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuActionsActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jMenuActionsActionPerformed
+
+    private void jCheckBoxMenuItemPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseActionPerformed
+        if (jCheckBoxMenuItemPause.isSelected()) {
+            pause();
+        } else {
+            resume();
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemPauseActionPerformed
 
     public void setReverseFlag(boolean reverseFlag) {
         for (int i = 0; i < aprsSystems.size(); i++) {
@@ -1570,6 +1600,22 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         return ret;
     }
 
+    private void pause() {
+        for (int i = 0; i < aprsSystems.size(); i++) {
+            aprsSystems.get(i).pause();
+        }
+    }
+
+    private XFuture<Void> resume() {
+
+        XFuture futures[] = new XFuture[aprsSystems.size()];
+        for (int i = 0; i < aprsSystems.size(); i++) {
+            futures[i] = aprsSystems.get(i).resume();
+        }
+        final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
+        return XFuture.allOf(futures);
+    }
+
     private XFuture<Void> startAllActions() {
 
         XFuture futures[] = new XFuture[aprsSystems.size()];
@@ -1605,6 +1651,10 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         if (null != lastFutureReturned) {
             lastFutureReturned.cancelAll(true);
             lastFutureReturned = null;
+        }
+        if (null != stealAbortFuture) {
+            stealAbortFuture.cancelAll(true);
+            stealAbortFuture = null;
         }
     }
 
@@ -1996,6 +2046,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButtonSetOutFromCurrent;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDisableTextPopups;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;
     private javax.swing.JMenu jMenuActions;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenu jMenuFile;
