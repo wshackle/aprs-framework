@@ -57,6 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -1469,6 +1470,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         connectAll();
         setReverseFlag(false);
         enableAllRobots();
+        continousDemoCycle.set(0);
         if (jCheckBoxMenuItemContinousDemo.isSelected()) {
             continousDemoFuture = startContinousDemo();
         }
@@ -1497,6 +1499,13 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         return checkEnabledAll()
                 .thenCompose(ok -> checkOk(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
     }
+    
+    private final AtomicInteger continousDemoCycle = new AtomicInteger(0);
+    
+     private XFuture<Void> incrementContinousDemoCycle() {
+         final int c = continousDemoCycle.incrementAndGet();
+         return Utils.runOnDispatchThread(() -> jCheckBoxMenuItemContinousDemo.setText("Continous Demo ("+c+") "));
+     }
 
     private XFuture<Void> continueContinousDemo() {
         connectAll();
@@ -1506,6 +1515,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 .thenCompose(x -> (null != stealRobotFuture) ? stealRobotFuture : XFuture.completedFuture(null))
                 .thenCompose(x -> startReverseActions())
                 .thenCompose(x -> (null != stealRobotFuture) ? stealRobotFuture : XFuture.completedFuture(null))
+                .thenCompose(x -> incrementContinousDemoCycle())
                 .thenCompose(x -> checkEnabledAll())
                 .thenCompose(ok -> checkOk(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
     }

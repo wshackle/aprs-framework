@@ -30,6 +30,8 @@ import aprs.framework.database.DbSetupBuilder;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
 import aprs.framework.spvision.VisionSocketClient;
 import aprs.framework.spvision.VisionSocketServer;
+import crcl.base.CRCLCommandType;
+import crcl.base.CRCLStatusType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.client.PendantClientJPanel;
@@ -75,6 +77,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
         this.object2DJPanel1.takeSnapshot(f, pose, label);
+        File csvDir = new File(f.getParentFile(),"csv");
+        csvDir.mkdirs();
+        saveFile(new File(csvDir,f.getName()+".csv"));
     }
 
     public void refresh() {
@@ -96,6 +101,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public void setItems(List<DetectedItem> items) {
+        setItems(items,true);
+    }
+    
+    public void setItems(List<DetectedItem> items, boolean publish) {
         try {
             settingItems = true;
             if (javax.swing.SwingUtilities.isEventDispatchThread()) {
@@ -103,7 +112,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             } else {
                 javax.swing.SwingUtilities.invokeLater(() -> setItemsInternal(items));
             }
-            if (null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
+            if (publish && null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
                 visionSocketServer.publishList(items);
             }
         } finally {
@@ -911,13 +920,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void saveFile(File f) throws IOException {
 
+        saveFile(f,getItems());
+        
+    }
+    
+    private void saveFile(File f,List<DetectedItem> items) throws IOException {
+
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             pw.println("name,rotation,x,y,score,type");
-            for (DetectedItem item : getItems()) {
+            for (DetectedItem item :items) {
                 pw.println(item.name + "," + item.rotation + "," + item.x + "," + item.y + "," + item.score + "," + item.type);
             }
         }
-        jTextFieldFilename.setText(f.getCanonicalPath());
+        
     }
 
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
@@ -959,7 +974,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
             try {
-                saveFile(chooser.getSelectedFile());
+                File newFile = chooser.getSelectedFile();
+                saveFile(newFile);
+                jTextFieldFilename.setText(newFile.getCanonicalPath());
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1109,11 +1126,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private static String makeShortPath(File f, String str) {
         try {
-            if(str.startsWith("..")) {
+            if (str.startsWith("..")) {
                 return str;
             }
             File strFile = new File(str);
-            if(!strFile.exists()) {
+            if (!strFile.exists()) {
                 return str;
             }
             String canString = strFile.getCanonicalPath();
@@ -1142,7 +1159,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("separatenames", Boolean.toString(jCheckBoxSeparateNames.isSelected()));
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText());
             props.put("xminymin", jTextFieldMinXMinY.getText());
-            if(reverseFlag) {
+            if (reverseFlag) {
                 this.reverseDataFileString = jTextFieldFilename.getText();
             } else {
                 this.dataFileString = jTextFieldFilename.getText();
@@ -1151,7 +1168,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 String datafileShort = makeShortPath(propertiesFile, reverseDataFileString);
                 props.put("reverse_datafile", datafileShort);
             }
-             if (null != dataFileString && dataFileString.length() > 0) {
+            if (null != dataFileString && dataFileString.length() > 0) {
                 String datafileShort = makeShortPath(propertiesFile, dataFileString);
                 props.put("datafile", datafileShort);
             }
@@ -1282,9 +1299,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private String dataFileString = null;
     private String reverseDataFileString = null;
-    
+
     public void reloadDataFile() throws IOException {
-        String currentDataFileString = reverseFlag?this.reverseDataFileString:this.dataFileString;
+        String currentDataFileString = reverseFlag ? this.reverseDataFileString : this.dataFileString;
         if (null != currentDataFileString && currentDataFileString.length() > 0) {
             File f = new File(currentDataFileString);
             if (f.exists() && f.canRead() && !f.isDirectory()) {
@@ -1327,11 +1344,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
-    boolean lastIsHoldingObjectExpected = false;
-    int captured_item_index = -1;
+    private volatile boolean lastIsHoldingObjectExpected = false;
+    private volatile int captured_item_index = -1;
+
+
+    public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
+        this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
+        File csvDir = new File(f.getParentFile(),"csv");
+        csvDir.mkdirs();
+        saveFile(new File(csvDir,f.getName()+".csv"),itemsToPaint);
+    }
 
     @Override
-    public void accept(PendantClientJPanel panel, PoseType pose) {
+    public void handlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
         PointType ptIn = pose.getPoint();
 
         PointType uncorrectedPoint = aprsJFrame.reverseCorrectPoint(ptIn);
@@ -1340,7 +1365,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));
         object2DJPanel1.setCurrentX(currentX);
         object2DJPanel1.setCurrentY(currentY);
-        boolean isHoldingObjectExpected = panel.isHoldingObjectExpected();
         List<DetectedItem> l = getItems();
         if (this.jCheckBoxSimulated.isSelected()) {
 
@@ -1359,8 +1383,41 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         min_dist = dist;
                     }
                 }
-                if (min_dist < 3.0 && min_dist_index >= 0) {
+                if (min_dist < 0.1 && min_dist_index >= 0) {
                     captured_item_index = min_dist_index;
+                    if (true) {
+                        System.out.println("Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                        try {
+                            takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "capture_" + captured_item_index + "_at_"+currentX+"_"+currentY+"_", ".PNG"), null, "");
+                        } catch (IOException ex) {
+                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                } else {
+                    try {
+                        takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "failed_to_capture_part_at_"+currentX+"_"+currentY+"_", ".PNG"), null, "");
+                    } catch (IOException ex) {
+                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    System.err.println("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+                    this.aprsJFrame.pause();
+                }
+            } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
+                if (true) {
+                    System.out.println("Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                    try {
+                        takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "_dropping_" + captured_item_index + "_at_"+currentX+"_"+currentY+"_", ".PNG"), null, "");
+                    } catch (IOException ex) {
+                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                if (captured_item_index < 0) {
+                    try {
+                        takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "failed_to_drop_part_", ".PNG"), null, "");
+                    } catch (IOException ex) {
+                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    System.err.println("Should be dropping item but no item captured");
                 }
             }
         }
@@ -1373,13 +1430,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 item.x = currentX;
                 item.y = currentY;
                 l.set(captured_item_index, item);
+                setItems(l,(isHoldingObjectExpected != lastIsHoldingObjectExpected));
+            } else if(isHoldingObjectExpected != lastIsHoldingObjectExpected) {
                 setItems(l);
             }
         }
-    }
-
-    public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
-        this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
+        lastIsHoldingObjectExpected = isHoldingObjectExpected;
     }
 
 }

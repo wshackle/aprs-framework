@@ -445,7 +445,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.options = options;
     }
 
-    
     /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
@@ -504,7 +503,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     break;
                 case "look-for-part":
                 case "look-for-parts":
-                    lookForParts(action, cmds,(lastIndex == 0), (lastIndex == actions.size()-1));
+                    lookForParts(action, cmds, (lastIndex == 0), (lastIndex == actions.size() - 1));
                     actionToCrclIndexes[lastIndex] = cmds.size();
                     actionToCrclLabels[lastIndex] = "";
                     actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
@@ -569,7 +568,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.slowTransSpeed = slowTransSpeed;
     }
 
-    private BigDecimal lookDwellTime = BigDecimal.valueOf(3.0);
+    private BigDecimal lookDwellTime = BigDecimal.valueOf(5.0);
 
     /**
      * Get the value of lookDwellTime
@@ -619,6 +618,46 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      */
     public void setFastTransSpeed(BigDecimal fastTransSpeed) {
         this.fastTransSpeed = fastTransSpeed;
+    }
+
+    private BigDecimal firstLookDwellTime = new BigDecimal(5.0);
+
+    /**
+     * Get the value of firstLookDwellTime
+     *
+     * @return the value of firstLookDwellTime
+     */
+    public BigDecimal getFirstLookDwellTime() {
+        return firstLookDwellTime;
+    }
+
+    /**
+     * Set the value of firstLookDwellTime
+     *
+     * @param firstLookDwellTime new value of firstLookDwellTime
+     */
+    public void setFirstLookDwellTime(BigDecimal firstLookDwellTime) {
+        this.firstLookDwellTime = firstLookDwellTime;
+    }
+
+    private BigDecimal lastLookDwellTime = new BigDecimal(1.0);
+
+    /**
+     * Get the value of lastLookDwellTime
+     *
+     * @return the value of lastLookDwellTime
+     */
+    public BigDecimal getLastLookDwellTime() {
+        return lastLookDwellTime;
+    }
+
+    /**
+     * Set the value of lastLookDwellTime
+     *
+     * @param lastLookDwellTime new value of lastLookDwellTime
+     */
+    public void setLastLookDwellTime(BigDecimal lastLookDwellTime) {
+        this.lastLookDwellTime = lastLookDwellTime;
     }
 
     private BigDecimal settleDwellTime = new BigDecimal(0.25);
@@ -1584,6 +1623,25 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         }
 
+        String firstLookDwellTimeString = options.get("firstLookDwellTime");
+        if (null != firstLookDwellTimeString && firstLookDwellTimeString.length() > 0) {
+            try {
+                double val = Double.parseDouble(firstLookDwellTimeString);
+                firstLookDwellTime = BigDecimal.valueOf(val);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
+        String lastLookDwellTimeString = options.get("lastLookDwellTime");
+        if (null != lastLookDwellTimeString && lastLookDwellTimeString.length() > 0) {
+            try {
+                double val = Double.parseDouble(lastLookDwellTimeString);
+                lastLookDwellTime = BigDecimal.valueOf(val);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
+
         String fastTransSpeedString = options.get("fastTransSpeed");
         if (null != fastTransSpeedString && fastTransSpeedString.length() > 0) {
             try {
@@ -1811,12 +1869,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         addMoveToLookForPosition(out);
 
-        if(lastAction || firstAction) {
-            addSettleDwell(out);
+        if (firstAction) {
+            addFirstLookDwell(out);
+        } else if(lastAction) {
+            addLastLookDwell(out);
         } else {
             addLookDwell(out);
         }
-        
+
         addTakeSimViewSnapshot(out, "-look-for-parts-", null, "");
         addMarkerCommand(out, "clear pose cache", x -> this.clearPoseCache());
         if (action.getArgs().length == 1) {
@@ -2094,6 +2154,20 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         DwellType dwellCmd = new DwellType();
         dwellCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
         dwellCmd.setDwellTime(settleDwellTime);
+        cmds.add(dwellCmd);
+    }
+
+    private void addFirstLookDwell(List<MiddleCommandType> cmds) {
+        DwellType dwellCmd = new DwellType();
+        dwellCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        dwellCmd.setDwellTime(firstLookDwellTime);
+        cmds.add(dwellCmd);
+    }
+
+    private void addLastLookDwell(List<MiddleCommandType> cmds) {
+        DwellType dwellCmd = new DwellType();
+        dwellCmd.setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        dwellCmd.setDwellTime(lastLookDwellTime);
         cmds.add(dwellCmd);
     }
 

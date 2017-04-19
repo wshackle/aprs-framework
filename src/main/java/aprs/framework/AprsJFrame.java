@@ -79,6 +79,7 @@ import java.io.PrintStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -322,7 +323,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private volatile XFuture<Void> safeAbortFuture = null;
-    
+
     /**
      * Attempt to safely abort the current CRCL program in a way that does not
      * leave the part in the gripper nor in a position obstructing the vision
@@ -348,9 +349,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return safeAbortFuture;
     }
 
-    
-    private volatile  XFuture<Void> startSafeAbortAndDisconnectAsyncFuture = null;
-    
+    private volatile XFuture<Void> startSafeAbortAndDisconnectAsyncFuture = null;
+
     /**
      * Safely abort the current CRCL program and then disconnect from the
      * robot's CRCL server.
@@ -361,9 +361,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * abort and disconnect is completed.
      */
     public XFuture<Void> startSafeAbortAndDisconnectAsync() {
-        startSafeAbortAndDisconnectAsyncFuture =
-                this.pddlExecutorJInternalFrame1.startSafeAbort()
-                .thenRunAsync(this::disconnectRobot);
+        startSafeAbortAndDisconnectAsyncFuture
+                = this.pddlExecutorJInternalFrame1.startSafeAbort()
+                        .thenRunAsync(this::disconnectRobot);
         return startSafeAbortAndDisconnectAsyncFuture;
     }
 
@@ -656,6 +656,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         sb.append("connected=").append(connected).append("\r\n");
         sb.append("reverseFlag=").append(jCheckBoxMenuItemReverse.isSelected()).append("\r\n");
         sb.append("paused=").append(jCheckBoxMenuItemPause.isSelected()).append("\r\n");
+        sb.append("run_name=").append(this.getRunName()).append("\r\n");
+        String crclClientErrString = getCrclClientErrorString();
+        if (null != crclClientErrString && crclClientErrString.length() > 0
+                && !Objects.equals(titleErrorString, crclClientErrString)) {
+            sb.append("crclClientErrString=").append(crclClientErrString).append("\r\n");
+            pause();
+        }
         sb.append("                                                                                                                                                                                                                                                                                        \r\n");
 
         if (null != titleErrorString && titleErrorString.length() > 0) {
@@ -695,21 +702,28 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         }
 
+        private StringBuffer sb = new StringBuffer();
+
         @Override
         public void write(byte[] buf, int off, int len) {
             super.write(buf, off, len);
             if (null != logDisplayJInternalFrame) {
                 final String s = new String(buf, off, len);
-                if (javax.swing.SwingUtilities.isEventDispatchThread()) {
-                    logDisplayJInternalFrame.appendText(s);
-                } else {
+                sb.append(s);
+                if (s.contains("\n")) {
+                    String fullString = sb.toString();
+                    if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+                        logDisplayJInternalFrame.appendText(fullString);
+                    } else {
 
-                    javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            logDisplayJInternalFrame.appendText(s);
-                        }
-                    });
+                        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                logDisplayJInternalFrame.appendText(fullString);
+                            }
+                        });
+                    }
+                    sb = new StringBuffer();
                 }
             }
         }
@@ -757,10 +771,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param titleErrorString title error string
      */
     public void setTitleErrorString(String titleErrorString) {
-        updateTitle();
-        this.titleErrorString = titleErrorString;
-        setTitle(titleErrorString);
-        System.err.println(titleErrorString);
+        if (!Objects.equals(this.titleErrorString, titleErrorString)) {
+            updateTitle();
+            this.titleErrorString = titleErrorString;
+            setTitle((null != titleErrorString) ? titleErrorString : "APRS");
+            if (null != titleErrorString && titleErrorString.length() > 0) {
+                System.err.println(titleErrorString);
+                pause();
+            }
+        }
     }
 
     private void startMotomanCrclServer() {
@@ -1237,8 +1256,21 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return titleUpdateRunnables;
     }
 
+    public String getCrclClientErrorString() {
+        if (null != pendantClientJInternalFrame) {
+            return pendantClientJInternalFrame.getCrclClientErrorMessage();
+        }
+        return null;
+    }
+
     private void updateTitle(String stateString, String stateDescription) {
         String oldTitle = getTitle();
+        String crclClientError = getCrclClientErrorString();
+        if (null != crclClientError && crclClientError.length() > 0
+                && (null == titleErrorString || titleErrorString.length() < 1)) {
+            this.titleErrorString = crclClientError;
+            pause();
+        }
         String newTitle = "APRS : " + ((robotName != null) ? robotName : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : "
                 + stateDescription
                 + ((titleErrorString != null) ? ": " + titleErrorString : "");
@@ -2063,7 +2095,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_jMenuItemResetActionPerformed
 
     private void jCheckBoxMenuItemReverseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemReverseActionPerformed
-         boolean reverseFlag = jCheckBoxMenuItemReverse.isSelected();
+        boolean reverseFlag = jCheckBoxMenuItemReverse.isSelected();
         setReverseFlag(reverseFlag);
     }//GEN-LAST:event_jCheckBoxMenuItemReverseActionPerformed
 
@@ -2108,11 +2140,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         System.out.println("continousDemoFuture = " + continousDemoFuture);
         System.out.println("safeAbortFuture = " + safeAbortFuture);
         System.out.println("startSafeAbortAndDisconnectAsyncFuture = " + startSafeAbortAndDisconnectAsyncFuture);
-        if(null != pddlExecutorJInternalFrame1) {
+        if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.debugAction();
         }
     }
-    
+
     private XFuture<Void> continousDemoFuture = null;
 
     public XFuture<Void> startContinousDemo() {

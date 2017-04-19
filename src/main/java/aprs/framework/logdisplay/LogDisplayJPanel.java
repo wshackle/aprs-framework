@@ -178,6 +178,9 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
 
     private void appendLine(String l) {
         int maxLines = 100;
+        if(l.length() > 204) {
+            l = l.substring(0, 200)+" ...";
+        }
         try {
             maxLines = (int) jSpinnerMaxLines.getValue();
             if (maxLines < 1) {

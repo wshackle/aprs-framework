@@ -471,7 +471,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 {"takeZOffset", "0.0"},
                 {"fastTransSpeed", "200.0"},
                 {"slowTransSpeed", "75"},
-                {"lookDwellTime", "3.0"},
+                {"lookDwellTime", "5.0"},
+                {"firstLookDwellTime", "5.0"},
+                {"lastLookDwellTime", "1.0"},
                 {"rotSpeed", "30.0"},
                 {"placePartSlotArgIndex", "0"},
                 {"takePartArgIndex", "0"},
@@ -1871,6 +1873,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setErrorString(null);
         aprsJFrame.setTitleErrorString(null);
         pddlActionToCrclGenerator.clearPoseCache();
+        lastContinueActionFuture = null;
+        lastSafeAbortFuture = null;
     }
 
     private AtomicInteger abortProgramCount = new AtomicInteger(0);
@@ -2479,13 +2483,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         System.out.println("startCrclProgramCount = " + startCrclProgramCount);
         System.out.println("doSafeAbortCount = " + doSafeAbortCount);
         System.out.println("doSafeAbortTime = " + doSafeAbortTime);
+        System.out.println("runningProgramFuture = " + runningProgramFuture);
+        System.out.println("lastSafeAbortFuture="+lastSafeAbortFuture);
+        System.out.println("lastContinueActionFuture = " + lastContinueActionFuture);
     }
 
     private volatile boolean startSafeAbortRunningProgram = false;
     private volatile long startSafeAbortTime = 0;
     
+    private volatile XFuture<Void> lastSafeAbortFuture = null;
+    
     public XFuture<Void> startSafeAbort() {
         final XFuture<Void> ret = new XFuture<>();
+        lastSafeAbortFuture = ret;
         startSafeAbortTime = System.currentTimeMillis();
         synchronized (this) {
             startSafeAbortRunningProgram = runningProgram;
@@ -2510,9 +2520,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         continueActionListPrivate();
     }//GEN-LAST:event_jButtonContinueActionPerformed
 
+    private volatile XFuture<Void> lastContinueActionFuture = null;
+    
     public XFuture<Void> continueActionList() {
 
         XFuture<Void> ret = new XFuture<>();
+        lastContinueActionFuture = ret;
         addProgramCompleteRunnable(() -> {
             ret.complete(null);
         });
