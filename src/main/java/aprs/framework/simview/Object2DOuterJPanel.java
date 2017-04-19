@@ -1400,6 +1400,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     System.err.println("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+                    this.aprsJFrame.setTitleErrorString("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
                     this.aprsJFrame.pause();
                 }
             } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
