@@ -425,6 +425,8 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
+    private List<XFuture> oldLfrs = new ArrayList<>();
+
     private void setRobotEnabled(String robotName, Boolean enabled) {
         debugAction();
         if (null != robotName && null != enabled) {
@@ -442,8 +444,17 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     this.stealRobotFuture.set(future);
                     final XFuture<Void> cancelFuture = new XFuture<>("cancelStealRobotFuture");
                     this.cancelStealRobotFuture.set(cancelFuture);
-                    lastFutureReturned = XFuture.anyOf("setRobotEnabled.anyOf1", future,
+                    lastFutureReturned = XFuture.anyOf("setRobotEnabled(" + robotName + "," + enabled + ").anyOf",
+                            future.handle((x, t) -> x)
+                                    .thenCompose(x -> {
+                                        if (stealingRobots) {
+                                            return XFuture.completedFuture(null);
+                                        } else {
+                                            return new XFuture<>("neverComplete");
+                                        }
+                                    }),
                             cancelFuture.thenCompose(x -> checkUnstealRobotFuture(null)));
+
                     if (null != origUnstealFuture && null != origCancelUnstealFuture) {
                         System.out.println("Completing origCancelUnstealFuture= " + origCancelUnstealFuture);
                         origCancelUnstealFuture.complete(null);
@@ -453,25 +464,46 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 }
             } else {
 
-                final XFuture<Void> origStealFuture = stealRobotFuture.getAndSet(null);;
-                final XFuture<Void> origCancelStealFuture = cancelStealRobotFuture.getAndSet(null);;
+                if (!stealingRobots) {
+                    return;
+                }
+                stealingRobots = false;
+                XFuture prevLFR = lastFutureReturned;
+                final XFuture<Void> origStealFuture = stealRobotFuture.getAndSet(null);
+                final XFuture<Void> origCancelStealFuture = cancelStealRobotFuture.getAndSet(null);
                 if (null != origStealFuture && null != origCancelStealFuture) {
                     System.out.println("Cancelling origStealFuture= " + origStealFuture);
                     origStealFuture.cancelAll(true);
+                    System.out.println("origStealFuture = " + origStealFuture);
                     printStatus(origStealFuture, System.out);
+                    System.out.println("lastFutureReturned = " + lastFutureReturned);
+                    printStatus(lastFutureReturned, System.out);
                 }
                 final XFuture<Void> future = unStealRobots();
                 this.unStealRobotFuture.set(future);
                 final XFuture<Void> cancelFuture = new XFuture<>("cancelUnStealRobotFuture");
                 this.cancelUnStealRobotFuture.set(cancelFuture);
-                lastFutureReturned = XFuture.anyOf("setRobotEnabled.anyOf2",
+                lastFutureReturned = XFuture.anyOf("setRobotEnabled(" + robotName + "," + enabled + ").anyOf",
                         future,
                         cancelFuture.thenCompose(x -> checkStealRobotFuture(null)));
 
                 if (null != origStealFuture && null != origCancelStealFuture) {
                     System.out.println("Completing origCancelStealFuture= " + origCancelStealFuture);
                     origCancelStealFuture.complete(null);
+                    System.out.println("origCancelStealFuture = " + origCancelStealFuture);
+                    printStatus(origCancelStealFuture, System.out);
+                    if (origCancelStealFuture.isCompletedExceptionally()) {
+                        origCancelStealFuture.exceptionally(t -> {
+                            t.printStackTrace();
+                            if(t.getCause() != null) {
+                                t.getCause().printStackTrace();
+                            }
+                            return null;
+                        });
+                    }
                 }
+                System.out.println("prevLFR = " + prevLFR);
+                printStatus(prevLFR, System.out);
 //                this.unStealRobotFuture = unStealRobots();
 //                this.cancelUnStealRobotFuture = new XFuture<>();
 //                final XFuture<Void> origStealFuture = stealRobotFuture;
@@ -480,6 +512,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
 //                 lastFutureReturned = XFuture.anyOf(this.stealRobotFuture, 
 //                            this.cancelStealRobotFuture.thenCompose(x -> (null != unStealRobotFuture)?unStealRobotFuture:XFuture.completedFuture(null)));
             }
+            oldLfrs.add(lastFutureReturned);
         }
     }
 
@@ -516,6 +549,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     private final AtomicReference<Runnable> returnRobotRunnable = new AtomicReference<>();
 
     private void returnRobots() {
+        this.stealingRobots = false;
         Runnable r = returnRobotRunnable.getAndSet(null);
         if (r != null) {
             r.run();
@@ -598,7 +632,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             unstealAbortFuture = XFuture.allOf("unStealAbortAllOf",
                     stealFrom.startSafeAbortAndDisconnectAsync(),
                     stealFor.startSafeAbortAndDisconnectAsync()
-                            .thenCompose(x -> {
+                            .thenCompose("unstealShowReenable", x -> {
                                 if (null != colorTextSocket) {
                                     try {
                                         colorTextSocket.getOutputStream().write("0x00FF00, 0x00FF00\r\n".getBytes());
@@ -611,9 +645,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                                         SplashScreen.getBlueWhiteGreenColorList(), gd);
                             }));
             return unstealAbortFuture
-                    .thenRun("returnRobots", this::returnRobots)
-                    .thenRun("connectAll", () -> connectAll())
-                    .thenCompose("continueAllOf", x -> {
+                    .thenRun("unsteal.returnRobots", this::returnRobots)
+                    .thenRun("unsteal.connectAll", () -> connectAll())
+                    .thenCompose("unsteal.continueAllOf", x -> {
                         return XFuture.allOf(stealFrom.continueActionList(), stealFor.continueActionList());
                     });
         });
@@ -1538,9 +1572,15 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         System.out.println("unstealAbortFuture = " + unstealAbortFuture);
         printStatus(unstealAbortFuture, System.out);
 
+        for (int i = 0; i < oldLfrs.size(); i++) {
+            XFuture xf = oldLfrs.get(i);
+            System.out.println("oldLfrs.get(" + i + ") = " + xf);
+            printStatus(xf, System.out);
+        }
         for (int i = 0; i < aprsSystems.size(); i++) {
             aprsSystems.get(i).debugAction();
         }
+
     }
 
     private Socket colorTextSocket = null;
@@ -1646,7 +1686,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
     public XFuture<Void> startContinousDemo() {
         connectAll();
         return checkEnabledAll()
-                .thenCompose(ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
+                .thenCompose("startContinousDemo", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
     }
 
     private final AtomicInteger continousDemoCycle = new AtomicInteger(0);
@@ -1662,19 +1702,19 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         enableAllRobots();
         final XFuture<?> lfr = this.lastFutureReturned;
         return startAllActions()
-                .thenCompose(x -> checkLastReturnedFuture(lfr))
-                .thenCompose(x -> startReverseActions())
-                .thenCompose(x -> checkLastReturnedFuture(lfr))
-                .thenCompose(x -> incrementContinousDemoCycle())
-                .thenCompose(x -> checkEnabledAll())
-                .thenCompose(ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
+                .thenCompose("continueContinousDeomo.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr))
+                .thenCompose("continueContinousDeomo.startReverseActions", x -> startReverseActions())
+                .thenCompose("continueContinousDeomo.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr))
+                .thenCompose("continueContinousDeomo.incrementContinousDemoCycle", x -> incrementContinousDemoCycle())
+                .thenCompose("continueContinousDeomo.checkEnabledAll", x -> checkEnabledAll())
+                .thenCompose("continueContinousDeomo.recurse", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
     }
 
     public XFuture<Void> startReverseActions() {
         setReverseFlag(true);
         enableAllRobots();
         return checkEnabledAll()
-                .thenCompose(ok -> checkOkElse(ok, this::startAllActions, this::showCheckEnabledErrorSplash));
+                .thenCompose("startReverseActions.startAllActions", ok -> checkOkElse(ok, this::startAllActions, this::showCheckEnabledErrorSplash));
     }
 
     private void savePosFile(File f) throws IOException {
@@ -1814,17 +1854,26 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         for (int i = 0; i < aprsSystems.size(); i++) {
             aprsSystems.get(i).immediateAbort();
         }
+        cancelAll(true);
+    }
+
+    private void cancelAll(boolean mayInterrupt) {
         if (null != continousDemoFuture) {
-            continousDemoFuture.cancelAll(true);
+            continousDemoFuture.cancelAll(mayInterrupt);
             continousDemoFuture = null;
         }
         if (null != lastFutureReturned) {
-            lastFutureReturned.cancelAll(true);
+            lastFutureReturned.cancelAll(mayInterrupt);
             lastFutureReturned = null;
         }
         if (null != stealAbortFuture) {
-            stealAbortFuture.cancelAll(true);
+            stealAbortFuture.cancelAll(mayInterrupt);
             stealAbortFuture = null;
+        }
+
+        if (null != unstealAbortFuture) {
+            unstealAbortFuture.cancelAll(mayInterrupt);
+            unstealAbortFuture = null;
         }
     }
 

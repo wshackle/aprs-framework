@@ -166,15 +166,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             if (null == ppi) {
                 throw new IllegalArgumentException("ppi == null");
             }
-            if (null == ppi.getWrapper()) {
+            CrclCommandWrapper wrapper = ppi.getWrapper();
+            if (null == wrapper) {
                 throw new IllegalArgumentException("ppi.getWrapper() == null");
             }
-            if (null == ppi.getWrapper().getCurProgram()) {
+            if (null == wrapper.getCurProgram()) {
                 throw new IllegalArgumentException(" ppi.getWrapper().getCurProgram() == null");
             }
-            List<MiddleCommandType> l = ppi.getWrapper().getCurProgram().getMiddleCommand();
-            while (l.size() > ppi.getOutIndex() + 1) {
-                l.remove(ppi.getOutIndex() + 1);
+            List<MiddleCommandType> l = wrapper.getCurProgram().getMiddleCommand();
+            int programIndex = wrapper.getCurProgramIndex();
+            while (l.size() > programIndex + 1) {
+                l.remove(programIndex + 1);
             }
             pddlActionToCrclGenerator.addMoveToLookForPosition(l);
             this.replanFromIndex = ppi.getPddlActionIndex() + 1;
