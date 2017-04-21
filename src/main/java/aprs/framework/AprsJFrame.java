@@ -651,10 +651,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 sb.append("pddlExecutorError=").append(pddlErrorString).append("\r\n");
             }
         }
-        sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append("\r\n");
+        sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append(", ");
         boolean connected = (null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected());
-        sb.append("connected=").append(connected).append("\r\n");
-        sb.append("reverseFlag=").append(jCheckBoxMenuItemReverse.isSelected()).append("\r\n");
+        sb.append("connected=").append(connected).append(", ");
+        sb.append("reverseFlag=").append(jCheckBoxMenuItemReverse.isSelected()).append(", ");
         sb.append("paused=").append(jCheckBoxMenuItemPause.isSelected()).append("\r\n");
         sb.append("run_name=").append(this.getRunName()).append("\r\n");
         String crclClientErrString = getCrclClientErrorString();
