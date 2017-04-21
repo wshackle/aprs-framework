@@ -445,9 +445,9 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     final XFuture<Void> cancelFuture = new XFuture<>("cancelStealRobotFuture");
                     this.cancelStealRobotFuture.set(cancelFuture);
                     lastFutureReturned = XFuture.anyOf("setRobotEnabled(" + robotName + "," + enabled + ").anyOf",
-                            future.handle((x, t) -> x)
+                            future.handle((x, t) -> (t==null))
                                     .thenCompose(x -> {
-                                        if (stealingRobots) {
+                                        if (x) {
                                             return XFuture.completedFuture(null);
                                         } else {
                                             return new XFuture<>("neverComplete");
