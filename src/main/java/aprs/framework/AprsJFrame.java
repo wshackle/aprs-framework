@@ -579,7 +579,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pendantClientJInternalFrame.setProgram(program);
             return pendantClientJInternalFrame.runCurrentProgram();
         }
-        XFuture<Boolean> ret = new XFuture<>();
+        XFuture<Boolean> ret = new XFuture<>("startCRCLProgram");
         ret.complete(false);
         return ret;
     }

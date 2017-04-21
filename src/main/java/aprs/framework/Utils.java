@@ -63,6 +63,11 @@ public class Utils {
 
     public static class SwingFuture<T> extends XFuture<T> {
 
+        public SwingFuture(String name) {
+            super(name);
+        }
+
+        
         @Override
         public T get() throws InterruptedException, ExecutionException {
             if (SwingUtilities.isEventDispatchThread()) {
@@ -82,7 +87,7 @@ public class Utils {
     }
 
     public static SwingFuture<Void> runOnDispatchThreadWithCatch(final RunnableWithThrow r) {
-        SwingFuture<Void> ret = new SwingFuture<>();
+        SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThreadWithCatch");
         try {
             if (javax.swing.SwingUtilities.isEventDispatchThread()) {
                 r.run();
@@ -110,7 +115,7 @@ public class Utils {
     }
 
     public static SwingFuture<Void> runOnDispatchThread(final Runnable r) {
-        SwingFuture<Void> ret = new SwingFuture<>();
+        SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThread");
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             try {
                 r.run();
@@ -136,7 +141,7 @@ public class Utils {
     }
 
     public static <R> SwingFuture<R> supplyOnDispatchThread(final Supplier<R> s) {
-        SwingFuture<R> ret = new SwingFuture<>();
+        SwingFuture<R> ret = new SwingFuture<>("supplyOnDispatchThread");
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             ret.complete(s.get());
             return ret;
@@ -156,7 +161,7 @@ public class Utils {
     }
 
     public static <R> XFuture<R> composeOnDispatchThread(final Supplier<XFuture<R>> s) {
-        XFuture<XFuture<R>> ret = new SwingFuture<>();
+        XFuture<XFuture<R>> ret = new SwingFuture<>("composeOnDispatchThread");
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             return s.get();
         } else {

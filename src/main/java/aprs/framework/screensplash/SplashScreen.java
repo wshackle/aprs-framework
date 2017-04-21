@@ -154,7 +154,7 @@ public class SplashScreen extends JFrame {
     }
 
     public static XFuture<Void> showMessageFullScreen(String message, float fontSize, Image image, List<Color> colors, GraphicsDevice graphicsDevice) {
-        XFuture<Void> returnFuture = new XFuture<>();
+        XFuture<Void> returnFuture = new XFuture<>("showMessageFullScreen("+message+")");
         Utils.runOnDispatchThread(() -> {
             SplashScreen ss = new SplashScreen(message, fontSize, image);
             ss.setVisible(true);

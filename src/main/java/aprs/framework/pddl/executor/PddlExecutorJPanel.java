@@ -1705,7 +1705,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return aprsJFrame.startCRCLProgram(crclProgram);
 
         } catch (Exception ex) {
-            XFuture<Boolean> future = new XFuture<>();
+            XFuture<Boolean> future = new XFuture<>("startCrclProgramException");
             Logger.getLogger(PddlExecutorJPanel.class
                     .getName()).log(Level.SEVERE, null, ex);
             future.completeExceptionally(ex);
@@ -2076,12 +2076,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 }
                 return this.randomPickup();
             }
-            XFuture<Boolean> future = new XFuture<>();
-            future.complete(false);
-            return future;
+            return XFuture.completedFuture(false);
         } catch (IOException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            XFuture<Boolean> future = new XFuture<>();
+            XFuture<Boolean> future = new XFuture<>("recordAndCompletTestPickupException");
             future.completeExceptionally(ex);
             return future;
         }
@@ -2494,7 +2492,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private volatile XFuture<Void> lastSafeAbortFuture = null;
     
     public XFuture<Void> startSafeAbort() {
-        final XFuture<Void> ret = new XFuture<>();
+        final XFuture<Void> ret = new XFuture<>("pddlExecutorStartSafeAbort");
         lastSafeAbortFuture = ret;
         startSafeAbortTime = System.currentTimeMillis();
         synchronized (this) {
@@ -2524,7 +2522,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     
     public XFuture<Void> continueActionList() {
 
-        XFuture<Void> ret = new XFuture<>();
+        XFuture<Void> ret = new XFuture<>("pddlExecutorContinueActionList");
         lastContinueActionFuture = ret;
         addProgramCompleteRunnable(() -> {
             ret.complete(null);
@@ -2843,14 +2841,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 return Utils.composeOnDispatchThread(supplier);
             } catch (Exception ex) {
                 Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                XFuture<Boolean> ret = new XFuture<Boolean>();
+                XFuture<Boolean> ret = new XFuture<Boolean>("recursiveSupplyBoolean");
                 ret.completeExceptionally(ex);
                 return ret;
             }
         } else {
-            XFuture<Boolean> ret = new XFuture<Boolean>();
-            ret.complete(false);
-            return ret;
+            return XFuture.completedFuture(false);
         }
     }
 
@@ -2864,14 +2860,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 return (XFuture<Boolean>) generateCrcl();
             } catch (IOException | IllegalStateException | SQLException ex) {
                 Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                XFuture<Boolean> ret = new XFuture<Boolean>();
+                XFuture<Boolean> ret = new XFuture<Boolean>("recursiveApplyGenerateCrclException");
                 ret.completeExceptionally(ex);
                 return ret;
             }
         } else {
-            XFuture<Boolean> ret = new XFuture<Boolean>();
-            ret.complete(false);
-            return ret;
+            return XFuture.completedFuture(false);
         }
     }
     private int crclStartActionIndex = -1;
@@ -2979,7 +2973,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         } catch (IllegalStateException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
             showExceptionInProgram(ex);
-            XFuture<Boolean> ret = new XFuture<>();
+            XFuture<Boolean> ret = new XFuture<>("doPddlActionsSectionException");
             ret.completeExceptionally(ex);
             return ret;
         } finally {
@@ -3344,17 +3338,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return startCrclProgram(program);
         } catch (IllegalStateException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            XFuture<Boolean> future = new XFuture<>();
+            XFuture<Boolean> future = new XFuture<>("lookForPartsException");
             future.completeExceptionally(ex);
             return future;
         }
     }
 
     private XFuture<Void> checkDbSupplierPublisher() throws IOException {
-        XFuture<Void> ret = new XFuture<>();
         if (null != this.pddlActionToCrclGenerator && pddlActionToCrclGenerator.isConnected()) {
-            ret.complete(null);
-            return ret;
+            return XFuture.completedFuture(null);
         }
         if (null != dbSetupSupplier) {
             try {
@@ -3369,7 +3361,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != dbSetupPublisher) {
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
-            return XFuture.runAsync(() -> {
+            return XFuture.runAsync("checkDbSupplierPublisherRunAsync",() -> {
                 for (Future<?> f : futures) {
                     if (!f.isDone() && !f.isCancelled()) {
                         try {
@@ -3385,8 +3377,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         } else {
             System.err.println("dbSetupPublisher == null");
         }
-        ret.complete(null);
-        return ret;
+       return XFuture.completedFuture(null);
     }
 
     public void setOption(String key, String val) {

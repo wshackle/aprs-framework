@@ -733,7 +733,7 @@ public class DbSetupBuilder {
         if (dbtype == null || dbtype == DbType.NONE) {
             throw new IllegalArgumentException("dbtype = " + dbtype);
         }
-        XFuture<Connection> ret = new XFuture<>();
+        XFuture<Connection> ret = new XFuture<>("setupConnection");
         new Thread(() -> {
             Connection conn;
             try {

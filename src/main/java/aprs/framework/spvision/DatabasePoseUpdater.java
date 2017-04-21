@@ -1578,10 +1578,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private final ExecutorService pqExecServ = Executors.newSingleThreadExecutor();
 
     public XFuture<List<PoseQueryElem>> queryDatabase()  {
-        return XFuture.supplyAsync(() -> Collections.unmodifiableList(getDirectPoseList()), pqExecServ);
+        return XFuture.supplyAsync("queryDatabase", () -> Collections.unmodifiableList(getDirectPoseList()), pqExecServ);
     }
 
     public XFuture<List<PoseQueryElem>> queryDatabaseNew()  {
-        return XFuture.supplyAsync(() -> Collections.unmodifiableList(getNewDirectPoseList()), pqExecServ);
+        return XFuture.supplyAsync("queryDatabaseNew",() -> Collections.unmodifiableList(getNewDirectPoseList()), pqExecServ);
     }
 }
