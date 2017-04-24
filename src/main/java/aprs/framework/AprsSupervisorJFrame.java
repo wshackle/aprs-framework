@@ -91,12 +91,12 @@ import org.apache.commons.csv.CSVRecord;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
+public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     /**
      * Creates new form AprsMulitSupervisorJFrame
      */
-    public AprsMulitSupervisorJFrame() {
+    public AprsSupervisorJFrame() {
 
         try {
             initComponents();
@@ -253,7 +253,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             Utils.autoResizeTableColWidths(jTablePositionMappings);
             Utils.autoResizeTableRowHeights(jTablePositionMappings);
             try {
-                setIconImage(ImageIO.read(AprsMulitSupervisorJFrame.class
+                setIconImage(ImageIO.read(AprsSupervisorJFrame.class
                         .getResource("aprs.png")));
 
             } catch (Exception ex) {
@@ -263,7 +263,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             updateRobotsTable();
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -292,11 +292,11 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 loadSetupFile(setupFile);
             }
         } catch (IOException ex) {
-            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
             try {
                 closeAllAprsSystems();
             } catch (IOException ex1) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex1);
+                Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex1);
             }
         }
     }
@@ -308,7 +308,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 loadPositionMaps(posFile);
             }
         } catch (IOException ex) {
-            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -366,7 +366,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     jTableSelectedPosMapFile.getSelectionModel().setSelectionInterval(0, 0);
                 }
             } catch (IOException | PositionMap.BadErrorMapFormatException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
@@ -460,7 +460,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                         origCancelUnstealFuture.complete(null);
                     }
                 } catch (IOException | PositionMap.BadErrorMapFormatException ex) {
-                    Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
             } else {
 
@@ -637,7 +637,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                                     try {
                                         colorTextSocket.getOutputStream().write("0x00FF00, 0x00FF00\r\n".getBytes());
                                     } catch (IOException ex) {
-                                        Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                                        Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
                                     }
                                 }
                                 return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Enabled", 80.0f,
@@ -660,7 +660,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                                 try {
                                     colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
                                 } catch (IOException ex) {
-                                    Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                                    Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
                                 }
                             }
                             return SplashScreen.showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
@@ -1270,7 +1270,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 saveSetupFile(chooser.getSelectedFile());
 
             } catch (IOException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class
+                Logger.getLogger(AprsSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -1294,7 +1294,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             try {
                 loadSetupFile(chooser.getSelectedFile());
             } catch (IOException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class
+                Logger.getLogger(AprsSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -1314,7 +1314,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 addAprsSystem(aj);
                 saveCurrentSetup();
             } catch (IOException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class
+                Logger.getLogger(AprsSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -1341,14 +1341,14 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                     aj.close();
 
                 } catch (Exception ex) {
-                    Logger.getLogger(AprsMulitSupervisorJFrame.class
+                    Logger.getLogger(AprsSupervisorJFrame.class
                             .getName()).log(Level.SEVERE, null, ex);
                 }
                 updateTasksTable();
                 updateRobotsTable();
                 saveCurrentSetup();
             } catch (IOException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class
+                Logger.getLogger(AprsSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -1381,7 +1381,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             try {
                 savePositionMaps(chooser.getSelectedFile());
             } catch (IOException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class
+                Logger.getLogger(AprsSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -1423,7 +1423,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 loadPositionMaps(chooser.getSelectedFile());
 
             } catch (IOException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class
+                Logger.getLogger(AprsSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -1525,7 +1525,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 browseAndSavePositionMappings();
             }
         } catch (IOException ex) {
-            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonSaveSelectedPosMapActionPerformed
 
@@ -1605,7 +1605,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 }
                 colorTextSocket = new Socket(options.getHost(), options.getPort());
             } catch (IOException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_jMenuItemStartColorTextDisplayActionPerformed
@@ -1619,7 +1619,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             try {
                 colorTextSocket.close();
             } catch (IOException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
             colorTextSocket = null;
         }
@@ -1634,7 +1634,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             try {
                 colorTextSocket.close();
             } catch (IOException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
             colorTextSocket = null;
         }
@@ -1648,7 +1648,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
             aj.browseSavePropertiesFileAs();
             saveCurrentSetup();
         } catch (IOException ex) {
-            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jMenuItemAddNewSystemActionPerformed
 
@@ -1771,7 +1771,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         try {
             initColorTextSocket();
         } catch (IOException ex) {
-            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
         DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
@@ -1782,7 +1782,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 colorTextSocket.getOutputStream().write("0x00FF00, 0x00FF000\r\n".getBytes());
                 colorTextSocket.getOutputStream().flush();
             } catch (IOException ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -1881,7 +1881,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         try {
             initColorTextSocket();
         } catch (IOException ex) {
-            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
         for (int i = 0; i < aprsSystems.size(); i++) {
             aprsSystems.get(i).setConnected(true);
@@ -1942,7 +1942,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(AprsMulitSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -2101,7 +2101,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 aprsJframe.close();
 
             } catch (Exception ex) {
-                Logger.getLogger(AprsMulitSupervisorJFrame.class
+                Logger.getLogger(AprsSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -2224,21 +2224,25 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(AprsMulitSupervisorJFrame.class
+            java.util.logging.Logger.getLogger(AprsSupervisorJFrame.class
                     .getName()).log(java.util.logging.Level.SEVERE, null, ex);
 
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(AprsMulitSupervisorJFrame.class
+            java.util.logging.Logger.getLogger(AprsSupervisorJFrame.class
                     .getName()).log(java.util.logging.Level.SEVERE, null, ex);
 
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(AprsMulitSupervisorJFrame.class
+            java.util.logging.Logger.getLogger(AprsSupervisorJFrame.class
                     .getName()).log(java.util.logging.Level.SEVERE, null, ex);
 
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(AprsMulitSupervisorJFrame.class
+            java.util.logging.Logger.getLogger(AprsSupervisorJFrame.class
                     .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
         //</editor-fold>
         //</editor-fold>
         //</editor-fold>
@@ -2247,7 +2251,7 @@ public class AprsMulitSupervisorJFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                AprsMulitSupervisorJFrame amsFrame = new AprsMulitSupervisorJFrame();
+                AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
                 amsFrame.startColorTextReader();
                 amsFrame.loadPrevSetup();
                 amsFrame.loadPrevPosMapFile();

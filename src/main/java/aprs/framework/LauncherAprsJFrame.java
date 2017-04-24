@@ -197,7 +197,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonPrevMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevMultiActionPerformed
-        AprsMulitSupervisorJFrame amsFrame = new AprsMulitSupervisorJFrame();
+        AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
         amsFrame.startColorTextReader();
         amsFrame.loadPrevSetup();
         amsFrame.loadPrevPosMapFile();
@@ -207,7 +207,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonPrevMultiActionPerformed
 
     private void jButtonNewMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonNewMultiActionPerformed
-        AprsMulitSupervisorJFrame amsFrame = new AprsMulitSupervisorJFrame();
+        AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
         amsFrame.startColorTextReader();
         amsFrame.setVisible(true);
         this.setVisible(false);
@@ -216,7 +216,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonNewMultiActionPerformed
 
     private void jButtonOpenMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenMultiActionPerformed
-        AprsMulitSupervisorJFrame amsFrame = new AprsMulitSupervisorJFrame();
+        AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
         amsFrame.startColorTextReader();
         amsFrame.setVisible(true);
         this.setVisible(false);
@@ -264,7 +264,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
         f = null;
         try {
-            f = AprsMulitSupervisorJFrame.getLastSetupFile();
+            f = AprsSupervisorJFrame.getLastSetupFile();
         } catch (IOException ex) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
