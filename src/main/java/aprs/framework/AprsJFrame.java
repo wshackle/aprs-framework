@@ -2138,8 +2138,20 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         String details = getDetailsString();
         System.out.println("details = " + details);
         System.out.println("continousDemoFuture = " + continousDemoFuture);
+         if(null != continousDemoFuture) {
+            continousDemoFuture.printStatus(System.out);
+        }
         System.out.println("safeAbortFuture = " + safeAbortFuture);
+        if(null != safeAbortFuture) {
+            safeAbortFuture.printStatus(System.out);
+        }
         System.out.println("startSafeAbortAndDisconnectAsyncFuture = " + startSafeAbortAndDisconnectAsyncFuture);
+        if(null != startSafeAbortAndDisconnectAsyncFuture) {
+            startSafeAbortAndDisconnectAsyncFuture.printStatus(System.out);
+        }
+        System.out.println("isConnected = "+isConnected());
+        System.out.println("getRobotCrclPort = "+getRobotCrclPort());
+        System.out.println("isCrclProgramPaused() = "+isCrclProgramPaused());
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.debugAction();
         }
@@ -2200,18 +2212,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    private static final CRCLProgramType emptyProgram = new CRCLProgramType();
+    private static final CRCLProgramType emptyProgram = createEmptyProgram();
 
-    {
-        emptyProgram.setInitCanon(new InitCanonType());
-        emptyProgram.getInitCanon().setCommandID(BigInteger.ONE);
-        MessageType msgCmd = new MessageType();
-        msgCmd.setMessage("empty program");
-        msgCmd.setCommandID(BigInteger.valueOf(2));
-        emptyProgram.getMiddleCommand().add(msgCmd);
-        emptyProgram.setEndCanon(new EndCanonType());
-        emptyProgram.getEndCanon().setCommandID(BigInteger.valueOf(3));
+    private static CRCLProgramType createEmptyProgram() {
+        CRCLProgramType prog = new CRCLProgramType();
+        prog.setInitCanon(new InitCanonType());
+        prog.getInitCanon().setCommandID(BigInteger.ONE);
+        prog.getMiddleCommand().clear();
+//        MessageType msgCmd = new MessageType();
+//        msgCmd.setMessage("empty program");
+//        msgCmd.setCommandID(BigInteger.valueOf(2));
+//        prog.getMiddleCommand().add(msgCmd);
+        prog.setEndCanon(new EndCanonType());
+        prog.getEndCanon().setCommandID(BigInteger.valueOf(3));
+        return prog;
     }
+    
 
     /**
      * Test that the robot can be connected by running an empty program.
@@ -2225,8 +2241,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public XFuture<Boolean> startCheckEnabled() {
         try {
+            System.out.println("startCheckEnabled called.");
             setConnected(true);
-            return startCRCLProgram(emptyProgram);
+            return startCRCLProgram(emptyProgram)
+                    .thenApply(x -> {
+                       System.out.println("startCheckEnabled finishing with "+x);
+                       return x;
+                    });
         } catch (JAXBException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             return XFuture.completedFuture(false);

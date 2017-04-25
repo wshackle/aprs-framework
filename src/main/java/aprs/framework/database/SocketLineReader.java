@@ -20,8 +20,6 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-
-
 package aprs.framework.database;
 
 import java.io.BufferedReader;
@@ -31,7 +29,10 @@ import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -42,28 +43,27 @@ public class SocketLineReader {
     private SocketLineReader() {
     }
 
-   
     public interface CallBack {
 
         public void call(String line, PrintStream ps);
     }
     private ServerSocket ss = null;
 
-    public boolean isConnected() { 
-        if(null != s) {
+    public boolean isConnected() {
+        if (null != s) {
             return s.isConnected();
         } else {
             return null != ss && ss.isBound() && !ss.isClosed();
         }
     }
-    
+
     private class Clnt {
 
         Socket s;
         Thread t;
         BufferedReader br;
         PrintStream ps;
-        
+
         public void close() {
             try {
                 if (null != t) {
@@ -88,9 +88,14 @@ public class SocketLineReader {
             s = null;
             t = null;
         }
-        
+
         protected void finalize() {
             close();
+        }
+
+        @Override
+        public String toString() {
+            return "Clnt{" + "s=" + s + ", t=" + t + ", br=" + br + ", ps=" + ps + '}';
         }
     }
     private ArrayList<Clnt> als = null;
@@ -99,9 +104,9 @@ public class SocketLineReader {
     private BufferedReader br = null;
     private PrintStream ps;
     private SocketLineReader.CallBack cb;
-    
+
     public int getPort() {
-        if(s == null) {
+        if (s == null) {
             return -1;
         }
         return s.getPort();
@@ -110,8 +115,8 @@ public class SocketLineReader {
     public String getHost() {
         return host;
     }
-    private String host=null;
-    
+    private String host = null;
+
     private SocketLineReader privateStart(boolean isClient,
             String host, int port, final String threadname,
             SocketLineReader.CallBack _cb) throws IOException {
@@ -133,7 +138,7 @@ public class SocketLineReader {
                             cb.call(line, ps);
                         }
                     } catch (Exception exception) {
-                        if(!closing) {
+                        if (!closing) {
                             exception.printStackTrace();
                         }
                     }
@@ -163,6 +168,13 @@ public class SocketLineReader {
                                         while (null != (line = c.br.readLine()) && !Thread.currentThread().isInterrupted()) {
                                             cb.call(line, c.ps);
                                         }
+                                    } catch (SocketException exception) {
+                                        System.out.println("Closing client socket "+c);
+                                        try {
+                                            s.close();
+                                        } catch (IOException ex) {
+                                            // ignore
+                                        }
                                     } catch (Exception exception) {
                                         exception.printStackTrace();
                                     }
@@ -181,7 +193,7 @@ public class SocketLineReader {
         return this;
     }
 
-    public static SocketLineReader startServer( int port, final String threadname,
+    public static SocketLineReader startServer(int port, final String threadname,
             SocketLineReader.CallBack _cb) throws IOException {
         SocketLineReader slr = new SocketLineReader();
         return slr.privateStart(false, null, port, threadname, _cb);
@@ -193,10 +205,11 @@ public class SocketLineReader {
         SocketLineReader slr = new SocketLineReader();
         return slr.privateStart(true, host, port, threadname, _cb);
     }
-    
+
     private volatile boolean closing = false;
+
     public void close() {
-        closing=true;
+        closing = true;
         try {
             if (null != t) {
                 t.interrupt();
@@ -222,11 +235,10 @@ public class SocketLineReader {
             }
         } catch (Exception e) {
         }
-        
-        
+
         try {
             if (null != als) {
-                for(int i = 0; i < als.size(); i++) {
+                for (int i = 0; i < als.size(); i++) {
                     Clnt c = als.get(i);
                     c.close();
                 }

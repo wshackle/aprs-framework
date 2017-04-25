@@ -115,7 +115,11 @@ public class Utils {
     }
 
     public static SwingFuture<Void> runOnDispatchThread(final Runnable r) {
-        SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThread");
+        return runOnDispatchThread("runOnDispatchThread", r);
+    }
+    
+    public static SwingFuture<Void> runOnDispatchThread(String name, final Runnable r) {
+        SwingFuture<Void> ret = new SwingFuture<>(name);
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             try {
                 r.run();

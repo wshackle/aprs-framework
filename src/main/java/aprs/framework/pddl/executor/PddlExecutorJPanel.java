@@ -1439,7 +1439,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null == initCmd) {
             initCmd = new InitCanonType();
             if (null == initCmd.getCommandID()) {
-                initCmd.setCommandID(BigInteger.ONE);
+                initCmd.setCommandID(pddlActionToCrclGenerator.getNextCommandId());
             }
         }
         program.setInitCanon(initCmd);
@@ -2807,9 +2807,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds = program.getMiddleCommand();
         MessageType message = new MessageType();
-        message.setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        message.setCommandID(pddlActionToCrclGenerator.getNextCommandId());
         message.setMessage(ex.toString());
         cmds.add(message);
+        program.getEndCanon().setCommandID(pddlActionToCrclGenerator.getNextCommandId());
         loadProgramToTable(program);
         jTableCrclProgram.setBackground(Color.red);
         jTabbedPane1.setSelectedComponent(jPanelCrcl);
@@ -2928,13 +2929,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != aprsJFrame) {
             aprsJFrame.updateTitle();
         }
+        CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(actionsList, this.replanFromIndex, options);
         int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
         indexes = Arrays.copyOf(indexes, indexes.length);
         setCrclIndexes(indexes);
         setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
         setPddlTakenParts(pddlActionToCrclGenerator.getActionToCrclTakenPartsNames());
-        CRCLProgramType program = createEmptyProgram();
+        program.getEndCanon().setCommandID(pddlActionToCrclGenerator.getNextCommandId());
         program.setName("pddl_" + replanFromIndex + "_" + pddlActionToCrclGenerator.getLastIndex());
         lastCrclProgName = crclProgName;
         crclProgName = program.getName();
@@ -3006,12 +3008,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 new String[]{slot}, "cost");
         placePartActionsList.add(placePartAction);
         pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
-        List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(placePartActionsList, this.replanFromIndex, options);
         CRCLProgramType program = createEmptyProgram();
+        List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(placePartActionsList, this.replanFromIndex, options);
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        program.getEndCanon().setCommandID(pddlActionToCrclGenerator.getNextCommandId());
         XFuture<Boolean> ret = startCrclProgram(program);
         replanStarted.set(false);
         return ret;
@@ -3026,12 +3028,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 new String[]{part}, "cost");
         testPartPositionActionList.add(takePartAction);
         pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
-        List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(testPartPositionActionList, this.replanFromIndex, options);
         CRCLProgramType program = createEmptyProgram();
+        List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(testPartPositionActionList, this.replanFromIndex, options);
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        program.getEndCanon().setCommandID(pddlActionToCrclGenerator.getNextCommandId());
 
         for (PositionMap positionMap : getPositionMaps()) {
             PointType offset = positionMap.getLastOffset();
@@ -3071,12 +3073,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 new String[]{part}, "cost");
         takePartActionsList.add(takePartAction);
         pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
-        List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(takePartActionsList, this.replanFromIndex, options);
         CRCLProgramType program = createEmptyProgram();
+        List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(takePartActionsList, this.replanFromIndex, options);
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
+        program.getEndCanon().setCommandID(pddlActionToCrclGenerator.getNextCommandId());
 
         for (PositionMap positionMap : getPositionMaps()) {
             PointType offset = positionMap.getLastOffset();
@@ -3112,14 +3114,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         Map<String, String> options = getTableOptions();
         replanFromIndex = 0;
         List<MiddleCommandType> cmds = new ArrayList<>();
+        CRCLProgramType program = createEmptyProgram();
         pddlActionToCrclGenerator.setOptions(options);
         pddlActionToCrclGenerator.returnPart(part, cmds);
-        CRCLProgramType program = createEmptyProgram();
+        
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(BigInteger.valueOf(cmds.size() + 2));
-
+        program.getEndCanon().setCommandID(pddlActionToCrclGenerator.getNextCommandId());
         replanStarted.set(false);
         return startCrclProgram(program);
     }
