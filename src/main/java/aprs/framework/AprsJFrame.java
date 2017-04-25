@@ -661,7 +661,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != crclClientErrString && crclClientErrString.length() > 0
                 && !Objects.equals(titleErrorString, crclClientErrString)) {
             sb.append("crclClientErrString=").append(crclClientErrString).append("\r\n");
-            pause();
+            if(!isPaused()) {
+                pause();
+            }
         }
         sb.append("                                                                                                                                                                                                                                                                                        \r\n");
 
@@ -2196,6 +2198,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    
+    public boolean isPaused() {
+        return jCheckBoxMenuItemPause.isSelected();
+    }
+    
     public void pause() {
         if (!jCheckBoxMenuItemPause.isSelected()) {
             jCheckBoxMenuItemPause.setSelected(true);
