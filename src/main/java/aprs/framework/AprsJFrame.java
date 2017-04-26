@@ -2235,7 +2235,27 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return prog;
     }
     
+    public BigInteger incrementAndGetCommandId() {
+        if(null != this.pddlExecutorJInternalFrame1) {
+            return this.pddlExecutorJInternalFrame1.incrementAndGetCommandId();
+        } else  {
+            return BigInteger.valueOf(System.currentTimeMillis());
+        }
+    }
+    
 
+    public void clearErrors() {
+        this.titleErrorString = null;
+        clearCrclClientErrorMessage();
+        updateTitle();
+    }
+    
+    public void clearCrclClientErrorMessage() {
+        if(null != pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.clearCrclClientErrorMessage();
+        }
+    }
+    
     /**
      * Test that the robot can be connected by running an empty program.
      *
@@ -2250,6 +2270,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         try {
             System.out.println("startCheckEnabled called.");
             setConnected(true);
+            emptyProgram.getInitCanon().setCommandID(incrementAndGetCommandId());
+            emptyProgram.getEndCanon().setCommandID(incrementAndGetCommandId());
             return startCRCLProgram(emptyProgram)
                     .thenApply(x -> {
                        System.out.println("startCheckEnabled finishing with "+x);

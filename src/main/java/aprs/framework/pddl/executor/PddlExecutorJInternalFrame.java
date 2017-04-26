@@ -30,6 +30,7 @@ import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -104,6 +105,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     
     public String getErrorString() {
         return this.actionsToCrclJPanel1.getErrorString();
+    }
+    
+    public BigInteger incrementAndGetCommandId() {
+        return this.actionsToCrclJPanel1.incrementAndGetCommandId();
     }
     
     /**
