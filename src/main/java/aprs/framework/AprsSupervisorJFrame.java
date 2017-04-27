@@ -767,7 +767,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                             SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList(), gd);
                 })
                 .thenRun("returnRobots2", this::returnRobots2)
-                .thenRun(() -> this.allowToggles())
                 .thenCompose("continueAfterReturn", x -> {
                     return stealFrom.continueActionList();
                 });
@@ -1850,13 +1849,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     
     private final ConcurrentLinkedDeque<XFuture<Void>> waitForTogglesFutures = new ConcurrentLinkedDeque<>();
     
-    private XFuture<Void> createWaitForTogglesFuture() {
+    private XFuture<Void> createWaitForTogglesFuture(XFuture<Void> old) {
+        if(null != old) {
+            return old;
+        }
          XFuture<Void> xf = new XFuture<>("waitForTogglesAllowed" + waitForTogglesFutureCount.incrementAndGet());
          waitForTogglesFutures.add(xf);
          return xf;
     }
     
-    private final AtomicReference<XFuture<Void>> togglesAllowedXfuture = new AtomicReference<>(createWaitForTogglesFuture());
+    private final AtomicReference<XFuture<Void>> togglesAllowedXfuture = new AtomicReference<>(createWaitForTogglesFuture(null));
 
     private XFuture<Void> waitTogglesAllowed() {
         XFuture xf = togglesAllowedXfuture.getAndSet(null);
@@ -1873,6 +1875,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         if (null != xf) {
             xf.complete(null);
         }
+        while((xf = waitForTogglesFutures.poll()) != null) {
+            xf.complete(null);
+        }
     }
 
     private final AtomicInteger allowTogglesCount = new AtomicInteger();
@@ -1881,7 +1886,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private void disallowToggles() {
         disallowTogglesCount.incrementAndGet();
         togglesAllowed = false;
-        togglesAllowedXfuture.compareAndSet(null, createWaitForTogglesFuture());
+        togglesAllowedXfuture.updateAndGet(this::createWaitForTogglesFuture);
     }
 
 //    private XFuture<Void> toggleRobotEnabledWithWait() {

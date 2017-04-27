@@ -2219,19 +2219,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    private static final CRCLProgramType emptyProgram = createEmptyProgram();
+    
 
-    private static CRCLProgramType createEmptyProgram() {
+    private CRCLProgramType createEmptyProgram() {
         CRCLProgramType prog = new CRCLProgramType();
         prog.setInitCanon(new InitCanonType());
-        prog.getInitCanon().setCommandID(BigInteger.ONE);
+        prog.getInitCanon().setCommandID(incrementAndGetCommandId());
         prog.getMiddleCommand().clear();
 //        MessageType msgCmd = new MessageType();
 //        msgCmd.setMessage("empty program");
 //        msgCmd.setCommandID(BigInteger.valueOf(2));
 //        prog.getMiddleCommand().add(msgCmd);
         prog.setEndCanon(new EndCanonType());
-        prog.getEndCanon().setCommandID(BigInteger.valueOf(3));
+        prog.getEndCanon().setCommandID(incrementAndGetCommandId());
         return prog;
     }
     
@@ -2270,6 +2270,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         try {
             System.out.println("startCheckEnabled called.");
             setConnected(true);
+            CRCLProgramType emptyProgram = createEmptyProgram();
             emptyProgram.getInitCanon().setCommandID(incrementAndGetCommandId());
             emptyProgram.getEndCanon().setCommandID(incrementAndGetCommandId());
             return startCRCLProgram(emptyProgram)

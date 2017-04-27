@@ -2498,7 +2498,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private volatile XFuture<Void> lastSafeAbortFuture = null;
     
     public XFuture<Void> startSafeAbort() {
-        final XFuture<Void> ret = new XFuture<>("pddlExecutorStartSafeAbort");
+        final XFuture<Void> ret = new XFuture<>("pddlExecutorStartSafeAbort."+aprsJFrame.getRunName());
         lastSafeAbortFuture = ret;
         startSafeAbortTime = System.currentTimeMillis();
         synchronized (this) {
