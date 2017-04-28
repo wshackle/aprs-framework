@@ -1432,7 +1432,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public BigInteger incrementAndGetCommandId() {
         return pddlActionToCrclGenerator.incrementAndGetCommandId();
     }
@@ -1442,7 +1442,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         InitCanonType initCmd = new InitCanonType();
         initCmd.setCommandID(incrementAndGetCommandId());
         program.setInitCanon(initCmd);
-        EndCanonType endCmd =new EndCanonType();
+        EndCanonType endCmd = new EndCanonType();
         endCmd.setCommandID(incrementAndGetCommandId());
         program.setEndCanon(endCmd);
         return program;
@@ -1671,8 +1671,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private volatile long startCrclProgramTime = 0;
-    private final AtomicInteger startCrclProgramCount  = new AtomicInteger(0);
-    
+    private final AtomicInteger startCrclProgramCount = new AtomicInteger(0);
+
     /**
      * Start executing a CRCL Program.
      *
@@ -1854,7 +1854,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private final AtomicInteger clearAllCount = new AtomicInteger(0);
     private volatile long clearAllTime = 0;
-    
+
     public void clearAll() {
         clearAllCount.incrementAndGet();
         clearAllTime = System.currentTimeMillis();
@@ -1875,7 +1875,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private AtomicInteger abortProgramCount = new AtomicInteger(0);
     private volatile long abortProgramTime = 0;
-    
+
     /**
      * Abort the currently running CRCL program.
      */
@@ -1893,6 +1893,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         this.replanRunnable = this.defaultReplanRunnable;
         if (null != aprsJFrame) {
             aprsJFrame.abortCrclProgram();
+        }
+        while (safeAbortRunnablesVector.size() > 0) {
+            Runnable r = safeAbortRunnablesVector.remove(0);
+            if (null != r) {
+                r.run();
+            }
         }
         this.safeAbortRequested = false;
         replanStarted.set(rps);
@@ -2468,6 +2474,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         System.out.println("safeAbortRequested = " + safeAbortRequested);
         System.out.println("safeAbortRunnablesVector = " + safeAbortRunnablesVector);
         System.out.println("startSafeAbortRunningProgram = " + startSafeAbortRunningProgram);
+        System.out.println("startSafeAbortRunningProgramFuture = " + startSafeAbortRunningProgramFuture);
+        if(null != startSafeAbortRunningProgramFuture) {
+            startSafeAbortRunningProgramFuture.printStatus();
+        }
+        System.out.println("startSafeAbortRunningProgramFutureDone = " + startSafeAbortRunningProgramFutureDone);
         System.out.println("continueActionsCount = " + continueActionsCount);
         System.out.println("continueActionsListTime = " + continueActionsListTime);
         System.out.println("clearAllCount = " + clearAllCount);
@@ -2478,32 +2489,36 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         System.out.println("doSafeAbortCount = " + doSafeAbortCount);
         System.out.println("doSafeAbortTime = " + doSafeAbortTime);
         System.out.println("runningProgramFuture = " + runningProgramFuture);
-        if(null != runningProgramFuture) {
+        if (null != runningProgramFuture) {
             runningProgramFuture.printStatus(System.out);
         }
-        
-        System.out.println("lastSafeAbortFuture="+lastSafeAbortFuture);
-        if(null != lastSafeAbortFuture) {
+
+        System.out.println("lastSafeAbortFuture=" + lastSafeAbortFuture);
+        if (null != lastSafeAbortFuture) {
             lastSafeAbortFuture.printStatus(System.out);
         }
         System.out.println("lastContinueActionFuture = " + lastContinueActionFuture);
-        if(null != lastContinueActionFuture) {
+        if (null != lastContinueActionFuture) {
             lastContinueActionFuture.printStatus(System.out);
         }
     }
 
     private volatile boolean startSafeAbortRunningProgram = false;
     private volatile long startSafeAbortTime = 0;
-    
+
     private volatile XFuture<Void> lastSafeAbortFuture = null;
-    
+    private volatile XFuture<Boolean> startSafeAbortRunningProgramFuture = null;
+    private volatile boolean startSafeAbortRunningProgramFutureDone = false;
+
     public XFuture<Void> startSafeAbort() {
-        final XFuture<Void> ret = new XFuture<>("pddlExecutorStartSafeAbort."+aprsJFrame.getRunName());
+        final XFuture<Void> ret = new XFuture<>("pddlExecutorStartSafeAbort." + aprsJFrame.getRunName());
         lastSafeAbortFuture = ret;
         startSafeAbortTime = System.currentTimeMillis();
         synchronized (this) {
             startSafeAbortRunningProgram = runningProgram;
-            if (!startSafeAbortRunningProgram) {
+            startSafeAbortRunningProgramFuture = runningProgramFuture;
+            startSafeAbortRunningProgramFutureDone = startSafeAbortRunningProgramFuture.isDone();
+            if (!startSafeAbortRunningProgram || startSafeAbortRunningProgramFutureDone) {
                 ret.complete(null);
                 return ret;
             }
@@ -2525,7 +2540,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jButtonContinueActionPerformed
 
     private volatile XFuture<Void> lastContinueActionFuture = null;
-    
+
     public XFuture<Void> continueActionList() {
 
         XFuture<Void> ret = new XFuture<>("pddlExecutorContinueActionList");
@@ -2539,10 +2554,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return ret;
     }
 
-    
     private final AtomicInteger continueActionsCount = new AtomicInteger(0);
     private volatile long continueActionsListTime = 0;
-    
+
     private void continueActionListPrivate() {
 //        if(aprsJFrame.isCrclProgramPaused() && aprsJFrame.getCrclProgram() != null) {
 //            runningProgramFuture = continueCrclProgram();
@@ -2886,7 +2900,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private volatile long doSafeAbortTime = 0;
     private final AtomicInteger doSafeAbortCount = new AtomicInteger(0);
-    
+
     private XFuture<Boolean> generateCrcl() throws IOException, IllegalStateException, SQLException {
         boolean doSafeAbort;
 
@@ -2903,12 +2917,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             doSafeAbortTime = System.currentTimeMillis();
             doSafeAbortCount.incrementAndGet();
             this.abortProgram();
-            while (safeAbortRunnablesVector.size() > 0) {
-                Runnable r = safeAbortRunnablesVector.remove(0);
-                if (null != r) {
-                    r.run();
-                }
-            }
+
             if (pddlActionToCrclGenerator.isTakeSnapshots()) {
                 takeSimViewSnapshot(File.createTempFile(pddlActionToCrclGenerator.getRunPrefix() + "-safe-abort-", ".PNG"), null, "");
             }
@@ -3121,7 +3130,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         CRCLProgramType program = createEmptyProgram();
         pddlActionToCrclGenerator.setOptions(options);
         pddlActionToCrclGenerator.returnPart(part, cmds);
-        
+
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
@@ -3369,7 +3378,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != dbSetupPublisher) {
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
-            return XFuture.runAsync("checkDbSupplierPublisherRunAsync",() -> {
+            return XFuture.runAsync("checkDbSupplierPublisherRunAsync", () -> {
                 for (Future<?> f : futures) {
                     if (!f.isDone() && !f.isCancelled()) {
                         try {
@@ -3385,7 +3394,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         } else {
             System.err.println("dbSetupPublisher == null");
         }
-       return XFuture.completedFuture(null);
+        return XFuture.completedFuture(null);
     }
 
     public void setOption(String key, String val) {
