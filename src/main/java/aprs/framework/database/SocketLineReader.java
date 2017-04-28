@@ -171,8 +171,10 @@ public class SocketLineReader {
                                     } catch (SocketException exception) {
                                         System.out.println("Closing client socket "+c);
                                         try {
-                                            s.close();
-                                        } catch (IOException ex) {
+                                            if(null != s) {
+                                                s.close();
+                                            }
+                                        } catch (Exception ex) {
                                             // ignore
                                         }
                                     } catch (Exception exception) {

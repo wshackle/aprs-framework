@@ -2470,15 +2470,25 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public void debugAction() {
+        long curTime = System.currentTimeMillis();
+        System.out.println("curTime = " + curTime);
         System.out.println("runningProgram = " + runningProgram);
         System.out.println("safeAbortRequested = " + safeAbortRequested);
         System.out.println("safeAbortRunnablesVector = " + safeAbortRunnablesVector);
         System.out.println("startSafeAbortRunningProgram = " + startSafeAbortRunningProgram);
         System.out.println("startSafeAbortRunningProgramFuture = " + startSafeAbortRunningProgramFuture);
-        if(null != startSafeAbortRunningProgramFuture) {
+        if (null != startSafeAbortRunningProgramFuture) {
             startSafeAbortRunningProgramFuture.printStatus();
         }
         System.out.println("startSafeAbortRunningProgramFutureDone = " + startSafeAbortRunningProgramFutureDone);
+        
+        System.out.println("lastCheckAbortCurrentPart = " + lastCheckAbortCurrentPart);
+        System.out.println("lastCheckAbortSafeAbortRequested = " + lastCheckAbortSafeAbortRequested);
+        System.out.println("lastCheckSafeAbortTime = " + lastCheckSafeAbortTime);
+        
+//        private volatile String lastCheckAbortCurrentPart = null;
+//    private volatile boolean lastCheckAbortSafeAbortRequested = false;
+//    private volatile long lastCheckSafeAbortTime = 0;
         System.out.println("continueActionsCount = " + continueActionsCount);
         System.out.println("continueActionsListTime = " + continueActionsListTime);
         System.out.println("clearAllCount = " + clearAllCount);
@@ -2489,6 +2499,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         System.out.println("doSafeAbortCount = " + doSafeAbortCount);
         System.out.println("doSafeAbortTime = " + doSafeAbortTime);
         System.out.println("runningProgramFuture = " + runningProgramFuture);
+        System.out.println("runProgramCompleteRunnablesTime = " + runProgramCompleteRunnablesTime);
+        System.out.println("(curTime - lastCheckSafeAbortTime) = " + (curTime - lastCheckSafeAbortTime));
+        System.out.println("(curTime - doSafeAbortTime)        = " + (curTime - doSafeAbortTime));
+        System.out.println("(curTime - startCrclProgramTime)   = " + (curTime - startCrclProgramTime));
+        System.out.println("(curTime - startSafeAbortTime)     = " + (curTime - startSafeAbortTime));
+        System.out.println("(curTime - clearAllTime)           = " + (curTime - clearAllTime));
+        System.out.println("(curTime - runProgramCompleteRunnablesTime)           = " + (curTime - runProgramCompleteRunnablesTime));
+        
         if (null != runningProgramFuture) {
             runningProgramFuture.printStatus(System.out);
         }
@@ -2512,9 +2530,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     public XFuture<Void> startSafeAbort() {
         final XFuture<Void> ret = new XFuture<>("pddlExecutorStartSafeAbort." + aprsJFrame.getRunName());
-        lastSafeAbortFuture = ret;
         startSafeAbortTime = System.currentTimeMillis();
         synchronized (this) {
+            if(null != lastSafeAbortFuture && safeAbortRequested && !lastSafeAbortFuture.isDone()) {
+                return lastSafeAbortFuture;
+            }
             startSafeAbortRunningProgram = runningProgram;
             startSafeAbortRunningProgramFuture = runningProgramFuture;
             startSafeAbortRunningProgramFutureDone = startSafeAbortRunningProgramFuture.isDone();
@@ -2526,6 +2546,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             this.safeAbortRequested = true;
             this.safeAbortRunnablesVector.add(this::incSafeAbortCount);
             this.safeAbortRunnablesVector.add(() -> ret.complete(null));
+            lastSafeAbortFuture = ret;
         }
         return ret;
     }
@@ -2690,11 +2711,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
             String jointVals
                     = jointList
-                    .stream()
-                    .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                    .map(JointStatusType::getJointPosition)
-                    .map(Objects::toString)
-                    .collect(Collectors.joining(","));
+                            .stream()
+                            .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                            .map(JointStatusType::getJointPosition)
+                            .map(Objects::toString)
+                            .collect(Collectors.joining(","));
             System.out.println("jointVals = " + jointVals);
             DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
             boolean keyFound = false;
@@ -2900,11 +2921,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private volatile long doSafeAbortTime = 0;
     private final AtomicInteger doSafeAbortCount = new AtomicInteger(0);
-
-    private XFuture<Boolean> generateCrcl() throws IOException, IllegalStateException, SQLException {
+    private volatile String lastCheckAbortCurrentPart = null;
+    private volatile boolean lastCheckAbortSafeAbortRequested = false;
+    private volatile long lastCheckSafeAbortTime = 0;
+    
+    private XFuture<Boolean> checkSafeAbort(Supplier<XFuture<Boolean>> supplier) {
         boolean doSafeAbort;
 
         synchronized (this) {
+            lastCheckAbortCurrentPart = currentPart;
+            lastCheckAbortSafeAbortRequested = safeAbortRequested;
+            lastCheckSafeAbortTime = System.currentTimeMillis();
             if (safeAbortRequested && null == currentPart) {
                 safeAbortRequested = false;
                 autoStart = false;
@@ -2917,18 +2944,37 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             doSafeAbortTime = System.currentTimeMillis();
             doSafeAbortCount.incrementAndGet();
             this.abortProgram();
-
-            if (pddlActionToCrclGenerator.isTakeSnapshots()) {
-                takeSimViewSnapshot(File.createTempFile(pddlActionToCrclGenerator.getRunPrefix() + "-safe-abort-", ".PNG"), null, "");
+            try {
+                if (pddlActionToCrclGenerator.isTakeSnapshots()) {
+                    takeSimViewSnapshot(File.createTempFile(pddlActionToCrclGenerator.getRunPrefix() + "-safe-abort-", ".PNG"), null, "");
+                }
+            } catch (IOException iOException) {
+                iOException.printStackTrace();
             }
             return XFuture.completedFuture(false);
         }
-        return checkDbSupplierPublisher()
-                .thenCompose(x -> {
-                    return Utils.supplyOnDispatchThread(() -> {
-                        return doPddlActionsSection();
-                    });
-                }).thenCompose(x -> x);
+        return supplier.get();
+    }
+
+    private XFuture<Boolean> generateCrcl() throws IOException, IllegalStateException, SQLException {
+
+        return checkSafeAbort(
+                () -> {
+                    try {
+                        return checkDbSupplierPublisher()
+                                .thenCompose(x -> {
+                                    return Utils.supplyOnDispatchThread(() -> {
+                                        return doPddlActionsSection();
+                                    });
+                                }).thenCompose(x -> x);
+                    } catch (IOException ex) {
+                        Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        XFuture<Boolean> xf = new XFuture<>("generateCrclException");
+                        xf.completeExceptionally(ex);
+                        return xf;
+                    }
+                }
+        );
     }
 
     private CRCLProgramType pddlActionSectionToCrcl() throws IllegalStateException, SQLException {
@@ -3000,9 +3046,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return XFuture.completedFuture(false);
     }
 
+    private volatile long runProgramCompleteRunnablesTime = 0;
+    
     private void runProgramCompleteRunnables() {
+        checkSafeAbort(()-> null);
         List<Runnable> runnables = new ArrayList<>();
         synchronized (this) {
+            runProgramCompleteRunnablesTime = System.currentTimeMillis();
             this.runningProgram = false;
             runnables.addAll(programCompleteRunnablesList);
             programCompleteRunnablesList.clear();

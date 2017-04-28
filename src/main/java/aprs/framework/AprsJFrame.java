@@ -87,6 +87,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
@@ -2135,8 +2136,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public XFuture<Boolean> resume() {
         return continueCrclProgram();
     }
+    
+    private final AtomicInteger debugActionCount = new AtomicInteger();
 
     public void debugAction() {
+        
+        System.out.println("");
+        System.err.println("");
+        int count = debugActionCount.incrementAndGet();
+        System.out.println("Begin AprsJFrame.debugAction()" + count);
         String details = getDetailsString();
         System.out.println("details = " + details);
         System.out.println("continousDemoFuture = " + continousDemoFuture);
@@ -2157,6 +2165,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.debugAction();
         }
+        System.out.println("");
+        System.err.println("");
+        System.out.println("Begin AprsJFrame.debugAction()" + count);
     }
 
     private XFuture<Void> continousDemoFuture = null;
