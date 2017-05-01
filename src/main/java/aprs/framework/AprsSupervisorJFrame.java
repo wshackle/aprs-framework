@@ -439,7 +439,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private List<XFuture> oldLfrs = new ArrayList<>();
 
     private void setRobotEnabled(String robotName, Boolean enabled) {
-//        debugAction();
         if (null != robotName && null != enabled) {
             robotEnableMap.put(robotName, enabled);
             if (!enabled) {
@@ -1804,7 +1803,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemPauseActionPerformed
 
-    private XFuture<Void> randomTest = null;
+    private volatile XFuture<Void> randomTest = null;
 
     private void jCheckBoxMenuItemRandomTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemRandomTestActionPerformed
         immediateAbortAll();
@@ -1836,7 +1835,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private XFuture<Void> startRandomTestStep2() {
         continousDemoFuture = startContinousDemo();
         jCheckBoxMenuItemContinousDemo.setSelected(true);
-        return continueRandomTest();
+        randomTest =  continueRandomTest();
+        return randomTest;
     }
 
     private Random random = new Random(System.currentTimeMillis());
@@ -1975,13 +1975,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             printStatus(continousDemoFuture, System.out);
             return quitRandomTest();
         }
-        return startRandomDelay(20000, 10000)
+        randomTest =  startRandomDelay(30000, 20000)
                 .thenCompose("checkForWaitResume1", x -> this.waitResume())
                 .thenCompose("waitTogglesAllowed", x -> this.waitTogglesAllowed())
                 .thenCompose("toggleRobotEnabled", x -> this.toggleRobotEnabled())
-                .thenCompose("checkForWaitResume2", x -> this.waitResume())
                 .thenCompose("updateRandomTestCount", x -> this.updateRandomTestCount())
                 .thenCompose("continueRandomTest", x -> continueRandomTest());
+        return randomTest;
     }
 
     private XFuture<Void> quitRandomTest() {
@@ -2008,8 +2008,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     public XFuture<Void> startContinousDemo() {
         connectAll();
-        return checkEnabledAll()
+        continousDemoFuture = 
+                checkEnabledAll()
                 .thenCompose("startContinousDemo", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
+        return continousDemoFuture;
     }
 
     private final AtomicInteger continousDemoCycle = new AtomicInteger(0);
@@ -2032,13 +2034,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         setReverseFlag(false);
         enableAllRobots();
         final XFuture<?> lfr = this.lastFutureReturned;
-        return startAllActions()
+        continousDemoFuture =
+                startAllActions()
                 .thenCompose("continueContinousDeomo.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr))
                 .thenCompose("continueContinousDeomo.startReverseActions", x -> startReverseActions())
                 .thenCompose("continueContinousDeomo.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr))
                 .thenCompose("continueContinousDeomo.incrementContinousDemoCycle", x -> incrementContinousDemoCycle())
                 .thenCompose("continueContinousDeomo.checkEnabledAll", x -> checkEnabledAll())
                 .thenCompose("continueContinousDeomo.recurse", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
+        return continousDemoFuture;
     }
 
     public XFuture<Void> startReverseActions() {
