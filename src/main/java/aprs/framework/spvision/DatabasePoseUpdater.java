@@ -375,7 +375,44 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     final private Map<DbQueryEnum, DbQueryInfo> queriesMap;
 
-    public DatabasePoseUpdater(
+    public static XFuture<DatabasePoseUpdater> createDatabasePoseUpdater(String host,
+            int port,
+            String db,
+            String username,
+            String password,
+            DbType dbtype,
+            Map<DbQueryEnum, DbQueryInfo> queriesMap,
+            boolean debug) {
+        
+        DatabasePoseUpdater dpu;
+        try {
+            dpu = new DatabasePoseUpdater(host, port, db, username, password, dbtype, queriesMap, debug);
+            return dpu.
+                    setupConnection(host, port, db, username, password, debug)
+                .thenRun(() -> {
+                    try {
+                        dpu.setupStatements();
+                    } catch (Throwable ex) {
+                        Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+                        throw new RuntimeException(ex);
+                    }
+                })
+                .handle((Void x, Throwable ex) -> {
+                    if (null != ex) {
+                        Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+                        return null;
+                    }
+                    return dpu;
+                });
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+            XFuture xf = new XFuture("createDatabasePoseUpdaterExeption");
+            xf.completeExceptionally(ex);
+            return xf;
+        }
+    }
+    
+    private DatabasePoseUpdater(
             String host,
             int port,
             String db,
@@ -387,21 +424,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
         this.dbtype = dbtype;
         sharedConnection = false;
         this.queriesMap = queriesMap;
-        setupConnection(host, port, db, username, password, debug)
-                .thenRun(() -> {
-                    try {
-                        setupStatements();
-                    } catch (Throwable ex) {
-                        Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
-                        throw new RuntimeException(ex);
-                    }
-                })
-                .handle((Void x, Throwable ex) -> {
-                    if (null != ex) {
-                        Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    return null;
-                });
     }
 
     private DbParamTypeEnum updateParamTypes[] = null;// NEO4J_MERGE_STATEMENT_PARAM_TYPES;
@@ -704,10 +726,22 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private final ConcurrentHashMap<String, List<DetectedItem>> offsetsMap = new ConcurrentHashMap<>();
 
     public List<DetectedItem> getSlotOffsets(String name) {
+        if (null == getTraySlotsParamTypes) {
+            throw new IllegalArgumentException("getTraySlotsParamTypes is null");
+        }
+        if (null == get_tray_slots_statement) {
+            throw new IllegalArgumentException("get_tray_slots_statement is null");
+        }
         return getSlotOffsets(new DetectedItem(name));
     }
     
     public List<DetectedItem> getSlotOffsets(DetectedItem tray) {
+        if (null == getTraySlotsParamTypes) {
+            throw new IllegalArgumentException("getTraySlotsParamTypes is null");
+        }
+        if (null == get_tray_slots_statement) {
+            throw new IllegalArgumentException("get_tray_slots_statement is null");
+        }
         String tray_name = tray.name;
         if (tray_name.startsWith("sku_")) {
             tray_name = tray_name.substring(4);
@@ -716,6 +750,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     public List<DetectedItem> getSlotOffsetsNew(DetectedItem tray) {
+        if (null == getTraySlotsParamTypes) {
+            throw new IllegalArgumentException("getTraySlotsParamTypes is null");
+        }
+        if (null == get_tray_slots_statement) {
+            throw new IllegalArgumentException("get_tray_slots_statement is null");
+        }
         List<DetectedItem> ret = new ArrayList<>();
         try {
             if(null == tray.fullName) {

@@ -191,14 +191,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return dpu;
     }
 
-    /**
-     * Set the value of dpu
-     *
-     * @param dpu new value of dpu
-     */
-    public void setDpu(DatabasePoseUpdater dpu) {
-        this.dpu = dpu;
-    }
 
     private void updateTransformFromTable() {
         try {
@@ -1245,14 +1237,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             Map<String, String> argsMap = updateArgsMap();
             closeDB();
             DbType type = DbType.valueOf(argsMap.get("--dbtype"));
-            dpu = new DatabasePoseUpdater(argsMap.get("--dbhost"),
+            DatabasePoseUpdater.createDatabasePoseUpdater(argsMap.get("--dbhost"),
                     Short.valueOf(argsMap.get("--dbport")),
                     argsMap.get("--dbname"),
                     argsMap.get("--dbuser"),
                     argsMap.get("--dbpasswd"),
                     type,
                     queriesMap,
-                    isDebug());
+                    isDebug())
+                    .thenAccept(x -> {
+                        VisionToDBJPanel.this.dpu = x;
+                    });
             double ro = Math.toRadians(Double.parseDouble(jTextFieldRotationOffset.getText()));
             if (null != dpu) {
                 dpu.setRotationOffset(ro);

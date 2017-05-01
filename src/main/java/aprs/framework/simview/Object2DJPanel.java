@@ -840,19 +840,23 @@ public class Object2DJPanel extends JPanel {
             item.displayRect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : item.name.length()), 20);
             g2d.setColor(item.labelColor);
             g2d.draw(item.displayRect);
-            if (null != aprsJFrame && ("PT".equals(item.type) || "KT".equals(item.type))) {
-                List<DetectedItem> offsets = aprsJFrame.getSlotOffsets(item.name);
-                if (null != offsets) {
-                    for (DetectedItem offset : offsets) {
-                        double mag = offset.mag();
-                        if (item.maxSlotDist < mag) {
-                            item.maxSlotDist = mag;
+            try {
+                if (null != aprsJFrame && ("PT".equals(item.type) || "KT".equals(item.type))) {
+                    List<DetectedItem> offsets = aprsJFrame.getSlotOffsets(item.name);
+                    if (null != offsets) {
+                        for (DetectedItem offset : offsets) {
+                            double mag = offset.mag();
+                            if (item.maxSlotDist < mag) {
+                                item.maxSlotDist = mag;
+                            }
                         }
                     }
                 }
-            }
-            if (item.maxSlotDist > 0) {
-                g2d.draw(new Arc2D.Double(-item.maxSlotDist / 2.0, -item.maxSlotDist / 2.0, item.maxSlotDist, item.maxSlotDist, 0.0, 360.0, Arc2D.OPEN));
+                if (item.maxSlotDist > 0) {
+                    g2d.draw(new Arc2D.Double(-item.maxSlotDist / 2.0, -item.maxSlotDist / 2.0, item.maxSlotDist, item.maxSlotDist, 0.0, 360.0, Arc2D.OPEN));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
             g2d.setTransform(origTransform);
         }
