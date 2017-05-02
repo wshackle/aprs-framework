@@ -1540,15 +1540,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             if (null != posMapInSys) {
                 PoseType pose = posMapInSys.getCurrentPose();
                 if (null != pose) {
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX().doubleValue(), row, 0);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY().doubleValue(), row, 1);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ().doubleValue(), row, 2);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX(), row, 0);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY(), row, 1);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ(), row, 2);
                     double otherx = (double) jTableSelectedPosMapFile.getValueAt(row, 3);
                     double othery = (double) jTableSelectedPosMapFile.getValueAt(row, 4);
                     double otherz = (double) jTableSelectedPosMapFile.getValueAt(row, 5);
-                    jTableSelectedPosMapFile.setValueAt(otherx - pose.getPoint().getX().doubleValue(), row, 6);
-                    jTableSelectedPosMapFile.setValueAt(othery - pose.getPoint().getY().doubleValue(), row, 7);
-                    jTableSelectedPosMapFile.setValueAt(otherz - pose.getPoint().getZ().doubleValue(), row, 8);
+                    jTableSelectedPosMapFile.setValueAt(otherx - pose.getPoint().getX(), row, 6);
+                    jTableSelectedPosMapFile.setValueAt(othery - pose.getPoint().getY(), row, 7);
+                    jTableSelectedPosMapFile.setValueAt(otherz - pose.getPoint().getZ(), row, 8);
                 }
             }
         }
@@ -1568,12 +1568,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     double otherx = (double) jTableSelectedPosMapFile.getValueAt(row, 0);
                     double othery = (double) jTableSelectedPosMapFile.getValueAt(row, 1);
                     double otherz = (double) jTableSelectedPosMapFile.getValueAt(row, 2);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX().doubleValue(), row, 3);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY().doubleValue(), row, 4);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ().doubleValue(), row, 5);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX().doubleValue() - otherx, row, 6);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY().doubleValue() - othery, row, 7);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ().doubleValue() - otherz, row, 8);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX(), row, 3);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY(), row, 4);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ(), row, 5);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX() - otherx, row, 6);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY() - othery, row, 7);
+                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ() - otherz, row, 8);
                 }
             }
         }

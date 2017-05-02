@@ -53,7 +53,6 @@ import crcl.base.TransSpeedAbsoluteType;
 import crcl.base.VectorType;
 import crcl.utils.CrclCommandWrapper;
 import crcl.utils.CRCLPosemath;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -85,6 +84,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.text.BadLocationException;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -337,9 +337,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    private BigDecimal approachZOffset = BigDecimal.valueOf(50.0);
-    private BigDecimal placeZOffset = BigDecimal.valueOf(5.0);
-    private BigDecimal takeZOffset = BigDecimal.valueOf(0.0);
+    private double approachZOffset = 50.0;
+    private double placeZOffset =  5.0;
+    private double  takeZOffset = 0.0;
 
     private String actionToCrclTakenPartsNames[] = null;
 
@@ -519,14 +519,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return lastTakenPart;
     }
 
-    private BigDecimal slowTransSpeed = BigDecimal.valueOf(75.0);
+    private double slowTransSpeed = 75.0;
 
     /**
      * Get the value of slowTransSpeed
      *
      * @return the value of slowTransSpeed
      */
-    public BigDecimal getSlowTransSpeed() {
+    public double getSlowTransSpeed() {
         return slowTransSpeed;
     }
 
@@ -535,18 +535,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param slowTransSpeed new value of slowTransSpeed
      */
-    public void setSlowTransSpeed(BigDecimal slowTransSpeed) {
+    public void setSlowTransSpeed(double slowTransSpeed) {
         this.slowTransSpeed = slowTransSpeed;
     }
 
-    private BigDecimal lookDwellTime = BigDecimal.valueOf(5.0);
+    private double lookDwellTime = 5.0;
 
     /**
      * Get the value of lookDwellTime
      *
      * @return the value of lookDwellTime
      */
-    public BigDecimal getLookDwellTime() {
+    public double getLookDwellTime() {
         return lookDwellTime;
     }
 
@@ -555,7 +555,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param lookDwellTime new value of lookDwellTime
      */
-    public void setLookDwellTime(BigDecimal lookDwellTime) {
+    public void setLookDwellTime(double lookDwellTime) {
         this.lookDwellTime = lookDwellTime;
     }
 
@@ -571,14 +571,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         placePartByPose(out, returnPosesByName.get(part));
     }
 
-    private BigDecimal fastTransSpeed = BigDecimal.valueOf(250.0);
+    private double fastTransSpeed = 250.0;
 
     /**
      * Get the value of fastTransSpeed
      *
      * @return the value of fastTransSpeed
      */
-    public BigDecimal getFastTransSpeed() {
+    public double getFastTransSpeed() {
         return fastTransSpeed;
     }
 
@@ -587,18 +587,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param fastTransSpeed new value of fastTransSpeed
      */
-    public void setFastTransSpeed(BigDecimal fastTransSpeed) {
+    public void setFastTransSpeed(double fastTransSpeed) {
         this.fastTransSpeed = fastTransSpeed;
     }
 
-    private BigDecimal firstLookDwellTime = new BigDecimal(5.0);
+    private double firstLookDwellTime = (5.0);
 
     /**
      * Get the value of firstLookDwellTime
      *
      * @return the value of firstLookDwellTime
      */
-    public BigDecimal getFirstLookDwellTime() {
+    public double getFirstLookDwellTime() {
         return firstLookDwellTime;
     }
 
@@ -607,18 +607,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param firstLookDwellTime new value of firstLookDwellTime
      */
-    public void setFirstLookDwellTime(BigDecimal firstLookDwellTime) {
+    public void setFirstLookDwellTime(double firstLookDwellTime) {
         this.firstLookDwellTime = firstLookDwellTime;
     }
 
-    private BigDecimal lastLookDwellTime = new BigDecimal(1.0);
+    private double lastLookDwellTime = (1.0);
 
     /**
      * Get the value of lastLookDwellTime
      *
      * @return the value of lastLookDwellTime
      */
-    public BigDecimal getLastLookDwellTime() {
+    public double getLastLookDwellTime() {
         return lastLookDwellTime;
     }
 
@@ -627,18 +627,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param lastLookDwellTime new value of lastLookDwellTime
      */
-    public void setLastLookDwellTime(BigDecimal lastLookDwellTime) {
+    public void setLastLookDwellTime(double lastLookDwellTime) {
         this.lastLookDwellTime = lastLookDwellTime;
     }
 
-    private BigDecimal settleDwellTime = new BigDecimal(0.25);
+    private double settleDwellTime = (0.25);
 
     /**
      * Get the value of settleDwellTime
      *
      * @return the value of settleDwellTime
      */
-    public BigDecimal getSettleDwellTime() {
+    public double getSettleDwellTime() {
         return settleDwellTime;
     }
 
@@ -647,7 +647,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param settleDwellTime new value of settleDwellTime
      */
-    public void setSettleDwellTime(BigDecimal settleDwellTime) {
+    public void setSettleDwellTime(double settleDwellTime) {
         this.settleDwellTime = settleDwellTime;
     }
 
@@ -871,8 +871,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 List<Slot> slotList = correctPartsTray.getSlotList();
                 for (int j = 0; j < slotList.size(); j++) {
                     Slot slot = slotList.get(j);
-                    BigDecimal slotx = slot.getSlotPose().getPoint().getX();
-                    BigDecimal sloty = slot.getSlotPose().getPoint().getY();
+                    double slotx = slot.getSlotPose().getPoint().getX();
+                    double sloty = slot.getSlotPose().getPoint().getY();
                     //System.out.println(slot.getSlotName() + ":(" + x_offset + "," + y_offset + ")");
                     System.out.println("++++++ " + slot.getSlotName() + ":(" + slotx + "," + sloty + ")");
 
@@ -1014,10 +1014,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 partsTrayPose = correctPose(partsTrayPose);
                 System.out.println("--Checking parts tray [" + partsTray.getPartsTrayName() + "] :(" + partsTrayPose.getPoint().getX() + "," + partsTrayPose.getPoint().getY() + ")");
                 partsTray.setpartsTrayPose(partsTrayPose);
-                BigDecimal xbd = partsTrayPose.getPoint().getX();
-                double partsTrayPoseX = xbd.doubleValue();
-                BigDecimal ybd = partsTrayPose.getPoint().getY();
-                double partsTrayPoseY = ybd.doubleValue();
+                double partsTrayPoseX = partsTrayPose.getPoint().getX();
+                double partsTrayPoseY = partsTrayPose.getPoint().getY();
 
                 double rotation = 0;
                 //-- Read partsTrayList
@@ -1071,9 +1069,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     Slot slot = slotList.get(j);
                     double x_offset = slot.getX_OFFSET() * 1000;
                     double y_offset = slot.getY_OFFSET() * 1000;
-                    BigDecimal slotX = BigDecimal.valueOf(partsTrayPoseX + x_offset * Math.cos(angle) - y_offset * Math.sin(angle));
-                    BigDecimal slotY = BigDecimal.valueOf(partsTrayPoseY + x_offset * Math.sin(angle) + y_offset * Math.cos(angle));
-                    BigDecimal slotZ = BigDecimal.valueOf(-146);
+                    double slotX = partsTrayPoseX + x_offset * Math.cos(angle) - y_offset * Math.sin(angle);
+                    double slotY = partsTrayPoseY + x_offset * Math.sin(angle) + y_offset * Math.cos(angle);
+                    double slotZ = -146; // FIXME : hard-coded Z offset
                     PointType slotPoint = new PointType();
                     slotPoint.setX(slotX);
                     slotPoint.setY(slotY);
@@ -1087,7 +1085,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     for (int k = 0; k < PlacePartSlotPoseList.size(); k++) {
                         PoseType pose = PlacePartSlotPoseList.get(k);
                         System.out.println("      placepartpose :(" + pose.getPoint().getX() + "," + pose.getPoint().getY() + ")");
-                        double distance = Math.hypot(pose.getPoint().getX().doubleValue() - slotX.doubleValue(), pose.getPoint().getY().doubleValue() - slotY.doubleValue());
+                        double distance = Math.hypot(pose.getPoint().getX() - slotX, pose.getPoint().getY() - slotY);
                         System.out.println("         Distance = " + distance + "\n");
                         if (distance < 2.0) {
                             count++;
@@ -1171,10 +1169,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         Boolean isPartInSlot = false;
         PoseType posePart = getPose(partName);
         posePart = correctPose(posePart);
-        double partX = posePart.getPoint().getX().doubleValue();
-        double partY = posePart.getPoint().getY().doubleValue();
-        double slotX = slot.getSlotPose().getPoint().getX().doubleValue();
-        double slotY = slot.getSlotPose().getPoint().getY().doubleValue();
+        double partX = posePart.getPoint().getX();
+        double partY = posePart.getPoint().getY();
+        double slotX = slot.getSlotPose().getPoint().getX();
+        double slotY = slot.getSlotPose().getPoint().getY();
         System.out.println(":(" + partX + "," + partY + ")");
         double distance = Math.hypot(partX - slotX, partY - slotY);
         System.out.print("--------- Distance = " + distance);
@@ -1407,10 +1405,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         checkSettings();
         PoseType approachPose = CRCLPosemath.copy(pose);
-        approachPose.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
 
         PoseType takePose = CRCLPosemath.copy(pose);
-        takePose.getPoint().setZ(pose.getPoint().getZ().add(takeZOffset));
+        takePose.getPoint().setZ(pose.getPoint().getZ() + takeZOffset);
 
         addSetFastSpeed(cmds);
 
@@ -1445,10 +1443,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         checkSettings();
         PoseType approachPose = CRCLPosemath.copy(pose);
-        approachPose.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+        approachPose.getPoint().setZ(pose.getPoint().getZ()+ approachZOffset);
 
         PoseType takePose = CRCLPosemath.copy(pose);
-        takePose.getPoint().setZ(pose.getPoint().getZ().add(takeZOffset));
+        takePose.getPoint().setZ(pose.getPoint().getZ() + takeZOffset);
 
         addSetFastSpeed(cmds);
 
@@ -1484,10 +1482,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         checkSettings();
         PoseType approachPose = CRCLPosemath.copy(pose);
-        approachPose.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
 
         PoseType takePose = CRCLPosemath.copy(pose);
-        takePose.getPoint().setZ(pose.getPoint().getZ().add(takeZOffset));
+        takePose.getPoint().setZ(pose.getPoint().getZ() + takeZOffset);
 
         addSetFastSpeed(cmds);
 
@@ -1509,14 +1507,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addSettleDwell(cmds);
     }
 
-    private BigDecimal rotSpeed = BigDecimal.valueOf(30.0);
+    private double rotSpeed = 30.0;
 
     /**
      * Get the value of rotSpeed
      *
      * @return the value of rotSpeed
      */
-    public BigDecimal getRotSpeed() {
+    public double getRotSpeed() {
         return rotSpeed;
     }
 
@@ -1525,7 +1523,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param rotSpeed new value of rotSpeed
      */
-    public void setRotSpeed(BigDecimal rotSpeed) {
+    public void setRotSpeed(double rotSpeed) {
         this.rotSpeed = rotSpeed;
     }
 
@@ -1556,8 +1554,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String approachZOffsetString = options.get("approachZOffset");
         if (null != approachZOffsetString && approachZOffsetString.length() > 0) {
             try {
-                double val = Double.parseDouble(approachZOffsetString);
-                approachZOffset = BigDecimal.valueOf(val);
+                approachZOffset = Double.parseDouble(approachZOffsetString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1565,8 +1562,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String placeZOffsetString = options.get("placeZOffset");
         if (null != placeZOffsetString && placeZOffsetString.length() > 0) {
             try {
-                double val = Double.parseDouble(placeZOffsetString);
-                placeZOffset = BigDecimal.valueOf(val);
+               placeZOffset = Double.parseDouble(placeZOffsetString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1574,8 +1570,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String takeZOffsetString = options.get("takeZOffset");
         if (null != takeZOffsetString && takeZOffsetString.length() > 0) {
             try {
-                double val = Double.parseDouble(takeZOffsetString);
-                takeZOffset = BigDecimal.valueOf(val);
+                takeZOffset = Double.parseDouble(takeZOffsetString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1583,8 +1578,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String settleDwellTimeString = options.get("settleDwellTime");
         if (null != settleDwellTimeString && settleDwellTimeString.length() > 0) {
             try {
-                double val = Double.parseDouble(settleDwellTimeString);
-                settleDwellTime = BigDecimal.valueOf(val);
+                settleDwellTime= Double.parseDouble(settleDwellTimeString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1593,8 +1587,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String lookDwellTimeString = options.get("lookDwellTime");
         if (null != lookDwellTimeString && lookDwellTimeString.length() > 0) {
             try {
-                double val = Double.parseDouble(lookDwellTimeString);
-                lookDwellTime = BigDecimal.valueOf(val);
+                lookDwellTime = Double.parseDouble(lookDwellTimeString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1603,8 +1596,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String firstLookDwellTimeString = options.get("firstLookDwellTime");
         if (null != firstLookDwellTimeString && firstLookDwellTimeString.length() > 0) {
             try {
-                double val = Double.parseDouble(firstLookDwellTimeString);
-                firstLookDwellTime = BigDecimal.valueOf(val);
+                firstLookDwellTime = Double.parseDouble(firstLookDwellTimeString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1612,8 +1604,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String lastLookDwellTimeString = options.get("lastLookDwellTime");
         if (null != lastLookDwellTimeString && lastLookDwellTimeString.length() > 0) {
             try {
-                double val = Double.parseDouble(lastLookDwellTimeString);
-                lastLookDwellTime = BigDecimal.valueOf(val);
+                lastLookDwellTime = Double.parseDouble(lastLookDwellTimeString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1622,8 +1613,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String fastTransSpeedString = options.get("fastTransSpeed");
         if (null != fastTransSpeedString && fastTransSpeedString.length() > 0) {
             try {
-                double val = Double.parseDouble(fastTransSpeedString);
-                fastTransSpeed = BigDecimal.valueOf(val);
+                fastTransSpeed = Double.parseDouble(fastTransSpeedString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1632,8 +1622,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String rotSpeedString = options.get("rotSpeed");
         if (null != rotSpeedString && rotSpeedString.length() > 0) {
             try {
-                double val = Double.parseDouble(rotSpeedString);
-                rotSpeed = BigDecimal.valueOf(val);
+                rotSpeed = Double.parseDouble(rotSpeedString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1641,8 +1630,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String jointSpeedString = options.get("jointSpeed");
         if (null != jointSpeedString && jointSpeedString.length() > 0) {
             try {
-                double val = Double.parseDouble(jointSpeedString);
-                jointSpeed = BigDecimal.valueOf(val);
+                jointSpeed = Double.parseDouble(jointSpeedString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1650,8 +1638,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String jointAccelString = options.get("jointAccel");
         if (null != jointAccelString && jointAccelString.length() > 0) {
             try {
-                double val = Double.parseDouble(jointAccelString);
-                jointAccel = BigDecimal.valueOf(val);
+                jointAccel = Double.parseDouble(jointAccelString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1659,8 +1646,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String slowTransSpeedString = options.get("slowTransSpeed");
         if (null != slowTransSpeedString && slowTransSpeedString.length() > 0) {
             try {
-                double val = Double.parseDouble(slowTransSpeedString);
-                slowTransSpeed = BigDecimal.valueOf(val);
+                slowTransSpeed = Double.parseDouble(slowTransSpeedString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1682,14 +1668,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void addOpenGripper(List<MiddleCommandType> cmds) {
         SetEndEffectorType openGripperCmd = new SetEndEffectorType();
         openGripperCmd.setCommandID(incrementAndGetCommandId());
-        openGripperCmd.setSetting(BigDecimal.ONE);
+        openGripperCmd.setSetting(1.0);
         cmds.add(openGripperCmd);
     }
 
     private void addCloseGripper(List<MiddleCommandType> cmds) {
         SetEndEffectorType closeGrippeerCmd = new SetEndEffectorType();
         closeGrippeerCmd.setCommandID(incrementAndGetCommandId());
-        closeGrippeerCmd.setSetting(BigDecimal.ZERO);
+        closeGrippeerCmd.setSetting(0.0);
         cmds.add(closeGrippeerCmd);
     }
 
@@ -1773,14 +1759,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    private BigDecimal jointSpeed = BigDecimal.valueOf(5.0);
+    private double jointSpeed = 5.0;
 
     /**
      * Get the value of jointSpeed
      *
      * @return the value of jointSpeed
      */
-    public BigDecimal getJointSpeed() {
+    public double getJointSpeed() {
         return jointSpeed;
     }
 
@@ -1789,18 +1775,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param jointSpeed new value of jointSpeed
      */
-    public void setJointSpeed(BigDecimal jointSpeed) {
+    public void setJointSpeed(double jointSpeed) {
         this.jointSpeed = jointSpeed;
     }
 
-    private BigDecimal jointAccel = BigDecimal.valueOf(100.0);
+    private double jointAccel = 100.0;
 
     /**
      * Get the value of jointAccel
      *
      * @return the value of jointAccel
      */
-    public BigDecimal getJointAccel() {
+    public double getJointAccel() {
         return jointAccel;
     }
 
@@ -1809,7 +1795,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param jointAccel new value of jointAccel
      */
-    public void setJointAccel(BigDecimal jointAccel) {
+    public void setJointAccel(double jointAccel) {
         this.jointAccel = jointAccel;
     }
 
@@ -1825,7 +1811,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             jsa.setJointSpeed(jointSpeed);
             aj.setJointDetails(jsa);
             aj.setJointNumber(BigInteger.valueOf(i + 1));
-            aj.setJointPosition(BigDecimal.valueOf(Double.parseDouble(jointPosStrings[i])));
+            aj.setJointPosition(Double.parseDouble(jointPosStrings[i]));
             ajCmd.getActuateJoint().add(aj);
         }
         out.add(ajCmd);
@@ -1893,7 +1879,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //    private void addOpenGripper(List<MiddleCommandType> out, PoseType pose) {
 //        SetEndEffectorType openGripperCmd = new SetEndEffectorType();
 //        openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
-//        openGripperCmd.setSetting(BigDecimal.ONE);
+//        openGripperCmd.setSetting(double.ONE);
 //    }
     private void addLookDwell(List<MiddleCommandType> out) {
         DwellType dwellCmd = new DwellType();
@@ -2099,10 +2085,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         PoseType poseAbove = CRCLPosemath.copy(pose);
         //System.out.println("Z= " + pose.getPoint().getZ());
-        poseAbove.getPoint().setZ(pose.getPoint().getZ().add(approachZOffset));
+        poseAbove.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
 
         PoseType placePose = CRCLPosemath.copy(pose);
-        placePose.getPoint().setZ(pose.getPoint().getZ().add(placeZOffset));
+        placePose.getPoint().setZ(pose.getPoint().getZ() + placeZOffset);
 
         addSetFastSpeed(cmds);
 

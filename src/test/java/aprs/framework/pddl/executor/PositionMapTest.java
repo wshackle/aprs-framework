@@ -76,22 +76,22 @@ public class PositionMapTest {
         if (expectedPt.equals(actualPt)) {
             return;
         }
-        assertEquals("X", expectedPt.getX().doubleValue(), actualPt.getX().doubleValue(), 1e-6);
-        assertEquals("Y", expectedPt.getY().doubleValue(), actualPt.getY().doubleValue(), 1e-6);
-        assertEquals("Z", expectedPt.getZ().doubleValue(), actualPt.getZ().doubleValue(), 1e-6);
+        assertEquals("X", expectedPt.getX(), actualPt.getX(), 1e-6);
+        assertEquals("Y", expectedPt.getY(), actualPt.getY(), 1e-6);
+        assertEquals("Z", expectedPt.getZ(), actualPt.getZ(), 1e-6);
     }
 
     private static boolean checkPointEquals(PointType expectedPt, PointType actualPt) {
         if (expectedPt.equals(actualPt)) {
             return true;
         }
-        return Math.abs(expectedPt.getX().doubleValue()- actualPt.getX().doubleValue()) < 1e-6
-                && Math.abs(expectedPt.getY().doubleValue()- actualPt.getY().doubleValue()) < 1e-6
-                && Math.abs(expectedPt.getZ().doubleValue()- actualPt.getZ().doubleValue()) < 1e-6;
+        return Math.abs(expectedPt.getX()- actualPt.getX()) < 1e-6
+                && Math.abs(expectedPt.getY()- actualPt.getY()) < 1e-6
+                && Math.abs(expectedPt.getZ()- actualPt.getZ()) < 1e-6;
                 
-//        assertEquals("X", expectedPt.getX().doubleValue(), actualPt.getX().doubleValue(), 1e-6);
-//        assertEquals("Y", expectedPt.getY().doubleValue(), actualPt.getY().doubleValue(), 1e-6);
-//        assertEquals("Z", expectedPt.getZ().doubleValue(), actualPt.getZ().doubleValue(), 1e-6);
+//        assertEquals("X", expectedPt.getX(), actualPt.getX(), 1e-6);
+//        assertEquals("Y", expectedPt.getY(), actualPt.getY(), 1e-6);
+//        assertEquals("Z", expectedPt.getZ(), actualPt.getZ(), 1e-6);
     }
     
     /**

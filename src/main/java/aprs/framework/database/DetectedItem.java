@@ -105,22 +105,22 @@ public class DetectedItem extends PM_CARTESIAN {
         if (null != pose) {
             VectorType xAxis = pose.getXAxis();
             if (null != xAxis) {
-                this.rotation = Math.atan2(xAxis.getJ().doubleValue(), xAxis.getI().doubleValue());
-                this.vxi = xAxis.getI().doubleValue();
-                this.vxj = xAxis.getJ().doubleValue();
-                this.vxk = xAxis.getK().doubleValue();
+                this.rotation = Math.atan2(xAxis.getJ(), xAxis.getI());
+                this.vxi = xAxis.getI();
+                this.vxj = xAxis.getJ();
+                this.vxk = xAxis.getK();
             }
             VectorType zAxis = pose.getZAxis();
             if (null != zAxis) {
-                this.vzi = zAxis.getI().doubleValue();
-                this.vzj = zAxis.getJ().doubleValue();
-                this.vzk = zAxis.getK().doubleValue();
+                this.vzi = zAxis.getI();
+                this.vzj = zAxis.getJ();
+                this.vzk = zAxis.getK();
             }
             PointType pt = pose.getPoint();
             if (null != pt) {
-                this.x = pt.getX().doubleValue();
-                this.y = pt.getY().doubleValue();
-                this.z = pt.getZ().doubleValue();
+                this.x = pt.getX();
+                this.y = pt.getY();
+                this.z = pt.getZ();
             }
         }
         this.visioncycle = visioncycle;

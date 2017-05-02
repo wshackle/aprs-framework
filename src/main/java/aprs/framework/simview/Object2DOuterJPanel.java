@@ -1360,8 +1360,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         PointType ptIn = pose.getPoint();
 
         PointType uncorrectedPoint = aprsJFrame.reverseCorrectPoint(ptIn);
-        currentX = uncorrectedPoint.getX().doubleValue();
-        currentY = uncorrectedPoint.getY().doubleValue();
+        currentX = uncorrectedPoint.getX();
+        currentY = uncorrectedPoint.getY();
         jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));
         object2DJPanel1.setCurrentX(currentX);
         object2DJPanel1.setCurrentY(currentY);

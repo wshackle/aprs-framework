@@ -2069,9 +2069,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                             + "," + poseFromDb.getPoint().getY()
                             + "," + poseFromDb.getPoint().getZ();
                     System.out.println("poseFromDbString = " + poseFromDbString);
-                    String offsetString = testDropOffPose.getPoint().getX().subtract(poseFromDb.getPoint().getX())
-                            + "," + testDropOffPose.getPoint().getY().subtract(poseFromDb.getPoint().getY())
-                            + "," + testDropOffPose.getPoint().getZ().subtract(poseFromDb.getPoint().getZ());
+                    String offsetString = 
+                            (testDropOffPose.getPoint().getX() - poseFromDb.getPoint().getX())
+                            + "," + (testDropOffPose.getPoint().getY() - poseFromDb.getPoint().getY())
+                            + "," + (testDropOffPose.getPoint().getZ() - poseFromDb.getPoint().getZ());
                     System.out.println("offsetString = " + offsetString);
                     writeCorrectionCsv(recordCsvName,
                             System.currentTimeMillis() + ", " + partName + ", " + randomPoseString + ", " + poseFromDbString + ", " + offsetString);
@@ -2102,9 +2103,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         String randomPoseString
                 = String.format("%.1f, %.1f, %.1f",
-                        testDropOffPose.getPoint().getX().doubleValue(),
-                        testDropOffPose.getPoint().getY().doubleValue(),
-                        testDropOffPose.getPoint().getZ().doubleValue());
+                        testDropOffPose.getPoint().getX(),
+                        testDropOffPose.getPoint().getY(),
+                        testDropOffPose.getPoint().getZ());
         System.out.println("randomPoseString = " + randomPoseString);
         System.out.println("randomDropOffCount = " + randomDropOffCount);
         customRunnables = new ArrayList<>();
@@ -2173,9 +2174,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             this.gridDropOff();
             String randomPoseString
                     = String.format("%.1f, %.1f, %.1f",
-                            testDropOffPose.getPoint().getX().doubleValue(),
-                            testDropOffPose.getPoint().getY().doubleValue(),
-                            testDropOffPose.getPoint().getZ().doubleValue());
+                            testDropOffPose.getPoint().getX(),
+                            testDropOffPose.getPoint().getY(),
+                            testDropOffPose.getPoint().getZ());
             System.out.println("randomPoseString = " + randomPoseString);
             System.out.println("randomDropOffCount = " + randomDropOffCount);
             customRunnables = new ArrayList<>();
@@ -2682,12 +2683,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     PoseType curPose = aprsJFrame.getCurrentPose();
                     String curPoseString
                             = String.format("%.1f, %.1f, %.1f",
-                                    curPose.getPoint().getX().doubleValue(),
-                                    curPose.getPoint().getY().doubleValue(),
-                                    curPose.getPoint().getZ().doubleValue());
-                    String offsetString = curPose.getPoint().getX().subtract(poseFromDb.getPoint().getX())
-                            + "," + curPose.getPoint().getY().subtract(poseFromDb.getPoint().getY())
-                            + "," + curPose.getPoint().getZ().subtract(poseFromDb.getPoint().getZ());
+                                    curPose.getPoint().getX(),
+                                    curPose.getPoint().getY(),
+                                    curPose.getPoint().getZ());
+                    String offsetString = 
+                            (curPose.getPoint().getX() - poseFromDb.getPoint().getX())
+                            + "," + (curPose.getPoint().getY() - poseFromDb.getPoint().getY())
+                            + "," + (curPose.getPoint().getZ() - poseFromDb.getPoint().getZ());
                     System.out.println("offsetString = " + offsetString);
                     writeCorrectionCsv(recordCsvName,
                             System.currentTimeMillis() + ", " + partName + ", " + curPoseString + ", " + poseFromDbString + ", " + offsetString);
@@ -3101,24 +3103,24 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         for (PositionMap positionMap : getPositionMaps()) {
             PointType offset = positionMap.getLastOffset();
             if (null != offset) {
-                jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX().doubleValue(), offset.getY().doubleValue()));
+                jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
             }
             PointType testPoint = positionMap.getLastPointOut();
             if (null != testPoint) {
                 String testPoseString
                         = String.format("%.1f, %.1f, %.1f",
-                                testPoint.getX().doubleValue(),
-                                testPoint.getY().doubleValue(),
-                                testPoint.getZ().doubleValue());
+                                testPoint.getX(),
+                                testPoint.getY(),
+                                testPoint.getZ());
                 jTextFieldAdjPose.setText(testPoseString);
             }
             PointType origPoint = positionMap.getLastPointIn();
             if (null != origPoint) {
                 String origPoseString
                         = String.format("%.1f, %.1f, %.1f",
-                                origPoint.getX().doubleValue(),
-                                origPoint.getY().doubleValue(),
-                                origPoint.getZ().doubleValue());
+                                origPoint.getX(),
+                                origPoint.getY(),
+                                origPoint.getZ());
                 this.jTextFieldTestPose.setText(origPoseString);
             }
         }
@@ -3146,24 +3148,24 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         for (PositionMap positionMap : getPositionMaps()) {
             PointType offset = positionMap.getLastOffset();
             if (null != offset) {
-                jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX().doubleValue(), offset.getY().doubleValue()));
+                jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
             }
             PointType testPoint = positionMap.getLastPointOut();
             if (null != testPoint) {
                 String testPoseString
                         = String.format("%.1f, %.1f, %.1f",
-                                testPoint.getX().doubleValue(),
-                                testPoint.getY().doubleValue(),
-                                testPoint.getZ().doubleValue());
+                                testPoint.getX(),
+                                testPoint.getY(),
+                                testPoint.getZ());
                 jTextFieldAdjPose.setText(testPoseString);
             }
             PointType origPoint = positionMap.getLastPointIn();
             if (null != origPoint) {
                 String origPoseString
                         = String.format("%.1f, %.1f, %.1f",
-                                origPoint.getX().doubleValue(),
-                                origPoint.getY().doubleValue(),
-                                origPoint.getZ().doubleValue());
+                                origPoint.getX(),
+                                origPoint.getY(),
+                                origPoint.getZ());
                 this.jTextFieldTestPose.setText(origPoseString);
             }
         }
@@ -3293,16 +3295,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         String randomPoseString
                 = String.format("%.1f, %.1f, %.1f",
-                        testDropOffPose.getPoint().getX().doubleValue(),
-                        testDropOffPose.getPoint().getY().doubleValue(),
-                        testDropOffPose.getPoint().getZ().doubleValue());
+                        testDropOffPose.getPoint().getX(),
+                        testDropOffPose.getPoint().getY(),
+                        testDropOffPose.getPoint().getZ());
         String origPoseString
                 = String.format("%.1f, %.1f, %.1f",
-                        origPose.getPoint().getX().doubleValue(),
-                        origPose.getPoint().getY().doubleValue(),
-                        origPose.getPoint().getZ().doubleValue());
+                        origPose.getPoint().getX(),
+                        origPose.getPoint().getY(),
+                        origPose.getPoint().getZ());
         System.out.println("randomPoseString = " + randomPoseString);
-        jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX().doubleValue(), offset.getY().doubleValue()));
+        jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
         jTextFieldAdjPose.setText(randomPoseString);
         this.jTextFieldTestPose.setText(origPoseString);
         replanStarted.set(false);
@@ -3317,7 +3319,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private PointType getOffset(double x, double y, double z) {
         PointType out = point(x, y, z);
         for (PositionMap pm : getPositionMaps()) {
-            out = pm.getOffset(out.getX().doubleValue(), out.getY().doubleValue(), out.getZ().doubleValue());
+            out = pm.getOffset(out.getX(), out.getY(), out.getZ());
         }
         return out;
     }
@@ -3357,16 +3359,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setCrclProgram(program);
         String gridPoseString
                 = String.format("%.1f, %.1f, %.1f",
-                        testDropOffPose.getPoint().getX().doubleValue(),
-                        testDropOffPose.getPoint().getY().doubleValue(),
-                        testDropOffPose.getPoint().getZ().doubleValue());
+                        testDropOffPose.getPoint().getX(),
+                        testDropOffPose.getPoint().getY(),
+                        testDropOffPose.getPoint().getZ());
         String origPoseString
                 = String.format("%.1f, %.1f, %.1f",
-                        origPose.getPoint().getX().doubleValue(),
-                        origPose.getPoint().getY().doubleValue(),
-                        origPose.getPoint().getZ().doubleValue());
+                        origPose.getPoint().getX(),
+                        origPose.getPoint().getY(),
+                        origPose.getPoint().getZ());
         System.out.println("gridPoseString = " + gridPoseString);
-        jTextFieldOffset.setText(String.format("%.1f,%.1f,%.1f", offset.getX().doubleValue(), offset.getY().doubleValue(), offset.getZ().doubleValue()));
+        jTextFieldOffset.setText(String.format("%.1f,%.1f,%.1f", offset.getX(), offset.getY(), offset.getZ()));
         jTextFieldAdjPose.setText(gridPoseString);
         this.jTextFieldTestPose.setText(origPoseString);
         replanStarted.set(false);

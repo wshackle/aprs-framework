@@ -737,20 +737,23 @@ public class QuerySet implements QuerySetInterface {
                     System.out.println("xString = " + xString);
                 }
                 PointType point = new PointType();
-                point.setX(new BigDecimal(xString));
+                double x = Double.parseDouble(xString);
+                point.setX(x);
                 String yString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Y));
                 if (debug) {
                     System.out.println("yString = " + yString);
                 }
-                point.setY(new BigDecimal(yString));
+                double y = Double.parseDouble(yString);
+                point.setY(y);
                 String zString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Z));
                 if (debug) {
                     System.out.println("zString = " + zString);
                 }
                 if (null != zString) {
-                    point.setZ(new BigDecimal(zString));
+                    double z = Double.parseDouble(zString);
+                    point.setZ(z);
                 } else {
-                    point.setZ(BigDecimal.ZERO);
+                    point.setZ(0.0);
                 }
                 pose.setPoint(point);
                 VectorType xAxis = new VectorType();
@@ -758,34 +761,40 @@ public class QuerySet implements QuerySetInterface {
                 if (debug) {
                     System.out.println("vxiString = " + vxiString);
                 }
-                xAxis.setI(new BigDecimal(vxiString));
+                double vxi = Double.parseDouble(vxiString);
+                xAxis.setI(vxi);
                 String vxjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXJ));
                 if (debug) {
-                    System.out.println("vxiString = " + vxjString);
+                    System.out.println("vxjString = " + vxjString);
                 }
-                xAxis.setJ(new BigDecimal(vxjString));
+                double vxj = Double.parseDouble(vxjString);
+                xAxis.setJ(vxj);
                 String vxkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXK));
                 if (debug) {
                     System.out.println("vxkString = " + vxkString);
                 }
-                xAxis.setK(new BigDecimal(vxkString));
+                double vxk = Double.parseDouble(vxkString);
+                xAxis.setK(vxk);
                 pose.setXAxis(xAxis);
                 VectorType zAxis = new VectorType();
                 String vziString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZI));
                 if (debug) {
                     System.out.println("vziString = " + vziString);
                 }
-                zAxis.setI(new BigDecimal(vziString));
+                double vzi = Double.parseDouble(vziString);
+                zAxis.setI(vzi);
                 String vzjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZJ));
                 if (debug) {
                     System.out.println("vziString = " + vzjString);
                 }
-                zAxis.setJ(new BigDecimal(vzjString));
+                double vzj = Double.parseDouble(vzjString);
+                zAxis.setJ(vzj);
                 String vzkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZK));
                 if (debug) {
                     System.out.println("vzkString = " + vzkString);
                 }
-                zAxis.setK(new BigDecimal(vzkString));
+                double vzk = Double.parseDouble(vzkString);
+                zAxis.setK(vzk);
                 pose.setZAxis(zAxis);
             } else {
                 throw new IllegalStateException("Database returned empty ResultSet for query to getPose for name=" + name + ", simQuery=" + simQuery);
@@ -1029,6 +1038,10 @@ public class QuerySet implements QuerySetInterface {
         setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value.doubleValue(), map);
     }
 
+    private void setPoseQueryDoubleParam(DbParamTypeEnum type, double value, Map<Integer, Object> map) throws SQLException {
+        setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value, map);
+    }
+    
     private static String toSku(String name) {
         String sku = name;
         if (!sku.startsWith("sku_")) {

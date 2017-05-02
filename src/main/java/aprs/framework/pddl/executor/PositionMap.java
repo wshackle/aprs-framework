@@ -106,7 +106,7 @@ public class PositionMap {
         fileName = null;
         columnHeaders = DEFAULT_COLUMN_HEADERS;
     }
-    
+
     public PositionMap(final List<PositionMapEntry> l) {
         errmapList = l;
         errmapStringsList = Collections.emptyList();
@@ -211,19 +211,23 @@ public class PositionMap {
 
     public PoseType correctPose(PoseType poseIn) {
         if (errmapList.size() < 1) {
-            if(null != poseIn) {
+            if (null != poseIn) {
                 lastPointIn = poseIn.getPoint();
                 lastPointOut = poseIn.getPoint();
             }
             return poseIn;
         }
         lastPointIn = poseIn.getPoint();
-        PointType offsetPt = getOffset(poseIn.getPoint().getX().doubleValue(),
-                poseIn.getPoint().getY().doubleValue(),
-                poseIn.getPoint().getZ().doubleValue());
-        PointType pt = point(offsetPt.getX().add(poseIn.getPoint().getX()),
-                offsetPt.getY().add(poseIn.getPoint().getY()),
-                offsetPt.getZ().add(poseIn.getPoint().getZ()));
+        PointType offsetPt = getOffset(
+                poseIn.getPoint().getX(),
+                poseIn.getPoint().getY(),
+                poseIn.getPoint().getZ()
+        );
+        PointType pt = point(
+                offsetPt.getX() + poseIn.getPoint().getX(),
+                offsetPt.getY() + poseIn.getPoint().getY(),
+                offsetPt.getZ() + poseIn.getPoint().getZ()
+        );
         PoseType poseOut = pose(pt, poseIn.getXAxis(), poseIn.getZAxis()
         );
         lastPointOut = poseOut.getPoint();
@@ -236,17 +240,19 @@ public class PositionMap {
             return ptIn;
         }
         lastPointIn = ptIn;
-        PointType offsetPt = getOffset(ptIn.getX().doubleValue(),
-                ptIn.getY().doubleValue(),
-                ptIn.getZ().doubleValue());
-        PointType pt = point(offsetPt.getX().add(ptIn.getX()),
-                offsetPt.getY().add(ptIn.getY()),
-                offsetPt.getZ().add(ptIn.getZ()));
+        PointType offsetPt = getOffset(
+                ptIn.getX(),
+                ptIn.getY(),
+                ptIn.getZ()
+        );
+        PointType pt = point(
+                offsetPt.getX() + ptIn.getX(),
+                offsetPt.getY() + ptIn.getY(),
+                offsetPt.getZ() + ptIn.getZ()
+        );
         lastPointOut = pt;
         return pt;
     }
-    
-    
 
     private static double dist(PositionMapEntry e, double x, double y) {
         double dx = e.getRobotX() - x;
@@ -399,7 +405,7 @@ public class PositionMap {
             return null;
         }
         if (errmapList.size() == 1) {
-            return point(errmapList.get(0).getOffsetX(),errmapList.get(0).getOffsetY(),errmapList.get(0).getOffsetZ());
+            return point(errmapList.get(0).getOffsetX(), errmapList.get(0).getOffsetY(), errmapList.get(0).getOffsetZ());
         }
         PositionMapEntry e12 = findXCombo(robotY -> robotY <= y, x, y, z);
         PositionMapEntry e34 = findXCombo(robotY -> robotY >= y, x, y, z);
@@ -552,7 +558,7 @@ public class PositionMap {
 
     public PositionMap reverse() {
         List<PositionMapEntry> l = new ArrayList<>();
-        for(PositionMapEntry entry : errmapList) {
+        for (PositionMapEntry entry : errmapList) {
             l.add(PositionMapEntry.pointOffsetEntry(entry.getOtherX(), entry.getOtherY(), entry.getOtherZ(), -entry.getOffsetX(), -entry.getOffsetY(), -entry.getOffsetZ()));
         }
         PositionMap rpm = new PositionMap(l);

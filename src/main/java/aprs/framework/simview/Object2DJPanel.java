@@ -132,8 +132,8 @@ public class Object2DJPanel extends JPanel {
                 }
             }
             if (null != pose && null != pose.getPoint()) {
-                double x = pose.getPoint().getX().doubleValue();
-                double y = pose.getPoint().getY().doubleValue();
+                double x = pose.getPoint().getX();
+                double y = pose.getPoint().getY();
                 if (minX > x) {
                     minX = x;
                 }
@@ -208,8 +208,8 @@ public class Object2DJPanel extends JPanel {
     public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY) {
         if (null != pose && null != pose.getPoint()) {
             List<DetectedItem> itemsToPaint = this.items;
-            double x = pose.getPoint().getX().doubleValue();
-            double y = pose.getPoint().getY().doubleValue();
+            double x = pose.getPoint().getX();
+            double y = pose.getPoint().getY();
             double displayMaxY = maxY;
             double displayMinY = minY;
             double displayMinX = minX;
