@@ -773,8 +773,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private final AtomicLong commandId = new AtomicLong(100*(System.currentTimeMillis()%200));
     
-    public final BigInteger incrementAndGetCommandId() {
-        return BigInteger.valueOf(commandId.incrementAndGet());
+    public final long incrementAndGetCommandId() {
+        return commandId.incrementAndGet();
     }
     
     /**
@@ -1801,7 +1801,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void addJointMove(List<MiddleCommandType> out, String jointVals) {
         ActuateJointsType ajCmd = new ActuateJointsType();
-        ajCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        ajCmd.setCommandID(out.size() + 2);
         ajCmd.getActuateJoint().clear();
         String jointPosStrings[] = jointVals.split("[,]+");
         for (int i = 0; i < jointPosStrings.length; i++) {
@@ -1810,7 +1810,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             jsa.setJointAccel(jointAccel);
             jsa.setJointSpeed(jointSpeed);
             aj.setJointDetails(jsa);
-            aj.setJointNumber(BigInteger.valueOf(i + 1));
+            aj.setJointNumber(i + 1);
             aj.setJointPosition(Double.parseDouble(jointPosStrings[i]));
             ajCmd.getActuateJoint().add(aj);
         }
@@ -1881,9 +1881,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //        openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
 //        openGripperCmd.setSetting(double.ONE);
 //    }
+    
+    
     private void addLookDwell(List<MiddleCommandType> out) {
         DwellType dwellCmd = new DwellType();
-        dwellCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
+        dwellCmd.setCommandID(out.size() + 2);
         dwellCmd.setDwellTime(lookDwellTime);
         out.add(dwellCmd);
     }

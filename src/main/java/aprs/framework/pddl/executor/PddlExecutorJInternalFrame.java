@@ -107,7 +107,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return this.actionsToCrclJPanel1.getErrorString();
     }
     
-    public BigInteger incrementAndGetCommandId() {
+    public long incrementAndGetCommandId() {
         return this.actionsToCrclJPanel1.incrementAndGetCommandId();
     }
     

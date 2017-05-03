@@ -1433,7 +1433,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
-    public BigInteger incrementAndGetCommandId() {
+    public long incrementAndGetCommandId() {
         return pddlActionToCrclGenerator.incrementAndGetCommandId();
     }
 
@@ -1566,12 +1566,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != initCanon) {
             try {
                 instance.setCRCLCommand(initCanon);
-                model.addRow(new Object[]{initCanon.getCommandID().intValue(),
+                model.addRow(new Object[]{initCanon.getCommandID(),
                     trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                 });
 
             } catch (JAXBException | CRCLException ex) {
-                model.addRow(new Object[]{initCanon.getCommandID().intValue(),
+                model.addRow(new Object[]{initCanon.getCommandID(),
                     ex.getMessage()
                 });
                 Logger.getLogger(PddlExecutorJPanel.class
@@ -1586,12 +1586,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             if (null != midCmd) {
                 try {
                     instance.setCRCLCommand(midCmd);
-                    model.addRow(new Object[]{midCmd.getCommandID().intValue(),
+                    model.addRow(new Object[]{midCmd.getCommandID(),
                         trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                     });
 
                 } catch (JAXBException | CRCLException ex) {
-                    model.addRow(new Object[]{midCmd.getCommandID().intValue(),
+                    model.addRow(new Object[]{midCmd.getCommandID(),
                         ex.getMessage()
                     });
                     Logger.getLogger(PddlExecutorJPanel.class
@@ -1603,12 +1603,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != endCanon) {
             try {
                 instance.setCRCLCommand(endCanon);
-                model.addRow(new Object[]{endCanon.getCommandID().intValue(),
+                model.addRow(new Object[]{endCanon.getCommandID(),
                     trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                 });
 
             } catch (JAXBException | CRCLException ex) {
-                model.addRow(new Object[]{endCanon.getCommandID().intValue(),
+                model.addRow(new Object[]{endCanon.getCommandID(),
                     ex.getMessage()
                 });
                 Logger.getLogger(PddlExecutorJPanel.class

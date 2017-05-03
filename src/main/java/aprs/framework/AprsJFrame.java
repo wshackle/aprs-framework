@@ -2246,11 +2246,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return prog;
     }
     
-    public BigInteger incrementAndGetCommandId() {
+    public long incrementAndGetCommandId() {
         if(null != this.pddlExecutorJInternalFrame1) {
             return this.pddlExecutorJInternalFrame1.incrementAndGetCommandId();
         } else  {
-            return BigInteger.valueOf(System.currentTimeMillis());
+            return System.currentTimeMillis();
         }
     }
     
