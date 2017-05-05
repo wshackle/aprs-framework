@@ -191,7 +191,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return dpu;
     }
 
-
     private void updateTransformFromTable() {
         try {
             PoseType pose = getTransformPose();
@@ -1237,6 +1236,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             Map<String, String> argsMap = updateArgsMap();
             closeDB();
             DbType type = DbType.valueOf(argsMap.get("--dbtype"));
+            double ro = Math.toRadians(Double.parseDouble(jTextFieldRotationOffset.getText()));
             DatabasePoseUpdater.createDatabasePoseUpdater(argsMap.get("--dbhost"),
                     Short.valueOf(argsMap.get("--dbport")),
                     argsMap.get("--dbname"),
@@ -1245,10 +1245,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     type,
                     queriesMap,
                     isDebug())
-                    .thenAccept(x -> {
+                    .thenAccept((DatabasePoseUpdater x) -> {
+                        if (null != x) {
+                            x.setRotationOffset(ro);
+                        }
                         VisionToDBJPanel.this.dpu = x;
                     });
-            double ro = Math.toRadians(Double.parseDouble(jTextFieldRotationOffset.getText()));
             if (null != dpu) {
                 dpu.setRotationOffset(ro);
             }
@@ -1582,7 +1584,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return XFuture.completedFuture(null);
     }
 
-    private XFuture<Void> startQueryDatabaseNew()  {
+    private XFuture<Void> startQueryDatabaseNew() {
         if (null != dpu) {
             return dpu.queryDatabaseNew().thenCompose(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
@@ -1832,7 +1834,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public XFuture<Void> startTakeSnapshot(File f) {
         return Utils.runOnDispatchThread(() -> takeSnapshot(f));
     }
-
 
     public XFuture<Void> startNewItemsImageSave(File f) {
         return Utils.runOnDispatchThread(() -> takeNewItemsSnapshot(f));

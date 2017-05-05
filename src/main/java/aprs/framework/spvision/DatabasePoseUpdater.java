@@ -1038,7 +1038,13 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public List<DetectedItem> updateVisionList(List<DetectedItem> inList,
             boolean addRepeatCountsToName,
             boolean keepFullNames) {
-        myRotationOffset = getRotationOffset();
+        
+        
+        // FIXME: myRotionOffset is public and static and used in
+        // PddlActionToCrclGenerator.findCorrectKitTray 
+        // FIXME:  this is not thread-safe and will not work with multiple 
+        // systems being used. 
+        myRotationOffset = this.rotationOffset;
 
         partsTrayList = new ArrayList();
         List<DetectedItem> itemsToVerify = new ArrayList<>();
