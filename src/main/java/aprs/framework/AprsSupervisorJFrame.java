@@ -1772,7 +1772,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             addAprsSystem(aj);
             aj.browseSavePropertiesFileAs();
             saveCurrentSetup();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jMenuItemAddNewSystemActionPerformed
@@ -2027,6 +2027,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private XFuture<Void> continueContinousDemo() {
         System.out.println("stealingRobots = " + stealingRobots);
         System.out.println("returnRobotRunnable = " + returnRobotRunnable);
+        disallowToggles();
         disconnectAll();
         returnRobots3();
         System.out.println("stealingRobots = " + stealingRobots);
@@ -2034,14 +2035,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         cancelAllStealUnsteal(false);
         connectAll();
         setReverseFlag(false);
-        enableAllRobots();
         final XFuture<?> lfr = this.lastFutureReturned;
         continousDemoFuture
-                = startAllActions()
+                = Utils.runOnDispatchThread(this::enableAllRobots)
+                        .thenCompose(x -> startAllActions())
                         .thenCompose("continueContinousDeomo.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr))
                         .thenCompose("continueContinousDeomo.startReverseActions", x -> startReverseActions())
                         .thenCompose("continueContinousDeomo.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr))
                         .thenCompose("continueContinousDeomo.incrementContinousDemoCycle", x -> incrementContinousDemoCycle())
+                        .thenRun(this::disallowToggles)
                         .thenCompose("continueContinousDeomo.checkEnabledAll", x -> checkEnabledAll())
                         .thenCompose("continueContinousDeomo.recurse", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
         return continousDemoFuture;
@@ -2050,8 +2052,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     public XFuture<Void> startReverseActions() {
         disallowToggles();
         setReverseFlag(true);
-        enableAllRobots();
-        return checkEnabledAll()
+        return Utils.runOnDispatchThread(this::enableAllRobots)
+                .thenCompose("startReverseActions.checkAllEnabled", x -> checkEnabledAll())
                 .thenCompose("startReverseActions.startAllActions", ok -> checkOkElse(ok, this::startAllActions, this::showCheckEnabledErrorSplash));
     }
 
@@ -2205,8 +2207,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     public XFuture<Void> startAll() {
         stealingRobots = false;
         returnRobots3();
-        enableAllRobots();
-        return checkEnabledAll().thenCompose(ok -> checkOkElse(ok, this::startAllActions, this::showCheckEnabledErrorSplash));
+        return Utils.runOnDispatchThread(this::enableAllRobots)
+                .thenCompose("startAll.checkEnabledAll", x -> checkEnabledAll())
+                .thenCompose(ok -> checkOkElse(ok, this::startAllActions, this::showCheckEnabledErrorSplash));
     }
 
     public void clearAllErrors() {
