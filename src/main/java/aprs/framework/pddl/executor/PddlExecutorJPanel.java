@@ -109,6 +109,8 @@ import static crcl.utils.CRCLPosemath.vector;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -140,35 +142,46 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 } else {
                     c.setBackground(Color.BLUE);
                 }
-//                c.addMouseListener(new MouseListener() {
-//                    @Override
-//                    public void mouseClicked(MouseEvent e) {
-//                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//                    }
-//
-//                    @Override
-//                    public void mousePressed(MouseEvent e) {
-//                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//                    }
-//
-//                    @Override
-//                    public void mouseReleased(MouseEvent e) {
-//                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//                    }
-//
-//                    @Override
-//                    public void mouseEntered(MouseEvent e) {
-//                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//                    }
-//
-//                    @Override
-//                    public void mouseExited(MouseEvent e) {
-//                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//                    }
-//                });
                 return c;
             }
         });
+        jTablePddlOutput.addMouseListener(new MouseListener() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        showPopup(e);
+                    }
+
+                    private void showPopup(MouseEvent e) {
+                        if(e.isPopupTrigger()) {
+                            JPopupMenu jpmenu = new JPopupMenu("PDDL Action Menu ");
+                            JMenuItem menuItem = new JMenuItem("Run Single");
+                            menuItem.addActionListener(x -> runSingleRow());
+                            jpmenu.add(menuItem);
+                            jpmenu.setLocation(e.getPoint());
+                            jpmenu.setVisible(true);
+                        }
+                    }
+
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                       showPopup(e);
+                    }
+
+                    @Override
+                    public void mouseReleased(MouseEvent e) {
+                        showPopup(e);
+                    }
+
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        showPopup(e);
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        showPopup(e);
+                    }
+                });
 //        jTablePddlOutput.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 //            @Override
 //            public void valueChanged(ListSelectionEvent e) {
@@ -187,6 +200,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //        });
     }
 
+    
+    private void runSingleRow() {
+        this.aprsJFrame.abortCrclProgram();
+        int row = jTablePddlOutput.getSelectedRow();
+        currentActionIndex = row;
+        replanFromIndex = row;
+        stepping = true;
+        continueActionListPrivate();
+    }
+    
     private boolean reverseFlag = false;
 
     /**
@@ -2476,8 +2499,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void jButtonStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStepActionPerformed
 
-        stepping = true;
-        continueActionListPrivate();
+        runSingleRow();
+//        stepping = true;
+//        continueActionListPrivate();
 //        try {
 //            stepping = true;
 //            autoStart = !started;
@@ -2603,6 +2627,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jButtonSafeAbortActionPerformed
 
     private void jButtonContinueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonContinueActionPerformed
+        this.aprsJFrame.abortCrclProgram();
+        int row = jTablePddlOutput.getSelectedRow();
+        currentActionIndex = row;
+        replanFromIndex = row;
         stepping = false;
         continueActionListPrivate();
     }//GEN-LAST:event_jButtonContinueActionPerformed
@@ -3081,7 +3109,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             } else {
                 setCrclProgram(program);
             }
-        } catch (IllegalStateException | SQLException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
             showExceptionInProgram(ex);
             XFuture<Boolean> ret = new XFuture<>("doPddlActionsSectionException");

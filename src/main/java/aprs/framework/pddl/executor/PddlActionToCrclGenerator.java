@@ -338,8 +338,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private double approachZOffset = 50.0;
-    private double placeZOffset =  5.0;
-    private double  takeZOffset = 0.0;
+    private double placeZOffset = 5.0;
+    private double takeZOffset = 0.0;
 
     private String actionToCrclTakenPartsNames[] = null;
 
@@ -771,12 +771,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return getRunName() + String.format("%03d", crclNumber) + "-action-" + String.format("%03d", lastIndex);
     }
 
-    private final AtomicLong commandId = new AtomicLong(100*(System.currentTimeMillis()%200));
-    
+    private final AtomicLong commandId = new AtomicLong(100 * (System.currentTimeMillis() % 200));
+
     public final long incrementAndGetCommandId() {
         return commandId.incrementAndGet();
     }
-    
+
     /**
      * Add commands to the list that will test a given part position by opening
      * the gripper and moving to that position but not actually taking the part.
@@ -1226,9 +1226,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         msg.setCommandID(incrementAndGetCommandId());
         out.add(msg);
 
-        kitInspectionJInternalFrame.setKitImage("init");
-        kitInspectionJInternalFrame.getKitTitleLabel().setText("Building kit");
-        setCorrectKitImage();
+        if (null != kitInspectionJInternalFrame) {
+            kitInspectionJInternalFrame.setKitImage("init");
+            kitInspectionJInternalFrame.getKitTitleLabel().setText("Building kit");
+            setCorrectKitImage();
+        }
 
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
@@ -1246,10 +1248,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
-            try {
-                kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
-            } catch (BadLocationException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            if (null != kitInspectionJInternalFrame) {
+                try {
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
         lastTakenPart = partName;
@@ -1286,10 +1290,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
-            try {
-                kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
-            } catch (BadLocationException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            if (null != kitInspectionJInternalFrame) {
+                try {
+                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
         lastTakenPart = partName;
@@ -1443,7 +1449,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         checkSettings();
         PoseType approachPose = CRCLPosemath.copy(pose);
-        approachPose.getPoint().setZ(pose.getPoint().getZ()+ approachZOffset);
+        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
 
         PoseType takePose = CRCLPosemath.copy(pose);
         takePose.getPoint().setZ(pose.getPoint().getZ() + takeZOffset);
@@ -1562,7 +1568,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String placeZOffsetString = options.get("placeZOffset");
         if (null != placeZOffsetString && placeZOffsetString.length() > 0) {
             try {
-               placeZOffset = Double.parseDouble(placeZOffsetString);
+                placeZOffset = Double.parseDouble(placeZOffsetString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1578,7 +1584,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String settleDwellTimeString = options.get("settleDwellTime");
         if (null != settleDwellTimeString && settleDwellTimeString.length() > 0) {
             try {
-                settleDwellTime= Double.parseDouble(settleDwellTimeString);
+                settleDwellTime = Double.parseDouble(settleDwellTimeString);
             } catch (NumberFormatException numberFormatException) {
                 numberFormatException.printStackTrace();
             }
@@ -1834,7 +1840,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         if (firstAction) {
             addFirstLookDwell(out);
-        } else if(lastAction) {
+        } else if (lastAction) {
             addLastLookDwell(out);
         } else {
             addLookDwell(out);
@@ -1881,8 +1887,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //        openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
 //        openGripperCmd.setSetting(double.ONE);
 //    }
-    
-    
     private void addLookDwell(List<MiddleCommandType> out) {
         DwellType dwellCmd = new DwellType();
         dwellCmd.setCommandID(out.size() + 2);
@@ -2015,7 +2019,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addMarkerCommand(out, msg,
                 ((CrclCommandWrapper wrapper) -> {
                     try {
-                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
+                        if (null != kitInspectionJInternalFrame) {
+                            kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
+                        }
                         System.out.println(msg + " completed at " + new Date());
                         ppi.setWrapper(wrapper);
                         notifyPlacePartConsumers(ppi);
@@ -2055,11 +2061,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     System.out.println(msg + " completed at " + new Date());
                     ppi.setWrapper(wrapper);
                     notifyPlacePartConsumers(ppi);
-                    try {
-
-                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    if (null != kitInspectionJInternalFrame) {
+                        try {
+                            kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
+                        } catch (BadLocationException ex) {
+                            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
                 }));
     }
