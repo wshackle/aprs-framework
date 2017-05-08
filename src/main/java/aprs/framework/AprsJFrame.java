@@ -736,7 +736,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private int motomanCrclPort = CRCLSocket.DEFAULT_PORT;
     private String fanucNeighborhoodName = "AgilityLabLRMate200iD"; // FIXME hard-coded default
     private boolean fanucPreferRNN = false;
-    private String fanucRobotHost = "129.6.78.111"; // FIXME hard-coded default
+    private String fanucRobotHost = System.getProperty("fanucRobotHost","192.168.1.34");// "129.6.78.111"; // FIXME hard-coded default
 
     private void startFanucCrclServer() {
         try {

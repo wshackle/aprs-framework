@@ -106,7 +106,11 @@ import static crcl.utils.CRCLPosemath.vector;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 /**
  *
@@ -136,9 +140,51 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 } else {
                     c.setBackground(Color.BLUE);
                 }
+//                c.addMouseListener(new MouseListener() {
+//                    @Override
+//                    public void mouseClicked(MouseEvent e) {
+//                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//                    }
+//
+//                    @Override
+//                    public void mousePressed(MouseEvent e) {
+//                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//                    }
+//
+//                    @Override
+//                    public void mouseReleased(MouseEvent e) {
+//                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//                    }
+//
+//                    @Override
+//                    public void mouseEntered(MouseEvent e) {
+//                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//                    }
+//
+//                    @Override
+//                    public void mouseExited(MouseEvent e) {
+//                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//                    }
+//                });
                 return c;
             }
         });
+//        jTablePddlOutput.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+//            @Override
+//            public void valueChanged(ListSelectionEvent e) {
+//                int index = e.getFirstIndex();
+//                if (aprsJFrame.isPaused()
+//                        && (index != currentActionIndex || index != replanFromIndex)
+//                        && null == unstartedProgram
+//                        && (null == runningProgramFuture
+//                        || runningProgramFuture.isDone()
+//                        | runningProgramFuture.isCancelled())) {
+//                    jTextFieldIndex.setText("" + index);
+//                    currentActionIndex = index;
+//                    replanFromIndex = index;
+//                }
+//            }
+//        });
     }
 
     private boolean reverseFlag = false;
@@ -2069,8 +2115,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                             + "," + poseFromDb.getPoint().getY()
                             + "," + poseFromDb.getPoint().getZ();
                     System.out.println("poseFromDbString = " + poseFromDbString);
-                    String offsetString = 
-                            (testDropOffPose.getPoint().getX() - poseFromDb.getPoint().getX())
+                    String offsetString
+                            = (testDropOffPose.getPoint().getX() - poseFromDb.getPoint().getX())
                             + "," + (testDropOffPose.getPoint().getY() - poseFromDb.getPoint().getY())
                             + "," + (testDropOffPose.getPoint().getZ() - poseFromDb.getPoint().getZ());
                     System.out.println("offsetString = " + offsetString);
@@ -2482,11 +2528,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             startSafeAbortRunningProgramFuture.printStatus();
         }
         System.out.println("startSafeAbortRunningProgramFutureDone = " + startSafeAbortRunningProgramFutureDone);
-        
+
         System.out.println("lastCheckAbortCurrentPart = " + lastCheckAbortCurrentPart);
         System.out.println("lastCheckAbortSafeAbortRequested = " + lastCheckAbortSafeAbortRequested);
         System.out.println("lastCheckSafeAbortTime = " + lastCheckSafeAbortTime);
-        
+
 //        private volatile String lastCheckAbortCurrentPart = null;
 //    private volatile boolean lastCheckAbortSafeAbortRequested = false;
 //    private volatile long lastCheckSafeAbortTime = 0;
@@ -2507,7 +2553,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         System.out.println("(curTime - startSafeAbortTime)     = " + (curTime - startSafeAbortTime));
         System.out.println("(curTime - clearAllTime)           = " + (curTime - clearAllTime));
         System.out.println("(curTime - runProgramCompleteRunnablesTime)           = " + (curTime - runProgramCompleteRunnablesTime));
-        
+
         if (null != runningProgramFuture) {
             runningProgramFuture.printStatus(System.out);
         }
@@ -2533,7 +2579,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         final XFuture<Void> ret = new XFuture<>("pddlExecutorStartSafeAbort." + aprsJFrame.getRunName());
         startSafeAbortTime = System.currentTimeMillis();
         synchronized (this) {
-            if(null != lastSafeAbortFuture && safeAbortRequested && !lastSafeAbortFuture.isDone()) {
+            if (null != lastSafeAbortFuture && safeAbortRequested && !lastSafeAbortFuture.isDone()) {
                 return lastSafeAbortFuture;
             }
             startSafeAbortRunningProgram = runningProgram;
@@ -2686,8 +2732,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                                     curPose.getPoint().getX(),
                                     curPose.getPoint().getY(),
                                     curPose.getPoint().getZ());
-                    String offsetString = 
-                            (curPose.getPoint().getX() - poseFromDb.getPoint().getX())
+                    String offsetString
+                            = (curPose.getPoint().getX() - poseFromDb.getPoint().getX())
                             + "," + (curPose.getPoint().getY() - poseFromDb.getPoint().getY())
                             + "," + (curPose.getPoint().getZ() - poseFromDb.getPoint().getZ());
                     System.out.println("offsetString = " + offsetString);
@@ -2713,11 +2759,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
             String jointVals
                     = jointList
-                            .stream()
-                            .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                            .map(JointStatusType::getJointPosition)
-                            .map(Objects::toString)
-                            .collect(Collectors.joining(","));
+                    .stream()
+                    .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                    .map(JointStatusType::getJointPosition)
+                    .map(Objects::toString)
+                    .collect(Collectors.joining(","));
             System.out.println("jointVals = " + jointVals);
             DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
             boolean keyFound = false;
@@ -2926,7 +2972,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private volatile String lastCheckAbortCurrentPart = null;
     private volatile boolean lastCheckAbortSafeAbortRequested = false;
     private volatile long lastCheckSafeAbortTime = 0;
-    
+
     private XFuture<Boolean> checkSafeAbort(Supplier<XFuture<Boolean>> supplier) {
         boolean doSafeAbort;
 
@@ -2964,11 +3010,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 () -> {
                     try {
                         return checkDbSupplierPublisher()
-                                .thenCompose(x -> {
-                                    return Utils.supplyOnDispatchThread(() -> {
-                                        return doPddlActionsSection();
-                                    });
-                                }).thenCompose(x -> x);
+                        .thenCompose(x -> {
+                            return Utils.supplyOnDispatchThread(() -> {
+                                return doPddlActionsSection();
+                            });
+                        }).thenCompose(x -> x);
                     } catch (IOException ex) {
                         Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         XFuture<Boolean> xf = new XFuture<>("generateCrclException");
@@ -3049,9 +3095,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private volatile long runProgramCompleteRunnablesTime = 0;
-    
+
     private void runProgramCompleteRunnables() {
-        checkSafeAbort(()-> null);
+        checkSafeAbort(() -> null);
         List<Runnable> runnables = new ArrayList<>();
         synchronized (this) {
             runProgramCompleteRunnablesTime = System.currentTimeMillis();

@@ -1,9 +1,11 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1310
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1364
 approachZOffset=50.0
 defaultDwellTime=0.1
 fastTransSpeed=400.0
+firstLookDwellTime=5.0
 jointAccel=100.0
 jointSpeed=25.0
+lastLookDwellTime=1.0
 lookDwell=1.0
 lookDwellTime=6.0
 lookForJoints=21.25071462955139,-35.78231945592341,-2.170151522559762,0.0004982266878095476,-87.82952547587409,-21.250738535213483
