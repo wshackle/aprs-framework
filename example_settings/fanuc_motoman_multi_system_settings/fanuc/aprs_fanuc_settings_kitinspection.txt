@@ -1,6 +1,3 @@
-kitinspection.robot=Fanuc
-kitinspection.kit.sku=sku_kit_m2l1_vessel
-kitinspection.banner.color=rgb(255,255,0)
-kitinspection.warning.color=rgb(255,0,0)
-kitinspection.image.kit.path =/aprs/framework/kitinspection/sku_kit_m2l1_vessel
-kitinspection.image.empty.kit=init.png
+#  Automatically saved by aprs.framework.kitinspection.KitInspectionJInternalFrame.saveProperties() at KitInspectionJInternalFrame.java:273
+kitinspection.image.empty.kit=123.png
+kitinspection.image.kit.path=/aprs/framework/kitinspection/sku_kit_m2l1_vessel

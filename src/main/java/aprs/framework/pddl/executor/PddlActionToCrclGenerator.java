@@ -900,6 +900,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     String part_in_pt = TakenPartList.get(i);
                     String tmpPartName = part_in_pt.replace("in_pt", "in_kt");
                     int indexLastUnderscore = tmpPartName.lastIndexOf("_");
+                    if(indexLastUnderscore < 0) {
+                        throw new IllegalStateException("TakenPartList="+TakenPartList+" contains invalid tmpPartName="+tmpPartName+" from part_in_pt="+part_in_pt);
+                    }
                     String part_in_kt = tmpPartName.substring(0, indexLastUnderscore);
                     TakenPartList.set(i, part_in_kt);
                 }
@@ -1376,18 +1379,27 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         checkSettings();
         MessageType msg = new MessageType();
-        msg.setMessage("take-part " + partName);
+        msg.setMessage("take-part-recovery " + partName);
         msg.setCommandID(incrementAndGetCommandId());
         out.add(msg);
 
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
             try {
-                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-take-part-" + partName + "-", ".PNG"), pose, partName);
+                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-take-part-recovery-" + partName + "-", ".PNG"), pose, partName);
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        if (null == pose) {
+            if (skipMissingParts) {
+                lastTakenPart = null;
+                return;
+            } else {
+                throw new IllegalStateException("getPose(" + partName + ") returned null");
+            }
+        }
+        
         pose = correctPose(pose);
         returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);

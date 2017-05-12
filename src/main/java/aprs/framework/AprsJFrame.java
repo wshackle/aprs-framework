@@ -469,7 +469,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public void setRobotName(String robotName) {
         this.robotName = robotName;
-        updateTitle("", "");
+        Utils.runOnDispatchThread(() -> updateTitle("", ""));
     }
 
     /**
@@ -1204,7 +1204,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         int menuItemCount = jMenuWindow.getItemCount();
         if(framesListSize != menuItemCount) {
-            throw new IllegalStateException("framesListSize = " + framesListSize +" does not match menuItemCount = " + menuItemCount);
+            throw new IllegalStateException("framesListSize = " + framesListSize +" does not match menuItemCount = " + menuItemCount
+             + "with framesList="+framesList+", menuItems="+menuItems);
         }
     }
 

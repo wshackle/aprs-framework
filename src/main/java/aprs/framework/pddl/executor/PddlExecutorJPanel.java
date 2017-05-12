@@ -277,7 +277,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void setCost(int index, double cost) {
         DefaultTableModel m = (DefaultTableModel) jTablePddlOutput.getModel();
-        m.setValueAt(cost, index, 5);
+        if(m.getRowCount() > index) {
+            m.setValueAt(cost, index, 5);
+        }
     }
 
     private void handleActionCompleted(PddlActionToCrclGenerator.ActionCallbackInfo actionInfo) {
