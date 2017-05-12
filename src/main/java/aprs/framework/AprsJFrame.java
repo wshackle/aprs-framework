@@ -25,7 +25,6 @@ package aprs.framework;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupJInternalFrame;
-import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
@@ -63,7 +62,6 @@ import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
 import crcl.base.EndCanonType;
 import crcl.base.InitCanonType;
-import crcl.base.MessageType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
@@ -76,9 +74,10 @@ import crcl.utils.CRCLSocket;
 import java.awt.Container;
 import java.awt.HeadlessException;
 import java.io.PrintStream;
-import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -143,6 +142,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             throw new IllegalStateException("visionToDbJInternalFrame == null");
         }
         return this.visionToDbJInternalFrame.getSlots(item);
+    }
+
+    public double getVisionToDBRotationOffset() {
+        return this.visionToDbJInternalFrame.getRotationOffset();
     }
 
     /**
@@ -662,7 +665,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != crclClientErrString && crclClientErrString.length() > 0
                 && !Objects.equals(titleErrorString, crclClientErrString)) {
             sb.append("crclClientErrString=").append(crclClientErrString).append("\r\n");
-            if(!isPaused()) {
+            if (!isPaused()) {
                 pause();
             }
         }
@@ -736,7 +739,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private int motomanCrclPort = CRCLSocket.DEFAULT_PORT;
     private String fanucNeighborhoodName = "AgilityLabLRMate200iD"; // FIXME hard-coded default
     private boolean fanucPreferRNN = false;
-    private String fanucRobotHost = System.getProperty("fanucRobotHost","192.168.1.34");// "129.6.78.111"; // FIXME hard-coded default
+    private String fanucRobotHost = System.getProperty("fanucRobotHost", "192.168.1.34");// "129.6.78.111"; // FIXME hard-coded default
 
     private void startFanucCrclServer() {
         try {
@@ -1172,9 +1175,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private void setupWindowsMenu() {
-        jMenuWindow.removeAll();
+//        jMenuWindow.removeAll();
         int count = 1;
-        for (JInternalFrame f : jDesktopPane1.getAllFrames()) {
+        ArrayList<JInternalFrame> framesList = new ArrayList<>();
+        framesList.addAll(Arrays.asList(jDesktopPane1.getAllFrames()));
+        Collections.sort(framesList, Comparator.comparing(JInternalFrame::getTitle));
+        List<JMenuItem> menuItems = new ArrayList<>();
+        int framesListSize= framesList.size();
+        for (JInternalFrame f : framesList) {
             JMenuItem menuItem = new JMenuItem(count + " " + f.getTitle());
             final JInternalFrame frameToShow = f;
             menuItem.addActionListener(new ActionListener() {
@@ -1183,8 +1191,20 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     activateFrame(frameToShow);
                 }
             });
-            jMenuWindow.add(menuItem);
+//            jMenuWindow.add(menuItem);
             count++;
+            menuItems.add(menuItem);
+        }
+        jMenuWindow.removeAll();
+        for(JMenuItem menuItem : menuItems) {
+            jMenuWindow.add(menuItem);
+        }
+        if(framesListSize != menuItems.size()) {
+            throw new IllegalStateException("menuItems = " + menuItems +" does not match framesList = " + framesList);
+        }
+        int menuItemCount = jMenuWindow.getItemCount();
+        if(framesListSize != menuItemCount) {
+            throw new IllegalStateException("framesListSize = " + framesListSize +" does not match menuItemCount = " + menuItemCount);
         }
     }
 
@@ -1547,6 +1567,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jCheckBoxMenuItemContinousDemo = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemPause = new javax.swing.JCheckBoxMenuItem();
         jMenuItemDebugAction = new javax.swing.JMenuItem();
+        jCheckBoxMenuItemForceFakeTake = new javax.swing.JCheckBoxMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
@@ -1797,6 +1818,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenuExecute.add(jMenuItemDebugAction);
+
+        jCheckBoxMenuItemForceFakeTake.setText("Force Fake Take");
+        jCheckBoxMenuItemForceFakeTake.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemForceFakeTakeActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jCheckBoxMenuItemForceFakeTake);
 
         jMenuBar1.add(jMenuExecute);
 
@@ -2133,14 +2162,34 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         debugAction();
     }//GEN-LAST:event_jMenuItemDebugActionActionPerformed
 
+    private void jCheckBoxMenuItemForceFakeTakeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemForceFakeTakeActionPerformed
+        if (pddlExecutorJInternalFrame1 != null) {
+            boolean val = jCheckBoxMenuItemForceFakeTake.isSelected();
+            if (pddlExecutorJInternalFrame1.getForceFakeTakeFlag() != val) {
+                pddlExecutorJInternalFrame1.setForceFakeTakeFlag(val);
+            }
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemForceFakeTakeActionPerformed
+
+    public void setForceFakeTakeFlag(boolean val) {
+        if (val != jCheckBoxMenuItemForceFakeTake.isSelected()) {
+            jCheckBoxMenuItemForceFakeTake.setSelected(val);
+        }
+        if (pddlExecutorJInternalFrame1 != null) {
+            if (pddlExecutorJInternalFrame1.getForceFakeTakeFlag() != val) {
+                pddlExecutorJInternalFrame1.setForceFakeTakeFlag(val);
+            }
+        }
+    }
+
     public XFuture<Boolean> resume() {
         return continueCrclProgram();
     }
-    
+
     private final AtomicInteger debugActionCount = new AtomicInteger();
 
     public void debugAction() {
-        
+
         System.out.println("");
         System.err.println("");
         int count = debugActionCount.incrementAndGet();
@@ -2148,20 +2197,20 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         String details = getDetailsString();
         System.out.println("details = " + details);
         System.out.println("continousDemoFuture = " + continousDemoFuture);
-         if(null != continousDemoFuture) {
+        if (null != continousDemoFuture) {
             continousDemoFuture.printStatus(System.out);
         }
         System.out.println("safeAbortFuture = " + safeAbortFuture);
-        if(null != safeAbortFuture) {
+        if (null != safeAbortFuture) {
             safeAbortFuture.printStatus(System.out);
         }
         System.out.println("startSafeAbortAndDisconnectAsyncFuture = " + startSafeAbortAndDisconnectAsyncFuture);
-        if(null != startSafeAbortAndDisconnectAsyncFuture) {
+        if (null != startSafeAbortAndDisconnectAsyncFuture) {
             startSafeAbortAndDisconnectAsyncFuture.printStatus(System.out);
         }
-        System.out.println("isConnected = "+isConnected());
-        System.out.println("getRobotCrclPort = "+getRobotCrclPort());
-        System.out.println("isCrclProgramPaused() = "+isCrclProgramPaused());
+        System.out.println("isConnected = " + isConnected());
+        System.out.println("getRobotCrclPort = " + getRobotCrclPort());
+        System.out.println("isCrclProgramPaused() = " + isCrclProgramPaused());
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.debugAction();
         }
@@ -2209,11 +2258,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    
     public boolean isPaused() {
         return jCheckBoxMenuItemPause.isSelected();
     }
-    
+
     public void pause() {
         if (!jCheckBoxMenuItemPause.isSelected()) {
             jCheckBoxMenuItemPause.setSelected(true);
@@ -2230,8 +2278,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    
-
     private CRCLProgramType createEmptyProgram() {
         CRCLProgramType prog = new CRCLProgramType();
         prog.setInitCanon(new InitCanonType());
@@ -2245,28 +2291,27 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         prog.getEndCanon().setCommandID(incrementAndGetCommandId());
         return prog;
     }
-    
+
     public long incrementAndGetCommandId() {
-        if(null != this.pddlExecutorJInternalFrame1) {
+        if (null != this.pddlExecutorJInternalFrame1) {
             return this.pddlExecutorJInternalFrame1.incrementAndGetCommandId();
-        } else  {
+        } else {
             return System.currentTimeMillis();
         }
     }
-    
 
     public void clearErrors() {
         this.titleErrorString = null;
         clearCrclClientErrorMessage();
         updateTitle();
     }
-    
+
     public void clearCrclClientErrorMessage() {
-        if(null != pendantClientJInternalFrame) {
+        if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.clearCrclClientErrorMessage();
         }
     }
-    
+
     /**
      * Test that the robot can be connected by running an empty program.
      *
@@ -2286,8 +2331,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             emptyProgram.getEndCanon().setCommandID(incrementAndGetCommandId());
             return startCRCLProgram(emptyProgram)
                     .thenApply(x -> {
-                       System.out.println("startCheckEnabled finishing with "+x);
-                       return x;
+                        System.out.println("startCheckEnabled finishing with " + x);
+                        return x;
                     });
         } catch (JAXBException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -2747,7 +2792,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         Utils.saveProperties(propertiesFile, props);
         updateSubPropertiesFiles();
         if (null != this.kitInspectionJInternalFrame) {
-            //this.kitInspectionJInternalFrame.saveProperties();
+            this.kitInspectionJInternalFrame.saveProperties();
         }
         if (null != this.pddlPlannerJInternalFrame) {
             this.pddlPlannerJInternalFrame.saveProperties();
@@ -2866,6 +2911,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVision;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemForceFakeTake;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKitInspectionStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReverse;

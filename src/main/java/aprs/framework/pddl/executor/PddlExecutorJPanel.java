@@ -198,6 +198,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //                }
 //            }
 //        });
+        this.pddlActionToCrclGenerator.setParentPddlExecutorJPanel(this);
     }
 
     
@@ -284,7 +285,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             currentActionIndex = actionInfo.getActionIndex() + 1;
             updateSelectionInterval();
             if (null != aprsJFrame) {
-                aprsJFrame.updateTitle();
+                Utils.runOnDispatchThread(aprsJFrame::updateTitle);
                 if (stepping) {
                     pause();
                 }
@@ -364,7 +365,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void initComponents() {
 
         jLabel6 = new javax.swing.JLabel();
-        jLabel7 = new javax.swing.JLabel();
         jScrollPane4 = new javax.swing.JScrollPane();
         jTablePddlOutput = new javax.swing.JTable();
         jButtonLoadPddlActionsFromFile = new javax.swing.JButton();
@@ -426,10 +426,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonTest = new javax.swing.JButton();
         jButtonRecord = new javax.swing.JButton();
         jButtonRecordLookForJoints = new javax.swing.JButton();
-        jPanel3 = new javax.swing.JPanel();
+        jPanelContainerPositionMap = new javax.swing.JPanel();
         positionMapJPanel1 = new aprs.framework.pddl.executor.PositionMapJPanel();
-        jScrollPane5 = new javax.swing.JScrollPane();
-        jPanel4 = new javax.swing.JPanel();
+        jScrollPaneExternalControl = new javax.swing.JScrollPane();
+        jPanelExternalControl = new javax.swing.JPanel();
         jLabel16 = new javax.swing.JLabel();
         jTextFieldExternalControlPort = new javax.swing.JTextField();
         jCheckBoxEnableExternalControlPort = new javax.swing.JCheckBox();
@@ -443,6 +443,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jPanelCrcl = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTableCrclProgram = new javax.swing.JTable();
+        jPanelContainerPoseCache = new javax.swing.JPanel();
+        jScrollPanePositionTable = new javax.swing.JScrollPane();
+        jTablePositionCache = new javax.swing.JTable();
+        jButtonClearPoseCache = new javax.swing.JButton();
         jButtonClear = new javax.swing.JButton();
         jCheckBoxDebug = new javax.swing.JCheckBox();
         jButtonAbort = new javax.swing.JButton();
@@ -452,10 +456,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonStep = new javax.swing.JButton();
         jButtonContinue = new javax.swing.JButton();
         jButtonPause = new javax.swing.JButton();
+        jCheckBoxForceFakeTake = new javax.swing.JCheckBox();
 
         jLabel6.setText("Pddl Output Actions");
-
-        jLabel7.setText("CRCL");
 
         jTablePddlOutput.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -552,7 +555,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 {"useJointLookFor", "false"},
                 {"jointSpeed", "5.0"},
                 {"jointAccel", "100.0"},
-                {"takeSnapshots", "false"}
+                {"takeSnapshots", "false"},
+                {"doInspectKit", "false"},
+                {"requireNewPoses", "false"},
+                {"visionCycleNewDiffThreshold", "3"},
+                {"skipMissingParts", "false"}
             },
             new String [] {
                 "Name", "Value"
@@ -914,7 +921,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jButtonNewLogFile)
                     .addComponent(jTextFieldRecordFailCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jTextFieldRecordSuccessCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(104, Short.MAX_VALUE))
+                .addContainerGap(260, Short.MAX_VALUE))
         );
 
         jScrollPane2.setViewportView(jPanelInnerManualControl);
@@ -925,37 +932,37 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 966, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 972, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelOuterManualControlLayout.setVerticalGroup(
             jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 236, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jTabbedPane1.addTab("Manual Pickup Return", jPanelOuterManualControl);
 
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanelContainerPositionMapLayout = new javax.swing.GroupLayout(jPanelContainerPositionMap);
+        jPanelContainerPositionMap.setLayout(jPanelContainerPositionMapLayout);
+        jPanelContainerPositionMapLayout.setHorizontalGroup(
+            jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPositionMapLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 966, Short.MAX_VALUE)
+                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 972, Short.MAX_VALUE)
                 .addContainerGap())
         );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+        jPanelContainerPositionMapLayout.setVerticalGroup(
+            jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPositionMapLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
+                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 236, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
-        jTabbedPane1.addTab("Error Map", jPanel3);
+        jTabbedPane1.addTab("Error Map", jPanelContainerPositionMap);
 
         jLabel16.setText("Port:");
 
@@ -989,15 +996,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldSafeAbortRequestCount.setEditable(false);
         jTextFieldSafeAbortRequestCount.setText("0");
 
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanelExternalControlLayout = new javax.swing.GroupLayout(jPanelExternalControl);
+        jPanelExternalControl.setLayout(jPanelExternalControlLayout);
+        jPanelExternalControlLayout.setHorizontalGroup(
+            jPanelExternalControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelExternalControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 960, Short.MAX_VALUE)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
+                .addGroup(jPanelExternalControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 966, Short.MAX_VALUE)
+                    .addGroup(jPanelExternalControlLayout.createSequentialGroup()
                         .addComponent(jLabel16)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldExternalControlPort, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1016,11 +1023,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
+        jPanelExternalControlLayout.setVerticalGroup(
+            jPanelExternalControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelExternalControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanelExternalControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel16)
                     .addComponent(jTextFieldExternalControlPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jCheckBoxEnableExternalControlPort)
@@ -1033,9 +1040,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 .addComponent(jScrollPane6))
         );
 
-        jScrollPane5.setViewportView(jPanel4);
+        jScrollPaneExternalControl.setViewportView(jPanelExternalControl);
 
-        jTabbedPane1.addTab("External Control", jScrollPane5);
+        jTabbedPane1.addTab("External Control", jScrollPaneExternalControl);
 
         jTableCrclProgram.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -1078,11 +1085,76 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelCrclLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 236, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jTabbedPane1.addTab("CRCL", jPanelCrcl);
+
+        jTablePositionCache.setAutoCreateRowSorter(true);
+        jTablePositionCache.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Name", "X", "Y", "Z"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPanePositionTable.setViewportView(jTablePositionCache);
+
+        jButtonClearPoseCache.setText("Clear Cache");
+        jButtonClearPoseCache.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonClearPoseCacheActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanelContainerPoseCacheLayout = new javax.swing.GroupLayout(jPanelContainerPoseCache);
+        jPanelContainerPoseCache.setLayout(jPanelContainerPoseCacheLayout);
+        jPanelContainerPoseCacheLayout.setHorizontalGroup(
+            jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButtonClearPoseCache)
+                .addContainerGap(875, Short.MAX_VALUE))
+            .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 972, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
+        jPanelContainerPoseCacheLayout.setVerticalGroup(
+            jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
+                .addContainerGap(215, Short.MAX_VALUE)
+                .addComponent(jButtonClearPoseCache)
+                .addContainerGap())
+            .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 204, Short.MAX_VALUE)
+                    .addGap(38, 38, 38)))
+        );
+
+        jTabbedPane1.addTab("Pose Cache", jPanelContainerPoseCache);
 
         jButtonClear.setText("Clear");
         jButtonClear.addActionListener(new java.awt.event.ActionListener() {
@@ -1115,6 +1187,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jLabel17.setText("Part:");
 
         jTextFieldCurrentPart.setText(" ");
+        jTextFieldCurrentPart.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldCurrentPartActionPerformed(evt);
+            }
+        });
 
         jButtonStep.setText("Step");
         jButtonStep.addActionListener(new java.awt.event.ActionListener() {
@@ -1137,43 +1214,23 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         });
 
+        jCheckBoxForceFakeTake.setText("Force Fake Take");
+        jCheckBoxForceFakeTake.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxForceFakeTakeActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jTabbedPane1)
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, 325, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonLoad)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonLoadPddlActionsFromFile)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonPddlOutputViewEdit)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonClear)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addComponent(jLabel7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxReplan)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxNeedLookFor)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel17)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane4)
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(jButtonPause)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonStep)
@@ -1184,10 +1241,39 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonGenerateCRCL)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxForceFakeTake)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jCheckBoxDebug)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonAbort)
-                        .addGap(11, 11, 11)))
+                        .addGap(11, 11, 11))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel6)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, 325, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonLoad)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonLoadPddlActionsFromFile)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonPddlOutputViewEdit)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonClear))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jCheckBoxReplan)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jCheckBoxNeedLookFor)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel17)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -1201,27 +1287,27 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jButtonPddlOutputViewEdit)
                     .addComponent(jButtonClear))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel7)
-                        .addComponent(jCheckBoxReplan)
-                        .addComponent(jLabel2)
-                        .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jCheckBoxNeedLookFor)
-                        .addComponent(jLabel17)
-                        .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jButtonGenerateCRCL)
-                        .addComponent(jCheckBoxDebug)
-                        .addComponent(jButtonAbort)
-                        .addComponent(jButtonGenerateAndRun)
-                        .addComponent(jButtonStep)
-                        .addComponent(jButtonContinue)
-                        .addComponent(jButtonPause)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jCheckBoxNeedLookFor)
+                    .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel17)
+                    .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2)
+                    .addComponent(jCheckBoxReplan))
+                .addGap(1, 1, 1)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonPause)
+                    .addComponent(jButtonStep)
+                    .addComponent(jButtonContinue)
+                    .addComponent(jButtonGenerateAndRun)
+                    .addComponent(jButtonGenerateCRCL)
+                    .addComponent(jCheckBoxForceFakeTake)
+                    .addComponent(jCheckBoxDebug)
+                    .addComponent(jButtonAbort))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -1715,6 +1801,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
+    public boolean getForceFakeTakeFlag() {
+        return jCheckBoxForceFakeTake.isSelected();
+    }
+    
+    public void setForceFakeTakeFlag(boolean _force) {
+        if(_force != jCheckBoxForceFakeTake.isSelected()) {
+            jCheckBoxForceFakeTake.setSelected(_force);
+        }
+        if(null != aprsJFrame) {
+            aprsJFrame.setForceFakeTakeFlag(_force);
+        }
+    }
+    
     /**
      * Set the value of crclProgram
      *
@@ -1937,7 +2036,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         lastActionMillis = System.currentTimeMillis();
         setErrorString(null);
         aprsJFrame.setTitleErrorString(null);
-        pddlActionToCrclGenerator.clearPoseCache();
+        clearPoseCache();
         lastContinueActionFuture = null;
         lastSafeAbortFuture = null;
     }
@@ -2815,6 +2914,23 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }//GEN-LAST:event_jButtonRecordLookForJointsActionPerformed
 
+    private void jButtonClearPoseCacheActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearPoseCacheActionPerformed
+        clearPoseCache();
+    }//GEN-LAST:event_jButtonClearPoseCacheActionPerformed
+
+    private void jTextFieldCurrentPartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldCurrentPartActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jTextFieldCurrentPartActionPerformed
+
+    private void jCheckBoxForceFakeTakeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxForceFakeTakeActionPerformed
+        setForceFakeTakeFlag(jCheckBoxForceFakeTake.isSelected());
+    }//GEN-LAST:event_jCheckBoxForceFakeTakeActionPerformed
+
+    private void clearPoseCache() {
+        pddlActionToCrclGenerator.clearPoseCache();
+        updatePositionCacheTable();
+    }
+
     private void queryLogFileName() {
         if (!new File(recordCsvName).exists()) {
             newLogFileName();
@@ -3086,9 +3202,26 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         program.getEndCanon().setCommandID(incrementAndGetCommandId());
+        updatePositionCacheTable();
         return program;
     }
 
+    private void updatePositionCacheTable() {
+       Map<String, PoseType> map = pddlActionToCrclGenerator.getPoseCache();
+       DefaultTableModel model = (DefaultTableModel) jTablePositionCache.getModel();
+       model.setRowCount(0);
+       for(Map.Entry<String,PoseType> entry : map.entrySet()) {
+           PoseType pose = entry.getValue();
+           if(null != pose) {
+               PointType point = pose.getPoint();
+               if(null != point) {
+                   model.addRow(new Object[]{entry.getKey(),point.getX(),point.getY(),point.getZ()});
+               }
+           }
+       }
+       Utils.autoResizeTableColWidths(jTablePositionCache);
+    }
+    
     private XFuture<Boolean> doPddlActionsSection() {
         try {
             CRCLProgramType program = pddlActionSectionToCrcl();
@@ -3552,6 +3685,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonAbort;
     private javax.swing.JButton jButtonClear;
+    private javax.swing.JButton jButtonClearPoseCache;
     private javax.swing.JButton jButtonContRandomTest;
     private javax.swing.JButton jButtonContinue;
     private javax.swing.JButton jButtonGenerateAndRun;
@@ -3579,6 +3713,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonTestPickup;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxEnableExternalControlPort;
+    private javax.swing.JCheckBox jCheckBoxForceFakeTake;
     private javax.swing.JCheckBox jCheckBoxNeedLookFor;
     private javax.swing.JCheckBox jCheckBoxReplan;
     private javax.swing.JComboBox<String> jComboBoxManualObjectName;
@@ -3599,24 +3734,26 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanelContainerPoseCache;
+    private javax.swing.JPanel jPanelContainerPositionMap;
     private javax.swing.JPanel jPanelCrcl;
+    private javax.swing.JPanel jPanelExternalControl;
     private javax.swing.JPanel jPanelInnerManualControl;
     private javax.swing.JPanel jPanelOuterManualControl;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane4;
-    private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPane6;
+    private javax.swing.JScrollPane jScrollPaneExternalControl;
     private javax.swing.JScrollPane jScrollPaneOptions;
+    private javax.swing.JScrollPane jScrollPanePositionTable;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTableCrclProgram;
     private javax.swing.JTable jTableOptions;
     private javax.swing.JTable jTablePddlOutput;
+    private javax.swing.JTable jTablePositionCache;
     private javax.swing.JTextArea jTextAreaExternalCommads;
     private javax.swing.JTextField jTextFieldAdjPose;
     private javax.swing.JTextField jTextFieldCurrentPart;

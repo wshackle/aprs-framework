@@ -86,7 +86,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private long totalUpdateTimeMillis;
     public static List<PartsTray> partsTrayList;
-    public static double myRotationOffset = 0;
+//    public static double myRotationOffset = 0; // get this through AprsJFrame
+    
 
     /**
      * Get the value of totalUpdateTimeMillis
@@ -1040,11 +1041,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
             boolean keepFullNames) {
         
         
-        // FIXME: myRotionOffset is public and static and used in
-        // PddlActionToCrclGenerator.findCorrectKitTray 
-        // FIXME:  this is not thread-safe and will not work with multiple 
-        // systems being used. 
-        myRotationOffset = this.rotationOffset;
+//        // FIXME: myRotionOffset is public and static and used in
+//        // PddlActionToCrclGenerator.findCorrectKitTray 
+//        // FIXME:  this is not thread-safe and will not work with multiple 
+//        // systems being used. 
+//        myRotationOffset = this.rotationOffset;
 
         partsTrayList = new ArrayList();
         List<DetectedItem> itemsToVerify = new ArrayList<>();

@@ -56,6 +56,10 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
 //        return this.visionToDBJPanel.getDbSetupPublisher();
 //    }
     
+    public double getRotationOffset() {
+        return this.visionToDBJPanel.getRotationOffset();
+    }
+    
     public XFuture<Void> startNewItemsImageSave(File f) {
         return this.visionToDBJPanel.startNewItemsImageSave(f);
     }

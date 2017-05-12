@@ -1,23 +1,28 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1306
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1468
 approachZOffset=50.0
+doInspectKit=true
 fastTransSpeed=200.0
+firstLookDwellTime=5.0
 jointAccel=100.0
 jointSpeed=5.0
+lastLookDwellTime=1.0
 lookDwellTime=5.0
-firstLookDwellTime=5.0
 lookForXYZ=200.0,200.0,-50.0
 manualPartNames=[null, null, null, null, null, null, null, null, null, null]
 manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
-pddl.output=../../../example_pddl/feb_21_2017_fanuc_demo_actions.txt
+pddl.output=../../../example_pddl/fanuc_demo_actions.txt
 pddl.reverse_output=../../../example_pddl/reverse_fanuc_demo_actions.txt
 placePartSlotArgIndex=0
 placeZOffset=5.0
+requireNewPoses=true
 reverseFlag=true
 rotSpeed=30.0
 rpy=175.0,0.0,0.0
 settleDwellTime=0.1
+skipMissingParts=true
 slowTransSpeed=75
 takePartArgIndex=0
 takeSnapshots=true
 takeZOffset=0.0
 useJointLookFor=false
+visionCycleNewDiffThreshold=1

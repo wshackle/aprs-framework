@@ -30,7 +30,6 @@ import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -48,6 +47,14 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         initComponents();
     }
 
+    public void setForceFakeTakeFlag(boolean val) {
+        this.actionsToCrclJPanel1.setForceFakeTakeFlag(val);
+    }
+    
+    public boolean getForceFakeTakeFlag() {
+        return actionsToCrclJPanel1.getForceFakeTakeFlag();
+    }
+    
     /**
      * Modify the given pose by applying all of the currently added position maps.
      * 

@@ -75,56 +75,11 @@ import javax.swing.table.DefaultTableModel;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import java.awt.Desktop;
 import java.io.BufferedWriter;
 import javax.swing.JTable;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
@@ -154,6 +109,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jTableFromVision.getSelectionModel().addListSelectionListener(x -> {
             jButtonForceSingleUpdate.setEnabled(jTableFromVision.getSelectedRow() >= 0 && null != dpu);
         });
+    }
+    
+    public double getRotationOffset() {
+        if(null != dpu) {
+            return dpu.getRotationOffset();
+        }
+        throw new IllegalStateException("dpu == null");
     }
 
     private double transform(int row, int col) {

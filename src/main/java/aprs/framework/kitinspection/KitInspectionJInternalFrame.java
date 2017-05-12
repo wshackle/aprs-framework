@@ -22,9 +22,11 @@
  */
 package aprs.framework.kitinspection;
 
+import aprs.framework.Utils;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -192,33 +194,32 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
         });
     }
 
-    public javax.swing.JLabel getKitTitleLabel(){
+    public javax.swing.JLabel getKitTitleLabel() {
         return this.kitTitleLabel;
     }
-    
-    public javax.swing.JPanel getTitleJPanel(){
+
+    public javax.swing.JPanel getTitleJPanel() {
         return titleJPanel;
     }
-    
-    public javax.swing.JLabel getKitImageLabel(){
+
+    public javax.swing.JLabel getKitImageLabel() {
         return this.kitImageLabel;
     }
-    
-    public javax.swing.JTextPane getInspectionResultJTextArea(){
+
+    public javax.swing.JTextPane getInspectionResultJTextArea() {
         return this.InspectionResultJTextPane;
     }
-    private String kitImage="complete";
-    
-    public String getKitImage(){
+    private String kitImage = "complete";
+
+    public String getKitImage() {
         return this.kitImage;
     }
-    
-    public void setKitImage(String kitImage){
-        this.kitImage=kitImage;
+
+    public void setKitImage(String kitImage) {
+        this.kitImage = kitImage;
     }
-    
- 
-    public void addToInspectionResultJTextPane(String text) throws BadLocationException{
+
+    public void addToInspectionResultJTextPane(String text) throws BadLocationException {
         try {
             editorKit.insertHTML(doc, doc.getLength(), text, 0, 0, null);
         } catch (IOException ex) {
@@ -226,8 +227,7 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
         }
         String oldtext = InspectionResultJTextPane.getText();
         InspectionResultJTextPane.setText(oldtext.concat(text + "\n"));
-    } 
-    
+    }
 
     private File propertiesFile = null;
 
@@ -239,7 +239,7 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
     public File getPropertiesFile() {
         return propertiesFile;
     }
-    
+
     /**
      * Set the value of propertiesFile
      *
@@ -248,21 +248,31 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
     public void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
     }
-    
-        public javax.swing.JTextPane getInspectionResultJTextPane(){
-            return InspectionResultJTextPane;
-        }
-    
-    /** Returns an ImageIcon, or null if the path was invalid. */
-public ImageIcon createImageIcon(String path) {
-    java.net.URL imgURL = getClass().getResource(path);
-    if (imgURL != null) {
-        return new ImageIcon(imgURL);
-    } else {
-        System.err.println("Couldn't find file: " + path);
-        return null;
+
+    public javax.swing.JTextPane getInspectionResultJTextPane() {
+        return InspectionResultJTextPane;
     }
-}
+
+    /**
+     * Returns an ImageIcon, or null if the path was invalid.
+     */
+    public ImageIcon createImageIcon(String path) {
+        java.net.URL imgURL = getClass().getResource(path);
+        if (imgURL != null) {
+            return new ImageIcon(imgURL);
+        } else {
+            System.err.println("Couldn't find file: " + path);
+            return null;
+        }
+    }
+    
+    public void saveProperties() throws IOException {
+        Properties props = new Properties();
+        props.put(IMAGE_KIT_PATH, kitinspectionImageKitPath);
+        props.put(IMAGE_EMPTY_KIT,"123.png");
+        Utils.saveProperties(propertiesFile, props);
+    }
+
     public void loadProperties() throws IOException {
         if (null == propertiesFile) {
             throw new IllegalStateException("propertiesFile not set");
@@ -272,17 +282,16 @@ public ImageIcon createImageIcon(String path) {
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
-            
-            kitinspectionImageKitPath = props.getProperty(IMAGE_KIT_PATH);
-            String kitinspectionImageEmptyKit = props.getProperty(IMAGE_EMPTY_KIT);
+
+            kitinspectionImageKitPath = props.getProperty(IMAGE_KIT_PATH,DEFAULT_KIT_M2L1_VESSEL_PATH);
+            String kitinspectionImageEmptyKit = props.getProperty(IMAGE_EMPTY_KIT,"init.png");
             if (null != kitinspectionImageKitPath) {
                 if (null != kitinspectionImageEmptyKit) {
-                    String originalImage = kitinspectionImageKitPath+"/"+kitinspectionImageEmptyKit;
-                kitImageLabel.setIcon(createImageIcon(originalImage)); // NOI18N
-                
+                    String originalImage = kitinspectionImageKitPath + "/" + kitinspectionImageEmptyKit;
+                    kitImageLabel.setIcon(createImageIcon(originalImage)); // NOI18N
                 }
             }
-            
+
             String robot = props.getProperty(ROBOT_NAME);
             if (null != robot) {
                 //jTextFieldPlannerProgramExecutable.setText(executable);
@@ -292,10 +301,12 @@ public ImageIcon createImageIcon(String path) {
                     getKitTitleLabel().setText("Waiting for Commands");
                 }
             }
-            
+
+        } else {
+            kitinspectionImageKitPath = DEFAULT_KIT_M2L1_VESSEL_PATH;
         }
     }
-    
+    private static final String DEFAULT_KIT_M2L1_VESSEL_PATH = "/aprs/framework/kitinspection/sku_kit_m2l1_vessel";
 
     private static final String ROBOT_NAME = "kitinspection.robot";
     private static final String IMAGE_KIT_PATH = "kitinspection.image.kit.path";
@@ -304,13 +315,12 @@ public ImageIcon createImageIcon(String path) {
     private static final String BANNER_COLOR = "kitinspection.banner.color";
     private static final String WARNING_COLOR = "kitinspection.warning.color";
 
-    
     private String kitinspectionImageKitPath;
-    
-    public String getKitinspectionImageKitPath(){
+
+    public String getKitinspectionImageKitPath() {
         return kitinspectionImageKitPath;
     }
-    
+
     private HTMLEditorKit editorKit;
     private HTMLDocument doc;
 

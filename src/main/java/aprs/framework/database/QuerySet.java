@@ -50,7 +50,17 @@ import java.util.logging.Logger;
 public class QuerySet implements QuerySetInterface {
 
     private final java.sql.Connection dbConnection;
+    private String expectQueryItemFormat = "\'%s\'";
 
+    public String getExpectQueryItemFormat() {
+        return expectQueryItemFormat;
+    }
+
+    public void setExpectQueryItemFormat(String expectQueryItemFormat) {
+        this.expectQueryItemFormat = expectQueryItemFormat;
+    }
+    
+    
     /**
      * Get the database connection being used.
      *
@@ -316,7 +326,11 @@ public class QuerySet implements QuerySetInterface {
         String qString = queryInfo.getQuery();
         if (null != paramTypes) {
             for (int i = 0; i < paramTypes.length; i++) {
-                qString = qString.replace(String.format(queryFormat, i + 1), map.get(i + 1).toString());
+                qString = qString.replace(
+                        String.format(queryFormat, i + 1),
+                        String.format(this.expectQueryItemFormat,
+                                map.get(i + 1).toString())
+                );
             }
         }
         return qString;
@@ -692,7 +706,11 @@ public class QuerySet implements QuerySetInterface {
     }
      */
     @Override
-    public PoseType getPose(String name) throws SQLException {
+    public PoseType getPose(String name)  throws SQLException {
+        return getPose(name,false,0);
+    }
+    
+    public PoseType getPose(String name, boolean requireNew,int visionCycleNewDiffThreshold) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
@@ -796,6 +814,25 @@ public class QuerySet implements QuerySetInterface {
                 double vzk = Double.parseDouble(vzkString);
                 zAxis.setK(vzk);
                 pose.setZAxis(zAxis);
+                String visionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VISIONCYCLE));
+                int visionCycle = -1;
+                if(null != visionCycleString) {
+                    visionCycle = Integer.parseInt(visionCycleString);
+                }
+                if (debug) {
+                    System.out.println("visionCycleString = " + visionCycleString);
+                }
+                String maxVisionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.MAX_VISIONCYCLE));
+                int maxVisionCycle = -1;
+                if(null != maxVisionCycleString) {
+                    maxVisionCycle = Integer.parseInt(maxVisionCycleString);
+                }
+                if (debug) {
+                    System.out.println("maxVisionCycleString = " + maxVisionCycleString);
+                }
+                if(requireNew && maxVisionCycle > visionCycle + visionCycleNewDiffThreshold) {
+                    return null;
+                }
             } else {
                 throw new IllegalStateException("Database returned empty ResultSet for query to getPose for name=" + name + ", simQuery=" + simQuery);
             }
