@@ -129,6 +129,7 @@ public class PositionMap {
         int offsetXIndex = -1;
         int offsetYIndex = -1;
         int offsetZIndex = -1;
+        int labelIndex = -1;
         for (int i = 0; i < columnHeaders.length; i++) {
             switch (columnHeaders[i]) {
                 case "X":
@@ -166,6 +167,10 @@ public class PositionMap {
                 case "Offset_Z":
                     offsetZIndex = i;
                     break;
+                    
+                case "Label":
+                    labelIndex = i;
+                    break;
             }
         }
         if (robotXIndex < 0) {
@@ -190,8 +195,8 @@ public class PositionMap {
             double offsetX = (offsetXIndex >= 0 ? Double.parseDouble(a[offsetXIndex]) : 0);
             double offsetY = (offsetYIndex >= 0 ? Double.parseDouble(a[offsetYIndex]) : 0);
             double offsetZ = (offsetZIndex >= 0 ? Double.parseDouble(a[offsetZIndex]) : 0);
-
-            errmapList.add(PositionMapEntry.pointOffsetEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ));
+            String label = (labelIndex >= 0 ? a[labelIndex]:"");
+            errmapList.add(PositionMapEntry.pointOffsetLabelEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ,label));
         }
 //        errmapList = errmapStringsList.stream().map(a -> {
 //            return new PositionMapEntry(Double.parseDouble(a[robotXIndex]), Double.parseDouble(a[robotYIndex]),

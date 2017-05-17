@@ -146,42 +146,42 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         });
         jTablePddlOutput.addMouseListener(new MouseListener() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        showPopup(e);
-                    }
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                showPopup(e);
+            }
 
-                    private void showPopup(MouseEvent e) {
-                        if(e.isPopupTrigger()) {
-                            JPopupMenu jpmenu = new JPopupMenu("PDDL Action Menu ");
-                            JMenuItem menuItem = new JMenuItem("Run Single");
-                            menuItem.addActionListener(x -> runSingleRow());
-                            jpmenu.add(menuItem);
-                            jpmenu.setLocation(e.getPoint());
-                            jpmenu.setVisible(true);
-                        }
-                    }
+            private void showPopup(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    JPopupMenu jpmenu = new JPopupMenu("PDDL Action Menu ");
+                    JMenuItem menuItem = new JMenuItem("Run Single");
+                    menuItem.addActionListener(x -> runSingleRow());
+                    jpmenu.add(menuItem);
+                    jpmenu.setLocation(e.getPoint());
+                    jpmenu.setVisible(true);
+                }
+            }
 
-                    @Override
-                    public void mousePressed(MouseEvent e) {
-                       showPopup(e);
-                    }
+            @Override
+            public void mousePressed(MouseEvent e) {
+                showPopup(e);
+            }
 
-                    @Override
-                    public void mouseReleased(MouseEvent e) {
-                        showPopup(e);
-                    }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                showPopup(e);
+            }
 
-                    @Override
-                    public void mouseEntered(MouseEvent e) {
-                        showPopup(e);
-                    }
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                showPopup(e);
+            }
 
-                    @Override
-                    public void mouseExited(MouseEvent e) {
-                        showPopup(e);
-                    }
-                });
+            @Override
+            public void mouseExited(MouseEvent e) {
+                showPopup(e);
+            }
+        });
 //        jTablePddlOutput.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 //            @Override
 //            public void valueChanged(ListSelectionEvent e) {
@@ -201,7 +201,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         this.pddlActionToCrclGenerator.setParentPddlExecutorJPanel(this);
     }
 
-    
     private void runSingleRow() {
         this.aprsJFrame.abortCrclProgram();
         int row = jTablePddlOutput.getSelectedRow();
@@ -210,7 +209,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         stepping = true;
         continueActionListPrivate();
     }
-    
+
     private boolean reverseFlag = false;
 
     /**
@@ -277,7 +276,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void setCost(int index, double cost) {
         DefaultTableModel m = (DefaultTableModel) jTablePddlOutput.getModel();
-        if(m.getRowCount() > index) {
+        if (m.getRowCount() > index) {
             m.setValueAt(cost, index, 5);
         }
     }
@@ -545,6 +544,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 {"approachZOffset", "50.0"},
                 {"placeZOffset", "5.0"},
                 {"takeZOffset", "0.0"},
+                {"testTransSpeed", "50.0"},
                 {"fastTransSpeed", "200.0"},
                 {"slowTransSpeed", "75"},
                 {"lookDwellTime", "5.0"},
@@ -1317,6 +1317,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     @Override
     public void browseActionsFile() throws IOException {
         JFileChooser chooser = new JFileChooser(new File(jTextFieldPddlOutputActions.getText()).getParent());
+        if (null != propertiesFile) {
+            chooser.setCurrentDirectory(propertiesFile.getParentFile());
+        }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
             jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
@@ -1358,6 +1361,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      *
      * @return the value of actionsList
      */
+    @Override
     public List<PddlAction> getActionsList() {
         return actionsList;
     }
@@ -1367,6 +1371,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      *
      * @param actionsList new value of actionsList
      */
+    @Override
     public void setActionsList(List<PddlAction> actionsList) {
         this.actionsList = actionsList;
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
@@ -1380,6 +1385,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      *
      * @return the value of propertiesFile
      */
+    @Override
     public File getPropertiesFile() {
         return propertiesFile;
     }
@@ -1389,8 +1395,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      *
      * @param propertiesFile new value of propertiesFile
      */
+    @Override
     public void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
+        if (null != propertiesFile) {
+            this.positionMapJPanel1.setStartingDirectory(propertiesFile.getParentFile());
+        } else {
+            this.positionMapJPanel1.setStartingDirectory(null);
+        }
     }
 
     private static final String PDDLOUTPUT = "pddl.output";
@@ -1469,11 +1481,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         props.putAll(getTableOptions());
         props.put(MANUAL_PART_NAMES, Arrays.toString(getComboPartNames(10)));
         props.put(MANUAL_SLOT_NAMES, Arrays.toString(getComboSlotNames(10)));
+        props.put(POS_ERROR_MAP_FILES, Arrays.toString(positionMapJPanel1.getPositionMapFileNames()));
 //        try (FileWriter fw = new FileWriter(propertiesFile)) {
 //            props.store(fw, "");
 //        }
         Utils.saveProperties(propertiesFile, props);
     }
+    private static final String POS_ERROR_MAP_FILES = "positionMapFileNames";
     private static final String MANUAL_PART_NAMES = "manualPartNames";
     private static final String MANUAL_SLOT_NAMES = "manualSlotNames";
 
@@ -1806,16 +1820,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public boolean getForceFakeTakeFlag() {
         return jCheckBoxForceFakeTake.isSelected();
     }
-    
+
     public void setForceFakeTakeFlag(boolean _force) {
-        if(_force != jCheckBoxForceFakeTake.isSelected()) {
+        if (_force != jCheckBoxForceFakeTake.isSelected()) {
             jCheckBoxForceFakeTake.setSelected(_force);
         }
-        if(null != aprsJFrame) {
+        if (null != aprsJFrame) {
             aprsJFrame.setForceFakeTakeFlag(_force);
         }
     }
-    
+
     /**
      * Set the value of crclProgram
      *
@@ -2942,6 +2956,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void newLogFileName() throws HeadlessException {
         recordCsvName = jTextFieldLogFilename.getText();
         JFileChooser chooser = new JFileChooser();
+        if (null != propertiesFile) {
+            chooser.setCurrentDirectory(propertiesFile.getParentFile());
+        }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 File f = chooser.getSelectedFile();
@@ -3209,21 +3226,21 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private void updatePositionCacheTable() {
-       Map<String, PoseType> map = pddlActionToCrclGenerator.getPoseCache();
-       DefaultTableModel model = (DefaultTableModel) jTablePositionCache.getModel();
-       model.setRowCount(0);
-       for(Map.Entry<String,PoseType> entry : map.entrySet()) {
-           PoseType pose = entry.getValue();
-           if(null != pose) {
-               PointType point = pose.getPoint();
-               if(null != point) {
-                   model.addRow(new Object[]{entry.getKey(),point.getX(),point.getY(),point.getZ()});
-               }
-           }
-       }
-       Utils.autoResizeTableColWidths(jTablePositionCache);
+        Map<String, PoseType> map = pddlActionToCrclGenerator.getPoseCache();
+        DefaultTableModel model = (DefaultTableModel) jTablePositionCache.getModel();
+        model.setRowCount(0);
+        for (Map.Entry<String, PoseType> entry : map.entrySet()) {
+            PoseType pose = entry.getValue();
+            if (null != pose) {
+                PointType point = pose.getPoint();
+                if (null != point) {
+                    model.addRow(new Object[]{entry.getKey(), point.getX(), point.getY(), point.getZ()});
+                }
+            }
+        }
+        Utils.autoResizeTableColWidths(jTablePositionCache);
     }
-    
+
     private XFuture<Boolean> doPddlActionsSection() {
         try {
             CRCLProgramType program = pddlActionSectionToCrcl();
@@ -3836,6 +3853,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
             String manualSlotNames = props.getProperty(MANUAL_SLOT_NAMES, "");
             String sna[] = manualSlotNames.split("[ \t,\\[\\]\\{\\}]+");
+
             cbm
                     = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
             cbm.removeAllElements();
@@ -3843,6 +3861,29 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 if (null != sna[i] && sna[i].length() > 0
                         && !sna[i].equals("null")) {
                     cbm.addElement(sna[i]);
+                }
+            }
+
+            String errorMapFiles = props.getProperty(POS_ERROR_MAP_FILES, "");
+            if (null != errorMapFiles && errorMapFiles.length() > 0) {
+                positionMapJPanel1.clearCurrentMap();
+                String errorMapFilesArray[] = errorMapFiles.split("[\t,\\[\\]\\{\\}" + File.pathSeparator + "]+");
+                for (String emf : errorMapFilesArray) {
+                    if (null == emf) {
+                        continue;
+                    }
+                    String fname = emf.trim();
+                    if (fname.length() < 1) {
+                        continue;
+                    }
+                    File f = new File(fname);
+                    if (f.exists()) {
+                        try {
+                            positionMapJPanel1.addPositionMapFile(f);
+                        } catch (PositionMap.BadErrorMapFormatException ex) {
+                            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
                 }
             }
         }

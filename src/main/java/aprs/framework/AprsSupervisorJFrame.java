@@ -221,40 +221,44 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     if (TableModelEvent.UPDATE == e.getType()) {
                         if (e.getFirstRow() == e.getLastRow()
                                 && e.getLastRow() >= 0
-                                && e.getColumn() >= 0) {
-                            double dval = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), e.getColumn());
-                            double other;
-                            switch (e.getColumn()) {
-                                case 0:
-                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 3);
-                                    jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 6);
-                                    break;
+                                && e.getColumn() >= 0
+                                && e.getColumn() < 6) {
+                            Object obj = jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), e.getColumn());
+                            if (obj instanceof Double) {
+                                double dval = (double) obj;
+                                double other;
+                                switch (e.getColumn()) {
+                                    case 0:
+                                        other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 3);
+                                        jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 6);
+                                        break;
 
-                                case 1:
-                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 4);
-                                    jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 7);
-                                    break;
+                                    case 1:
+                                        other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 4);
+                                        jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 7);
+                                        break;
 
-                                case 2:
-                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 5);
-                                    jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 8);
-                                    break;
+                                    case 2:
+                                        other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 5);
+                                        jTableSelectedPosMapFile.setValueAt(other - dval, e.getFirstRow(), 8);
+                                        break;
 
-                                case 3:
-                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 0);
-                                    jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 6);
-                                    break;
+                                    case 3:
+                                        other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 0);
+                                        jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 6);
+                                        break;
 
-                                case 4:
-                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 1);
-                                    jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 7);
-                                    break;
+                                    case 4:
+                                        other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 1);
+                                        jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 7);
+                                        break;
 
-                                case 5:
-                                    other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 2);
-                                    jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 8);
-                                    break;
+                                    case 5:
+                                        other = (double) jTableSelectedPosMapFile.getValueAt(e.getFirstRow(), 2);
+                                        jTableSelectedPosMapFile.setValueAt(dval - other, e.getFirstRow(), 8);
+                                        break;
 
+                                }
                             }
                         }
                     }
@@ -369,7 +373,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         model.addRow(new Object[]{
                             pme.getRobotX(), pme.getRobotY(), pme.getRobotZ(),
                             pme.getRobotX() + pme.getOffsetX(), pme.getRobotY() + pme.getOffsetY(), pme.getRobotZ() + pme.getOffsetZ(),
-                            pme.getOffsetX(), pme.getOffsetY(), pme.getOffsetZ()
+                            pme.getOffsetX(), pme.getOffsetY(), pme.getOffsetZ(),
+                            pme.getLabel()
                         });
                     }
                 }
@@ -1037,17 +1042,17 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
         jTableSelectedPosMapFile.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                { new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0)}
+                { new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0), null}
             },
             new String [] {
-                "Xin", "Yin", "Zin", "Xout", "Yout", "Zout", "Offset_X", "Offset_Y", "Offset_Z"
+                "Xin", "Yin", "Zin", "Xout", "Yout", "Zout", "Offset_X", "Offset_Y", "Offset_Z", "Label"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
+                java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                true, true, true, true, true, true, false, false, false
+                true, true, true, true, true, true, false, false, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -1585,7 +1590,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void jButtonAddLineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddLineActionPerformed
         DefaultTableModel model = (DefaultTableModel) jTableSelectedPosMapFile.getModel();
-        model.addRow(new Double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+        model.addRow(new Object[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "label" + model.getRowCount()});
     }//GEN-LAST:event_jButtonAddLineActionPerformed
 
     private void jButtonDeleteLineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteLineActionPerformed

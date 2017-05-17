@@ -281,6 +281,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
+     * Get the current point(translation only) from current pose of the robot.
+     *
+     * @return current point(translation only) from current pose of the robot.
+     */
+    public PointType getCurrentPosePoint() {
+        PoseType pose = getCurrentPose();
+        if (null != pose) {
+            return pose.getPoint();
+        }
+        return null;
+    }
+
+    /**
      * Check if the CRCL client is connected to the CRCL Server and therefore to
      * the robot.
      *
@@ -367,7 +380,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public XFuture<Void> startSafeAbortAndDisconnectAsync() {
         startSafeAbortAndDisconnectAsyncFuture
                 = this.pddlExecutorJInternalFrame1.startSafeAbort()
-                        .thenRunAsync(this::disconnectRobot);
+                .thenRunAsync(this::disconnectRobot);
         return startSafeAbortAndDisconnectAsyncFuture;
     }
 
@@ -1181,7 +1194,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         framesList.addAll(Arrays.asList(jDesktopPane1.getAllFrames()));
         Collections.sort(framesList, Comparator.comparing(JInternalFrame::getTitle));
         List<JMenuItem> menuItems = new ArrayList<>();
-        int framesListSize= framesList.size();
+        int framesListSize = framesList.size();
         for (JInternalFrame f : framesList) {
             JMenuItem menuItem = new JMenuItem(count + " " + f.getTitle());
             final JInternalFrame frameToShow = f;
@@ -1196,16 +1209,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             menuItems.add(menuItem);
         }
         jMenuWindow.removeAll();
-        for(JMenuItem menuItem : menuItems) {
+        for (JMenuItem menuItem : menuItems) {
             jMenuWindow.add(menuItem);
         }
-        if(framesListSize != menuItems.size()) {
-            throw new IllegalStateException("menuItems = " + menuItems +" does not match framesList = " + framesList);
+        if (framesListSize != menuItems.size()) {
+            throw new IllegalStateException("menuItems = " + menuItems + " does not match framesList = " + framesList);
         }
         int menuItemCount = jMenuWindow.getItemCount();
-        if(framesListSize != menuItemCount) {
-            throw new IllegalStateException("framesListSize = " + framesListSize +" does not match menuItemCount = " + menuItemCount
-             + "with framesList="+framesList+", menuItems="+menuItems);
+        if (framesListSize != menuItemCount) {
+            throw new IllegalStateException("framesListSize = " + framesListSize + " does not match menuItemCount = " + menuItemCount
+                    + "with framesList=" + framesList + ", menuItems=" + menuItems);
         }
     }
 

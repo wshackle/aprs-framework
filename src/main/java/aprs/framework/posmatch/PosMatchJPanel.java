@@ -312,9 +312,19 @@ public class PosMatchJPanel extends javax.swing.JPanel {
             printer.printRecord(l);
             for (int i = 0; i < tm.getRowCount(); i++) {
                 l = new ArrayList<>();
+                boolean bad_record = false;
                 for (int j = 0; j < tm.getColumnCount(); j++) {
                     Object o = tm.getValueAt(i, j);
-                    if (o instanceof File) {
+                    if(o == null) {
+                        bad_record = true;
+                        break;
+                    } else if(o instanceof Double) {
+                        if(!Double.isFinite((Double)o)) {
+                            bad_record = true;
+                            break;
+                        }
+                        l.add(o);
+                    } else if (o instanceof File) {
                         Path rel = f.getParentFile().toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
                         if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
                             l.add(rel);
@@ -325,7 +335,9 @@ public class PosMatchJPanel extends javax.swing.JPanel {
                         l.add(o);
                     }
                 }
-                printer.printRecord(l);
+                if(!bad_record) {
+                    printer.printRecord(l);
+                }
             }
         }
     }
@@ -336,7 +348,7 @@ public class PosMatchJPanel extends javax.swing.JPanel {
         double minDist = Double.POSITIVE_INFINITY;
         for (int i = 0; i < posList1.size(); i++) {
             for (int j = 0; j < posList2.size(); j++) {
-                double dist = posList1.get(i).distFrom(posList2.get(j));
+                double dist = posList1.get(i).distFromXY(posList2.get(j));
                 if (dist < minDist) {
                     bestL1Index = i;
                     bestL2Index = j;

@@ -69,6 +69,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         jButtonSave = new javax.swing.JButton();
         jSpinnerIndex = new javax.swing.JSpinner();
         jButtonClear = new javax.swing.JButton();
+        jLabelSize = new javax.swing.JLabel();
 
         jLabel13.setText("File name:");
 
@@ -123,6 +124,8 @@ public class PositionMapJPanel extends javax.swing.JPanel {
             }
         });
 
+        jLabelSize.setText("/1         ");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -130,13 +133,15 @@ public class PositionMapJPanel extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 544, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jSpinnerIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabelSize)
+                        .addGap(10, 10, 10)
                         .addComponent(jLabel13)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldErrorMapFilename, javax.swing.GroupLayout.DEFAULT_SIZE, 108, Short.MAX_VALUE)
+                        .addComponent(jTextFieldErrorMapFilename)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonErrorMapFileBrowse)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -156,9 +161,10 @@ public class PositionMapJPanel extends javax.swing.JPanel {
                         .addComponent(jTextFieldErrorMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jButtonErrorMapFileBrowse)
                         .addComponent(jButtonSave)
-                        .addComponent(jButtonClear)))
+                        .addComponent(jButtonClear)
+                        .addComponent(jLabelSize)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 67, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -198,15 +204,29 @@ public class PositionMapJPanel extends javax.swing.JPanel {
             loadPositionMapToTable(positionMap);
         }
         jSpinnerIndex.setModel(new SpinnerNumberModel((int) jSpinnerIndex.getValue(), 0, positionMaps.size(), 1));
+        jLabelSize.setText("/"+positionMaps.size()+"   ");
     }
 
     public void addPositionMap(PositionMap positionMap) {
         reversePositionMaps = null;
+        for (int i = positionMaps.size()-1; i >= 0; i--) {
+            PositionMap pm = positionMaps.get(i);
+            if(pm == null || pm.getErrmapList()== null || pm.getErrmapList().size() < 1) {
+                positionMaps.remove(i);
+            } else {
+                break;
+            }
+            int spinVal = (int) jSpinnerIndex.getValue();
+            if(spinVal >= positionMaps.size()) {
+                jSpinnerIndex.setValue(Math.max(0, positionMaps.size()-1));
+            }
+        }
         this.positionMaps.add(positionMap);
         if (positionMaps.size() == 1) {
             loadPositionMapToTable(positionMap);
         }
         jSpinnerIndex.setModel(new SpinnerNumberModel((int) jSpinnerIndex.getValue(), 0, positionMaps.size(), 1));
+        jLabelSize.setText("/"+positionMaps.size()+"   ");
     }
 
     public void removePositionMap(PositionMap positionMap) {
@@ -231,6 +251,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         }
         loadPositionMapToTable(getPositionMap(spinVal));
         jSpinnerIndex.setModel(new SpinnerNumberModel(spinVal, 0, positionMaps.size(), 1));
+        jLabelSize.setText("/"+positionMaps.size()+"   ");
     }
 
     private boolean selected;
@@ -268,6 +289,15 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         }
         return new File(jTextFieldErrorMapFilename.getText());
     }
+    
+    public String[] getPositionMapFileNames() {
+        String fa[] = new String[positionMaps.size()];
+        for (int i = 0; i < fa.length; i++) {
+            fa[i] = positionMaps.get(i).getFileName();
+        }
+        return fa;
+    }
+    
 
     private void loadPositionMapToTable(PositionMap positionMap) {
         DefaultTableModel m = (DefaultTableModel) jTable1.getModel();
@@ -294,8 +324,31 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         addPositionMap(new PositionMap(f));
     }
 
+        private File startingDirectory;
+
+    /**
+     * Get the value of startingDirectory
+     *
+     * @return the value of startingDirectory
+     */
+    public File getStartingDirectory() {
+        return startingDirectory;
+    }
+
+    /**
+     * Set the value of startingDirectory
+     *
+     * @param startingDirectory new value of startingDirectory
+     */
+    public void setStartingDirectory(File startingDirectory) {
+        this.startingDirectory = startingDirectory;
+    }
+
     private void jButtonErrorMapFileBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrorMapFileBrowseActionPerformed
         JFileChooser chooser = new JFileChooser();
+        if(null != startingDirectory) {
+            chooser.setCurrentDirectory(startingDirectory);
+        }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 setPositionMap((int) jSpinnerIndex.getValue(), new PositionMap(chooser.getSelectedFile()));
@@ -307,6 +360,9 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
     private void jButtonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveActionPerformed
         JFileChooser chooser = new JFileChooser();
+        if(null != startingDirectory) {
+            chooser.setCurrentDirectory(startingDirectory);
+        }
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 PositionMap positionMap = getPositionMap((int) jSpinnerIndex.getValue());
@@ -339,12 +395,22 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         loadPositionMapToTable(getPositionMap(spinVal));
     }
 
+    
+    public void clearAllMaps() {
+        positionMaps.clear();
+        reversePositionMaps.clear();
+        jSpinnerIndex.setModel(new SpinnerNumberModel(0, 0, 0, 1));
+        jLabelSize.setText("/1   ");
+        clearCurrentMap();
+    }
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonClear;
     private javax.swing.JButton jButtonErrorMapFileBrowse;
     private javax.swing.JButton jButtonSave;
     private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabelSize;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JSpinner jSpinnerIndex;
     private javax.swing.JTable jTable1;

@@ -46,9 +46,10 @@ public class PositionMapEntry {
     private final double maxY;
     private final double minZ;
     private final double maxZ;
+    private final String label;
     private final List<PositionMapEntry> combined;
 
-    private PositionMapEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ, double minX, double maxX, double minY, double maxY, double minZ, double maxZ, PositionMapEntry ... combined) {
+    private PositionMapEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ, double minX, double maxX, double minY, double maxY, double minZ, double maxZ, String label, PositionMapEntry ... combined) {
         this.robotX = robotX;
         this.robotY = robotY;
         this.robotZ = robotZ;
@@ -61,6 +62,7 @@ public class PositionMapEntry {
         this.maxY = maxY;
         this.minZ = minZ;
         this.maxZ = maxZ;
+        this.label = label;
         this.combined = new ArrayList<>();
         this.combined.addAll(Arrays.asList(combined));
         for(PositionMapEntry pme: combined) {
@@ -68,7 +70,12 @@ public class PositionMapEntry {
         }
     }
 
-    private PositionMapEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ) {
+    public String getLabel() {
+        return label;
+    }
+
+    
+    private PositionMapEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ, String label) {
         this.robotX = robotX;
         this.robotY = robotY;
         this.robotZ = robotZ;
@@ -78,11 +85,16 @@ public class PositionMapEntry {
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.offsetZ = offsetZ;
+        this.label = label;
         combined = Collections.emptyList();
     }
 
     public static PositionMapEntry pointOffsetEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ) {
-        return new PositionMapEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ);
+        return new PositionMapEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ,"");
+    }
+
+    public static PositionMapEntry pointOffsetLabelEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ,String label) {
+        return new PositionMapEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ,label);
     }
 
     public static PositionMapEntry pointOffsetEntryCombining(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ, PositionMapEntry pme1, PositionMapEntry pme2) {
@@ -93,14 +105,33 @@ public class PositionMapEntry {
                 Math.max(pme1.maxY, pme2.maxY),
                 Math.min(pme1.minZ, pme2.minZ),
                 Math.max(pme1.maxZ, pme2.maxZ),
+                "",
+                pme1,pme2
+        );
+    }
+
+    public static PositionMapEntry pointOffsetLabelEntryCombining(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ, String label,
+            PositionMapEntry pme1, PositionMapEntry pme2) {
+        return new PositionMapEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ,
+                Math.min(pme1.minX, pme2.minX),
+                Math.max(pme1.maxX, pme2.maxX),
+                Math.min(pme1.minY, pme2.minY),
+                Math.max(pme1.maxY, pme2.maxY),
+                Math.min(pme1.minZ, pme2.minZ),
+                Math.max(pme1.maxZ, pme2.maxZ),
+                label,
                 pme1,pme2
         );
     }
 
     public static PositionMapEntry pointPairEntry(double robotX, double robotY, double robotZ, double otherX, double otherY, double otherZ) {
-        return new PositionMapEntry(robotX, robotY, robotZ, otherX - robotX, otherY - robotY, otherZ - robotZ);
+        return new PositionMapEntry(robotX, robotY, robotZ, otherX - robotX, otherY - robotY, otherZ - robotZ,"");
     }
 
+    public static PositionMapEntry pointPairLabelEntry(double robotX, double robotY, double robotZ, double otherX, double otherY, double otherZ, String label) {
+        return new PositionMapEntry(robotX, robotY, robotZ, otherX - robotX, otherY - robotY, otherZ - robotZ,label);
+    }
+    
     public static PositionMapEntry cartPairEntry(PmCartesian robotCart, PmCartesian otherCart) {
         return pointPairEntry(robotCart.x, robotCart.y, robotCart.z, otherCart.x, otherCart.y, otherCart.z);
     }
@@ -143,7 +174,7 @@ public class PositionMapEntry {
 
     @Override
     public String toString() {
-        return "PositionMapEntry{" + "robot(X,Y,Z)=" + robotX + "," + robotY + "," + robotZ + ", other(X,Y,Z)=" + getOtherX() + "," + getOtherY() + ", " + getOtherZ() + ", offset(X,Y,Z)=" + offsetX + "," + offsetY + "," + offsetZ + '}';
+        return "PositionMapEntry{" + "robot(X,Y,Z)=" + robotX + "," + robotY + "," + robotZ + ", other(X,Y,Z)=" + getOtherX() + "," + getOtherY() + ", " + getOtherZ() + ", offset(X,Y,Z)=" + offsetX + "," + offsetY + "," + offsetZ + ",label="+label+'}';
     }
 
     public double getMinX() {

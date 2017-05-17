@@ -1,5 +1,5 @@
-#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:2747
-STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
+#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:2806
+STARTUP_ACTIVE_WIN=PDDL_EXECUTOR_WINDOW
 aprs.robotName=Motoman
 aprs.taskName=Shared Table
 crclWebApp.httpPort=8081
