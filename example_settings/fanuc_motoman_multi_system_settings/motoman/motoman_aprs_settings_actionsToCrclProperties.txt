@@ -1,7 +1,7 @@
 #  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1488
 approachZOffset=50.0
 defaultDwellTime=0.5
-doInspectKit=true
+doInspectKit=false
 fastTransSpeed=400
 firstLookDwellTime=5.0
 jointAccel=100.0

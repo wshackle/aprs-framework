@@ -892,6 +892,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (action.getArgs().length < 2) {
             throw new IllegalArgumentException("action = " + action + " needs at least two arguments: kitSku inspectionID");
         }
+        try {
+            final String filename = getRunPrefix() + "-inspect-kit-";
+            takeSimViewSnapshot(File.createTempFile(filename, ".PNG"), null, "-inspect-kit-");
+            takeDatabaseViewSnapshot(File.createTempFile(filename + "_new_database_items", ".PNG"));
+        } catch (IOException iOException) {
+            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, iOException);
+        }
+//        addTakeSimViewSnapshot(out, "-inspect-kit-", null, "");
         String kitSku = action.getArgs()[0];
         String inspectionID = action.getArgs()[1];
         MessageType msg = new MessageType();
@@ -1090,6 +1098,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 partsTray.setpartsTrayPose(partsTrayPose);
                 double partsTrayPoseX = partsTrayPose.getPoint().getX();
                 double partsTrayPoseY = partsTrayPose.getPoint().getY();
+                double partsTrayPoseZ = partsTrayPose.getPoint().getZ();
 
                 double rotation = 0;
                 //-- Read partsTrayList
@@ -1145,7 +1154,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     double y_offset = slot.getY_OFFSET() * 1000;
                     double slotX = partsTrayPoseX + x_offset * Math.cos(angle) - y_offset * Math.sin(angle);
                     double slotY = partsTrayPoseY + x_offset * Math.sin(angle) + y_offset * Math.cos(angle);
-                    double slotZ = -146; // FIXME : hard-coded Z offset
+                    double slotZ = partsTrayPoseZ;
                     PointType slotPoint = new PointType();
                     slotPoint.setX(slotX);
                     slotPoint.setY(slotY);
@@ -1324,7 +1333,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
             try {
-                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-take-part-" + partName + "-", ".PNG"), pose, partName);
+                if (pose != null || !skipMissingParts) {
+                    takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-take-part-" + partName + "-", ".PNG"), pose, partName);
+                }
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1332,6 +1343,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == pose) {
             if (skipMissingParts) {
                 lastTakenPart = null;
+                if (takeSnapshots) {
+                    try {
+                        if (pose != null || !skipMissingParts) {
+                            takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-skipping-take-part-" + partName + "-", ".PNG"), pose, partName);
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
                 return;
             } else {
                 throw new IllegalStateException("getPose(" + partName + ") returned null");
@@ -2335,23 +2355,53 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             PlacePartSlotPoseList = new ArrayList();
         }
         checkSettings();
-        if (skipMissingParts && lastTakenPart == null) {
-            return;
-        }
         String slotName = action.getArgs()[placePartSlotArgIndex];
         PoseType pose = getPose(slotName);
+        if (skipMissingParts && lastTakenPart == null) {
+            try {
+                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
+            } catch (IOException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class
+                        .getName()).log(Level.SEVERE, null, ex);
+            }
+            return;
+        }
 
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         if (takeSnapshots) {
             try {
                 takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
-
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
         if (pose == null) {
+            if (skipMissingParts && null != lastTakenPart) {
+                PoseType origPose = getPose(lastTakenPart);
+                if (null != origPose) {
+                    pose = correctPose(origPose);
+                    origPose.setXAxis(xAxis);
+                    origPose.setZAxis(zAxis);
+                    placePartByPose(out, origPose);
+                    final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
+                    addMarkerCommand(out, msg,
+                            ((CrclCommandWrapper wrapper) -> {
+                                try {
+                                    if (null != kitInspectionJInternalFrame) {
+                                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
+                                    }
+                                    System.out.println(msg + " completed at " + new Date());
+                                    ppi.setWrapper(wrapper);
+                                    notifyPlacePartConsumers(ppi);
+                                } catch (BadLocationException ex) {
+                                    Logger.getLogger(PddlActionToCrclGenerator.class
+                                            .getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }));
+                    return;
+                }
+            }
             throw new IllegalStateException("getPose(" + slotName + ") returned null");
         }
 
@@ -2392,13 +2442,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         if (takeSnapshots) {
             try {
-                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
+                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-recovery-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
 
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
+        if (pose == null) {
+            throw new IllegalStateException("getPose(" + slotName + ") returned null");
+        }
+
         pose = correctPose(pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);

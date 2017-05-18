@@ -36,6 +36,7 @@ import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.utils.CRCLPosemath;
+import crcl.utils.CRCLSocket;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.io.File;
@@ -64,6 +65,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
+import javax.xml.bind.JAXBException;
 import rcs.posemath.PmCartesian;
 
 /**
@@ -78,11 +80,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private volatile boolean settingItems = false;
 
+    @Override
     public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
-        this.object2DJPanel1.takeSnapshot(f, pose, label);
-        File csvDir = new File(f.getParentFile(),"csv");
-        csvDir.mkdirs();
-        saveFile(new File(csvDir,f.getName()+".csv"));
+        try {
+            this.object2DJPanel1.takeSnapshot(f, pose, label);
+            File csvDir = new File(f.getParentFile(),"csv");
+            csvDir.mkdirs();
+            saveFile(new File(csvDir,f.getName()+".csv"));
+            File xmlDir = new File(f.getParentFile(),"crclStatusXml");
+            xmlDir.mkdirs();
+            String xmlString = CRCLSocket.getUtilSocket().statusToPrettyString(aprsJFrame.getCurrentStatus(), false);
+            File xmlFile =  new File(xmlDir,f.getName()+"-status.xml");
+            try(FileWriter fw = new FileWriter(xmlFile)) {
+                fw.write(xmlString);
+            }
+        } catch (JAXBException ex) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void refresh() {
