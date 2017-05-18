@@ -2378,9 +2378,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         if (pose == null) {
             if (skipMissingParts && null != lastTakenPart) {
-                PoseType origPose = getPose(lastTakenPart);
+                PoseType origPose = poseCache.get(lastTakenPart);
                 if (null != origPose) {
-                    pose = correctPose(origPose);
+                    origPose = correctPose(origPose);
                     origPose.setXAxis(xAxis);
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
