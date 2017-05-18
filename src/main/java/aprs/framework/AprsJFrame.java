@@ -2243,7 +2243,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         return startActions()
                                 .thenRun(() -> setReverseFlag(true))
                                 .thenCompose(x2 -> startActions())
-                                .thenCompose(x2 -> x ? startContinousDemo() : XFuture.completedFuture(null));
+                                .thenCompose(x2 -> x ? startContinousDemo() : XFuture.completedFutureWithName("startContinousDemo.completedFutureWithName",null));
                     } else {
                         return Utils.runOnDispatchThread(() -> jCheckBoxMenuItemContinousDemo.setSelected(false));
                     }
@@ -2318,6 +2318,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         this.titleErrorString = null;
         clearCrclClientErrorMessage();
         updateTitle();
+        if(null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.setErrorString(null);
+        }
     }
 
     public void clearCrclClientErrorMessage() {

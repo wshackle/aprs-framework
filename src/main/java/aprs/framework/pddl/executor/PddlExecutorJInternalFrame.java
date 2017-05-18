@@ -114,6 +114,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return this.actionsToCrclJPanel1.getErrorString();
     }
     
+    public void setErrorString(String errorString) {
+        this.actionsToCrclJPanel1.setErrorString(errorString);
+    }
+    
     public long incrementAndGetCommandId() {
         return this.actionsToCrclJPanel1.incrementAndGetCommandId();
     }

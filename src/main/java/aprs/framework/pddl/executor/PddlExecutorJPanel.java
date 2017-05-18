@@ -3641,7 +3641,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private XFuture<Void> checkDbSupplierPublisher() throws IOException {
         if (null != this.pddlActionToCrclGenerator && pddlActionToCrclGenerator.isConnected()) {
-            return XFuture.completedFuture(null);
+            return XFuture.completedFutureWithName("checkDbSupplierPublisher.completedFuture",null);
         }
         if (null != dbSetupSupplier) {
             try {
@@ -3672,7 +3672,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         } else {
             System.err.println("dbSetupPublisher == null");
         }
-        return XFuture.completedFuture(null);
+        return XFuture.completedFutureWithName("checkDbSupplierPublisher.completedFuture3", null);
     }
 
     public void setOption(String key, String val) {

@@ -220,6 +220,7 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
         } else {
             throw new IllegalArgumentException("map may not be null");
         }
+        item.normalizeRotation();
         return item;
     }
 

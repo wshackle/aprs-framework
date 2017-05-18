@@ -416,7 +416,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             return newFuture
                     .thenCompose(x -> checkUnstealRobotFuture(newFuture));
         } else {
-            return XFuture.completedFuture(null);
+            return XFuture.completedFutureWithName("checkUnstealRobotFuture2",null);
         }
     }
 
@@ -427,7 +427,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             return newFuture
                     .thenCompose(x -> checkUnstealRobotFuture(newFuture));
         } else {
-            return XFuture.completedFuture(null);
+            return XFuture.completedFutureWithName("checkStealRobotFuture2",null);
         }
     }
 
@@ -437,7 +437,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             return lfr
                     .thenCompose(x -> checkLastReturnedFuture(lfr));
         } else {
-            return XFuture.completedFuture(null);
+            return XFuture.completedFutureWithName("checkLastReturnedFuture2",null);
         }
     }
 
@@ -510,7 +510,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         future.handle((x, t) -> (t == null))
                         .thenCompose(x -> {
                             if (x) {
-                                return XFuture.completedFuture(null);
+                                return XFuture.completedFutureWithName("setRobotEnabled(" + robotName + "," + enabled + ").completedFuture2",null);
                             } else {
                                 return new XFuture<>("neverComplete");
                             }
@@ -554,7 +554,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 return stealRobot(aprsSystems.get(i + 1), aprsSystems.get(i));
             }
         }
-        return XFuture.completedFuture(null);
+        return XFuture.completedFutureWithName("stealRobot("+robotName+").completedFuture", null);
     }
 
     final private static String transferrableOptions[] = new String[]{
@@ -627,7 +627,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private XFuture<Void> unStealRobots() {
         Supplier<XFuture<Void>> supplier = unStealRobotsSupplier.getAndSet(null);
         if (null == supplier) {
-            return XFuture.completedFuture(null);
+            return XFuture.completedFutureWithName("unStealRobots.null==supplier",null);
         }
         return supplier.get();
     }
@@ -2172,7 +2172,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         if (null != rf) {
             return rf;
         } else {
-            return XFuture.completedFuture(null);
+            return XFuture.completedFutureWithName("waitResume.rf==null",null);
         }
     }
 
@@ -2211,7 +2211,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         if (ok) {
             return okSupplier.get();
         } else {
-            return XFuture.completedFuture(null);
+            return XFuture.completedFutureWithName("checkOk(false)",null);
         }
     }
 

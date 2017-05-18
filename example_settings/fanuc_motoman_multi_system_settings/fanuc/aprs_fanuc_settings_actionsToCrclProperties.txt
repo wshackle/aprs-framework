@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1476
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1488
 approachZOffset=50.0
 defaultDwellTime=0.1
 doInspectKit=true
@@ -17,6 +17,7 @@ pddl.output=..\\..\\..\\example_pddl\\fanuc_demo_actions.txt
 pddl.reverse_output=..\\..\\..\\example_pddl\\reverse_fanuc_demo_actions.txt
 placePartSlotArgIndex=0
 placeZOffset=5.0
+positionMapFileNames=[null]
 requireNewPoses=true
 reverseFlag=false
 rotSpeed=30.0
@@ -29,4 +30,4 @@ takeSnapshots=true
 takeZOffset=0.0
 testTransSpeed=50.0
 useJointLookFor=false
-visionCycleNewDiffThreshold=3
+visionCycleNewDiffThreshold=5

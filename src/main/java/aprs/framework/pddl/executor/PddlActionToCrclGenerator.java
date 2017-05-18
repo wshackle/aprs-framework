@@ -35,8 +35,11 @@ import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
 import crcl.base.AngleUnitEnumType;
+import crcl.base.CRCLStatusType;
 import crcl.base.DwellType;
 import crcl.base.JointSpeedAccelType;
+import crcl.base.JointStatusType;
+import crcl.base.JointStatusesType;
 import crcl.base.LengthUnitEnumType;
 import crcl.base.MessageType;
 import crcl.base.MiddleCommandType;
@@ -66,27 +69,25 @@ import rcs.posemath.PmCartesian;
 import rcs.posemath.PmRpy;
 import crcl.utils.CrclCommandWrapper.CRCLCommandWrapperConsumer;
 import java.util.Date;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.Consumer;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.awt.Color;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.text.BadLocationException;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 
 import java.util.concurrent.atomic.AtomicLong;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -926,7 +927,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         throw new IllegalStateException("TakenPartList=" + TakenPartList + " contains invalid tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt);
                     }
                     String part_in_kt = tmpPartName.substring(0, indexLastUnderscore);
-                    TakenPartList.set(i, part_in_kt);
+                    if (part_in_kt.indexOf('_') > 0) {
+                        TakenPartList.set(i, part_in_kt);
+                    } else {
+                        throw new IllegalStateException("part_in_kt=" + part_in_kt + ",tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt + ", indexLastUnderscore=" + indexLastUnderscore);
+                    }
                 }
 
                 //-- Get all the slots for the current parts tray
@@ -1350,7 +1355,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         });
         lastTakenPart = partName;
         //inspectionList.add(partName);
-        TakenPartList.add(partName);
+        if (partName.indexOf('_') > 0) {
+            TakenPartList.add(partName);
+        }
     }
 
     /**
@@ -1391,7 +1398,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         });
         lastTakenPart = partName;
-        TakenPartList.add(partName);
+        if (partName.indexOf('_') > 0) {
+            TakenPartList.add(partName);
+        }
     }
 
     public void takePartRecovery(String partName, List<MiddleCommandType> out) throws SQLException, BadLocationException {
@@ -1399,6 +1408,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("Database not setup and connected.");
         }
 
+        if (partName.indexOf('_') < 0) {
+            throw new IllegalArgumentException("partName must contain an underscore: partName=" + partName);
+        }
         checkSettings();
         MessageType msg = new MessageType();
         msg.setMessage("take-part-recovery " + partName);
@@ -1438,7 +1450,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         });
         lastTakenPart = partName;
-        TakenPartList.add(partName);
+        if (partName.indexOf('_') > 0) {
+            TakenPartList.add(partName);
+        }
     }
 
     /**
@@ -1467,6 +1481,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         SQLException ex = getNewPoseFromDbException.getAndSet(null);
         if (null != ex) {
             throw ex;
+        }
+        if (null != pose) {
+            for (Entry<String, PoseType> entry : poseCache.entrySet()) {
+                if (entry.getKey().equals(posename)) {
+                    continue;
+                }
+                PointType point = pose.getPoint();
+                PointType entryPoint = entry.getValue().getPoint();
+                double diff = CRCLPosemath.diffPoints(point, entryPoint);
+                if (diff < 15.0) {
+                    throw new IllegalStateException("two poses in cache are too close : posename=" + posename + ",pose=" + CRCLPosemath.toString(point) + ", entry=" + entry + ", entryPoint=" + CRCLPosemath.toString(entryPoint));
+                }
+            }
         }
         return pose;
     }
@@ -1836,7 +1863,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             MiddleCommandType cmd = wrapper.getWrappedCommand();
             if (cmd instanceof MoveToType) {
                 MoveToType mtCmd = (MoveToType) cmd;
-                moveToCmd.setEndPosition(copyAndAddZ(aprsJFrame.getCurrentPose(), offset, limit));
+                PoseType pose = aprsJFrame.getCurrentPose();
+                if (pose == null || pose.getPoint() == null || pose.getPoint().getZ() >= (limit - 1e-6)) {
+                    MessageType messageCommand = new MessageType();
+                    messageCommand.setCommandID(mtCmd.getCommandID());
+                    messageCommand.setMessage("moveUpFromCurrent NOT needed.");
+                    wrapper.setWrappedCommand(messageCommand);
+                } else {
+                    moveToCmd.setEndPosition(copyAndAddZ(aprsJFrame.getCurrentPose(), offset, limit));
+                }
             }
         });
     }
@@ -1860,6 +1895,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         moveAboveCmd.setEndPosition(poseAbove);
         moveAboveCmd.setMoveStraight(straight);
         cmds.add(moveAboveCmd);
+        atLookForPosition = false;
     }
 
     private void addSetSlowSpeed(List<MiddleCommandType> cmds) {
@@ -1962,6 +1998,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return point(Double.parseDouble(lookForXYZFields[0]), Double.parseDouble(lookForXYZFields[1]), Double.parseDouble(lookForXYZFields[2]));
     }
 
+    private volatile boolean atLookForPosition = false;
+
     public void addMoveToLookForPosition(List<MiddleCommandType> out) {
 
         String useLookForJointString = options.get("useJointLookFor");
@@ -1970,10 +2008,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == lookForJointsString || lookForJointsString.length() < 1) {
             useLookForJoint = false;
         }
-        addSetFastSpeed(out);
 
         addOpenGripper(out);
-
+        addSlowLimitedMoveUpFromCurrent(out);
+        addSetFastSpeed(out);
         if (!useLookForJoint) {
             PoseType pose = new PoseType();
             PointType pt = getLookForXYZ();
@@ -1987,6 +2025,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         } else {
             addJointMove(out, lookForJointsString);
         }
+        addMarkerCommand(out, "set atLookForPosition true", x -> {
+            atLookForPosition = true;
+        });
     }
 
     private double jointSpeed = 5.0;
@@ -2045,6 +2086,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             ajCmd.getActuateJoint().add(aj);
         }
         out.add(ajCmd);
+        atLookForPosition = false;
     }
 
     public void clearPoseCache() {
@@ -2053,6 +2095,48 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     public Map<String, PoseType> getPoseCache() {
         return Collections.unmodifiableMap(poseCache);
+    }
+
+    public boolean checkAtLookForPosition() {
+        checkSettings();
+        String useLookForJointString = options.get("useJointLookFor");
+        boolean useLookForJoint = (null != useLookForJointString && useLookForJointString.length() > 0 && Boolean.valueOf(useLookForJointString));
+        String lookForJointsString = options.get("lookForJoints");
+        if (null == lookForJointsString || lookForJointsString.length() < 1) {
+            useLookForJoint = false;
+        }
+        if (!useLookForJoint) {
+            PointType lookForPoint = getLookForXYZ();
+            if (null == lookForPoint) {
+                throw new IllegalStateException("getLookForXYZ() returned null: options.get(\"lookForXYZ\") = " + options.get("lookForXYZ"));
+            }
+            PointType currentPoint = aprsJFrame.getCurrentPosePoint();
+            double diff = CRCLPosemath.diffPoints(currentPoint, lookForPoint);
+            return diff < 2.0;
+        } else {
+            CRCLStatusType curStatus = aprsJFrame.getCurrentStatus();
+            if (curStatus == null) {
+                return false;
+            }
+            JointStatusesType jss = curStatus.getJointStatuses();
+            if (jss == null) {
+                return false;
+            }
+            List<JointStatusType> l = jss.getJointStatus();
+            String jointPosStrings[] = lookForJointsString.split("[,]+");
+            for (int i = 0; i < jointPosStrings.length; i++) {
+                final int number = i + 1;
+                JointStatusType js = l.stream().filter(x -> x.getJointNumber() == number).findFirst().orElse(null);
+                if (null == js) {
+                    return false;
+                }
+                double jpos = Double.parseDouble(jointPosStrings[i]);
+                if (Math.abs(jpos - js.getJointPosition()) > 2.0) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
     private void lookForParts(PddlAction action, List<MiddleCommandType> out, boolean firstAction, boolean lastAction) throws IllegalStateException, SQLException {
@@ -2065,15 +2149,20 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == kitInspectionJInternalFrame) {
             kitInspectionJInternalFrame = aprsJFrame.getKitInspectionJInternalFrame();
         }
-        addSlowLimitedMoveUpFromCurrent(out);
-        addMoveToLookForPosition(out);
 
-        if (firstAction) {
-            addFirstLookDwell(out);
-        } else if (lastAction) {
-            addLastLookDwell(out);
-        } else {
-            addLookDwell(out);
+        if (atLookForPosition) {
+            atLookForPosition = checkAtLookForPosition();
+        }
+        if (!atLookForPosition) {
+            addMoveToLookForPosition(out);
+
+            if (firstAction) {
+                addFirstLookDwell(out);
+            } else if (lastAction) {
+                addLastLookDwell(out);
+            } else {
+                addLookDwell(out);
+            }
         }
 
         addTakeSimViewSnapshot(out, "-look-for-parts-", null, "");
@@ -2084,8 +2173,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     kitInspectionJInternalFrame.getKitTitleLabel().setText("Inspecting kit");
                     try {
                         kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR:" + messageColorH3 + "\">&nbsp;&nbsp;Inspecting kit</h2>");
+
                     } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(PddlActionToCrclGenerator.class
+                                .getName()).log(Level.SEVERE, null, ex);
                     }
                 });
 
@@ -2094,8 +2185,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     kitInspectionJInternalFrame.getKitTitleLabel().setText("Building kit");
                     try {
                         kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;Building kit</h2>");
+
                     } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(PddlActionToCrclGenerator.class
+                                .getName()).log(Level.SEVERE, null, ex);
                     }
                 });
             } else if (action.getArgs()[0].startsWith("2")) {
@@ -2103,12 +2196,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     kitInspectionJInternalFrame.getKitTitleLabel().setText("All Tasks Completed");
                     try {
                         kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;All tasks completed</h2>");
+
                     } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(PddlActionToCrclGenerator.class
+                                .getName()).log(Level.SEVERE, null, ex);
                     }
                 });
             }
-
+        } else {
+            TakenPartList.clear();
         }
     }
 
@@ -2116,7 +2212,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addSetSlowSpeed(out);
         double limit = Double.POSITIVE_INFINITY;
         PointType pt = getLookForXYZ();
-        if (null == pt) {
+        if (null != pt) {
             limit = pt.getZ();
         }
         addMoveUpFromCurrent(out, approachZOffset, limit);
@@ -2132,6 +2228,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         dwellCmd.setCommandID(out.size() + 2);
         dwellCmd.setDwellTime(lookDwellTime);
         out.add(dwellCmd);
+
     }
 
     /**
@@ -2248,8 +2345,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (takeSnapshots) {
             try {
                 takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
+
             } catch (IOException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(PddlActionToCrclGenerator.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
         if (pose == null) {
@@ -2271,8 +2370,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         System.out.println(msg + " completed at " + new Date());
                         ppi.setWrapper(wrapper);
                         notifyPlacePartConsumers(ppi);
+
                     } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(PddlActionToCrclGenerator.class
+                                .getName()).log(Level.SEVERE, null, ex);
                     }
                 }));
     }
@@ -2292,8 +2393,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (takeSnapshots) {
             try {
                 takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
+
             } catch (IOException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(PddlActionToCrclGenerator.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
         pose = correctPose(pose);
@@ -2310,8 +2413,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     if (null != kitInspectionJInternalFrame) {
                         try {
                             kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
+
                         } catch (BadLocationException ex) {
-                            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(PddlActionToCrclGenerator.class
+                                    .getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }));
@@ -2408,6 +2513,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     @Override
     public void accept(DbSetup setup) {
         this.setDbSetup(setup);
+
     }
 
     /**

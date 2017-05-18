@@ -277,7 +277,7 @@ public class VisionSocketClient implements AutoCloseable {
 
                 //--getting the type
                 ci.type = String.valueOf(fa[i + 5]);
-
+                ci.normalizeRotation();
                 ci.index = index;
                 if (listOut.size() > index) {
                     listOut.set(index, ci);

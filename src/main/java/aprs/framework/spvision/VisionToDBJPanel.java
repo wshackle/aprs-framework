@@ -1543,14 +1543,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (null != dpu) {
             return dpu.queryDatabase().thenCompose(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
-        return XFuture.completedFuture(null);
+        return XFuture.completedFutureWithName("queryDatabase.null==dpu",null);
     }
 
     private XFuture<Void> startQueryDatabaseNew() {
         if (null != dpu) {
             return dpu.queryDatabaseNew().thenCompose(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
-        return XFuture.completedFuture(null);
+        return XFuture.completedFutureWithName("startQueryDatabaseNew.null==dpu",null);
     }
 
     private void jButtonAddItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddItemActionPerformed

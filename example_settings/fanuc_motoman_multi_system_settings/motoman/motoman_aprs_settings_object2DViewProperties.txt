@@ -5,7 +5,7 @@ autoscale=false
 connected=true
 datafile=motoman_shared_table_objects.csv
 displayAxis=NEG_X_NEG_Y
-items=sku_part_large_gear,-0.09,666.44,191.9,1.0,P,sku_part_large_gear,-0.09,668.98,84.13,1.0,P,sku_part_large_gear,-0.05,723.18,-263.72,1.0,P,sku_part_large_gear,0.0,724.53,-371.19,1.0,P,sku_part_small_gear,0.0,749.78,99.56,1.0,P,sku_part_small_gear,0.0,748.77,177.58,1.0,P,sku_part_small_gear,0.0,758.02,-130.46,1.0,P,sku_part_small_gear,0.0,757.12,-51.18,1.0,P,sku_small_gear_vessel,0.0,554.9,-54.17,0.97,PT,sku_large_gear_vessel,0.0,723.79,-314.56,0.94,PT,sku_large_gear_vessel,0.0,540.74,130.9,0.79,PT,sku_kit_s2l2_vessel,-0.01,694.66,135.17,0.82,KT,sku_kit_s2l2_vessel,-0.03,702.57,-91.74,0.73,KT,
+items=sku_part_large_gear,-0.06,725.26,-370.4,1.0,P,sku_part_large_gear,-0.05,667.34,84.87,1.0,P,sku_part_large_gear,-0.05,666.67,192.88,1.0,P,sku_part_large_gear,-0.05,723.01,-262.62,1.0,P,sku_part_small_gear,0.0,526.65,-81.77,1.0,P,sku_part_small_gear,0.0,581.56,-82.42,1.0,P,sku_part_small_gear,0.0,748.39,178.35,0.99,P,sku_part_small_gear,0.0,750.29,100.58,0.98,P,sku_small_gear_vessel,0.0,554.89,-53.67,0.97,PT,sku_large_gear_vessel,0.0,723.89,-313.94,0.97,PT,sku_large_gear_vessel,0.0,540.62,131.16,0.8,PT,sku_kit_s2l2_vessel,-0.01,694.75,135.87,0.8,KT,sku_kit_s2l2_vessel,-0.02,702.61,-91.11,0.76,KT,
 
 reverseFlag=false
 reverse_datafile=end_locations_motoman_shared_table_objects.csv

@@ -39,8 +39,8 @@ import rcs.posemath.PM_CARTESIAN;
  * This is a general holder for anything that might have a position associated
  * with it that comes directly or indirectly from the vision system including
  * parts, kit trays, parts trays, slots in trays, etc.
- * 
- * 
+ *
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 //TODO-zeid
@@ -77,13 +77,12 @@ public class DetectedItem extends PM_CARTESIAN {
     public int kitTrayNum;
     public String slotForSkuName;
     public Color labelColor = Color.BLACK;
-    
-    
+
     public DetectedItem(String name) {
         this.name = name;
         this.origName = name;
     }
-    
+
     public DetectedItem(String name, double rotation, double x, double y) {
         this(name);
         this.rotation = rotation;
@@ -93,12 +92,32 @@ public class DetectedItem extends PM_CARTESIAN {
         this.y = y;
     }
 
+    public void normalizeRotation() {
+        rotation = rotation % (2.0 * Math.PI);
+        switch (type) {
+            case "PT":
+                // FIXME: Determine which parts are symetric.
+                if (rotation < -Math.PI/2.0) {
+                    rotation += Math.PI;
+                } else if (rotation > Math.PI/2.0) {
+                    rotation -= Math.PI;
+                }
+                break;
+
+            default:
+                break;
+        }
+//        if(Math.abs(rotation) > Math.PI/2.0) {
+//            System.out.println("this = " + this);
+//        }
+    }
+
     public DetectedItem(String name, double rotation, double x, double y, double score, String type) {
-        this(name,rotation,x,y);
+        this(name, rotation, x, y);
         this.score = score;
         this.type = type;
     }
-    
+
     public DetectedItem(String name, PoseType pose, int visioncycle) {
         this.origName = name;
         this.name = name;
@@ -125,17 +144,17 @@ public class DetectedItem extends PM_CARTESIAN {
         }
         this.visioncycle = visioncycle;
     }
-    
+
     public double dist(DetectedItem other) {
-       return dist(other.x,other.y);
+        return dist(other.x, other.y);
     }
 
     public double dist(double otherx, double othery) {
-        double dx = x-otherx;
-        double dy = y-othery;
-        return Math.sqrt(dx*dx+dy*dy);
+        double dx = x - otherx;
+        double dy = y - othery;
+        return Math.sqrt(dx * dx + dy * dy);
     }
-    
+
     public PoseType toCrclPose() {
         return pose(point(x, y, z), vector(vxi, vxj, vxk), vector(vzi, vzj, vzk));
     }
