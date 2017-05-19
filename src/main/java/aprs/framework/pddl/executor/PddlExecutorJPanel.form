@@ -232,7 +232,7 @@
             <Component class="javax.swing.JTable" name="jTableOptions">
               <Properties>
                 <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                  <Table columnCount="2" rowCount="23">
+                  <Table columnCount="2" rowCount="24">
                     <Column editable="false" title="Name" type="java.lang.String">
                       <Data value="rpy"/>
                       <Data value="lookForXYZ"/>
@@ -254,6 +254,7 @@
                       <Data value="jointAccel"/>
                       <Data value="takeSnapshots"/>
                       <Data value="doInspectKit"/>
+                      <Data value="kitInspectDistThreshold"/>
                       <Data value="requireNewPoses"/>
                       <Data value="visionCycleNewDiffThreshold"/>
                       <Data value="skipMissingParts"/>
@@ -279,6 +280,7 @@
                       <Data value="100.0"/>
                       <Data value="false"/>
                       <Data value="false"/>
+                      <Data value="20.0"/>
                       <Data value="false"/>
                       <Data value="3"/>
                       <Data value="false"/>

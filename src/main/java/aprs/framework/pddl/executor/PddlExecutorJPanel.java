@@ -559,6 +559,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 {"jointAccel", "100.0"},
                 {"takeSnapshots", "false"},
                 {"doInspectKit", "false"},
+                {"kitInspectDistThreshold", "20.0"},
                 {"requireNewPoses", "false"},
                 {"visionCycleNewDiffThreshold", "3"},
                 {"skipMissingParts", "false"}

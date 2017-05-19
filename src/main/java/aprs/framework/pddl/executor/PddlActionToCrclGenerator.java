@@ -1248,6 +1248,26 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return nbOfOccupiedSlots;
     }
 
+        private double kitInspectDistThreshold = 20.0;
+
+    /**
+     * Get the value of kitInspectDistThreshold
+     *
+     * @return the value of kitInspectDistThreshold
+     */
+    public double getKitInspectDistThreshold() {
+        return kitInspectDistThreshold;
+    }
+
+    /**
+     * Set the value of kitInspectDistThreshold
+     *
+     * @param kitInspectDistThreshold new value of kitInspectDistThreshold
+     */
+    public void setKitInspectDistThreshold(double kitInspectDistThreshold) {
+        this.kitInspectDistThreshold = kitInspectDistThreshold;
+    }
+
     private Boolean checkPartInSlot(String partName, Slot slot) throws SQLException {
         Boolean isPartInSlot = false;
         PoseType posePart = getPose(partName);
@@ -1261,7 +1281,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         System.out.print("--------- Distance = " + distance);
         // compare finalres with a specified tolerance value of 6.5 mm
         double threshold = 20;
-        if (distance < threshold) {
+        if (distance < kitInspectDistThreshold) {
             isPartInSlot = true;
             // System.out.println("----- Part " + partName + " : (" + partX + "," + partY + ")");
             // System.out.println("----- Slot " + slot.getSlotName() + " : (" + slotX + "," + slotY + ")");
@@ -1824,6 +1844,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 numberFormatException.printStackTrace();
             }
         }
+               
+        String kitInspectDistThresholdString = options.get("kitInspectDistThreshold");
+        if (null != kitInspectDistThresholdString && kitInspectDistThresholdString.length() > 0) {
+            try {
+                kitInspectDistThreshold = Double.parseDouble(kitInspectDistThresholdString);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
+        
         String slowTransSpeedString = options.get("slowTransSpeed");
         if (null != slowTransSpeedString && slowTransSpeedString.length() > 0) {
             try {
