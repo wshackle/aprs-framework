@@ -84,14 +84,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
         try {
             this.object2DJPanel1.takeSnapshot(f, pose, label);
-            File csvDir = new File(f.getParentFile(),"csv");
+            File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
-            saveFile(new File(csvDir,f.getName()+".csv"));
-            File xmlDir = new File(f.getParentFile(),"crclStatusXml");
+            saveFile(new File(csvDir, f.getName() + ".csv"));
+            File xmlDir = new File(f.getParentFile(), "crclStatusXml");
             xmlDir.mkdirs();
             String xmlString = CRCLSocket.getUtilSocket().statusToPrettyString(aprsJFrame.getCurrentStatus(), false);
-            File xmlFile =  new File(xmlDir,f.getName()+"-status.xml");
-            try(FileWriter fw = new FileWriter(xmlFile)) {
+            File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
+            try (FileWriter fw = new FileWriter(xmlFile)) {
                 fw.write(xmlString);
             }
         } catch (JAXBException ex) {
@@ -118,9 +118,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public void setItems(List<DetectedItem> items) {
-        setItems(items,true);
+        setItems(items, true);
     }
-    
+
     public void setItems(List<DetectedItem> items, boolean publish) {
         try {
             settingItems = true;
@@ -951,19 +951,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void saveFile(File f) throws IOException {
 
-        saveFile(f,getItems());
-        
+        saveFile(f, getItems());
+
     }
-    
-    private void saveFile(File f,List<DetectedItem> items) throws IOException {
+
+    private void saveFile(File f, List<DetectedItem> items) throws IOException {
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             pw.println("name,rotation,x,y,score,type");
-            for (DetectedItem item :items) {
+            for (DetectedItem item : items) {
                 pw.println(item.name + "," + item.rotation + "," + item.x + "," + item.y + "," + item.score + "," + item.type);
             }
         }
-        
+
     }
 
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
@@ -1076,18 +1076,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
     }//GEN-LAST:event_jCheckBoxAutoscaleActionPerformed
 
-    
     PmCartesian getMinOffset() {
         PmCartesian minDiffCart = new PmCartesian();
         PointType current = aprsJFrame.getCurrentPosePoint();
         double min_diff = Double.POSITIVE_INFINITY;
-        if(null != current) {
+        if (null != current) {
             PmCartesian currentCart = CRCLPosemath.toPmCartesian(current);
-            for(DetectedItem item : this.getItems()) {
+            for (DetectedItem item : this.getItems()) {
                 PmCartesian diffCart = item.subtract(currentCart);
                 diffCart.z = 0;
                 double diffMag = diffCart.mag();
-                if(min_diff > diffMag) {
+                if (min_diff > diffMag) {
                     min_diff = diffMag;
                     minDiffCart = diffCart;
                 }
@@ -1095,12 +1094,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         return minDiffCart;
     }
-    
+
     private void jButtonOffsetAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOffsetAllActionPerformed
         offsetAll();
     }//GEN-LAST:event_jButtonOffsetAllActionPerformed
 
-    private void offsetAll()  {
+    private void offsetAll() {
         try {
             PmCartesian minOffset = getMinOffset();
             String offsetString = JOptionPane.showInputDialog("Offset to apply to all items:", minOffset.toString());
@@ -1108,10 +1107,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 String fa[] = offsetString.split("[{} ,]+");
                 double x = 0;
                 double y = 0;
-                for(String s : fa) {
-                    if(s.startsWith("x=")) {
+                for (String s : fa) {
+                    if (s.startsWith("x=")) {
                         x = Double.parseDouble(s.substring(2));
-                    } else if(s.startsWith("y=")) {
+                    } else if (s.startsWith("y=")) {
                         y = Double.parseDouble(s.substring(2));
                     }
                 }
@@ -1434,12 +1433,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile boolean lastIsHoldingObjectExpected = false;
     private volatile int captured_item_index = -1;
 
-
     public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
-        File csvDir = new File(f.getParentFile(),"csv");
+        File csvDir = new File(f.getParentFile(), "csv");
         csvDir.mkdirs();
-        saveFile(new File(csvDir,f.getName()+".csv"),itemsToPaint);
+        saveFile(new File(csvDir, f.getName() + ".csv"), itemsToPaint);
     }
 
     @Override
@@ -1453,36 +1451,50 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setCurrentX(currentX);
         object2DJPanel1.setCurrentY(currentY);
         List<DetectedItem> l = getItems();
+        double min_dist = Double.POSITIVE_INFINITY;
+        int min_dist_index = -1;
+        for (int i = 0; i < l.size(); i++) {
+            if (i == captured_item_index) {
+                continue;
+            }
+            DetectedItem item = l.get(i);
+            if (!item.type.equals("P")) {
+                continue;
+            }
+            double dist = item.dist(currentX, currentY);
+            if (dist < min_dist) {
+                min_dist_index = i;
+                min_dist = dist;
+            }
+        }
+        if (min_dist < 25.0
+                && lastIsHoldingObjectExpected && !isHoldingObjectExpected
+                && min_dist_index != captured_item_index) {
+            DetectedItem captured_item = (captured_item_index>=0 && captured_item_index < l.size())?l.get(captured_item_index):null;
+            String errString = 
+                    "Dropping item on to another item min_dist=" + min_dist 
+                    + ", min_dist_index=" + min_dist_index
+                    + ", captured_item_index=" + captured_item_index
+                    +", bottom item at min_dist_index ="+l.get(min_dist_index)
+                     + ", captured_item  =" + captured_item;
+            this.aprsJFrame.setTitleErrorString(errString);
+            this.aprsJFrame.pause();
+        }
         if (this.jCheckBoxSimulated.isSelected()) {
-
             if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
-
-                double min_dist = Double.POSITIVE_INFINITY;
-                int min_dist_index = -1;
-                for (int i = 0; i < l.size(); i++) {
-                    DetectedItem item = l.get(i);
-                    if (!item.type.equals("P")) {
-                        continue;
-                    }
-                    double dist = item.dist(currentX, currentY);
-                    if (dist < min_dist) {
-                        min_dist_index = i;
-                        min_dist = dist;
-                    }
-                }
                 if (min_dist < 5.0 && min_dist_index >= 0) {
                     captured_item_index = min_dist_index;
                     if (true) {
                         System.out.println("Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
                         try {
-                            takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "capture_" + captured_item_index + "_at_"+currentX+"_"+currentY+"_", ".PNG"), null, "");
+                            takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
                         } catch (IOException ex) {
                             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 } else {
                     try {
-                        takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "failed_to_capture_part_at_"+currentX+"_"+currentY+"_", ".PNG"), null, "");
+                        takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -1494,7 +1506,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (true) {
                     System.out.println("Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
                     try {
-                        takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "_dropping_" + captured_item_index + "_at_"+currentX+"_"+currentY+"_", ".PNG"), null, "");
+                        takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "_dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -1518,8 +1530,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 item.x = currentX;
                 item.y = currentY;
                 l.set(captured_item_index, item);
-                setItems(l,(isHoldingObjectExpected != lastIsHoldingObjectExpected));
-            } else if(isHoldingObjectExpected != lastIsHoldingObjectExpected) {
+                setItems(l, (isHoldingObjectExpected != lastIsHoldingObjectExpected));
+            } else if (isHoldingObjectExpected != lastIsHoldingObjectExpected) {
                 setItems(l);
             }
         }
