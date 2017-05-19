@@ -22,6 +22,7 @@
  */
 package aprs.framework.logdisplay;
 
+import aprs.framework.Utils;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Toolkit;
@@ -128,7 +129,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
 
     private void jButtonToExternalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonToExternalActionPerformed
         try {
-            File f = File.createTempFile("log", ".txt");
+            File f = Utils.createTempFile("log", ".txt");
             try (FileWriter fw = new FileWriter(f)) {
                 fw.write(jTextArea1.getText());
             }

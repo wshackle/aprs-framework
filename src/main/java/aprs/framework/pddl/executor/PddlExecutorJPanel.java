@@ -3158,7 +3158,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             this.abortProgram();
             try {
                 if (pddlActionToCrclGenerator.isTakeSnapshots()) {
-                    takeSimViewSnapshot(File.createTempFile(pddlActionToCrclGenerator.getRunPrefix() + "-safe-abort-", ".PNG"), null, "");
+                    takeSimViewSnapshot(Utils.createTempFile(pddlActionToCrclGenerator.getRunPrefix() + "-safe-abort-", ".PNG"), null, "");
                 }
             } catch (IOException iOException) {
                 iOException.printStackTrace();

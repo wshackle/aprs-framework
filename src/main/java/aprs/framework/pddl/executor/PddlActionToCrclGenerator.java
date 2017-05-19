@@ -810,8 +810,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             final String filename = getRunPrefix() + title;
             addMarkerCommand(out, title, x -> {
                 try {
-                    takeSimViewSnapshot(File.createTempFile(filename, ".PNG"), pose, label);
-                    takeDatabaseViewSnapshot(File.createTempFile(filename + "_new_database_items", ".PNG"));
+                    takeSimViewSnapshot(Utils.createTempFile(filename, ".PNG"), pose, label);
+                    takeDatabaseViewSnapshot(Utils.createTempFile(filename + "_new_database_items", ".PNG"));
                 } catch (IOException ex) {
                     Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -894,8 +894,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         try {
             final String filename = getRunPrefix() + "-inspect-kit-";
-            takeSimViewSnapshot(File.createTempFile(filename, ".PNG"), null, "-inspect-kit-");
-            takeDatabaseViewSnapshot(File.createTempFile(filename + "_new_database_items", ".PNG"));
+            takeSimViewSnapshot(Utils.createTempFile(filename, ".PNG"), null, "-inspect-kit-");
+            takeDatabaseViewSnapshot(Utils.createTempFile(filename + "_new_database_items", ".PNG"));
         } catch (IOException iOException) {
             Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, iOException);
         }
@@ -1354,7 +1354,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (takeSnapshots) {
             try {
                 if (pose != null || !skipMissingParts) {
-                    takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-take-part-" + partName + "-", ".PNG"), pose, partName);
+                    takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "-take-part-" + partName + "-", ".PNG"), pose, partName);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -1366,7 +1366,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 if (takeSnapshots) {
                     try {
                         if (pose != null || !skipMissingParts) {
-                            takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-skipping-take-part-" + partName + "-", ".PNG"), pose, partName);
+                            takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "-skipping-take-part-" + partName + "-", ".PNG"), pose, partName);
                         }
                     } catch (IOException ex) {
                         Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -1460,7 +1460,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
             try {
-                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-take-part-recovery-" + partName + "-", ".PNG"), pose, partName);
+                takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "-take-part-recovery-" + partName + "-", ".PNG"), pose, partName);
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -2389,7 +2389,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         PoseType pose = getPose(slotName);
         if (skipMissingParts && lastTakenPart == null) {
             try {
-                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
+                takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class
                         .getName()).log(Level.SEVERE, null, ex);
@@ -2400,7 +2400,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         if (takeSnapshots) {
             try {
-                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
+                takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class
                         .getName()).log(Level.SEVERE, null, ex);
@@ -2472,7 +2472,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         if (takeSnapshots) {
             try {
-                takeSimViewSnapshot(File.createTempFile(getRunPrefix() + "-place-part-recovery-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
+                takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "-place-part-recovery-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
 
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class

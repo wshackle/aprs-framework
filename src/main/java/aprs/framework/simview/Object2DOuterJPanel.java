@@ -1487,14 +1487,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     if (true) {
                         System.out.println("Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
                         try {
-                            takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
+                            takeSnapshot(Utils.createTempFile(aprsJFrame.getRunName() + "capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
                         } catch (IOException ex) {
                             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 } else {
                     try {
-                        takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
+                        takeSnapshot(Utils.createTempFile(aprsJFrame.getRunName() + "failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -1506,14 +1506,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (true) {
                     System.out.println("Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
                     try {
-                        takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "_dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
+                        takeSnapshot(Utils.createTempFile(aprsJFrame.getRunName() + "_dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
                 if (captured_item_index < 0) {
                     try {
-                        takeSnapshot(File.createTempFile(aprsJFrame.getRunName() + "failed_to_drop_part_", ".PNG"), null, "");
+                        takeSnapshot(Utils.createTempFile(aprsJFrame.getRunName() + "failed_to_drop_part_", ".PNG"), null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }

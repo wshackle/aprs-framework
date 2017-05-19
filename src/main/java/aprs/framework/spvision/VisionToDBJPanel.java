@@ -1720,7 +1720,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public void toCsv(String name, JTable table) throws IOException {
-        File f = File.createTempFile(name, ".csv");
+        File f = Utils.createTempFile(name, ".csv");
         saveTableToFile(f, table);
         Desktop.getDesktop().open(f);
     }
@@ -1760,7 +1760,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void showDatabaseTableImage() {
         try {
-            File f = File.createTempFile("newDataBaseItems_", ".png");
+            File f = Utils.createTempFile("newDataBaseItems_", ".png");
             takeSnapshot(f);
             Desktop.getDesktop().open(f);
         } catch (IOException ex) {

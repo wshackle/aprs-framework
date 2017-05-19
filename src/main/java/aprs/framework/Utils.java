@@ -86,6 +86,41 @@ public class Utils {
 
     }
 
+    
+    private static class LogFileDirGetter {
+        
+        private static File logFileDir = createLogFileDir();
+        
+        private static File createLogFileDir() {
+            try {
+                File tmpTest = File.createTempFile("temp_test", "txt");
+                File logFileDir = new File(tmpTest.getParentFile(), "aprs_logs_"+System.currentTimeMillis()+"_dir");
+                logFileDir.mkdirs();
+                tmpTest.delete();
+                return logFileDir;
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+            return null;
+        }
+        
+        public File getLogFileDir() {
+            return logFileDir;
+        }
+    }
+    
+    public static File getlogFileDir() {
+        return new LogFileDirGetter().getLogFileDir();
+    }
+    
+    public static File createTempFile(String prefix,String suffix) throws IOException {
+        return File.createTempFile(prefix, suffix, getlogFileDir());
+    }
+    
+    public static File createTempFile(String prefix,String suffix,File dir) throws IOException {
+        return File.createTempFile(prefix, suffix, dir);
+    }
+    
     public static SwingFuture<Void> runOnDispatchThreadWithCatch(final RunnableWithThrow r) {
         SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThreadWithCatch");
         try {
