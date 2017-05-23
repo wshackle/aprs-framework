@@ -27,9 +27,13 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,6 +50,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
 /**
  *
@@ -292,4 +299,31 @@ public class Utils {
         }
     }
 
+    public static  void saveJTable(File f, JTable jtable) throws IOException {
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT)) {
+            TableModel tm = jtable.getModel();
+            List<String> colNameList = new ArrayList<>();
+            for (int i = 0; i < tm.getColumnCount(); i++) {
+                colNameList.add(tm.getColumnName(i));
+            }
+            printer.printRecord(colNameList);
+            for (int i = 0; i < tm.getRowCount(); i++) {
+                List<Object> l = new ArrayList<>();
+                for (int j = 0; j < tm.getColumnCount(); j++) {
+                    Object o = tm.getValueAt(i, j);
+                    if (o instanceof File) {
+                        Path rel = f.getParentFile().toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
+                        if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
+                            l.add(rel);
+                        } else {
+                            l.add(o);
+                        }
+                    } else {
+                        l.add(o);
+                    }
+                }
+                printer.printRecord(l);
+            }
+        }
+    }
 }

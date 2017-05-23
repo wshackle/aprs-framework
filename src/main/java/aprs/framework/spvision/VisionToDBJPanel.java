@@ -1782,6 +1782,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 System.err.println("takeSnapshot(" + f + ") called when table is empty");
                 return;
             }
+            File dbLogDir = new File(f.getParentFile(),"db_log_dir");
+            dbLogDir.mkdirs();
+            File csvFile = Utils.createTempFile(f.getName()+"_db", ".csv", dbLogDir);
+            Utils.saveJTable(csvFile, jTableFromDatabase);
             aprsJFrame.takeSimViewSnapshot(f, list);
         } catch (IOException ex) {
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);

@@ -30,6 +30,7 @@ import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupJPanel;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbType;
+import aprs.framework.database.DetectedItem;
 import aprs.framework.database.QuerySet;
 import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import crcl.base.ActuateJointType;
@@ -81,13 +82,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.text.BadLocationException;
 
 import java.util.concurrent.atomic.AtomicLong;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -787,6 +788,28 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * specified file, optionally highlighting a pose with a label.
      *
      * @param f file to save snapshot image to
+     * @param itemsToPaint items to paint in the snapshot image
+     * @throws IOException if writing the file fails
+     */
+    public void takeSimViewSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
+        if (null != aprsJFrame) {
+            aprsJFrame.takeSimViewSnapshot(f, itemsToPaint);
+        }
+    }
+
+    private List<DetectedItem> poseCacheToDetectedItemList() {
+        List<DetectedItem> l = new ArrayList<>();
+        for (Entry<String, PoseType> entry : poseCache.entrySet()) {
+            l.add(new DetectedItem(entry.getKey(), entry.getValue(), 0));
+        }
+        return Collections.unmodifiableList(l);
+    }
+
+    /**
+     * Take a snapshot of the view of objects positions and save it in the
+     * specified file, optionally highlighting a pose with a label.
+     *
+     * @param f file to save snapshot image to
      * @throws IOException if writing the file fails
      */
     public void takeDatabaseViewSnapshot(File f) throws IOException {
@@ -804,18 +827,25 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param pose optional pose to highlight in snapshot or null
      * @param label optional label for highlighted pose or null.
      */
-    public void addTakeSimViewSnapshot(List<MiddleCommandType> out,
+    public void addTakeSnapshots(List<MiddleCommandType> out,
             String title, final PoseType pose, String label) {
         if (takeSnapshots) {
-            final String filename = getRunPrefix() + title;
             addMarkerCommand(out, title, x -> {
-                try {
-                    takeSimViewSnapshot(Utils.createTempFile(filename, ".PNG"), pose, label);
-                    takeDatabaseViewSnapshot(Utils.createTempFile(filename + "_new_database_items", ".PNG"));
-                } catch (IOException ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                takeSnapshots(title, pose, label);
             });
+        }
+    }
+
+    public void takeSnapshots(String title, PoseType pose, String label) {
+        if (takeSnapshots) {
+            try {
+                final String filename = getRunPrefix() + title;
+                takeSimViewSnapshot(Utils.createTempFile(filename, ".PNG"), pose, label);
+                takeDatabaseViewSnapshot(Utils.createTempFile(filename + "_new_database_items", ".PNG"));
+                takeSimViewSnapshot(Utils.createTempFile(filename + "_pose_cache", ".PNG"), poseCacheToDetectedItemList());
+            } catch (IOException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -892,14 +922,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (action.getArgs().length < 2) {
             throw new IllegalArgumentException("action = " + action + " needs at least two arguments: kitSku inspectionID");
         }
-        try {
-            final String filename = getRunPrefix() + "-inspect-kit-";
-            takeSimViewSnapshot(Utils.createTempFile(filename, ".PNG"), null, "-inspect-kit-");
-            takeDatabaseViewSnapshot(Utils.createTempFile(filename + "_new_database_items", ".PNG"));
-        } catch (IOException iOException) {
-            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, iOException);
-        }
-//        addTakeSimViewSnapshot(out, "-inspect-kit-", null, "");
+        takeSnapshots("-inspect-kit-", null, "");
+
+//        addTakeSnapshots(out, "-inspect-kit-", null, "");
         String kitSku = action.getArgs()[0];
         String inspectionID = action.getArgs()[1];
         MessageType msg = new MessageType();
@@ -1248,7 +1273,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return nbOfOccupiedSlots;
     }
 
-        private double kitInspectDistThreshold = 20.0;
+    private double kitInspectDistThreshold = 20.0;
 
     /**
      * Get the value of kitInspectDistThreshold
@@ -1352,24 +1377,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
-            try {
-                if (pose != null || !skipMissingParts) {
-                    takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "-take-part-" + partName + "-", ".PNG"), pose, partName);
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            takeSnapshots("-take-part-" + partName + "-", pose, partName);
         }
         if (null == pose) {
             if (skipMissingParts) {
                 lastTakenPart = null;
                 if (takeSnapshots) {
-                    try {
-                        if (pose != null || !skipMissingParts) {
-                            takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "-skipping-take-part-" + partName + "-", ".PNG"), pose, partName);
-                        }
-                    } catch (IOException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    if (pose != null || !skipMissingParts) {
+                        takeSnapshots("-skipping-take-part-" + partName + "-", pose, partName);
                     }
                 }
                 return;
@@ -1459,11 +1474,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
-            try {
-                takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "-take-part-recovery-" + partName + "-", ".PNG"), pose, partName);
-            } catch (IOException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            takeSnapshots("-take-part-recovery-" + partName + "-", pose, partName);
         }
         if (null == pose) {
             if (skipMissingParts) {
@@ -1844,7 +1855,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 numberFormatException.printStackTrace();
             }
         }
-               
+
         String kitInspectDistThresholdString = options.get("kitInspectDistThreshold");
         if (null != kitInspectDistThresholdString && kitInspectDistThresholdString.length() > 0) {
             try {
@@ -1853,7 +1864,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 numberFormatException.printStackTrace();
             }
         }
-        
+
         String slowTransSpeedString = options.get("slowTransSpeed");
         if (null != slowTransSpeedString && slowTransSpeedString.length() > 0) {
             try {
@@ -2215,7 +2226,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         }
 
-        addTakeSimViewSnapshot(out, "-look-for-parts-", null, "");
+        addTakeSnapshots(out, "-look-for-parts-", null, "");
         addMarkerCommand(out, "clear pose cache", x -> this.clearPoseCache());
         if (action.getArgs().length == 1) {
             if (action.getArgs()[0].startsWith("1")) {
@@ -2388,23 +2399,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String slotName = action.getArgs()[placePartSlotArgIndex];
         PoseType pose = getPose(slotName);
         if (skipMissingParts && lastTakenPart == null) {
-            try {
-                takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
-            } catch (IOException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class
-                        .getName()).log(Level.SEVERE, null, ex);
-            }
+            takeSnapshots("skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", pose, slotName);
             return;
         }
 
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         if (takeSnapshots) {
-            try {
-                takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
-            } catch (IOException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class
-                        .getName()).log(Level.SEVERE, null, ex);
-            }
+            takeSnapshots("-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", pose, slotName);
         }
         if (pose == null) {
             if (skipMissingParts && null != lastTakenPart) {
@@ -2469,14 +2470,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String slotName = action.getArgs()[0];
         PoseType pose = slot.getSlotPose();
 
-        final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
+        final String msg = "placed part (recovery) in " + slotName;
         if (takeSnapshots) {
-            try {
-                takeSimViewSnapshot(Utils.createTempFile(getRunPrefix() + "-place-part-recovery-" + getLastTakenPart() + "-in-" + slotName + "-", ".PNG"), pose, slotName);
-
-            } catch (IOException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class
-                        .getName()).log(Level.SEVERE, null, ex);
+            if (takeSnapshots) {
+                takeSnapshots("-place-part-recovery-in-" + slotName + "-", pose, slotName);
             }
         }
         if (pose == null) {

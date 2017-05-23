@@ -1440,6 +1440,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         saveFile(new File(csvDir, f.getName() + ".csv"), itemsToPaint);
     }
 
+    private volatile long lastIsHoldingObjectExpectedTime = -1;
+    private volatile long lastNotIsHoldingObjectExpectedTime = -1;
+    
+    
     @Override
     public void handlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
         PointType ptIn = pose.getPoint();
@@ -1467,10 +1471,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 min_dist = dist;
             }
         }
+        long time  = System.currentTimeMillis();
         if (min_dist < 25.0
                 && lastIsHoldingObjectExpected && !isHoldingObjectExpected
                 && min_dist_index != captured_item_index) {
             DetectedItem captured_item = (captured_item_index>=0 && captured_item_index < l.size())?l.get(captured_item_index):null;
+            System.out.println("captured_item = " + captured_item);
+            System.out.println("(time-lastIsHoldingObjectExpectedTime) = " + (time-lastIsHoldingObjectExpectedTime));
+            System.out.println("(time-lastNotIsHoldingObjectExpectedTime) = " + (time-lastNotIsHoldingObjectExpectedTime));
             String errString = 
                     "Dropping item on to another item min_dist=" + min_dist 
                     + ", min_dist_index=" + min_dist_index
@@ -1480,6 +1488,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             this.aprsJFrame.setTitleErrorString(errString);
             this.aprsJFrame.pause();
         }
+        if(isHoldingObjectExpected) {
+            lastIsHoldingObjectExpectedTime = time;
+        } else {
+            lastNotIsHoldingObjectExpectedTime = time;
+        }
+        
         if (this.jCheckBoxSimulated.isSelected()) {
             if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
                 if (min_dist < 5.0 && min_dist_index >= 0) {
