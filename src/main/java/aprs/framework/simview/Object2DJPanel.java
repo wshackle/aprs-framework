@@ -93,7 +93,7 @@ public class Object2DJPanel extends JPanel {
             new DetectedItem("sku_medium_gear_vessel", 0.00, 569.17, -161.29, 0.67, "PT"),
             new DetectedItem("sku_kit_m2l1_vessel", -1.57, 579.86, 170.14, 0.96, "KT")
     );
-    private List<DetectedItem> items = EXAMPLES_ITEMS_LIST;
+    private volatile List<DetectedItem>  items = EXAMPLES_ITEMS_LIST;
 
     public void setItems(List<DetectedItem> items) {
         this.items = items;

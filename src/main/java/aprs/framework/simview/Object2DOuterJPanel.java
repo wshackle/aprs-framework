@@ -99,18 +99,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
-    public void refresh() {
+    public void refresh(boolean loadFile) {
         if (jCheckBoxSimulated.isSelected()) {
-            String fname = jTextFieldFilename.getText();
-            File f = new File(fname);
-            if (f.exists() && f.canRead()) {
-                try {
-                    loadFile(f);
-                } catch (IOException ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            boolean fileLoaded = false;
+            if (loadFile) {
+                String fname = jTextFieldFilename.getText();
+                File f = new File(fname);
+                if (f.exists() && f.canRead()) {
+                    try {
+                        loadFile(f);
+                         fileLoaded = true;
+                    } catch (IOException ex) {
+                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
             }
-            if (null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
+            if (!fileLoaded && null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
                 this.setItems(object2DJPanel1.getItems());
                 visionSocketServer.publishList(this.getItems());
             }
@@ -122,18 +126,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public void setItems(List<DetectedItem> items, boolean publish) {
-        try {
-            settingItems = true;
-            if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+        settingItems = true;
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+            setItemsInternal(items);
+            settingItems = false;
+        } else {
+            javax.swing.SwingUtilities.invokeLater(() -> {
                 setItemsInternal(items);
-            } else {
-                javax.swing.SwingUtilities.invokeLater(() -> setItemsInternal(items));
-            }
-            if (publish && null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
+                settingItems = false;
+            });
+        }
+        if (publish) {
+            if (null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
                 visionSocketServer.publishList(items);
             }
-        } finally {
-            settingItems = false;
         }
     }
 
@@ -1442,8 +1448,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private volatile long lastIsHoldingObjectExpectedTime = -1;
     private volatile long lastNotIsHoldingObjectExpectedTime = -1;
-    
-    
+
     @Override
     public void handlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
         PointType ptIn = pose.getPoint();
@@ -1471,29 +1476,29 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 min_dist = dist;
             }
         }
-        long time  = System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         if (min_dist < 25.0
                 && lastIsHoldingObjectExpected && !isHoldingObjectExpected
                 && min_dist_index != captured_item_index) {
-            DetectedItem captured_item = (captured_item_index>=0 && captured_item_index < l.size())?l.get(captured_item_index):null;
+            DetectedItem captured_item = (captured_item_index >= 0 && captured_item_index < l.size()) ? l.get(captured_item_index) : null;
             System.out.println("captured_item = " + captured_item);
-            System.out.println("(time-lastIsHoldingObjectExpectedTime) = " + (time-lastIsHoldingObjectExpectedTime));
-            System.out.println("(time-lastNotIsHoldingObjectExpectedTime) = " + (time-lastNotIsHoldingObjectExpectedTime));
-            String errString = 
-                    "Dropping item on to another item min_dist=" + min_dist 
+            System.out.println("(time-lastIsHoldingObjectExpectedTime) = " + (time - lastIsHoldingObjectExpectedTime));
+            System.out.println("(time-lastNotIsHoldingObjectExpectedTime) = " + (time - lastNotIsHoldingObjectExpectedTime));
+            String errString
+                    = "Dropping item on to another item min_dist=" + min_dist
                     + ", min_dist_index=" + min_dist_index
                     + ", captured_item_index=" + captured_item_index
-                    +", bottom item at min_dist_index ="+l.get(min_dist_index)
-                     + ", captured_item  =" + captured_item;
+                    + ", bottom item at min_dist_index =" + l.get(min_dist_index)
+                    + ", captured_item  =" + captured_item;
             this.aprsJFrame.setTitleErrorString(errString);
             this.aprsJFrame.pause();
         }
-        if(isHoldingObjectExpected) {
+        if (isHoldingObjectExpected) {
             lastIsHoldingObjectExpectedTime = time;
         } else {
             lastNotIsHoldingObjectExpectedTime = time;
         }
-        
+
         if (this.jCheckBoxSimulated.isSelected()) {
             if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
                 if (min_dist < 5.0 && min_dist_index >= 0) {

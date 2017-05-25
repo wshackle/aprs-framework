@@ -43,8 +43,8 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         initComponents();
     }
 
-    public void refresh() {
-        object2DOuterJPanel1.refresh();
+    public void refresh(boolean loadFile) {
+        object2DOuterJPanel1.refresh(loadFile);
     }
     
     

@@ -34,8 +34,12 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -74,7 +78,6 @@ public class Utils {
             super(name);
         }
 
-        
         @Override
         public T get() throws InterruptedException, ExecutionException {
             if (SwingUtilities.isEventDispatchThread()) {
@@ -93,15 +96,14 @@ public class Utils {
 
     }
 
-    
     private static class LogFileDirGetter {
-        
+
         private static File logFileDir = createLogFileDir();
-        
+
         private static File createLogFileDir() {
             try {
                 File tmpTest = File.createTempFile("temp_test", "txt");
-                File logFileDir = new File(tmpTest.getParentFile(), "aprs_logs_"+System.currentTimeMillis()+"_dir");
+                File logFileDir = new File(tmpTest.getParentFile(), "aprs_logs_" + getDateTimeString() + "_dir");
                 logFileDir.mkdirs();
                 tmpTest.delete();
                 return logFileDir;
@@ -110,24 +112,31 @@ public class Utils {
             }
             return null;
         }
-        
+
         public File getLogFileDir() {
             return logFileDir;
         }
     }
-    
+
     public static File getlogFileDir() {
         return new LogFileDirGetter().getLogFileDir();
     }
-    
-    public static File createTempFile(String prefix,String suffix) throws IOException {
+
+    public static File createTempFile(String prefix, String suffix) throws IOException {
         return File.createTempFile(prefix, suffix, getlogFileDir());
     }
-    
-    public static File createTempFile(String prefix,String suffix,File dir) throws IOException {
+
+    public static File createTempFile(String prefix, String suffix, File dir) throws IOException {
         return File.createTempFile(prefix, suffix, dir);
     }
+
+    private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmmss.SSS");
     
+    public static String getDateTimeString() {
+        Date date = new Date();
+        return dateFormat.format(date);
+    }
+
     public static SwingFuture<Void> runOnDispatchThreadWithCatch(final RunnableWithThrow r) {
         SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThreadWithCatch");
         try {
@@ -159,7 +168,7 @@ public class Utils {
     public static SwingFuture<Void> runOnDispatchThread(final Runnable r) {
         return runOnDispatchThread("runOnDispatchThread", r);
     }
-    
+
     public static SwingFuture<Void> runOnDispatchThread(String name, final Runnable r) {
         SwingFuture<Void> ret = new SwingFuture<>(name);
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
@@ -299,7 +308,7 @@ public class Utils {
         }
     }
 
-    public static  void saveJTable(File f, JTable jtable) throws IOException {
+    public static void saveJTable(File f, JTable jtable) throws IOException {
         try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT)) {
             TableModel tm = jtable.getModel();
             List<String> colNameList = new ArrayList<>();
@@ -326,4 +335,16 @@ public class Utils {
             }
         }
     }
+
+//    public static void main(String[] args) {
+//
+//        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+//        //get current date time with Date()
+//        Date date = new Date();
+//        System.out.println(dateFormat.format(date));
+//
+//        //get current date time with Calendar()
+//        Calendar cal = Calendar.getInstance();
+//        System.out.println(dateFormat.format(cal.getTime()));
+//    }
 }

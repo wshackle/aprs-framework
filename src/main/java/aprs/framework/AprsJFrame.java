@@ -1359,6 +1359,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void startPendantClientJInternalFrame() {
         try {
             pendantClientJInternalFrame = new PendantClientJInternalFrame();
+            pendantClientJInternalFrame.setTempLogDir(Utils.getlogFileDir());
             updateSubPropertiesFiles();
             pendantClientJInternalFrame.loadProperties();
 //            pendantClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "object2DViewProperties.txt"));
@@ -2285,7 +2286,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     public void reset() {
         if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.refresh();
+            object2DViewJInternalFrame.refresh(true);
         }
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.refresh();
@@ -2374,7 +2375,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             jCheckBoxMenuItemPause.setSelected(false);
         }
         if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.refresh();
+            object2DViewJInternalFrame.refresh(true);
         }
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.refresh();
@@ -3161,6 +3162,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             return pendantClientJInternalFrame.continueCurrentProgram();
         } else {
             return XFuture.completedFuture(false);
+        }
+    }
+    
+    public boolean isEnableVisionToDatabaseUpdates() {
+        return visionToDbJInternalFrame.isEnableDatabaseUpdates();
+    }
+
+    /**
+     * Set the value of enableDatabaseUpdates
+     *
+     * @param enableDatabaseUpdates new value of enableDatabaseUpdates
+     */
+    public void setEnableVisionToDatabaseUpdates(boolean enableDatabaseUpdates) {
+        visionToDbJInternalFrame.setEnableDatabaseUpdates(enableDatabaseUpdates);
+        if(enableDatabaseUpdates && null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.refresh(false);
         }
     }
 

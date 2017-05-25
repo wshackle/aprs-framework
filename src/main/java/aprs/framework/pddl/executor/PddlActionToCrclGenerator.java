@@ -625,6 +625,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.testTransSpeed = testTransSpeed;
     }
 
+    private double skipLookDwellTime = (5.0);
+
     private double firstLookDwellTime = (5.0);
 
     /**
@@ -855,7 +857,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @return run prefix
      */
     public String getRunPrefix() {
-        return getRunName() + String.format("_%09d_", System.currentTimeMillis()) + String.format("%03d", crclNumber) + "-action-" + String.format("%03d", lastIndex);
+        return getRunName() + Utils.getDateTimeString() + String.format("%03d", crclNumber) + "-action-" + String.format("%03d", lastIndex);
     }
 
     private final AtomicLong commandId = new AtomicLong(100 * (System.currentTimeMillis() % 200));
@@ -1296,6 +1298,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private Boolean checkPartInSlot(String partName, Slot slot) throws SQLException {
         Boolean isPartInSlot = false;
         PoseType posePart = getPose(partName);
+        if (null == posePart) {
+            throw new IllegalStateException("getPose(" + partName + ") returned null");
+        }
         posePart = correctPose(posePart);
         double partX = posePart.getPoint().getX();
         double partY = posePart.getPoint().getY();
@@ -1796,6 +1801,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         }
 
+        String skipLookDwellTimeString = options.get("skipLookDwellTime");
+        if (null != skipLookDwellTimeString && skipLookDwellTimeString.length() > 0) {
+            try {
+                skipLookDwellTime = Double.parseDouble(skipLookDwellTimeString);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
+
         String firstLookDwellTimeString = options.get("firstLookDwellTime");
         if (null != firstLookDwellTimeString && firstLookDwellTimeString.length() > 0) {
             try {
@@ -2217,6 +2231,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (!atLookForPosition) {
             addMoveToLookForPosition(out);
 
+            addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
+                aprsJFrame.setEnableVisionToDatabaseUpdates(true);
+            });
             if (firstAction) {
                 addFirstLookDwell(out);
             } else if (lastAction) {
@@ -2224,8 +2241,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             } else {
                 addLookDwell(out);
             }
+        } else {
+            addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
+                aprsJFrame.setEnableVisionToDatabaseUpdates(true);
+            });
+            addSkipLookDwell(out);
         }
 
+        addMarkerCommand(out, "disableVisionToDatabaseUpdates", x -> {
+            aprsJFrame.setEnableVisionToDatabaseUpdates(false);
+        });
         addTakeSnapshots(out, "-look-for-parts-", null, "");
         addMarkerCommand(out, "clear pose cache", x -> this.clearPoseCache());
         if (action.getArgs().length == 1) {
@@ -2560,6 +2585,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         DwellType dwellCmd = new DwellType();
         dwellCmd.setCommandID(incrementAndGetCommandId());
         dwellCmd.setDwellTime(settleDwellTime);
+        cmds.add(dwellCmd);
+    }
+
+    private void addSkipLookDwell(List<MiddleCommandType> cmds) {
+        DwellType dwellCmd = new DwellType();
+        dwellCmd.setCommandID(incrementAndGetCommandId());
+        dwellCmd.setDwellTime(skipLookDwellTime);
         cmds.add(dwellCmd);
     }
 

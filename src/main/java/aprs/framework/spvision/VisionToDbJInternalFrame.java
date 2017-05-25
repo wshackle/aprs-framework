@@ -20,9 +20,7 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-
 package aprs.framework.spvision;
-
 
 import aprs.framework.AprsJFrame;
 import aprs.framework.Utils;
@@ -51,19 +49,18 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         initComponents();
 //        DbMain.setDisplayInterface(this);
     }
-    
+
 //    public DbSetupPublisher getDbSetupPublisher() {
 //        return this.visionToDBJPanel.getDbSetupPublisher();
 //    }
-    
     public double getRotationOffset() {
         return this.visionToDBJPanel.getRotationOffset();
     }
-    
+
     public XFuture<Void> startNewItemsImageSave(File f) {
         return this.visionToDBJPanel.startNewItemsImageSave(f);
     }
-    
+
     public List<DetectedItem> getSlotOffsets(String name) {
         return this.visionToDBJPanel.getSlotOffsets(name);
     }
@@ -72,10 +69,10 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return this.visionToDBJPanel.getSlots(item);
     }
 
-     public void setAprsJFrame(AprsJFrame aprsJFrame) {
-         this.visionToDBJPanel.setAprsJFrame(aprsJFrame);
-     }
-     
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        this.visionToDBJPanel.setAprsJFrame(aprsJFrame);
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -125,45 +122,45 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public void updateInfo(List<DetectedItem> _list, String line) {
         this.visionToDBJPanel.updateInfo(_list, line);
     }
-    
+
     @Override
     public void updataPoseQueryInfo(final List<PoseQueryElem> _list) {
         this.visionToDBJPanel.updataPoseQueryInfo(_list);
     }
-    
+
     @Override
     public boolean isDebug() {
         return this.visionToDBJPanel.isDebug();
     }
-    
+
     @Override
     public void addLogMessage(String stmnt) {
         this.visionToDBJPanel.addLogMessage(stmnt);
     }
-    
+
     @Override
     public void setVisionConnected(boolean _val) {
         this.visionToDBJPanel.setVisionConnected(_val);
     }
-    
+
     @Override
     public void setDBConnected(boolean _val) {
         this.visionToDBJPanel.setDBConnected(_val);
     }
-    
+
     @Override
-     public void setLastCommand(String c) {
-         this.visionToDBJPanel.setLastCommand(c);
-     }
-     
+    public void setLastCommand(String c) {
+        this.visionToDBJPanel.setLastCommand(c);
+    }
+
     @Override
-     public void setCommandConnected(boolean _val) {
-         this.visionToDBJPanel.setCommandConnected(_val);
-     }
-     
-     public void startCommand(Map<String, String> argsMap) {
-         visionToDBJPanel.startCommand(argsMap);
-     }
+    public void setCommandConnected(boolean _val) {
+        this.visionToDBJPanel.setCommandConnected(_val);
+    }
+
+    public void startCommand(Map<String, String> argsMap) {
+        visionToDBJPanel.startCommand(argsMap);
+    }
 
 //     public void startVision(Map<String, String> argsMap) {
 //         visionToDBJPanel.startVision(argsMap);
@@ -172,7 +169,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
 //     public Map<String,String> getArgsMap() {
 //         return visionToDBJPanel.getArgsMap();
 //     }
-     
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.framework.spvision.VisionToDBJPanel visionToDBJPanel;
     // End of variables declaration//GEN-END:variables
@@ -194,7 +191,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
 
     @Override
     public void saveProperties() {
-       this.visionToDBJPanel.saveProperties();
+        this.visionToDBJPanel.saveProperties();
     }
 
     @Override
@@ -241,7 +238,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public void connectVision() {
         visionToDBJPanel.connectVision();
     }
-    
+
     public void disconnectVision() {
         visionToDBJPanel.disconnectVision();
     }
@@ -249,5 +246,18 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     @Override
     public void updateResultsMap(Map<String, UpdateResults> _map) {
         visionToDBJPanel.updateResultsMap(_map);
+    }
+
+    public boolean isEnableDatabaseUpdates() {
+        return visionToDBJPanel.isEnableDatabaseUpdates();
+    }
+
+    /**
+     * Set the value of enableDatabaseUpdates
+     *
+     * @param enableDatabaseUpdates new value of enableDatabaseUpdates
+     */
+    public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates) {
+        visionToDBJPanel.setEnableDatabaseUpdates(enableDatabaseUpdates);
     }
 }

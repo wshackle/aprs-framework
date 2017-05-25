@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,7 +50,7 @@ public class VisionSocketClient implements AutoCloseable {
     private SocketLineReader visionSlr = null;
     private ExecutorService visionExecServ = Executors.newFixedThreadPool(1);
     private volatile String parsing_line = null;
-    private static int visioncycle = 0;
+    private static final AtomicInteger visioncycle = new AtomicInteger();
 
     private PrintStream replyPs;
 
@@ -184,7 +185,6 @@ public class VisionSocketClient implements AutoCloseable {
                                     parseVisionLine(skippedLine);
                                 }
                                 parsing_line = null;
-                                visioncycle++;
                                 Thread.currentThread().setName(origName);
                             }
                         });
@@ -220,6 +220,7 @@ public class VisionSocketClient implements AutoCloseable {
         List<DetectedItem> listOut = new ArrayList<>();
         String fa[] = null;
         int i = 0;
+        final int cur_visioncycle = visioncycle.incrementAndGet();
         try {
             fa = line.split(",");
 
@@ -269,7 +270,7 @@ public class VisionSocketClient implements AutoCloseable {
                     continue;
                 }
 
-                ci.visioncycle = visioncycle;
+                ci.visioncycle = cur_visioncycle;
                 //System.out.println("VisionSocketClient visioncycle-----> "+visioncycle);
                 if (fa[i + 4].length() > 0) {
                     ci.score = Double.parseDouble(fa[i + 4]);
@@ -290,7 +291,6 @@ public class VisionSocketClient implements AutoCloseable {
                 listOut.remove(index);
             }
         } catch (Exception exception) {
-
             System.out.println("i = " + i);
             System.out.println("fa = " + Arrays.toString(fa));
             String msg = "Failed to parse line \"" + line + "\" : " + exception.getMessage() + System.lineSeparator();
