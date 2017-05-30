@@ -619,6 +619,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         } else {
             abortCrclProgram();
         }
+        jCheckBoxMenuItemPause.setSelected(false);
+        jCheckBoxMenuItemContinousDemo.setSelected(false);
     }
 
     /**
@@ -3174,8 +3176,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @param enableDatabaseUpdates new value of enableDatabaseUpdates
      */
-    public void setEnableVisionToDatabaseUpdates(boolean enableDatabaseUpdates) {
-        visionToDbJInternalFrame.setEnableDatabaseUpdates(enableDatabaseUpdates);
+    public void setEnableVisionToDatabaseUpdates(boolean enableDatabaseUpdates, Map<String,Integer> requiredParts) {
+        visionToDbJInternalFrame.setEnableDatabaseUpdates(enableDatabaseUpdates,requiredParts);
         if(enableDatabaseUpdates && null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(false);
         }

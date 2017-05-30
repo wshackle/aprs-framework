@@ -89,7 +89,7 @@ import static crcl.utils.CRCLPosemath.vector;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJFrameInterface, DbSetupListener, VisionSocketClient.VisionSocketClientListener {
-
+    
     private DbSetupPublisher dbSetupPublisher;
 
     /**
@@ -110,18 +110,18 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             jButtonForceSingleUpdate.setEnabled(jTableFromVision.getSelectedRow() >= 0 && null != dpu);
         });
     }
-
+    
     public double getRotationOffset() {
         if (null != dpu) {
             return dpu.getRotationOffset();
         }
         throw new IllegalStateException("dpu == null");
     }
-
+    
     private double transform(int row, int col) {
         return (double) jTableTransform.getValueAt(row, col);
     }
-
+    
     private VisionSocketClient visionClient;
 
     /**
@@ -141,7 +141,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void setVisionClient(VisionSocketClient visionClient) {
         this.visionClient = visionClient;
     }
-
+    
     private DatabasePoseUpdater dpu;
 
     /**
@@ -152,7 +152,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public DatabasePoseUpdater getDpu() {
         return dpu;
     }
-
+    
     private void updateTransformFromTable() {
         try {
             PoseType pose = getTransformPose();
@@ -168,12 +168,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 }
                 dpu.setForceUpdates(origForceUpdates);
             }
-
+            
         } catch (Exception e) {
             addLogMessage(e);
         }
     }
-
+    
     public PoseType getTransformPose() {
         PoseType pose = pose(point(transform(0, 1), transform(0, 2), transform(0, 3)),
                 vector(transform(1, 1), transform(1, 2), transform(1, 3)),
@@ -252,6 +252,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jCheckBoxForceUpdates = new javax.swing.JCheckBox();
         jSpinnerLogLines = new javax.swing.JSpinner();
         jLabel1 = new javax.swing.JLabel();
+        jCheckBoxDbUpdateEnabled = new javax.swing.JCheckBox();
+        jLabel5 = new javax.swing.JLabel();
+        jTextFieldRequiredParts = new javax.swing.JTextField();
 
         jPanel1.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
@@ -817,6 +820,15 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
         jLabel1.setText("Lines to Keep:");
 
+        jCheckBoxDbUpdateEnabled.setText("Db Update Enabled");
+        jCheckBoxDbUpdateEnabled.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxDbUpdateEnabledActionPerformed(evt);
+            }
+        });
+
+        jLabel5.setText("Required Parts:");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -832,7 +844,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jSpinnerLogLines, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jSpinnerLogLines, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxDbUpdateEnabled)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldRequiredParts))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -847,11 +865,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel11)
-                    .addComponent(jCheckBoxDebug)
-                    .addComponent(jSpinnerLogLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel11)
+                        .addComponent(jCheckBoxDebug)
+                        .addComponent(jSpinnerLogLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel1))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jCheckBoxDbUpdateEnabled)
+                        .addComponent(jLabel5)
+                        .addComponent(jTextFieldRequiredParts, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE)
                 .addContainerGap())
@@ -861,12 +884,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private void jButtonDisconnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDisconnectVisionActionPerformed
         disconnectVision();
     }//GEN-LAST:event_jButtonDisconnectVisionActionPerformed
-
+    
     public void disconnectVision() {
         stopVisionStartThread();
         closeVision();
     }
-
+    
     public void closeVision() {
         if (null != visionClient) {
             try {
@@ -878,7 +901,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         visionClient = null;
         runOnDispatchThread(() -> setVisionConnected(false));
     }
-
+    
     private void stopVisionStartThread() {
         if (null != startVisionThread) {
             startVisionThread.interrupt();
@@ -890,9 +913,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             startVisionThread = null;
         }
     }
-
+    
     private volatile boolean updatingFromArgs = false;
-
+    
     @Override
     public void updateFromArgs(Map<String, String> _argsMap) {
         try {
@@ -959,7 +982,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 double zk = Double.parseDouble(zAxisKStriing);
                 model.setValueAt(zk, 2, 3);
             }
-
+            
             String rotationOffsetString = _argsMap.get("rotationOffset");
             if (null != rotationOffsetString) {
                 double ro = Double.parseDouble(rotationOffsetString);
@@ -968,20 +991,20 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     dpu.setRotationOffset(ro);
                 }
             }
-
+            
         } finally {
             updatingFromArgs = false;
         }
     }
-
+    
     private void setText(Map<String, String> argsMap, JTextField fld, String key) {
         if (argsMap.containsKey(key)) {
             fld.setText(argsMap.get(key));
         }
     }
-
+    
     int update_info_count = 0;
-
+    
     @Override
     public void updataPoseQueryInfo(final List<PoseQueryElem> _list) {
 //        this.pq_list = _list;
@@ -1003,19 +1026,19 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         autoResizeTableColWidths(jTableFromDatabase);
     }
-
+    
     public boolean isDebug() {
         return this.jCheckBoxDebug.isSelected();
     }
-
+    
     private List<String> logLines = new LinkedList<>();
-
+    
     private void appendLogDisplay(String txt) {
         int maxLines = 100;
         try {
             maxLines = (int) jSpinnerLogLines.getValue();
         } catch (Exception ex) {
-
+            
         }
 //        System.out.println("maxLines = " + maxLines);
 //        System.out.println("logLines.size() = " + logLines.size());
@@ -1029,7 +1052,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
             logLines.add(txt);
             StringBuilder sb = new StringBuilder();
-
+            
             for (String oldTxt : logLines) {
                 sb.append(oldTxt);
             }
@@ -1037,7 +1060,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         jTextAreaLog.setCaretPosition(jTextAreaLog.getText().length());
     }
-
+    
     public void updateInfo(List<DetectedItem> visionList, String line) {
         DefaultTableModel tm = (DefaultTableModel) this.jTableFromVision.getModel();
 //        TableColumnModel tcm = this.jTableFromCognex.getColumnModel();
@@ -1092,7 +1115,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             aprsJFrame.setShowVisionConnected(_val);
         }
     }
-
+    
     public void setDBConnected(boolean _val) {
         try {
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(_val).build());
@@ -1118,7 +1141,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     public void setCommandConnected(boolean _val) {
 //        this.jButtonConnectDB.setEnabled(!_val);
 //        this.jButtonDisconnectDB.setEnabled(_val);
@@ -1162,7 +1185,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //        });
 //    }
     public int log_count = 0;
-
+    
     public void addLogMessage(String stmnt) {
         log_count++;
         System.out.println(stmnt);
@@ -1172,22 +1195,22 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             javax.swing.SwingUtilities.invokeLater(() -> appendLogDisplay(stmnt + "\r\n"));
         }
     }
-
+    
     public void addLogMessage(Exception exception) {
         StringWriter sw = new StringWriter();
         exception.printStackTrace(new PrintWriter(sw));
         addLogMessage(sw.toString());
     }
-
+    
     public void setLastCommand(String c) {
         appendLogDisplay(c + "\n");
         this.jTextFieldLastCommand.setText(c);
     }
-
+    
     public void setAquiring(String s) {
         this.jTextFieldAcquire.setText(s);
     }
-
+    
     public void connectDB(DbSetup dbSetup) {
         try {
             Map<String, String> argsMap = updateArgsMap();
@@ -1213,7 +1236,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
             setDBConnected(true);
         } catch (Exception exception) {
-
+            
             StringWriter sw = new StringWriter();
             exception.printStackTrace(new PrintWriter(sw));
             this.addLogMessage("connectDB failed :" + System.lineSeparator() + sw);
@@ -1221,16 +1244,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             System.err.println("Connect to database failed.");
         }
     }
-
+    
     @Override
     public Map<String, String> updateArgsMap() {
         return updateArgsMap(dbSetupPublisher.getDbSetup().getDbType());
     }
-
+    
     private final Map<String, String> argsMap = DbSetupBuilder.getDefaultArgsMap();
-
+    
     public Map<String, String> updateArgsMap(DbType dbtype) {
-
+        
         DbSetup curSetup = dbSetupPublisher.getDbSetup();
         if (null != curSetup) {
             argsMap.put("--dbhost", curSetup.getHost());
@@ -1257,10 +1280,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return argsMap;
     }
     public static final String ADD_REPEAT_COUNTS_TO_DATABASE_NAMES = "AddRepeatCountsToDatabaseNames";
-
+    
     private Thread startVisionThread = null;
     private List<DetectedItem> transformedVisionList = null;
-
+    
     public static List<DetectedItem> transformList(List<DetectedItem> in, PoseType transform) {
         List<DetectedItem> out = new ArrayList<>();
         for (int i = 0; i < in.size(); i++) {
@@ -1287,39 +1310,95 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return out;
     }
     private volatile boolean addRepeatCountsToDatabaseNames = false;
-
+    
     public List<DetectedItem> getSlotOffsets(String name) {
         if (null == dpu) {
             return null;
         }
         return dpu.getSlotOffsets(name);
     }
-
+    
     public List<DetectedItem> getSlots(DetectedItem item) {
         if (null == dpu) {
             return null;
         }
         return dpu.getSlots(item);
     }
-
+    
     public boolean isEnableDatabaseUpdates() {
         if (null == dpu) {
             return false;
         }
         return dpu.isEnableDatabaseUpdates();
     }
+    
+    private Map<String,Integer> requiredParts = null;
 
+    /**
+     * Get the value of requiredParts
+     *
+     * @return the value of requiredParts
+     */
+    public Map<String,Integer> getRequiredParts() {
+        return requiredParts;
+    }
+
+    /**
+     * Set the value of requiredParts
+     *
+     * @param requiredParts new value of requiredParts
+     */
+    public void setRequiredParts(Map<String,Integer> requiredParts) {
+        this.requiredParts = requiredParts;
+        if(null == requiredParts || requiredParts.isEmpty()) {
+            jTextFieldRequiredParts.setText("");
+        } else {
+            jTextFieldRequiredParts.setText(requiredParts.toString());
+        }
+    }
+
+    private void checkRequiredParts(List<DetectedItem> list) {
+        if(null != requiredParts) {
+            for(Entry<String,Integer> entry : requiredParts.entrySet()) {
+                String name = entry.getKey();
+                int required = entry.getValue();
+                long found = list.stream().filter(item -> item.name.startsWith(name) || item.name.startsWith("sku_"+name)).count();
+                if(required > found) {
+                    String msg = "Found only "+found + " of "+ name+" when "+required +" needed.";
+                    aprsJFrame.setTitleErrorString(msg);
+                    throw new IllegalStateException(msg);
+                }
+            }
+        }
+    }
+    
     /**
      * Set the value of enableDatabaseUpdates
      *
      * @param enableDatabaseUpdates new value of enableDatabaseUpdates
      */
-    public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates) {
+    private void setEnableDatabaseUpdates(boolean enableDatabaseUpdates) {
+        this.setRequiredParts(requiredParts);
         if (null != dpu) {
             dpu.setEnableDatabaseUpdates(enableDatabaseUpdates);
         }
+        if (enableDatabaseUpdates != jCheckBoxDbUpdateEnabled.isSelected()) {
+            jCheckBoxDbUpdateEnabled.setSelected(enableDatabaseUpdates);
+        }
     }
-
+    
+    void setEnableDatabaseUpdates(boolean enableDatabaseUpdates, Map<String,Integer> requiredParts) {
+        if(enableDatabaseUpdates || null != requiredParts) {
+            this.setRequiredParts(requiredParts);
+        }
+        if (null != dpu) {
+            dpu.setEnableDatabaseUpdates(enableDatabaseUpdates);
+        }
+        if (enableDatabaseUpdates != jCheckBoxDbUpdateEnabled.isSelected()) {
+            jCheckBoxDbUpdateEnabled.setSelected(enableDatabaseUpdates);
+        }
+    }
+    
     @Override
     public void visionClientUpdateRecieved(List<DetectedItem> visionList, String line) {
         if (acquire == AcquireEnum.OFF) {
@@ -1330,6 +1409,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (null != commandReplyPrintStream) {
                 commandReplyPrintStream.println("acquire=" + acquire);
             }
+        }
+        if(dpu.isEnableDatabaseUpdates()) {
+            checkRequiredParts(visionList);
         }
         PoseType transform = getTransformPose();
         if (null != dpu && null != dpu.getSqlConnection()) {
@@ -1345,7 +1427,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         }
     }
-
+    
     private void startVisionInternal(Map<String, String> argsMap) {
         closeVision();
         if (null == visionClient) {
@@ -1362,7 +1444,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             javax.swing.SwingUtilities.invokeLater(this::finishConnectVision);
         }
     }
-
+    
     public void connectVision() {
         try {
             argsMap.put("--visionhost", this.jTextFieldVisionHost.getText());
@@ -1371,12 +1453,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             startVisionThread = new Thread(() -> startVisionInternal(argsMap), "startVisionThread");
             startVisionThread.setDaemon(true);
             startVisionThread.start();
-
+            
         } catch (Exception exception) {
             addLogMessage(exception);
         }
     }
-
+    
     private AprsJFrame aprsJFrame = null;
 
     /**
@@ -1396,7 +1478,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void setAprsJFrame(AprsJFrame aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
     }
-
+    
     private void finishConnectVision() {
         if (null != visionClient) {
             visionClient.setDebug(this.jCheckBoxDebug.isSelected());
@@ -1413,7 +1495,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private void jButtonConnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectVisionActionPerformed
         connectVision();
     }//GEN-LAST:event_jButtonConnectVisionActionPerformed
-
+    
     public void closeDB() {
         try {
             if (null != dpu) {
@@ -1429,9 +1511,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private void jTextFieldVisionHostActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldVisionHostActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextFieldVisionHostActionPerformed
-
+    
     private SocketLineReader commandSlr = null;
-
+    
     private void closeCommand() {
 //        System.out.println("closeCommand() called.");
         if (null != commandSlr) {
@@ -1440,7 +1522,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         runOnDispatchThread(() -> setCommandConnected(false));
         commandSlr = null;
     }
-
+    
     void startCommand(Map<String, String> argsMap) {
         try {
             closeCommand();
@@ -1454,19 +1536,19 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             System.err.println("Starting server for command port failed.");
         }
     }
-
+    
     private volatile AcquireEnum acquire = AcquireEnum.ON;
-
+    
     public AcquireEnum getAcquire() {
         return acquire;
     }
-
+    
     public void setAcquire(AcquireEnum acquire) {
         this.acquire = acquire;
     }
-
+    
     private volatile PrintStream commandReplyPrintStream = null;
-
+    
     public void handleCommand(String line, PrintStream os) {
         runOnDispatchThread(() -> setLastCommand(line));
         if (null == dpu) {
@@ -1487,7 +1569,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             runOnDispatchThread(() -> {
                 setAquiring(AcquireEnum.ON.toString());
             });
-
+            
             os.println("Acquire Status: " + getAcquire());
         } else if (fa[0].trim().toUpperCase().compareTo("ONCE") == 0) {
             setAcquire(AcquireEnum.ONCE);
@@ -1498,7 +1580,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         } else if (fa[0].trim().toUpperCase().compareTo("OFF") == 0) {
             setAcquire(AcquireEnum.OFF);
             runOnDispatchThread(() -> {
-
+                
                 setAquiring(AcquireEnum.OFF.toString());
             });
             os.println("Acquire Status: " + AcquireEnum.OFF);
@@ -1511,7 +1593,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             return;
         }
     }
-
+    
 
     private void jTextFieldCmdPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldCmdPortActionPerformed
         try {
@@ -1522,7 +1604,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             addLogMessage(exception);
         }
     }//GEN-LAST:event_jTextFieldCmdPortActionPerformed
-
+    
     private Window getParentWindow() {
         Container container = this.getParent();
         while (null != container) {
@@ -1533,12 +1615,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         return null;
     }
-
+    
 
     private void jTextFieldAcquireActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldAcquireActionPerformed
         setAcquire(AcquireEnum.valueOf(this.jTextFieldAcquire.getText()));
     }//GEN-LAST:event_jTextFieldAcquireActionPerformed
-
+    
 
     private void jButtonCheckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCheckActionPerformed
         try {
@@ -1549,14 +1631,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonCheckActionPerformed
-
+    
     private XFuture<Void> queryDatabase() throws InterruptedException, ExecutionException {
         if (null != dpu) {
             return dpu.queryDatabase().thenCompose(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
         return XFuture.completedFutureWithName("queryDatabase.null==dpu", null);
     }
-
+    
     private XFuture<Void> startQueryDatabaseNew() {
         if (null != dpu) {
             return dpu.queryDatabaseNew().thenCompose(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
@@ -1589,13 +1671,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonAddItemActionPerformed
-
+    
     private Callable<DbSetupPublisher> dbSetupSupplier = null;
-
+    
     public Callable<DbSetupPublisher> getDbSetupSupplier() {
         return dbSetupSupplier;
     }
-
+    
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {
         this.dbSetupSupplier = dbSetupSupplier;
         try {
@@ -1609,10 +1691,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
 
     private void jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed
-
+        
         if (null != visionClient) {
             visionClient.setDebug(this.jCheckBoxDebug.isSelected());
             addRepeatCountsToDatabaseNames = this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected();
@@ -1633,21 +1715,21 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             MultiLineStringJPanel.showText("Latest update attempt for " + name + ":\r\n" + value);
         }
     }//GEN-LAST:event_jButtonUpdateResultDetailsActionPerformed
-
+    
     private JPopupMenu popMenu = new JPopupMenu();
-
+    
     {
         JMenuItem copyMenuItem = new JMenuItem("Copy");
         copyMenuItem.addActionListener(e -> copyText());
     }
-
+    
     private void copyText() {
         this.jTextAreaLog.getTransferHandler().exportToClipboard(this.jTextAreaLog,
                 Toolkit.getDefaultToolkit().getSystemClipboard(),
                 TransferHandler.COPY);
         popMenu.setVisible(false);
     }
-
+    
     public void showPopup(Component comp, int x, int y) {
         popMenu.show(comp, x, y);
     }
@@ -1681,11 +1763,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             for (int i : jTableFromDatabase.getSelectedRows()) {
                 String name = (String) jTableFromDatabase.getModel().getValueAt(i, 0);
                 try {
-
+                    
                     if (name != null && name.length() > 0) {
                         dpu.deletePose(name);
                     }
-
+                    
                 } catch (SQLException ex) {
                     Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     appendLogDisplay("\nDelete " + name + " failed :" + ex + "\n");
@@ -1710,7 +1792,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private void jButtonForceAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonForceAllActionPerformed
         forceAllUpdates();
     }//GEN-LAST:event_jButtonForceAllActionPerformed
-
+    
     public void saveTableToFile(File f, JTable table) throws IOException {
         try (CSVPrinter printer = new CSVPrinter(new BufferedWriter(new FileWriter(f)), CSVFormat.DEFAULT)) {
             List<String> colHeaderList = new ArrayList<>();
@@ -1729,7 +1811,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         }
     }
-
+    
     public void toCsv(String name, JTable table) throws IOException {
         File f = Utils.createTempFile(name, ".csv");
         saveTableToFile(f, table);
@@ -1764,11 +1846,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             dpu.setForceUpdates(jCheckBoxForceUpdates.isSelected());
         }
     }//GEN-LAST:event_jCheckBoxForceUpdatesActionPerformed
-
+    
     private void callShowDatabaseTableImage() {
         Utils.runOnDispatchThread(this::showDatabaseTableImage);
     }
-
+    
     private void showDatabaseTableImage() {
         try {
             File f = Utils.createTempFile("newDataBaseItems_", ".png");
@@ -1778,7 +1860,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     private void takeSnapshot(File f) {
         try {
             List<DetectedItem> list = new ArrayList<>();
@@ -1797,7 +1879,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             dbLogDir.mkdirs();
             File csvFile = Utils.createTempFile(f.getName() + "_db", ".csv", dbLogDir);
             Utils.saveJTable(csvFile, jTableFromDatabase);
-
+            
             List<DetectedItem> lastInput = dpu.getLastEnabledUpdateList();
             if (null != lastInput && !lastInput.isEmpty()) {
                 File dbInputLogDir = new File(f.getParentFile(), "visionToDb_input_dir");
@@ -1806,7 +1888,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 try (PrintWriter pw = new PrintWriter(new FileWriter(csvInputFile))) {
                     pw.println("name,rotation,x,y,score,type,visioncycle,repeats,fullname");
                     for (DetectedItem item : lastInput) {
-                        pw.println(item.name + "," + item.rotation + "," + item.x + "," + item.y + "," + item.score + "," + item.type+","+item.visioncycle +","+item.repeats +","+item.fullName);
+                        pw.println(item.name + "," + item.rotation + "," + item.x + "," + item.y + "," + item.score + "," + item.type + "," + item.visioncycle + "," + item.repeats + "," + item.fullName);
                     }
                 }
             }
@@ -1815,16 +1897,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     private void takeNewItemsSnapshot(File f) {
         startNewItemsCheck()
                 .thenRun(() -> takeSnapshot(f));
     }
-
+    
     public XFuture<Void> startTakeSnapshot(File f) {
         return Utils.runOnDispatchThread(() -> takeSnapshot(f));
     }
-
+    
     public XFuture<Void> startNewItemsImageSave(File f) {
         return Utils.runOnDispatchThread(() -> takeNewItemsSnapshot(f));
     }
@@ -1832,9 +1914,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private void jButtonCheckNewItemsOnlyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCheckNewItemsOnlyActionPerformed
         startNewItemsCheck();
     }//GEN-LAST:event_jButtonCheckNewItemsOnlyActionPerformed
-
+    
     private XFuture<Void> startNewItemsCheck() {
-
+        
         DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
         tm.setRowCount(0);
         return startQueryDatabaseNew();
@@ -1852,6 +1934,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         showDatabaseTableImage();
     }//GEN-LAST:event_jButtonShowImageActionPerformed
 
+    private void jCheckBoxDbUpdateEnabledActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxDbUpdateEnabledActionPerformed
+        this.setEnableDatabaseUpdates(jCheckBoxDbUpdateEnabled.isSelected());
+    }//GEN-LAST:event_jCheckBoxDbUpdateEnabledActionPerformed
+    
     public void forceAllUpdates() throws NumberFormatException {
         try {
             DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
@@ -1864,7 +1950,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     public void forceUpdateSingle(int row) throws NumberFormatException {
         String name = (String) jTableFromVision.getValueAt(row, 1);
         DetectedItem item = new DetectedItem(name);
@@ -1897,7 +1983,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         dpu.setForceUpdates(origForceUpdates);
         jCheckBoxDebug.setSelected(isDebug);
     }
-
+    
     private DbType oldDbType = null;
 
 
@@ -1915,6 +2001,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JButton jButtonShowImage;
     private javax.swing.JButton jButtonUpdateResultDetails;
     private javax.swing.JCheckBox jCheckBoxAddRepeatCountsToDatabaseNames;
+    private javax.swing.JCheckBox jCheckBoxDbUpdateEnabled;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxForceUpdates;
     private javax.swing.JCheckBox jCheckBoxVerifyUpdates;
@@ -1932,6 +2019,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
@@ -1961,6 +2049,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JTextField jTextFieldPerformance;
     private javax.swing.JTextField jTextFieldPoseUpdatesParsed;
     private javax.swing.JTextField jTextFieldPoseUpdatesProcessed;
+    private javax.swing.JTextField jTextFieldRequiredParts;
     private javax.swing.JTextField jTextFieldRotationOffset;
     private javax.swing.JTextField jTextFieldVisionHost;
     private javax.swing.JTextField jTextFieldVisionPort;
@@ -1970,26 +2059,26 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void dispose() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     private File propertiesFile = new File(System.getProperty("user.home"), ".visiontodb_properties.txt");
-
+    
     @Override
     public void setPropertiesFile(File f) {
         propertiesFile = f;
     }
-
+    
     @Override
     public File getPropertiesFile() {
         return propertiesFile;
     }
     private volatile boolean savingProperties = false;
-
+    
     @Override
     public void saveProperties() {
         DbSetup setup = dbSetupPublisher.getDbSetup();
         saveProperties(setup.getDbType(), setup.getHost(), setup.getPort());
     }
-
+    
     public void saveProperties(DbType dbtype, String host, int port) {
         try {
             savingProperties = true;
@@ -2036,7 +2125,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //        return dbSetupPublisher;
 //    }
     private volatile boolean restoringProperties = false;
-
+    
     public final void restoreProperties(DbType dbtype, String host, int port) {
         try {
             restoringProperties = true;
@@ -2058,7 +2147,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             restoringProperties = false;
         }
     }
-
+    
     @Override
     public final void loadProperties() {
         try {
@@ -2081,19 +2170,19 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             restoringProperties = false;
         }
     }
-
+    
     @Override
     public Connection getSqlConnection() {
         return dpu.getSqlConnection();
     }
-
+    
     private void closeDatabasePoseUpdater() {
         if (null != dpu) {
             dpu.close();
         }
         dpu = null;
     }
-
+    
     @Override
     public void setSqlConnection(Connection connection, DbType dbtype) throws SQLException {
         try {
@@ -2107,7 +2196,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             closeDatabasePoseUpdater();
         }
     }
-
+    
     @Override
     public DbType getDbType() {
         if (null != dpu) {
@@ -2125,9 +2214,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         return dbSetupPublisher.getDbSetup().getDbType();
     }
-
+    
     private DbSetup lastSetup = null;
-
+    
     @Override
     public void accept(DbSetup setup) {
         if (setup.isConnected()) {
@@ -2143,10 +2232,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             oldDbType = setup.getDbType();
             return;
         }
-
+        
         try {
             if (!savingProperties && !restoringProperties && !updatingFromArgs) {
-
+                
                 DbType newDbType = setup.getDbType();
                 if (oldDbType != newDbType) {
                     this.closeDB();
@@ -2162,7 +2251,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
     private Map<String, UpdateResults> resultsMap;
-
+    
     private void updateResultsMapInternal(Map<String, UpdateResults> _map) {
         DefaultTableModel model = (DefaultTableModel) jTableUpdateResults.getModel();
         model.setRowCount(0);
@@ -2180,10 +2269,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     + " ms, worst=" + dpu.getMaxUpdateTimeMillis() + " ms");
         }
     }
-
+    
     @Override
     public void updateResultsMap(Map<String, UpdateResults> _map) {
         runOnDispatchThread(() -> this.updateResultsMapInternal(_map));
     }
-
+    
 }

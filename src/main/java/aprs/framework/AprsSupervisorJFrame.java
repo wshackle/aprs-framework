@@ -1541,6 +1541,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             lastFutureReturned.cancelAll(true);
         }
         immediateAbortAll();
+        jCheckBoxMenuItemContinousDemo.setSelected(false);
+        jCheckBoxMenuItemRandomTest.setSelected(false);
+        jCheckBoxMenuItemPause.setSelected(false);
     }//GEN-LAST:event_jMenuItemImmediateAbortAllActionPerformed
 
     private void jButtonSetInFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSetInFromCurrentActionPerformed

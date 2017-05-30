@@ -626,7 +626,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private double skipLookDwellTime = (5.0);
-
+    private double afterMoveToLookForDwellTime = 5.0;
     private double firstLookDwellTime = (5.0);
 
     /**
@@ -1809,7 +1809,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 numberFormatException.printStackTrace();
             }
         }
+        
+        String afterMoveToLookForDwellTimeString = options.get("afterMoveToLookForDwellTime");
+        if (null != afterMoveToLookForDwellTimeString && afterMoveToLookForDwellTimeString.length() > 0) {
+            try {
+                afterMoveToLookForDwellTime = Double.parseDouble(afterMoveToLookForDwellTimeString);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
 
+        // afterMoveToLookForDwellTime
+        
         String firstLookDwellTimeString = options.get("firstLookDwellTime");
         if (null != firstLookDwellTimeString && firstLookDwellTimeString.length() > 0) {
             try {
@@ -2214,6 +2225,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
+    private Map<String,Integer> lastRequiredPartsMap = null;
+    
     private void lookForParts(PddlAction action, List<MiddleCommandType> out, boolean firstAction, boolean lastAction) throws IllegalStateException, SQLException {
 
         lastTestApproachPose = null;
@@ -2225,14 +2238,31 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             kitInspectionJInternalFrame = aprsJFrame.getKitInspectionJInternalFrame();
         }
 
+        Map<String, Integer> requiredPartsMap = new HashMap<>();
+        if (null != action.getArgs()) {
+            for (int i = 0; i < action.getArgs().length; i++) {
+                String arg = action.getArgs()[i];
+                int eindex  = arg.indexOf('=');
+                if(eindex > 0) {
+                    String name = arg.substring(0, eindex);
+                    String valString = arg.substring(eindex+1);
+                    requiredPartsMap.put(name, Integer.valueOf(valString));
+                }
+            }
+        }
+        if(null != lastRequiredPartsMap && requiredPartsMap.isEmpty()) {
+            requiredPartsMap.putAll(lastRequiredPartsMap);
+        } else if(!requiredPartsMap.isEmpty()) {
+            lastRequiredPartsMap = requiredPartsMap;
+        }
         if (atLookForPosition) {
             atLookForPosition = checkAtLookForPosition();
         }
         if (!atLookForPosition) {
             addMoveToLookForPosition(out);
-
+            addAfterMoveToLookForDwell(out);
             addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
-                aprsJFrame.setEnableVisionToDatabaseUpdates(true);
+                aprsJFrame.setEnableVisionToDatabaseUpdates(true, Collections.unmodifiableMap(requiredPartsMap));
             });
             if (firstAction) {
                 addFirstLookDwell(out);
@@ -2243,13 +2273,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         } else {
             addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
-                aprsJFrame.setEnableVisionToDatabaseUpdates(true);
+                aprsJFrame.setEnableVisionToDatabaseUpdates(true,Collections.unmodifiableMap(requiredPartsMap));
             });
             addSkipLookDwell(out);
         }
 
         addMarkerCommand(out, "disableVisionToDatabaseUpdates", x -> {
-            aprsJFrame.setEnableVisionToDatabaseUpdates(false);
+            aprsJFrame.setEnableVisionToDatabaseUpdates(false,null);
         });
         addTakeSnapshots(out, "-look-for-parts-", null, "");
         addMarkerCommand(out, "clear pose cache", x -> this.clearPoseCache());
@@ -2587,7 +2617,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         dwellCmd.setDwellTime(settleDwellTime);
         cmds.add(dwellCmd);
     }
-
+// addAfterMoveToLookForDwell
+    
+    private void addAfterMoveToLookForDwell(List<MiddleCommandType> cmds) {
+        DwellType dwellCmd = new DwellType();
+        dwellCmd.setCommandID(incrementAndGetCommandId());
+        dwellCmd.setDwellTime(afterMoveToLookForDwellTime);
+        cmds.add(dwellCmd);
+    }
     private void addSkipLookDwell(List<MiddleCommandType> cmds) {
         DwellType dwellCmd = new DwellType();
         dwellCmd.setCommandID(incrementAndGetCommandId());

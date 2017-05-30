@@ -22,6 +22,7 @@
  */
 package aprs.framework.spvision;
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.Utils;
 import aprs.framework.database.DbParamTypeEnum;
 import aprs.framework.database.DbQueryEnum;
@@ -913,9 +914,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
         final long timestamp = System.currentTimeMillis();
         prevParts
                 = prevParts.stream()
-                        .filter((DetectedItem prevPart) -> timestamp - prevPart.timestamp < 10000)
-                        .filter((DetectedItem prevPart) -> closestDist(prevPart, parts) < 25.0)
-                        .collect(Collectors.toCollection(() -> new ArrayList<DetectedItem>()));
+                .filter((DetectedItem prevPart) -> timestamp - prevPart.timestamp < 10000)
+                .filter((DetectedItem prevPart) -> closestDist(prevPart, parts) < 25.0)
+                .collect(Collectors.toCollection(() -> new ArrayList<DetectedItem>()));
         prevParts.addAll(parts);
         return slots.stream()
                 .filter(slot -> closestDist(slot, prevParts) > 25.0)
@@ -950,9 +951,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
         for (DetectedItem kitTrayItem : kitTrays) {
             kitTrayItem.emptySlotsList
                     = emptySlots.stream()
-                            .filter((DetectedItem slotItem) -> "EMPTY_SLOT".equals(slotItem.type))
-                            .filter((DetectedItem slotItem) -> slotItem.tray == kitTrayItem)
-                            .collect(Collectors.toList());
+                    .filter((DetectedItem slotItem) -> "EMPTY_SLOT".equals(slotItem.type))
+                    .filter((DetectedItem slotItem) -> slotItem.tray == kitTrayItem)
+                    .collect(Collectors.toList());
             kitTrayItem.emptySlotsCount = kitTrayItem.emptySlotsList.size();
         }
         kitTrays.sort((DetectedItem tray1, DetectedItem tray2) -> Long.compare(tray1.emptySlotsCount, tray2.emptySlotsCount));
@@ -990,16 +991,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                        .collect(Collectors.toList());
         List<DetectedItem> kitTrays
                 = itemList.stream()
-                        .filter((DetectedItem item) -> "KT".equals(item.type))
-                        .collect(Collectors.toList());
+                .filter((DetectedItem item) -> "KT".equals(item.type))
+                .collect(Collectors.toList());
         List<DetectedItem> partTrays
                 = itemList.stream()
-                        .filter((DetectedItem item) -> "PT".equals(item.type))
-                        .collect(Collectors.toList());
+                .filter((DetectedItem item) -> "PT".equals(item.type))
+                .collect(Collectors.toList());
         List<DetectedItem> parts
                 = itemList.stream()
-                        .filter((DetectedItem item) -> "P".equals(item.type))
-                        .collect(Collectors.toList());
+                .filter((DetectedItem item) -> "P".equals(item.type))
+                .collect(Collectors.toList());
         List<DetectedItem> fullList = new ArrayList<>();
         List<DetectedItem> bestKitTrayEmptySlots = findBestEmptyTraySlots(kitTrays, parts);
         List<DetectedItem> bestPartTrayEmptySlots = findBestEmptyTraySlots(partTrays, parts);
@@ -1054,6 +1055,26 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private volatile PrintStream dbQueryLogPrintStream = null;
 
+    private List<String> requiredParts;
+
+    /**
+     * Get the value of requiredParts
+     *
+     * @return the value of requiredParts
+     */
+    public List<String> getRequiredParts() {
+        return requiredParts;
+    }
+
+    /**
+     * Set the value of requiredParts
+     *
+     * @param requiredParts new value of requiredParts
+     */
+    public void setRequiredParts(List<String> requiredParts) {
+        this.requiredParts = requiredParts;
+    }
+
     /**
      * Set the value of enableDatabaseUpdates
      *
@@ -1107,6 +1128,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         this.commentStartString = commentStartString;
     }
 
+
     public List<DetectedItem> updateVisionList(List<DetectedItem> inList,
             boolean addRepeatCountsToName,
             boolean keepFullNames) {
@@ -1131,12 +1153,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
             updateCount++;
             List<DetectedItem> partsTrays
                     = inList.stream()
-                            .filter((DetectedItem item) -> "PT".equals(item.type))
-                            .collect(Collectors.toList());
+                    .filter((DetectedItem item) -> "PT".equals(item.type))
+                    .collect(Collectors.toList());
             List<DetectedItem> kitTrays
                     = inList.stream()
-                            .filter((DetectedItem item) -> "KT".equals(item.type))
-                            .collect(Collectors.toList());
+                    .filter((DetectedItem item) -> "KT".equals(item.type))
+                    .collect(Collectors.toList());
 
             List<DetectedItem> list = inList;
             for (int i = 0; i < list.size(); i++) {
@@ -1172,12 +1194,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                 List<DetectedItem> parts
                         = inList.stream()
-                                .filter((DetectedItem item) -> "P".equals(item.type))
-                                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "P".equals(item.type))
+                        .collect(Collectors.toList());
                 List<DetectedItem> emptySlots
                         = list.stream()
-                                .filter((DetectedItem item) -> "EMPTY_SLOT".equals(item.type))
-                                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "EMPTY_SLOT".equals(item.type))
+                        .collect(Collectors.toList());
                 Comparator<DetectedItem> kitComparator
                         = comparingLong((DetectedItem kt) -> (kt.emptySlotsCount < 1) ? Long.MAX_VALUE : kt.emptySlotsCount);
                 kitTrays.sort(kitComparator);
@@ -1208,10 +1230,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                         DetectedItem bestSlotFiller
                                 = firstSortParts.stream()
-                                        .filter((DetectedItem p) -> p.insidePartsTray)
-                                        .filter((DetectedItem p) -> Objects.equals(p.origName, slot.slotForSkuName))
-                                        .findFirst()
-                                        .orElse(null);
+                                .filter((DetectedItem p) -> p.insidePartsTray)
+                                .filter((DetectedItem p) -> Objects.equals(p.origName, slot.slotForSkuName))
+                                .findFirst()
+                                .orElse(null);
                         if (null != bestSlotFiller) {
                             slotFillers.add(bestSlotFiller);
                             firstSortParts.remove(bestSlotFiller);

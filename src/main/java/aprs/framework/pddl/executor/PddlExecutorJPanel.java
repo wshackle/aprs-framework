@@ -557,6 +557,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 {"firstLookDwellTime", "5.0"},
                 {"lastLookDwellTime", "1.0"},
                 {"skipLookDwellTime", "5.0"},
+                {"afterMoveToLookForDwellTime", "5.0"},
                 {"rotSpeed", "30.0"},
                 {"placePartSlotArgIndex", "0"},
                 {"takePartArgIndex", "0"},

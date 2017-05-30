@@ -257,7 +257,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
      *
      * @param enableDatabaseUpdates new value of enableDatabaseUpdates
      */
-    public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates) {
-        visionToDBJPanel.setEnableDatabaseUpdates(enableDatabaseUpdates);
+    public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates, Map<String,Integer> requiredParts) {
+        visionToDBJPanel.setEnableDatabaseUpdates(enableDatabaseUpdates,requiredParts);
     }
 }

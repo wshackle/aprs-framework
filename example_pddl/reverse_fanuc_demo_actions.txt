@@ -1,4 +1,4 @@
-(look-for-parts)
+(look-for-parts 0 part_medium_gear=4 part_large_gear=2 kit_m2l1_vessel=2 large_gear_vessel=1 medium_gear_vessel=1)
 (take-part part_medium_gear_in_kt_1)
 (place-part empty_slot_for_medium_gear_in_medium_gear_vessel_1)
 (take-part  part_medium_gear_in_kt_2)
