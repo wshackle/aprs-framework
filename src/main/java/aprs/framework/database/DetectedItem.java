@@ -77,6 +77,8 @@ public class DetectedItem extends PM_CARTESIAN {
     public int kitTrayNum;
     public String slotForSkuName;
     public Color labelColor = Color.BLACK;
+    public String newSlotQuery = null;
+    
 
     public DetectedItem(String name) {
         this.name = name;

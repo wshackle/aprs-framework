@@ -22,7 +22,6 @@
  */
 package aprs.framework.spvision;
 
-import aprs.framework.AprsJFrame;
 import aprs.framework.Utils;
 import aprs.framework.database.DbParamTypeEnum;
 import aprs.framework.database.DbQueryEnum;
@@ -54,6 +53,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -773,6 +773,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
             }
             List<Object> paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
             String getTraySlotsQueryStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
+            if (!enableDatabaseUpdates && dbQueryLogPrintStream != null) {
+                dbQueryLogPrintStream.println();
+                dbQueryLogPrintStream.println(getTraySlotsQueryStringFilled);
+                dbQueryLogPrintStream.println();
+            }
             boolean exec_result = get_tray_slots_statement.execute();
             if (exec_result) {
                 try (ResultSet rs = get_tray_slots_statement.getResultSet()) {
@@ -811,6 +816,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         DetectedItem item = new DetectedItem(short_sku_name, 0, x, y);
                         item.fullName = name;
                         item.slotForSkuName = sku_name;
+                        item.newSlotQuery = getTraySlotsQueryStringFilled;
                         ret.add(item);
                     }
                 }
@@ -1091,6 +1097,18 @@ public class DatabasePoseUpdater implements AutoCloseable {
             }
             if (enableDatabaseUpdates) {
                 dbQueryLogPrintStream = new PrintStream(new FileOutputStream(Utils.createTempFile("dbQueries_" + dbsetup.getPort() + "_" + Utils.getDateTimeString() + "_", "_log.txt")));
+                for (Entry<String, List<DetectedItem>> offsetEntry : offsetsMap.entrySet()) {
+                    dbQueryLogPrintStream.println();
+                    dbQueryLogPrintStream.println(commentStartString + " offsetsMap.key =" + offsetEntry.getKey());
+                    List<DetectedItem> l = offsetEntry.getValue();
+                    dbQueryLogPrintStream.println(commentStartString + " offsetsMap.value =" + l);
+                    if (!l.isEmpty() && null != l.get(0) && null != l.get(0).newSlotQuery) {
+                        dbQueryLogPrintStream.println();
+                        dbQueryLogPrintStream.println(l.get(0).newSlotQuery);
+                        dbQueryLogPrintStream.println();
+                    }
+                    dbQueryLogPrintStream.println();
+                }
             }
         } catch (IOException ex) {
             Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
@@ -1127,7 +1145,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public void setCommentStartString(String commentStartString) {
         this.commentStartString = commentStartString;
     }
-
 
     public List<DetectedItem> updateVisionList(List<DetectedItem> inList,
             boolean addRepeatCountsToName,
