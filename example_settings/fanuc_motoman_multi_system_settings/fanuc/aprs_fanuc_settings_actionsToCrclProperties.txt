@@ -1,4 +1,5 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1496
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1497
+afterMoveToLookForDwellTime=5.0
 approachZOffset=50.0
 defaultDwellTime=0.1
 doInspectKit=true
