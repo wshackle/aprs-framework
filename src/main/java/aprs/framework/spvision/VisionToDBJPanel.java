@@ -1369,6 +1369,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 if (required > found) {
                     String msg = "Found only " + found + " of " + name + " when " + required + " needed.";
                     aprsJFrame.setTitleErrorString(msg);
+                    try {
+                        aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile("checkRequiredParts_"+msg, ".PNG"), list);
+                    } catch (IOException ex) {
+                        Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     throw new IllegalStateException(msg);
                 }
             }
