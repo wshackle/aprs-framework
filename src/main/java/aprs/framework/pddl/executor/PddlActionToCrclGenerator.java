@@ -493,7 +493,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     actionToCrclLabels[lastIndex] = "";
                     actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
                     final int markerIndex = lastIndex;
-                    addMarkerCommand(cmds, "end action " + markerIndex + ": " + action.getType() + " " + Arrays.toString(action.getArgs()),
+                    String end_action_string = "end_action_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                    addMarkerCommand(cmds, end_action_string,
                             (CrclCommandWrapper wrapper) -> {
                                 notifyActionCompletedListeners(markerIndex, action);
                             });
@@ -507,7 +508,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     if (doInspectKit) {
                         try {
                             inspectKit(action, cmds);
-                        } catch (BadLocationException ex) {
+                        } catch (Exception ex) {
                             Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
@@ -522,7 +523,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             actionToCrclLabels[lastIndex] = "";
             actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
             final int markerIndex = lastIndex;
-            String end_action_string = "end action " + markerIndex + ": " + action.getType() + " " + Arrays.toString(action.getArgs());
+            String end_action_string = "end_action_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
             addMarkerCommand(cmds, end_action_string,
                     (CrclCommandWrapper wrapper) -> {
                         notifyActionCompletedListeners(markerIndex, action);

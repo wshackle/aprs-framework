@@ -165,7 +165,11 @@ public class Object2DJPanel extends JPanel {
             paintHighlightedPose(pose, g2d, label, this.minX, this.minY, this.maxX, this.maxY);
         }
         ImageIO.write(img, type, f);
-        System.out.println("Saved snapshot to " + f.getCanonicalPath());
+        try {
+            System.out.println("Saved snapshot to " + f.getCanonicalPath());
+        } catch (IOException iOException) {
+            iOException.printStackTrace();
+        }
     }
 
     public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
