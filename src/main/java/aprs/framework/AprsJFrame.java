@@ -31,6 +31,7 @@ import aprs.framework.database.DetectedItem;
 import aprs.framework.database.explore.ExploreGraphDbJInternalFrame;
 import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import aprs.framework.logdisplay.LogDisplayJInternalFrame;
+import aprs.framework.pddl.executor.PddlActionToCrclGenerator;
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.pddl.executor.PositionMap;
 import aprs.framework.pddl.planner.PddlPlannerJInternalFrame;
@@ -123,6 +124,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private String taskName;
 
+    public XFuture<List<DetectedItem>> getNextUpdate() {
+        if(null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("null == visionToDbJInternalFrame");
+        }
+        return visionToDbJInternalFrame.getNextUpdate();
+    }
+    
+    public void refreshSimView() {
+        if(null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.refresh(false);
+        }
+    }
+    
     public List<DetectedItem> getSlotOffsets(String name) {
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("visionToDbJInternalFrame == null");
@@ -165,6 +179,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private int runNumber = (int) ((System.currentTimeMillis() / 10000) % 1000);
+    
+    public boolean isEnableDebugDumpstacks() {
+        return jCheckBoxMenuItemEnableDebugDumpstacks.isSelected();
+    }
 
     /**
      * Creates a run name useful for identifying a run in log files or the names
@@ -175,7 +193,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public String getRunName() {
         return ((this.taskName != null) ? this.taskName.replace(" ", "-") : "") + "-run-" + String.format("%03d", runNumber) + "-"
-                + ((this.robotName != null) ? this.robotName : "") + "-";
+                + ((this.robotName != null) ? this.robotName : "");
     }
 
     /**
@@ -319,6 +337,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param connected the new desired connected state.
      */
     public void setConnected(boolean connected) {
+        if (null == robotName && connected) {
+            throw new IllegalStateException("Can not connect when robotName is null");
+        }
         if (null != pendantClientJInternalFrame) {
             if (pendantClientJInternalFrame.isConnected() != connected) {
                 if (connected) {
@@ -328,6 +349,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }
             }
         }
+        takeSnapshots("setConnected_" + connected);
     }
 
     /**
@@ -363,6 +385,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         continousDemoFuture = null;
                     }
                 });
+        takeSnapshots("startSafeAbort");
         return safeAbortFuture;
     }
 
@@ -380,7 +403,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public XFuture<Void> startSafeAbortAndDisconnectAsync() {
         startSafeAbortAndDisconnectAsyncFuture
                 = this.pddlExecutorJInternalFrame1.startSafeAbort()
-                .thenRunAsync(this::disconnectRobot);
+                        .thenRunAsync(this::disconnectRobot);
         return startSafeAbortAndDisconnectAsyncFuture;
     }
 
@@ -394,6 +417,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.disconnect();
         }
+        takeSnapshots("disconnectRobot");
         this.setRobotName(null);
         System.out.println("disconnectRobot completed");
     }
@@ -451,6 +475,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (jCheckBoxMenuItemPause.isSelected()) {
             jCheckBoxMenuItemPause.setSelected(false);
         }
+        takeSnapshots("continueActionList");
         return pddlExecutorJInternalFrame1.continueActionList();
     }
 
@@ -576,6 +601,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private volatile XFuture<Boolean> lastRunProgramFuture = null;
+
     /**
      * Load the given program an begin running it.
      *
@@ -594,7 +621,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public synchronized XFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.setProgram(program);
-            return pendantClientJInternalFrame.runCurrentProgram();
+            lastRunProgramFuture = pendantClientJInternalFrame.runCurrentProgram();
+            return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram");
         ret.complete(false);
@@ -618,6 +646,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pddlExecutorJInternalFrame1.abortProgram();
         } else {
             abortCrclProgram();
+        }
+        if (null != lastResumeFuture) {
+            lastResumeFuture.cancelAll(true);
+            lastResumeFuture = null;
+        }
+        if (null != lastRunProgramFuture) {
+            lastRunProgramFuture.cancelAll(true);
+            lastRunProgramFuture = null;
         }
         jCheckBoxMenuItemPause.setSelected(false);
         jCheckBoxMenuItemContinousDemo.setSelected(false);
@@ -1308,7 +1344,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != crclClientError && crclClientError.length() > 0
                 && (null == titleErrorString || titleErrorString.length() < 1)) {
             this.titleErrorString = crclClientError;
-            pause();
+            pauseInternal();
+        }
+        if(isPaused()) {
+            stateString = "PAUSED";
         }
         String newTitle = "APRS : " + ((robotName != null) ? robotName : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : "
                 + stateDescription
@@ -1577,6 +1616,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenu2 = new javax.swing.JMenu();
         jCheckBoxMenuItemConnectDatabase = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemConnectVision = new javax.swing.JCheckBoxMenuItem();
+        jMenu4 = new javax.swing.JMenu();
+        jCheckBoxMenuItemEnableDebugDumpstacks = new javax.swing.JCheckBoxMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
@@ -1784,6 +1825,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenu2.add(jCheckBoxMenuItemConnectVision);
 
         jMenuBar1.add(jMenu2);
+
+        jMenu4.setText("Options");
+
+        jCheckBoxMenuItemEnableDebugDumpstacks.setText("Enable Debug DumpStacks");
+        jMenu4.add(jCheckBoxMenuItemEnableDebugDumpstacks);
+
+        jMenuBar1.add(jMenu4);
 
         jMenuExecute.setText("Execute");
 
@@ -2199,8 +2247,39 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    public XFuture<Boolean> resume() {
-        return continueCrclProgram();
+    private volatile XFuture<Boolean> lastResumeFuture = null;
+
+    public void resume() {
+        if (jCheckBoxMenuItemPause.isSelected()) {
+            jCheckBoxMenuItemPause.setSelected(false);
+        }
+        String methodName = "resume";
+        takeSnapshots(methodName);
+//        if(null != pendantClientJInternalFrame
+//                && pendantClientJInternalFrame.isPaused()
+//                && pendantClientJInternalFrame.isRunningProgram() ) {
+//            return continueCrclProgram();
+//        }
+//        System.err.println("Resume when not paused.");
+//        if(null != pddlExecutorJInternalFrame1) {
+//            return pddlExecutorJInternalFrame1.continueActionList().thenApply(x -> true);
+//        }
+//        lastResumeFuture = continueCrclProgram();
+//        return lastResumeFuture;
+        if(null != pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.unpauseCrclProgram();
+        }
+        updateTitle("", "");
+    }
+
+    public void takeSnapshots(String methodName) {
+        try {
+//            final String filename = getRunName() + Utils.getDateTimeString() + "_" + methodName + "_";
+            takeSimViewSnapshot(createTempFile(methodName, ".PNG"), null, null);
+            startVisionToDbNewItemsImageSave(createTempFile(methodName + "_new_database_items", ".PNG"));
+        } catch (IOException ex) {
+            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private final AtomicInteger debugActionCount = new AtomicInteger();
@@ -2213,6 +2292,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         System.out.println("Begin AprsJFrame.debugAction()" + count);
         String details = getDetailsString();
         System.out.println("details = " + details);
+        System.out.println("lastContinueCrclProgramResult = " + lastContinueCrclProgramResult);
         System.out.println("continousDemoFuture = " + continousDemoFuture);
         if (null != continousDemoFuture) {
             continousDemoFuture.printStatus(System.out);
@@ -2221,11 +2301,20 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != safeAbortFuture) {
             safeAbortFuture.printStatus(System.out);
         }
+        System.out.println("lastResumeFuture = " + lastResumeFuture);
+        if (null != lastResumeFuture) {
+            lastResumeFuture.printStatus(System.out);
+        }
+        System.out.println("lastResumeFuture = " + lastRunProgramFuture);
+        if (null != lastRunProgramFuture) {
+            lastRunProgramFuture.printStatus(System.out);
+        }
         System.out.println("startSafeAbortAndDisconnectAsyncFuture = " + startSafeAbortAndDisconnectAsyncFuture);
         if (null != startSafeAbortAndDisconnectAsyncFuture) {
             startSafeAbortAndDisconnectAsyncFuture.printStatus(System.out);
         }
         System.out.println("isConnected = " + isConnected());
+        System.out.println("isPaused = " + isPaused());
         System.out.println("getRobotCrclPort = " + getRobotCrclPort());
         System.out.println("isCrclProgramPaused() = " + isCrclProgramPaused());
         if (null != pddlExecutorJInternalFrame1) {
@@ -2246,7 +2335,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         return startActions()
                                 .thenRun(() -> setReverseFlag(true))
                                 .thenCompose(x2 -> startActions())
-                                .thenCompose(x2 -> x ? startContinousDemo() : XFuture.completedFutureWithName("startContinousDemo.completedFutureWithName",null));
+                                .thenCompose(x2 -> x ? startContinousDemo() : XFuture.completedFutureWithName("startContinousDemo.completedFutureWithName", null));
                     } else {
                         return Utils.runOnDispatchThread(() -> jCheckBoxMenuItemContinousDemo.setSelected(false));
                     }
@@ -2280,9 +2369,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public void pause() {
+        pauseInternal();
+        updateTitle("", "");
+    }
+
+    private void pauseInternal() {
         if (!jCheckBoxMenuItemPause.isSelected()) {
             jCheckBoxMenuItemPause.setSelected(true);
         }
+        takeSnapshots("pause");
         this.pauseCrclProgram();
     }
 
@@ -2321,7 +2416,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         this.titleErrorString = null;
         clearCrclClientErrorMessage();
         updateTitle();
-        if(null != pddlExecutorJInternalFrame1) {
+        if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.setErrorString(null);
         }
     }
@@ -2345,7 +2440,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public XFuture<Boolean> startCheckEnabled() {
         try {
             System.out.println("startCheckEnabled called.");
-            setConnected(true);
+            if (!isConnected()) {
+                setConnected(true);
+            }
             CRCLProgramType emptyProgram = createEmptyProgram();
             emptyProgram.getInitCanon().setCommandID(incrementAndGetCommandId());
             emptyProgram.getEndCanon().setCommandID(incrementAndGetCommandId());
@@ -2379,6 +2476,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(true);
         }
+        takeSnapshots("startActions");
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.refresh();
             return pddlExecutorJInternalFrame1.startActions();
@@ -2930,6 +3028,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToVisionOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVision;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinousDemo;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemEnableDebugDumpstacks;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemForceFakeTake;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKitInspectionStartup;
@@ -2949,6 +3048,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
+    private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenu jMenuExecute;
     private javax.swing.JMenuItem jMenuItemDebugAction;
@@ -3149,6 +3249,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private volatile boolean lastContinueCrclProgramResult = false;
+
+    private Boolean completeCrclProgramContinuation(Boolean ok) {
+        lastContinueCrclProgramResult = ok;
+        if (ok) {
+            pddlExecutorJInternalFrame1.checkSafeAbort(() -> null);
+        }
+        return ok;
+    }
+
     /**
      * Continue or start executing the currently loaded CRCL program.
      *
@@ -3162,11 +3272,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public XFuture<Boolean> continueCrclProgram() {
         if (null != pendantClientJInternalFrame) {
             return pendantClientJInternalFrame.continueCurrentProgram();
+//                    .thenApply(this::completeCrclProgramContinuation);
         } else {
             return XFuture.completedFuture(false);
         }
     }
-    
+
     public boolean isEnableVisionToDatabaseUpdates() {
         return visionToDbJInternalFrame.isEnableDatabaseUpdates();
     }
@@ -3176,11 +3287,28 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @param enableDatabaseUpdates new value of enableDatabaseUpdates
      */
-    public void setEnableVisionToDatabaseUpdates(boolean enableDatabaseUpdates, Map<String,Integer> requiredParts) {
-        visionToDbJInternalFrame.setEnableDatabaseUpdates(enableDatabaseUpdates,requiredParts);
-        if(enableDatabaseUpdates && null != object2DViewJInternalFrame) {
+    public void setEnableVisionToDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
+        visionToDbJInternalFrame.setEnableDatabaseUpdates(enableDatabaseUpdates, requiredParts);
+        if (enableDatabaseUpdates && null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(false);
         }
     }
+    
+    
+    
+    public File getlogFileDir() {
+        File f =   new File(Utils.getlogFileDir(),getRunName());
+        f.mkdirs();
+        return f;
+    }
+
+    public File createTempFile(String prefix, String suffix) throws IOException {
+        return File.createTempFile(Utils.getTimeString()+"_"+prefix, suffix, getlogFileDir());
+    }
+
+    public File createTempFile(String prefix, String suffix, File dir) throws IOException {
+        return File.createTempFile(prefix, suffix, dir);
+    }
+
 
 }

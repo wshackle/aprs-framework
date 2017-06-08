@@ -2087,6 +2087,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != aprsJFrame) {
             aprsJFrame.abortCrclProgram();
         }
+        completeSafeAbort();
+        replanStarted.set(rps);
+        runningProgram = false;
+        abortProgramTime = System.currentTimeMillis();
+        abortProgramCount.incrementAndGet();
+    }
+
+    public void completeSafeAbort() {
         while (safeAbortRunnablesVector.size() > 0) {
             Runnable r = safeAbortRunnablesVector.remove(0);
             if (null != r) {
@@ -2094,10 +2102,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         }
         this.safeAbortRequested = false;
-        replanStarted.set(rps);
-        runningProgram = false;
-        abortProgramTime = System.currentTimeMillis();
-        abortProgramCount.incrementAndGet();
     }
 
     private int takePartCount = 0;
@@ -2680,7 +2684,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         System.out.println("lastCheckAbortCurrentPart = " + lastCheckAbortCurrentPart);
         System.out.println("lastCheckAbortSafeAbortRequested = " + lastCheckAbortSafeAbortRequested);
         System.out.println("lastCheckSafeAbortTime = " + lastCheckSafeAbortTime);
-
+        System.out.println("lastReplanAfterCrclBlock = " + lastReplanAfterCrclBlock);
+        
 //        private volatile String lastCheckAbortCurrentPart = null;
 //    private volatile boolean lastCheckAbortSafeAbortRequested = false;
 //    private volatile long lastCheckSafeAbortTime = 0;
@@ -3145,7 +3150,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private volatile boolean lastCheckAbortSafeAbortRequested = false;
     private volatile long lastCheckSafeAbortTime = 0;
 
-    private XFuture<Boolean> checkSafeAbort(Supplier<XFuture<Boolean>> supplier) {
+    public XFuture<Boolean> checkSafeAbort(Supplier<XFuture<Boolean>> supplier) {
         boolean doSafeAbort;
 
         synchronized (this) {
@@ -3166,7 +3171,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             this.abortProgram();
             try {
                 if (pddlActionToCrclGenerator.isTakeSnapshots()) {
-                    takeSimViewSnapshot(Utils.createTempFile(pddlActionToCrclGenerator.getRunPrefix() + "-safe-abort-", ".PNG"), null, "");
+                    takeSimViewSnapshot(aprsJFrame.createTempFile("-safe-abort-", ".PNG"), null, "");
                 }
             } catch (IOException iOException) {
                 iOException.printStackTrace();
@@ -3250,6 +3255,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         Utils.autoResizeTableColWidths(jTablePositionCache);
     }
 
+    private boolean lastReplanAfterCrclBlock = false;
     private XFuture<Boolean> doPddlActionsSection() {
         try {
             CRCLProgramType program = pddlActionSectionToCrcl();
@@ -3258,6 +3264,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 boolean replanAfterCrclBlock
                         = pddlActionToCrclGenerator.getLastIndex() < actionsList.size() - 1
                         && jCheckBoxReplan.isSelected();
+                lastReplanAfterCrclBlock = replanAfterCrclBlock;
                 if (replanAfterCrclBlock) {
                     return startCrclProgram(program)
                             .thenCompose(this::recursiveApplyGenerateCrcl);
@@ -3285,7 +3292,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private volatile long runProgramCompleteRunnablesTime = 0;
 
-    private void runProgramCompleteRunnables() {
+    public void runProgramCompleteRunnables() {
         checkSafeAbort(() -> null);
         List<Runnable> runnables = new ArrayList<>();
         synchronized (this) {

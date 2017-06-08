@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 /**
  *
@@ -53,6 +54,14 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     
     public boolean getForceFakeTakeFlag() {
         return actionsToCrclJPanel1.getForceFakeTakeFlag();
+    }
+    
+    public void runProgramCompleteRunnables() {
+        this.actionsToCrclJPanel1.runProgramCompleteRunnables();
+    }
+    
+    public XFuture<Boolean> checkSafeAbort(Supplier<XFuture<Boolean>> supplier) {
+        return actionsToCrclJPanel1.checkSafeAbort(supplier);
     }
     
     /**

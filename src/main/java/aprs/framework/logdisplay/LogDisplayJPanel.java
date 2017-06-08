@@ -22,6 +22,7 @@
  */
 package aprs.framework.logdisplay;
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.Utils;
 import java.awt.Component;
 import java.awt.Desktop;
@@ -126,6 +127,27 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    
+        private AprsJFrame aprsJFrame;
+
+    /**
+     * Get the value of aprsJFrame
+     *
+     * @return the value of aprsJFrame
+     */
+    public AprsJFrame getAprsJFrame() {
+        return aprsJFrame;
+    }
+
+    /**
+     * Set the value of aprsJFrame
+     *
+     * @param aprsJFrame new value of aprsJFrame
+     */
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        this.aprsJFrame = aprsJFrame;
+    }
 
     private void jButtonToExternalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonToExternalActionPerformed
         try {

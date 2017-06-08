@@ -27,8 +27,6 @@ import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
 import static aprs.framework.Utils.runOnDispatchThread;
 import aprs.framework.database.AcquireEnum;
-import aprs.framework.database.DbQueryEnum;
-import aprs.framework.database.DbQueryInfo;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
@@ -83,6 +81,8 @@ import org.apache.commons.csv.CSVPrinter;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  *
@@ -1103,6 +1103,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             appendLogDisplay("\nupdateInfo(\n\t_list=" + visionList + ",\n\tline =" + line + "\n\t)\r\n");
         }
         autoResizeTableColWidths(jTableFromVision);
+        if (dpu.isEnableDatabaseUpdates()) {
+            notifyNextUpdateListeners(visionList);
+        }
     }
 
 //    private final TableModelListener tableModelListener;
@@ -1387,7 +1390,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    void setEnableDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
+    public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
         if (enableDatabaseUpdates || null != requiredParts) {
             this.setRequiredParts(requiredParts);
         }
@@ -1399,6 +1402,23 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
+    private final ConcurrentLinkedDeque<XFuture<List<DetectedItem>>> nextUpdateListeners 
+            = new ConcurrentLinkedDeque<>();
+    
+    public XFuture<List<DetectedItem>> getNextUpdate() {
+        XFuture<List<DetectedItem>> ret  = new XFuture<>("getNextUpdate");
+        nextUpdateListeners.add(ret);
+        return ret;
+    }
+    
+    private void notifyNextUpdateListeners(List<DetectedItem> l) {
+        XFuture<List<DetectedItem>> future;
+        List<DetectedItem> unmodifiableList = Collections.unmodifiableList(l);
+        while(null != (future = nextUpdateListeners.poll())) {
+            future.complete(unmodifiableList);
+        }
+    }
+    
     @Override
     public void visionClientUpdateRecieved(List<DetectedItem> visionList, String line) {
         if (acquire == AcquireEnum.OFF) {
@@ -1814,7 +1834,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public void toCsv(String name, JTable table) throws IOException {
-        File f = Utils.createTempFile(name, ".csv");
+        File f = aprsJFrame.createTempFile(name, ".csv");
         saveTableToFile(f, table);
         Desktop.getDesktop().open(f);
     }
@@ -1854,7 +1874,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void showDatabaseTableImage() {
         try {
-            File f = Utils.createTempFile("newDataBaseItems_", ".png");
+            File f = aprsJFrame.createTempFile("newDataBaseItems_", ".png");
             takeSnapshot(f);
             Desktop.getDesktop().open(f);
         } catch (IOException ex) {
@@ -1878,7 +1898,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
             File dbLogDir = new File(f.getParentFile(), "db_log_dir");
             dbLogDir.mkdirs();
-            File csvFile = Utils.createTempFile(f.getName() + "_db", ".csv", dbLogDir);
+            File csvFile = aprsJFrame.createTempFile(f.getName() + "_db", ".csv", dbLogDir);
             Utils.saveJTable(csvFile, jTableFromDatabase);
 
             List<DetectedItem> lastInput = dpu.getLastEnabledUpdateList();

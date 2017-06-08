@@ -216,6 +216,18 @@
             </MenuItem>
           </SubComponents>
         </Menu>
+        <Menu class="javax.swing.JMenu" name="jMenu4">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Options"/>
+          </Properties>
+          <SubComponents>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemEnableDebugDumpstacks">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Enable Debug DumpStacks"/>
+              </Properties>
+            </MenuItem>
+          </SubComponents>
+        </Menu>
         <Menu class="javax.swing.JMenu" name="jMenuExecute">
           <Properties>
             <Property name="text" type="java.lang.String" value="Execute"/>

@@ -108,7 +108,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (f.exists() && f.canRead()) {
                     try {
                         loadFile(f);
-                         fileLoaded = true;
+                        fileLoaded = true;
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -946,6 +946,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jComboBoxDisplayAxisActionPerformed
 
     private void loadFile(File f) throws IOException {
+
+        try {
+            takeSnapshot(aprsJFrame.createTempFile("before_loadFile_" + f.getName() + "_", ".PNG"), null, "");
+        } catch (IOException ex) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
         if (f.isDirectory()) {
             System.err.println("Can not load file \"" + f + "\" : It is a directory when a text/csv file is expected.");
             return;
@@ -953,6 +959,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         String line = Files.lines(f.toPath()).skip(1).map(String::trim).collect(Collectors.joining(","));
         this.setItems(VisionSocketClient.lineToList(line));
         jTextFieldFilename.setText(f.getCanonicalPath());
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            try {
+                takeSnapshot(aprsJFrame.createTempFile("loadFile_" + f.getName() + "_", ".PNG"), null, "");
+            } catch (IOException ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
     }
 
     private void saveFile(File f) throws IOException {
@@ -1506,14 +1519,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     if (true) {
                         System.out.println("Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
                         try {
-                            takeSnapshot(Utils.createTempFile(aprsJFrame.getRunName() + "capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
+                            takeSnapshot(aprsJFrame.createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
                         } catch (IOException ex) {
                             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 } else {
                     try {
-                        takeSnapshot(Utils.createTempFile(aprsJFrame.getRunName() + "failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
+                        takeSnapshot(aprsJFrame.createTempFile("failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -1525,14 +1538,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (true) {
                     System.out.println("Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
                     try {
-                        takeSnapshot(Utils.createTempFile(aprsJFrame.getRunName() + "_dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
+                        takeSnapshot(aprsJFrame.createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
                 if (captured_item_index < 0) {
                     try {
-                        takeSnapshot(Utils.createTempFile(aprsJFrame.getRunName() + "failed_to_drop_part_", ".PNG"), null, "");
+                        takeSnapshot(aprsJFrame.createTempFile("failed_to_drop_part_", ".PNG"), null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }

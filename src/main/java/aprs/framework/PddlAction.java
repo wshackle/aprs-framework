@@ -152,7 +152,7 @@ public class PddlAction {
 
     @Override
     public String toString() {
-        return type + " : " + Arrays.toString(args);
+        return type + "-" + Arrays.toString(args);
     }
 
     

@@ -101,7 +101,18 @@ public class Object2DJPanel extends JPanel {
     }
 
     public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
-        BufferedImage img = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+        final int w = this.getWidth();
+        final int h = this.getHeight();
+        if(w < 1 || h < 1) {
+            System.err.println("Can not take snapshot with sized to "+w+" x "+h);
+            return;
+        }
+        takeSnapshot(f, pose, label,w,h);
+    }
+    
+    public void takeSnapshot(File f, PoseType pose, String label, final int w, final int h) throws IOException {
+        
+        BufferedImage img = new BufferedImage(w,h, BufferedImage.TYPE_3BYTE_BGR);
         int pindex = f.getName().lastIndexOf('.');
         String type = "JPEG";
         if (pindex > 0) {
@@ -158,7 +169,17 @@ public class Object2DJPanel extends JPanel {
     }
 
     public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
-        BufferedImage img = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+        final int w = this.getWidth();
+        final int h = this.getHeight();
+        if(w < 1 || h < 1) {
+            System.err.println("Can not take snapshot with sized to "+w+" x "+h);
+            return;
+        }
+        takeSnapshot(f, itemsToPaint,w,h);
+    }
+    
+    public void takeSnapshot(File f, List<DetectedItem> itemsToPaint, final int w, final int h) throws IOException {
+        BufferedImage img = new BufferedImage(w,h, BufferedImage.TYPE_3BYTE_BGR);
         int pindex = f.getName().lastIndexOf('.');
         String type = "JPEG";
         if (pindex > 0) {

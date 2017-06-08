@@ -73,6 +73,10 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         this.visionToDBJPanel.setAprsJFrame(aprsJFrame);
     }
 
+    public XFuture<List<DetectedItem>> getNextUpdate() {
+        return visionToDBJPanel.getNextUpdate();
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

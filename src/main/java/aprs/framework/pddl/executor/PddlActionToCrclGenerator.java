@@ -55,6 +55,7 @@ import crcl.base.SetRotSpeedType;
 import crcl.base.SetTransSpeedType;
 import crcl.base.TransSpeedAbsoluteType;
 import crcl.base.VectorType;
+import crcl.ui.XFuture;
 import crcl.utils.CrclCommandWrapper;
 import crcl.utils.CRCLPosemath;
 import java.sql.Connection;
@@ -89,6 +90,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.util.concurrent.ExecutionException;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -323,8 +325,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             }
                             System.err.println("");
                             System.err.println("Exception handled at ");
-                            Thread.dumpStack();
                             if (null != aprsJFrame) {
+                                if (aprsJFrame.isEnableDebugDumpstacks()) {
+                                    Thread.dumpStack();
+                                }
                                 aprsJFrame.setTitleErrorString("Database error: " + ex.toString());
                             }
                         }
@@ -466,6 +470,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
             PddlAction action = actions.get(lastIndex);
             System.out.println("action = " + action);
+            takeSnapshots("generating crcl for actions.get(" + lastIndex + ")=" + action, null, null);
 //            try {
             switch (action.getType()) {
                 case "take-part":
@@ -517,10 +522,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             actionToCrclLabels[lastIndex] = "";
             actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
             final int markerIndex = lastIndex;
-            addMarkerCommand(cmds, "end action " + markerIndex + ": " + action.getType() + " " + Arrays.toString(action.getArgs()),
+            String end_action_string = "end action " + markerIndex + ": " + action.getType() + " " + Arrays.toString(action.getArgs());
+            addMarkerCommand(cmds, end_action_string,
                     (CrclCommandWrapper wrapper) -> {
                         notifyActionCompletedListeners(markerIndex, action);
                     });
+            addTakeSnapshots(cmds, end_action_string, null, null);
         }
         return cmds;
     }
@@ -841,10 +848,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public void takeSnapshots(String title, PoseType pose, String label) {
         if (takeSnapshots) {
             try {
-                final String filename = getRunPrefix() + title;
-                takeSimViewSnapshot(Utils.createTempFile(filename, ".PNG"), pose, label);
-                takeDatabaseViewSnapshot(Utils.createTempFile(filename + "_new_database_items", ".PNG"));
-                takeSimViewSnapshot(Utils.createTempFile(filename + "_pose_cache", ".PNG"), poseCacheToDetectedItemList());
+                takeSimViewSnapshot(aprsJFrame.createTempFile(title, ".PNG"), pose, label);
+                takeDatabaseViewSnapshot(aprsJFrame.createTempFile(title + "_new_database_items", ".PNG"));
+                takeSimViewSnapshot(aprsJFrame.createTempFile(title + "_pose_cache", ".PNG"), poseCacheToDetectedItemList());
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -857,7 +863,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @return run prefix
      */
     public String getRunPrefix() {
-        return getRunName() + Utils.getDateTimeString() + String.format("%03d", crclNumber) + "-action-" + String.format("%03d", lastIndex);
+        return getRunName() + Utils.getDateTimeString() + "_" + String.format("%03d", crclNumber) + "-action-" + String.format("%03d", lastIndex);
     }
 
     private final AtomicLong commandId = new AtomicLong(100 * (System.currentTimeMillis() % 200));
@@ -1544,6 +1550,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     throw new IllegalStateException("two poses in cache are too close : posename=" + posename + ",pose=" + CRCLPosemath.toString(point) + ", entry=" + entry + ", entryPoint=" + CRCLPosemath.toString(entryPoint));
                 }
             }
+        } else {
+            System.err.println("getPose(" + posename + ") returning null.");
         }
         return pose;
     }
@@ -2246,11 +2254,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
             }
         }
+
         if (null != lastRequiredPartsMap && requiredPartsMap.isEmpty()) {
             requiredPartsMap.putAll(lastRequiredPartsMap);
         } else if (!requiredPartsMap.isEmpty()) {
             lastRequiredPartsMap = requiredPartsMap;
         }
+        final Map<String, Integer> immutableRequiredPartsMap = Collections.unmodifiableMap(requiredPartsMap);
         if (atLookForPosition) {
             atLookForPosition = checkAtLookForPosition();
         }
@@ -2258,7 +2268,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             addMoveToLookForPosition(out);
             addAfterMoveToLookForDwell(out);
             addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
-                aprsJFrame.setEnableVisionToDatabaseUpdates(true, Collections.unmodifiableMap(requiredPartsMap));
+                aprsJFrame.setEnableVisionToDatabaseUpdates(true, immutableRequiredPartsMap);
             });
             if (firstAction) {
                 addFirstLookDwell(out);
@@ -2269,16 +2279,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         } else {
             addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
-                aprsJFrame.setEnableVisionToDatabaseUpdates(true, Collections.unmodifiableMap(requiredPartsMap));
+                aprsJFrame.setEnableVisionToDatabaseUpdates(true, immutableRequiredPartsMap);
             });
             addSkipLookDwell(out);
         }
 
-        addMarkerCommand(out, "disableVisionToDatabaseUpdates", x -> {
-            aprsJFrame.setEnableVisionToDatabaseUpdates(false, null);
+        addMarkerCommand(out, "waitForCompleteVisionUpdates", x -> {
+            waitForCompleteVisionUpdates(immutableRequiredPartsMap);
         });
         addTakeSnapshots(out, "-look-for-parts-", null, "");
-        addMarkerCommand(out, "clear pose cache", x -> this.clearPoseCache());
         if (action.getArgs().length == 1) {
             if (action.getArgs()[0].startsWith("1")) {
                 addMarkerCommand(out, "", x -> {
@@ -2317,6 +2326,26 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         } else {
             TakenPartList.clear();
+        }
+    }
+
+    private void waitForCompleteVisionUpdates(Map<String, Integer> requiredPartsMap) {
+        try {
+            XFuture<List<DetectedItem>> xfl = aprsJFrame.getNextUpdate();
+            aprsJFrame.refreshSimView();
+            while (!xfl.isDone()) {
+                if (!aprsJFrame.isEnableVisionToDatabaseUpdates()) {
+                    System.err.println("VisionToDatabaseUpdates not enabled as expected.");
+                    aprsJFrame.setEnableVisionToDatabaseUpdates(true, requiredPartsMap);
+                }
+                Thread.sleep(50);
+                aprsJFrame.refreshSimView();
+            }
+            List<DetectedItem> l = xfl.get();
+            aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile("lookForParts_update_", ".PNG"), l);
+            aprsJFrame.setEnableVisionToDatabaseUpdates(false, null);
+            clearPoseCache();
+        } catch (InterruptedException | ExecutionException | IOException interruptedException) {
         }
     }
 

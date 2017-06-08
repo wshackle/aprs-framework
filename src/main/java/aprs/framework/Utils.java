@@ -137,6 +137,14 @@ public class Utils {
         return dateFormat.format(date);
     }
 
+    private static final DateFormat timeFormat = new SimpleDateFormat("HHmmss.SSS");
+    
+    public static String getTimeString() {
+        Date date = new Date();
+        return timeFormat.format(date);
+    }
+
+    
     public static SwingFuture<Void> runOnDispatchThreadWithCatch(final RunnableWithThrow r) {
         SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThreadWithCatch");
         try {

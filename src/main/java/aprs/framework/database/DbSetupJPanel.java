@@ -456,7 +456,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }//GEN-LAST:event_jComboBoxDbTypeActionPerformed
 
-        private AprsJFrame aprsJFrame = null;
+    private AprsJFrame aprsJFrame = null;
 
     /**
      * Get the value of aprsJFrame
@@ -491,7 +491,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                         System.err.println(stackTraceElemArray[i]);
                     }
                     System.err.println("Exception handled at ");
-                    Thread.dumpStack();
+                    if (aprsJFrame.isEnableDebugDumpstacks()) {
+                        Thread.dumpStack();
+                    }
                     if (null != aprsJFrame) {
                         aprsJFrame.setTitleErrorString("Database error: " + e.toString());
                     }
@@ -903,7 +905,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     if (!cancelWarnGiven) {
                         cancelWarnGiven = true;
                         System.err.println("Cancelling a dbSetup notification");
-                        Thread.dumpStack();
+                        if (aprsJFrame.isEnableDebugDumpstacks()) {
+                            Thread.dumpStack();
+                        }
                     }
                     f.cancel(false);
                 }
