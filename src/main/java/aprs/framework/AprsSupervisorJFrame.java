@@ -859,6 +859,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jMenuOptions = new javax.swing.JMenu();
         jCheckBoxMenuItemDisableTextPopups = new javax.swing.JCheckBoxMenuItem();
         jMenuItemStartColorTextDisplay = new javax.swing.JMenuItem();
+        jCheckBoxMenuItemDebugStartReverse = new javax.swing.JCheckBoxMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Multi Aprs Supervisor");
@@ -1313,6 +1314,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jMenuItemStartColorTextDisplay);
+
+        jCheckBoxMenuItemDebugStartReverse.setText("Debug Start Reverse");
+        jCheckBoxMenuItemDebugStartReverse.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemDebugStartReverseActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jCheckBoxMenuItemDebugStartReverse);
 
         jMenuBar1.add(jMenuOptions);
 
@@ -1925,6 +1934,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemPauseResumeTestActionPerformed
 
+    private void jCheckBoxMenuItemDebugStartReverseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemDebugStartReverseActionPerformed
+        debugStartReverseActions = jCheckBoxMenuItemDebugStartReverse.isSelected();
+    }//GEN-LAST:event_jCheckBoxMenuItemDebugStartReverseActionPerformed
+
     public XFuture<Void> startRandomTest() {
         connectAll();
         return checkEnabledAll()
@@ -2183,10 +2196,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return continousDemoFuture;
     }
 
+    private volatile boolean debugStartReverseActions = false;
+
     public XFuture<Void> startReverseActions() {
         disallowToggles();
         setReverseFlag(true);
-        debugAction();
+        if (debugStartReverseActions) {
+            debugAction();
+        }
         return Utils.runOnDispatchThread(this::enableAllRobots)
                 .thenCompose("startReverseActions.checkAllEnabled", x -> checkEnabledAll())
                 .thenCompose("startReverseActions.startAllActions", ok -> checkOkElse(ok, this::startAllActions, this::showCheckEnabledErrorSplash));
@@ -2321,7 +2338,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             AprsJFrame aprsSys = aprsSystems.get(i);
             if (aprsSys.isPaused()) {
                 aprsSys.resume();
-            } 
+            }
 //            else {
 //                futures[i] = XFuture.completedFuture(null);
 //            }
@@ -2842,6 +2859,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButtonSetInFromCurrent;
     private javax.swing.JButton jButtonSetOutFromCurrent;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinousDemo;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDebugStartReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDisableTextPopups;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPauseResumeTest;

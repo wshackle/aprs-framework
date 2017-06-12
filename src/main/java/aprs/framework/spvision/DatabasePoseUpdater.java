@@ -890,7 +890,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     tray.x + x * Math.cos(angle) - y * Math.sin(angle),
                     tray.y + x * Math.sin(angle) + y * Math.cos(angle)
             );
-            item.type = "SLOT";
+            item.type = "S";
             item.tray = tray;
             item.slotForSkuName = offsetItem.slotForSkuName;
             item.visioncycle = tray.visioncycle;
@@ -898,7 +898,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
             item = new DetectedItem("empty_slot_for_" + sku_name + "_in_" + tray_name, 0,
                     tray.x + x * Math.cos(angle) - y * Math.sin(angle),
                     tray.y + x * Math.sin(angle) + y * Math.cos(angle));
-            item.type = "EMPTY_SLOT";
+            item.type = "ES";
             item.tray = tray;
             item.visioncycle = tray.visioncycle;
             item.slotForSkuName = offsetItem.slotForSkuName;
@@ -957,7 +957,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         for (DetectedItem kitTrayItem : kitTrays) {
             kitTrayItem.emptySlotsList
                     = emptySlots.stream()
-                            .filter((DetectedItem slotItem) -> "EMPTY_SLOT".equals(slotItem.type))
+                            .filter((DetectedItem slotItem) -> "ES".equals(slotItem.type))
                             .filter((DetectedItem slotItem) -> slotItem.tray == kitTrayItem)
                             .collect(Collectors.toList());
             kitTrayItem.emptySlotsCount = kitTrayItem.emptySlotsList.size();
@@ -974,12 +974,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
         final int mnzt = min_non_zero_tray;
         List<DetectedItem> firstTraySlots = emptySlots
                 .stream()
-                .filter((DetectedItem slotItem) -> "EMPTY_SLOT".equals(slotItem.type))
+                .filter((DetectedItem slotItem) -> "ES".equals(slotItem.type))
                 .filter((DetectedItem slotItem) -> slotItem.tray != null && slotItem.tray.kitTrayNum == mnzt)
                 .collect(Collectors.toList());
         List<DetectedItem> otherTraySlots = emptySlots
                 .stream()
-                .filter((DetectedItem slotItem) -> "EMPTY_SLOT".equals(slotItem.type))
+                .filter((DetectedItem slotItem) -> "ES".equals(slotItem.type))
                 .filter((DetectedItem slotItem) -> slotItem.tray == null || slotItem.tray.kitTrayNum != mnzt)
                 .collect(Collectors.toList());
         List<DetectedItem> orderedEmptySlots = new ArrayList<>();
@@ -1216,7 +1216,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                                 .collect(Collectors.toList());
                 List<DetectedItem> emptySlots
                         = list.stream()
-                                .filter((DetectedItem item) -> "EMPTY_SLOT".equals(item.type))
+                                .filter((DetectedItem item) -> "ES".equals(item.type))
                                 .collect(Collectors.toList());
                 Comparator<DetectedItem> kitComparator
                         = comparingLong((DetectedItem kt) -> (kt.emptySlotsCount < 1) ? Long.MAX_VALUE : kt.emptySlotsCount);

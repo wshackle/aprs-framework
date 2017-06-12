@@ -3187,11 +3187,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 () -> {
                     try {
                         return checkDbSupplierPublisher()
-                        .thenCompose(x -> {
-                            return Utils.supplyOnDispatchThread(() -> {
-                                return doPddlActionsSection();
-                            });
-                        }).thenCompose(x -> x);
+                        .thenComposeAsync(x -> doPddlActionsSection());
                     } catch (IOException ex) {
                         Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         XFuture<Boolean> xf = new XFuture<>("generateCrclException");

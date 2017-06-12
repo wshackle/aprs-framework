@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:2139
+#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:2184
 --acquirestate=ON
 --commandport=4001
 --dbhost=ying-220.el.nist.gov

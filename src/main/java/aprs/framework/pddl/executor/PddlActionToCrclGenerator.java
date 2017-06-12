@@ -90,6 +90,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -814,6 +815,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         return Collections.unmodifiableList(l);
     }
+    
+    private List<DetectedItem> slotsToDetectedItemList(Collection<Slot> slots) {
+        List<DetectedItem> l = new ArrayList<>();
+        for (Slot slot : slots) {
+            l.add(new DetectedItem(slot.getSlotName(),slot.getSlotPose(), 0));
+        }
+        l.addAll(poseCacheToDetectedItemList());
+        return Collections.unmodifiableList(l);
+    }
 
     /**
      * Take a snapshot of the view of objects positions and save it in the
@@ -931,6 +941,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (action.getArgs().length < 2) {
             throw new IllegalArgumentException("action = " + action + " needs at least two arguments: kitSku inspectionID");
         }
+        waitForCompleteVisionUpdates(lastRequiredPartsMap);
         takeSnapshots("-inspect-kit-", null, "");
 
 //        addTakeSnapshots(out, "-inspect-kit-", null, "");
@@ -1008,6 +1019,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 if (numberOfPartsInKit == partDesignPartCount) {
                     kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #7ef904\">&nbsp;&nbsp;The kit is complete</h3><br>");
                 } else {
+                    try {
+                        takeSimViewSnapshot(aprsJFrame.createTempFile("inspectKit-slotList", ".PNG"), slotsToDetectedItemList(slotList));
+                        takeSimViewSnapshot(aprsJFrame.createTempFile("inspectKit-EmptySlotSet", ".PNG"), slotsToDetectedItemList(EmptySlotSet));
+                    } catch (IOException ex) {
+                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     //if (part_in_kt_found) {
                     TakenPartList.clear();
                     int nbofmissingparts = partDesignPartCount - numberOfPartsInKit;
@@ -2288,10 +2305,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addMarkerCommand(out, "waitForCompleteVisionUpdates", x -> {
             waitForCompleteVisionUpdates(immutableRequiredPartsMap);
         });
-        addTakeSnapshots(out, "-look-for-parts-", null, "");
-        if (action.getArgs().length == 1) {
+        addTakeSnapshots(out, "lookForParts-"+((action.getArgs().length ==1)?action.getArgs()[0]:""), null, "");
+        if (action.getArgs().length >= 1) {
             if (action.getArgs()[0].startsWith("1")) {
-                addMarkerCommand(out, "", x -> {
+                addMarkerCommand(out, "Inspecting kit", x -> {
                     kitInspectionJInternalFrame.getKitTitleLabel().setText("Inspecting kit");
                     try {
                         kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR:" + messageColorH3 + "\">&nbsp;&nbsp;Inspecting kit</h2>");
@@ -2303,7 +2320,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 });
 
             } else if (action.getArgs()[0].startsWith("0")) {
-                addMarkerCommand(out, "", x -> {
+                addMarkerCommand(out, "Building kit", x -> {
                     kitInspectionJInternalFrame.getKitTitleLabel().setText("Building kit");
                     try {
                         kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;Building kit</h2>");
@@ -2314,7 +2331,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     }
                 });
             } else if (action.getArgs()[0].startsWith("2")) {
-                addMarkerCommand(out, "", x -> {
+                addMarkerCommand(out, "All Tasks Completed", x -> {
                     kitInspectionJInternalFrame.getKitTitleLabel().setText("All Tasks Completed");
                     try {
                         kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;All tasks completed</h2>");
@@ -2332,6 +2349,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void waitForCompleteVisionUpdates(Map<String, Integer> requiredPartsMap) {
         try {
+            aprsJFrame.setEnableVisionToDatabaseUpdates(true, requiredPartsMap);
             XFuture<List<DetectedItem>> xfl = aprsJFrame.getNextUpdate();
             aprsJFrame.refreshSimView();
             while (!xfl.isDone()) {
@@ -2345,8 +2363,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             List<DetectedItem> l = xfl.get();
             aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile("lookForParts_update_", ".PNG"), l);
             aprsJFrame.setEnableVisionToDatabaseUpdates(false, null);
+            aprsJFrame.getUpdatesFinished().join();
             clearPoseCache();
-        } catch (InterruptedException | ExecutionException | IOException interruptedException) {
+        } catch (Exception ex) {
+            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

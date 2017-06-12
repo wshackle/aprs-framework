@@ -83,6 +83,7 @@ import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -1395,6 +1396,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
+    private volatile StackTraceElement setEnableDatabaseUpdatesTrueStacktraceArray[] = null;
+    private volatile StackTraceElement setEnableDatabaseUpdatesFalseStacktraceArray[] = null;
+    private volatile long setEnableDatabaseUpdatesTrueTime = 0;
+    private volatile long setEnableDatabaseUpdatesFalseTime = 0;
+    
     public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
         if (enableDatabaseUpdates || null != requiredParts) {
             this.setRequiredParts(requiredParts);
@@ -1404,6 +1410,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         if (enableDatabaseUpdates != jCheckBoxDbUpdateEnabled.isSelected()) {
             jCheckBoxDbUpdateEnabled.setSelected(enableDatabaseUpdates);
+        }
+        if(enableDatabaseUpdates) {
+            setEnableDatabaseUpdatesTrueStacktraceArray = Thread.currentThread().getStackTrace();
+            setEnableDatabaseUpdatesTrueTime = System.currentTimeMillis();
+        } else {
+            setEnableDatabaseUpdatesFalseStacktraceArray = Thread.currentThread().getStackTrace();
+            setEnableDatabaseUpdatesFalseTime = System.currentTimeMillis();
         }
     }
 
@@ -1424,6 +1437,20 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
     
+    private volatile boolean updating = false;
+    
+    private final ConcurrentLinkedDeque<XFuture<Void>> finishedUpdateListeners 
+            = new ConcurrentLinkedDeque<>();
+    
+    public XFuture<Void> getUpdatesFinished() {
+        if(!updating && !dpu.isEnableDatabaseUpdates()) {
+            return XFuture.completedFutureWithName("getUpdatesFinished.alreadyComplee", null);
+        }
+        XFuture<Void> ret  = new XFuture<>("getUpdatesFinished");
+        finishedUpdateListeners.add(ret);
+        return ret;
+    }
+    
     @Override
     public void visionClientUpdateRecieved(List<DetectedItem> visionList, String line) {
         if (acquire == AcquireEnum.OFF) {
@@ -1437,6 +1464,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
 
         if (null != dpu && null != dpu.getSqlConnection()) {
+            updating = true;
             if (dpu.isEnableDatabaseUpdates()) {
                 checkRequiredParts(visionList);
             }
@@ -1451,9 +1479,21 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 List<DetectedItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCountsToDatabaseNames, false);
                 runOnDispatchThread(() -> this.updateInfo(l, line));
             }
+            updating = false;
+            if(!dpu.isEnableDatabaseUpdates()) {
+                notifyFinishedUpdatingListeners();
+            }
         }
     }
 
+    private void notifyFinishedUpdatingListeners() {
+        XFuture future = finishedUpdateListeners.pollFirst();
+        while(future != null) {
+            future.complete(null);
+            future = finishedUpdateListeners.pollFirst();
+        }
+    }
+    
     private void startVisionInternal(Map<String, String> argsMap) {
         closeVision();
         if (null == visionClient) {

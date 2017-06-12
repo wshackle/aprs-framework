@@ -131,6 +131,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return visionToDbJInternalFrame.getNextUpdate();
     }
     
+    public XFuture<Void> getUpdatesFinished() {
+        if(null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("null == visionToDbJInternalFrame");
+        }
+        return visionToDbJInternalFrame.getUpdatesFinished();
+    }
+    
     public void refreshSimView() {
         if(null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(false);
@@ -417,7 +424,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.disconnect();
         }
-        takeSnapshots("disconnectRobot");
+        if(null != getRobotName()) {
+            takeSnapshots("disconnectRobot");
+        }
         this.setRobotName(null);
         System.out.println("disconnectRobot completed");
     }
@@ -1380,6 +1389,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Update the title based on the current state.
      */
     public void updateTitle() {
+        Utils.runOnDispatchThread(this::updateTitleInternal);
+    }
+    
+    private void updateTitleInternal() {
         if (null != pendantClientJInternalFrame) {
             CommandStatusType cs = pendantClientJInternalFrame.getCurrentStatus()
                     .map(x -> x.getCommandStatus())
@@ -1396,6 +1409,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             updateTitle("", "");
         }
     }
+    
+    
 
     private void startPendantClientJInternalFrame() {
         try {
