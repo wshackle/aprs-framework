@@ -36,6 +36,7 @@ import aprs.framework.database.DetectedItem;
 import aprs.framework.database.DetectedItemJPanel;
 import aprs.framework.database.PoseQueryElem;
 import aprs.framework.database.SocketLineReader;
+import aprs.framework.pddl.executor.PartsTray;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import crcl.ui.misc.MultiLineStringJPanel;
@@ -93,6 +94,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private DbSetupPublisher dbSetupPublisher;
 
+    
+    public List<PartsTray> getPartsTrayList() {
+        if(null == dpu) {
+            throw new IllegalStateException("dpu == null");
+        }
+        return dpu.getPartsTrayList();
+    }
     /**
      * Creates new form VisionToDBJPanel
      */

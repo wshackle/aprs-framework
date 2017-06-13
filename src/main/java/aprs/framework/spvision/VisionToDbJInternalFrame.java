@@ -28,6 +28,7 @@ import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.DetectedItem;
 import aprs.framework.database.PoseQueryElem;
+import aprs.framework.pddl.executor.PartsTray;
 import crcl.ui.XFuture;
 import java.io.File;
 import java.sql.Connection;
@@ -50,6 +51,10 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
 //        DbMain.setDisplayInterface(this);
     }
 
+    public List<PartsTray> getPartsTrayList() {
+        return visionToDBJPanel.getPartsTrayList();
+    }
+    
 //    public DbSetupPublisher getDbSetupPublisher() {
 //        return this.visionToDBJPanel.getDbSetupPublisher();
 //    }

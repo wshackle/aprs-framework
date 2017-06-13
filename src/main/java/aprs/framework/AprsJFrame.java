@@ -31,6 +31,7 @@ import aprs.framework.database.DetectedItem;
 import aprs.framework.database.explore.ExploreGraphDbJInternalFrame;
 import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import aprs.framework.logdisplay.LogDisplayJInternalFrame;
+import aprs.framework.pddl.executor.PartsTray;
 import aprs.framework.pddl.executor.PddlActionToCrclGenerator;
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.pddl.executor.PositionMap;
@@ -129,6 +130,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             throw new IllegalStateException("null == visionToDbJInternalFrame");
         }
         return visionToDbJInternalFrame.getNextUpdate();
+    }
+    
+    public List<PartsTray> getPartsTrayList() {
+        if(null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("null == visionToDbJInternalFrame");
+        }
+        return visionToDbJInternalFrame.getPartsTrayList();
     }
     
     public XFuture<Void> getUpdatesFinished() {

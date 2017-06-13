@@ -1124,7 +1124,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      */
     private PartsTray findCorrectKitTray(String kitSku) throws SQLException {
 
-        List<PartsTray> dpuPartsTrayList = DatabasePoseUpdater.partsTrayList;
+        List<PartsTray> dpuPartsTrayList = aprsJFrame.getPartsTrayList();
         //-- retrieveing from the database all the parts trays that have the sku kitSku
         List<PartsTray> partsTraysList = getPartsTrays(kitSku);
 
