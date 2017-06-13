@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:2812
+#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:2925
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 aprs.robotName=Fanuc
 aprs.taskName=Fanuc Cart

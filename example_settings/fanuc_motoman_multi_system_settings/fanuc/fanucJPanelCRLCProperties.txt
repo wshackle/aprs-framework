@@ -1,10 +1,10 @@
 #
-#Thu Jun 01 16:04:53 EDT 2017
+#Tue Jun 13 11:06:37 EDT 2017
 ode.exe=sensorServer.js
 autoStartPressureSensorServer=true
 fingerSensorServerCmd=C\:Program Files
-odejs=
 showPressureOutput=true
+odejs=
 autoStartClient=true
-keepMoveToLog=true
+keepMoveToLog=false
 fingerSensorServerDirectory=C\:UsersPublicDocumentsFingerPressureSensorNodeJS
