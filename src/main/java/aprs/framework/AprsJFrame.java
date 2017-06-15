@@ -3336,11 +3336,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public File createTempFile(String prefix, String suffix) throws IOException {
-        return File.createTempFile(Utils.getTimeString()+"_"+prefix, suffix, getlogFileDir());
+        return File.createTempFile(Utils.getTimeString()+"_"+prefix.replaceAll("[ :;-]+", "_"), suffix, getlogFileDir());
     }
 
     public File createTempFile(String prefix, String suffix, File dir) throws IOException {
-        return File.createTempFile(prefix, suffix, dir);
+        return File.createTempFile(prefix.replaceAll("[ :;-]+", "_"), suffix, dir);
     }
 
 
