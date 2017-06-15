@@ -139,18 +139,18 @@ public class VisionSocketServer implements AutoCloseable {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < list.size(); i++) {
             DetectedItem item = list.get(i);
-            if (null != item && item.name != null && item.name.length() > 0) {
-                sb.append(item.name);
+            if (null != item && item.getName() != null && item.getName().length() > 0) {
+                sb.append(item.getName());
                 sb.append(',');
-                sb.append(item.rotation);
+                sb.append(item.getRotation());
                 sb.append(',');
                 sb.append(item.x);
                 sb.append(',');
                 sb.append(item.y);
                 sb.append(',');
-                sb.append(item.score);
+                sb.append(item.getScore());
                 sb.append(',');
-                sb.append(item.type);
+                sb.append(item.getType());
                 sb.append(',');
             }
         }

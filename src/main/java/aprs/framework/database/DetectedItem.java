@@ -46,38 +46,39 @@ import rcs.posemath.PM_CARTESIAN;
 //TODO-zeid
 public class DetectedItem extends PM_CARTESIAN {
 
+    
     final public String origName;
-    public String name;
-    public String fullName;
-    public int repeats;
-    public int index;
-    public double rotation;
-    public double vxi = 1;
-    public double vxj = 0;
-    public double vxk = 0;
-    public double vzi = 0;
-    public double vzj = 0;
-    public double vzk = 1;
-    public double score = 100.0;
-    public int visioncycle;
-    public String type;
-    public AffineTransform displayTransform;
-    public AffineTransform origTransform;
-    public AffineTransform relTransform;
-    public Rectangle2D.Double displayRect;
-    public boolean insideKitTray;
-    public boolean insidePartsTray;
-    public String setQuery;
-    public long timestamp;
-    public DetectedItem tray;
-    public long emptySlotsCount;
-    public long totalSlotsCount;
-    public double maxSlotDist;
-    public List<DetectedItem> emptySlotsList = new ArrayList<>();
-    public int kitTrayNum;
-    public String slotForSkuName;
-    public Color labelColor = Color.BLACK;
-    public String newSlotQuery = null;
+    private String name;
+    private String fullName;
+    private int repeats;
+    private int index;
+    private double rotation;
+    private double vxi = 1;
+    private double vxj = 0;
+    private double vxk = 0;
+    private double vzi = 0;
+    private double vzj = 0;
+    private double vzk = 1;
+    private double score = 100.0;
+    private int visioncycle;
+    private String type;
+    private AffineTransform displayTransform;
+    private AffineTransform origTransform;
+    private AffineTransform relTransform;
+    private Rectangle2D.Double displayRect;
+    private boolean insideKitTray;
+    private boolean insidePartsTray;
+    private String setQuery;
+    private long timestamp;
+    private DetectedItem tray;
+    private long emptySlotsCount;
+    private long totalSlotsCount;
+    private double maxSlotDist;
+    private List<DetectedItem> emptySlotsList = new ArrayList<>();
+    private int kitTrayNum;
+    private String slotForSkuName;
+    private Color labelColor = Color.BLACK;
+    private String newSlotQuery = null;
     
 
     public DetectedItem(String name) {
@@ -121,8 +122,7 @@ public class DetectedItem extends PM_CARTESIAN {
     }
 
     public DetectedItem(String name, PoseType pose, int visioncycle) {
-        this.origName = name;
-        this.name = name;
+        this(name);
         if (null != pose) {
             VectorType xAxis = pose.getXAxis();
             if (null != xAxis) {
@@ -164,6 +164,254 @@ public class DetectedItem extends PM_CARTESIAN {
     @Override
     public String toString() {
         return "DetectedItem{" + "name=" + name + ", fullName=" + fullName + ", repeats=" + repeats + ", index=" + index + ", rotation=" + rotation + ", x=" + x + ", y=" + y + ", z=" + z + ", vxi=" + vxi + ", vxj=" + vxj + ", vxk=" + vxk + ", vzi=" + vzi + ", vzj=" + vzj + ", vzk=" + vzk + ", score=" + score + ", type=" + type + '}';
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public int getRepeats() {
+        return repeats;
+    }
+
+    public void setRepeats(int repeats) {
+        this.repeats = repeats;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    public double getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(double rotation) {
+        this.rotation = rotation;
+    }
+
+    public double getVxi() {
+        return vxi;
+    }
+
+    public void setVxi(double vxi) {
+        this.vxi = vxi;
+    }
+
+    public double getVxj() {
+        return vxj;
+    }
+
+    public void setVxj(double vxj) {
+        this.vxj = vxj;
+    }
+
+    public double getVxk() {
+        return vxk;
+    }
+
+    public void setVxk(double vxk) {
+        this.vxk = vxk;
+    }
+
+    public double getVzi() {
+        return vzi;
+    }
+
+    public void setVzi(double vzi) {
+        this.vzi = vzi;
+    }
+
+    public double getVzj() {
+        return vzj;
+    }
+
+    public void setVzj(double vzj) {
+        this.vzj = vzj;
+    }
+
+    public double getVzk() {
+        return vzk;
+    }
+
+    public void setVzk(double vzk) {
+        this.vzk = vzk;
+    }
+
+    public double getScore() {
+        return score;
+    }
+
+    public void setScore(double score) {
+        this.score = score;
+    }
+
+    public int getVisioncycle() {
+        return visioncycle;
+    }
+
+    public void setVisioncycle(int visioncycle) {
+        this.visioncycle = visioncycle;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public AffineTransform getDisplayTransform() {
+        return displayTransform;
+    }
+
+    public void setDisplayTransform(AffineTransform displayTransform) {
+        this.displayTransform = displayTransform;
+    }
+
+    public AffineTransform getOrigTransform() {
+        return origTransform;
+    }
+
+    public void setOrigTransform(AffineTransform origTransform) {
+        this.origTransform = origTransform;
+    }
+
+    public AffineTransform getRelTransform() {
+        return relTransform;
+    }
+
+    public void setRelTransform(AffineTransform relTransform) {
+        this.relTransform = relTransform;
+    }
+
+    public Rectangle2D.Double getDisplayRect() {
+        return displayRect;
+    }
+
+    public void setDisplayRect(Rectangle2D.Double displayRect) {
+        this.displayRect = displayRect;
+    }
+
+    public boolean isInsideKitTray() {
+        return insideKitTray;
+    }
+
+    public void setInsideKitTray(boolean insideKitTray) {
+        this.insideKitTray = insideKitTray;
+    }
+
+    public boolean isInsidePartsTray() {
+        return insidePartsTray;
+    }
+
+    public void setInsidePartsTray(boolean insidePartsTray) {
+        this.insidePartsTray = insidePartsTray;
+    }
+
+    public String getSetQuery() {
+        return setQuery;
+    }
+
+    public void setSetQuery(String setQuery) {
+        this.setQuery = setQuery;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public DetectedItem getTray() {
+        return tray;
+    }
+
+    public void setTray(DetectedItem tray) {
+        this.tray = tray;
+    }
+
+    public long getEmptySlotsCount() {
+        return emptySlotsCount;
+    }
+
+    public void setEmptySlotsCount(long emptySlotsCount) {
+        this.emptySlotsCount = emptySlotsCount;
+    }
+
+    public long getTotalSlotsCount() {
+        return totalSlotsCount;
+    }
+
+    public void setTotalSlotsCount(long totalSlotsCount) {
+        this.totalSlotsCount = totalSlotsCount;
+    }
+
+    public double getMaxSlotDist() {
+        return maxSlotDist;
+    }
+
+    public void setMaxSlotDist(double maxSlotDist) {
+        this.maxSlotDist = maxSlotDist;
+    }
+
+    public List<DetectedItem> getEmptySlotsList() {
+        return emptySlotsList;
+    }
+
+    public void setEmptySlotsList(List<DetectedItem> emptySlotsList) {
+        this.emptySlotsList = emptySlotsList;
+    }
+
+    public int getKitTrayNum() {
+        return kitTrayNum;
+    }
+
+    public void setKitTrayNum(int kitTrayNum) {
+        this.kitTrayNum = kitTrayNum;
+    }
+
+    public String getSlotForSkuName() {
+        return slotForSkuName;
+    }
+
+    public void setSlotForSkuName(String slotForSkuName) {
+        this.slotForSkuName = slotForSkuName;
+    }
+
+    public Color getLabelColor() {
+        return labelColor;
+    }
+
+    public void setLabelColor(Color labelColor) {
+        this.labelColor = labelColor;
+    }
+
+    public String getNewSlotQuery() {
+        return newSlotQuery;
+    }
+
+    public void setNewSlotQuery(String newSlotQuery) {
+        this.newSlotQuery = newSlotQuery;
     }
 
 }

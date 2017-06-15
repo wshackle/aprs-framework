@@ -93,26 +93,70 @@ public class Object2DJPanel extends JPanel {
             new DetectedItem("sku_medium_gear_vessel", 0.00, 569.17, -161.29, 0.67, "PT"),
             new DetectedItem("sku_kit_m2l1_vessel", -1.57, 579.86, 170.14, 0.96, "KT")
     );
-    private volatile List<DetectedItem>  items = EXAMPLES_ITEMS_LIST;
+    private volatile List<DetectedItem> items = EXAMPLES_ITEMS_LIST;
 
     public void setItems(List<DetectedItem> items) {
         this.items = items;
         this.repaint();
     }
 
+    private boolean showOutputItems = false;
+
+    /**
+     * Get the value of showOutputItems
+     *
+     * @return the value of showOutputItems
+     */
+    public boolean isShowOutputItems() {
+        return showOutputItems;
+    }
+
+    /**
+     * Set the value of showOutputItems
+     *
+     * @param showOutputItems new value of showOutputItems
+     */
+    public void setShowOutputItems(boolean showOutputItems) {
+        this.showOutputItems = showOutputItems;
+        this.repaint();
+    }
+
+    private List<DetectedItem> outputItems;
+
+    /**
+     * Get the value of outputItems
+     *
+     * @return the value of outputItems
+     */
+    public List<DetectedItem> getOutputItems() {
+        return ((null != outputItems)?Collections.unmodifiableList(outputItems):null);
+    }
+
+    /**
+     * Set the value of outputItems
+     *
+     * @param outputItems new value of outputItems
+     */
+    public void setOutputItems(List<DetectedItem> outputItems) {
+        this.outputItems = outputItems;
+        if (this.showOutputItems) {
+            this.repaint();
+        }
+    }
+
     public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
         final int w = this.getWidth();
         final int h = this.getHeight();
-        if(w < 1 || h < 1) {
-            System.err.println("Can not take snapshot with sized to "+w+" x "+h);
+        if (w < 1 || h < 1) {
+            System.err.println("Can not take snapshot with sized to " + w + " x " + h);
             return;
         }
-        takeSnapshot(f, pose, label,w,h);
+        takeSnapshot(f, pose, label, w, h);
     }
-    
+
     public void takeSnapshot(File f, PoseType pose, String label, final int w, final int h) throws IOException {
-        
-        BufferedImage img = new BufferedImage(w,h, BufferedImage.TYPE_3BYTE_BGR);
+
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         int pindex = f.getName().lastIndexOf('.');
         String type = "JPEG";
         if (pindex > 0) {
@@ -123,6 +167,9 @@ public class Object2DJPanel extends JPanel {
         g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
         g2d.setColor(this.getForeground());
         List<DetectedItem> itemsToPaint = this.items;
+        if (showOutputItems) {
+            itemsToPaint = this.outputItems;
+        }
         if (autoscale) {
             double minX = Double.POSITIVE_INFINITY;
             double maxX = Double.NEGATIVE_INFINITY;
@@ -175,15 +222,15 @@ public class Object2DJPanel extends JPanel {
     public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
         final int w = this.getWidth();
         final int h = this.getHeight();
-        if(w < 1 || h < 1) {
-            System.err.println("Can not take snapshot with sized to "+w+" x "+h);
+        if (w < 1 || h < 1) {
+            System.err.println("Can not take snapshot with sized to " + w + " x " + h);
             return;
         }
-        takeSnapshot(f, itemsToPaint,w,h);
+        takeSnapshot(f, itemsToPaint, w, h);
     }
-    
+
     public void takeSnapshot(File f, List<DetectedItem> itemsToPaint, final int w, final int h) throws IOException {
-        BufferedImage img = new BufferedImage(w,h, BufferedImage.TYPE_3BYTE_BGR);
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         int pindex = f.getName().lastIndexOf('.');
         String type = "JPEG";
         if (pindex > 0) {
@@ -233,6 +280,9 @@ public class Object2DJPanel extends JPanel {
     public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY) {
         if (null != pose && null != pose.getPoint()) {
             List<DetectedItem> itemsToPaint = this.items;
+            if (showOutputItems) {
+                itemsToPaint = this.outputItems;
+            }
             double x = pose.getPoint().getX();
             double y = pose.getPoint().getY();
             double displayMaxY = maxY;
@@ -279,7 +329,7 @@ public class Object2DJPanel extends JPanel {
             }
             if (useSeparateNames) {
                 g2d.setColor(Color.BLACK);
-                int i = items.size();
+                int i = itemsToPaint.size();
                 double namex = maxX + (maxX - minX) / 10.0;
                 double namey = displayMinY + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxY - displayMinY);
                 switch (displayAxis) {
@@ -389,7 +439,7 @@ public class Object2DJPanel extends JPanel {
      * @return the value of items
      */
     public List<DetectedItem> getItems() {
-        return items;
+        return Collections.unmodifiableList(items);
     }
 
     private double scale;
@@ -567,6 +617,9 @@ public class Object2DJPanel extends JPanel {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         List<DetectedItem> itemsToPaint = this.items;
+        if(showOutputItems) {
+            itemsToPaint = this.outputItems;
+        }
         DetectedItem selectedItem = null;
         if (selectedItemIndex >= 0 && selectedItemIndex < itemsToPaint.size()) {
             selectedItem = itemsToPaint.get(selectedItemIndex);
@@ -581,18 +634,18 @@ public class Object2DJPanel extends JPanel {
     }
 
     private static String getItemType(DetectedItem item) {
-        if (item.type != null) {
-            return item.type;
-        } else if (item.name.startsWith("part_")) {
+        if (item.getType() != null) {
+            return item.getType();
+        } else if (item.getName().startsWith("part_")) {
             return "P";
-        } else if (item.name.startsWith("kit_")) {
+        } else if (item.getName().startsWith("kit_")) {
             return "KT";
-        } else if (item.name.startsWith("empty_slot_")) {
+        } else if (item.getName().startsWith("empty_slot_")) {
             return "S";
-        } else if (item.name.contains("vessel")) {
+        } else if (item.getName().contains("vessel")) {
             return "PT";
         } else {
-            return item.name.substring(0, 1);
+            return item.getName().substring(0, 1);
         }
     }
 
@@ -634,7 +687,7 @@ public class Object2DJPanel extends JPanel {
         origTransform = g2d.getTransform();
 
         int maxNameLength = itemsToPaint.stream()
-                .mapToInt((DetectedItem item) -> item.name.length())
+                .mapToInt((DetectedItem item) -> item.getName().length())
                 .max().orElse(1);
 
         if (!Double.isFinite(maxX) || !Double.isFinite(minX) || !Double.isFinite(minY) || !Double.isFinite(maxY)) {
@@ -754,7 +807,7 @@ public class Object2DJPanel extends JPanel {
             if (null == item) {
                 continue;
             }
-            if (item.name == null || item.name.length() < 1) {
+            if (item.getName() == null || item.getName().length() < 1) {
                 continue;
             }
             if (Double.isInfinite(item.x) || Double.isNaN(item.x)) {
@@ -763,12 +816,12 @@ public class Object2DJPanel extends JPanel {
             if (Double.isInfinite(item.y) || Double.isNaN(item.y)) {
                 continue;
             }
-            if (Double.isInfinite(item.rotation) || Double.isNaN(item.rotation)) {
+            if (Double.isInfinite(item.getRotation()) || Double.isNaN(item.getRotation())) {
                 continue;
             }
             if (useSeparateNames) {
-                item.labelColor = labelColors[i % labelColors.length];
-                g2d.setColor(item.labelColor);
+                item.setLabelColor(labelColors[i % labelColors.length]);
+                g2d.setColor(item.getLabelColor());
                 double namex = maxX + (maxX - minX) / 10.0;
                 double namey = displayMinY + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxY - displayMinY);
                 switch (displayAxis) {
@@ -792,11 +845,11 @@ public class Object2DJPanel extends JPanel {
                 this.translate(g2d, namex, namey, minX, minY, maxX, maxY);
                 if (item == selectedItem) {
                     g2d.setColor(Color.WHITE);
-                    Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.name.length(), 20);
+                    Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.getName().length(), 20);
                     g2d.fill(rect);
                 }
-                g2d.setColor(item.labelColor);
-                g2d.drawString(item.name, 0, 0);
+                g2d.setColor(item.getLabelColor());
+                g2d.drawString(item.getName(), 0, 0);
                 g2d.setTransform(origTransform);
                 g2d.draw(new Line2D.Double(toScreenPoint(namex, namey, minX, minY, maxX, maxY), toScreenPoint(item.x, item.y, minX, minY, maxX, maxY)));
             }
@@ -810,20 +863,20 @@ public class Object2DJPanel extends JPanel {
             }
             this.translate(g2d, item.x, item.y, minX, minY, maxX, maxY);
             if (viewRotations) {
-                g2d.rotate(item.rotation);
+                g2d.rotate(item.getRotation());
             }
-            item.displayTransform = g2d.getTransform();
-            item.origTransform = origTransform;
+            item.setDisplayTransform(g2d.getTransform());
+            item.setOrigTransform(origTransform);
             try {
-                item.relTransform = origTransform.createInverse();
-                item.relTransform.concatenate(item.displayTransform);
+                item.setRelTransform(origTransform.createInverse());
+                item.getRelTransform().concatenate(item.getDisplayTransform());
             } catch (NoninvertibleTransformException ex) {
                 Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            item.displayRect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : item.name.length()), 20);
+            item.setDisplayRect(new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : item.getName().length()), 20));
             g2d.setColor(this.getBackground());
-            g2d.fill(item.displayRect);
+            g2d.fill(item.getDisplayRect());
             g2d.setTransform(origTransform);
         }
         for (int i = 0; i < displayList.size(); i++) {
@@ -833,52 +886,52 @@ public class Object2DJPanel extends JPanel {
             }
             this.translate(g2d, item.x, item.y, minX, minY, maxX, maxY);
             if (viewRotations) {
-                g2d.rotate(item.rotation);
+                g2d.rotate(item.getRotation());
             }
             g2d.setColor(Color.BLACK);
             if (!useSeparateNames) {
-                if (item.name != null) {
-                    g2d.drawString(item.name, 0, 0);
+                if (item.getName() != null) {
+                    g2d.drawString(item.getName(), 0, 0);
                 }
-            } else if (item.type != null) {
-                g2d.drawString(item.type, 0, 0);
-            } else if (item.name.startsWith("part_")) {
+            } else if (item.getType() != null) {
+                g2d.drawString(item.getType(), 0, 0);
+            } else if (item.getName().startsWith("part_")) {
                 g2d.drawString("P", 0, 0);
-            } else if (item.name.startsWith("kit_")) {
+            } else if (item.getName().startsWith("kit_")) {
                 g2d.drawString("KT", 0, 0);
-            } else if (item.name.startsWith("empty_slot_")) {
+            } else if (item.getName().startsWith("empty_slot_")) {
                 g2d.drawString("S", 0, 0);
-            } else if (item.name.contains("vessel")) {
+            } else if (item.getName().contains("vessel")) {
                 g2d.drawString("PT", 0, 0);
             } else {
-                g2d.drawString(item.name.substring(0, 1), 0, 0);
+                g2d.drawString(item.getName().substring(0, 1), 0, 0);
             }
-            item.displayTransform = g2d.getTransform();
-            item.origTransform = origTransform;
+            item.setDisplayTransform(g2d.getTransform());
+            item.setOrigTransform(origTransform);
             try {
-                item.relTransform = origTransform.createInverse();
-                item.relTransform.concatenate(item.displayTransform);
+                item.setRelTransform(origTransform.createInverse());
+                item.getRelTransform().concatenate(item.getDisplayTransform());
             } catch (NoninvertibleTransformException ex) {
                 Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            item.displayRect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : item.name.length()), 20);
-            g2d.setColor(item.labelColor);
-            g2d.draw(item.displayRect);
+            item.setDisplayRect(new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : item.getName().length()), 20));
+            g2d.setColor(item.getLabelColor());
+            g2d.draw(item.getDisplayRect());
             try {
-                if (null != aprsJFrame && ("PT".equals(item.type) || "KT".equals(item.type))) {
-                    List<DetectedItem> offsets = aprsJFrame.getSlotOffsets(item.name);
+                if (null != aprsJFrame && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
+                    List<DetectedItem> offsets = aprsJFrame.getSlotOffsets(item.getName());
                     if (null != offsets) {
                         for (DetectedItem offset : offsets) {
                             double mag = offset.mag();
-                            if (item.maxSlotDist < mag) {
-                                item.maxSlotDist = mag;
+                            if (item.getMaxSlotDist() < mag) {
+                                item.setMaxSlotDist(mag);
                             }
                         }
                     }
                 }
-                if (item.maxSlotDist > 0) {
-                    g2d.draw(new Arc2D.Double(-item.maxSlotDist / 2.0, -item.maxSlotDist / 2.0, item.maxSlotDist, item.maxSlotDist, 0.0, 360.0, Arc2D.OPEN));
+                if (item.getMaxSlotDist() > 0) {
+                    g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() / 2.0, -item.getMaxSlotDist() / 2.0, item.getMaxSlotDist(), item.getMaxSlotDist(), 0.0, 360.0, Arc2D.OPEN));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -887,7 +940,7 @@ public class Object2DJPanel extends JPanel {
         }
         g2d.setColor(Color.BLACK);
         if (null != selectedItem) {
-            if (selectedItem.name == null || selectedItem.name.length() < 1) {
+            if (selectedItem.getName() == null || selectedItem.getName().length() < 1) {
                 return;
             }
             if (Double.isInfinite(selectedItem.x) || Double.isNaN(selectedItem.x)) {
@@ -896,23 +949,23 @@ public class Object2DJPanel extends JPanel {
             if (Double.isInfinite(selectedItem.y) || Double.isNaN(selectedItem.y)) {
                 return;
             }
-            if (Double.isInfinite(selectedItem.rotation) || Double.isNaN(selectedItem.rotation)) {
+            if (Double.isInfinite(selectedItem.getRotation()) || Double.isNaN(selectedItem.getRotation())) {
                 return;
             }
             this.translate(g2d, selectedItem.x, selectedItem.y, minX, minY, maxX, maxY);
             if (viewRotations) {
-                g2d.rotate(selectedItem.rotation);
+                g2d.rotate(selectedItem.getRotation());
             }
             g2d.setColor(Color.WHITE);
             String typeString = getItemType(selectedItem);
-            Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? typeString.length() : selectedItem.name.length()), 20);
+            Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? typeString.length() : selectedItem.getName().length()), 20);
             g2d.fill(rect);
             g2d.setColor(Color.BLACK);
             g2d.draw(rect);
             if (!useSeparateNames) {
-                g2d.drawString(selectedItem.name, 0, 0);
+                g2d.drawString(selectedItem.getName(), 0, 0);
             } else {
-                g2d.drawString(selectedItem.type, 0, 0);
+                g2d.drawString(selectedItem.getType(), 0, 0);
             }
             g2d.setTransform(origTransform);
         }

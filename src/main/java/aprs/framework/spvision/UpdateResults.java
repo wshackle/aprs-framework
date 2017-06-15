@@ -194,7 +194,7 @@ public class UpdateResults {
         this.lastDetectedItem = lastDetectedItem;
         x = lastDetectedItem.x;
         y = lastDetectedItem.y;
-        rotation = lastDetectedItem.rotation;
+        rotation = lastDetectedItem.getRotation();
     }
 
     /**

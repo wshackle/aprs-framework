@@ -57,7 +57,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -84,7 +83,7 @@ import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -94,19 +93,18 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private DbSetupPublisher dbSetupPublisher;
 
-    
     public List<PartsTray> getPartsTrayList() {
-        if(null == dpu) {
+        if (null == dpu) {
             throw new IllegalStateException("dpu == null");
         }
         return dpu.getPartsTrayList();
     }
+
     /**
      * Creates new form VisionToDBJPanel
      */
     public VisionToDBJPanel() {
         initComponents();
-//        jSpinnerLogLines.setValue(100);
         loadProperties();
         oldDbType = null;
         jTableTransform.getModel().addTableModelListener(new TableModelListener() {
@@ -1049,9 +1047,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         } catch (Exception ex) {
 
         }
-//        System.out.println("maxLines = " + maxLines);
-//        System.out.println("logLines.size() = " + logLines.size());
-//        System.out.println("jTextAreaLog.getText().length() = " + jTextAreaLog.getText().length());
         if (logLines.size() < maxLines) {
             logLines.add(txt);
             jTextAreaLog.append(txt);
@@ -1072,32 +1067,31 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     public void updateInfo(List<DetectedItem> visionList, String line) {
         DefaultTableModel tm = (DefaultTableModel) this.jTableFromVision.getModel();
-//        TableColumnModel tcm = this.jTableFromCognex.getColumnModel();
         tm.setRowCount(0);
         if (null != visionList) {
             for (int i = 0; i < visionList.size(); i++) {
                 DetectedItem ci = visionList.get(i);
-                if (ci.fullName == null || ci.fullName.length() < 1) {
+                if (ci.getFullName() == null || ci.getFullName().length() < 1) {
                     System.err.println("bad ci fullname " + ci);
                 }
                 if (tm.getRowCount() <= i) {
-                    tm.addRow(new Object[]{i, ci.name, ci.repeats, ci.rotation, ci.x, ci.y, ci.z, ci.score, ci.type, ci.insidePartsTray, ci.insideKitTray, ci.fullName, ci.visioncycle, ci.setQuery});
+                    tm.addRow(new Object[]{i, ci.getName(), ci.getRepeats(), ci.getRotation(), ci.x, ci.y, ci.z, ci.getScore(), ci.getType(), ci.isInsidePartsTray(), ci.isInsideKitTray(), ci.getFullName(), ci.getVisioncycle(), ci.getSetQuery()});
                     continue;
                 }
-                tm.setValueAt(ci.index, i, 0);
-                tm.setValueAt(ci.name, i, 1);
-                tm.setValueAt(ci.repeats, i, 2);
-                tm.setValueAt(ci.rotation, i, 3);
+                tm.setValueAt(ci.getIndex(), i, 0);
+                tm.setValueAt(ci.getName(), i, 1);
+                tm.setValueAt(ci.getRepeats(), i, 2);
+                tm.setValueAt(ci.getRotation(), i, 3);
                 tm.setValueAt(ci.x, i, 4);
                 tm.setValueAt(ci.y, i, 5);
                 tm.setValueAt(ci.z, i, 6);
-                tm.setValueAt(ci.score, i, 7);
-                tm.setValueAt(ci.type, i, 8);
-                tm.setValueAt(ci.insidePartsTray, i, 9);
-                tm.setValueAt(ci.insideKitTray, i, 10);
-                tm.setValueAt(ci.fullName, i, 11);
-                tm.setValueAt(ci.visioncycle, i, 11);
-                tm.setValueAt(ci.setQuery, i, 12);
+                tm.setValueAt(ci.getScore(), i, 7);
+                tm.setValueAt(ci.getType(), i, 8);
+                tm.setValueAt(ci.isInsidePartsTray(), i, 9);
+                tm.setValueAt(ci.isInsideKitTray(), i, 10);
+                tm.setValueAt(ci.getFullName(), i, 11);
+                tm.setValueAt(ci.getVisioncycle(), i, 11);
+                tm.setValueAt(ci.getSetQuery(), i, 12);
             }
         }
         if (this.jCheckBoxDebug.isSelected()) {
@@ -1117,7 +1111,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-//    private final TableModelListener tableModelListener;
     public void setVisionConnected(boolean _val) {
         this.jButtonConnectVision.setEnabled(!_val);
         this.jButtonDisconnectVision.setEnabled(_val);
@@ -1301,22 +1294,20 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         for (int i = 0; i < in.size(); i++) {
             DetectedItem inItem = in.get(i);
             PoseType newPose = CRCLPosemath.multiply(transform, inItem.toCrclPose());
-            DetectedItem outItem = new DetectedItem(inItem.origName, newPose, inItem.visioncycle);
-            outItem.name = inItem.name;
-            outItem.repeats = inItem.repeats;
-            outItem.index = inItem.index;
-            outItem.fullName = inItem.fullName;
-            outItem.name = inItem.name;
-            outItem.score = inItem.score;
-            outItem.type = inItem.type;
-            outItem.rotation = inItem.rotation;
-            outItem.slotForSkuName = inItem.slotForSkuName;
-            outItem.emptySlotsCount = inItem.emptySlotsCount;
-            outItem.tray = inItem.tray;
-            outItem.emptySlotsList = transformList(inItem.emptySlotsList, transform);
-            outItem.totalSlotsCount = inItem.totalSlotsCount;
-            outItem.timestamp = inItem.timestamp;
-            outItem.maxSlotDist = inItem.maxSlotDist;
+            DetectedItem outItem = new DetectedItem(inItem.getName(), newPose, inItem.getVisioncycle());
+            outItem.setRepeats(inItem.getRepeats());
+            outItem.setIndex(inItem.getIndex());
+            outItem.setFullName(inItem.getFullName());
+            outItem.setScore(inItem.getScore());
+            outItem.setType(inItem.getType());
+            outItem.setRotation(inItem.getRotation());
+            outItem.setSlotForSkuName(inItem.getSlotForSkuName());
+            outItem.setEmptySlotsCount(inItem.getEmptySlotsCount());
+            outItem.setTray(inItem.getTray());
+            outItem.setEmptySlotsList(transformList(inItem.getEmptySlotsList(), transform));
+            outItem.setTotalSlotsCount(inItem.getTotalSlotsCount());
+            outItem.setTimestamp(inItem.getTimestamp());
+            outItem.setMaxSlotDist(inItem.getMaxSlotDist());
             out.add(outItem);
         }
         return out;
@@ -1369,24 +1360,55 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    private void checkRequiredParts(List<DetectedItem> list) {
+    private final AtomicInteger checkRequiredPartFailures = new AtomicInteger();
+
+    private int maxRequiredPartFailures = 5;
+
+    /**
+     * Get the value of maxRequiredPartFailures
+     *
+     * @return the value of maxRequiredPartFailures
+     */
+    public int getMaxRequiredPartFailures() {
+        return maxRequiredPartFailures;
+    }
+
+    /**
+     * Set the value of maxRequiredPartFailures
+     *
+     * @param maxRequiredPartFailures new value of maxRequiredPartFailures
+     */
+    public void setMaxRequiredPartFailures(int maxRequiredPartFailures) {
+        this.maxRequiredPartFailures = maxRequiredPartFailures;
+    }
+
+    private boolean checkRequiredParts(List<DetectedItem> list) {
         if (null != requiredParts) {
             for (Entry<String, Integer> entry : requiredParts.entrySet()) {
                 String name = entry.getKey();
                 int required = entry.getValue();
-                long found = list.stream().filter(item -> item.name.startsWith(name) || item.name.startsWith("sku_" + name)).count();
+                long found = list.stream().filter(item -> item.getName().startsWith(name) || item.getName().startsWith("sku_" + name)).count();
                 if (required > found) {
-                    String msg = "Found only " + found + " of " + name + " when " + required + " needed.";
-                    aprsJFrame.setTitleErrorString(msg);
+                    int failures = checkRequiredPartFailures.incrementAndGet();
+                    String msg = "Found only " + found + " of " + name + " when " + required + " needed."
+                            + " : failures = " + failures + " out of " + maxRequiredPartFailures;
                     try {
-                        aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile("checkRequiredParts_"+msg, ".PNG"), list);
+                        aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile("checkRequiredParts_" + msg, ".PNG"), list);
                     } catch (IOException ex) {
                         Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    throw new IllegalStateException(msg);
+                    if (failures > maxRequiredPartFailures) {
+                        aprsJFrame.setTitleErrorString(msg);
+                        throw new IllegalStateException(msg);
+                    } else {
+                        System.err.println(msg);
+                        return false;
+                    }
                 }
             }
         }
+        checkRequiredPartFailures.set(0);
+        return true;
     }
 
     /**
@@ -1408,10 +1430,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private volatile StackTraceElement setEnableDatabaseUpdatesFalseStacktraceArray[] = null;
     private volatile long setEnableDatabaseUpdatesTrueTime = 0;
     private volatile long setEnableDatabaseUpdatesFalseTime = 0;
-    
+
     public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
         if (enableDatabaseUpdates || null != requiredParts) {
             this.setRequiredParts(requiredParts);
+            checkRequiredPartFailures.set(0);
         }
         if (null != dpu) {
             dpu.setEnableDatabaseUpdates(enableDatabaseUpdates);
@@ -1419,7 +1442,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (enableDatabaseUpdates != jCheckBoxDbUpdateEnabled.isSelected()) {
             jCheckBoxDbUpdateEnabled.setSelected(enableDatabaseUpdates);
         }
-        if(enableDatabaseUpdates) {
+        if (enableDatabaseUpdates) {
             setEnableDatabaseUpdatesTrueStacktraceArray = Thread.currentThread().getStackTrace();
             setEnableDatabaseUpdatesTrueTime = System.currentTimeMillis();
         } else {
@@ -1428,37 +1451,37 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    private final ConcurrentLinkedDeque<XFuture<List<DetectedItem>>> nextUpdateListeners 
+    private final ConcurrentLinkedDeque<XFuture<List<DetectedItem>>> nextUpdateListeners
             = new ConcurrentLinkedDeque<>();
-    
+
     public XFuture<List<DetectedItem>> getNextUpdate() {
-        XFuture<List<DetectedItem>> ret  = new XFuture<>("getNextUpdate");
+        XFuture<List<DetectedItem>> ret = new XFuture<>("getNextUpdate");
         nextUpdateListeners.add(ret);
         return ret;
     }
-    
+
     private void notifyNextUpdateListeners(List<DetectedItem> l) {
         XFuture<List<DetectedItem>> future;
         List<DetectedItem> unmodifiableList = Collections.unmodifiableList(l);
-        while(null != (future = nextUpdateListeners.poll())) {
+        while (null != (future = nextUpdateListeners.poll())) {
             future.complete(unmodifiableList);
         }
     }
-    
+
     private volatile boolean updating = false;
-    
-    private final ConcurrentLinkedDeque<XFuture<Void>> finishedUpdateListeners 
+
+    private final ConcurrentLinkedDeque<XFuture<Void>> finishedUpdateListeners
             = new ConcurrentLinkedDeque<>();
-    
+
     public XFuture<Void> getUpdatesFinished() {
-        if(!updating && !dpu.isEnableDatabaseUpdates()) {
+        if (!updating && !dpu.isEnableDatabaseUpdates()) {
             return XFuture.completedFutureWithName("getUpdatesFinished.alreadyComplee", null);
         }
-        XFuture<Void> ret  = new XFuture<>("getUpdatesFinished");
+        XFuture<Void> ret = new XFuture<>("getUpdatesFinished");
         finishedUpdateListeners.add(ret);
         return ret;
     }
-    
+
     @Override
     public void visionClientUpdateRecieved(List<DetectedItem> visionList, String line) {
         if (acquire == AcquireEnum.OFF) {
@@ -1472,10 +1495,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
 
         if (null != dpu && null != dpu.getSqlConnection()) {
-            updating = true;
             if (dpu.isEnableDatabaseUpdates()) {
-                checkRequiredParts(visionList);
+                if (!checkRequiredParts(visionList)) {
+                    return;
+                }
             }
+            updating = true;
             PoseType transform = getTransformPose();
             dpu.setDisplayInterface(this);
             List<DetectedItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
@@ -1488,7 +1513,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 runOnDispatchThread(() -> this.updateInfo(l, line));
             }
             updating = false;
-            if(!dpu.isEnableDatabaseUpdates()) {
+            if (!dpu.isEnableDatabaseUpdates()) {
                 notifyFinishedUpdatingListeners();
             }
         }
@@ -1496,12 +1521,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void notifyFinishedUpdatingListeners() {
         XFuture future = finishedUpdateListeners.pollFirst();
-        while(future != null) {
+        while (future != null) {
             future.complete(null);
             future = finishedUpdateListeners.pollFirst();
         }
     }
-    
+
     private void startVisionInternal(Map<String, String> argsMap) {
         closeVision();
         if (null == visionClient) {
@@ -1962,7 +1987,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 try (PrintWriter pw = new PrintWriter(new FileWriter(csvInputFile))) {
                     pw.println("name,rotation,x,y,score,type,visioncycle,repeats,fullname");
                     for (DetectedItem item : lastInput) {
-                        pw.println(item.name + "," + item.rotation + "," + item.x + "," + item.y + "," + item.score + "," + item.type + "," + item.visioncycle + "," + item.repeats + "," + item.fullName);
+                        pw.println(item.getName() + "," + item.getRotation() + "," + item.x + "," + item.y + "," + item.getScore() + "," + item.getType() + "," + item.getVisioncycle() + "," + item.getRepeats() + "," + item.getFullName());
                     }
                 }
             }
@@ -2028,16 +2053,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void forceUpdateSingle(int row) throws NumberFormatException {
         String name = (String) jTableFromVision.getValueAt(row, 1);
         DetectedItem item = new DetectedItem(name);
-        item.rotation = Double.parseDouble(jTableFromVision.getValueAt(row, 3).toString());
+        item.setRotation(Double.parseDouble(jTableFromVision.getValueAt(row, 3).toString()));
         item.x = Double.parseDouble(jTableFromVision.getValueAt(row, 4).toString());
         item.y = Double.parseDouble(jTableFromVision.getValueAt(row, 5).toString());
         item.z = Double.parseDouble(jTableFromVision.getValueAt(row, 6).toString());
-        item.score = Double.parseDouble(jTableFromVision.getValueAt(row, 7).toString());
-        item.type = (String) jTableFromVision.getValueAt(row, 8);
-        item.insidePartsTray = (Boolean) jTableFromVision.getValueAt(row, 9);
-        item.insideKitTray = (Boolean) jTableFromVision.getValueAt(row, 10);
-        item.fullName = (String) jTableFromVision.getValueAt(row, 11);
-        item.visioncycle = Integer.parseInt(jTableFromVision.getValueAt(row, 12).toString());
+        item.setScore(Double.parseDouble(jTableFromVision.getValueAt(row, 7).toString()));
+        item.setType((String) jTableFromVision.getValueAt(row, 8));
+        item.setInsidePartsTray((boolean) (Boolean) jTableFromVision.getValueAt(row, 9));
+        item.setInsideKitTray((boolean) (Boolean) jTableFromVision.getValueAt(row, 10));
+        item.setFullName((String) jTableFromVision.getValueAt(row, 11));
+        item.setVisioncycle(Integer.parseInt(jTableFromVision.getValueAt(row, 12).toString()));
         System.out.println("item = " + item);
         List<DetectedItem> singletonList = Collections.singletonList(item);
         System.out.println("singletonList = " + singletonList);

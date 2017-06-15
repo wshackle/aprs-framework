@@ -155,11 +155,11 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
         if (map == null) {
             map = new LinkedHashMap<>();
         }
-        map.put("name", item.name);
+        map.put("name", item.getName());
         map.put("X", item.x);
         map.put("y", item.y);
         map.put("z", item.z);
-        map.put("rotation", item.rotation);
+        map.put("rotation", item.getRotation());
         return map;
     }
 
@@ -171,7 +171,7 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
                 item = new DetectedItem(name);
             }
             if (null != name && name.length() > 0) {
-                item.name = name;
+                item.setName(name);
             } else {
                 throw new IllegalArgumentException("map must have non-null and non-empty entry for name. map=" + map);
             }
@@ -189,33 +189,33 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
             }
             Object VXI = map.get("vxi");
             if (VXI != null) {
-                item.vxi = Double.parseDouble(VXI.toString());
+                item.setVxi(Double.parseDouble(VXI.toString()));
             }
             Object VXJ = map.get("vxj");
             if (VXJ != null) {
-                item.vxj = Double.parseDouble(VXJ.toString());
+                item.setVxj(Double.parseDouble(VXJ.toString()));
             }
             Object VXK = map.get("vxk");
             if (VXK != null) {
-                item.vxk = Double.parseDouble(VXK.toString());
+                item.setVxk(Double.parseDouble(VXK.toString()));
             }
             Object VZI = map.get("vzi");
             if (VZI != null) {
-                item.vzi = Double.parseDouble(VZI.toString());
+                item.setVzi(Double.parseDouble(VZI.toString()));
             }
             Object VZJ = map.get("vzj");
             if (VZJ != null) {
-                item.vzj = Double.parseDouble(VZJ.toString());
+                item.setVzj(Double.parseDouble(VZJ.toString()));
             }
             Object VZK = map.get("vzk");
             if (VZK != null) {
-                item.vzk = Double.parseDouble(VZK.toString());
+                item.setVzk(Double.parseDouble(VZK.toString()));
             }
             Object Rot = map.get("rotation");
             if (Rot != null) {
-                item.rotation = Double.parseDouble(Rot.toString());
-                item.vxi = Math.cos(item.rotation);
-                item.vxj = Math.sin(item.rotation);
+                item.setRotation(Double.parseDouble(Rot.toString()));
+                item.setVxi(Math.cos(item.getRotation()));
+                item.setVxj(Math.sin(item.getRotation()));
             }
         } else {
             throw new IllegalArgumentException("map may not be null");

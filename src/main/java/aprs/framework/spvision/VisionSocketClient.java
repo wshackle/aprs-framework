@@ -30,7 +30,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -228,24 +227,24 @@ public class VisionSocketClient implements AutoCloseable {
             long timestamp = System.currentTimeMillis();
             for (i = 0; i < fa.length - 5; i += 6) {
                 DetectedItem ci = new DetectedItem(fa[i]);
-                ci.timestamp = timestamp;
+                ci.setTimestamp(timestamp);
                 if (fa[i].length() < 1) {
                     continue;
                 }
-                ci.name = fa[i];
-                if (ci.name == null || ci.name.length() < 1 || "*".equals(ci.name)) {
+                ci.setName(fa[i]);
+                if (ci.getName() == null || ci.getName().length() < 1 || "*".equals(ci.getName())) {
                     if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Ignoring item with name=" + ci.name + " in field " + (i) + " in " + line + "\n");
+                        displayInterface.addLogMessage("Ignoring item with name=" + ci.getName() + " in field " + (i) + " in " + line + "\n");
                     }
                     continue;
                 }
                 if (fa[i + 1].length() < 1) {
                     continue;
                 }
-                ci.rotation = Double.parseDouble(fa[i + 1]);
-                if (Double.isInfinite(ci.rotation) || Double.isNaN(ci.rotation)) {
+                ci.setRotation(Double.parseDouble(fa[i + 1]));
+                if (Double.isInfinite(ci.getRotation()) || Double.isNaN(ci.getRotation())) {
                     if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Ignoring item with rotation=" + ci.rotation + " in field " + (i + 1) + " in " + line + "\n");
+                        displayInterface.addLogMessage("Ignoring item with rotation=" + ci.getRotation() + " in field " + (i + 1) + " in " + line + "\n");
                     }
                     continue;
                 }
@@ -270,16 +269,16 @@ public class VisionSocketClient implements AutoCloseable {
                     continue;
                 }
 
-                ci.visioncycle = cur_visioncycle;
+                ci.setVisioncycle(cur_visioncycle);
                 //System.out.println("VisionSocketClient visioncycle-----> "+visioncycle);
                 if (fa[i + 4].length() > 0) {
-                    ci.score = Double.parseDouble(fa[i + 4]);
+                    ci.setScore(Double.parseDouble(fa[i + 4]));
                 }
 
                 //--getting the type
-                ci.type = String.valueOf(fa[i + 5]);
+                ci.setType(String.valueOf(fa[i + 5]));
                 ci.normalizeRotation();
-                ci.index = index;
+                ci.setIndex(index);
                 if (listOut.size() > index) {
                     listOut.set(index, ci);
                 } else {

@@ -842,15 +842,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * the most critical problem if there is one appropriate for displaying in
      * the title.
      *
-     * @param titleErrorString title error string
+     * @param newTitleErrorString title error string
      */
-    public void setTitleErrorString(String titleErrorString) {
-        if (!Objects.equals(this.titleErrorString, titleErrorString)) {
+    public void setTitleErrorString(String newTitleErrorString) {
+        if (!Objects.equals(this.titleErrorString, newTitleErrorString)) {
             updateTitle();
-            this.titleErrorString = titleErrorString;
-            setTitle((null != titleErrorString) ? titleErrorString : "APRS");
-            if (null != titleErrorString && titleErrorString.length() > 0) {
-                System.err.println(titleErrorString);
+            if(null != this.titleErrorString 
+                    && null != newTitleErrorString
+                    && this.titleErrorString.length() > 0) {
+                if(this.titleErrorString.length() > 200) {
+                    this.titleErrorString = this.titleErrorString.substring(0,200) +" ...\n"+ newTitleErrorString;
+                } else {
+                    this.titleErrorString = this.titleErrorString +" ...\n"+ newTitleErrorString;
+                }
+            } else {
+                this.titleErrorString = newTitleErrorString;
+            }
+            setTitle((null != this.titleErrorString) ? this.titleErrorString : "APRS");
+            if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
+                System.err.println(newTitleErrorString);
                 pause();
             }
         }
