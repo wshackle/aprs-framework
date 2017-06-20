@@ -57,10 +57,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -68,6 +71,8 @@ import javax.swing.table.DefaultTableModel;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener {
+
+    private final TableModelListener nodeTableModelListener;
 
     /**
      * Creates new form ExplorteGraphDbJPanel
@@ -80,6 +85,73 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 updatePropsRels();
             }
         });
+        nodeTableModelListener = new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                if (e.getType() != TableModelEvent.UPDATE) {
+                    return;
+                }
+                int col = e.getColumn();
+                if (col == TableModelEvent.ALL_COLUMNS) {
+                    return;
+                }
+                if (col < 2) {
+                    return;
+                }
+                int row = e.getFirstRow();
+                if (row != e.getLastRow()) {
+                    return;
+                }
+                String colName = jTableNodes.getColumnName(col);
+                Object oValue = jTableNodes.getValueAt(row, col);
+                if (oValue == null) {
+                    return;
+                }
+                String sValue = oValue.toString();
+                int id = (int) jTableNodes.getValueAt(row, 0);
+                Object olabel = jTableNodes.getValueAt(row, 1);
+                if (olabel == null) {
+                    return;
+                }
+                String label = olabel.toString();
+                if (olabel instanceof List) {
+                    label = ((List) olabel).get(0).toString();
+                }
+                if (label.startsWith("[")) {
+                    label = label.substring(1);
+                }
+                int lbindex = label.indexOf(']');
+                if (lbindex > 0) {
+                    label = label.substring(0, lbindex);
+                }
+                int lcindex = label.indexOf(',');
+                if (lcindex > 0) {
+                    label = label.substring(0, lcindex);
+                }
+                String name = (String) jTableNodes.getValueAt(row, 2);
+                setDatabaseItemProperty(id, label, name, colName, sValue);
+            }
+        };
+        jTableNodes.getModel().addTableModelListener(nodeTableModelListener);
+    }
+
+    private void setDatabaseItemProperty(int id, String label, String name, String propName, String value) {
+        try {
+            String setDatabaseItemPropertyStatementString
+                    = "MATCH (n:" + label + " { name: '" + name + "' })\n"
+                    + "WHERE ID(n) = " + id + "\n"
+                    + "SET " + propName + " = '" + value + "'\n"
+                    + "RETURN n";
+            System.out.println("setDatabaseItemPropertyStatementString = \n" + setDatabaseItemPropertyStatementString);
+            if (JOptionPane.showConfirmDialog(this, "Set database property with : \n" + setDatabaseItemPropertyStatementString) == JOptionPane.YES_OPTION) {
+                PreparedStatement setDatabaseItemPropertyStatement
+                        = connection.prepareStatement(setDatabaseItemPropertyStatementString);
+                setDatabaseItemPropertyStatement.execute();
+                System.out.println("done");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(ExploreGraphDbJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private Map<String, ?> objectToMap(Object o) {
@@ -676,6 +748,12 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             if (label.endsWith("\"")) {
                 label = label.substring(0, label.length() - 1);
             }
+            if (label.startsWith("[")) {
+                label = label.substring(1);
+            }
+            if (label.endsWith("]")) {
+                label = label.substring(0, label.length() - 1);
+            }
             String query = "MATCH (n:" + label + ") RETURN ID(n),LABELS(n),n";
             jTextFieldQuery.setText(query);
 //        Map map = (Map) jTable.getValueAt(row, 2);
@@ -1063,6 +1141,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     }
 
     private void updateNodes(DefaultTableModel model) {
+        jTableNodes.getModel().removeTableModelListener(nodeTableModelListener);
         jTableNodes.setModel(model);
         jTableNodes.getSelectionModel().setSelectionInterval(-1, -1);
         jTableNodes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -1073,6 +1152,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         outModel.setRowCount(0);
         jTextFieldSelectedNodeId.setText("");
         jTextFieldSelectedNodeName.setText("");
+        jTableNodes.getModel().addTableModelListener(nodeTableModelListener);
     }
 
 

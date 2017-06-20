@@ -97,6 +97,10 @@ public class Object2DJPanel extends JPanel {
 
     public void setItems(List<DetectedItem> items) {
         this.items = items;
+        this.addedSlots = computeAbsSlotPositions(items);
+        this.itemsWithAddedSlots = new ArrayList<>();
+        this.itemsWithAddedSlots.addAll(items);
+        this.itemsWithAddedSlots.addAll(this.addedSlots);
         this.repaint();
     }
 
@@ -129,7 +133,7 @@ public class Object2DJPanel extends JPanel {
      * @return the value of outputItems
      */
     public List<DetectedItem> getOutputItems() {
-        return ((null != outputItems)?Collections.unmodifiableList(outputItems):null);
+        return ((null != outputItems) ? Collections.unmodifiableList(outputItems) : null);
     }
 
     /**
@@ -139,9 +143,93 @@ public class Object2DJPanel extends JPanel {
      */
     public void setOutputItems(List<DetectedItem> outputItems) {
         this.outputItems = outputItems;
+        this.addedOutputSlots = computeAbsSlotPositions(outputItems);
+        this.outputItemsWithAddedSlots = new ArrayList<>();
+        this.outputItemsWithAddedSlots.addAll(outputItems);
+        this.outputItemsWithAddedSlots.addAll(this.addedOutputSlots);
         if (this.showOutputItems) {
             this.repaint();
         }
+    }
+
+    private List<DetectedItem> addedOutputSlots;
+
+    /**
+     * Get the value of addedOutputSlots
+     *
+     * @return the value of addedOutputSlots
+     */
+    public List<DetectedItem> getAddedOutputSlots() {
+        return addedOutputSlots;
+    }
+
+    /**
+     * Set the value of addedOutputSlots
+     *
+     * @param addedOutputSlots new value of addedOutputSlots
+     */
+    public void setAddedOutputSlots(List<DetectedItem> addedOutputSlots) {
+        this.addedOutputSlots = addedOutputSlots;
+    }
+
+    private List<DetectedItem> addedSlots;
+
+    /**
+     * Get the value of addedSlots
+     *
+     * @return the value of addedSlots
+     */
+    public List<DetectedItem> getAddedSlots() {
+        return addedSlots;
+    }
+
+    private List<DetectedItem> itemsWithAddedSlots;
+
+    /**
+     * Get the value of itemsWithAddedSlots
+     *
+     * @return the value of itemsWithAddedSlots
+     */
+    public List<DetectedItem> getItemsWithAddedSlots() {
+        return itemsWithAddedSlots;
+    }
+
+    /**
+     * Set the value of itemsWithAddedSlots
+     *
+     * @param itemsWithAddedSlots new value of itemsWithAddedSlots
+     */
+    public void setItemsWithAddedSlots(List<DetectedItem> itemsWithAddedSlots) {
+        this.itemsWithAddedSlots = itemsWithAddedSlots;
+    }
+
+    private List<DetectedItem> outputItemsWithAddedSlots;
+
+    /**
+     * Get the value of outputItemsWithAddedSlots
+     *
+     * @return the value of outputItemsWithAddedSlots
+     */
+    public List<DetectedItem> getOutputItemsWithAddedSlots() {
+        return outputItemsWithAddedSlots;
+    }
+
+    /**
+     * Set the value of outputItemsWithAddedSlots
+     *
+     * @param outputItemsWithAddedSlots new value of outputItemsWithAddedSlots
+     */
+    public void setOutputItemsWithAddedSlots(List<DetectedItem> outputItemsWithAddedSlots) {
+        this.outputItemsWithAddedSlots = outputItemsWithAddedSlots;
+    }
+
+    /**
+     * Set the value of addedSlots
+     *
+     * @param addedSlots new value of addedSlots
+     */
+    public void setAddedSlots(List<DetectedItem> addedSlots) {
+        this.addedSlots = addedSlots;
     }
 
     public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
@@ -166,10 +254,7 @@ public class Object2DJPanel extends JPanel {
         g2d.setColor(this.getBackground());
         g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
         g2d.setColor(this.getForeground());
-        List<DetectedItem> itemsToPaint = this.items;
-        if (showOutputItems) {
-            itemsToPaint = this.outputItems;
-        }
+        List<DetectedItem> itemsToPaint = getItemsToPaint();
         if (autoscale) {
             double minX = Double.POSITIVE_INFINITY;
             double maxX = Double.NEGATIVE_INFINITY;
@@ -217,6 +302,20 @@ public class Object2DJPanel extends JPanel {
         } catch (IOException iOException) {
             iOException.printStackTrace();
         }
+    }
+
+    private List<DetectedItem> getItemsToPaint() {
+        List<DetectedItem> itemsToPaint = this.items;
+        if (showAddedSlotPositions && null != this.itemsWithAddedSlots) {
+            itemsToPaint = this.itemsWithAddedSlots;
+        }
+        if (showOutputItems && null != outputItems) {
+            itemsToPaint = this.outputItems;
+            if (showAddedSlotPositions && null != this.outputItemsWithAddedSlots) {
+                itemsToPaint = this.outputItemsWithAddedSlots;
+            }
+        }
+        return itemsToPaint;
     }
 
     public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
@@ -279,10 +378,7 @@ public class Object2DJPanel extends JPanel {
 
     public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY) {
         if (null != pose && null != pose.getPoint()) {
-            List<DetectedItem> itemsToPaint = this.items;
-            if (showOutputItems) {
-                itemsToPaint = this.outputItems;
-            }
+            List<DetectedItem> itemsToPaint = getItemsToPaint();
             double x = pose.getPoint().getX();
             double y = pose.getPoint().getY();
             double displayMaxY = maxY;
@@ -439,7 +535,7 @@ public class Object2DJPanel extends JPanel {
      * @return the value of items
      */
     public List<DetectedItem> getItems() {
-        return Collections.unmodifiableList(items);
+        return items;
     }
 
     private double scale;
@@ -616,10 +712,7 @@ public class Object2DJPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        List<DetectedItem> itemsToPaint = this.items;
-        if(showOutputItems) {
-            itemsToPaint = this.outputItems;
-        }
+        List<DetectedItem> itemsToPaint = getItemsToPaint();
         DetectedItem selectedItem = null;
         if (selectedItemIndex >= 0 && selectedItemIndex < itemsToPaint.size()) {
             selectedItem = itemsToPaint.get(selectedItemIndex);
@@ -675,6 +768,70 @@ public class Object2DJPanel extends JPanel {
      */
     public void setAprsJFrame(AprsJFrame aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
+    }
+
+    private boolean showAddedSlotPositions;
+
+    /**
+     * Get the value of showAddedSlotPositions
+     *
+     * @return the value of showAddedSlotPositions
+     */
+    public boolean isShowAddedSlotPositions() {
+        return showAddedSlotPositions;
+    }
+
+    /**
+     * Set the value of showAddedSlotPositions
+     *
+     * @param showAddedSlotPositions new value of showAddedSlotPositions
+     */
+    public void setShowAddedSlotPositions(boolean showAddedSlotPositions) {
+        this.showAddedSlotPositions = showAddedSlotPositions;
+        if (showAddedSlotPositions) {
+            if (null != items) {
+                this.addedSlots = computeAbsSlotPositions(items);
+                this.itemsWithAddedSlots = new ArrayList<>();
+                this.itemsWithAddedSlots.addAll(items);
+                this.itemsWithAddedSlots.addAll(this.addedSlots);
+            }
+            if (null != outputItems) {
+                this.addedOutputSlots = computeAbsSlotPositions(outputItems);
+                this.outputItemsWithAddedSlots = new ArrayList<>();
+                this.outputItemsWithAddedSlots.addAll(outputItems);
+                this.outputItemsWithAddedSlots.addAll(this.addedOutputSlots);
+            }
+        } else {
+            this.addedSlots = null;
+            this.addedOutputSlots = null;
+            this.outputItemsWithAddedSlots = null;
+            this.itemsWithAddedSlots = null;
+        }
+        repaint();
+    }
+
+    public List<DetectedItem> computeAbsSlotPositions(List<DetectedItem> l) {
+        List<DetectedItem> absSlotList = new ArrayList<>();
+        for (DetectedItem item : l) {
+            if (null != aprsJFrame && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
+                absSlotList.addAll(computeSlotPositions(item));
+            }
+        }
+        return absSlotList;
+    }
+
+    public List<DetectedItem> computeSlotPositions(DetectedItem item) {
+        List<DetectedItem> offsets = aprsJFrame.getSlotOffsets(item.getName());
+        List<DetectedItem> slotList = new ArrayList<>();
+        if (null != offsets) {
+            for (DetectedItem offset : offsets) {
+                slotList.add(new DetectedItem("slot_"+offset.getPrpName(), 0.0,
+                        item.x + (offset.x * Math.cos(item.getRotation()) + offset.y * Math.sin(item.getRotation())),
+                        item.y + (-offset.x * Math.sin(item.getRotation()) + offset.y * Math.cos(item.getRotation())),
+                        item.getScore(), "S"));
+            }
+        }
+        return slotList;
     }
 
     public void paintItems(Graphics2D g2d,
@@ -923,6 +1080,17 @@ public class Object2DJPanel extends JPanel {
                     List<DetectedItem> offsets = aprsJFrame.getSlotOffsets(item.getName());
                     if (null != offsets) {
                         for (DetectedItem offset : offsets) {
+//                            if (viewRotations) {
+//                                g2d.draw(new Arc2D.Double(
+//                                        offset.x * scale - 2.5,
+//                                        offset.y * scale - 2.5,
+//                                        5.0, 5.0, 0.0, 360.0, Arc2D.OPEN));
+//                            } else {
+//                                g2d.draw(new Arc2D.Double(
+//                                        (offset.x * Math.cos(item.getRotation()) + offset.y * Math.sin(item.getRotation())) * scale - 2.5,
+//                                        (-offset.x * Math.sin(item.getRotation()) + offset.y * Math.cos(item.getRotation())) * scale - 2.5,
+//                                        5.0, 5.0, 0.0, 360.0, Arc2D.OPEN));
+//                            }
                             double mag = offset.mag();
                             if (item.getMaxSlotDist() < mag) {
                                 item.setMaxSlotDist(mag);
@@ -930,8 +1098,12 @@ public class Object2DJPanel extends JPanel {
                         }
                     }
                 }
+//                g2d.draw(new Arc2D.Double(
+//                        -2.5,
+//                        -2.5,
+//                        5.0, 5.0, 0.0, 360.0, Arc2D.OPEN));
                 if (item.getMaxSlotDist() > 0) {
-                    g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() / 2.0, -item.getMaxSlotDist() / 2.0, item.getMaxSlotDist(), item.getMaxSlotDist(), 0.0, 360.0, Arc2D.OPEN));
+                    g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() * scale, -item.getMaxSlotDist() * scale, item.getMaxSlotDist() * 2.0 * scale, item.getMaxSlotDist() * 2.0 * scale, 0.0, 360.0, Arc2D.OPEN));
                 }
             } catch (Exception e) {
                 e.printStackTrace();

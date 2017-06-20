@@ -94,10 +94,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public List<PartsTray> getPartsTrayList() {
         return partsTrayList;
     }
-    
-    
-//    public static double myRotationOffset = 0; // get this through AprsJFrame
 
+//    public static double myRotationOffset = 0; // get this through AprsJFrame
     /**
      * Get the value of totalUpdateTimeMillis
      *
@@ -809,6 +807,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         }
                         String name = resultMap.get("name");
                         String sku_name = resultMap.get("sku_name");
+                        String prp_name = resultMap.get("prp_name");
+                        if (prp_name.startsWith("part_ref_and_pose_")) {
+                            prp_name = prp_name.substring("part_ref_and_pose_".length());
+                        }
                         double x = fixDouble(rs, "x") * 1000.0;
                         double y = fixDouble(rs, "y") * 1000.0;
                         String short_sku_name = sku_name;
@@ -820,6 +822,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             short_sku_name = short_sku_name.substring(5);
                         }
                         DetectedItem item = new DetectedItem(short_sku_name, 0, x, y);
+                        item.setPrpName(prp_name);
                         item.setFullName(name);
                         item.setSlotForSkuName(sku_name);
                         item.setNewSlotQuery(getTraySlotsQueryStringFilled);
@@ -901,7 +904,24 @@ public class DatabasePoseUpdater implements AutoCloseable {
             item.setSlotForSkuName(offsetItem.getSlotForSkuName());
             item.setVisioncycle(tray.getVisioncycle());
             ret.add(item);
-            item = new DetectedItem("empty_slot_for_" + sku_name + "_in_" + tray_name, 0,
+            String composedName = "empty_slot_for_" + sku_name + "_in_" + tray_name;
+            if (tray.getType().equals("KT")) {
+                String prpName = offsetItem.getPrpName();
+                if (null != prpName) {
+                    try {
+                        int uindex = prpName.lastIndexOf('_');
+                        int slot_index = Integer.parseInt(prpName.substring(uindex + 1).trim());
+                        if (slot_index > 0) {
+                            composedName = "empty_slot_" + slot_index + "_for_" + sku_name + "_in_" + tray_name;
+                        }
+                    } catch (Exception exception) {
+                        System.err.println("prpName=" + prpName);
+                        exception.printStackTrace();
+                    }
+                }
+            }
+//            System.out.println("composedName = " + composedName);
+            item = new DetectedItem(composedName, 0,
                     tray.x + x * Math.cos(angle) - y * Math.sin(angle),
                     tray.y + x * Math.sin(angle) + y * Math.cos(angle));
             item.setType("ES");
@@ -926,9 +946,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
         final long timestamp = System.currentTimeMillis();
         prevParts
                 = prevParts.stream()
-                .filter((DetectedItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
-                .filter((DetectedItem prevPart) -> closestDist(prevPart, parts) < 25.0)
-                .collect(Collectors.toCollection(() -> new ArrayList<DetectedItem>()));
+                        .filter((DetectedItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
+                        .filter((DetectedItem prevPart) -> closestDist(prevPart, parts) < 25.0)
+                        .collect(Collectors.toCollection(() -> new ArrayList<DetectedItem>()));
         prevParts.addAll(parts);
         return slots.stream()
                 .filter(slot -> closestDist(slot, prevParts) > 25.0)
@@ -1002,16 +1022,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                        .collect(Collectors.toList());
         List<DetectedItem> kitTrays
                 = itemList.stream()
-                .filter((DetectedItem item) -> "KT".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "KT".equals(item.getType()))
+                        .collect(Collectors.toList());
         List<DetectedItem> partTrays
                 = itemList.stream()
-                .filter((DetectedItem item) -> "PT".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "PT".equals(item.getType()))
+                        .collect(Collectors.toList());
         List<DetectedItem> parts
                 = itemList.stream()
-                .filter((DetectedItem item) -> "P".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "P".equals(item.getType()))
+                        .collect(Collectors.toList());
         List<DetectedItem> fullList = new ArrayList<>();
         List<DetectedItem> bestKitTrayEmptySlots = findBestEmptyTraySlots(kitTrays, parts);
         List<DetectedItem> bestPartTrayEmptySlots = findBestEmptyTraySlots(partTrays, parts);
@@ -1176,12 +1196,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
             updateCount++;
             List<DetectedItem> partsTrays
                     = inList.stream()
-                    .filter((DetectedItem item) -> "PT".equals(item.getType()))
-                    .collect(Collectors.toList());
+                            .filter((DetectedItem item) -> "PT".equals(item.getType()))
+                            .collect(Collectors.toList());
             List<DetectedItem> kitTrays
                     = inList.stream()
-                    .filter((DetectedItem item) -> "KT".equals(item.getType()))
-                    .collect(Collectors.toList());
+                            .filter((DetectedItem item) -> "KT".equals(item.getType()))
+                            .collect(Collectors.toList());
 
             List<DetectedItem> list = inList;
             for (int i = 0; i < list.size(); i++) {
@@ -1217,12 +1237,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                 List<DetectedItem> parts
                         = inList.stream()
-                        .filter((DetectedItem item) -> "P".equals(item.getType()))
-                        .collect(Collectors.toList());
+                                .filter((DetectedItem item) -> "P".equals(item.getType()))
+                                .collect(Collectors.toList());
                 List<DetectedItem> emptySlots
                         = list.stream()
-                        .filter((DetectedItem item) -> "ES".equals(item.getType()))
-                        .collect(Collectors.toList());
+                                .filter((DetectedItem item) -> "ES".equals(item.getType()))
+                                .collect(Collectors.toList());
                 Comparator<DetectedItem> kitComparator
                         = comparingLong((DetectedItem kt) -> (kt.getEmptySlotsCount() < 1) ? Long.MAX_VALUE : kt.getEmptySlotsCount());
                 kitTrays.sort(kitComparator);
@@ -1253,10 +1273,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                         DetectedItem bestSlotFiller
                                 = firstSortParts.stream()
-                                .filter((DetectedItem p) -> p.isInsidePartsTray())
-                                .filter((DetectedItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
-                                .findFirst()
-                                .orElse(null);
+                                        .filter((DetectedItem p) -> p.isInsidePartsTray())
+                                        .filter((DetectedItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
+                                        .findFirst()
+                                        .orElse(null);
                         if (null != bestSlotFiller) {
                             slotFillers.add(bestSlotFiller);
                             firstSortParts.remove(bestSlotFiller);

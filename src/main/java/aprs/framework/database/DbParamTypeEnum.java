@@ -43,5 +43,6 @@ public enum DbParamTypeEnum {
     EXTERNAL_SHAPE_MODEL_FORMAT_NAME,
     SLOT_OCCUPIED,
     SKU_NAME,
-    MAX_VISIONCYCLE;
+    MAX_VISIONCYCLE,
+    PRP_NAME;
 }

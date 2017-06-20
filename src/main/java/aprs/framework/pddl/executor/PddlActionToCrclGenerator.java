@@ -22,7 +22,6 @@
 package aprs.framework.pddl.executor;
 
 import aprs.framework.AprsJFrame;
-import aprs.framework.spvision.DatabasePoseUpdater;
 import aprs.framework.PddlAction;
 import aprs.framework.Utils;
 import aprs.framework.database.DbSetup;
@@ -91,7 +90,6 @@ import java.util.function.Consumer;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.util.Collection;
-import java.util.concurrent.ExecutionException;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -1219,7 +1217,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     System.out.println("      placepartpose :(" + pose.getPoint().getX() + "," + pose.getPoint().getY() + ")");
                     double distance = Math.hypot(pose.getPoint().getX() - slotX, pose.getPoint().getY() - slotY);
                     System.out.println("         Distance = " + distance + "\n");
-                    if (distance < 2.0) {
+                    if (distance < 5.0) {
                         count++;
                     }
                 }
@@ -2279,6 +2277,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             lastRequiredPartsMap = requiredPartsMap;
         }
         final Map<String, Integer> immutableRequiredPartsMap = Collections.unmodifiableMap(requiredPartsMap);
+        addMarkerCommand(out, "clearPoseCache", x -> {
+            clearPoseCache();
+        });
         if (atLookForPosition) {
             atLookForPosition = checkAtLookForPosition();
         }

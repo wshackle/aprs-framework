@@ -2055,12 +2055,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             if (status != null
                     && status.getCommandStatus() != null
                     && status.getCommandStatus().getCommandState() == CommandStateEnumType.CRCL_ERROR) {
+                System.err.println("allSystemsOk failing: bad status for sys=" + sys);
                 return false;
             }
             if (sys.getTitleErrorString() != null && sys.getTitleErrorString().length() > 0) {
+                System.err.println("allSystemsOk failing: bad titleErrorString (" + sys.getTitleErrorString() + ") for sys=" + sys);
                 return false;
             }
             if (sys.getCrclClientErrorString() != null && sys.getCrclClientErrorString().length() > 0) {
+                System.err.println("allSystemsOk failing: bad rclClientErrorString (" + sys.getCrclClientErrorString() + ") for sys=" + sys);
                 return false;
             }
         }
@@ -2501,6 +2504,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      */
     public File getSetupFile() {
         return setupFile;
+    }
+
+    private void setTitleMessage(String message) {
+        if (null != this.setupFile) {
+            Utils.runOnDispatchThread(() -> setTitle("Multi Aprs Supervisor : " + this.setupFile + " : " + message));
+        } else {
+            Utils.runOnDispatchThread(() -> setTitle("Multi Aprs Supervisor : : " + message));
+        }
     }
 
     /**

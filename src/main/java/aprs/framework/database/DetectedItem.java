@@ -46,7 +46,6 @@ import rcs.posemath.PM_CARTESIAN;
 //TODO-zeid
 public class DetectedItem extends PM_CARTESIAN {
 
-    
     final public String origName;
     private String name;
     private String fullName;
@@ -79,7 +78,26 @@ public class DetectedItem extends PM_CARTESIAN {
     private String slotForSkuName;
     private Color labelColor = Color.BLACK;
     private String newSlotQuery = null;
-    
+
+    private String prpName;
+
+    /**
+     * Get the value of prpName
+     *
+     * @return the value of prpName
+     */
+    public String getPrpName() {
+        return prpName;
+    }
+
+    /**
+     * Set the value of prpName
+     *
+     * @param prpName new value of prpName
+     */
+    public void setPrpName(String prpName) {
+        this.prpName = prpName;
+    }
 
     public DetectedItem(String name) {
         this.name = name;
@@ -100,9 +118,9 @@ public class DetectedItem extends PM_CARTESIAN {
         switch (type) {
             case "PT":
                 // FIXME: Determine which parts are symetric.
-                if (rotation < -Math.PI/2.0) {
+                if (rotation < -Math.PI / 2.0) {
                     rotation += Math.PI;
-                } else if (rotation > Math.PI/2.0) {
+                } else if (rotation > Math.PI / 2.0) {
                     rotation -= Math.PI;
                 }
                 break;

@@ -82,12 +82,11 @@ import rcs.posemath.PmCartesian;
 public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener, PendantClientJPanel.CurrentPoseListener {
 
     public List<DetectedItem> getItems() {
-        return Collections.unmodifiableList(object2DJPanel1.getItems());
+        return object2DJPanel1.getItems();
     }
 
     public List<DetectedItem> getOutputItems() {
-        List<DetectedItem> l = object2DJPanel1.getOutputItems();
-        return ((null != l) ? Collections.unmodifiableList(l) : null);
+        return object2DJPanel1.getOutputItems();
     }
 
     private volatile boolean settingItems = false;
@@ -137,28 +136,28 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setItems(items, true);
     }
 
-    static public Map<String, Integer> countNames(List<DetectedItem> l) {
-        return l.stream()
-                .collect(Collectors.groupingBy(DetectedItem::getName, Collectors.summingInt(x -> 1)));
-    }
+//    static public Map<String, Integer> countNames(List<DetectedItem> l) {
+//        return l.stream()
+//                .collect(Collectors.groupingBy(DetectedItem::getName, Collectors.summingInt(x -> 1)));
+//    }
 
     private volatile Map<String, Integer> origNamesMap = null;
 
     public void setItems(List<DetectedItem> items, boolean publish) {
         settingItems = true;
-        Map<String, Integer> namesMap = countNames(items);
-        if (null != origNamesMap) {
-            for (Entry<String, Integer> entry : namesMap.entrySet()) {
-                String name = entry.getKey();
-                int count = entry.getValue();
-                int origCount = origNamesMap.getOrDefault(name, 0);
-                if (count > origCount) {
-                    System.err.println("name =" + name + ", count = " + count + ", origCount=" + origCount);
-                }
-            }
-        } else {
-            origNamesMap = namesMap;
-        }
+//        Map<String, Integer> namesMap = countNames(items);
+//        if (null != origNamesMap) {
+//            for (Entry<String, Integer> entry : namesMap.entrySet()) {
+//                String name = entry.getKey();
+//                int count = entry.getValue();
+//                int origCount = origNamesMap.getOrDefault(name, 0);
+//                if (count > origCount) {
+//                    System.err.println("name =" + name + ", count = " + count + ", origCount=" + origCount);
+//                }
+//            }
+//        } else {
+//            origNamesMap = namesMap;
+//        }
         Utils.runOnDispatchThread(() -> {
             setItemsInternal(items);
             settingItems = false;
@@ -181,14 +180,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void setItemsInternal(List<DetectedItem> items) {
         object2DJPanel1.setItems(items);
         if (!object2DJPanel1.isShowOutputItems()) {
-            loadItemsToTable(items, jTableItems);
+            if(object2DJPanel1.isShowAddedSlotPositions()) {
+                loadItemsToTable(object2DJPanel1.getItemsWithAddedSlots(), jTableItems);
+            } else {
+                loadItemsToTable(items, jTableItems);
+            }
         }
     }
 
     private void setOutputItemsInternal(List<DetectedItem> items) {
         object2DJPanel1.setOutputItems(items);
         if (object2DJPanel1.isShowOutputItems()) {
-            loadItemsToTable(items, jTableItems);
+            if(object2DJPanel1.isShowAddedSlotPositions()) {
+                loadItemsToTable(object2DJPanel1.getOutputItemsWithAddedSlots(), jTableItems);
+            } else {
+                loadItemsToTable(items, jTableItems);
+            }
         }
     }
 
@@ -230,6 +237,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
+    public List<DetectedItem> computeAbsSlotPositions(List<DetectedItem> l) {
+        return object2DJPanel1.computeAbsSlotPositions(l);
+    }
+    
     /**
      * Creates new form Object2DOuterJPanel
      */
@@ -338,6 +349,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jLabel3 = new javax.swing.JLabel();
         jTextFieldMinXMinY = new javax.swing.JTextField();
         jButtonDelete = new javax.swing.JButton();
+        jCheckBoxAddSlots = new javax.swing.JCheckBox();
         jPanelConnectionsTab = new javax.swing.JPanel();
         jCheckBoxSimulated = new javax.swing.JCheckBox();
         jTextFieldHost = new javax.swing.JTextField();
@@ -537,6 +549,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jCheckBoxAddSlots.setText("Add Slots");
+        jCheckBoxAddSlots.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxAddSlotsActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelOptionsTabLayout = new javax.swing.GroupLayout(jPanelOptionsTab);
         jPanelOptionsTab.setLayout(jPanelOptionsTabLayout);
         jPanelOptionsTabLayout.setHorizontalGroup(
@@ -562,6 +581,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.Alignment.TRAILING)
                                 .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOptionsTabLayout.createSequentialGroup()
+                        .addComponent(jCheckBoxAddSlots)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxSeparateNames)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxAutoscale))
@@ -583,7 +604,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxAutoscale)
-                    .addComponent(jCheckBoxSeparateNames))
+                    .addComponent(jCheckBoxSeparateNames)
+                    .addComponent(jCheckBoxAddSlots))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxShowRotations)
@@ -817,38 +839,38 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
                         .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldSimulationUpdateTime, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 63, Short.MAX_VALUE)
+                        .addComponent(jTextFieldSimulationUpdateTime)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxViewOutput))
+                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                        .addComponent(jLabel6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldSimDropRate))
+                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldPosNoise, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel8)
+                        .addGap(120, 120, 120))
                     .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
                         .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jCheckBoxSimulationUpdateAsNeeded)
                             .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                                .addComponent(jLabel6)
+                                .addComponent(jCheckBoxShuffleSimulatedUpdates)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                                .addComponent(jLabel7)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldPosNoise, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel8)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldRotNoise, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelSimulationTabLayout.createSequentialGroup()
-                                    .addComponent(jLabel9)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(jTextFieldPickupDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(jLabel10)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(jTextFieldDropOffThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelSimulationTabLayout.createSequentialGroup()
-                                    .addComponent(jCheckBoxShuffleSimulatedUpdates)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(jCheckBoxAddPosNoise))))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                                .addComponent(jCheckBoxAddPosNoise)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                        .addComponent(jLabel9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldPickupDist)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel10)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jTextFieldDropOffThreshold)
+                            .addComponent(jTextFieldRotNoise))))
                 .addContainerGap())
         );
         jPanelSimulationTabLayout.setVerticalGroup(
@@ -960,7 +982,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void updateTextFieldDouble(double value, JTextField textField, double threshold) {
         if (Math.abs(value - Double.parseDouble(textField.getText().trim())) > threshold) {
-            textField.setText(String.format("%.2f", value));
+            textField.setText(String.format("%.3f", value));
         }
     }
 
@@ -1117,17 +1139,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      * @param simulatedDropRate new value of simulatedDropRate
      */
     public void setSimulatedDropRate(double simulatedDropRate) {
-        if (simulatedDropRate > 1.0 || simulatedDropRate < 0.0) {
-            throw new IllegalArgumentException("simulatedDropRate must be between 0.0 and 1.0 but was " + simulatedDropRate);
+        if (simulatedDropRate > 1.0 || simulatedDropRate < -Double.MIN_VALUE) {
+            throw new IllegalArgumentException("simulatedDropRate must be between 0 and 1.0 but was " + simulatedDropRate);
         }
-        updateTextFieldDouble(simulatedDropRate, jTextFieldSimDropRate, 0.005);
+        if(simulatedDropRate < 0.001) {
+            simulatedDropRate =0;
+        }
+        updateTextFieldDouble(simulatedDropRate, jTextFieldSimDropRate, 0.001);
         this.simulatedDropRate = simulatedDropRate;
     }
 
     private final Random dropRandom = new Random();
 
     private boolean dropFilter(Object x) {
-        if (simulatedDropRate < 0.01) {
+        if (simulatedDropRate < 0.001) {
             return true;
         }
         return dropRandom.nextDouble() > simulatedDropRate;
@@ -1151,13 +1176,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (jCheckBoxShuffleSimulatedUpdates.isSelected() || simulatedDropRate > 0.01 || jCheckBoxAddPosNoise.isSelected()) {
             List<DetectedItem> l = new ArrayList<>();
             List<DetectedItem> origList = getItems();
-            if (simulatedDropRate < 0.01 && !jCheckBoxAddPosNoise.isSelected()) {
-                l.addAll(origList);
-            } else {
-                l.addAll(origList.stream()
+            l.addAll(origList);
+            if (simulatedDropRate > 0.01  || jCheckBoxAddPosNoise.isSelected()) {
+                l = l.stream()
                         .filter(this::dropFilter)
                         .map(this::noiseFilter)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList());
             }
             if (jCheckBoxShuffleSimulatedUpdates.isSelected()) {
                 Collections.shuffle(l);
@@ -1555,6 +1579,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setDropOffThreshold(Double.parseDouble(jTextFieldDropOffThreshold.getText().trim()));
     }//GEN-LAST:event_jTextFieldDropOffThresholdActionPerformed
 
+    private void jCheckBoxAddSlotsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAddSlotsActionPerformed
+       object2DJPanel1.setShowAddedSlotPositions(jCheckBoxAddSlots.isSelected());
+       refresh(false);
+    }//GEN-LAST:event_jCheckBoxAddSlotsActionPerformed
+
     javax.swing.Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
@@ -1662,6 +1691,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JButton jButtonReset;
     private javax.swing.JButton jButtonSave;
     private javax.swing.JCheckBox jCheckBoxAddPosNoise;
+    private javax.swing.JCheckBox jCheckBoxAddSlots;
     private javax.swing.JCheckBox jCheckBoxAutoscale;
     private javax.swing.JCheckBox jCheckBoxConnected;
     private javax.swing.JCheckBox jCheckBoxDebug;
@@ -1760,7 +1790,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("viewOutput", Boolean.toString(jCheckBoxViewOutput.isSelected()));
             props.put("simulationUpdateAsNeeded", Boolean.toString(jCheckBoxSimulationUpdateAsNeeded.isSelected()));
             props.put("shuffleSimulatedUpdates", Boolean.toString(jCheckBoxShuffleSimulatedUpdates.isSelected()));
-            props.put("simulatedDropRate", String.format("%.2f", simulatedDropRate));
+            props.put("simulatedDropRate", String.format("%.3f", simulatedDropRate));
             props.put("addPosNoise", Boolean.toString(jCheckBoxAddPosNoise.isSelected()));
             props.put("pickupDist", String.format("%.2f", pickupDist));
             props.put("dropOffThreshold", String.format("%.2f", dropOffThreshold));
@@ -1882,6 +1912,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             String simulatedDropRateString = props.getProperty("simulatedDropRate");
             if (null != simulatedDropRateString && simulatedDropRateString.length() > 0) {
                 double simDropRate = Double.parseDouble(simulatedDropRateString);
+                if(simDropRate < 0.001) {
+                    simDropRate = 0;
+                }
                 setSimulatedDropRate(simDropRate);
             }
 

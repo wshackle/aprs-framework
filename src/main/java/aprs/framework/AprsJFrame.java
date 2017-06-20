@@ -861,6 +861,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setTitle((null != this.titleErrorString) ? this.titleErrorString : "APRS");
             if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
                 System.err.println(newTitleErrorString);
+                takeSnapshots("setTitleError_"+newTitleErrorString+"_");
                 pause();
             }
         }
