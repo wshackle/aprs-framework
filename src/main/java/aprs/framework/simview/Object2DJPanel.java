@@ -378,6 +378,9 @@ public class Object2DJPanel extends JPanel {
 
     public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY) {
         if (null != pose && null != pose.getPoint()) {
+            if(label == null) {
+                label = "(null)";
+            }
             List<DetectedItem> itemsToPaint = getItemsToPaint();
             double x = pose.getPoint().getX();
             double y = pose.getPoint().getY();
@@ -868,12 +871,12 @@ public class Object2DJPanel extends JPanel {
 //        if (useSeparateNames) {
 //            scale_x = scale_x / 2.0;
 //        }
-        if (Double.isInfinite(scale_x) || Double.isNaN(scale_x)) {
-            throw new IllegalStateException("scale_x = " + scale_x);
-        }
-        if (Double.isInfinite(scale_y) || Double.isNaN(scale_y)) {
-            throw new IllegalStateException("scale_y = " + scale_y);
-        }
+        assert (Double.isFinite(scale_x)) :
+                ("scale_x = " + scale_x);
+        
+        assert (Double.isFinite(scale_y)) :
+                ("scale_y = " + scale_y);
+        
         scale = Math.min(scale_x, scale_y);
         if (null == minCorner) {
             minCorner = new Point2D.Double();

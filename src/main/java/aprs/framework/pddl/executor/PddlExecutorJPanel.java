@@ -33,6 +33,7 @@ import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.spvision.VisionToDBJPanel;
 import crcl.base.CRCLCommandInstanceType;
+import crcl.base.CRCLCommandType;
 import crcl.base.CRCLProgramType;
 import crcl.base.CRCLStatusType;
 import crcl.base.CommandStateEnumType;
@@ -113,6 +114,18 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
@@ -812,63 +825,58 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldAdjPose, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                        .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                                .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, 222, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonTake)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonLookFor)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonTest)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonReturn)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonRecord))
-                            .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                                .addComponent(jLabel3)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel4)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel5)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel8)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel9)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonContRandomTest)))
-                        .addGap(6, 6, 6)
-                        .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                                .addGap(6, 6, 6)
-                                .addComponent(jButtonGridTest)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonStopRandomTest)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonRecordLookForJoints))
-                            .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                                .addComponent(jLabel12)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonPlacePart)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel20)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE, 234, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addContainerGap())
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonTake)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonLookFor)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonTest)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonReturn)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonRecord)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonPlacePart)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel20)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonContRandomTest)
+                        .addGap(90, 90, 90)
+                        .addComponent(jButtonStopRandomTest)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonRecordLookForJoints))
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                        .addComponent(jLabel12)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonGridTest)))
+                .addContainerGap(13, Short.MAX_VALUE))
         );
 
         jPanelInnerManualControlLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
@@ -883,9 +891,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jButtonLookFor)
                     .addComponent(jButtonReturn)
                     .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel12)
                     .addComponent(jButtonTest)
-                    .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButtonPlacePart)
                     .addComponent(jLabel20)
                     .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -906,7 +912,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jButtonContRandomTest)
                         .addComponent(jButtonStopRandomTest)
                         .addComponent(jLabel9)
-                        .addComponent(jButtonGridTest)
                         .addComponent(jButtonRecordLookForJoints)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -932,7 +937,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jButtonNewLogFile)
                     .addComponent(jTextFieldRecordFailCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jTextFieldRecordSuccessCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(260, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel12)
+                    .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonGridTest))
+                .addContainerGap(72, Short.MAX_VALUE))
         );
 
         jScrollPane2.setViewportView(jPanelInnerManualControl);
@@ -943,7 +953,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 972, Short.MAX_VALUE)
+                .addComponent(jScrollPane2)
                 .addContainerGap())
         );
         jPanelOuterManualControlLayout.setVerticalGroup(
@@ -1543,6 +1553,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jCheckBoxReplan.setSelected(false);
             setReplanFromIndex(0);
             jTextFieldIndex.setText("0");
+            updateComboPartModel();
+            updateComboSlotModel();
         }
     }
 
@@ -1617,15 +1629,21 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return pddlActionToCrclGenerator.incrementAndGetCommandId();
     }
 
+    
+    
     private CRCLProgramType createEmptyProgram() {
         CRCLProgramType program = new CRCLProgramType();
         InitCanonType initCmd = new InitCanonType();
-        initCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(initCmd);
         program.setInitCanon(initCmd);
         EndCanonType endCmd = new EndCanonType();
-        endCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(endCmd);
         program.setEndCanon(endCmd);
         return program;
+    }
+
+    private void setCommandId(CRCLCommandType cmd) {
+        Utils.setCommandID(cmd, incrementAndGetCommandId());
     }
 
     private CRCLProgramType crclProgram;
@@ -2149,7 +2167,64 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         return part;
     }
+    
+    private void updateComboPartModel() {
+        DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
+        boolean first = true;
+        for(PddlAction action : actionsList) {
+            switch(action.getType()) {
+                case "fake-take-part":
+                case "take-part":
+                    if(action.getArgs().length > 0) {
+                        boolean found = false;
+                        String part = action.getArgs()[0];
+                        for (int i = 0; i < cbm.getSize(); i++) {
+                            if(cbm.getElementAt(i).equals(part)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if(!found) {
+                            cbm.insertElementAt(part, 0);
+                        }
+                        if(first){
+                            cbm.setSelectedItem(part);
+                            first = false;
+                        }
+                    }
+                    break;
+            }
+        }
+    }
 
+    private void updateComboSlotModel() {
+        DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
+        boolean first = true;
+        for(PddlAction action : actionsList) {
+            switch(action.getType()) {
+                case "place-part":
+                    if(action.getArgs().length > 0) {
+                        boolean found = false;
+                        String slot = action.getArgs()[0];
+                        for (int i = 0; i < cbm.getSize(); i++) {
+                            if(cbm.getElementAt(i).equals(slot)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if(!found) {
+                            cbm.insertElementAt(slot, 0);
+                        }
+                        if(first){
+                            cbm.setSelectedItem(slot);
+                            first = false;
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+    
     public String getComboSlot() {
         String slot = jComboBoxManualSlotName.getSelectedItem().toString();
         DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
@@ -3071,10 +3146,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds = program.getMiddleCommand();
         MessageType message = new MessageType();
-        message.setCommandID(incrementAndGetCommandId());
+        setCommandId(message);
         message.setMessage(ex.toString());
         cmds.add(message);
-        program.getEndCanon().setCommandID(incrementAndGetCommandId());
+        setCommandId(program.getEndCanon());
         loadProgramToTable(program);
         jTableCrclProgram.setBackground(Color.red);
         jTabbedPane1.setSelectedComponent(jPanelCrcl);
@@ -3216,7 +3291,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setCrclIndexes(indexes);
         setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
         setPddlTakenParts(pddlActionToCrclGenerator.getActionToCrclTakenPartsNames());
-        program.getEndCanon().setCommandID(incrementAndGetCommandId());
         program.setName("pddl_" + replanFromIndex + "_" + pddlActionToCrclGenerator.getLastIndex());
         lastCrclProgName = crclProgName;
         crclProgName = program.getName();
@@ -3230,7 +3304,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(incrementAndGetCommandId());
+        setCommandId(program.getEndCanon());
         updatePositionCacheTable();
         return program;
     }
@@ -3316,7 +3390,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(incrementAndGetCommandId());
+        setCommandId(program.getEndCanon());
         XFuture<Boolean> ret = startCrclProgram(program);
         replanStarted.set(false);
         return ret;
@@ -3336,7 +3410,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(incrementAndGetCommandId());
+        setCommandId(program.getEndCanon());
 
         for (PositionMap positionMap : getPositionMaps()) {
             PointType offset = positionMap.getLastOffset();
@@ -3381,7 +3455,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(incrementAndGetCommandId());
+        setCommandId(program.getEndCanon());
 
         for (PositionMap positionMap : getPositionMaps()) {
             PointType offset = positionMap.getLastOffset();
@@ -3424,7 +3498,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(incrementAndGetCommandId());
+        setCommandId(program.getEndCanon());
         replanStarted.set(false);
         return startCrclProgram(program);
     }
@@ -3529,7 +3603,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(incrementAndGetCommandId());
+        setCommandId(program.getEndCanon());
 
         String randomPoseString
                 = String.format("%.1f, %.1f, %.1f",
@@ -3593,7 +3667,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(incrementAndGetCommandId());
+        setCommandId(program.getEndCanon());
         setCrclProgram(program);
         String gridPoseString
                 = String.format("%.1f, %.1f, %.1f",
@@ -3622,7 +3696,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTextFieldIndex.setText(Integer.toString(replanFromIndex));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
-        program.getEndCanon().setCommandID(incrementAndGetCommandId());
+        setCommandId(program.getEndCanon());
         replanStarted.set(false);
         return startCrclProgram(program);
     }
@@ -3640,7 +3714,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jTextFieldIndex.setText(Integer.toString(replanFromIndex));
             program.getMiddleCommand().clear();
             program.getMiddleCommand().addAll(cmds);
-            program.getEndCanon().setCommandID(incrementAndGetCommandId());
+            setCommandId(program.getEndCanon());
             replanStarted.set(false);
             return startCrclProgram(program);
         } catch (IllegalStateException | SQLException ex) {
@@ -3824,6 +3898,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
+            loadComboModels(props);
             this.actionsFileString = props.getProperty(PDDLOUTPUT);
             this.reverseActionsFileString = props.getProperty(REVERSE_PDDLOUTPUT);
             reloadActionsFile();
@@ -3851,30 +3926,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     }
                 }
             }
-            String manualPartNames = props.getProperty(MANUAL_PART_NAMES, "");
-            String pna[] = manualPartNames.split("[ \t,\\[\\]\\{\\}]+");
-            DefaultComboBoxModel<String> cbm
-                    = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
-            cbm.removeAllElements();
-            for (int i = 0; i < pna.length; i++) {
-                if (null != pna[i] && pna[i].length() > 0
-                        && !pna[i].equals("null")) {
-                    cbm.addElement(pna[i]);
-                }
-            }
-
-            String manualSlotNames = props.getProperty(MANUAL_SLOT_NAMES, "");
-            String sna[] = manualSlotNames.split("[ \t,\\[\\]\\{\\}]+");
-
-            cbm
-                    = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
-            cbm.removeAllElements();
-            for (int i = 0; i < sna.length; i++) {
-                if (null != sna[i] && sna[i].length() > 0
-                        && !sna[i].equals("null")) {
-                    cbm.addElement(sna[i]);
-                }
-            }
+            
 
             String errorMapFiles = props.getProperty(POS_ERROR_MAP_FILES, "");
             if (null != errorMapFiles && errorMapFiles.length() > 0) {
@@ -3897,6 +3949,33 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private void loadComboModels(Properties props) {
+        String manualPartNames = props.getProperty(MANUAL_PART_NAMES, "");
+        String pna[] = manualPartNames.split("[ \t,\\[\\]\\{\\}]+");
+        DefaultComboBoxModel<String> cbm
+                = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
+        cbm.removeAllElements();
+        for (int i = 0; i < pna.length; i++) {
+            if (null != pna[i] && pna[i].length() > 0
+                    && !pna[i].equals("null")) {
+                cbm.addElement(pna[i]);
+            }
+        }
+        
+        String manualSlotNames = props.getProperty(MANUAL_SLOT_NAMES, "");
+        String sna[] = manualSlotNames.split("[ \t,\\[\\]\\{\\}]+");
+        
+        cbm
+                = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
+        cbm.removeAllElements();
+        for (int i = 0; i < sna.length; i++) {
+            if (null != sna[i] && sna[i].length() > 0
+                    && !sna[i].equals("null")) {
+                cbm.addElement(sna[i]);
             }
         }
     }

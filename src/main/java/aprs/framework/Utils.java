@@ -22,7 +22,9 @@
  */
 package aprs.framework;
 
+import crcl.base.CRCLCommandType;
 import crcl.ui.XFuture;
+import crcl.utils.CRCLSocket;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -96,6 +98,15 @@ public class Utils {
 
     }
 
+    private static String createAssertErrorString(CRCLCommandType cmd, long id) {
+        return "command id being reduced id="+id+", cmd="+CRCLSocket.cmdToString(cmd);
+    }
+    public static void setCommandID(CRCLCommandType cmd, long id) {
+        assert cmd.getCommandID() <= id:
+                createAssertErrorString(cmd,id);
+        cmd.setCommandID(id);
+    }
+    
     private static class LogFileDirGetter {
 
         private static File logFileDir = createLogFileDir();
@@ -103,7 +114,7 @@ public class Utils {
         private static File createLogFileDir() {
             try {
                 File tmpTest = File.createTempFile("temp_test", "txt");
-                File logFileDir = new File(tmpTest.getParentFile(), "aprs_logs_" + getDateTimeString() + "_dir");
+                File logFileDir = new File(tmpTest.getParentFile(), "aprs_logs_" + getDateTimeString());
                 logFileDir.mkdirs();
                 tmpTest.delete();
                 return logFileDir;
@@ -122,14 +133,29 @@ public class Utils {
         return new LogFileDirGetter().getLogFileDir();
     }
 
+    
+    private static String cleanAndLimitFilePrefix(String prefix_in) {
+        if(prefix_in.length() > 80) {
+            prefix_in = prefix_in.substring(0, 79);
+        }
+        String prefixOut = prefix_in.replaceAll("[ \t:;-]+", "_").replace('\\', '_').replace('/', '_');
+        if(prefixOut.length() > 80) {
+            prefixOut = prefixOut.substring(0, 79);
+        }
+        if(!prefixOut.endsWith("_")) {
+            prefixOut = prefixOut + "_";
+        }
+        return prefixOut;
+    }
+    
     public static File createTempFile(String prefix, String suffix) throws IOException {
-        return File.createTempFile(prefix, suffix, getlogFileDir());
+        return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, getlogFileDir());
     }
 
     public static File createTempFile(String prefix, String suffix, File dir) throws IOException {
-        return File.createTempFile(prefix, suffix, dir);
+        return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, dir);
     }
-
+    
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmmss.SSS");
     
     public static String getDateTimeString() {

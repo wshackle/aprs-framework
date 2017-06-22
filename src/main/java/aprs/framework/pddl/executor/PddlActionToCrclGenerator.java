@@ -35,6 +35,7 @@ import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
 import crcl.base.AngleUnitEnumType;
+import crcl.base.CRCLCommandType;
 import crcl.base.CRCLStatusType;
 import crcl.base.DwellType;
 import crcl.base.JointSpeedAccelType;
@@ -90,6 +91,8 @@ import java.util.function.Consumer;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.util.Collection;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -813,11 +816,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         return Collections.unmodifiableList(l);
     }
-    
+
     private List<DetectedItem> slotsToDetectedItemList(Collection<Slot> slots) {
         List<DetectedItem> l = new ArrayList<>();
         for (Slot slot : slots) {
-            l.add(new DetectedItem(slot.getSlotName(),slot.getSlotPose(), 0));
+            l.add(new DetectedItem(slot.getSlotName(), slot.getSlotPose(), 0));
         }
         l.addAll(poseCacheToDetectedItemList());
         return Collections.unmodifiableList(l);
@@ -898,7 +901,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String partName = action.getArgs()[0];
         MessageType msg = new MessageType();
         msg.setMessage("take-part " + partName);
-        msg.setCommandID(incrementAndGetCommandId());
+        setCommandId(msg);
         out.add(msg);
 
         PoseType pose = getPose(partName);
@@ -908,6 +911,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setZAxis(zAxis);
         testPartPositionByPose(out, pose);
         lastTakenPart = partName;
+    }
+
+    private void setCommandId(CRCLCommandType cmd) {
+        Utils.setCommandID(cmd,incrementAndGetCommandId());
     }
 
     //-- contains all the slots that do not have a part
@@ -939,7 +946,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (action.getArgs().length < 2) {
             throw new IllegalArgumentException("action = " + action + " needs at least two arguments: kitSku inspectionID");
         }
-        waitForCompleteVisionUpdates(lastRequiredPartsMap);
+        waitForCompleteVisionUpdates("inspectKit",lastRequiredPartsMap);
         takeSnapshots("-inspect-kit-", null, "");
 
 //        addTakeSnapshots(out, "-inspect-kit-", null, "");
@@ -947,7 +954,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String inspectionID = action.getArgs()[1];
         MessageType msg = new MessageType();
         msg.setMessage("inspect-kit " + kitSku);
-        msg.setCommandID(incrementAndGetCommandId());
+        setCommandId(msg);
         out.add(msg);
 
         //-- inspect-kit takes an sku as argument
@@ -974,15 +981,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     String part_in_pt = TakenPartList.get(i);
                     String tmpPartName = part_in_pt.replace("in_pt", "in_kt");
                     int indexLastUnderscore = tmpPartName.lastIndexOf("_");
-                    if (indexLastUnderscore < 0) {
-                        throw new IllegalStateException("TakenPartList=" + TakenPartList + " contains invalid tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt);
-                    }
+                    assert (indexLastUnderscore >= 0) :
+                        ("TakenPartList=" + TakenPartList + " contains invalid tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt);
+                    
                     String part_in_kt = tmpPartName.substring(0, indexLastUnderscore);
-                    if (part_in_kt.indexOf('_') > 0) {
-                        TakenPartList.set(i, part_in_kt);
-                    } else {
-                        throw new IllegalStateException("part_in_kt=" + part_in_kt + ",tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt + ", indexLastUnderscore=" + indexLastUnderscore);
-                    }
+                    assert (part_in_kt.indexOf('_') > 0) :
+                       ("part_in_kt=" + part_in_kt + ",tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt + ", indexLastUnderscore=" + indexLastUnderscore);
+                    
+                    TakenPartList.set(i, part_in_kt);
                 }
 
                 //-- Get all the slots for the current parts tray
@@ -1106,9 +1112,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private double getVisionToDBRotationOffset() {
-        if (null == this.aprsJFrame) {
-            throw new IllegalStateException("null == this.aprsJFrame");
-        }
+        assert (null != this.aprsJFrame) :
+            ("null == this.aprsJFrame");
+        
         return this.aprsJFrame.getVisionToDBRotationOffset();
     }
 
@@ -1387,7 +1393,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String partName = action.getArgs()[takePartArgIndex];
         MessageType msg = new MessageType();
         msg.setMessage("take-part " + partName);
-        msg.setCommandID(incrementAndGetCommandId());
+        setCommandId(msg);
         out.add(msg);
 
         if (null != kitInspectionJInternalFrame) {
@@ -1453,7 +1459,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String partName = action.getArgs()[takePartArgIndex];
         MessageType msg = new MessageType();
         msg.setMessage("take-part " + partName);
-        msg.setCommandID(incrementAndGetCommandId());
+        setCommandId(msg);
         out.add(msg);
 
         PoseType pose = getPose(partName);
@@ -1490,7 +1496,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         checkSettings();
         MessageType msg = new MessageType();
         msg.setMessage("take-part-recovery " + partName);
-        msg.setCommandID(incrementAndGetCommandId());
+        setCommandId(msg);
         out.add(msg);
 
         PoseType pose = getPose(partName);
@@ -1947,7 +1953,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void addOpenGripper(List<MiddleCommandType> cmds) {
         SetEndEffectorType openGripperCmd = new SetEndEffectorType();
-        openGripperCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(openGripperCmd);
         openGripperCmd.setSetting(1.0);
         cmds.add(openGripperCmd);
     }
@@ -1969,7 +1975,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 PoseType pose = aprsJFrame.getCurrentPose();
                 if (pose == null || pose.getPoint() == null || pose.getPoint().getZ() >= (limit - 1e-6)) {
                     MessageType messageCommand = new MessageType();
-                    messageCommand.setCommandID(mtCmd.getCommandID());
+                    setCommandId(messageCommand);
                     messageCommand.setMessage("moveUpFromCurrent NOT needed.");
                     wrapper.setWrappedCommand(messageCommand);
                 } else {
@@ -1987,14 +1993,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void addCloseGripper(List<MiddleCommandType> cmds) {
         SetEndEffectorType closeGrippeerCmd = new SetEndEffectorType();
-        closeGrippeerCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(closeGrippeerCmd);
         closeGrippeerCmd.setSetting(0.0);
         cmds.add(closeGrippeerCmd);
     }
 
     private void addMoveTo(List<MiddleCommandType> cmds, PoseType poseAbove, boolean straight) {
         MoveToType moveAboveCmd = new MoveToType();
-        moveAboveCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(moveAboveCmd);
         moveAboveCmd.setEndPosition(poseAbove);
         moveAboveCmd.setMoveStraight(straight);
         cmds.add(moveAboveCmd);
@@ -2003,7 +2009,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void addSetSlowSpeed(List<MiddleCommandType> cmds) {
         SetTransSpeedType stst = new SetTransSpeedType();
-        stst.setCommandID(incrementAndGetCommandId());
+        setCommandId(stst);
         TransSpeedAbsoluteType tas = new TransSpeedAbsoluteType();
         tas.setSetting(slowTransSpeed);
         stst.setTransSpeed(tas);
@@ -2018,14 +2024,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             SetRotSpeedType srs = new SetRotSpeedType();
             RotSpeedAbsoluteType rsa = new RotSpeedAbsoluteType();
             rsa.setSetting(rotSpeed);
-            srs.setCommandID(incrementAndGetCommandId());
+            setCommandId(srs);
             srs.setRotSpeed(rsa);
             cmds.add(srs);
             rotSpeedSet = true;
         }
 
         SetTransSpeedType stst = new SetTransSpeedType();
-        stst.setCommandID(incrementAndGetCommandId());
+        setCommandId(stst);
         TransSpeedAbsoluteType tas = new TransSpeedAbsoluteType();
         tas.setSetting(fastTransSpeed);
         stst.setTransSpeed(tas);
@@ -2038,14 +2044,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             SetRotSpeedType srs = new SetRotSpeedType();
             RotSpeedAbsoluteType rsa = new RotSpeedAbsoluteType();
             rsa.setSetting(rotSpeed);
-            srs.setCommandID(incrementAndGetCommandId());
+            setCommandId(srs);
             srs.setRotSpeed(rsa);
             cmds.add(srs);
             rotSpeedSet = true;
         }
 
         SetTransSpeedType stst = new SetTransSpeedType();
-        stst.setCommandID(incrementAndGetCommandId());
+        setCommandId(stst);
         TransSpeedAbsoluteType tas = new TransSpeedAbsoluteType();
         tas.setSetting(Math.min(fastTransSpeed, testTransSpeed));
         stst.setTransSpeed(tas);
@@ -2058,14 +2064,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             SetRotSpeedType srs = new SetRotSpeedType();
             RotSpeedAbsoluteType rsa = new RotSpeedAbsoluteType();
             rsa.setSetting(rotSpeed);
-            srs.setCommandID(incrementAndGetCommandId());
+            setCommandId(srs);
             srs.setRotSpeed(rsa);
             cmds.add(srs);
             rotSpeedSet = true;
         }
 
         SetTransSpeedType stst = new SetTransSpeedType();
-        stst.setCommandID(incrementAndGetCommandId());
+        setCommandId(stst);
         TransSpeedAbsoluteType tas = new TransSpeedAbsoluteType();
         tas.setSetting(Math.min(slowTransSpeed, testTransSpeed));
         stst.setTransSpeed(tas);
@@ -2078,12 +2084,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (!unitsSet) {
             SetLengthUnitsType slu = new SetLengthUnitsType();
             slu.setUnitName(LengthUnitEnumType.MILLIMETER);
-            slu.setCommandID(incrementAndGetCommandId());
+            setCommandId(slu);
             cmds.add(slu);
 
             SetAngleUnitsType sau = new SetAngleUnitsType();
             sau.setUnitName(AngleUnitEnumType.DEGREE);
-            sau.setCommandID(incrementAndGetCommandId());
+            setCommandId(sau);
             cmds.add(sau);
             unitsSet = true;
         }
@@ -2175,7 +2181,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void addJointMove(List<MiddleCommandType> out, String jointVals) {
         ActuateJointsType ajCmd = new ActuateJointsType();
-        ajCmd.setCommandID(out.size() + 2);
+        setCommandId(ajCmd);
         ajCmd.getActuateJoint().clear();
         String jointPosStrings[] = jointVals.split("[,]+");
         for (int i = 0; i < jointPosStrings.length; i++) {
@@ -2215,7 +2221,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
             PointType currentPoint = aprsJFrame.getCurrentPosePoint();
             if (null == currentPoint) {
-                throw new IllegalStateException("getCurrentPosePoint() returned null");
+//                System.err.println("checkAtLookForPosition: getCurrentPosePoint() returned null");
+                return false;
             }
             double diff = CRCLPosemath.diffPoints(currentPoint, lookForPoint);
             return diff < 2.0;
@@ -2303,10 +2310,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             addSkipLookDwell(out);
         }
 
-        addMarkerCommand(out, "waitForCompleteVisionUpdates", x -> {
-            waitForCompleteVisionUpdates(immutableRequiredPartsMap);
+        addMarkerCommand(out, "lookForParts.waitForCompleteVisionUpdates", x -> {
+            waitForCompleteVisionUpdates("lookForParts",immutableRequiredPartsMap);
         });
-        addTakeSnapshots(out, "lookForParts-"+((action.getArgs().length ==1)?action.getArgs()[0]:""), null, "");
+        addTakeSnapshots(out, "lookForParts-" + ((action.getArgs().length == 1) ? action.getArgs()[0] : ""), null, "");
         if (action.getArgs().length >= 1) {
             if (action.getArgs()[0].startsWith("1")) {
                 addMarkerCommand(out, "Inspecting kit", x -> {
@@ -2348,10 +2355,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    private void waitForCompleteVisionUpdates(Map<String, Integer> requiredPartsMap) {
+    private void waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap) {
         try {
-            aprsJFrame.setEnableVisionToDatabaseUpdates(true, requiredPartsMap);
-            XFuture<List<DetectedItem>> xfl = aprsJFrame.getNextUpdate();
+            XFuture<List<DetectedItem>> xfl = aprsJFrame.getSingleVisionToDbUpdate();
             aprsJFrame.refreshSimView();
             while (!xfl.isDone()) {
                 if (!aprsJFrame.isEnableVisionToDatabaseUpdates()) {
@@ -2362,9 +2368,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 aprsJFrame.refreshSimView();
             }
             List<DetectedItem> l = xfl.get();
-            aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile("lookForParts_update_", ".PNG"), l);
-            aprsJFrame.setEnableVisionToDatabaseUpdates(false, null);
+            aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile(prefix+"_waitForCompleteVisionUpdates", ".PNG"), l);
             aprsJFrame.getUpdatesFinished().join();
+            takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix+"_waitForCompleteVisionUpdates_new_database", ".PNG"));
             clearPoseCache();
         } catch (Exception ex) {
             Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -2388,10 +2394,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //    }
     private void addLookDwell(List<MiddleCommandType> out) {
         DwellType dwellCmd = new DwellType();
-        dwellCmd.setCommandID(out.size() + 2);
+        setCommandId(dwellCmd);
         dwellCmd.setDwellTime(lookDwellTime);
         out.add(dwellCmd);
-
     }
 
     /**
@@ -2517,6 +2522,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     origPose.setXAxis(xAxis);
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
+                    takeSnapshots("returning-" + getLastTakenPart()+"_no_pose_for_"+slotName, origPose, lastTakenPart);
                     final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
                     addMarkerCommand(out, msg,
                             ((CrclCommandWrapper wrapper) -> {
@@ -2660,7 +2666,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void addSettleDwell(List<MiddleCommandType> cmds) {
         DwellType dwellCmd = new DwellType();
-        dwellCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(dwellCmd);
         dwellCmd.setDwellTime(settleDwellTime);
         cmds.add(dwellCmd);
     }
@@ -2668,28 +2674,28 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void addAfterMoveToLookForDwell(List<MiddleCommandType> cmds) {
         DwellType dwellCmd = new DwellType();
-        dwellCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(dwellCmd);
         dwellCmd.setDwellTime(afterMoveToLookForDwellTime);
         cmds.add(dwellCmd);
     }
 
     private void addSkipLookDwell(List<MiddleCommandType> cmds) {
         DwellType dwellCmd = new DwellType();
-        dwellCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(dwellCmd);
         dwellCmd.setDwellTime(skipLookDwellTime);
         cmds.add(dwellCmd);
     }
 
     private void addFirstLookDwell(List<MiddleCommandType> cmds) {
         DwellType dwellCmd = new DwellType();
-        dwellCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(dwellCmd);
         dwellCmd.setDwellTime(firstLookDwellTime);
         cmds.add(dwellCmd);
     }
 
     private void addLastLookDwell(List<MiddleCommandType> cmds) {
         DwellType dwellCmd = new DwellType();
-        dwellCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(dwellCmd);
         dwellCmd.setDwellTime(lastLookDwellTime);
         cmds.add(dwellCmd);
     }
@@ -2697,13 +2703,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void addMarkerCommand(List<MiddleCommandType> cmds, String message, CRCLCommandWrapperConsumer cb) {
         MessageType messageCmd = new MessageType();
         messageCmd.setMessage(message);
-        messageCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(messageCmd);
         CrclCommandWrapper wrapper = CrclCommandWrapper.wrapWithOnDone(messageCmd, cb);
         cmds.add(wrapper);
     }
 
     private void addOptionalCommand(MiddleCommandType optCmd, List<MiddleCommandType> cmds, CRCLCommandWrapperConsumer cb) {
-        optCmd.setCommandID(incrementAndGetCommandId());
+        setCommandId(optCmd);
         CrclCommandWrapper wrapper = CrclCommandWrapper.wrapWithOnStart(optCmd, cb);
         cmds.add(wrapper);
     }

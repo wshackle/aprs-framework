@@ -33,6 +33,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import rcs.posemath.PM_CARTESIAN;
 
 /**
@@ -430,6 +431,26 @@ public class DetectedItem extends PM_CARTESIAN {
 
     public void setNewSlotQuery(String newSlotQuery) {
         this.newSlotQuery = newSlotQuery;
+    }
+
+    private Map<String, String> newSlotOffsetResultMap = null;
+
+    /**
+     * Get the value of newSlotOffsetResultMap
+     *
+     * @return the value of newSlotOffsetResultMap
+     */
+    public Map<String, String> getNewSlotOffsetResultMap() {
+        return newSlotOffsetResultMap;
+    }
+
+    /**
+     * Set the value of newSlotOffsetResultMap
+     *
+     * @param newSlotOffsetResultMap new value of newSlotOffsetResultMap
+     */
+    public void setNewSlotOffsetResultMap(Map<String, String> newSlotOffsetResultMap) {
+        this.newSlotOffsetResultMap = newSlotOffsetResultMap;
     }
 
 }

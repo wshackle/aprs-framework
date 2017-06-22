@@ -1,17 +1,27 @@
-#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:1277
+#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:1830
 --visionhost=agility
 --visionport=5002
+addPosNoise=false
 autoscale=false
 connected=true
 datafile=motoman_shared_table_objects.csv
 displayAxis=NEG_X_NEG_Y
-items=sku_part_large_gear,-0.06,667.1,86.7,1.0,P,sku_part_large_gear,-0.06,675.2,-138.62,1.0,P,sku_part_large_gear,-0.06,677.24,-31.53,1.0,P,sku_part_large_gear,0.0,662.29,194.53,0.88,P,sku_part_small_gear,0.0,758.26,-126.78,1.0,P,sku_part_small_gear,0.0,747.55,102.91,1.0,P,sku_part_small_gear,0.0,745.7,180.89,0.99,P,sku_part_small_gear,0.0,759.09,-47.63,0.99,P,sku_small_gear_vessel,0.02,554.01,-52.84,0.99,PT,sku_large_gear_vessel,0.01,725.52,-311.22,1.0,PT,sku_large_gear_vessel,0.0,538.01,131.46,0.81,PT,sku_kit_s2l2_vessel,0.0,691.9,137.72,0.77,KT,sku_kit_s2l2_vessel,-0.04,703.57,-86.84,0.76,KT,
+dropOffThreshold=25.00
+items=sku_part_large_gear,-0.05,539.56,77.58,1.0,P,sku_part_large_gear,0.11,724.72,-270.37,0.99,P,sku_part_large_gear,0.14,538.41,184.24,0.98,P,sku_part_small_gear,0.0,580.98,-84.06,0.99,P,sku_part_small_gear,0.0,525.03,-28.78,0.99,P,sku_part_small_gear,0.0,525.36,-85.08,0.99,P,sku_part_small_gear,0.0,581.0,-28.02,0.98,P,sku_small_gear_vessel,0.0,554.5,-55.88,0.77,PT,sku_large_gear_vessel,0.0,540.09,130.35,0.97,PT,sku_kit_s2l2_vessel,-0.01,696.27,135.22,0.76,KT,sku_kit_s2l2_vessel,-0.05,704.37,-93.33,0.73,KT,
 
+pickupDist=5.00
+posNoise=1.00
 reverseFlag=false
 reverse_datafile=end_locations_motoman_shared_table_objects.csv
+rotNoise=1.00
 separatenames=true
 showrotations=false
+shuffleSimulatedUpdates=false
+simRefreshMillis=50
 simulated=false
+simulatedDropRate=0.000
+simulationUpdateAsNeeded=true
 trackcurrentpos=true
+viewOutput=false
 xmaxymax=760.0,500.0
 xminymin=0.0, -500.0

@@ -82,6 +82,10 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return visionToDBJPanel.getNextUpdate();
     }
     
+     public XFuture<List<DetectedItem>> getSingleUpdate() {
+        return visionToDBJPanel.getSingleUpdate();
+    }
+    
     public XFuture<Void> getUpdatesFinished() {
         return visionToDBJPanel.getUpdatesFinished();
     }

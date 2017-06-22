@@ -503,7 +503,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     }//GEN-LAST:event_jCheckBoxSshActionPerformed
 
     private void jButtonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearActionPerformed
-       jTextAreaOutput.setText("");
+        jTextAreaOutput.setText("");
     }//GEN-LAST:event_jButtonClearActionPerformed
 
     private ExecutorService executor = Executors.newCachedThreadPool();
@@ -537,10 +537,9 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     }
 
     public List<PddlAction> getActionsList() {
-        if (null != actionsToCrclJInternalFrame1) {
-            return actionsToCrclJInternalFrame1.getActionsList();
-        }
-        throw new IllegalStateException("actionsToCrclJInternalFrame not set");
+        assert (null != actionsToCrclJInternalFrame1) :
+                ("null == actionsToCrclJInternalFrame1");
+        return actionsToCrclJInternalFrame1.getActionsList();
     }
 
     public void setActionsList(List<PddlAction> actionsList) {
@@ -683,14 +682,14 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     }
 
     private boolean lastMessageBlank = false;
-    
+
     List<String> logLines = new ArrayList<>();
 
     private void appendLine(String l) {
         int maxLines = 100;
         try {
             maxLines = (int) jSpinnerMaxLines.getValue();
-            if(maxLines < 1) {
+            if (maxLines < 1) {
                 jSpinnerMaxLines.setValue(1);
                 maxLines = 1;
             }
@@ -748,9 +747,10 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
             }
         }
     }
+
     private void printMessage(String msg) {
-        boolean msgIsBlank = msg.trim().length()<1;
-        if(!msgIsBlank || !lastMessageBlank) {
+        boolean msgIsBlank = msg.trim().length() < 1;
+        if (!msgIsBlank || !lastMessageBlank) {
             System.out.println(msg);
             appendText(msg);
         }
@@ -977,9 +977,9 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
             scp(session, jTextFieldHost.getText(), remoteProblemFile, jTextFieldPddlProblem.getText());
             sshExec(session, jTextFieldPlannerProgramExecutable.getText() + " " + jTextFieldAdditionalArgs.getText() + " " + remoteDomainFile + " " + remoteProblemFile);
         } catch (Exception ex) {
-            printMessage("runPddlPlannerOnceSsh failed with "+ex);
+            printMessage("runPddlPlannerOnceSsh failed with " + ex);
             Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
-        } 
+        }
     }
 
     public void runPddlPlannerOnce() throws IOException {
@@ -1019,7 +1019,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                         String line = null;
                         while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
                             final String lineToAppend = line;
-                            System.out.println("Line from remote error source:"+line);
+                            System.out.println("Line from remote error source:" + line);
                             javax.swing.SwingUtilities.invokeLater(new Runnable() {
                                 @Override
                                 public void run() {
@@ -1042,7 +1042,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                     boolean planFoundFound = false;
                     while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
                         final String lineToAppend = line;
-                        System.out.println("Line from remote out source:"+line);
+                        System.out.println("Line from remote out source:" + line);
                         javax.swing.SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {

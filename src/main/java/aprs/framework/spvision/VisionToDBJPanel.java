@@ -84,6 +84,10 @@ import static crcl.utils.CRCLPosemath.vector;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
+import static aprs.framework.Utils.runOnDispatchThread;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  *
@@ -94,9 +98,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private DbSetupPublisher dbSetupPublisher;
 
     public List<PartsTray> getPartsTrayList() {
-        if (null == dpu) {
-            throw new IllegalStateException("dpu == null");
-        }
+        assert (null != dpu) :
+                ("dpu == null");
+
         return dpu.getPartsTrayList();
     }
 
@@ -119,10 +123,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public double getRotationOffset() {
-        if (null != dpu) {
-            return dpu.getRotationOffset();
-        }
-        throw new IllegalStateException("dpu == null");
+        assert (null != dpu) :
+                ("dpu == null");
+
+        return dpu.getRotationOffset();
     }
 
     private double transform(int row, int col) {
@@ -1391,7 +1395,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 if (required > found) {
                     int failures = checkRequiredPartFailures.incrementAndGet();
                     String msg = "Found only " + found + " of " + name + " when " + required + " needed."
-                            + " : failures = " + failures + " out of " + maxRequiredPartFailures;
+                            + " : failures = " + failures + " out of " + maxRequiredPartFailures + "_";
                     try {
                         aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile("checkRequiredParts_" + msg, ".PNG"), list);
                     } catch (IOException ex) {
@@ -1451,6 +1455,25 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
+    private final ConcurrentLinkedDeque<XFuture<List<DetectedItem>>> singleUpdateListeners
+            = new ConcurrentLinkedDeque<>();
+
+    public XFuture<List<DetectedItem>> getSingleUpdate() {
+        setEnableDatabaseUpdates(true);
+        XFuture<List<DetectedItem>> ret = new XFuture<>("getSingleUpdate");
+        singleUpdateListeners.add(ret);
+        return ret;
+    }
+
+    private void notifySingleUpdateListeners(List<DetectedItem> l) {
+        XFuture<List<DetectedItem>> future;
+        setEnableDatabaseUpdates(false);
+        List<DetectedItem> unmodifiableList = Collections.unmodifiableList(l);
+        while (null != (future = singleUpdateListeners.poll())) {
+            future.complete(unmodifiableList);
+        }
+    }
+    
     private final ConcurrentLinkedDeque<XFuture<List<DetectedItem>>> nextUpdateListeners
             = new ConcurrentLinkedDeque<>();
 
@@ -1507,13 +1530,18 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (null != transform) {
                 transformedVisionList = transformList(visionListWithEmptySlots, transform);
                 List<DetectedItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
+                if(!singleUpdateListeners.isEmpty()) {
+                    setEnableDatabaseUpdates(false);
+                    notifySingleUpdateListeners(l);
+                }
                 runOnDispatchThread(() -> this.updateInfo(l, line));
             } else {
                 List<DetectedItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCountsToDatabaseNames, false);
                 runOnDispatchThread(() -> this.updateInfo(l, line));
             }
             updating = false;
-            if (!dpu.isEnableDatabaseUpdates()) {
+            if (!finishedUpdateListeners.isEmpty()) {
+                setEnableDatabaseUpdates(false);
                 notifyFinishedUpdatingListeners();
             }
         }

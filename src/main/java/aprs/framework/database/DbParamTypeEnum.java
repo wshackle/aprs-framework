@@ -44,5 +44,6 @@ public enum DbParamTypeEnum {
     SLOT_OCCUPIED,
     SKU_NAME,
     MAX_VISIONCYCLE,
-    PRP_NAME;
+    PRP_NAME,
+    TRAY_NAME;
 }

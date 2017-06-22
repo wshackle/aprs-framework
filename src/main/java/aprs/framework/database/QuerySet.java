@@ -59,8 +59,7 @@ public class QuerySet implements QuerySetInterface {
     public void setExpectQueryItemFormat(String expectQueryItemFormat) {
         this.expectQueryItemFormat = expectQueryItemFormat;
     }
-    
-    
+
     /**
      * Get the database connection being used.
      *
@@ -420,6 +419,7 @@ public class QuerySet implements QuerySetInterface {
 
     /**
      * Get all parts_in_kt from the database
+     *
      * @param name name of kit tray
      * @return a list of all the parts that has "parts_in_kt" in their names
      * @throws java.sql.SQLException if query fails
@@ -451,7 +451,6 @@ public class QuerySet implements QuerySetInterface {
         return partsInKtList;
     }
 
-    
     public ArrayList<String> getAllPartsInPt(String name) throws SQLException {
         ArrayList<String> partsInPtList = new ArrayList();
         if (closed) {
@@ -507,9 +506,9 @@ public class QuerySet implements QuerySetInterface {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-        if (null == getPartsTraysStatement) {
-            throw new IllegalStateException("null == getPartsTraysStatement");
-        }
+        assert (null != getPartsTraysStatement) :
+                ("null == getPartsTraysStatement");
+
         List<PartsTray> list = new ArrayList<>();
         Map<Integer, Object> map = new TreeMap<>();
         DbQueryInfo getPartsTraysQueryInfo = queriesMap.get(DbQueryEnum.GET_PARTSTRAYS);
@@ -588,9 +587,9 @@ public class QuerySet implements QuerySetInterface {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-        if (null == getPartsTraysStatement) {
-            throw new IllegalStateException("null == getPartsTraysStatement");
-        }
+        assert (null != getPartsTraysStatement) :
+                ("null == getPartsTraysStatement");
+
         List<Slot> list = new ArrayList<>();
         Map<Integer, Object> map = new TreeMap<>();
         DbQueryInfo getSlotsQueryInfo = queriesMap.get(DbQueryEnum.GET_SLOTS);
@@ -706,11 +705,11 @@ public class QuerySet implements QuerySetInterface {
     }
      */
     @Override
-    public PoseType getPose(String name)  throws SQLException {
-        return getPose(name,false,0);
+    public PoseType getPose(String name) throws SQLException {
+        return getPose(name, false, 0);
     }
-    
-    public PoseType getPose(String name, boolean requireNew,int visionCycleNewDiffThreshold) throws SQLException {
+
+    public PoseType getPose(String name, boolean requireNew, int visionCycleNewDiffThreshold) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
@@ -747,9 +746,9 @@ public class QuerySet implements QuerySetInterface {
                 if (debug) {
                     System.out.println("nameCheckString = " + nameCheckString);
                 }
-                if (!nameCheckString.equals(name)) {
-                    throw new IllegalStateException("returned name " + nameCheckString + " does not match requested name " + name);
-                }
+                assert (nameCheckString.equals(name)) :
+                    ("returned name " + nameCheckString + " does not match requested name " + name);
+               
                 String xString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.X));
                 if (debug) {
                     System.out.println("xString = " + xString);
@@ -816,7 +815,7 @@ public class QuerySet implements QuerySetInterface {
                 pose.setZAxis(zAxis);
                 String visionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VISIONCYCLE));
                 int visionCycle = -1;
-                if(null != visionCycleString) {
+                if (null != visionCycleString) {
                     visionCycle = Integer.parseInt(visionCycleString);
                 }
                 if (debug) {
@@ -824,13 +823,13 @@ public class QuerySet implements QuerySetInterface {
                 }
                 String maxVisionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.MAX_VISIONCYCLE));
                 int maxVisionCycle = -1;
-                if(null != maxVisionCycleString) {
+                if (null != maxVisionCycleString) {
                     maxVisionCycle = Integer.parseInt(maxVisionCycleString);
                 }
                 if (debug) {
                     System.out.println("maxVisionCycleString = " + maxVisionCycleString);
                 }
-                if(requireNew && maxVisionCycle > visionCycle + visionCycleNewDiffThreshold) {
+                if (requireNew && maxVisionCycle > visionCycle + visionCycleNewDiffThreshold) {
                     return null;
                 }
             } else {
@@ -855,9 +854,9 @@ public class QuerySet implements QuerySetInterface {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-        if (null == setSingleTrayDesignStatement) {
-            throw new IllegalStateException("null == getAllTrayDesignsStatement");
-        }
+        assert (null != setSingleTrayDesignStatement) :
+            ("null == getAllTrayDesignsStatement");
+        
         List<TraySlotDesign> list = new ArrayList<>();
         Map<Integer, Object> map = new TreeMap<>();
         DbQueryInfo setSingleTraySlotDesignQueryInfo = queriesMap.get(DbQueryEnum.SET_SINGLE_TRAY_SLOT_DESIGN);
@@ -873,9 +872,9 @@ public class QuerySet implements QuerySetInterface {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-        if (null == newSingleTrayDesignStatement) {
-            throw new IllegalStateException("null == getAllTrayDesignsStatement");
-        }
+        assert (null != newSingleTrayDesignStatement) :
+            ("null == getAllTrayDesignsStatement");
+        
         List<TraySlotDesign> list = new ArrayList<>();
         Map<Integer, Object> map = new TreeMap<>();
         DbQueryInfo newSingleTraySlotDesignQueryInfo = queriesMap.get(DbQueryEnum.NEW_SINGLE_TRAY_SLOT_DESIGN);
@@ -893,9 +892,9 @@ public class QuerySet implements QuerySetInterface {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-        if (null == getSingleTrayDesignStatement) {
-            throw new IllegalStateException("null == getAllTrayDesignsStatement");
-        }
+        assert (null != getSingleTrayDesignStatement) :
+            ("null == getAllTrayDesignsStatement");
+        
         List<TraySlotDesign> list = new ArrayList<>();
         Map<Integer, Object> map = new TreeMap<>();
         DbQueryInfo getSingleTraySlotDesignQueryInfo = queriesMap.get(DbQueryEnum.GET_SINGLE_TRAY_SLOT_DESIGN);
@@ -945,9 +944,9 @@ public class QuerySet implements QuerySetInterface {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-        if (null == getAllTrayDesignsStatement) {
-            throw new IllegalStateException("null == getAllTrayDesignsStatement");
-        }
+        assert (null != getAllTrayDesignsStatement) :
+            ("null == getAllTrayDesignsStatement");
+        
         List<TraySlotDesign> list = new ArrayList<>();
 //        Map<Integer, Object> map = new TreeMap<>();
         DbQueryInfo getAllTraySlotDesignsQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_TRAY_SLOT_DESIGNS);
@@ -1078,7 +1077,7 @@ public class QuerySet implements QuerySetInterface {
     private void setPoseQueryDoubleParam(DbParamTypeEnum type, double value, Map<Integer, Object> map) throws SQLException {
         setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value, map);
     }
-    
+
     private static String toSku(String name) {
         String sku = name;
         if (!sku.startsWith("sku_")) {

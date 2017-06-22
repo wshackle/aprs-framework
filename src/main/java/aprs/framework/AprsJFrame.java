@@ -125,51 +125,44 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private String taskName;
 
-    public XFuture<List<DetectedItem>> getNextUpdate() {
-        if(null == visionToDbJInternalFrame) {
-            throw new IllegalStateException("null == visionToDbJInternalFrame");
-        }
+    public XFuture<List<DetectedItem>> getSingleVisionToDbUpdate() {
+        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
+        return visionToDbJInternalFrame.getSingleUpdate();
+    }
+    
+    public XFuture<List<DetectedItem>> getNextVisionToDbUpdate() {
+        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return visionToDbJInternalFrame.getNextUpdate();
     }
-    
+
     public List<PartsTray> getPartsTrayList() {
-        if(null == visionToDbJInternalFrame) {
-            throw new IllegalStateException("null == visionToDbJInternalFrame");
-        }
+        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return visionToDbJInternalFrame.getPartsTrayList();
     }
-    
+
     public XFuture<Void> getUpdatesFinished() {
-        if(null == visionToDbJInternalFrame) {
-            throw new IllegalStateException("null == visionToDbJInternalFrame");
-        }
+        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return visionToDbJInternalFrame.getUpdatesFinished();
     }
-    
+
     public void refreshSimView() {
-        if(null != object2DViewJInternalFrame) {
+        if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(false);
         }
     }
-    
+
     public List<DetectedItem> getSlotOffsets(String name) {
-        if (null == visionToDbJInternalFrame) {
-            throw new IllegalStateException("visionToDbJInternalFrame == null");
-        }
+        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return this.visionToDbJInternalFrame.getSlotOffsets(name);
     }
 
     public XFuture<Void> startVisionToDbNewItemsImageSave(File f) {
-        if (null == visionToDbJInternalFrame) {
-            throw new IllegalStateException("visionToDbJInternalFrame == null");
-        }
+        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return this.visionToDbJInternalFrame.startNewItemsImageSave(f);
     }
 
     public List<DetectedItem> getSlots(DetectedItem item) {
-        if (null == visionToDbJInternalFrame) {
-            throw new IllegalStateException("visionToDbJInternalFrame == null");
-        }
+        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return this.visionToDbJInternalFrame.getSlots(item);
     }
 
@@ -194,7 +187,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private int runNumber = (int) ((System.currentTimeMillis() / 10000) % 1000);
-    
+
     public boolean isEnableDebugDumpstacks() {
         return jCheckBoxMenuItemEnableDebugDumpstacks.isSelected();
     }
@@ -418,7 +411,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public XFuture<Void> startSafeAbortAndDisconnectAsync() {
         startSafeAbortAndDisconnectAsyncFuture
                 = this.pddlExecutorJInternalFrame1.startSafeAbort()
-                        .thenRunAsync(this::disconnectRobot);
+                .thenRunAsync(this::disconnectRobot);
         return startSafeAbortAndDisconnectAsyncFuture;
     }
 
@@ -432,7 +425,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.disconnect();
         }
-        if(null != getRobotName()) {
+        if (null != getRobotName()) {
             takeSnapshots("disconnectRobot");
         }
         this.setRobotName(null);
@@ -847,13 +840,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void setTitleErrorString(String newTitleErrorString) {
         if (!Objects.equals(this.titleErrorString, newTitleErrorString)) {
             updateTitle();
-            if(null != this.titleErrorString 
+            if (null != this.titleErrorString
                     && null != newTitleErrorString
                     && this.titleErrorString.length() > 0) {
-                if(this.titleErrorString.length() > 200) {
-                    this.titleErrorString = this.titleErrorString.substring(0,200) +" ...\n"+ newTitleErrorString;
+                if (this.titleErrorString.length() > 200) {
+                    this.titleErrorString = this.titleErrorString.substring(0, 200) + " ...\n" + newTitleErrorString;
                 } else {
-                    this.titleErrorString = this.titleErrorString +" ...\n"+ newTitleErrorString;
+                    this.titleErrorString = this.titleErrorString + " ...\n" + newTitleErrorString;
                 }
             } else {
                 this.titleErrorString = newTitleErrorString;
@@ -861,7 +854,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setTitle((null != this.titleErrorString) ? this.titleErrorString : "APRS");
             if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
                 System.err.println(newTitleErrorString);
-                takeSnapshots("setTitleError_"+newTitleErrorString+"_");
+                takeSnapshots("setTitleError_" + newTitleErrorString + "_");
                 pause();
             }
         }
@@ -961,6 +954,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public AprsJFrame() {
         try {
+
             initPropertiesFileInfo();
             initComponents();
         } catch (Exception ex) {
@@ -1278,14 +1272,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         for (JMenuItem menuItem : menuItems) {
             jMenuWindow.add(menuItem);
         }
-        if (framesListSize != menuItems.size()) {
-            throw new IllegalStateException("menuItems = " + menuItems + " does not match framesList = " + framesList);
-        }
+        assert (framesListSize == menuItems.size()) :
+                ("menuItems = " + menuItems + " does not match framesList = " + framesList);
+        
         int menuItemCount = jMenuWindow.getItemCount();
-        if (framesListSize != menuItemCount) {
-            throw new IllegalStateException("framesListSize = " + framesListSize + " does not match menuItemCount = " + menuItemCount
+        assert (framesListSize == menuItemCount) :
+            ("framesListSize = " + framesListSize + " does not match menuItemCount = " + menuItemCount
                     + "with framesList=" + framesList + ", menuItems=" + menuItems);
-        }
+        
     }
 
     private ACTIVE_WINDOW_NAME activeWin = ACTIVE_WINDOW_NAME.OTHER;
@@ -1374,7 +1368,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             this.titleErrorString = crclClientError;
             pauseInternal();
         }
-        if(isPaused()) {
+        if (isPaused()) {
             stateString = "PAUSED";
         }
         String newTitle = "APRS : " + ((robotName != null) ? robotName : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : "
@@ -1410,7 +1404,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void updateTitle() {
         Utils.runOnDispatchThread(this::updateTitleInternal);
     }
-    
+
     private void updateTitleInternal() {
         if (null != pendantClientJInternalFrame) {
             CommandStatusType cs = pendantClientJInternalFrame.getCurrentStatus()
@@ -1428,8 +1422,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             updateTitle("", "");
         }
     }
-    
-    
 
     private void startPendantClientJInternalFrame() {
         try {
@@ -2300,7 +2292,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 //        }
 //        lastResumeFuture = continueCrclProgram();
 //        return lastResumeFuture;
-        if(null != pendantClientJInternalFrame) {
+        if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.unpauseCrclProgram();
         }
         updateTitle("", "");
@@ -2423,18 +2415,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pddlExecutorJInternalFrame1.refresh();
         }
     }
+    
+    private void setCommandID(CRCLCommandType cmd) {
+        Utils.setCommandID(cmd, incrementAndGetCommandId());
+    }
 
     private CRCLProgramType createEmptyProgram() {
         CRCLProgramType prog = new CRCLProgramType();
         prog.setInitCanon(new InitCanonType());
-        prog.getInitCanon().setCommandID(incrementAndGetCommandId());
+        setCommandID(prog.getInitCanon());
         prog.getMiddleCommand().clear();
 //        MessageType msgCmd = new MessageType();
 //        msgCmd.setMessage("empty program");
 //        msgCmd.setCommandID(BigInteger.valueOf(2));
 //        prog.getMiddleCommand().add(msgCmd);
         prog.setEndCanon(new EndCanonType());
-        prog.getEndCanon().setCommandID(incrementAndGetCommandId());
+        setCommandID(prog.getEndCanon());
         return prog;
     }
 
@@ -2478,8 +2474,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 setConnected(true);
             }
             CRCLProgramType emptyProgram = createEmptyProgram();
-            emptyProgram.getInitCanon().setCommandID(incrementAndGetCommandId());
-            emptyProgram.getEndCanon().setCommandID(incrementAndGetCommandId());
+            setCommandID(emptyProgram.getInitCanon());
+            setCommandID(emptyProgram.getEndCanon());
             return startCRCLProgram(emptyProgram)
                     .thenApply(x -> {
                         System.out.println("startCheckEnabled finishing with " + x);
@@ -3327,22 +3323,33 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             object2DViewJInternalFrame.refresh(false);
         }
     }
-    
-    
-    
+
     public File getlogFileDir() {
-        File f =   new File(Utils.getlogFileDir(),getRunName());
+        File f = new File(Utils.getlogFileDir(), getRunName());
         f.mkdirs();
         return f;
     }
 
+    private static String cleanAndLimitFilePrefix(String prefix_in) {
+        if(prefix_in.length() > 80) {
+            prefix_in = prefix_in.substring(0, 79);
+        }
+        String prefixOut = prefix_in.replaceAll("[ \t:;-]+", "_").replace('\\', '_').replace('/', '_');
+        if(prefixOut.length() > 80) {
+            prefixOut = prefixOut.substring(0, 79);
+        }
+        if(!prefixOut.endsWith("_")) {
+            prefixOut = prefixOut + "_";
+        }
+        return prefixOut;
+    }
+    
     public File createTempFile(String prefix, String suffix) throws IOException {
-        return File.createTempFile(Utils.getTimeString()+"_"+prefix.replaceAll("[ :;-]+", "_"), suffix, getlogFileDir());
+        return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, getlogFileDir());
     }
 
     public File createTempFile(String prefix, String suffix, File dir) throws IOException {
-        return File.createTempFile(prefix.replaceAll("[ :;-]+", "_"), suffix, dir);
+        return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, dir);
     }
-
 
 }
