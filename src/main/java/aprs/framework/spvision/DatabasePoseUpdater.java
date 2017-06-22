@@ -643,8 +643,25 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return l;
     }
 
+    public String getURL() {
+        try {
+            if (null != con) {
+                return con.getMetaData().getURL();
+            }
+        } catch (SQLException sQLException) {
+            sQLException.printStackTrace();
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
+        return "DatabasePoseUpdater{"+getURL()+ '}';
+    }
+
+    
+    
+    public String getDetailString() {
         return "DatabasePoseUpdater{" + "con=" + con + ", dbtype=" + dbtype + ", useBatch=" + useBatch + ", verify=" + verify + ", totalUpdateTimeMillis=" + totalUpdateTimeMillis + ", maxUpdateTimeMillis=" + maxUpdateTimeMillis + ", totalUpdateTimeNanos=" + totalUpdateTimeNanos + ", maxUpdateTimeNanos=" + maxUpdateTimeNanos + ", totalUpdates=" + totalUpdates + ", totalListUpdates=" + totalListUpdates + ", sharedConnection=" + sharedConnection + ", queryAllString=" + queryAllString + ", querySingleString=" + querySingleString + ", mergeStatementString=" + updateStatementString + ", updateParamTypes=" + updateParamTypes + ", getSingleParamTypes=" + getSingleParamTypes + ", debug=" + debug + '}';
     }
 
@@ -979,9 +996,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
         final long timestamp = System.currentTimeMillis();
         prevParts
                 = prevParts.stream()
-                .filter((DetectedItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
-                .filter((DetectedItem prevPart) -> closestDist(prevPart, parts) < 25.0)
-                .collect(Collectors.toCollection(() -> new ArrayList<DetectedItem>()));
+                        .filter((DetectedItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
+                        .filter((DetectedItem prevPart) -> closestDist(prevPart, parts) < 25.0)
+                        .collect(Collectors.toCollection(() -> new ArrayList<DetectedItem>()));
         prevParts.addAll(parts);
         return slots.stream()
                 .filter(slot -> closestDist(slot, prevParts) > 25.0)
@@ -1057,16 +1074,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                        .collect(Collectors.toList());
         List<DetectedItem> kitTrays
                 = itemList.stream()
-                .filter((DetectedItem item) -> "KT".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "KT".equals(item.getType()))
+                        .collect(Collectors.toList());
         List<DetectedItem> partTrays
                 = itemList.stream()
-                .filter((DetectedItem item) -> "PT".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "PT".equals(item.getType()))
+                        .collect(Collectors.toList());
         List<DetectedItem> parts
                 = itemList.stream()
-                .filter((DetectedItem item) -> "P".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((DetectedItem item) -> "P".equals(item.getType()))
+                        .collect(Collectors.toList());
         List<DetectedItem> fullList = new ArrayList<>();
         List<DetectedItem> bestKitTrayEmptySlots = findBestEmptyTraySlots(kitTrays, parts);
         List<DetectedItem> bestPartTrayEmptySlots = findBestEmptyTraySlots(partTrays, parts);
@@ -1156,9 +1173,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 ps.close();
             }
             if (enableDatabaseUpdates) {
-                File dbQueriesDir = new File(Utils.getlogFileDir(),"dbQueries");
+                File dbQueriesDir = new File(Utils.getlogFileDir(), "dbQueries");
                 dbQueriesDir.mkdirs();
-                dbQueryLogPrintStream = new PrintStream(new FileOutputStream(Utils.createTempFile("db_"+dbsetup.getPort(), "_log.txt",dbQueriesDir)));
+                dbQueryLogPrintStream = new PrintStream(new FileOutputStream(Utils.createTempFile("db_" + dbsetup.getPort(), "_log.txt", dbQueriesDir)));
                 for (Entry<String, List<DetectedItem>> offsetEntry : offsetsMap.entrySet()) {
                     dbQueryLogPrintStream.println();
                     dbQueryLogPrintStream.println(commentStartString + " offsetsMap.key =" + offsetEntry.getKey());
@@ -1233,12 +1250,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
             updateCount++;
             List<DetectedItem> partsTrays
                     = inList.stream()
-                    .filter((DetectedItem item) -> "PT".equals(item.getType()))
-                    .collect(Collectors.toList());
+                            .filter((DetectedItem item) -> "PT".equals(item.getType()))
+                            .collect(Collectors.toList());
             List<DetectedItem> kitTrays
                     = inList.stream()
-                    .filter((DetectedItem item) -> "KT".equals(item.getType()))
-                    .collect(Collectors.toList());
+                            .filter((DetectedItem item) -> "KT".equals(item.getType()))
+                            .collect(Collectors.toList());
 
             List<DetectedItem> list = inList;
             for (int i = 0; i < list.size(); i++) {
@@ -1274,12 +1291,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                 List<DetectedItem> parts
                         = inList.stream()
-                        .filter((DetectedItem item) -> "P".equals(item.getType()))
-                        .collect(Collectors.toList());
+                                .filter((DetectedItem item) -> "P".equals(item.getType()))
+                                .collect(Collectors.toList());
                 List<DetectedItem> emptySlots
                         = list.stream()
-                        .filter((DetectedItem item) -> "ES".equals(item.getType()))
-                        .collect(Collectors.toList());
+                                .filter((DetectedItem item) -> "ES".equals(item.getType()))
+                                .collect(Collectors.toList());
                 Comparator<DetectedItem> kitComparator
                         = comparingLong((DetectedItem kt) -> (kt.getEmptySlotsCount() < 1) ? Long.MAX_VALUE : kt.getEmptySlotsCount());
                 kitTrays.sort(kitComparator);
@@ -1310,10 +1327,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                         DetectedItem bestSlotFiller
                                 = firstSortParts.stream()
-                                .filter((DetectedItem p) -> p.isInsidePartsTray())
-                                .filter((DetectedItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
-                                .findFirst()
-                                .orElse(null);
+                                        .filter((DetectedItem p) -> p.isInsidePartsTray())
+                                        .filter((DetectedItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
+                                        .findFirst()
+                                        .orElse(null);
                         if (null != bestSlotFiller) {
                             slotFillers.add(bestSlotFiller);
                             firstSortParts.remove(bestSlotFiller);
@@ -1853,6 +1870,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     public XFuture<List<PoseQueryElem>> queryDatabaseNew() {
-        return XFuture.supplyAsync("queryDatabaseNew", () -> Collections.unmodifiableList(getNewDirectPoseList()), pqExecServ);
+        return XFuture.supplyAsync("queryDatabaseNew." + this.toString(), () -> Collections.unmodifiableList(getNewDirectPoseList()), pqExecServ);
     }
+
 }

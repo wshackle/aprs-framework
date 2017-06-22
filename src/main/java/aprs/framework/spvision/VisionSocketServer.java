@@ -183,6 +183,7 @@ public class VisionSocketServer implements AutoCloseable {
         publishService.submit(new Runnable() {
             @Override
             public void run() {
+                Thread.currentThread().setName("VisionSocketServer.publishList.serverSocket="+serverSocket+".clients.size="+clients.size());
                 for (int i = 0; i < clients.size() && !closing; i++) {
                     Socket client = clients.get(i);
                     if(Thread.currentThread().isInterrupted()) {

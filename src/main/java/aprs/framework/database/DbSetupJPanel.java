@@ -889,7 +889,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private ExecutorService notifyService = Executors.newSingleThreadExecutor(new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
-            Thread thread = new Thread(r, "dbSetupNotifyThread");
+            Thread thread = new Thread(r, "dbSetupNotifyThread."+this.toString());
             thread.setDaemon(true);
             return thread;
         }
@@ -1045,6 +1045,12 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }
 
+    @Override
+    public String toString() {
+        return "DbSetupJPanel{" + "aprsJFrame=" + aprsJFrame + ", connected=" + connected + '}';
+    }
+
+    
     private volatile boolean restoringProperties = false;
 
     public Map<String, String> updateArgsMap() {

@@ -1954,9 +1954,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private Random random = new Random(System.currentTimeMillis());
 
-    private XFuture<Void> startRandomDelay(final int millis, final int min_millis) {
+    private XFuture<Void> startRandomDelay(String name,final int millis, final int min_millis) {
         final long val = random.nextInt(millis) + 10 + min_millis;
-        return XFuture.runAsync("randomDelay(" + millis + ":" + val + ")",
+        return XFuture.runAsync(name+".randomDelay(" + millis + ":" + val + ")",
                 () -> {
                     try {
                         Thread.sleep(val);
@@ -2093,9 +2093,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             printStatus(continousDemoFuture, System.out);
             return quitRandomTest();
         }
-        pauseTest = startRandomDelay(30000, 20000)
+        pauseTest = startRandomDelay("pauseTest",30000, 20000)
                 .thenCompose(x -> Utils.runOnDispatchThread(this::pause))
-                .thenCompose(x -> startRandomDelay(1000, 1000))
+                .thenCompose(x -> startRandomDelay("pauseTest",1000, 1000))
                 .thenCompose(x -> Utils.runOnDispatchThread(this::resume))
                 .thenCompose(x -> continuePauseTest());
         return pauseTest;
@@ -2122,7 +2122,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             printStatus(continousDemoFuture, System.out);
             return quitRandomTest();
         }
-        randomTest = startRandomDelay(30000, 20000)
+        randomTest = startRandomDelay("enableTest",30000, 20000)
                 .thenCompose("checkForWaitResume1", x -> this.waitResume())
                 .thenCompose("waitTogglesAllowed", x -> this.waitTogglesAllowed())
                 .thenCompose("toggleRobotEnabled", x -> this.toggleRobotEnabled())

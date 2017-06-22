@@ -3352,4 +3352,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, dir);
     }
 
+    @Override
+    public String toString() {
+        return super.toString()+getTitle();
+    }
+
+    
+    
 }
