@@ -1,17 +1,27 @@
-#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:1290
+#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:1847
 --visionhost=agility.el.nist.gov
 --visionport=5001
+addPosNoise=false
 autoscale=false
 connected=true
 datafile=fanuc_cart_objects_capture_april_13_2017.csv
 displayAxis=POS_Y_NEG_X
-items=sku_part_large_gear,0.0,356.68,-189.13,0.98,P,sku_part_large_gear,0.0,373.92,9.95,100.0,P,sku_part_medium_gear,0.0,315.36,-95.12,0.94,P,sku_part_medium_gear,0.0,599.01,-164.81,0.94,P,sku_part_medium_gear,0.0,412.41,108.63,0.93,P,sku_part_medium_gear,0.0,394.27,-96.33,0.9,P,sku_part_small_gear,-0.86,103.97,375.45,0.99,P,sku_part_small_gear,-0.48,250.97,386.02,0.97,P,sku_large_gear_vessel,1.2515926535897932,574.97,56.42,0.96,PT,sku_medium_gear_vessel,-0.05,562.83,-124.38,0.92,PT,sku_kit_m2l1_vessel,3.07,372.33,52.22,0.55,KT,sku_kit_m2l1_vessel,3.11,356.36,-148.32,0.57,KT,
+dropOffThreshold=25.00
+items=sku_part_large_gear,0.0,336.21,129.47,0.98,P,sku_part_large_gear,0.0,602.47,34.11,100.0,P,sku_part_medium_gear,0.0,598.39,-164.72,0.95,P,sku_part_medium_gear,0.0,524.16,-161.49,0.95,P,sku_part_medium_gear,0.0,372.52,33.16,0.91,P,sku_part_medium_gear,0.0,292.75,34.18,0.87,P,sku_part_small_gear,-0.69,103.92,375.61,1.0,P,sku_part_small_gear,0.27,329.16,384.4,0.99,P,sku_part_small_gear,0.65,250.17,382.96,0.97,P,sku_large_gear_vessel,0.981592653589793,558.51,63.13,0.87,PT,sku_medium_gear_vessel,-0.04,562.31,-124.5,0.92,PT,sku_kit_m2l1_vessel,-0.06,336.03,89.09,0.52,KT,sku_kit_m2l1_vessel,-0.1,357.4,-113.1,0.71,KT,
 
+pickupDist=5.00
+posNoise=1.00
 reverseFlag=false
 reverse_datafile=fanuc_cart_objects_capture_jan_11_2017_combined_modified.csv
+rotNoise=1.00
 separatenames=true
 showrotations=false
+shuffleSimulatedUpdates=false
+simRefreshMillis=50
 simulated=false
+simulatedDropRate=0.000
+simulationUpdateAsNeeded=true
 trackcurrentpos=true
+viewOutput=false
 xmaxymax=700.0, 500.0
 xminymin=200.0, -200.0

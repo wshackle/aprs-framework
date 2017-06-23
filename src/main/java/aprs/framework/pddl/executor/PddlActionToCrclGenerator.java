@@ -88,8 +88,6 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import java.util.Collection;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
@@ -429,6 +427,20 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private boolean doInspectKit = false;
     private boolean requireNewPoses = false;
 
+    private PddlAction getNextPlacePartAction(int lastIndex, List<PddlAction> actions) {
+        for (int i = lastIndex + 1; i < actions.size(); i++) {
+            PddlAction action = actions.get(i);
+            switch (action.getType()) {
+                case "place-part":
+                    return action;
+                case "look-for-part":
+                case "look-for-parts":
+                    return null;
+            }
+        }
+        return null;
+    }
+
     /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
@@ -472,11 +484,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
             PddlAction action = actions.get(lastIndex);
             System.out.println("action = " + action);
-            takeSnapshots("generating crcl for actions.get(" + lastIndex + ")=" + action, null, null);
+            takeSnapshots("gc_actions.get(" + lastIndex + ")=" + action, null, null);
 //            try {
             switch (action.getType()) {
                 case "take-part":
-                    takePart(action, cmds);
+                    takePart(action, cmds, getNextPlacePartAction(lastIndex, actions));
                     break;
 
                 case "fake-take-part":
@@ -736,6 +748,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return pout;
     }
 
+    public PointType correctPoint(PointType poseIn) {
+        PointType pout = poseIn;
+        if (null != getPositionMaps()) {
+            for (PositionMap pm : getPositionMaps()) {
+                pout = pm.correctPoint(pout);
+            }
+        }
+        return pout;
+    }
+
     private AprsJFrame aprsJFrame;
 
     /**
@@ -795,6 +817,36 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
+    public void takeSimViewSnapshot(File f, PointType point, String label) throws IOException {
+        if (null != aprsJFrame) {
+            aprsJFrame.takeSimViewSnapshot(f, point, label);
+        }
+    }
+
+    public void takeSimViewSnapshot(File f, PmCartesian pt, String label) throws IOException {
+        if (null != aprsJFrame) {
+            aprsJFrame.takeSimViewSnapshot(f, pt, label);
+        }
+    }
+
+    public void takeSimViewSnapshot(String imgLabel, PoseType pose, String label) throws IOException {
+        if (null != aprsJFrame) {
+            aprsJFrame.takeSimViewSnapshot(imgLabel, pose, label);
+        }
+    }
+
+    public void takeSimViewSnapshot(String imgLabel, PointType point, String label) throws IOException {
+        if (null != aprsJFrame) {
+            aprsJFrame.takeSimViewSnapshot(imgLabel, point, label);
+        }
+    }
+
+    public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String label) throws IOException {
+        if (null != aprsJFrame) {
+            aprsJFrame.takeSimViewSnapshot(imgLabel, pt, label);
+        }
+    }
+
     /**
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
@@ -809,6 +861,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
+    public void takeSimViewSnapshot(String imgLabel, List<DetectedItem> itemsToPaint) throws IOException {
+        if (null != aprsJFrame) {
+            aprsJFrame.takeSimViewSnapshot(imgLabel, itemsToPaint);
+        }
+    }
     private List<DetectedItem> poseCacheToDetectedItemList() {
         List<DetectedItem> l = new ArrayList<>();
         for (Entry<String, PoseType> entry : poseCache.entrySet()) {
@@ -861,8 +918,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (takeSnapshots) {
             try {
                 takeSimViewSnapshot(aprsJFrame.createTempFile(title, ".PNG"), pose, label);
-                takeDatabaseViewSnapshot(aprsJFrame.createTempFile(title + "_new_database_items", ".PNG"));
-                takeSimViewSnapshot(aprsJFrame.createTempFile(title + "_pose_cache", ".PNG"), poseCacheToDetectedItemList());
+                takeDatabaseViewSnapshot(aprsJFrame.createTempFile("db_"+title, ".PNG"));
+                takeSimViewSnapshot(aprsJFrame.createTempFile("pc_"+title, ".PNG"), poseCacheToDetectedItemList());
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -875,7 +932,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @return run prefix
      */
     public String getRunPrefix() {
-        return getRunName() + Utils.getDateTimeString() + "_" + String.format("%03d", crclNumber) + "-action-" + String.format("%03d", lastIndex);
+        return getRunName() + Utils.getDateTimeString() + "_" + String.format("%03d", crclNumber) + "action-" + String.format("%03d", lastIndex);
     }
 
     private final AtomicLong commandId = new AtomicLong(100 * (System.currentTimeMillis() % 200));
@@ -914,7 +971,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private void setCommandId(CRCLCommandType cmd) {
-        Utils.setCommandID(cmd,incrementAndGetCommandId());
+        Utils.setCommandID(cmd, incrementAndGetCommandId());
     }
 
     //-- contains all the slots that do not have a part
@@ -946,10 +1003,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (action.getArgs().length < 2) {
             throw new IllegalArgumentException("action = " + action + " needs at least two arguments: kitSku inspectionID");
         }
-        waitForCompleteVisionUpdates("inspectKit",lastRequiredPartsMap);
-        takeSnapshots("-inspect-kit-", null, "");
+        waitForCompleteVisionUpdates("inspectKit", lastRequiredPartsMap);
+        takeSnapshots("inspect-kit-", null, "");
 
-//        addTakeSnapshots(out, "-inspect-kit-", null, "");
+//        addTakeSnapshots(out, "inspect-kit-", null, "");
         String kitSku = action.getArgs()[0];
         String inspectionID = action.getArgs()[1];
         MessageType msg = new MessageType();
@@ -968,6 +1025,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 correctPartsTray = findCorrectKitTray(kitSku);
             }
             if (null != correctPartsTray) {
+                try {
+//                    takeSimViewSnapshot("inspectKit.correctPartsTray",
+//                            new PmCartesian(correctPartsTray.getX(), correctPartsTray.getY(), 0),
+//                            correctPartsTray.getPartsTrayName());
+                    takeSimViewSnapshot("inspectKit.correctPartsTray.partsTrayPose",
+                            new PmCartesian(correctPartsTray.getPartsTrayPose().getPoint().getX(), correctPartsTray.getPartsTrayPose().getPoint().getY(), 0),
+                            correctPartsTray.getPartsTrayName());
+                    takeSimViewSnapshot("inspectKit.correctPartsTray.slotList",
+                            slotsToDetectedItemList(correctPartsTray.getSlotList()));
+                } catch (IOException ex) {
+                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 EmptySlotSet = new HashSet<Slot>();
                 int numberOfPartsInKit = 0;
 
@@ -982,12 +1051,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     String tmpPartName = part_in_pt.replace("in_pt", "in_kt");
                     int indexLastUnderscore = tmpPartName.lastIndexOf("_");
                     assert (indexLastUnderscore >= 0) :
-                        ("TakenPartList=" + TakenPartList + " contains invalid tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt);
-                    
+                            ("TakenPartList=" + TakenPartList + " contains invalid tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt);
+
                     String part_in_kt = tmpPartName.substring(0, indexLastUnderscore);
                     assert (part_in_kt.indexOf('_') > 0) :
-                       ("part_in_kt=" + part_in_kt + ",tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt + ", indexLastUnderscore=" + indexLastUnderscore);
-                    
+                            ("part_in_kt=" + part_in_kt + ",tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt + ", indexLastUnderscore=" + indexLastUnderscore);
+
                     TakenPartList.set(i, part_in_kt);
                 }
 
@@ -1113,11 +1182,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private double getVisionToDBRotationOffset() {
         assert (null != this.aprsJFrame) :
-            ("null == this.aprsJFrame");
-        
+                ("null == this.aprsJFrame");
+
         return this.aprsJFrame.getVisionToDBRotationOffset();
     }
 
+//    private List<DetectedItem>  partsTrayListToDetectedItemList(List<PartsTray> listIn) {
+//        List<DetectedItem>  listOut = new ArrayList<>();
+//        for(PartsTray partsTray : listIn) {
+//            listOut.add(new DetectedItem(partsTray.getPartsTrayName(), partsTray.getRotation(), partsTray.getX(), partsTray.getY()));
+//        }
+//        return listOut;
+//    }
     /**
      * Function that finds the correct kit tray from the database using the sku
      * kitSku
@@ -1129,14 +1205,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private PartsTray findCorrectKitTray(String kitSku) throws SQLException {
 
         List<PartsTray> dpuPartsTrayList = aprsJFrame.getPartsTrayList();
+
         //-- retrieveing from the database all the parts trays that have the sku kitSku
         List<PartsTray> partsTraysList = getPartsTrays(kitSku);
 
+        List<DetectedItem> partsTrayListItems = new ArrayList<>();
+        List<DetectedItem> dpuPartsTrayListItems = new ArrayList<>();
+
         /*
-        System.out.println("--Checking parts trays");
+        System.out.println("-Checking parts trays");
         for (int i = 0; i < partsTraysList.size(); i++) {
             PartsTray partsTray = partsTraysList.get(i);
-            System.out.println("--Parts tray: " + partsTray.getPartsTrayName());
+            System.out.println("-Parts tray: " + partsTray.getPartsTrayName());
         }
          */
         for (int i = 0; i < partsTraysList.size(); i++) {
@@ -1146,8 +1226,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             //-- getting the pose for the parts tray 
             PoseType partsTrayPose = qs.getPose(partsTray.getPartsTrayName());
 
-            partsTrayPose = correctPose(partsTrayPose);
-            System.out.println("--Checking parts tray [" + partsTray.getPartsTrayName() + "] :(" + partsTrayPose.getPoint().getX() + "," + partsTrayPose.getPoint().getY() + ")");
+//            partsTrayPose = correctPose(partsTrayPose);
+            System.out.println("-Checking parts tray [" + partsTray.getPartsTrayName() + "] :(" + partsTrayPose.getPoint().getX() + "," + partsTrayPose.getPoint().getY() + ")");
             partsTray.setpartsTrayPose(partsTrayPose);
             double partsTrayPoseX = partsTrayPose.getPoint().getX();
             double partsTrayPoseY = partsTrayPose.getPoint().getY();
@@ -1156,12 +1236,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             double rotation = 0;
             //-- Read partsTrayList
             //-- Assign rotation to myPartsTray by comparing poses from vision vs database
-            //System.out.print("--Assigning proper rotation: ");
-            System.out.println("--Comparing with other parts trays from vision");
+            //System.out.print("-Assigning proper rotation: ");
+            System.out.println("-Comparing with other parts trays from vision");
             for (int c = 0; c < dpuPartsTrayList.size(); c++) {
                 PartsTray pt = dpuPartsTrayList.get(c);
-                double ptX = pt.getX();
-                double ptY = pt.getY();
+
+                PointType dpuPartsTrayPoint = point(pt.getX(), pt.getY(), 0);
+
+//                dpuPartsTrayPoint = correctPoint(dpuPartsTrayPoint);
+                double ptX = dpuPartsTrayPoint.getX();
+                double ptY = dpuPartsTrayPoint.getY();
                 System.out.println("    Parts tray:(" + pt.getX() + "," + pt.getY() + ")");
                 System.out.println("    Rotation:(" + pt.getRotation() + ")");
                 //-- Check if X for parts trays are close enough
@@ -1185,6 +1269,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     rotation = pt.getRotation();
                     partsTray.setRotation(rotation);
                 }
+                if (c >= dpuPartsTrayListItems.size()) {
+                    dpuPartsTrayListItems.add(new DetectedItem(pt.getPartsTrayName(), pt.getRotation(), ptX, ptY));
+                }
             }
 
             //rotation = partsTray.getRotation();
@@ -1198,7 +1285,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             double angle = normAngle(partsTray.getRotation() + rotationOffset);
 
             //-- Get list of slots for this parts tray
-            System.out.println("--Checking slots");
+            System.out.println("-Checking slots");
             List<Slot> slotList = partsTray.getSlotList();
             int count = 0;
             for (int j = 0; j < slotList.size(); j++) {
@@ -1228,11 +1315,24 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     }
                 }
             }
+            partsTrayListItems.add(new DetectedItem(partsTray.getPartsTrayName(), partsTray.getRotation(), partsTrayPoseX, partsTrayPoseY));
             if (count > 0) {
+                try {
+                    takeSimViewSnapshot(aprsJFrame.createTempFile("dpuPartsTrayList", ".PNG"), dpuPartsTrayListItems);
+                    takeSimViewSnapshot(aprsJFrame.createTempFile("partsTrayList", ".PNG"), partsTrayListItems);
+                } catch (IOException ex) {
+                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 correctPartsTray = partsTray;
                 System.out.println("Found partstray: " + partsTray.getPartsTrayName());
                 return partsTray;
             }
+        }
+        try {
+            takeSimViewSnapshot(aprsJFrame.createTempFile("dpuPartsTrayList", ".PNG"), dpuPartsTrayListItems);
+            takeSimViewSnapshot(aprsJFrame.createTempFile("partsTrayList", ".PNG"), partsTrayListItems);
+        } catch (IOException ex) {
+            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.err.println("findCorrectKitTray(" + kitSku + ") returning null. partsTraysList=" + partsTraysList);
         return null;
@@ -1281,12 +1381,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (!allPartsInKt.isEmpty()) {
             for (int i = 0; i < allPartsInKt.size(); i++) {
                 String newPartInKt = allPartsInKt.get(i);
-                System.out.print("--------- " + newPartInKt);
+                System.out.print("-------- " + newPartInKt);
                 if (checkPartInSlot(newPartInKt, slot)) {
-                    System.out.println("--------- Located in slot");
+                    System.out.println("-------- Located in slot");
                     nbOfOccupiedSlots++;
                 } else {
-                    System.out.println("--------- Not located in slot");
+                    System.out.println("-------- Not located in slot");
                 }
             }
             //part_in_kt_found=true;
@@ -1330,14 +1430,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         double slotY = slot.getSlotPose().getPoint().getY();
         System.out.println(":(" + partX + "," + partY + ")");
         double distance = Math.hypot(partX - slotX, partY - slotY);
-        System.out.print("--------- Distance = " + distance);
+        System.out.print("-------- Distance = " + distance);
         // compare finalres with a specified tolerance value of 6.5 mm
         double threshold = 20;
         if (distance < kitInspectDistThreshold) {
             isPartInSlot = true;
-            // System.out.println("----- Part " + partName + " : (" + partX + "," + partY + ")");
-            // System.out.println("----- Slot " + slot.getSlotName() + " : (" + slotX + "," + slotY + ")");
-            // System.out.println("----- Distance between part and slot = " + dist);
+            // System.out.println("---- Part " + partName + " : (" + partX + "," + partY + ")");
+            // System.out.println("---- Slot " + slot.getSlotName() + " : (" + slotX + "," + slotY + ")");
+            // System.out.println("---- Distance between part and slot = " + dist);
         }
         return isPartInSlot;
     }
@@ -1385,7 +1485,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if database query fails
      */
-    public void takePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+    public void takePart(PddlAction action, List<MiddleCommandType> out, PddlAction nextPlacePartAction) throws IllegalStateException, SQLException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
@@ -1404,19 +1504,26 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
-            takeSnapshots("-take-part-" + partName + "-", pose, partName);
+            takeSnapshots("take-part-" + partName + "", pose, partName);
         }
         if (null == pose) {
             if (skipMissingParts) {
                 lastTakenPart = null;
-                if (takeSnapshots) {
-                    if (pose != null || !skipMissingParts) {
-                        takeSnapshots("-skipping-take-part-" + partName + "-", pose, partName);
-                    }
-                }
+                takeSnapshots("skipping-take-part-" + partName + "", pose, partName);
                 return;
             } else {
                 throw new IllegalStateException("getPose(" + partName + ") returned null");
+            }
+        }
+        if (skipMissingParts) {
+            if (null != nextPlacePartAction) {
+                String slot = nextPlacePartAction.getArgs()[0];
+                PoseType slotPose = getPose(slot);
+                if (null == slotPose) {
+                    lastTakenPart = null;
+                    takeSnapshots("skipping-take-part-next-slot-not-available-" + partName + "", pose, partName);
+                    return;
+                }
             }
         }
         pose = correctPose(pose);
@@ -1501,7 +1608,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
-            takeSnapshots("-take-part-recovery-" + partName + "-", pose, partName);
+            takeSnapshots("take-part-recovery-" + partName + "", pose, partName);
         }
         if (null == pose) {
             if (skipMissingParts) {
@@ -2311,7 +2418,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
 
         addMarkerCommand(out, "lookForParts.waitForCompleteVisionUpdates", x -> {
-            waitForCompleteVisionUpdates("lookForParts",immutableRequiredPartsMap);
+            waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap);
         });
         addTakeSnapshots(out, "lookForParts-" + ((action.getArgs().length == 1) ? action.getArgs()[0] : ""), null, "");
         if (action.getArgs().length >= 1) {
@@ -2368,9 +2475,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 aprsJFrame.refreshSimView();
             }
             List<DetectedItem> l = xfl.get();
-            aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile(prefix+"_waitForCompleteVisionUpdates", ".PNG"), l);
+            aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates", ".PNG"), l);
             aprsJFrame.getUpdatesFinished().join();
-            takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix+"_waitForCompleteVisionUpdates_new_database", ".PNG"));
+            takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates_new_database", ".PNG"));
             clearPoseCache();
         } catch (Exception ex) {
             Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -2506,13 +2613,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String slotName = action.getArgs()[placePartSlotArgIndex];
         PoseType pose = getPose(slotName);
         if (skipMissingParts && lastTakenPart == null) {
-            takeSnapshots("skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", pose, slotName);
+            takeSnapshots("skipping-place-part-" + getLastTakenPart() + "in-" + slotName + "", pose, slotName);
             return;
         }
 
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         if (takeSnapshots) {
-            takeSnapshots("-place-part-" + getLastTakenPart() + "-in-" + slotName + "-", pose, slotName);
+            takeSnapshots("place-part-" + getLastTakenPart() + "in-" + slotName + "", pose, slotName);
         }
         if (pose == null) {
             if (skipMissingParts && null != lastTakenPart) {
@@ -2522,7 +2629,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     origPose.setXAxis(xAxis);
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
-                    takeSnapshots("returning-" + getLastTakenPart()+"_no_pose_for_"+slotName, origPose, lastTakenPart);
+                    takeSnapshots("returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPart);
                     final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
                     addMarkerCommand(out, msg,
                             ((CrclCommandWrapper wrapper) -> {
@@ -2581,7 +2688,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         final String msg = "placed part (recovery) in " + slotName;
         if (takeSnapshots) {
             if (takeSnapshots) {
-                takeSnapshots("-place-part-recovery-in-" + slotName + "-", pose, slotName);
+                takeSnapshots("place-part-recovery-in-" + slotName + "", pose, slotName);
             }
         }
         if (pose == null) {

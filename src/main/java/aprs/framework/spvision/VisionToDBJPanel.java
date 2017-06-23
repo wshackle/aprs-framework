@@ -88,6 +88,7 @@ import static aprs.framework.Utils.runOnDispatchThread;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.util.HashMap;
 
 /**
  *
@@ -2399,7 +2400,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     @Override
     public void updateResultsMap(Map<String, UpdateResults> _map) {
-        runOnDispatchThread(() -> this.updateResultsMapInternal(_map));
+        Map<String, UpdateResults> mapCopy = new HashMap<>();
+        mapCopy.putAll(_map);
+        runOnDispatchThread(() -> this.updateResultsMapInternal(Collections.unmodifiableMap(mapCopy)));
     }
 
 }

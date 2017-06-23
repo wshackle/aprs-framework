@@ -93,8 +93,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @Override
     public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
+        if(null != pose) {
+            takeSnapshot(f, pose.getPoint(), label);
+        } else {
+            takeSnapshot(f, (PmCartesian) null, (String) null);
+        }
+    }
+
+    @Override
+    public void takeSnapshot(File f, PointType point, String label) throws IOException {
+        if(null != point) {
+            takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label);
+        } else {
+            takeSnapshot(f, (PmCartesian) null, (String) null);
+        }
+    }
+
+    @Override
+    public void takeSnapshot(File f, PmCartesian point, String label) throws IOException {
         try {
-            this.object2DJPanel1.takeSnapshot(f, pose, label);
+            this.object2DJPanel1.takeSnapshot(f, point, label);
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             saveFile(new File(csvDir, f.getName() + ".csv"));
@@ -140,7 +158,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //        return l.stream()
 //                .collect(Collectors.groupingBy(DetectedItem::getName, Collectors.summingInt(x -> 1)));
 //    }
-
     private volatile Map<String, Integer> origNamesMap = null;
 
     public void setItems(List<DetectedItem> items, boolean publish) {
@@ -180,7 +197,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void setItemsInternal(List<DetectedItem> items) {
         object2DJPanel1.setItems(items);
         if (!object2DJPanel1.isShowOutputItems()) {
-            if(object2DJPanel1.isShowAddedSlotPositions()) {
+            if (object2DJPanel1.isShowAddedSlotPositions()) {
                 loadItemsToTable(object2DJPanel1.getItemsWithAddedSlots(), jTableItems);
             } else {
                 loadItemsToTable(items, jTableItems);
@@ -191,7 +208,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void setOutputItemsInternal(List<DetectedItem> items) {
         object2DJPanel1.setOutputItems(items);
         if (object2DJPanel1.isShowOutputItems()) {
-            if(object2DJPanel1.isShowAddedSlotPositions()) {
+            if (object2DJPanel1.isShowAddedSlotPositions()) {
                 loadItemsToTable(object2DJPanel1.getOutputItemsWithAddedSlots(), jTableItems);
             } else {
                 loadItemsToTable(items, jTableItems);
@@ -203,7 +220,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int origSelectedRow = jtable.getSelectedRow();
         int origSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jtable.getRowCount())
-                ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
+                        ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
 
         RowSorter rowSorter = jtable.getRowSorter();
         if (null != rowSorter) {
@@ -222,7 +239,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         int newSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jtable.getRowCount())
-                ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
+                        ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
         if (newSelectedRowIndex > 0 && newSelectedRowIndex == origSelectedRowIndex) {
             DefaultListSelectionModel dlsm;
             ListSelectionModel lsm = jtable.getSelectionModel();
@@ -240,7 +257,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public List<DetectedItem> computeAbsSlotPositions(List<DetectedItem> l) {
         return object2DJPanel1.computeAbsSlotPositions(l);
     }
-    
+
     /**
      * Creates new form Object2DOuterJPanel
      */
@@ -730,7 +747,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxDebug)
                     .addComponent(jCheckBoxPause))
-                .addContainerGap(107, Short.MAX_VALUE))
+                .addContainerGap(116, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Connections", jPanelConnectionsTab);
@@ -940,9 +957,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 217, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
+                        .addGap(7, 7, 7)
+                        .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap())
                     .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
@@ -1142,8 +1159,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (simulatedDropRate > 1.0 || simulatedDropRate < -Double.MIN_VALUE) {
             throw new IllegalArgumentException("simulatedDropRate must be between 0 and 1.0 but was " + simulatedDropRate);
         }
-        if(simulatedDropRate < 0.001) {
-            simulatedDropRate =0;
+        if (simulatedDropRate < 0.001) {
+            simulatedDropRate = 0;
         }
         updateTextFieldDouble(simulatedDropRate, jTextFieldSimDropRate, 0.001);
         this.simulatedDropRate = simulatedDropRate;
@@ -1177,7 +1194,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             List<DetectedItem> l = new ArrayList<>();
             List<DetectedItem> origList = getItems();
             l.addAll(origList);
-            if (simulatedDropRate > 0.01  || jCheckBoxAddPosNoise.isSelected()) {
+            if (simulatedDropRate > 0.01 || jCheckBoxAddPosNoise.isSelected()) {
                 l = l.stream()
                         .filter(this::dropFilter)
                         .map(this::noiseFilter)
@@ -1366,7 +1383,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void loadFile(File f) throws IOException {
 
         try {
-            takeSnapshot(aprsJFrame.createTempFile("before_loadFile_" + f.getName() + "_", ".PNG"), null, "");
+            takeSnapshot(aprsJFrame.createTempFile("before_loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
         } catch (IOException ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1379,7 +1396,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldFilename.setText(f.getCanonicalPath());
         javax.swing.SwingUtilities.invokeLater(() -> {
             try {
-                takeSnapshot(aprsJFrame.createTempFile("loadFile_" + f.getName() + "_", ".PNG"), null, "");
+                takeSnapshot(aprsJFrame.createTempFile("loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1580,8 +1597,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jTextFieldDropOffThresholdActionPerformed
 
     private void jCheckBoxAddSlotsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAddSlotsActionPerformed
-       object2DJPanel1.setShowAddedSlotPositions(jCheckBoxAddSlots.isSelected());
-       refresh(false);
+        object2DJPanel1.setShowAddedSlotPositions(jCheckBoxAddSlots.isSelected());
+        refresh(false);
     }//GEN-LAST:event_jCheckBoxAddSlotsActionPerformed
 
     javax.swing.Timer simUpdateTimer = null;
@@ -1912,7 +1929,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             String simulatedDropRateString = props.getProperty("simulatedDropRate");
             if (null != simulatedDropRateString && simulatedDropRateString.length() > 0) {
                 double simDropRate = Double.parseDouble(simulatedDropRateString);
-                if(simDropRate < 0.001) {
+                if (simDropRate < 0.001) {
                     simDropRate = 0;
                 }
                 setSimulatedDropRate(simDropRate);
@@ -2173,14 +2190,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     if (true) {
                         System.out.println("Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
                         try {
-                            takeSnapshot(aprsJFrame.createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
+                            takeSnapshot(aprsJFrame.createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
                         } catch (IOException ex) {
                             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 } else {
                     try {
-                        takeSnapshot(aprsJFrame.createTempFile("failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
+                        takeSnapshot(aprsJFrame.createTempFile("failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -2192,14 +2209,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (true) {
                     System.out.println("Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
                     try {
-                        takeSnapshot(aprsJFrame.createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), null, "");
+                        takeSnapshot(aprsJFrame.createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
                 if (captured_item_index < 0) {
                     try {
-                        takeSnapshot(aprsJFrame.createTempFile("failed_to_drop_part_", ".PNG"), null, "");
+                        takeSnapshot(aprsJFrame.createTempFile("failed_to_drop_part_", ".PNG"), (PmCartesian) null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }

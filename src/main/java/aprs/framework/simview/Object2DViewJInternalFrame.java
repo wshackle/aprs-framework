@@ -24,11 +24,13 @@ package aprs.framework.simview;
 
 import aprs.framework.AprsJFrame;
 import aprs.framework.database.DetectedItem;
+import crcl.base.PointType;
 import crcl.base.PoseType;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
+import rcs.posemath.PmCartesian;
 
 /**
  *
@@ -137,6 +139,16 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     @Override
     public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
         object2DOuterJPanel1.takeSnapshot(f, pose, label);
+    }
+    
+    @Override
+    public void takeSnapshot(File f, PointType point, String label) throws IOException {
+        object2DOuterJPanel1.takeSnapshot(f, point, label);
+    }
+    
+    @Override
+    public void takeSnapshot(File f, PmCartesian point, String label) throws IOException {
+        object2DOuterJPanel1.takeSnapshot(f, point, label);
     }
     
     @Override

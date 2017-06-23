@@ -96,6 +96,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
+import rcs.posemath.PmCartesian;
 
 /**
  * AprsJFrame is the container for one robotic system in the APRS (Agility
@@ -129,7 +130,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return visionToDbJInternalFrame.getSingleUpdate();
     }
-    
+
     public XFuture<List<DetectedItem>> getNextVisionToDbUpdate() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return visionToDbJInternalFrame.getNextUpdate();
@@ -1274,12 +1275,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         assert (framesListSize == menuItems.size()) :
                 ("menuItems = " + menuItems + " does not match framesList = " + framesList);
-        
+
         int menuItemCount = jMenuWindow.getItemCount();
         assert (framesListSize == menuItemCount) :
-            ("framesListSize = " + framesListSize + " does not match menuItemCount = " + menuItemCount
-                    + "with framesList=" + framesList + ", menuItems=" + menuItems);
-        
+                ("framesListSize = " + framesListSize + " does not match menuItemCount = " + menuItemCount
+                + "with framesList=" + framesList + ", menuItems=" + menuItems);
+
     }
 
     private ACTIVE_WINDOW_NAME activeWin = ACTIVE_WINDOW_NAME.OTHER;
@@ -2301,7 +2302,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void takeSnapshots(String methodName) {
         try {
 //            final String filename = getRunName() + Utils.getDateTimeString() + "_" + methodName + "_";
-            takeSimViewSnapshot(createTempFile(methodName, ".PNG"), null, null);
+            takeSimViewSnapshot(createTempFile(methodName, ".PNG"), (PmCartesian)null, (String)null);
             startVisionToDbNewItemsImageSave(createTempFile(methodName + "_new_database_items", ".PNG"));
         } catch (IOException ex) {
             Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -2415,7 +2416,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pddlExecutorJInternalFrame1.refresh();
         }
     }
-    
+
     private void setCommandID(CRCLCommandType cmd) {
         Utils.setCommandID(cmd, incrementAndGetCommandId());
     }
@@ -2666,9 +2667,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-//    private void saveDbSetup() {
-//        DbSetupBuilder.savePropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"), dbSetup);
-//    }
     /**
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
@@ -2681,6 +2679,36 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void takeSimViewSnapshot(File f, PoseType pose, String label) throws IOException {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.takeSnapshot(f, pose, label);
+        }
+    }
+
+    public void takeSimViewSnapshot(File f, PointType point, String label) throws IOException {
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.takeSnapshot(f, point, label);
+        }
+    }
+
+    public void takeSimViewSnapshot(File f, PmCartesian point, String label) throws IOException {
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.takeSnapshot(f, point, label);
+        }
+    }
+
+    public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pose, poseLabel);
+        }
+    }
+
+    public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel) throws IOException {
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel);
+        }
+    }
+
+    public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel);
         }
     }
 
@@ -2697,6 +2725,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    public void takeSimViewSnapshot(String imgLabel, List<DetectedItem> itemsToPaint) throws IOException {
+        if (null != object2DViewJInternalFrame) {
+            this.object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), itemsToPaint);
+        }
+    }
+    
     DbSetup dbSetup = null;
 
     @Override
@@ -3331,19 +3365,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private static String cleanAndLimitFilePrefix(String prefix_in) {
-        if(prefix_in.length() > 80) {
+        if (prefix_in.length() > 80) {
             prefix_in = prefix_in.substring(0, 79);
         }
         String prefixOut = prefix_in.replaceAll("[ \t:;-]+", "_").replace('\\', '_').replace('/', '_');
-        if(prefixOut.length() > 80) {
+        if (prefixOut.length() > 80) {
             prefixOut = prefixOut.substring(0, 79);
         }
-        if(!prefixOut.endsWith("_")) {
+        if (!prefixOut.endsWith("_")) {
             prefixOut = prefixOut + "_";
         }
         return prefixOut;
     }
-    
+
     public File createTempFile(String prefix, String suffix) throws IOException {
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, getlogFileDir());
     }
@@ -3354,9 +3388,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     @Override
     public String toString() {
-        return super.toString()+getTitle();
+        return super.toString() + getTitle();
     }
 
-    
-    
 }

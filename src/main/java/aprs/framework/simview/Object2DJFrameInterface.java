@@ -24,10 +24,12 @@ package aprs.framework.simview;
 
 import aprs.framework.database.CommonJFrameInterface;
 import aprs.framework.database.DetectedItem;
+import crcl.base.PointType;
 import crcl.base.PoseType;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import rcs.posemath.PmCartesian;
 
 /**
  *
@@ -39,6 +41,8 @@ public interface Object2DJFrameInterface extends CommonJFrameInterface {
     
     public void setItems(List<DetectedItem> items);
     
+    public void takeSnapshot(File f, PointType point, String label) throws IOException;
+    public void takeSnapshot(File f, PmCartesian point, String label) throws IOException;
     public void takeSnapshot(File f, PoseType pose, String label) throws IOException;
     
     public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException;

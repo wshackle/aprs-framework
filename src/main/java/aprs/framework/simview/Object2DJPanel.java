@@ -25,7 +25,9 @@ package aprs.framework.simview;
 import aprs.framework.AprsJFrame;
 import aprs.framework.database.DetectedItem;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
+import crcl.base.PointType;
 import crcl.base.PoseType;
+import crcl.utils.CRCLPosemath;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -48,6 +50,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
+import rcs.posemath.PmCartesian;
+import rcs.posemath.Posemath;
 
 /**
  *
@@ -241,9 +245,45 @@ public class Object2DJPanel extends JPanel {
         }
         takeSnapshot(f, pose, label, w, h);
     }
+    
+    public void takeSnapshot(File f, PointType point, String label) throws IOException {
+        final int w = this.getWidth();
+        final int h = this.getHeight();
+        if (w < 1 || h < 1) {
+            System.err.println("Can not take snapshot with sized to " + w + " x " + h);
+            return;
+        }
+        takeSnapshot(f, point, label, w, h);
+    }
+    
+    public void takeSnapshot(File f, PmCartesian point, String label) throws IOException {
+        final int w = this.getWidth();
+        final int h = this.getHeight();
+        if (w < 1 || h < 1) {
+            System.err.println("Can not take snapshot with sized to " + w + " x " + h);
+            return;
+        }
+        takeSnapshot(f, point, label, w, h);
+    }
 
     public void takeSnapshot(File f, PoseType pose, String label, final int w, final int h) throws IOException {
+        if(null != pose) {
+            takeSnapshot(f, pose.getPoint(), label, w, h);
+        } else {
+            takeSnapshot(f, (PmCartesian) null, (String) null, w, h);
+            
+        }
+    }
+    
+    public void takeSnapshot(File f, PointType point, String label, final int w, final int h) throws IOException {
+        if(null != point) {
+            takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label, w, h);
+        } else {
+            takeSnapshot(f, (PmCartesian) null, (String) null, w, h);
+        }
+    }
 
+    public void takeSnapshot(File f, PmCartesian point, String label, final int w, final int h) throws IOException {
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         int pindex = f.getName().lastIndexOf('.');
         String type = "JPEG";
@@ -274,9 +314,9 @@ public class Object2DJPanel extends JPanel {
                     maxY = item.y;
                 }
             }
-            if (null != pose && null != pose.getPoint()) {
-                double x = pose.getPoint().getX();
-                double y = pose.getPoint().getY();
+            if (null != point) {
+                double x = point.getX();
+                double y = point.getY();
                 if (minX > x) {
                     minX = x;
                 }
@@ -291,10 +331,10 @@ public class Object2DJPanel extends JPanel {
                 }
             }
             this.paintItems(g2d, itemsToPaint, null, minX, minY, maxX, maxY);
-            paintHighlightedPose(pose, g2d, label, minX, minY, maxX, maxY);
+            paintHighlightedPose(point, g2d, label, minX, minY, maxX, maxY);
         } else {
             this.paintComponent(g2d);
-            paintHighlightedPose(pose, g2d, label, this.minX, this.minY, this.maxX, this.maxY);
+            paintHighlightedPose(point, g2d, label, this.minX, this.minY, this.maxX, this.maxY);
         }
         ImageIO.write(img, type, f);
         try {
@@ -377,13 +417,24 @@ public class Object2DJPanel extends JPanel {
     }
 
     public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY) {
-        if (null != pose && null != pose.getPoint()) {
-            if(label == null) {
+        PointType point = pose.getPoint();
+        if (null != point) {
+            paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY);
+        }
+    }
+
+    public void paintHighlightedPose(PointType point, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY) {
+        paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY);
+    }
+
+    public void paintHighlightedPose(PmCartesian point, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY) {
+        if (null != point) {
+            if (label == null) {
                 label = "(null)";
             }
             List<DetectedItem> itemsToPaint = getItemsToPaint();
-            double x = pose.getPoint().getX();
-            double y = pose.getPoint().getY();
+            double x = point.getX();
+            double y = point.getY();
             double displayMaxY = maxY;
             double displayMinY = minY;
             double displayMinX = minX;
@@ -828,7 +879,7 @@ public class Object2DJPanel extends JPanel {
         List<DetectedItem> slotList = new ArrayList<>();
         if (null != offsets) {
             for (DetectedItem offset : offsets) {
-                slotList.add(new DetectedItem("slot_"+offset.getPrpName(), 0.0,
+                slotList.add(new DetectedItem("slot_" + offset.getPrpName(), 0.0,
                         item.x + (offset.x * Math.cos(item.getRotation()) + offset.y * Math.sin(item.getRotation())),
                         item.y + (-offset.x * Math.sin(item.getRotation()) + offset.y * Math.cos(item.getRotation())),
                         item.getScore(), "S"));
@@ -873,10 +924,10 @@ public class Object2DJPanel extends JPanel {
 //        }
         assert (Double.isFinite(scale_x)) :
                 ("scale_x = " + scale_x);
-        
+
         assert (Double.isFinite(scale_y)) :
                 ("scale_y = " + scale_y);
-        
+
         scale = Math.min(scale_x, scale_y);
         if (null == minCorner) {
             minCorner = new Point2D.Double();
