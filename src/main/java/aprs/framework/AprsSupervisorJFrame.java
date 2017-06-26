@@ -2275,6 +2275,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             robotEnableMap.put(robotName, true);
             model.setValueAt(true, i, 1);
         }
+        Utils.autoResizeTableColWidths(jTableRobots);
         if (null != colorTextSocket) {
             try {
                 colorTextSocket.getOutputStream().write("0x00FF00, 0x00FF000\r\n".getBytes());

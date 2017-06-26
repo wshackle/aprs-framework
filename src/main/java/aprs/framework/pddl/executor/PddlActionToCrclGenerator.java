@@ -91,6 +91,12 @@ import java.util.function.Consumer;
 import java.util.Collection;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -738,7 +744,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param poseIn the pose to correct or transform
      * @return pose after being corrected by all currently added position maps
      */
-    public PoseType correctPose(PoseType poseIn) {
+    public PoseType visionToRobotPose(PoseType poseIn) {
         PoseType pout = poseIn;
         if (null != getPositionMaps()) {
             for (PositionMap pm : getPositionMaps()) {
@@ -748,7 +754,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return pout;
     }
 
-    public PointType correctPoint(PointType poseIn) {
+    public PointType visionToRobotPoint(PointType poseIn) {
         PointType pout = poseIn;
         if (null != getPositionMaps()) {
             for (PositionMap pm : getPositionMaps()) {
@@ -866,6 +872,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             aprsJFrame.takeSimViewSnapshot(imgLabel, itemsToPaint);
         }
     }
+
     private List<DetectedItem> poseCacheToDetectedItemList() {
         List<DetectedItem> l = new ArrayList<>();
         for (Entry<String, PoseType> entry : poseCache.entrySet()) {
@@ -878,6 +885,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         List<DetectedItem> l = new ArrayList<>();
         for (Slot slot : slots) {
             l.add(new DetectedItem(slot.getSlotName(), slot.getSlotPose(), 0));
+        }
+        l.addAll(poseCacheToDetectedItemList());
+        return Collections.unmodifiableList(l);
+    }
+
+    private List<DetectedItem> posesToDetectedItemList(Collection<PoseType> poses) {
+        List<DetectedItem> l = new ArrayList<>();
+        int i = 0;
+        for (PoseType pose : poses) {
+            i++;
+            l.add(new DetectedItem("pose_" + i, pose, 0));
         }
         l.addAll(poseCacheToDetectedItemList());
         return Collections.unmodifiableList(l);
@@ -918,8 +936,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (takeSnapshots) {
             try {
                 takeSimViewSnapshot(aprsJFrame.createTempFile(title, ".PNG"), pose, label);
-                takeDatabaseViewSnapshot(aprsJFrame.createTempFile("db_"+title, ".PNG"));
-                takeSimViewSnapshot(aprsJFrame.createTempFile("pc_"+title, ".PNG"), poseCacheToDetectedItemList());
+                takeDatabaseViewSnapshot(aprsJFrame.createTempFile("db_" + title, ".PNG"));
+                takeSimViewSnapshot(aprsJFrame.createTempFile("pc_" + title, ".PNG"), poseCacheToDetectedItemList());
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -962,7 +980,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         out.add(msg);
 
         PoseType pose = getPose(partName);
-        pose = correctPose(pose);
+        pose = visionToRobotPose(pose);
         returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
@@ -1002,6 +1020,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         checkSettings();
         if (action.getArgs().length < 2) {
             throw new IllegalArgumentException("action = " + action + " needs at least two arguments: kitSku inspectionID");
+        }
+        if (PlacePartSlotPoseList.isEmpty()) {
+            kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;No place part slots added. </h3><br>");
+            kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
+            takeSnapshots("PlacePartSlotPoseList.isEmpty()-inspect-kit-", null, "");
+            return;
         }
         waitForCompleteVisionUpdates("inspectKit", lastRequiredPartsMap);
         takeSnapshots("inspect-kit-", null, "");
@@ -1171,6 +1195,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             } else {
                 kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;The system could not identify the kit tray that was built. (kitSku=" + kitSku + ") </h3><br>");
                 kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
+                System.err.println("Trying to get correctPartsTray again ...");
+                correctPartsTray = findCorrectKitTray(kitSku);
+                System.out.println("msg = " + msg);
             }
         }
         if (inspectionID.contains("0")) {
@@ -1226,7 +1253,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             //-- getting the pose for the parts tray 
             PoseType partsTrayPose = qs.getPose(partsTray.getPartsTrayName());
 
-//            partsTrayPose = correctPose(partsTrayPose);
+//            partsTrayPose = visionToRobotPose(partsTrayPose);
             System.out.println("-Checking parts tray [" + partsTray.getPartsTrayName() + "] :(" + partsTrayPose.getPoint().getX() + "," + partsTrayPose.getPoint().getY() + ")");
             partsTray.setpartsTrayPose(partsTrayPose);
             double partsTrayPoseX = partsTrayPose.getPoint().getX();
@@ -1243,7 +1270,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
                 PointType dpuPartsTrayPoint = point(pt.getX(), pt.getY(), 0);
 
-//                dpuPartsTrayPoint = correctPoint(dpuPartsTrayPoint);
+//                dpuPartsTrayPoint = visionToRobotPoint(dpuPartsTrayPoint);
                 double ptX = dpuPartsTrayPoint.getX();
                 double ptY = dpuPartsTrayPoint.getY();
                 System.out.println("    Parts tray:(" + pt.getX() + "," + pt.getY() + ")");
@@ -1314,6 +1341,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         count++;
                     }
                 }
+            }
+            try {
+                takeSimViewSnapshot(aprsJFrame.createTempFile("PlacePartSlotPoseList", ".PNG"), posesToDetectedItemList(PlacePartSlotPoseList));
+                takeSimViewSnapshot(aprsJFrame.createTempFile("partsTray.getSlotList", ".PNG"), slotsToDetectedItemList(slotList));
+            } catch (IOException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
             partsTrayListItems.add(new DetectedItem(partsTray.getPartsTrayName(), partsTray.getRotation(), partsTrayPoseX, partsTrayPoseY));
             if (count > 0) {
@@ -1423,7 +1456,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == posePart) {
             throw new IllegalStateException("getPose(" + partName + ") returned null");
         }
-        posePart = correctPose(posePart);
+//        posePart = visionToRobotPose(posePart);
         double partX = posePart.getPoint().getX();
         double partY = posePart.getPoint().getY();
         double slotX = slot.getSlotPose().getPoint().getX();
@@ -1526,7 +1559,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
             }
         }
-        pose = correctPose(pose);
+        pose = visionToRobotPose(pose);
         returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
@@ -1570,7 +1603,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         out.add(msg);
 
         PoseType pose = getPose(partName);
-        pose = correctPose(pose);
+        pose = visionToRobotPose(pose);
         returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
@@ -1619,7 +1652,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         }
 
-        pose = correctPose(pose);
+        pose = visionToRobotPose(pose);
         returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
@@ -2612,8 +2645,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         checkSettings();
         String slotName = action.getArgs()[placePartSlotArgIndex];
         PoseType pose = getPose(slotName);
+        if (null != pose) {
+            PlacePartSlotPoseList.add(pose);
+        }
+
         if (skipMissingParts && lastTakenPart == null) {
-            takeSnapshots("skipping-place-part-" + getLastTakenPart() + "in-" + slotName + "", pose, slotName);
+            takeSnapshots("skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "", pose, slotName);
             return;
         }
 
@@ -2625,7 +2662,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             if (skipMissingParts && null != lastTakenPart) {
                 PoseType origPose = poseCache.get(lastTakenPart);
                 if (null != origPose) {
-                    origPose = correctPose(origPose);
+                    origPose = visionToRobotPose(origPose);
                     origPose.setXAxis(xAxis);
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
@@ -2651,10 +2688,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("getPose(" + slotName + ") returned null");
         }
 
-        pose = correctPose(pose);
+        pose = visionToRobotPose(pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
-        PlacePartSlotPoseList.add(pose);
+
         placePartByPose(out, pose);
         final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
         addMarkerCommand(out, msg,
@@ -2695,7 +2732,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("getPose(" + slotName + ") returned null");
         }
 
-        pose = correctPose(pose);
+        pose = visionToRobotPose(pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         PlacePartSlotPoseList.add(pose);
