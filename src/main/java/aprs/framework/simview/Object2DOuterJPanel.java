@@ -263,12 +263,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 double x = (double) jTableItems.getValueAt(row, 2);
                 double y = (double) jTableItems.getValueAt(row, 3);
                 double rot = Math.toRadians((double) jTableItems.getValueAt(row, 4));
+                PhysicalItem trayItem = new PhysicalItem(name, rot, x, y);
                 List<PhysicalItem> l = aprsJFrame.getSlotOffsets(name);
                 for (PhysicalItem s : l) {
-                    double sx = x + s.x * Math.cos(rot) + s.y * Math.sin(rot);
-                    double sy = y - s.x * Math.sin(rot) + s.y * Math.cos(rot);
-                    double minDist = minDist(sx, sy, items);
-                    tm.addRow(new Object[]{s.getSlotForSkuName(), minDist < 20.0, sx, sy, minDist});
+                    PhysicalItem absItem = aprsJFrame.absSlotFromTrayAndOffset(trayItem, s);
+                        
+//                    double sx = x + s.x * Math.cos(rot) + s.y * Math.sin(rot);
+//                    double sy = y - s.x * Math.sin(rot) + s.y * Math.cos(rot);
+                    double minDist = minDist(absItem.x, absItem.y, items);
+                    tm.addRow(new Object[]{s.getSlotForSkuName(), minDist < 20.0, absItem.x, absItem.y, minDist});
                 }
                 break;
 

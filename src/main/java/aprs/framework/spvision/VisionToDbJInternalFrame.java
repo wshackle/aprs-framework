@@ -51,10 +51,14 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
 //        DbMain.setDisplayInterface(this);
     }
 
+    public PhysicalItem absSlotFromTrayAndOffset(PhysicalItem tray, PhysicalItem offsetItem) {
+        return visionToDBJPanel.absSlotFromTrayAndOffset(tray, offsetItem);
+    }
+
     public List<PartsTray> getPartsTrayList() {
         return visionToDBJPanel.getPartsTrayList();
     }
-    
+
 //    public DbSetupPublisher getDbSetupPublisher() {
 //        return this.visionToDBJPanel.getDbSetupPublisher();
 //    }
@@ -81,15 +85,15 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public XFuture<List<PhysicalItem>> getNextUpdate() {
         return visionToDBJPanel.getNextUpdate();
     }
-    
-     public XFuture<List<PhysicalItem>> getSingleUpdate() {
+
+    public XFuture<List<PhysicalItem>> getSingleUpdate() {
         return visionToDBJPanel.getSingleUpdate();
     }
-    
+
     public XFuture<Void> getUpdatesFinished() {
         return visionToDBJPanel.getUpdatesFinished();
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -274,7 +278,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
      *
      * @param enableDatabaseUpdates new value of enableDatabaseUpdates
      */
-    public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates, Map<String,Integer> requiredParts) {
-        visionToDBJPanel.setEnableDatabaseUpdates(enableDatabaseUpdates,requiredParts);
+    public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
+        visionToDBJPanel.setEnableDatabaseUpdates(enableDatabaseUpdates, requiredParts);
     }
 }

@@ -656,11 +656,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     @Override
     public String toString() {
-        return "DatabasePoseUpdater{"+getURL()+ '}';
+        return "DatabasePoseUpdater{" + getURL() + '}';
     }
 
-    
-    
     public String getDetailString() {
         return "DatabasePoseUpdater{" + "con=" + con + ", dbtype=" + dbtype + ", useBatch=" + useBatch + ", verify=" + verify + ", totalUpdateTimeMillis=" + totalUpdateTimeMillis + ", maxUpdateTimeMillis=" + maxUpdateTimeMillis + ", totalUpdateTimeNanos=" + totalUpdateTimeNanos + ", maxUpdateTimeNanos=" + maxUpdateTimeNanos + ", totalUpdates=" + totalUpdates + ", totalListUpdates=" + totalListUpdates + ", sharedConnection=" + sharedConnection + ", queryAllString=" + queryAllString + ", querySingleString=" + querySingleString + ", mergeStatementString=" + updateStatementString + ", updateParamTypes=" + updateParamTypes + ", getSingleParamTypes=" + getSingleParamTypes + ", debug=" + debug + '}';
     }
@@ -911,6 +909,23 @@ public class DatabasePoseUpdater implements AutoCloseable {
         this.rotationOffset = rotationOffset;
     }
 
+    public PhysicalItem absSlotFromTrayAndOffset(PhysicalItem tray, PhysicalItem offsetItem) {
+        String name = offsetItem.getFullName();
+        double x = offsetItem.x;
+        double y = offsetItem.y;
+        double angle = normAngle(tray.getRotation() + rotationOffset);
+
+        PhysicalItem item = new PhysicalItem(name, 0,
+                tray.x + x * Math.cos(angle) - y * Math.sin(angle),
+                tray.y + x * Math.sin(angle) + y * Math.cos(angle)
+        );
+        item.setType("S");
+        item.setTray(tray);
+        item.setSlotForSkuName(offsetItem.getSlotForSkuName());
+        item.setVisioncycle(tray.getVisioncycle());
+        return item;
+    }
+
     public List<PhysicalItem> getSlots(PhysicalItem tray) {
         List<PhysicalItem> offsets = getSlotOffsets(tray);
         List<PhysicalItem> ret = new ArrayList<>();
@@ -933,23 +948,13 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     throw new IllegalStateException("Offset seems to belong to the wrong tray : offsetItem=" + offsetItem + ", tray=" + tray);
                 }
             }
-            String sku_name = offsetItem.getName();
-            String name = offsetItem.getFullName();
-            double x = offsetItem.x;
-            double y = offsetItem.y;
-            double angle = normAngle(tray.getRotation() + rotationOffset);
+
             double offsetMag = offsetItem.mag();
             if (tray.getMaxSlotDist() < offsetMag) {
                 tray.setMaxSlotDist(offsetMag);
             }
-            PhysicalItem item = new PhysicalItem(name, 0,
-                    tray.x + x * Math.cos(angle) - y * Math.sin(angle),
-                    tray.y + x * Math.sin(angle) + y * Math.cos(angle)
-            );
-            item.setType("S");
-            item.setTray(tray);
-            item.setSlotForSkuName(offsetItem.getSlotForSkuName());
-            item.setVisioncycle(tray.getVisioncycle());
+            String sku_name = offsetItem.getName();
+            PhysicalItem item = absSlotFromTrayAndOffset(tray,offsetItem);
             ret.add(item);
             String composedName = "empty_slot_for_" + sku_name + "_in_" + tray_name;
             if (tray.getType().equals("KT")) {
@@ -967,13 +972,13 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     }
                 }
             }
-            if (sku_name.contains("medium") && tray_name.contains("large")) {
-                throw new IllegalStateException("WTF");
-            }
+//            if (sku_name.contains("medium") && tray_name.contains("large")) {
+//                throw new IllegalStateException("WTF");
+//            }
 //            System.out.println("composedName = " + composedName);
-            item = new PhysicalItem(composedName, 0,
-                    tray.x + x * Math.cos(angle) - y * Math.sin(angle),
-                    tray.y + x * Math.sin(angle) + y * Math.cos(angle));
+            item = new PhysicalItem(composedName, item.getRotation(), 
+                    item.x,
+                    item.y);
             item.setType("ES");
             item.setTray(tray);
             item.setVisioncycle(tray.getVisioncycle());
@@ -996,9 +1001,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
         final long timestamp = System.currentTimeMillis();
         prevParts
                 = prevParts.stream()
-                        .filter((PhysicalItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
-                        .filter((PhysicalItem prevPart) -> closestDist(prevPart, parts) < 25.0)
-                        .collect(Collectors.toCollection(() -> new ArrayList<PhysicalItem>()));
+                .filter((PhysicalItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
+                .filter((PhysicalItem prevPart) -> closestDist(prevPart, parts) < 25.0)
+                .collect(Collectors.toCollection(() -> new ArrayList<PhysicalItem>()));
         prevParts.addAll(parts);
         return slots.stream()
                 .filter(slot -> closestDist(slot, prevParts) > 25.0)
@@ -1074,16 +1079,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                        .collect(Collectors.toList());
         List<PhysicalItem> kitTrays
                 = itemList.stream()
-                        .filter((PhysicalItem item) -> "KT".equals(item.getType()))
-                        .collect(Collectors.toList());
+                .filter((PhysicalItem item) -> "KT".equals(item.getType()))
+                .collect(Collectors.toList());
         List<PhysicalItem> partTrays
                 = itemList.stream()
-                        .filter((PhysicalItem item) -> "PT".equals(item.getType()))
-                        .collect(Collectors.toList());
+                .filter((PhysicalItem item) -> "PT".equals(item.getType()))
+                .collect(Collectors.toList());
         List<PhysicalItem> parts
                 = itemList.stream()
-                        .filter((PhysicalItem item) -> "P".equals(item.getType()))
-                        .collect(Collectors.toList());
+                .filter((PhysicalItem item) -> "P".equals(item.getType()))
+                .collect(Collectors.toList());
         List<PhysicalItem> fullList = new ArrayList<>();
         List<PhysicalItem> bestKitTrayEmptySlots = findBestEmptyTraySlots(kitTrays, parts);
         List<PhysicalItem> bestPartTrayEmptySlots = findBestEmptyTraySlots(partTrays, parts);
@@ -1250,12 +1255,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
             updateCount++;
             List<PhysicalItem> partsTrays
                     = inList.stream()
-                            .filter((PhysicalItem item) -> "PT".equals(item.getType()))
-                            .collect(Collectors.toList());
+                    .filter((PhysicalItem item) -> "PT".equals(item.getType()))
+                    .collect(Collectors.toList());
             List<PhysicalItem> kitTrays
                     = inList.stream()
-                            .filter((PhysicalItem item) -> "KT".equals(item.getType()))
-                            .collect(Collectors.toList());
+                    .filter((PhysicalItem item) -> "KT".equals(item.getType()))
+                    .collect(Collectors.toList());
 
             List<PhysicalItem> list = inList;
             for (int i = 0; i < list.size(); i++) {
@@ -1291,12 +1296,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                 List<PhysicalItem> parts
                         = inList.stream()
-                                .filter((PhysicalItem item) -> "P".equals(item.getType()))
-                                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "P".equals(item.getType()))
+                        .collect(Collectors.toList());
                 List<PhysicalItem> emptySlots
                         = list.stream()
-                                .filter((PhysicalItem item) -> "ES".equals(item.getType()))
-                                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "ES".equals(item.getType()))
+                        .collect(Collectors.toList());
                 Comparator<PhysicalItem> kitComparator
                         = comparingLong((PhysicalItem kt) -> (kt.getEmptySlotsCount() < 1) ? Long.MAX_VALUE : kt.getEmptySlotsCount());
                 kitTrays.sort(kitComparator);
@@ -1327,10 +1332,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                         PhysicalItem bestSlotFiller
                                 = firstSortParts.stream()
-                                        .filter((PhysicalItem p) -> p.isInsidePartsTray())
-                                        .filter((PhysicalItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
-                                        .findFirst()
-                                        .orElse(null);
+                                .filter((PhysicalItem p) -> p.isInsidePartsTray())
+                                .filter((PhysicalItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
+                                .findFirst()
+                                .orElse(null);
                         if (null != bestSlotFiller) {
                             slotFillers.add(bestSlotFiller);
                             firstSortParts.remove(bestSlotFiller);

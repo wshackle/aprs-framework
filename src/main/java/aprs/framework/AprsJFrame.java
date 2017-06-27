@@ -72,6 +72,7 @@ import crcl.ui.client.PendantClientJPanel;
 import crcl.ui.client.UpdateTitleListener;
 import crcl.ui.server.SimServerJInternalFrame;
 import crcl.utils.CRCLException;
+import crcl.utils.CRCLPosemath;
 import crcl.utils.CRCLSocket;
 import java.awt.Container;
 import java.awt.HeadlessException;
@@ -835,6 +836,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return titleErrorString;
     }
 
+    private volatile CommandStatusType titleErrorStringCommandStatus = null;
+
     /**
      * Set the title error string, which should be a short string identifying
      * the most critical problem if there is one appropriate for displaying in
@@ -844,7 +847,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public void setTitleErrorString(String newTitleErrorString) {
         if (!Objects.equals(this.titleErrorString, newTitleErrorString)) {
-            updateTitle();
+            titleErrorStringCommandStatus = getCommandStatus();
             if (null != this.titleErrorString
                     && null != newTitleErrorString
                     && this.titleErrorString.length() > 0) {
@@ -856,7 +859,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             } else {
                 this.titleErrorString = newTitleErrorString;
             }
-            setTitle((null != this.titleErrorString) ? this.titleErrorString : "APRS");
+            updateTitle();
             if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
                 System.err.println(newTitleErrorString);
                 takeSnapshots("setTitleError_" + newTitleErrorString + "_");
@@ -1410,6 +1413,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         Utils.runOnDispatchThread(this::updateTitleInternal);
     }
 
+    public CommandStatusType getCommandStatus() {
+        if (null != pendantClientJInternalFrame) {
+            return pendantClientJInternalFrame.getCurrentStatus()
+                    .map(x -> x.getCommandStatus())
+                    .map(CRCLPosemath::copy)
+                    .orElse(null);
+        }
+        return null;
+    }
+
     private void updateTitleInternal() {
         if (null != pendantClientJInternalFrame) {
             CommandStatusType cs = pendantClientJInternalFrame.getCurrentStatus()
@@ -1419,7 +1432,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 updateTitle("", "");
             } else {
                 if (cs.getCommandState() == CommandStateEnumType.CRCL_DONE) {
-                    titleErrorString = null;
+                    if (null != titleErrorStringCommandStatus
+                            && (titleErrorStringCommandStatus.getCommandID() != cs.getCommandID()
+                            || (titleErrorStringCommandStatus.getCommandState() == CommandStateEnumType.CRCL_ERROR))) {
+                        titleErrorString = null;
+                    }
                 }
                 updateTitle(cs.getCommandState().toString(), cs.getStateDescription());
             }
@@ -2305,73 +2322,76 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 .orElse(Double.POSITIVE_INFINITY);
     }
 
+    public PhysicalItem absSlotFromTrayAndOffset(PhysicalItem tray, PhysicalItem offsetItem) {
+        return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem);
+    }
+
     public void createActionListFromVision() throws IOException {
         List<PhysicalItem> itemsList = getSimviewItems();
-        Map<String,Integer> requiredItemsMap =
-                itemsList.stream()
-                .collect(Collectors.toMap(PhysicalItem::getName, x->1 , (a,b) -> a+b));
-        String requiredItemsString =
-                requiredItemsMap
-                    .entrySet()
-                    .stream()
-                    .map(entry -> entry.getKey()+"="+entry.getValue())
-                    .collect(Collectors.joining(" "));
+        Map<String, Integer> requiredItemsMap
+                = itemsList.stream()
+                .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
+        String requiredItemsString
+                = requiredItemsMap
+                .entrySet()
+                .stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining(" "));
         List<PhysicalItem> kitTrays = itemsList.stream()
                 .filter(x -> "KT".equals(x.getType()))
                 .collect(Collectors.toList());
         System.out.println("requiredItemsString = " + requiredItemsString);
         File f = createTempFile("actionList", ".txt");
-        try(PrintStream ps = new PrintStream(new FileOutputStream(f))) {
-            ps.println("(look-for-parts 0 "+requiredItemsString+")");
-            ConcurrentMap<String,Integer> kitUsedMap = new ConcurrentHashMap<>();
-            ConcurrentMap<String,Integer> ptUsedMap = new ConcurrentHashMap<>();
-            for(PhysicalItem kit : kitTrays) {
+        try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
+            ps.println("(look-for-parts 0 " + requiredItemsString + ")");
+            ConcurrentMap<String, Integer> kitUsedMap = new ConcurrentHashMap<>();
+            ConcurrentMap<String, Integer> ptUsedMap = new ConcurrentHashMap<>();
+            for (PhysicalItem kit : kitTrays) {
                 List<PhysicalItem> slotOffsetList = getSlotOffsets(kit.getName());
                 double x = kit.x;
                 double y = kit.y;
                 double rot = kit.getRotation();
                 String shortKitName = kit.getName();
-                if(shortKitName.startsWith("sku_")) {
+                if (shortKitName.startsWith("sku_")) {
                     shortKitName = shortKitName.substring(4);
                 }
                 int kitNumber = -1;
-                for (PhysicalItem s : slotOffsetList) {
-                    double sx = x + s.x * Math.cos(rot) + s.y * Math.sin(rot);
-                    double sy = y - s.x * Math.sin(rot) + s.y * Math.cos(rot);
-                    double minDist = minDist(sx, sy, itemsList);
-                    if(minDist < 20) {
-                        int pt_used_num = ptUsedMap.compute(s.getSlotForSkuName(), (k,v) -> (v==null)?1:(v+1));
-                        String shortSkuName = s.getSlotForSkuName();
-                        if(shortSkuName.startsWith("sku_")) {
+                for (PhysicalItem slotOffset : slotOffsetList) {
+                    PhysicalItem absSlot = absSlotFromTrayAndOffset(kit, slotOffset);
+                    double minDist = minDist(absSlot.x, absSlot.y, itemsList);
+                    if (minDist < 20) {
+                        int pt_used_num = ptUsedMap.compute(slotOffset.getSlotForSkuName(), (k, v) -> (v == null) ? 1 : (v + 1));
+                        String shortSkuName = slotOffset.getSlotForSkuName();
+                        if (shortSkuName.startsWith("sku_")) {
                             shortSkuName = shortSkuName.substring(4);
                         }
-                        String partName = shortSkuName+"_in_pt_"+pt_used_num;
-                        ps.println("(take-part "+partName+")");
-                        if(shortSkuName.startsWith("part_")) {
+                        String partName = shortSkuName + "_in_pt_" + pt_used_num;
+                        ps.println("(take-part " + partName + ")");
+                        if (shortSkuName.startsWith("part_")) {
                             shortSkuName = shortSkuName.substring(5);
                         }
-                        if(kitNumber < 0) {
-                            kitNumber = kitUsedMap.compute(kit.getName(), (k,v) -> (v==null)?1:(v+1));
+                        if (kitNumber < 0) {
+                            kitNumber = kitUsedMap.compute(kit.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
                         }
-                        String slotName = "empty_slot_"+s.getPrpName().substring(s.getPrpName().lastIndexOf("_")+1)+"_for_"+shortSkuName+"_in_"+shortKitName+"_"+kitNumber;
-                        ps.println("(place-part "+slotName+")");
+                        String slotName = "empty_slot_" + slotOffset.getPrpName().substring(slotOffset.getPrpName().lastIndexOf("_") + 1) + "_for_" + shortSkuName + "_in_" + shortKitName + "_" + kitNumber;
+                        ps.println("(place-part " + slotName + ")");
                     }
                 }
             }
             ps.println("(look-for-parts 2)");
         }
-        if(null != pddlExecutorJInternalFrame1) {
+        if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.loadActionsFile(f);
         }
     }
-    
+
     public List<PhysicalItem> getSimviewItems() {
-        if(null !=  object2DViewJInternalFrame) {
+        if (null != object2DViewJInternalFrame) {
             return object2DViewJInternalFrame.getItems();
         }
         return Collections.emptyList();
     }
-    
+
     public void setForceFakeTakeFlag(boolean val) {
         if (val != jCheckBoxMenuItemForceFakeTake.isSelected()) {
             jCheckBoxMenuItemForceFakeTake.setSelected(val);
@@ -2411,7 +2431,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void takeSnapshots(String methodName) {
         try {
 //            final String filename = getRunName() + Utils.getDateTimeString() + "_" + methodName + "_";
-            takeSimViewSnapshot(createTempFile(methodName, ".PNG"), (PmCartesian)null, (String)null);
+            takeSimViewSnapshot(createTempFile(methodName, ".PNG"), (PmCartesian) null, (String) null);
             startVisionToDbNewItemsImageSave(createTempFile(methodName + "_new_database_items", ".PNG"));
         } catch (IOException ex) {
             Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -2839,7 +2859,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             this.object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), itemsToPaint);
         }
     }
-    
+
     DbSetup dbSetup = null;
 
     @Override
