@@ -151,7 +151,7 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_jButtonCancelActionPerformed
 
-    public static Map<String, Object> itemToMap(DetectedItem item, Map<String, Object> map) {
+    public static Map<String, Object> itemToMap(PhysicalItem item, Map<String, Object> map) {
         if (map == null) {
             map = new LinkedHashMap<>();
         }
@@ -163,12 +163,12 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
         return map;
     }
 
-    public static DetectedItem mapToItem(Map<String, Object> map, DetectedItem item) {
+    public static PhysicalItem mapToItem(Map<String, Object> map, PhysicalItem item) {
 
         if (null != map) {
             String name = (String) map.get("name");
             if (item == null) {
-                item = new DetectedItem(name);
+                item = new PhysicalItem(name);
             }
             if (null != name && name.length() > 0) {
                 item.setName(name);

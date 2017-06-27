@@ -373,6 +373,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private void handleActionCompleted(PddlActionToCrclGenerator.ActionCallbackInfo actionInfo) {
+        if(currentActionIndex != actionInfo.getActionIndex()) {
+            System.out.println("actionInfo = " + actionInfo);
+            System.out.println("currentActionIndex = " + currentActionIndex);
+        }
         if (currentActionIndex < actionInfo.getActionIndex() + 1) {
             currentActionIndex = actionInfo.getActionIndex() + 1;
             updateSelectionInterval();
@@ -1417,7 +1421,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             saveProperties();
         }
     }
-
+    
     public XFuture<Boolean> startActions() {
         this.abortProgram();
         try {
@@ -1627,6 +1631,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jTextFieldIndex.setText("0");
             updateComboPartModel();
             updateComboSlotModel();
+            String canonName = f.getCanonicalPath();
+            if(!jTextFieldPddlOutputActions.getText().equals(canonName)) {
+                jTextFieldPddlOutputActions.setText(canonName);
+            }
         }
     }
 

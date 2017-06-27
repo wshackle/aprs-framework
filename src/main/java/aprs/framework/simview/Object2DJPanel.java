@@ -23,7 +23,7 @@
 package aprs.framework.simview;
 
 import aprs.framework.AprsJFrame;
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
 import crcl.base.PointType;
 import crcl.base.PoseType;
@@ -79,27 +79,26 @@ public class Object2DJPanel extends JPanel {
         this.displayAxis = displayAxis;
         this.repaint();
     }
-    public static final List<DetectedItem> EXAMPLES_ITEMS_LIST = Arrays.asList(
-            // DetectedItem(String name, double rotation, double x, double y, double score, String type)
-            new DetectedItem("sku_part_medium_gear", 0.10, 700.45, -140.82, 0.99, "P"),
-            new DetectedItem("sku_part_medium_gear", 0.79, 528.60, -122.51, 0.95, "P"),
-            new DetectedItem("sku_part_medium_gear", -0.60, 529.98, 213.96, 0.94, "P"),
-            new DetectedItem("sku_part_medium_gear", -0.02, 527.61, -205.06, 0.91, "P"),
-            new DetectedItem("sku_part_medium_gear", -0.75, 216.66, 128.56, 0.91, "P"),
-            new DetectedItem("sku_part_small_gear", 0.53, 509.01, -11.83, 0.95, "P"),
-            new DetectedItem("sku_part_small_gear", -0.23, 640.49, 32.88, 0.89, "P"),
-            new DetectedItem("sku_part_small_gear", -0.23, 640.49, 32.88, 0.89, "P"),
-            new DetectedItem("sku_part_small_gear", -0.07, 310.04, -102.02, 0.65, "P"),
-            new DetectedItem("sku_part_small_gear", -0.31, 321.38, 177.59, 0.61, "P"),
-            new DetectedItem("sku_kit_s2l2_vessel", -0.02, 295.65, -296.90, 0.80, "KT"),
-            new DetectedItem("sku_kit_s2l2_vessel", 0.01, 310.90, -20.87, 0.73, "KT"),
-            new DetectedItem("sku_small_gear_vessel", -0.03, 609.22, 5.09, 0.95, "PT"),
-            new DetectedItem("sku_medium_gear_vessel", 0.00, 569.17, -161.29, 0.67, "PT"),
-            new DetectedItem("sku_kit_m2l1_vessel", -1.57, 579.86, 170.14, 0.96, "KT")
+    public static final List<PhysicalItem> EXAMPLES_ITEMS_LIST = Arrays.asList(// PhysicalItem(String name, double rotation, double x, double y, double score, String type)
+            new PhysicalItem("sku_part_medium_gear", 0.10, 700.45, -140.82, 0.99, "P"),
+            new PhysicalItem("sku_part_medium_gear", 0.79, 528.60, -122.51, 0.95, "P"),
+            new PhysicalItem("sku_part_medium_gear", -0.60, 529.98, 213.96, 0.94, "P"),
+            new PhysicalItem("sku_part_medium_gear", -0.02, 527.61, -205.06, 0.91, "P"),
+            new PhysicalItem("sku_part_medium_gear", -0.75, 216.66, 128.56, 0.91, "P"),
+            new PhysicalItem("sku_part_small_gear", 0.53, 509.01, -11.83, 0.95, "P"),
+            new PhysicalItem("sku_part_small_gear", -0.23, 640.49, 32.88, 0.89, "P"),
+            new PhysicalItem("sku_part_small_gear", -0.23, 640.49, 32.88, 0.89, "P"),
+            new PhysicalItem("sku_part_small_gear", -0.07, 310.04, -102.02, 0.65, "P"),
+            new PhysicalItem("sku_part_small_gear", -0.31, 321.38, 177.59, 0.61, "P"),
+            new PhysicalItem("sku_kit_s2l2_vessel", -0.02, 295.65, -296.90, 0.80, "KT"),
+            new PhysicalItem("sku_kit_s2l2_vessel", 0.01, 310.90, -20.87, 0.73, "KT"),
+            new PhysicalItem("sku_small_gear_vessel", -0.03, 609.22, 5.09, 0.95, "PT"),
+            new PhysicalItem("sku_medium_gear_vessel", 0.00, 569.17, -161.29, 0.67, "PT"),
+            new PhysicalItem("sku_kit_m2l1_vessel", -1.57, 579.86, 170.14, 0.96, "KT")
     );
-    private volatile List<DetectedItem> items = EXAMPLES_ITEMS_LIST;
+    private volatile List<PhysicalItem> items = EXAMPLES_ITEMS_LIST;
 
-    public void setItems(List<DetectedItem> items) {
+    public void setItems(List<PhysicalItem> items) {
         this.items = items;
         this.addedSlots = computeAbsSlotPositions(items);
         this.itemsWithAddedSlots = new ArrayList<>();
@@ -129,14 +128,14 @@ public class Object2DJPanel extends JPanel {
         this.repaint();
     }
 
-    private List<DetectedItem> outputItems;
+    private List<PhysicalItem> outputItems;
 
     /**
      * Get the value of outputItems
      *
      * @return the value of outputItems
      */
-    public List<DetectedItem> getOutputItems() {
+    public List<PhysicalItem> getOutputItems() {
         return ((null != outputItems) ? Collections.unmodifiableList(outputItems) : null);
     }
 
@@ -145,7 +144,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param outputItems new value of outputItems
      */
-    public void setOutputItems(List<DetectedItem> outputItems) {
+    public void setOutputItems(List<PhysicalItem> outputItems) {
         this.outputItems = outputItems;
         this.addedOutputSlots = computeAbsSlotPositions(outputItems);
         this.outputItemsWithAddedSlots = new ArrayList<>();
@@ -156,14 +155,14 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    private List<DetectedItem> addedOutputSlots;
+    private List<PhysicalItem> addedOutputSlots;
 
     /**
      * Get the value of addedOutputSlots
      *
      * @return the value of addedOutputSlots
      */
-    public List<DetectedItem> getAddedOutputSlots() {
+    public List<PhysicalItem> getAddedOutputSlots() {
         return addedOutputSlots;
     }
 
@@ -172,29 +171,29 @@ public class Object2DJPanel extends JPanel {
      *
      * @param addedOutputSlots new value of addedOutputSlots
      */
-    public void setAddedOutputSlots(List<DetectedItem> addedOutputSlots) {
+    public void setAddedOutputSlots(List<PhysicalItem> addedOutputSlots) {
         this.addedOutputSlots = addedOutputSlots;
     }
 
-    private List<DetectedItem> addedSlots;
+    private List<PhysicalItem> addedSlots;
 
     /**
      * Get the value of addedSlots
      *
      * @return the value of addedSlots
      */
-    public List<DetectedItem> getAddedSlots() {
+    public List<PhysicalItem> getAddedSlots() {
         return addedSlots;
     }
 
-    private List<DetectedItem> itemsWithAddedSlots;
+    private List<PhysicalItem> itemsWithAddedSlots;
 
     /**
      * Get the value of itemsWithAddedSlots
      *
      * @return the value of itemsWithAddedSlots
      */
-    public List<DetectedItem> getItemsWithAddedSlots() {
+    public List<PhysicalItem> getItemsWithAddedSlots() {
         return itemsWithAddedSlots;
     }
 
@@ -203,18 +202,18 @@ public class Object2DJPanel extends JPanel {
      *
      * @param itemsWithAddedSlots new value of itemsWithAddedSlots
      */
-    public void setItemsWithAddedSlots(List<DetectedItem> itemsWithAddedSlots) {
+    public void setItemsWithAddedSlots(List<PhysicalItem> itemsWithAddedSlots) {
         this.itemsWithAddedSlots = itemsWithAddedSlots;
     }
 
-    private List<DetectedItem> outputItemsWithAddedSlots;
+    private List<PhysicalItem> outputItemsWithAddedSlots;
 
     /**
      * Get the value of outputItemsWithAddedSlots
      *
      * @return the value of outputItemsWithAddedSlots
      */
-    public List<DetectedItem> getOutputItemsWithAddedSlots() {
+    public List<PhysicalItem> getOutputItemsWithAddedSlots() {
         return outputItemsWithAddedSlots;
     }
 
@@ -223,7 +222,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param outputItemsWithAddedSlots new value of outputItemsWithAddedSlots
      */
-    public void setOutputItemsWithAddedSlots(List<DetectedItem> outputItemsWithAddedSlots) {
+    public void setOutputItemsWithAddedSlots(List<PhysicalItem> outputItemsWithAddedSlots) {
         this.outputItemsWithAddedSlots = outputItemsWithAddedSlots;
     }
 
@@ -232,7 +231,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param addedSlots new value of addedSlots
      */
-    public void setAddedSlots(List<DetectedItem> addedSlots) {
+    public void setAddedSlots(List<PhysicalItem> addedSlots) {
         this.addedSlots = addedSlots;
     }
 
@@ -294,13 +293,13 @@ public class Object2DJPanel extends JPanel {
         g2d.setColor(this.getBackground());
         g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
         g2d.setColor(this.getForeground());
-        List<DetectedItem> itemsToPaint = getItemsToPaint();
+        List<PhysicalItem> itemsToPaint = getItemsToPaint();
         if (autoscale) {
             double minX = Double.POSITIVE_INFINITY;
             double maxX = Double.NEGATIVE_INFINITY;
             double minY = Double.POSITIVE_INFINITY;
             double maxY = Double.NEGATIVE_INFINITY;
-            for (DetectedItem item : itemsToPaint) {
+            for (PhysicalItem item : itemsToPaint) {
                 if (minX > item.x) {
                     minX = item.x;
                 }
@@ -344,8 +343,8 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    private List<DetectedItem> getItemsToPaint() {
-        List<DetectedItem> itemsToPaint = this.items;
+    private List<PhysicalItem> getItemsToPaint() {
+        List<PhysicalItem> itemsToPaint = this.items;
         if (showAddedSlotPositions && null != this.itemsWithAddedSlots) {
             itemsToPaint = this.itemsWithAddedSlots;
         }
@@ -358,7 +357,7 @@ public class Object2DJPanel extends JPanel {
         return itemsToPaint;
     }
 
-    public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
+    public void takeSnapshot(File f, List<PhysicalItem> itemsToPaint) throws IOException {
         final int w = this.getWidth();
         final int h = this.getHeight();
         if (w < 1 || h < 1) {
@@ -368,7 +367,7 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, itemsToPaint, w, h);
     }
 
-    public void takeSnapshot(File f, List<DetectedItem> itemsToPaint, final int w, final int h) throws IOException {
+    public void takeSnapshot(File f, List<PhysicalItem> itemsToPaint, final int w, final int h) throws IOException {
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         int pindex = f.getName().lastIndexOf('.');
         String type = "JPEG";
@@ -391,7 +390,7 @@ public class Object2DJPanel extends JPanel {
         System.out.println("Saved snapshot to " + f.getCanonicalPath());
     }
 
-    public void paintWithAutoScale(List<DetectedItem> itemsToPaint, DetectedItem selectedItem, Graphics2D g2d) {
+    public void paintWithAutoScale(List<PhysicalItem> itemsToPaint, PhysicalItem selectedItem, Graphics2D g2d) {
         double minX = Double.POSITIVE_INFINITY;
         double maxX = Double.NEGATIVE_INFINITY;
         double minY = Double.POSITIVE_INFINITY;
@@ -399,7 +398,7 @@ public class Object2DJPanel extends JPanel {
         if (itemsToPaint.isEmpty()) {
             throw new IllegalArgumentException("itemsToPaint is empty.");
         }
-        for (DetectedItem item : itemsToPaint) {
+        for (PhysicalItem item : itemsToPaint) {
             if (minX > item.x) {
                 minX = item.x;
             }
@@ -432,7 +431,7 @@ public class Object2DJPanel extends JPanel {
             if (label == null) {
                 label = "(null)";
             }
-            List<DetectedItem> itemsToPaint = getItemsToPaint();
+            List<PhysicalItem> itemsToPaint = getItemsToPaint();
             double x = point.getX();
             double y = point.getY();
             double displayMaxY = maxY;
@@ -588,7 +587,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @return the value of items
      */
-    public List<DetectedItem> getItems() {
+    public List<PhysicalItem> getItems() {
         return items;
     }
 
@@ -766,8 +765,8 @@ public class Object2DJPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        List<DetectedItem> itemsToPaint = getItemsToPaint();
-        DetectedItem selectedItem = null;
+        List<PhysicalItem> itemsToPaint = getItemsToPaint();
+        PhysicalItem selectedItem = null;
         if (selectedItemIndex >= 0 && selectedItemIndex < itemsToPaint.size()) {
             selectedItem = itemsToPaint.get(selectedItemIndex);
         }
@@ -780,7 +779,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    private static String getItemType(DetectedItem item) {
+    private static String getItemType(PhysicalItem item) {
         if (item.getType() != null) {
             return item.getType();
         } else if (item.getName().startsWith("part_")) {
@@ -864,9 +863,9 @@ public class Object2DJPanel extends JPanel {
         repaint();
     }
 
-    public List<DetectedItem> computeAbsSlotPositions(List<DetectedItem> l) {
-        List<DetectedItem> absSlotList = new ArrayList<>();
-        for (DetectedItem item : l) {
+    public List<PhysicalItem> computeAbsSlotPositions(List<PhysicalItem> l) {
+        List<PhysicalItem> absSlotList = new ArrayList<>();
+        for (PhysicalItem item : l) {
             if (null != aprsJFrame && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
                 absSlotList.addAll(computeSlotPositions(item));
             }
@@ -874,12 +873,12 @@ public class Object2DJPanel extends JPanel {
         return absSlotList;
     }
 
-    public List<DetectedItem> computeSlotPositions(DetectedItem item) {
-        List<DetectedItem> offsets = aprsJFrame.getSlotOffsets(item.getName());
-        List<DetectedItem> slotList = new ArrayList<>();
+    public List<PhysicalItem> computeSlotPositions(PhysicalItem item) {
+        List<PhysicalItem> offsets = aprsJFrame.getSlotOffsets(item.getName());
+        List<PhysicalItem> slotList = new ArrayList<>();
         if (null != offsets) {
-            for (DetectedItem offset : offsets) {
-                slotList.add(new DetectedItem("slot_" + offset.getPrpName(), 0.0,
+            for (PhysicalItem offset : offsets) {
+                slotList.add(new PhysicalItem("slot_" + offset.getPrpName(), 0.0,
                         item.x + (offset.x * Math.cos(item.getRotation()) + offset.y * Math.sin(item.getRotation())),
                         item.y + (-offset.x * Math.sin(item.getRotation()) + offset.y * Math.cos(item.getRotation())),
                         item.getScore(), "S"));
@@ -889,8 +888,8 @@ public class Object2DJPanel extends JPanel {
     }
 
     public void paintItems(Graphics2D g2d,
-            List<DetectedItem> itemsToPaint,
-            DetectedItem selectedItem,
+            List<PhysicalItem> itemsToPaint,
+            PhysicalItem selectedItem,
             double minX,
             double minY,
             double maxX,
@@ -898,7 +897,7 @@ public class Object2DJPanel extends JPanel {
         origTransform = g2d.getTransform();
 
         int maxNameLength = itemsToPaint.stream()
-                .mapToInt((DetectedItem item) -> item.getName().length())
+                .mapToInt((PhysicalItem item) -> item.getName().length())
                 .max().orElse(1);
 
         if (!Double.isFinite(maxX) || !Double.isFinite(minX) || !Double.isFinite(minY) || !Double.isFinite(maxY)) {
@@ -978,23 +977,23 @@ public class Object2DJPanel extends JPanel {
         }
         g2d.drawString(String.format("MinX,MinY = (%.2f,%.2f), MaxX,MaxY= (%.2f,%.2f), scale=%.2f", minX, minY, maxX, maxY, scale), 10, this.getSize().height - 10);
         //        System.out.println("scale = " + scale);
-        List<DetectedItem> displayList = itemsToPaint;
+        List<PhysicalItem> displayList = itemsToPaint;
         if (useSeparateNames) {
             displayList = new ArrayList<>();
             displayList.addAll(itemsToPaint);
             switch (displayAxis) {
                 case POS_X_POS_Y:
-                    Collections.sort(displayList, Comparator.comparing((DetectedItem item) -> item.y));
+                    Collections.sort(displayList, Comparator.comparing((PhysicalItem item) -> item.y));
                     break;
                 case NEG_X_NEG_Y:
-                    Collections.sort(displayList, Comparator.comparing((DetectedItem item) -> -item.y));
+                    Collections.sort(displayList, Comparator.comparing((PhysicalItem item) -> -item.y));
                     break;
 
                 case POS_Y_NEG_X:
-                    Collections.sort(displayList, Comparator.comparing((DetectedItem item) -> item.x));
+                    Collections.sort(displayList, Comparator.comparing((PhysicalItem item) -> item.x));
                     break;
                 case NEG_Y_POS_X:
-                    Collections.sort(displayList, Comparator.comparing((DetectedItem item) -> -item.x));
+                    Collections.sort(displayList, Comparator.comparing((PhysicalItem item) -> -item.x));
                     break;
             }
         }
@@ -1014,7 +1013,7 @@ public class Object2DJPanel extends JPanel {
         }
         float newFontSize = g2d.getFont().getSize2D();
         for (int i = 0; i < displayList.size(); i++) {
-            DetectedItem item = displayList.get(i);
+            PhysicalItem item = displayList.get(i);
             if (null == item) {
                 continue;
             }
@@ -1068,7 +1067,7 @@ public class Object2DJPanel extends JPanel {
         g2d.setFont(origFont);
 
         for (int i = 0; i < displayList.size(); i++) {
-            DetectedItem item = displayList.get(i);
+            PhysicalItem item = displayList.get(i);
             if (null == item) {
                 continue;
             }
@@ -1091,7 +1090,7 @@ public class Object2DJPanel extends JPanel {
             g2d.setTransform(origTransform);
         }
         for (int i = 0; i < displayList.size(); i++) {
-            DetectedItem item = displayList.get(i);
+            PhysicalItem item = displayList.get(i);
             if (null == item) {
                 continue;
             }
@@ -1131,9 +1130,9 @@ public class Object2DJPanel extends JPanel {
             g2d.draw(item.getDisplayRect());
             try {
                 if (null != aprsJFrame && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
-                    List<DetectedItem> offsets = aprsJFrame.getSlotOffsets(item.getName());
+                    List<PhysicalItem> offsets = aprsJFrame.getSlotOffsets(item.getName());
                     if (null != offsets) {
-                        for (DetectedItem offset : offsets) {
+                        for (PhysicalItem offset : offsets) {
 //                            if (viewRotations) {
 //                                g2d.draw(new Arc2D.Double(
 //                                        offset.x * scale - 2.5,

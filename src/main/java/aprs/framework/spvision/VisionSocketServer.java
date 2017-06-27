@@ -22,7 +22,7 @@
  */
 package aprs.framework.spvision;
 
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -135,10 +135,10 @@ public class VisionSocketServer implements AutoCloseable {
     private volatile boolean closing = false;
     private byte bytesToSend[] = null;
 
-    public static String listToLine(List<DetectedItem> list) {
+    public static String listToLine(List<PhysicalItem> list) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < list.size(); i++) {
-            DetectedItem item = list.get(i);
+            PhysicalItem item = list.get(i);
             if (null != item && item.getName() != null && item.getName().length() > 0) {
                 sb.append(item.getName());
                 sb.append(',');
@@ -178,7 +178,7 @@ public class VisionSocketServer implements AutoCloseable {
         this.debug = debug;
     }
 
-    public void publishList(List<DetectedItem> list) {
+    public void publishList(List<PhysicalItem> list) {
         bytesToSend = listToLine(list).getBytes();
         publishService.submit(new Runnable() {
             @Override

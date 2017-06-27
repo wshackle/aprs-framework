@@ -27,7 +27,7 @@ import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupJInternalFrame;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.explore.ExploreGraphDbJInternalFrame;
 import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import aprs.framework.logdisplay.LogDisplayJInternalFrame;
@@ -75,6 +75,7 @@ import crcl.utils.CRCLException;
 import crcl.utils.CRCLSocket;
 import java.awt.Container;
 import java.awt.HeadlessException;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,6 +83,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -89,6 +92,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
@@ -126,12 +130,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private String taskName;
 
-    public XFuture<List<DetectedItem>> getSingleVisionToDbUpdate() {
+    public XFuture<List<PhysicalItem>> getSingleVisionToDbUpdate() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return visionToDbJInternalFrame.getSingleUpdate();
     }
 
-    public XFuture<List<DetectedItem>> getNextVisionToDbUpdate() {
+    public XFuture<List<PhysicalItem>> getNextVisionToDbUpdate() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return visionToDbJInternalFrame.getNextUpdate();
     }
@@ -152,7 +156,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    public List<DetectedItem> getSlotOffsets(String name) {
+    public List<PhysicalItem> getSlotOffsets(String name) {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return this.visionToDbJInternalFrame.getSlotOffsets(name);
     }
@@ -162,7 +166,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return this.visionToDbJInternalFrame.startNewItemsImageSave(f);
     }
 
-    public List<DetectedItem> getSlots(DetectedItem item) {
+    public List<PhysicalItem> getSlots(PhysicalItem item) {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return this.visionToDbJInternalFrame.getSlots(item);
     }
@@ -1648,11 +1652,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
+        jMenuItemContinueActionList = new javax.swing.JMenuItem();
         jMenuItemReset = new javax.swing.JMenuItem();
         jCheckBoxMenuItemContinousDemo = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemPause = new javax.swing.JCheckBoxMenuItem();
         jMenuItemDebugAction = new javax.swing.JMenuItem();
         jCheckBoxMenuItemForceFakeTake = new javax.swing.JCheckBoxMenuItem();
+        jMenuItemCreateActionListFromVision = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
@@ -1878,6 +1884,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
         jMenuExecute.add(jMenuItemImmediateAbort);
 
+        jMenuItemContinueActionList.setText("Continue Action List");
+        jMenuItemContinueActionList.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemContinueActionListActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemContinueActionList);
+
         jMenuItemReset.setText("Reset");
         jMenuItemReset.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1918,6 +1932,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenuExecute.add(jCheckBoxMenuItemForceFakeTake);
+
+        jMenuItemCreateActionListFromVision.setText("Create Action List From Vision");
+        jMenuItemCreateActionListFromVision.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCreateActionListFromVisionActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemCreateActionListFromVision);
 
         jMenuBar1.add(jMenuExecute);
 
@@ -2263,6 +2285,93 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }//GEN-LAST:event_jCheckBoxMenuItemForceFakeTakeActionPerformed
 
+    private void jMenuItemContinueActionListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemContinueActionListActionPerformed
+        continueActionList();
+    }//GEN-LAST:event_jMenuItemContinueActionListActionPerformed
+
+    private void jMenuItemCreateActionListFromVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCreateActionListFromVisionActionPerformed
+        try {
+            createActionListFromVision();
+        } catch (IOException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jMenuItemCreateActionListFromVisionActionPerformed
+
+    private static double minDist(double sx, double sy, List<PhysicalItem> items) {
+        return items.stream()
+                .filter(x -> x.getType().equals("P"))
+                .mapToDouble(x -> Math.hypot(x.x - sx, x.y - sy))
+                .min()
+                .orElse(Double.POSITIVE_INFINITY);
+    }
+
+    public void createActionListFromVision() throws IOException {
+        List<PhysicalItem> itemsList = getSimviewItems();
+        Map<String,Integer> requiredItemsMap =
+                itemsList.stream()
+                .collect(Collectors.toMap(PhysicalItem::getName, x->1 , (a,b) -> a+b));
+        String requiredItemsString =
+                requiredItemsMap
+                    .entrySet()
+                    .stream()
+                    .map(entry -> entry.getKey()+"="+entry.getValue())
+                    .collect(Collectors.joining(" "));
+        List<PhysicalItem> kitTrays = itemsList.stream()
+                .filter(x -> "KT".equals(x.getType()))
+                .collect(Collectors.toList());
+        System.out.println("requiredItemsString = " + requiredItemsString);
+        File f = createTempFile("actionList", ".txt");
+        try(PrintStream ps = new PrintStream(new FileOutputStream(f))) {
+            ps.println("(look-for-parts 0 "+requiredItemsString+")");
+            ConcurrentMap<String,Integer> kitUsedMap = new ConcurrentHashMap<>();
+            ConcurrentMap<String,Integer> ptUsedMap = new ConcurrentHashMap<>();
+            for(PhysicalItem kit : kitTrays) {
+                List<PhysicalItem> slotOffsetList = getSlotOffsets(kit.getName());
+                double x = kit.x;
+                double y = kit.y;
+                double rot = kit.getRotation();
+                String shortKitName = kit.getName();
+                if(shortKitName.startsWith("sku_")) {
+                    shortKitName = shortKitName.substring(4);
+                }
+                int kitNumber = -1;
+                for (PhysicalItem s : slotOffsetList) {
+                    double sx = x + s.x * Math.cos(rot) + s.y * Math.sin(rot);
+                    double sy = y - s.x * Math.sin(rot) + s.y * Math.cos(rot);
+                    double minDist = minDist(sx, sy, itemsList);
+                    if(minDist < 20) {
+                        int pt_used_num = ptUsedMap.compute(s.getSlotForSkuName(), (k,v) -> (v==null)?1:(v+1));
+                        String shortSkuName = s.getSlotForSkuName();
+                        if(shortSkuName.startsWith("sku_")) {
+                            shortSkuName = shortSkuName.substring(4);
+                        }
+                        String partName = shortSkuName+"_in_pt_"+pt_used_num;
+                        ps.println("(take-part "+partName+")");
+                        if(shortSkuName.startsWith("part_")) {
+                            shortSkuName = shortSkuName.substring(5);
+                        }
+                        if(kitNumber < 0) {
+                            kitNumber = kitUsedMap.compute(kit.getName(), (k,v) -> (v==null)?1:(v+1));
+                        }
+                        String slotName = "empty_slot_"+s.getPrpName().substring(s.getPrpName().lastIndexOf("_")+1)+"_for_"+shortSkuName+"_in_"+shortKitName+"_"+kitNumber;
+                        ps.println("(place-part "+slotName+")");
+                    }
+                }
+            }
+            ps.println("(look-for-parts 2)");
+        }
+        if(null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.loadActionsFile(f);
+        }
+    }
+    
+    public List<PhysicalItem> getSimviewItems() {
+        if(null !=  object2DViewJInternalFrame) {
+            return object2DViewJInternalFrame.getItems();
+        }
+        return Collections.emptyList();
+    }
+    
     public void setForceFakeTakeFlag(boolean val) {
         if (val != jCheckBoxMenuItemForceFakeTake.isSelected()) {
             jCheckBoxMenuItemForceFakeTake.setSelected(val);
@@ -2719,13 +2828,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param itemsToPaint list of items to paint
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
+    public void takeSimViewSnapshot(File f, List<PhysicalItem> itemsToPaint) throws IOException {
         if (null != object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint);
         }
     }
 
-    public void takeSimViewSnapshot(String imgLabel, List<DetectedItem> itemsToPaint) throws IOException {
+    public void takeSimViewSnapshot(String imgLabel, List<PhysicalItem> itemsToPaint) throws IOException {
         if (null != object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), itemsToPaint);
         }
@@ -3115,6 +3224,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenu jMenuExecute;
+    private javax.swing.JMenuItem jMenuItemContinueActionList;
+    private javax.swing.JMenuItem jMenuItemCreateActionListFromVision;
     private javax.swing.JMenuItem jMenuItemDebugAction;
     private javax.swing.JMenuItem jMenuItemExit;
     private javax.swing.JMenuItem jMenuItemImmediateAbort;

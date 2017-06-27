@@ -848,6 +848,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jMenuItemStartAll = new javax.swing.JMenuItem();
         jMenuItemSafeAbortAll = new javax.swing.JMenuItem();
         jMenuItemImmediateAbortAll = new javax.swing.JMenuItem();
+        jMenuItemContinueAll = new javax.swing.JMenuItem();
         jMenuItemConnectAll = new javax.swing.JMenuItem();
         jMenuItemDbgAction = new javax.swing.JMenuItem();
         jMenuItemResetAll = new javax.swing.JMenuItem();
@@ -1228,6 +1229,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
         });
         jMenuActions.add(jMenuItemImmediateAbortAll);
+
+        jMenuItemContinueAll.setText("Continue All");
+        jMenuItemContinueAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemContinueAllActionPerformed(evt);
+            }
+        });
+        jMenuActions.add(jMenuItemContinueAll);
 
         jMenuItemConnectAll.setText("Connect All ...");
         jMenuItemConnectAll.addActionListener(new java.awt.event.ActionListener() {
@@ -1878,6 +1887,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemStartAllReverseActionPerformed
 
     private void jMenuItemResetAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemResetAllActionPerformed
+        resetAll();
+    }//GEN-LAST:event_jMenuItemResetAllActionPerformed
+
+    public void resetAll() {
         if (null != lastFutureReturned) {
             lastFutureReturned.cancelAll(true);
             lastFutureReturned = null;
@@ -1897,7 +1910,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         for (int i = 0; i < aprsSystems.size(); i++) {
             aprsSystems.get(i).reset();
         }
-    }//GEN-LAST:event_jMenuItemResetAllActionPerformed
+    }
 
     private void jCheckBoxMenuItemPauseResumeTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseResumeTestActionPerformed
         if (null != continousDemoFuture) {
@@ -1938,6 +1951,36 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         debugStartReverseActions = jCheckBoxMenuItemDebugStartReverse.isSelected();
     }//GEN-LAST:event_jCheckBoxMenuItemDebugStartReverseActionPerformed
 
+    private void jMenuItemContinueAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemContinueAllActionPerformed
+        if (null != lastFutureReturned) {
+            lastFutureReturned.cancelAll(true);
+        }
+        if (null != randomTest) {
+            randomTest.cancelAll(true);
+            randomTest = null;
+        }
+        if (null != pauseTest) {
+            pauseTest.cancelAll(true);
+            pauseTest = null;
+        }
+        if (null != continousDemoFuture) {
+            continousDemoFuture.cancelAll(true);
+            continousDemoFuture = null;
+        }
+        immediateAbortAll();
+        jCheckBoxMenuItemRandomTest.setSelected(false);
+        jCheckBoxMenuItemPause.setSelected(false);
+        resume();
+        lastFutureReturned = continueAll();
+        if(jCheckBoxMenuItemContinousDemo.isSelected()) {
+            continousDemoFuture = 
+                    lastFutureReturned
+                    .thenCompose("jMenuItemContinueAllActionPerformed.continueAllActions",
+                            x -> continueAllActions());
+                    
+        }
+    }//GEN-LAST:event_jMenuItemContinueAllActionPerformed
+
     public XFuture<Void> startRandomTest() {
         connectAll();
         return checkEnabledAll()
@@ -1954,9 +1997,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private Random random = new Random(System.currentTimeMillis());
 
-    private XFuture<Void> startRandomDelay(String name,final int millis, final int min_millis) {
+    private XFuture<Void> startRandomDelay(String name, final int millis, final int min_millis) {
         final long val = random.nextInt(millis) + 10 + min_millis;
-        return XFuture.runAsync(name+".randomDelay(" + millis + ":" + val + ")",
+        return XFuture.runAsync(name + ".randomDelay(" + millis + ":" + val + ")",
                 () -> {
                     try {
                         Thread.sleep(val);
@@ -2093,9 +2136,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             printStatus(continousDemoFuture, System.out);
             return quitRandomTest();
         }
-        pauseTest = startRandomDelay("pauseTest",30000, 20000)
+        pauseTest = startRandomDelay("pauseTest", 30000, 20000)
                 .thenCompose(x -> Utils.runOnDispatchThread(this::pause))
-                .thenCompose(x -> startRandomDelay("pauseTest",1000, 1000))
+                .thenCompose(x -> startRandomDelay("pauseTest", 1000, 1000))
                 .thenCompose(x -> Utils.runOnDispatchThread(this::resume))
                 .thenCompose(x -> continuePauseTest());
         return pauseTest;
@@ -2122,7 +2165,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             printStatus(continousDemoFuture, System.out);
             return quitRandomTest();
         }
-        randomTest = startRandomDelay("enableTest",30000, 20000)
+        randomTest = startRandomDelay("enableTest", 30000, 20000)
                 .thenCompose("checkForWaitResume1", x -> this.waitResume())
                 .thenCompose("waitTogglesAllowed", x -> this.waitTogglesAllowed())
                 .thenCompose("toggleRobotEnabled", x -> this.toggleRobotEnabled())
@@ -2367,6 +2410,17 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return XFuture.allOf("startAll", futures);
     }
 
+    private XFuture<Void> continueAllActions() {
+        XFuture futures[] = new XFuture[aprsSystems.size()];
+        for (int i = 0; i < aprsSystems.size(); i++) {
+            futures[i] = aprsSystems.get(i).continueActionList();
+        }
+        lastStartAllActionsArray = futures;
+        final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
+        allowToggles();
+        return XFuture.allOf("startAll", futures);
+    }
+
     private XFuture<Void> checkOkElse(Boolean ok, Supplier<XFuture<Void>> okSupplier, Supplier<XFuture<Void>> notOkSupplier) {
         if (ok) {
             return okSupplier.get();
@@ -2381,6 +2435,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         } else {
             return XFuture.completedFutureWithName("checkOk(false)", null);
         }
+    }
+
+    public XFuture<Void> continueAll() {
+        stealingRobots = false;
+        returnRobots3();
+        return Utils.runOnDispatchThread(this::enableAllRobots)
+                .thenCompose("startAll.checkEnabledAll", x -> checkEnabledAll())
+                .thenCompose(ok -> checkOkElse(ok, this::continueAllActions, this::showCheckEnabledErrorSplash));
     }
 
     public XFuture<Void> startAll() {
@@ -2882,6 +2944,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemAddExistingSystem;
     private javax.swing.JMenuItem jMenuItemAddNewSystem;
     private javax.swing.JMenuItem jMenuItemConnectAll;
+    private javax.swing.JMenuItem jMenuItemContinueAll;
     private javax.swing.JMenuItem jMenuItemDbgAction;
     private javax.swing.JMenuItem jMenuItemImmediateAbortAll;
     private javax.swing.JMenuItem jMenuItemLoadPosMaps;

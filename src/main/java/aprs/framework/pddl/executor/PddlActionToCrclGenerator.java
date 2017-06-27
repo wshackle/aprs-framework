@@ -29,7 +29,7 @@ import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupJPanel;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbType;
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.QuerySet;
 import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import crcl.base.ActuateJointType;
@@ -492,6 +492,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             System.out.println("action = " + action);
             takeSnapshots("gc_actions.get(" + lastIndex + ")=" + action, null, null);
 //            try {
+            final int startMarkIndex = lastIndex;
+            String start_action_string = "start_" + startMarkIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+            addTakeSnapshots(cmds, start_action_string, null, null);
             switch (action.getType()) {
                 case "take-part":
                     takePart(action, cmds, getNextPlacePartAction(lastIndex, actions));
@@ -513,7 +516,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     actionToCrclLabels[lastIndex] = "";
                     actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
                     final int markerIndex = lastIndex;
-                    String end_action_string = "end_action_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                    String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
                     addMarkerCommand(cmds, end_action_string,
                             (CrclCommandWrapper wrapper) -> {
                                 notifyActionCompletedListeners(markerIndex, action);
@@ -543,7 +546,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             actionToCrclLabels[lastIndex] = "";
             actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
             final int markerIndex = lastIndex;
-            String end_action_string = "end_action_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+            String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
             addMarkerCommand(cmds, end_action_string,
                     (CrclCommandWrapper wrapper) -> {
                         notifyActionCompletedListeners(markerIndex, action);
@@ -861,41 +864,41 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param itemsToPaint items to paint in the snapshot image
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
+    public void takeSimViewSnapshot(File f, List<PhysicalItem> itemsToPaint) throws IOException {
         if (null != aprsJFrame) {
             aprsJFrame.takeSimViewSnapshot(f, itemsToPaint);
         }
     }
 
-    public void takeSimViewSnapshot(String imgLabel, List<DetectedItem> itemsToPaint) throws IOException {
+    public void takeSimViewSnapshot(String imgLabel, List<PhysicalItem> itemsToPaint) throws IOException {
         if (null != aprsJFrame) {
             aprsJFrame.takeSimViewSnapshot(imgLabel, itemsToPaint);
         }
     }
 
-    private List<DetectedItem> poseCacheToDetectedItemList() {
-        List<DetectedItem> l = new ArrayList<>();
+    private List<PhysicalItem> poseCacheToDetectedItemList() {
+        List<PhysicalItem> l = new ArrayList<>();
         for (Entry<String, PoseType> entry : poseCache.entrySet()) {
-            l.add(new DetectedItem(entry.getKey(), entry.getValue(), 0));
+            l.add(new PhysicalItem(entry.getKey(), entry.getValue(), 0));
         }
         return Collections.unmodifiableList(l);
     }
 
-    private List<DetectedItem> slotsToDetectedItemList(Collection<Slot> slots) {
-        List<DetectedItem> l = new ArrayList<>();
+    private List<PhysicalItem> slotsToDetectedItemList(Collection<Slot> slots) {
+        List<PhysicalItem> l = new ArrayList<>();
         for (Slot slot : slots) {
-            l.add(new DetectedItem(slot.getSlotName(), slot.getSlotPose(), 0));
+            l.add(new PhysicalItem(slot.getSlotName(), slot.getSlotPose(), 0));
         }
         l.addAll(poseCacheToDetectedItemList());
         return Collections.unmodifiableList(l);
     }
 
-    private List<DetectedItem> posesToDetectedItemList(Collection<PoseType> poses) {
-        List<DetectedItem> l = new ArrayList<>();
+    private List<PhysicalItem> posesToDetectedItemList(Collection<PoseType> poses) {
+        List<PhysicalItem> l = new ArrayList<>();
         int i = 0;
         for (PoseType pose : poses) {
             i++;
-            l.add(new DetectedItem("pose_" + i, pose, 0));
+            l.add(new PhysicalItem("pose_" + i, pose, 0));
         }
         l.addAll(poseCacheToDetectedItemList());
         return Collections.unmodifiableList(l);
@@ -1217,7 +1220,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //    private List<DetectedItem>  partsTrayListToDetectedItemList(List<PartsTray> listIn) {
 //        List<DetectedItem>  listOut = new ArrayList<>();
 //        for(PartsTray partsTray : listIn) {
-//            listOut.add(new DetectedItem(partsTray.getPartsTrayName(), partsTray.getRotation(), partsTray.getX(), partsTray.getY()));
+//            listOut.add(new PhysicalItem(partsTray.getPartsTrayName(), partsTray.getRotation(), partsTray.getX(), partsTray.getY()));
 //        }
 //        return listOut;
 //    }
@@ -1236,8 +1239,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         //-- retrieveing from the database all the parts trays that have the sku kitSku
         List<PartsTray> partsTraysList = getPartsTrays(kitSku);
 
-        List<DetectedItem> partsTrayListItems = new ArrayList<>();
-        List<DetectedItem> dpuPartsTrayListItems = new ArrayList<>();
+        List<PhysicalItem> partsTrayListItems = new ArrayList<>();
+        List<PhysicalItem> dpuPartsTrayListItems = new ArrayList<>();
 
         /*
         System.out.println("-Checking parts trays");
@@ -1297,7 +1300,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     partsTray.setRotation(rotation);
                 }
                 if (c >= dpuPartsTrayListItems.size()) {
-                    dpuPartsTrayListItems.add(new DetectedItem(pt.getPartsTrayName(), pt.getRotation(), ptX, ptY));
+                    dpuPartsTrayListItems.add(new PhysicalItem(pt.getPartsTrayName(), pt.getRotation(), ptX, ptY));
                 }
             }
 
@@ -1348,7 +1351,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
-            partsTrayListItems.add(new DetectedItem(partsTray.getPartsTrayName(), partsTray.getRotation(), partsTrayPoseX, partsTrayPoseY));
+            partsTrayListItems.add(new PhysicalItem(partsTray.getPartsTrayName(), partsTray.getRotation(), partsTrayPoseX, partsTrayPoseY));
             if (count > 0) {
                 try {
                     takeSimViewSnapshot(aprsJFrame.createTempFile("dpuPartsTrayList", ".PNG"), dpuPartsTrayListItems);
@@ -2497,7 +2500,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap) {
         try {
-            XFuture<List<DetectedItem>> xfl = aprsJFrame.getSingleVisionToDbUpdate();
+            XFuture<List<PhysicalItem>> xfl = aprsJFrame.getSingleVisionToDbUpdate();
             aprsJFrame.refreshSimView();
             while (!xfl.isDone()) {
                 if (!aprsJFrame.isEnableVisionToDatabaseUpdates()) {
@@ -2507,7 +2510,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 Thread.sleep(50);
                 aprsJFrame.refreshSimView();
             }
-            List<DetectedItem> l = xfl.get();
+            List<PhysicalItem> l = xfl.get();
             aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates", ".PNG"), l);
             aprsJFrame.getUpdatesFinished().join();
             takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates_new_database", ".PNG"));

@@ -32,7 +32,7 @@ import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.DetectedItemJPanel;
 import aprs.framework.database.PoseQueryElem;
 import aprs.framework.database.SocketLineReader;
@@ -1070,12 +1070,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jTextAreaLog.setCaretPosition(jTextAreaLog.getText().length());
     }
 
-    public void updateInfo(List<DetectedItem> visionList, String line) {
+    public void updateInfo(List<PhysicalItem> visionList, String line) {
         DefaultTableModel tm = (DefaultTableModel) this.jTableFromVision.getModel();
         tm.setRowCount(0);
         if (null != visionList) {
             for (int i = 0; i < visionList.size(); i++) {
-                DetectedItem ci = visionList.get(i);
+                PhysicalItem ci = visionList.get(i);
                 if (ci.getFullName() == null || ci.getFullName().length() < 1) {
                     System.err.println("bad ci fullname " + ci);
                 }
@@ -1292,14 +1292,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public static final String ADD_REPEAT_COUNTS_TO_DATABASE_NAMES = "AddRepeatCountsToDatabaseNames";
 
     private Thread startVisionThread = null;
-    private List<DetectedItem> transformedVisionList = null;
+    private List<PhysicalItem> transformedVisionList = null;
 
-    public static List<DetectedItem> transformList(List<DetectedItem> in, PoseType transform) {
-        List<DetectedItem> out = new ArrayList<>();
+    public static List<PhysicalItem> transformList(List<PhysicalItem> in, PoseType transform) {
+        List<PhysicalItem> out = new ArrayList<>();
         for (int i = 0; i < in.size(); i++) {
-            DetectedItem inItem = in.get(i);
+            PhysicalItem inItem = in.get(i);
             PoseType newPose = CRCLPosemath.multiply(transform, inItem.toCrclPose());
-            DetectedItem outItem = new DetectedItem(inItem.getName(), newPose, inItem.getVisioncycle());
+            PhysicalItem outItem = new PhysicalItem(inItem.getName(), newPose, inItem.getVisioncycle());
             outItem.setRepeats(inItem.getRepeats());
             outItem.setIndex(inItem.getIndex());
             outItem.setFullName(inItem.getFullName());
@@ -1319,14 +1319,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
     private volatile boolean addRepeatCountsToDatabaseNames = false;
 
-    public List<DetectedItem> getSlotOffsets(String name) {
+    public List<PhysicalItem> getSlotOffsets(String name) {
         if (null == dpu) {
             return null;
         }
         return dpu.getSlotOffsets(name);
     }
 
-    public List<DetectedItem> getSlots(DetectedItem item) {
+    public List<PhysicalItem> getSlots(PhysicalItem item) {
         if (null == dpu) {
             return null;
         }
@@ -1387,7 +1387,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.maxRequiredPartFailures = maxRequiredPartFailures;
     }
 
-    private boolean checkRequiredParts(List<DetectedItem> list) {
+    private boolean checkRequiredParts(List<PhysicalItem> list) {
         if (null != requiredParts) {
             for (Entry<String, Integer> entry : requiredParts.entrySet()) {
                 String name = entry.getKey();
@@ -1403,6 +1403,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     if (failures > maxRequiredPartFailures) {
+                        setEnableDatabaseUpdates(false);
                         aprsJFrame.setTitleErrorString(msg);
                         throw new IllegalStateException(msg);
                     } else {
@@ -1456,37 +1457,37 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    private final ConcurrentLinkedDeque<XFuture<List<DetectedItem>>> singleUpdateListeners
+    private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>> singleUpdateListeners
             = new ConcurrentLinkedDeque<>();
 
-    public XFuture<List<DetectedItem>> getSingleUpdate() {
+    public XFuture<List<PhysicalItem>> getSingleUpdate() {
         setEnableDatabaseUpdates(true);
-        XFuture<List<DetectedItem>> ret = new XFuture<>("getSingleUpdate");
+        XFuture<List<PhysicalItem>> ret = new XFuture<>("getSingleUpdate");
         singleUpdateListeners.add(ret);
         return ret;
     }
 
-    private void notifySingleUpdateListeners(List<DetectedItem> l) {
-        XFuture<List<DetectedItem>> future;
+    private void notifySingleUpdateListeners(List<PhysicalItem> l) {
+        XFuture<List<PhysicalItem>> future;
         setEnableDatabaseUpdates(false);
-        List<DetectedItem> unmodifiableList = Collections.unmodifiableList(l);
+        List<PhysicalItem> unmodifiableList = Collections.unmodifiableList(l);
         while (null != (future = singleUpdateListeners.poll())) {
             future.complete(unmodifiableList);
         }
     }
     
-    private final ConcurrentLinkedDeque<XFuture<List<DetectedItem>>> nextUpdateListeners
+    private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>> nextUpdateListeners
             = new ConcurrentLinkedDeque<>();
 
-    public XFuture<List<DetectedItem>> getNextUpdate() {
-        XFuture<List<DetectedItem>> ret = new XFuture<>("getNextUpdate");
+    public XFuture<List<PhysicalItem>> getNextUpdate() {
+        XFuture<List<PhysicalItem>> ret = new XFuture<>("getNextUpdate");
         nextUpdateListeners.add(ret);
         return ret;
     }
 
-    private void notifyNextUpdateListeners(List<DetectedItem> l) {
-        XFuture<List<DetectedItem>> future;
-        List<DetectedItem> unmodifiableList = Collections.unmodifiableList(l);
+    private void notifyNextUpdateListeners(List<PhysicalItem> l) {
+        XFuture<List<PhysicalItem>> future;
+        List<PhysicalItem> unmodifiableList = Collections.unmodifiableList(l);
         while (null != (future = nextUpdateListeners.poll())) {
             future.complete(unmodifiableList);
         }
@@ -1507,7 +1508,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     @Override
-    public void visionClientUpdateRecieved(List<DetectedItem> visionList, String line) {
+    public void visionClientUpdateRecieved(List<PhysicalItem> visionList, String line) {
         if (acquire == AcquireEnum.OFF) {
             return;
         }
@@ -1527,17 +1528,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             updating = true;
             PoseType transform = getTransformPose();
             dpu.setDisplayInterface(this);
-            List<DetectedItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
+            List<PhysicalItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
             if (null != transform) {
                 transformedVisionList = transformList(visionListWithEmptySlots, transform);
-                List<DetectedItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
+                List<PhysicalItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
                 if(!singleUpdateListeners.isEmpty()) {
                     setEnableDatabaseUpdates(false);
                     notifySingleUpdateListeners(l);
                 }
                 runOnDispatchThread(() -> this.updateInfo(l, line));
             } else {
-                List<DetectedItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCountsToDatabaseNames, false);
+                List<PhysicalItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCountsToDatabaseNames, false);
                 runOnDispatchThread(() -> this.updateInfo(l, line));
             }
             updating = false;
@@ -1781,14 +1782,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (isDebug()) {
                 addLogMessage("Detected item to add map = " + map);
             }
-            DetectedItem item = DetectedItemJPanel.mapToItem(map, null);
+            PhysicalItem item = DetectedItemJPanel.mapToItem(map, null);
             if (isDebug()) {
                 addLogMessage("Detected item to add = " + item);
             }
-            List<DetectedItem> singletonList = Collections.singletonList(item);
+            List<PhysicalItem> singletonList = Collections.singletonList(item);
             PoseType pose = getTransformPose();
             if (null != pose) {
-                List<DetectedItem> transformedList = transformList(singletonList, pose);
+                List<PhysicalItem> transformedList = transformList(singletonList, pose);
                 System.out.println("transformedList = " + transformedList);
                 dpu.updateVisionList(transformedList, jCheckBoxAddRepeatCountsToDatabaseNames.isSelected(), true);
             } else {
@@ -1991,10 +1992,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void takeSnapshot(File f) {
         try {
-            List<DetectedItem> list = new ArrayList<>();
+            List<PhysicalItem> list = new ArrayList<>();
             DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
             for (int i = 0; i < tm.getRowCount(); i++) {
-                list.add(new DetectedItem(tm.getValueAt(i, 0).toString(),
+                list.add(new PhysicalItem(tm.getValueAt(i, 0).toString(),
                         Double.parseDouble(tm.getValueAt(i, 4).toString()),
                         Double.parseDouble(tm.getValueAt(i, 1).toString()),
                         Double.parseDouble(tm.getValueAt(i, 2).toString())));
@@ -2008,14 +2009,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             File csvFile = aprsJFrame.createTempFile(f.getName() + "_db", ".csv", dbLogDir);
             Utils.saveJTable(csvFile, jTableFromDatabase);
 
-            List<DetectedItem> lastInput = dpu.getLastEnabledUpdateList();
+            List<PhysicalItem> lastInput = dpu.getLastEnabledUpdateList();
             if (null != lastInput && !lastInput.isEmpty()) {
                 File dbInputLogDir = new File(f.getParentFile(), "visionToDb_input_dir");
                 dbInputLogDir.mkdirs();
                 File csvInputFile = Utils.createTempFile(f.getName() + "_visiontToDb", ".csv", dbInputLogDir);
                 try (PrintWriter pw = new PrintWriter(new FileWriter(csvInputFile))) {
                     pw.println("name,rotation,x,y,score,type,visioncycle,repeats,fullname");
-                    for (DetectedItem item : lastInput) {
+                    for (PhysicalItem item : lastInput) {
                         pw.println(item.getName() + "," + item.getRotation() + "," + item.x + "," + item.y + "," + item.getScore() + "," + item.getType() + "," + item.getVisioncycle() + "," + item.getRepeats() + "," + item.getFullName());
                     }
                 }
@@ -2081,7 +2082,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     public void forceUpdateSingle(int row) throws NumberFormatException {
         String name = (String) jTableFromVision.getValueAt(row, 1);
-        DetectedItem item = new DetectedItem(name);
+        PhysicalItem item = new PhysicalItem(name);
         item.setRotation(Double.parseDouble(jTableFromVision.getValueAt(row, 3).toString()));
         item.x = Double.parseDouble(jTableFromVision.getValueAt(row, 4).toString());
         item.y = Double.parseDouble(jTableFromVision.getValueAt(row, 5).toString());
@@ -2093,7 +2094,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         item.setFullName((String) jTableFromVision.getValueAt(row, 11));
         item.setVisioncycle(Integer.parseInt(jTableFromVision.getValueAt(row, 12).toString()));
         System.out.println("item = " + item);
-        List<DetectedItem> singletonList = Collections.singletonList(item);
+        List<PhysicalItem> singletonList = Collections.singletonList(item);
         System.out.println("singletonList = " + singletonList);
         boolean origForceUpdates = dpu.isForceUpdates();
         dpu.setForceUpdates(true);

@@ -22,7 +22,7 @@
  */
 package aprs.framework.spvision;
 
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +38,7 @@ public class UpdateResults {
     private int updateCount;
     private int totalUpdateCount;
     private int statementExecutionCount;
-    private DetectedItem lastDetectedItem;
+    private PhysicalItem lastDetectedItem;
     private double x;
     private double y;
     private double rotation;
@@ -183,14 +183,14 @@ public class UpdateResults {
     /**
      * @return the lastDetectedItem
      */
-    public DetectedItem getLastDetectedItem() {
+    public PhysicalItem getLastDetectedItem() {
         return lastDetectedItem;
     }
 
     /**
      * @param lastDetectedItem the lastDetectedItem to set
      */
-    public void setLastDetectedItem(DetectedItem lastDetectedItem) {
+    public void setLastDetectedItem(PhysicalItem lastDetectedItem) {
         this.lastDetectedItem = lastDetectedItem;
         x = lastDetectedItem.x;
         y = lastDetectedItem.y;

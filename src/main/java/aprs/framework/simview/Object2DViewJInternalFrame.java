@@ -23,7 +23,7 @@
 package aprs.framework.simview;
 
 import aprs.framework.AprsJFrame;
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import java.io.File;
@@ -99,12 +99,12 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     // End of variables declaration//GEN-END:variables
 
     @Override
-    public List<DetectedItem> getItems() {
+    public List<PhysicalItem> getItems() {
         return object2DOuterJPanel1.getItems();
     }
 
     @Override
-    public void setItems(List<DetectedItem> items) {
+    public void setItems(List<PhysicalItem> items) {
         object2DOuterJPanel1.setItems(items);
     }
 
@@ -152,7 +152,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
     
     @Override
-    public void takeSnapshot(File f, List<DetectedItem> itemsToPaint) throws IOException {
+    public void takeSnapshot(File f, List<PhysicalItem> itemsToPaint) throws IOException {
         this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint);
     }
 

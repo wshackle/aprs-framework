@@ -44,8 +44,7 @@ import rcs.posemath.PM_CARTESIAN;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-//TODO-zeid
-public class DetectedItem extends PM_CARTESIAN {
+public class PhysicalItem extends PM_CARTESIAN {
 
     final public String origName;
     private String name;
@@ -70,11 +69,11 @@ public class DetectedItem extends PM_CARTESIAN {
     private boolean insidePartsTray;
     private String setQuery;
     private long timestamp;
-    private DetectedItem tray;
+    private PhysicalItem tray;
     private long emptySlotsCount;
     private long totalSlotsCount;
     private double maxSlotDist;
-    private List<DetectedItem> emptySlotsList = new ArrayList<>();
+    private List<PhysicalItem> emptySlotsList = new ArrayList<>();
     private int kitTrayNum;
     private String slotForSkuName;
     private Color labelColor = Color.BLACK;
@@ -82,6 +81,10 @@ public class DetectedItem extends PM_CARTESIAN {
 
     private String prpName;
 
+    public PoseType getPose() {
+        return pose(point(x,y,z),vector(vxi,vxj,vxk),vector(vzi,vzj,vzk));
+    }
+    
     /**
      * Get the value of prpName
      *
@@ -100,12 +103,12 @@ public class DetectedItem extends PM_CARTESIAN {
         this.prpName = prpName;
     }
 
-    public DetectedItem(String name) {
+    public PhysicalItem(String name) {
         this.name = name;
         this.origName = name;
     }
 
-    public DetectedItem(String name, double rotation, double x, double y) {
+    public PhysicalItem(String name, double rotation, double x, double y) {
         this(name);
         this.rotation = rotation;
         this.vxi = Math.cos(rotation);
@@ -134,13 +137,13 @@ public class DetectedItem extends PM_CARTESIAN {
 //        }
     }
 
-    public DetectedItem(String name, double rotation, double x, double y, double score, String type) {
+    public PhysicalItem(String name, double rotation, double x, double y, double score, String type) {
         this(name, rotation, x, y);
         this.score = score;
         this.type = type;
     }
 
-    public DetectedItem(String name, PoseType pose, int visioncycle) {
+    public PhysicalItem(String name, PoseType pose, int visioncycle) {
         this(name);
         if (null != pose) {
             VectorType xAxis = pose.getXAxis();
@@ -166,7 +169,7 @@ public class DetectedItem extends PM_CARTESIAN {
         this.visioncycle = visioncycle;
     }
 
-    public double dist(DetectedItem other) {
+    public double dist(PhysicalItem other) {
         return dist(other.x, other.y);
     }
 
@@ -361,11 +364,11 @@ public class DetectedItem extends PM_CARTESIAN {
         this.timestamp = timestamp;
     }
 
-    public DetectedItem getTray() {
+    public PhysicalItem getTray() {
         return tray;
     }
 
-    public void setTray(DetectedItem tray) {
+    public void setTray(PhysicalItem tray) {
         this.tray = tray;
     }
 
@@ -393,11 +396,11 @@ public class DetectedItem extends PM_CARTESIAN {
         this.maxSlotDist = maxSlotDist;
     }
 
-    public List<DetectedItem> getEmptySlotsList() {
+    public List<PhysicalItem> getEmptySlotsList() {
         return emptySlotsList;
     }
 
-    public void setEmptySlotsList(List<DetectedItem> emptySlotsList) {
+    public void setEmptySlotsList(List<PhysicalItem> emptySlotsList) {
         this.emptySlotsList = emptySlotsList;
     }
 

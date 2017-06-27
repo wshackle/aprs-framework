@@ -24,7 +24,7 @@ package aprs.framework.spvision;
 
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.PoseQueryElem;
 import aprs.framework.simview.Object2DJFrame;
 import java.awt.Frame;
@@ -205,7 +205,7 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
         this.visionToDBJPanel.setAquiring(s);
     }
 
-    public void updateInfo(List<DetectedItem> _list, String line) {
+    public void updateInfo(List<PhysicalItem> _list, String line) {
         this.visionToDBJPanel.updateInfo(_list, line);
     }
 

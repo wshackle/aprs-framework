@@ -22,7 +22,7 @@
  */
 package aprs.framework.simview;
 
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import java.util.Arrays;
 
 /**

@@ -204,6 +204,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         this.actionsToCrclJPanel1.browseActionsFile();
     }
 
+    public void loadActionsFile(File f) throws IOException {
+        this.actionsToCrclJPanel1.loadActionsFile(f);
+    }
+    
     @Override
     public void setActionsList(List<PddlAction> actionsList) {
         this.actionsToCrclJPanel1.setActionsList(actionsList);

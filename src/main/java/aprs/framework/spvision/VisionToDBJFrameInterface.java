@@ -25,7 +25,7 @@ package aprs.framework.spvision;
 import aprs.framework.database.CommonJFrameInterface;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.PoseQueryElem;
 import java.io.File;
 import java.util.List;
@@ -40,7 +40,7 @@ public interface VisionToDBJFrameInterface extends CommonJFrameInterface {
 
     public void setAquiring(String s);
 
-    public void updateInfo(List<DetectedItem> _list, String line);
+    public void updateInfo(List<PhysicalItem> _list, String line);
 
     public void updataPoseQueryInfo(final List<PoseQueryElem> _list);
     

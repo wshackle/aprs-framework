@@ -26,7 +26,7 @@ import aprs.framework.AprsJFrame;
 import aprs.framework.Utils;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.PoseQueryElem;
 import aprs.framework.pddl.executor.PartsTray;
 import crcl.ui.XFuture;
@@ -66,11 +66,11 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return this.visionToDBJPanel.startNewItemsImageSave(f);
     }
 
-    public List<DetectedItem> getSlotOffsets(String name) {
+    public List<PhysicalItem> getSlotOffsets(String name) {
         return this.visionToDBJPanel.getSlotOffsets(name);
     }
 
-    public List<DetectedItem> getSlots(DetectedItem item) {
+    public List<PhysicalItem> getSlots(PhysicalItem item) {
         return this.visionToDBJPanel.getSlots(item);
     }
 
@@ -78,11 +78,11 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         this.visionToDBJPanel.setAprsJFrame(aprsJFrame);
     }
 
-    public XFuture<List<DetectedItem>> getNextUpdate() {
+    public XFuture<List<PhysicalItem>> getNextUpdate() {
         return visionToDBJPanel.getNextUpdate();
     }
     
-     public XFuture<List<DetectedItem>> getSingleUpdate() {
+     public XFuture<List<PhysicalItem>> getSingleUpdate() {
         return visionToDBJPanel.getSingleUpdate();
     }
     
@@ -136,7 +136,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     }
 
     @Override
-    public void updateInfo(List<DetectedItem> _list, String line) {
+    public void updateInfo(List<PhysicalItem> _list, String line) {
         this.visionToDBJPanel.updateInfo(_list, line);
     }
 

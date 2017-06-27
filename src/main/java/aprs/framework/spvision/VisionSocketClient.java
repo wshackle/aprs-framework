@@ -22,7 +22,7 @@
  */
 package aprs.framework.spvision;
 
-import aprs.framework.database.DetectedItem;
+import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.SocketLineReader;
 import crcl.base.PoseType;
 import java.io.IOException;
@@ -45,7 +45,7 @@ import java.util.logging.Logger;
  */
 public class VisionSocketClient implements AutoCloseable {
 
-    private List<DetectedItem> visionList = null;
+    private List<PhysicalItem> visionList = null;
     private SocketLineReader visionSlr = null;
     private ExecutorService visionExecServ = Executors.newFixedThreadPool(1);
     private volatile String parsing_line = null;
@@ -78,13 +78,13 @@ public class VisionSocketClient implements AutoCloseable {
         return poseUpdatesParsed;
     }
 
-    public List<DetectedItem> getVisionList() {
+    public List<PhysicalItem> getVisionList() {
         return Collections.unmodifiableList(visionList);
     }
 
     public static interface VisionSocketClientListener {
 
-        public void visionClientUpdateRecieved(List<DetectedItem> list, String line);
+        public void visionClientUpdateRecieved(List<PhysicalItem> list, String line);
     }
 
     private final List<VisionSocketClientListener> listListeners = new ArrayList<>();
@@ -103,7 +103,7 @@ public class VisionSocketClient implements AutoCloseable {
 
     public void updateListeners() {
         if (null != visionList) {
-            List<DetectedItem> listToSend = new ArrayList<>();
+            List<PhysicalItem> listToSend = new ArrayList<>();
             listToSend.addAll(visionList);
             synchronized (listListeners) {
                 for (int i = 0; i < listListeners.size(); i++) {
@@ -211,12 +211,12 @@ public class VisionSocketClient implements AutoCloseable {
         return line;
     }
 
-    public static List<DetectedItem> lineToList(String line) {
+    public static List<PhysicalItem> lineToList(String line) {
         return lineToList(line, null);
     }
 
-    public static List<DetectedItem> lineToList(String line, final VisionToDBJFrameInterface displayInterface) {
-        List<DetectedItem> listOut = new ArrayList<>();
+    public static List<PhysicalItem> lineToList(String line, final VisionToDBJFrameInterface displayInterface) {
+        List<PhysicalItem> listOut = new ArrayList<>();
         String fa[] = null;
         int i = 0;
         final int cur_visioncycle = visioncycle.incrementAndGet();
@@ -226,7 +226,7 @@ public class VisionSocketClient implements AutoCloseable {
             int index = 0;
             long timestamp = System.currentTimeMillis();
             for (i = 0; i < fa.length - 5; i += 6) {
-                DetectedItem ci = new DetectedItem(fa[i]);
+                PhysicalItem ci = new PhysicalItem(fa[i]);
                 ci.setTimestamp(timestamp);
                 if (fa[i].length() < 1) {
                     continue;
