@@ -1,9 +1,10 @@
 #params= NAME{1}
-#results={NAME=name,X=x,Y=y,SKU_NAME=sku_name,PRP_NAME=prp_name,TRAY_NAME=tray_name}
+#results={NAME=name,X=x,Y=y,SKU_NAME=sku_name,PRP_NAME=prp_name,TRAY_NAME=tray_name,DIAMETER=diameter}
 match pointpath =(p:PartsTray)-[:hasPartsTray_Slot]-(s:Slot)-[:hasSlot_PartRefAndPose]-(prp:PartRefAndPose)-[:hasPartRefAndPose_Pose]-(pose:Pose)-[:hasPose_Point]-(point:Point), 
 skupath = (prp) - [:hasPartRefAndPose_Sku] -> (sku:StockKeepingUnit)
 where p.name={1}
-return s.name as name, point.hasPoint_X as x, point.hasPoint_Y as y, sku.name as sku_name, prp.name as prp_name, p.name as tray_name
+optional match sku - [:hasStockKeepingUnit_InternalShape] -> (shape:CylindricalShape) 
+return s.name as name, point.hasPoint_X as x, point.hasPoint_Y as y, sku.name as sku_name, prp.name as prp_name, p.name as tray_name,shape.hasCylindricalShape_Diameter as diameter
 
 
 

@@ -835,6 +835,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             String sku_name = resultMap.get("sku_name");
                             String prp_name = resultMap.get("prp_name");
                             String tray_name = resultMap.get("tray_name");
+                            
                             assert (tray_name.equals(tray.getFullName())) :
                                     ("!tray_name.equals(tray.getName()) tray_name=" + tray_name + ", tray=" + tray);
                             if (prp_name.startsWith("part_ref_and_pose_")) {
@@ -842,6 +843,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             }
                             double x = fixDouble(rs, "x") * 1000.0;
                             double y = fixDouble(rs, "y") * 1000.0;
+                            
                             String short_sku_name = sku_name;
                             if (short_sku_name.startsWith("sku_")) {
                                 short_sku_name = short_sku_name.substring(4);
@@ -857,6 +859,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             offsetItem.setNewSlotQuery(getTraySlotsQueryStringFilled);
                             offsetItem.setNewSlotOffsetResultMap(resultMap);
                             offsetItem.setTray(tray);
+                            if(resultMap.containsKey("diameter")) {
+                                double diameter = fixDouble(rs, "diameter") * 1000.0;
+                                offsetItem.setDiameter(diameter);
+                            }
                             ret.add(offsetItem);
                         }
                     }
@@ -919,6 +925,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 tray.x + x * Math.cos(angle) - y * Math.sin(angle),
                 tray.y + x * Math.sin(angle) + y * Math.cos(angle)
         );
+        item.setDiameter(offsetItem.getDiameter());
         item.setType("S");
         item.setTray(tray);
         item.setSlotForSkuName(offsetItem.getSlotForSkuName());
@@ -937,6 +944,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
             return null;
         }
         tray.setTotalSlotsCount(offsets.size());
+        tray.setAbsSlotList(new ArrayList<>());
         for (PhysicalItem offsetItem : offsets) {
 
             if (offsetItem.getTray() != tray) {
@@ -956,6 +964,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
             String sku_name = offsetItem.getName();
             PhysicalItem item = absSlotFromTrayAndOffset(tray,offsetItem);
             ret.add(item);
+            tray.getAbsSlotList().add(item);
             String composedName = "empty_slot_for_" + sku_name + "_in_" + tray_name;
             if (tray.getType().equals("KT")) {
                 String prpName = offsetItem.getPrpName();
@@ -1610,7 +1619,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     private static boolean inside(List<PhysicalItem> trays, PhysicalItem ci, double threshhold) {
-        return trays.stream().anyMatch((PhysicalItem tray) -> tray.dist(ci) < tray.getMaxSlotDist() + threshhold);
+        return trays.stream().anyMatch((PhysicalItem tray) -> tray.insideAbsSlot(ci, threshhold));
     }
 
     public void deletePose(String name) throws SQLException {

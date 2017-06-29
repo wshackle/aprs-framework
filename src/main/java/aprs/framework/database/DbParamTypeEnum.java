@@ -45,5 +45,6 @@ public enum DbParamTypeEnum {
     SKU_NAME,
     MAX_VISIONCYCLE,
     PRP_NAME,
-    TRAY_NAME;
+    TRAY_NAME,
+    DIAMETER;
 }

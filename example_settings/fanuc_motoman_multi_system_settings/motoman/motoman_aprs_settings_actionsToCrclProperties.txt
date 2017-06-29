@@ -1,20 +1,20 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1494
-afterMoveToLookForDwellTime=5.0
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1579
+afterMoveToLookForDwellTime=0.5
 approachZOffset=50.0
 defaultDwellTime=0.5
 doInspectKit=true
 fastTransSpeed=400
-firstLookDwellTime=5.0
+firstLookDwellTime=0.5
 jointAccel=100.0
 jointSpeed=60.0
 kitInspectDistThreshold=20.0
-lastLookDwellTime=1.0
+lastLookDwellTime=0.5
 lookDwell=1.0
-lookDwellTime=6.5
+lookDwellTime=0.5
 lookForJoints=63016,20778,-106670,4,-63848,-39220,-1,0
 lookForXYZ=240,435,-165
 manualPartNames=[part_small_gear_in_pt_2, part_small_gear_in_pt_1, part_large_gear_in_pt_2, part_large_gear_in_pt_1, part_small_gear_in_kt_2, part_small_gear_in_kt_1, empty_slot_for_large_gear_in_large_gear_vessel_4, empty_slot_for_large_gear_in_large_gear_vessel_1, empty_slot_for_large_gear_in_large_gear_vessel_3, empty_slot_for_large_gear_in_kit_s2l2_vessel, empty_slot_for_small_gear_in_kit_s2l2_vessel, kit_lg2small2_2_slot_l2, large_gear_2, large_gear_1, kit_lg2small2_1_slot_s2, small_gear_2, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]
-manualSlotNames=[empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1, empty_slot_1_for_large_gear_in_kit_s2l2_vessel_1, empty_slot_2_for_small_gear_in_kit_s2l2_vessel_1, empty_slot_1_for_small_gear_in_kit_s2l2_vessel_1, null, null, null, null, null, null]
+manualSlotNames=[empty_slot_1_for_large_gear_in_kit_s2l2_vessel_2, empty_slot_1_for_small_gear_in_kit_s2l2_vessel_2, empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1, empty_slot_1_for_large_gear_in_kit_s2l2_vessel_1, empty_slot_2_for_small_gear_in_kit_s2l2_vessel_1, empty_slot_1_for_small_gear_in_kit_s2l2_vessel_1, null, null, null, null]
 pddl.output=..\\..\\..\\example_pddl\\motoman_demo_actions.txt
 pddl.reverse_output=..\\..\\..\\example_pddl\\reverse_motoman_demo_actions.txt
 placePartSlotArgIndex=0
@@ -25,7 +25,7 @@ reverseFlag=false
 rotSpeed=30.0
 rpy=180.0,0.0,0.0
 settleDwellTime=0.05
-skipLookDwellTime=5.0
+skipLookDwellTime=0.5
 skipMissingParts=true
 slowTransSpeed=120
 takePartArgIndex=0

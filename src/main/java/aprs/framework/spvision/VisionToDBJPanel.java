@@ -1302,6 +1302,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private List<PhysicalItem> transformedVisionList = null;
 
     public static List<PhysicalItem> transformList(List<PhysicalItem> in, PoseType transform) {
+        if(null == in) {
+            return null;
+        }
         List<PhysicalItem> out = new ArrayList<>();
         for (int i = 0; i < in.size(); i++) {
             PhysicalItem inItem = in.get(i);
@@ -1320,6 +1323,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             outItem.setTotalSlotsCount(inItem.getTotalSlotsCount());
             outItem.setTimestamp(inItem.getTimestamp());
             outItem.setMaxSlotDist(inItem.getMaxSlotDist());
+            outItem.setAbsSlotList(transformList(inItem.getAbsSlotList(),transform));
+            outItem.setDiameter(inItem.getDiameter());
             out.add(outItem);
         }
         return out;
@@ -1412,7 +1417,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     if (failures > maxRequiredPartFailures) {
                         setEnableDatabaseUpdates(false);
                         aprsJFrame.setTitleErrorString(msg);
-                        throw new IllegalStateException(msg);
+                        IllegalStateException ex =  new IllegalStateException(msg);
+                        notifyNextUpdateListenersExceptionally(ex);
+                        notifySingleUpdateListenersExceptionally(ex);
+                        throw ex;
                     } else {
                         System.err.println(msg);
                         return false;
@@ -1483,6 +1491,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
     
+     private void notifySingleUpdateListenersExceptionally(Throwable ex) {
+        XFuture<List<PhysicalItem>> future;
+        setEnableDatabaseUpdates(false);
+        while (null != (future = singleUpdateListeners.poll())) {
+            future.completeExceptionally(ex);
+        }
+    }
     private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>> nextUpdateListeners
             = new ConcurrentLinkedDeque<>();
 
@@ -1497,6 +1512,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         List<PhysicalItem> unmodifiableList = Collections.unmodifiableList(l);
         while (null != (future = nextUpdateListeners.poll())) {
             future.complete(unmodifiableList);
+        }
+    }
+    
+    private void notifyNextUpdateListenersExceptionally(Throwable ex) {
+        XFuture<List<PhysicalItem>> future;
+        while (null != (future = nextUpdateListeners.poll())) {
+            future.completeExceptionally(ex);
         }
     }
 

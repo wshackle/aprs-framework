@@ -91,12 +91,6 @@ import java.util.function.Consumer;
 import java.util.Collection;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -441,6 +435,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     return action;
                 case "look-for-part":
                 case "look-for-parts":
+                case "end-program":
                     return null;
             }
         }
@@ -516,11 +511,28 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     actionToCrclLabels[lastIndex] = "";
                     actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
                     final int markerIndex = lastIndex;
-                    String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
-                    addMarkerCommand(cmds, end_action_string,
-                            (CrclCommandWrapper wrapper) -> {
-                                notifyActionCompletedListeners(markerIndex, action);
-                            });
+                     {
+                        String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                        addMarkerCommand(cmds, end_action_string,
+                                (CrclCommandWrapper wrapper) -> {
+                                    notifyActionCompletedListeners(markerIndex, action);
+                                });
+                    }
+                    return cmds;
+
+                case "end-program":
+                    endProgram(action, cmds);
+                    actionToCrclIndexes[lastIndex] = cmds.size();
+                    actionToCrclLabels[lastIndex] = "";
+                    actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
+                    final int endMarkerIndex = lastIndex;
+                     {
+                        String end_action_string = "end_" + endMarkerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                        addMarkerCommand(cmds, end_action_string,
+                                (CrclCommandWrapper wrapper) -> {
+                                    notifyActionCompletedListeners(endMarkerIndex, action);
+                                });
+                    }
                     return cmds;
 
                 case "place-part":
@@ -977,10 +989,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         checkSettings();
         String partName = action.getArgs()[0];
-        MessageType msg = new MessageType();
-        msg.setMessage("take-part " + partName);
-        setCommandId(msg);
-        out.add(msg);
 
         PoseType pose = getPose(partName);
         pose = visionToRobotPose(pose);
@@ -1527,10 +1535,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
-        MessageType msg = new MessageType();
-        msg.setMessage("take-part " + partName);
-        setCommandId(msg);
-        out.add(msg);
 
         if (null != kitInspectionJInternalFrame) {
             kitInspectionJInternalFrame.setKitImage("init");
@@ -1601,7 +1605,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
         MessageType msg = new MessageType();
-        msg.setMessage("take-part " + partName);
+        msg.setMessage("fake-take-part " + partName);
         setCommandId(msg);
         out.add(msg);
 
@@ -2397,6 +2401,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private Map<String, Integer> lastRequiredPartsMap = null;
 
+    private void endProgram(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+        if (atLookForPosition) {
+            atLookForPosition = checkAtLookForPosition();
+        }
+        if (!atLookForPosition) {
+            addMoveToLookForPosition(out);
+        }
+        TakenPartList.clear();
+    }
+
     private void lookForParts(PddlAction action, List<MiddleCommandType> out, boolean firstAction, boolean lastAction) throws IllegalStateException, SQLException {
 
         lastTestApproachPose = null;
@@ -2858,6 +2872,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void addOptionalCommand(MiddleCommandType optCmd, List<MiddleCommandType> cmds, CRCLCommandWrapperConsumer cb) {
         setCommandId(optCmd);
         CrclCommandWrapper wrapper = CrclCommandWrapper.wrapWithOnStart(optCmd, cb);
+        wrapper.setCommandID(optCmd.getCommandID());
         cmds.add(wrapper);
     }
 

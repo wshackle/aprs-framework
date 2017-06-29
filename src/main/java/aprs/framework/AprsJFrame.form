@@ -226,6 +226,22 @@
                 <Property name="text" type="java.lang.String" value="Enable Debug DumpStacks"/>
               </Properties>
             </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemSetPoseMaxLimits">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Set Pose Max Limits ... (+10000,+10000,+10000)    ..."/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemSetPoseMaxLimitsActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemSetPoseMinLimits">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Set Pose Min Limits ... (-10000,-10000,-10000)    ..."/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemSetPoseMinLimitsActionPerformed"/>
+              </Events>
+            </MenuItem>
           </SubComponents>
         </Menu>
         <Menu class="javax.swing.JMenu" name="jMenuExecute">

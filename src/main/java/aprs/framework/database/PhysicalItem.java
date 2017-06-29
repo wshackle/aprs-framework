@@ -32,9 +32,11 @@ import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import rcs.posemath.PM_CARTESIAN;
+import rcs.posemath.PmCartesian;
 
 /**
  * This is a general holder for anything that might have a position associated
@@ -173,12 +175,81 @@ public class PhysicalItem extends PM_CARTESIAN {
         return dist(other.x, other.y);
     }
 
+    
+        private List<PhysicalItem> absSlotList = null;
+
+    /**
+     * Get the value of absSlotList
+     *
+     * @return the value of absSlotList
+     */
+    public List<PhysicalItem> getAbsSlotList() {
+        return absSlotList;
+    }
+
+    /**
+     * Set the value of absSlotList
+     *
+     * @param absSlotList new value of absSlotList
+     */
+    public void setAbsSlotList(List<PhysicalItem> absSlotList) {
+        this.absSlotList = absSlotList;
+    }
+
     public double dist(double otherx, double othery) {
         double dx = x - otherx;
         double dy = y - othery;
         return Math.sqrt(dx * dx + dy * dy);
     }
+    
+    public double distFromAbsSlot(PmCartesian cart) {
+        if(null == absSlotList) {
+            return java.lang.Double.POSITIVE_INFINITY;
+        }
+        return absSlotList.stream()
+                .mapToDouble(cart::distFromXY)
+                .min()
+                .orElse(java.lang.Double.POSITIVE_INFINITY);
+    }
+    
+    public PhysicalItem closestAbsSlot(PmCartesian cart) {
+        if(null == absSlotList) {
+            return null;
+        }
+        return absSlotList.stream()
+                .min(Comparator.comparing(cart::distFromXY))
+                .orElse(null);
+    }
+    
+    
+        private double diameter;
 
+    /**
+     * Get the value of diameter
+     *
+     * @return the value of diameter
+     */
+    public double getDiameter() {
+        return diameter;
+    }
+
+    /**
+     * Set the value of diameter
+     *
+     * @param diameter new value of diameter
+     */
+    public void setDiameter(double diameter) {
+        this.diameter = diameter;
+    }
+
+    public boolean insideAbsSlot(PmCartesian cart, double threshold) {
+        PhysicalItem slot = closestAbsSlot(cart);
+        if(null != slot) {
+            return slot.distFrom(cart) < (slot.getDiameter()/2.0+ threshold);
+        }
+        return false;
+    }
+    
     public PoseType toCrclPose() {
         return pose(point(x, y, z), vector(vxi, vxj, vxk), vector(vzi, vzj, vzk));
     }

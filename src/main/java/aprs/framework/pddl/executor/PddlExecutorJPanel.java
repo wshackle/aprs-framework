@@ -1549,11 +1549,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     public void saveProperties() throws IOException {
         Map<String, String> propsMap = new HashMap<>();
-        if (reverseFlag) {
-            this.reverseActionsFileString = jTextFieldPddlOutputActions.getText();
-        } else {
-            this.actionsFileString = jTextFieldPddlOutputActions.getText();
-        }
+        updateActionFileStrings();
         if (reverseActionsFileString != null && reverseActionsFileString.length() > 0) {
             String relPath = makeShortPath(propertiesFile, reverseActionsFileString);
             System.out.println("relPath = " + relPath);
@@ -1581,6 +1577,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //            props.store(fw, "");
 //        }
         Utils.saveProperties(propertiesFile, props);
+    }
+
+    private void updateActionFileStrings() {
+        if (reverseFlag) {
+            this.reverseActionsFileString = jTextFieldPddlOutputActions.getText();
+        } else {
+            this.actionsFileString = jTextFieldPddlOutputActions.getText();
+        }
     }
     private static final String POS_ERROR_MAP_FILES = "positionMapFileNames";
     private static final String MANUAL_PART_NAMES = "manualPartNames";
@@ -1634,6 +1638,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             String canonName = f.getCanonicalPath();
             if(!jTextFieldPddlOutputActions.getText().equals(canonName)) {
                 jTextFieldPddlOutputActions.setText(canonName);
+                updateActionFileStrings();
             }
         }
     }

@@ -638,6 +638,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 .thenRun(() -> {
                     Utils.runOnDispatchThread(() -> {
                         jCheckBoxMenuItemContinousDemo.setSelected(false);
+                        jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
                         if (null != continousDemoFuture) {
                             continousDemoFuture.cancelAll(true);
                             continousDemoFuture = null;
@@ -854,6 +855,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jMenuItemResetAll = new javax.swing.JMenuItem();
         jMenuItemStartAllReverse = new javax.swing.JMenuItem();
         jCheckBoxMenuItemContinousDemo = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemContinousDemoRevFirst = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemPause = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemRandomTest = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemPauseResumeTest = new javax.swing.JCheckBoxMenuItem();
@@ -1278,6 +1280,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         });
         jMenuActions.add(jCheckBoxMenuItemContinousDemo);
 
+        jCheckBoxMenuItemContinousDemoRevFirst.setText("Continous Demo (Reverse first)");
+        jCheckBoxMenuItemContinousDemoRevFirst.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemContinousDemoRevFirstActionPerformed(evt);
+            }
+        });
+        jMenuActions.add(jCheckBoxMenuItemContinousDemoRevFirst);
+
         jCheckBoxMenuItemPause.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PAUSE, 0));
         jCheckBoxMenuItemPause.setText("Pause");
         jCheckBoxMenuItemPause.addActionListener(new java.awt.event.ActionListener() {
@@ -1578,6 +1588,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         immediateAbortAll();
         jCheckBoxMenuItemContinousDemo.setSelected(false);
+        jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         jCheckBoxMenuItemRandomTest.setSelected(false);
         jCheckBoxMenuItemPause.setSelected(false);
     }//GEN-LAST:event_jMenuItemImmediateAbortAllActionPerformed
@@ -1839,6 +1850,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private volatile XFuture<Void> continousDemoFuture = null;
 
     private void jCheckBoxMenuItemContinousDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinousDemoActionPerformed
+        jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         immediateAbortAll();
         clearAllErrors();
         connectAll();
@@ -1905,6 +1917,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         immediateAbortAll();
         jCheckBoxMenuItemContinousDemo.setSelected(false);
+        jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         jCheckBoxMenuItemRandomTest.setSelected(false);
         jCheckBoxMenuItemPause.setSelected(false);
         for (int i = 0; i < aprsSystems.size(); i++) {
@@ -1937,6 +1950,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         continousDemoCycle.set(0);
         randomTestCount.set(0);
         jCheckBoxMenuItemContinousDemo.setSelected(false);
+        jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         jCheckBoxMenuItemRandomTest.setSelected(false);
         if (jCheckBoxMenuItemPauseResumeTest.isSelected()) {
             jCheckBoxMenuItemContinousDemo.setSelected(true);
@@ -1980,6 +1994,19 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     
         }
     }//GEN-LAST:event_jMenuItemContinueAllActionPerformed
+
+    private void jCheckBoxMenuItemContinousDemoRevFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinousDemoRevFirstActionPerformed
+        jCheckBoxMenuItemContinousDemo.setSelected(false);
+        immediateAbortAll();
+        clearAllErrors();
+        connectAll();
+        setReverseFlag(false);
+        enableAllRobots();
+        continousDemoCycle.set(0);
+        if (jCheckBoxMenuItemContinousDemoRevFirst.isSelected()) {
+            continousDemoFuture = startContinousDemoRevFirst();
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemContinousDemoRevFirstActionPerformed
 
     public XFuture<Void> startRandomTest() {
         connectAll();
@@ -2120,7 +2147,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             System.err.println("allSystemsOk returned false forcing quitRandomTest");
             return quitRandomTest();
         }
-        if (!jCheckBoxMenuItemContinousDemo.isSelected()) {
+        if (!jCheckBoxMenuItemContinousDemo.isSelected() && !jCheckBoxMenuItemContinousDemoRevFirst.isSelected()) {
             System.err.println("jCheckBoxMenuItemContinousDemo.isSelected() returned false forcing quitRandomTest");
             return quitRandomTest();
         }
@@ -2149,7 +2176,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             System.err.println("allSystemsOk returned false forcing quitRandomTest");
             return quitRandomTest();
         }
-        if (!jCheckBoxMenuItemContinousDemo.isSelected()) {
+        if (!jCheckBoxMenuItemContinousDemo.isSelected() && !jCheckBoxMenuItemContinousDemoRevFirst.isSelected()) {
             System.err.println("jCheckBoxMenuItemContinousDemo.isSelected() returned false forcing quitRandomTest");
             return quitRandomTest();
         }
@@ -2179,6 +2206,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         xf.cancel(false);
         System.out.println("continueRandomTest quit");
         jCheckBoxMenuItemContinousDemo.setSelected(false);
+        jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         jCheckBoxMenuItemRandomTest.setSelected(false);
         immediateAbortAll();
         return xf;
@@ -2196,6 +2224,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
+    public XFuture<Void> startContinousDemoRevFirst() {
+        connectAll();
+        continousDemoFuture
+                = checkEnabledAll()
+                        .thenCompose("startContinousDemoRevFirst.startReverseActions", x -> startReverseActions())
+                        .thenCompose("continueContinousDeomo.checkEnabledAll", x -> checkEnabledAll())
+                        .thenCompose("startContinousDemoRevFirst", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
+        return continousDemoFuture;
+    }
+    
     public XFuture<Void> startContinousDemo() {
         connectAll();
         continousDemoFuture
@@ -2209,7 +2247,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private XFuture<Void> incrementContinousDemoCycle() {
         final int c = continousDemoCycle.incrementAndGet();
         System.out.println("incrementContinousDemoCycle : " + c);
-        return Utils.runOnDispatchThread(() -> jCheckBoxMenuItemContinousDemo.setText("Continous Demo (" + c + ") "));
+        if(jCheckBoxMenuItemContinousDemoRevFirst.isSelected()) {
+            return Utils.runOnDispatchThread(() -> jCheckBoxMenuItemContinousDemoRevFirst.setText("Continous Demo (Reverse First) (" + c + ") "));
+        } else {
+            return Utils.runOnDispatchThread(() -> jCheckBoxMenuItemContinousDemo.setText("Continous Demo (" + c + ") "));
+        }
     }
 
     private XFuture<Void> continueContinousDemo() {
@@ -2933,6 +2975,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButtonSetInFromCurrent;
     private javax.swing.JButton jButtonSetOutFromCurrent;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinousDemo;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinousDemoRevFirst;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDebugStartReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDisableTextPopups;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;

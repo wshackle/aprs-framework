@@ -20,5 +20,5 @@
 (place-part empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1)
 (look-for-parts 1)
 (inspect-kit sku_kit_s2l2_vessel 0)
-(look-for-parts 2)
+(end-program)
 
