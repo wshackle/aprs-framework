@@ -23,8 +23,6 @@
 package aprs.framework.database;
 
 import aprs.framework.pddl.executor.TraySlotDesign;
-import aprs.framework.pddl.executor.PartsTray;
-import aprs.framework.pddl.executor.Slot;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.VectorType;

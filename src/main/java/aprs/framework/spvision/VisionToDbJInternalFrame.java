@@ -23,12 +23,13 @@
 package aprs.framework.spvision;
 
 import aprs.framework.AprsJFrame;
-import aprs.framework.Utils;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.PoseQueryElem;
-import aprs.framework.pddl.executor.PartsTray;
+import aprs.framework.database.PartsTray;
+import aprs.framework.database.Slot;
+import aprs.framework.database.Tray;
 import crcl.ui.XFuture;
 import java.io.File;
 import java.sql.Connection;
@@ -51,7 +52,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
 //        DbMain.setDisplayInterface(this);
     }
 
-    public PhysicalItem absSlotFromTrayAndOffset(PhysicalItem tray, PhysicalItem offsetItem) {
+    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         return visionToDBJPanel.absSlotFromTrayAndOffset(tray, offsetItem);
     }
 
@@ -70,11 +71,11 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return this.visionToDBJPanel.startNewItemsImageSave(f);
     }
 
-    public List<PhysicalItem> getSlotOffsets(String name) {
+    public List<Slot> getSlotOffsets(String name) {
         return this.visionToDBJPanel.getSlotOffsets(name);
     }
 
-    public List<PhysicalItem> getSlots(PhysicalItem item) {
+    public List<Slot> getSlots(Tray item) {
         return this.visionToDBJPanel.getSlots(item);
     }
 

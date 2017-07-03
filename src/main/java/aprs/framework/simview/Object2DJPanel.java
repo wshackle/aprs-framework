@@ -24,6 +24,7 @@ package aprs.framework.simview;
 
 import aprs.framework.AprsJFrame;
 import aprs.framework.database.PhysicalItem;
+import aprs.framework.database.Slot;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
 import crcl.base.PointType;
 import crcl.base.PoseType;
@@ -51,7 +52,9 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import rcs.posemath.PmCartesian;
-import rcs.posemath.Posemath;
+import static aprs.framework.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import java.util.Collection;
+import java.util.stream.StreamSupport;
 
 /**
  *
@@ -80,21 +83,21 @@ public class Object2DJPanel extends JPanel {
         this.repaint();
     }
     public static final List<PhysicalItem> EXAMPLES_ITEMS_LIST = Arrays.asList(// PhysicalItem(String name, double rotation, double x, double y, double score, String type)
-            new PhysicalItem("sku_part_medium_gear", 0.10, 700.45, -140.82, 0.99, "P"),
-            new PhysicalItem("sku_part_medium_gear", 0.79, 528.60, -122.51, 0.95, "P"),
-            new PhysicalItem("sku_part_medium_gear", -0.60, 529.98, 213.96, 0.94, "P"),
-            new PhysicalItem("sku_part_medium_gear", -0.02, 527.61, -205.06, 0.91, "P"),
-            new PhysicalItem("sku_part_medium_gear", -0.75, 216.66, 128.56, 0.91, "P"),
-            new PhysicalItem("sku_part_small_gear", 0.53, 509.01, -11.83, 0.95, "P"),
-            new PhysicalItem("sku_part_small_gear", -0.23, 640.49, 32.88, 0.89, "P"),
-            new PhysicalItem("sku_part_small_gear", -0.23, 640.49, 32.88, 0.89, "P"),
-            new PhysicalItem("sku_part_small_gear", -0.07, 310.04, -102.02, 0.65, "P"),
-            new PhysicalItem("sku_part_small_gear", -0.31, 321.38, 177.59, 0.61, "P"),
-            new PhysicalItem("sku_kit_s2l2_vessel", -0.02, 295.65, -296.90, 0.80, "KT"),
-            new PhysicalItem("sku_kit_s2l2_vessel", 0.01, 310.90, -20.87, 0.73, "KT"),
-            new PhysicalItem("sku_small_gear_vessel", -0.03, 609.22, 5.09, 0.95, "PT"),
-            new PhysicalItem("sku_medium_gear_vessel", 0.00, 569.17, -161.29, 0.67, "PT"),
-            new PhysicalItem("sku_kit_m2l1_vessel", -1.57, 579.86, 170.14, 0.96, "KT")
+            newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", 0.10, 700.45, -140.82, 0.99, "P"),
+            newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", 0.79, 528.60, -122.51, 0.95, "P"),
+            newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", -0.60, 529.98, 213.96, 0.94, "P"),
+            newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", -0.02, 527.61, -205.06, 0.91, "P"),
+            newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", -0.75, 216.66, 128.56, 0.91, "P"),
+            newPhysicalItemNameRotXYScoreType("sku_part_small_gear", 0.53, 509.01, -11.83, 0.95, "P"),
+            newPhysicalItemNameRotXYScoreType("sku_part_small_gear", -0.23, 640.49, 32.88, 0.89, "P"),
+            newPhysicalItemNameRotXYScoreType("sku_part_small_gear", -0.23, 640.49, 32.88, 0.89, "P"),
+            newPhysicalItemNameRotXYScoreType("sku_part_small_gear", -0.07, 310.04, -102.02, 0.65, "P"),
+            newPhysicalItemNameRotXYScoreType("sku_part_small_gear", -0.31, 321.38, 177.59, 0.61, "P"),
+            newPhysicalItemNameRotXYScoreType("sku_kit_s2l2_vessel", -0.02, 295.65, -296.90, 0.80, "KT"),
+            newPhysicalItemNameRotXYScoreType("sku_kit_s2l2_vessel", 0.01, 310.90, -20.87, 0.73, "KT"),
+            newPhysicalItemNameRotXYScoreType("sku_small_gear_vessel", -0.03, 609.22, 5.09, 0.95, "PT"),
+            newPhysicalItemNameRotXYScoreType("sku_medium_gear_vessel", 0.00, 569.17, -161.29, 0.67, "PT"),
+            newPhysicalItemNameRotXYScoreType("sku_kit_m2l1_vessel", -1.57, 579.86, 170.14, 0.96, "KT")
     );
     private volatile List<PhysicalItem> items = EXAMPLES_ITEMS_LIST;
 
@@ -244,7 +247,7 @@ public class Object2DJPanel extends JPanel {
         }
         takeSnapshot(f, pose, label, w, h);
     }
-    
+
     public void takeSnapshot(File f, PointType point, String label) throws IOException {
         final int w = this.getWidth();
         final int h = this.getHeight();
@@ -254,7 +257,7 @@ public class Object2DJPanel extends JPanel {
         }
         takeSnapshot(f, point, label, w, h);
     }
-    
+
     public void takeSnapshot(File f, PmCartesian point, String label) throws IOException {
         final int w = this.getWidth();
         final int h = this.getHeight();
@@ -266,16 +269,16 @@ public class Object2DJPanel extends JPanel {
     }
 
     public void takeSnapshot(File f, PoseType pose, String label, final int w, final int h) throws IOException {
-        if(null != pose) {
+        if (null != pose) {
             takeSnapshot(f, pose.getPoint(), label, w, h);
         } else {
             takeSnapshot(f, (PmCartesian) null, (String) null, w, h);
-            
+
         }
     }
-    
+
     public void takeSnapshot(File f, PointType point, String label, final int w, final int h) throws IOException {
-        if(null != point) {
+        if (null != point) {
             takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label, w, h);
         } else {
             takeSnapshot(f, (PmCartesian) null, (String) null, w, h);
@@ -357,7 +360,7 @@ public class Object2DJPanel extends JPanel {
         return itemsToPaint;
     }
 
-    public void takeSnapshot(File f, List<PhysicalItem> itemsToPaint) throws IOException {
+    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
         final int w = this.getWidth();
         final int h = this.getHeight();
         if (w < 1 || h < 1) {
@@ -367,7 +370,7 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, itemsToPaint, w, h);
     }
 
-    public void takeSnapshot(File f, List<PhysicalItem> itemsToPaint, final int w, final int h) throws IOException {
+    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, final int w, final int h) throws IOException {
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         int pindex = f.getName().lastIndexOf('.');
         String type = "JPEG";
@@ -390,14 +393,11 @@ public class Object2DJPanel extends JPanel {
         System.out.println("Saved snapshot to " + f.getCanonicalPath());
     }
 
-    public void paintWithAutoScale(List<PhysicalItem> itemsToPaint, PhysicalItem selectedItem, Graphics2D g2d) {
+    public void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, PhysicalItem selectedItem, Graphics2D g2d) {
         double minX = Double.POSITIVE_INFINITY;
         double maxX = Double.NEGATIVE_INFINITY;
         double minY = Double.POSITIVE_INFINITY;
         double maxY = Double.NEGATIVE_INFINITY;
-        if (itemsToPaint.isEmpty()) {
-            throw new IllegalArgumentException("itemsToPaint is empty.");
-        }
         for (PhysicalItem item : itemsToPaint) {
             if (minX > item.x) {
                 minX = item.x;
@@ -874,11 +874,11 @@ public class Object2DJPanel extends JPanel {
     }
 
     public List<PhysicalItem> computeSlotPositions(PhysicalItem item) {
-        List<PhysicalItem> offsets = aprsJFrame.getSlotOffsets(item.getName());
+        List<Slot> offsets = aprsJFrame.getSlotOffsets(item.getName());
         List<PhysicalItem> slotList = new ArrayList<>();
         if (null != offsets) {
             for (PhysicalItem offset : offsets) {
-                slotList.add(new PhysicalItem("slot_" + offset.getPrpName(), 0.0,
+                slotList.add(newPhysicalItemNameRotXYScoreType("slot_" + offset.getPrpName(), 0.0,
                         item.x + (offset.x * Math.cos(item.getRotation()) + offset.y * Math.sin(item.getRotation())),
                         item.y + (-offset.x * Math.sin(item.getRotation()) + offset.y * Math.cos(item.getRotation())),
                         item.getScore(), "S"));
@@ -888,7 +888,7 @@ public class Object2DJPanel extends JPanel {
     }
 
     public void paintItems(Graphics2D g2d,
-            List<PhysicalItem> itemsToPaint,
+            Collection<? extends PhysicalItem> itemsToPaint,
             PhysicalItem selectedItem,
             double minX,
             double minY,
@@ -896,9 +896,10 @@ public class Object2DJPanel extends JPanel {
             double maxY) {
         origTransform = g2d.getTransform();
 
-        int maxNameLength = itemsToPaint.stream()
-                .mapToInt((PhysicalItem item) -> item.getName().length())
-                .max().orElse(1);
+        int maxNameLength
+                = StreamSupport.stream(itemsToPaint.spliterator(), false)
+                        .mapToInt((PhysicalItem item) -> item.getName().length())
+                        .max().orElse(1);
 
         if (!Double.isFinite(maxX) || !Double.isFinite(minX) || !Double.isFinite(minY) || !Double.isFinite(maxY)) {
             throw new IllegalArgumentException("Limits must be finite: (" + minX + "," + minY + "," + maxX + "," + maxY + ")");
@@ -977,23 +978,22 @@ public class Object2DJPanel extends JPanel {
         }
         g2d.drawString(String.format("MinX,MinY = (%.2f,%.2f), MaxX,MaxY= (%.2f,%.2f), scale=%.2f", minX, minY, maxX, maxY, scale), 10, this.getSize().height - 10);
         //        System.out.println("scale = " + scale);
-        List<PhysicalItem> displayList = itemsToPaint;
+        Collection<? extends PhysicalItem> displayItems = itemsToPaint;
         if (useSeparateNames) {
-            displayList = new ArrayList<>();
-            displayList.addAll(itemsToPaint);
+            displayItems = new ArrayList<>(itemsToPaint);
             switch (displayAxis) {
                 case POS_X_POS_Y:
-                    Collections.sort(displayList, Comparator.comparing((PhysicalItem item) -> item.y));
+                    Collections.sort((List) displayItems, Comparator.comparing((PhysicalItem item) -> item.y));
                     break;
                 case NEG_X_NEG_Y:
-                    Collections.sort(displayList, Comparator.comparing((PhysicalItem item) -> -item.y));
+                    Collections.sort((List) displayItems, Comparator.comparing((PhysicalItem item) -> -item.y));
                     break;
 
                 case POS_Y_NEG_X:
-                    Collections.sort(displayList, Comparator.comparing((PhysicalItem item) -> item.x));
+                    Collections.sort((List) displayItems, Comparator.comparing((PhysicalItem item) -> item.x));
                     break;
                 case NEG_Y_POS_X:
-                    Collections.sort(displayList, Comparator.comparing((PhysicalItem item) -> -item.x));
+                    Collections.sort((List) displayItems, Comparator.comparing((PhysicalItem item) -> -item.x));
                     break;
             }
         }
@@ -1012,11 +1012,12 @@ public class Object2DJPanel extends JPanel {
             g2d.setFont(newFont);
         }
         float newFontSize = g2d.getFont().getSize2D();
-        for (int i = 0; i < displayList.size(); i++) {
-            PhysicalItem item = displayList.get(i);
+        int i = 0;
+        for (PhysicalItem item : displayItems) {
             if (null == item) {
                 continue;
             }
+            ++i;
             if (item.getName() == null || item.getName().length() < 1) {
                 continue;
             }
@@ -1066,8 +1067,7 @@ public class Object2DJPanel extends JPanel {
         }
         g2d.setFont(origFont);
 
-        for (int i = 0; i < displayList.size(); i++) {
-            PhysicalItem item = displayList.get(i);
+        for (PhysicalItem item : displayItems) {
             if (null == item) {
                 continue;
             }
@@ -1089,8 +1089,9 @@ public class Object2DJPanel extends JPanel {
             g2d.fill(item.getDisplayRect());
             g2d.setTransform(origTransform);
         }
-        for (int i = 0; i < displayList.size(); i++) {
-            PhysicalItem item = displayList.get(i);
+        i = 0;
+        for (PhysicalItem item : displayItems) {
+            ++i;
             if (null == item) {
                 continue;
             }
@@ -1130,7 +1131,7 @@ public class Object2DJPanel extends JPanel {
             g2d.draw(item.getDisplayRect());
             try {
                 if (null != aprsJFrame && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
-                    List<PhysicalItem> offsets = aprsJFrame.getSlotOffsets(item.getName());
+                    List<Slot> offsets = aprsJFrame.getSlotOffsets(item.getName());
                     if (null != offsets) {
                         for (PhysicalItem offset : offsets) {
 //                            if (viewRotations) {

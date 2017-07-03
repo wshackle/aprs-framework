@@ -105,12 +105,16 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.prpName = prpName;
     }
 
-    public PhysicalItem(String name) {
+    protected PhysicalItem(String name) {
         this.name = name;
         this.origName = name;
     }
 
-    public PhysicalItem(String name, double rotation, double x, double y) {
+    public static PhysicalItem newPhysicalItemNameRotXY(String name, double rotation, double x, double y) {
+        return new PhysicalItem(name, rotation, x, y);
+    }
+    
+    protected PhysicalItem(String name, double rotation, double x, double y) {
         this(name);
         this.rotation = rotation;
         this.vxi = Math.cos(rotation);
@@ -139,14 +143,42 @@ public class PhysicalItem extends PM_CARTESIAN {
 //        }
     }
 
-    public PhysicalItem(String name, double rotation, double x, double y, double score, String type) {
+    public static PhysicalItem newPhysicalItemNameRotXYScoreType(String name, double rotation, double x, double y, double score, String type) {
+        switch(type) {
+            case "KT":
+            case "PT": 
+                return new Tray(name, rotation, x, y, score, type);
+                
+            case "S":
+            case "ES":
+                return new Slot(name, rotation, x, y, score, type);
+                
+            case "P":
+                return new PhysicalItem(name, rotation, x, y, score, type);
+                
+            default:
+                throw new IllegalArgumentException("type ="+type);
+//                return new PhysicalItem(name, rotation, x, y, score, type);
+        }
+    }
+    
+    protected PhysicalItem(String name, double rotation, double x, double y, double score, String type) {
         this(name, rotation, x, y);
         this.score = score;
         this.type = type;
     }
 
-    public PhysicalItem(String name, PoseType pose, int visioncycle) {
+    public static PhysicalItem newPhysicalItemNamePoseVisionCycle(String name, PoseType pose, int visioncycle) {
+        return new PhysicalItem(name, pose, visioncycle);
+    }
+    
+    protected PhysicalItem(String name, PoseType pose, int visioncycle) {
         this(name);
+        setFromCrclPoseType(pose);
+        this.visioncycle = visioncycle;
+    }
+
+    public final void setFromCrclPoseType(PoseType pose) {
         if (null != pose) {
             VectorType xAxis = pose.getXAxis();
             if (null != xAxis) {
@@ -168,7 +200,6 @@ public class PhysicalItem extends PM_CARTESIAN {
                 this.z = pt.getZ();
             }
         }
-        this.visioncycle = visioncycle;
     }
 
     public double dist(PhysicalItem other) {
@@ -176,78 +207,12 @@ public class PhysicalItem extends PM_CARTESIAN {
     }
 
     
-        private List<PhysicalItem> absSlotList = null;
-
-    /**
-     * Get the value of absSlotList
-     *
-     * @return the value of absSlotList
-     */
-    public List<PhysicalItem> getAbsSlotList() {
-        return absSlotList;
-    }
-
-    /**
-     * Set the value of absSlotList
-     *
-     * @param absSlotList new value of absSlotList
-     */
-    public void setAbsSlotList(List<PhysicalItem> absSlotList) {
-        this.absSlotList = absSlotList;
-    }
+        
 
     public double dist(double otherx, double othery) {
         double dx = x - otherx;
         double dy = y - othery;
         return Math.sqrt(dx * dx + dy * dy);
-    }
-    
-    public double distFromAbsSlot(PmCartesian cart) {
-        if(null == absSlotList) {
-            return java.lang.Double.POSITIVE_INFINITY;
-        }
-        return absSlotList.stream()
-                .mapToDouble(cart::distFromXY)
-                .min()
-                .orElse(java.lang.Double.POSITIVE_INFINITY);
-    }
-    
-    public PhysicalItem closestAbsSlot(PmCartesian cart) {
-        if(null == absSlotList) {
-            return null;
-        }
-        return absSlotList.stream()
-                .min(Comparator.comparing(cart::distFromXY))
-                .orElse(null);
-    }
-    
-    
-        private double diameter;
-
-    /**
-     * Get the value of diameter
-     *
-     * @return the value of diameter
-     */
-    public double getDiameter() {
-        return diameter;
-    }
-
-    /**
-     * Set the value of diameter
-     *
-     * @param diameter new value of diameter
-     */
-    public void setDiameter(double diameter) {
-        this.diameter = diameter;
-    }
-
-    public boolean insideAbsSlot(PmCartesian cart, double threshold) {
-        PhysicalItem slot = closestAbsSlot(cart);
-        if(null != slot) {
-            return slot.distFrom(cart) < (slot.getDiameter()/2.0+ threshold);
-        }
-        return false;
     }
     
     public PoseType toCrclPose() {
@@ -527,4 +492,9 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.newSlotOffsetResultMap = newSlotOffsetResultMap;
     }
 
+    
+    @Override
+    public PhysicalItem clone() {
+        return (PhysicalItem) super.clone();
+    }
 }

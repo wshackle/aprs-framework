@@ -1722,7 +1722,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setCommandId(initCmd);
         program.setInitCanon(initCmd);
         EndCanonType endCmd = new EndCanonType();
-        setCommandId(endCmd);
+//        setCommandId(endCmd);
         program.setEndCanon(endCmd);
         return program;
     }

@@ -20,7 +20,7 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.pddl.executor;
+package aprs.framework.database;
 
 import crcl.base.PoseType;
 
@@ -28,7 +28,7 @@ import crcl.base.PoseType;
  *
  * @author zeid
  */
-public class Slot {
+public class Slot  extends PhysicalItem {
 
     private int ID;
     private String SlotName;
@@ -39,11 +39,32 @@ public class Slot {
     private double Y_OFFSET;
     private Boolean SlotOccupied;
     private PoseType SlotPose;
+    private double diameter;
 
     public Slot(String SlotName) {
+        super(SlotName);
         this.SlotName = SlotName;
     }
 
+    public Slot(String name, double rotation, double x, double y) {
+        super(name, rotation, x, y);
+        X_OFFSET = x;
+        Y_OFFSET = y;
+    }
+
+    public Slot(String name, double rotation, double x, double y, double score, String type) {
+        super(name, rotation, x, y, score, type);
+        X_OFFSET = x;
+        Y_OFFSET = y;
+    }
+
+    public Slot(String name, PoseType pose, int visioncycle) {
+        super(name, pose, visioncycle);
+        X_OFFSET = x;
+        Y_OFFSET = y;
+    }
+
+    
     public PoseType getSlotPose() {
         return this.SlotPose;
     }
@@ -115,4 +136,18 @@ public class Slot {
     public void setSlotOccupied(Boolean SlotOccupied) {
         this.SlotOccupied = SlotOccupied;
     }
+
+    public double getDiameter() {
+        return diameter;
+    }
+
+    public void setDiameter(double diameter) {
+        this.diameter = diameter;
+    }
+    
+    @Override
+    public Slot clone() {
+        return (Slot) super.clone();
+    }
+    
 }

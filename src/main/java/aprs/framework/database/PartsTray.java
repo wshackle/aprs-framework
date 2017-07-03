@@ -20,7 +20,7 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework.pddl.executor;
+package aprs.framework.database;
 
 import crcl.base.PoseType;
 import java.util.List;
@@ -29,7 +29,7 @@ import java.util.List;
  *
  * @author zeid
  */
-public class PartsTray {
+public class PartsTray extends Tray {
 
     private int NodeID;
     private String PartsTraySku;
@@ -38,39 +38,55 @@ public class PartsTray {
     private String ExternalShapeModelFormatName;
     private String PartsTrayDesign;
     private Boolean PartsTrayComplete;
-    private double Rotation;
+//    private double Rotation;  now in super class PhysicalItem
     private List<Slot> SlotList;
-    private double x;
-    private double y;
+//    private double x; now in super class PhysicalItem
+//    private double y; now in super class PhysicalItem
     private PoseType PartsTrayPose;
 
     public PartsTray(String PartsTrayName) {
+        super(PartsTrayName);
         this.PartsTrayName = PartsTrayName;
     }
 
-    public double getX() {
-        return x;
+    public PartsTray(String name, double rotation, double x, double y) {
+        super(name, rotation, x, y);
     }
 
-    public void setX(double x) {
-        this.x = x;
+    public PartsTray(String name, double rotation, double x, double y, double score, String type) {
+        super(name, rotation, x, y, score, type);
     }
 
-    public double getY() {
-        return y;
+    public PartsTray(String name, PoseType pose, int visioncycle) {
+        super(name, pose, visioncycle);
     }
-
-    public void setY(double y) {
-        this.y = y;
-    }
-
-    public double getRotation() {
-        return Rotation;
-    }
-
-    public void setRotation(double Rotation) {
-        this.Rotation = Rotation;
-    }
+    
+    
+    
+//    These are now inherited from super class PhysicalItem
+//    public double getX() {
+//        return x;
+//    }
+//
+//    public void setX(double x) {
+//        this.x = x;
+//    }
+//
+//    public double getY() {
+//        return y;
+//    }
+//
+//    public void setY(double y) {
+//        this.y = y;
+//    }
+//
+//    public double getRotation() {
+//        return Rotation;
+//    }
+//
+//    public void setRotation(double Rotation) {
+//        this.Rotation = Rotation;
+//    }
 
     public String getPartsTrayName() {
         return PartsTrayName;
@@ -138,5 +154,10 @@ public class PartsTray {
 
     public void setpartsTrayPose(PoseType PartsTrayPose) {
         this.PartsTrayPose = PartsTrayPose;
+    }
+    
+    @Override
+    public PartsTray clone() {
+        return  (PartsTray) super.clone();
     }
 }

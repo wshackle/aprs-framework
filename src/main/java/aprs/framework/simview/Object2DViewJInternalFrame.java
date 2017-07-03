@@ -28,8 +28,8 @@ import crcl.base.PointType;
 import crcl.base.PoseType;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
 import rcs.posemath.PmCartesian;
 
 /**
@@ -152,7 +152,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
     
     @Override
-    public void takeSnapshot(File f, List<PhysicalItem> itemsToPaint) throws IOException {
+    public void takeSnapshot(File f,Collection<? extends PhysicalItem>  itemsToPaint) throws IOException {
         this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint);
     }
 

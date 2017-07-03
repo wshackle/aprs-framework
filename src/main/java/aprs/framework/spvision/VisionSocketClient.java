@@ -226,49 +226,57 @@ public class VisionSocketClient implements AutoCloseable {
             int index = 0;
             long timestamp = System.currentTimeMillis();
             for (i = 0; i < fa.length - 5; i += 6) {
-                PhysicalItem ci = new PhysicalItem(fa[i]);
-                ci.setTimestamp(timestamp);
-                if (fa[i].length() < 1) {
-                    continue;
-                }
-                ci.setName(fa[i]);
-                if (ci.getName() == null || ci.getName().length() < 1 || "*".equals(ci.getName())) {
+//                PhysicalItem ci = new PhysicalItem(fa[i]);
+                String name = fa[i];
+                if("*".equals(name)) {
                     if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Ignoring item with name=" + ci.getName() + " in field " + (i) + " in " + line + "\n");
+                        displayInterface.addLogMessage("Ignoring item with name=" +name + " in field " + (i) + " in " + line + "\n");
                     }
                     continue;
                 }
-                if (fa[i + 1].length() < 1) {
+                boolean missingVal = false;
+                for (int j = 0; j < 6; j++) {
+                    if (fa[i + j].length() < 1) {
+                        if (null != displayInterface && displayInterface.isDebug()) {
+                            displayInterface.addLogMessage("Ignoring item with empty field  at position =" + (i + j) + " in " + line + "\n");
+                        }
+                        missingVal = true;
+                        break;
+                    }
+                }
+                if (missingVal) {
                     continue;
                 }
-                ci.setRotation(Double.parseDouble(fa[i + 1]));
-                if (Double.isInfinite(ci.getRotation()) || Double.isNaN(ci.getRotation())) {
+                double rot = Double.parseDouble(fa[i + 1]);
+                if (!Double.isFinite(rot)) {
                     if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Ignoring item with rotation=" + ci.getRotation() + " in field " + (i + 1) + " in " + line + "\n");
+                        displayInterface.addLogMessage("Ignoring item with invalid rotation  at position =" + (i + 1) + " of " +(fa[i+1])+"in " + line + "\n");
                     }
                     continue;
                 }
-                if (fa[i + 2].length() < 1) {
-                    continue;
-                }
-                ci.x = Double.parseDouble(fa[i + 2]);
-                if (Double.isInfinite(ci.x) || Double.isNaN(ci.x)) {
+                double x = Double.parseDouble(fa[i + 2]);
+                if (!Double.isFinite(x)) {
                     if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Ignoring item with x=" + ci.x + " in field " + (i + 2) + " in " + line + "\n");
+                        displayInterface.addLogMessage("Ignoring item with invalid x  at position =" + (i + 2) + " of " +(fa[i+2])+"in " + line + "\n");
                     }
                     continue;
                 }
-                if (fa[i + 3].length() < 1) {
-                    continue;
-                }
-                ci.y = Double.parseDouble(fa[i + 3]);
-                if (Double.isInfinite(ci.y) || Double.isNaN(ci.y)) {
+                double y = Double.parseDouble(fa[i + 3]);
+                if (!Double.isFinite(y)) {
                     if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Ignoring item with y=" + ci.y + " in field " + (i + 3) + " in " + line + "\n");
+                        displayInterface.addLogMessage("Ignoring item with invalid y  at position =" + (i + 3) + " of " +(fa[i+3])+"in " + line + "\n");
                     }
                     continue;
                 }
-
+                double score = Double.parseDouble(fa[i + 4]);
+                if (!Double.isFinite(score)) {
+                    if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage("Ignoring item with invalid score  at position =" + (i + 4) + " of " +(fa[i+4])+"in " + line + "\n");
+                    }
+                    continue;
+                }
+                String type = fa[i + 5];
+                PhysicalItem ci = PhysicalItem.newPhysicalItemNameRotXYScoreType(name, rot, x, y, score, type);
                 ci.setVisioncycle(cur_visioncycle);
                 //System.out.println("VisionSocketClient visioncycle-----> "+visioncycle);
                 if (fa[i + 4].length() > 0) {
@@ -322,7 +330,7 @@ public class VisionSocketClient implements AutoCloseable {
                     System.err.println("ignoring vision list that decreased from " + prevVisionListSize + " to " + visionList.size() + " items");
                     System.err.println("lineCount=" + lineCount);
                     System.err.println("ignoreCount=" + ignoreCount);
-                } else if(ignoreCount == 100) {
+                } else if (ignoreCount == 100) {
                     System.err.println("No more messages about ignored vision lists will be printed");
                 }
                 ignoreCount++;
@@ -337,7 +345,7 @@ public class VisionSocketClient implements AutoCloseable {
                 long time_diff = t1 - t0;
                 System.out.println("line = " + line);
                 System.out.println("visionList = " + visionList);
-                System.out.println("lineCount ="+lineCount);
+                System.out.println("lineCount =" + lineCount);
                 System.out.printf("parseVisionLine time_diff = %.3f\n", (time_diff * 1e-9));
             }
         } catch (Exception ex) {

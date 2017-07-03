@@ -27,6 +27,8 @@ import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
 import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.DbSetupBuilder;
+import aprs.framework.database.Slot;
+import aprs.framework.database.Tray;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
 import aprs.framework.spvision.VisionSocketClient;
 import aprs.framework.spvision.VisionSocketServer;
@@ -72,6 +74,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.xml.bind.JAXBException;
 import rcs.posemath.PmCartesian;
+import static aprs.framework.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import java.util.Collection;
 
 /**
  *
@@ -263,10 +267,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 double x = (double) jTableItems.getValueAt(row, 2);
                 double y = (double) jTableItems.getValueAt(row, 3);
                 double rot = Math.toRadians((double) jTableItems.getValueAt(row, 4));
-                PhysicalItem trayItem = new PhysicalItem(name, rot, x, y);
-                List<PhysicalItem> l = aprsJFrame.getSlotOffsets(name);
-                for (PhysicalItem s : l) {
-                    PhysicalItem absItem = aprsJFrame.absSlotFromTrayAndOffset(trayItem, s);
+                Tray trayItem = new Tray(name, rot, x, y);
+                List<Slot> l = aprsJFrame.getSlotOffsets(name);
+                for (Slot s : l) {
+                    Slot absItem = aprsJFrame.absSlotFromTrayAndOffset(trayItem, s);
                         
 //                    double sx = x + s.x * Math.cos(rot) + s.y * Math.sin(rot);
 //                    double sy = y - s.x * Math.sin(rot) + s.y * Math.cos(rot);
@@ -373,7 +377,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             }
                             String name = Objects.toString(jTableItems.getValueAt(i, 1));
                             if (item == null || !item.getName().equals(name)) {
-                                item = new PhysicalItem(Objects.toString(jTableItems.getValueAt(i, 1)));
+                                double x = Double.parseDouble(jTableItems.getValueAt(i, 2).toString());
+                                double y = Double.parseDouble(jTableItems.getValueAt(i, 3).toString());
+                                double rotation =Math.toRadians(Double.parseDouble(jTableItems.getValueAt(i, 4).toString()));
+                                String type = Objects.toString(jTableItems.getValueAt(i, 5));
+                                double score = Double.parseDouble(jTableItems.getValueAt(i, 6).toString());
+                                item = newPhysicalItemNameRotXYScoreType(name, rotation, x, y, score, type);
                             }
                             item.x = Double.parseDouble(jTableItems.getValueAt(i, 2).toString());
                             item.y = Double.parseDouble(jTableItems.getValueAt(i, 3).toString());
@@ -424,8 +433,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             double sx = (double) jTableTraySlots.getValueAt(row, 2);
                             double sy = (double) jTableTraySlots.getValueAt(row, 3);
                             String name = (String) jTableTraySlots.getValueAt(row, 0);
-                            PhysicalItem newPart = new PhysicalItem(name, 0.0, sx, sy);
-                            newPart.setType("P");
+                            PhysicalItem newPart = newPhysicalItemNameRotXYScoreType(name, 0.0, sx, sy, 100.0, "P");
                             l.add(newPart);
                         } else {
                             double sx = (double) jTableTraySlots.getValueAt(row, 2);
@@ -1351,7 +1359,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (!jCheckBoxAddPosNoise.isSelected()) {
             return in;
         }
-        PhysicalItem out = new PhysicalItem(in.getName(),
+        PhysicalItem out = newPhysicalItemNameRotXYScoreType(in.getName(),
                 in.getRotation() + posRandom.nextGaussian() * Math.toRadians(rotNoise),
                 in.x + posRandom.nextGaussian() * posNoise,
                 in.y + posRandom.nextGaussian() * posNoise, in.getScore(), in.getType());
@@ -1383,9 +1391,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void jButtonAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddActionPerformed
         List<PhysicalItem> l = new ArrayList<>();
         l.addAll(getItems());
-        PhysicalItem item = new PhysicalItem("item_" + (l.size() + 1), 0,
+        PhysicalItem item = newPhysicalItemNameRotXYScoreType("item_" + (l.size() + 1), 0,
                 (object2DJPanel1.getMaxX() + object2DJPanel1.getMinX()) / 2.0,
-                (object2DJPanel1.getMaxY() + object2DJPanel1.getMinY()) / 2.0
+                (object2DJPanel1.getMaxY() + object2DJPanel1.getMinY()) / 2.0,
+                100.0,
+                "P"
         );
         l.add(item);
         setItems(l);
@@ -1579,7 +1589,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     }
 
-    private void saveFile(File f, List<PhysicalItem> items) throws IOException {
+    private void saveFile(File f, Collection<? extends PhysicalItem> items) throws IOException {
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             pw.println("name,rotation,x,y,score,type");
@@ -1839,7 +1849,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     List<PhysicalItem> inItems = getItems();
                     List<PhysicalItem> newItems = new ArrayList<>();
                     for (PhysicalItem item : inItems) {
-                        PhysicalItem newItem = new PhysicalItem(item.getName(), item.getRotation(), item.x - x, item.y - y, item.getScore(), item.getType());
+                        PhysicalItem newItem = newPhysicalItemNameRotXYScoreType(item.getName(), item.getRotation(), item.x - x, item.y - y, item.getScore(), item.getType());
                         newItem.setVisioncycle(item.getVisioncycle());
                         newItems.add(newItem);
                     }
@@ -2258,7 +2268,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile boolean lastIsHoldingObjectExpected = false;
     private volatile int captured_item_index = -1;
 
-    public void takeSnapshot(File f, List<PhysicalItem> itemsToPaint) throws IOException {
+    public void takeSnapshot(File f, Collection<? extends PhysicalItem>  itemsToPaint) throws IOException {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
         File csvDir = new File(f.getParentFile(), "csv");
         csvDir.mkdirs();

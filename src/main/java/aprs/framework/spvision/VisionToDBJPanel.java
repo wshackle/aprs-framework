@@ -25,7 +25,6 @@ package aprs.framework.spvision;
 import aprs.framework.AprsJFrame;
 import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
-import static aprs.framework.Utils.runOnDispatchThread;
 import aprs.framework.database.AcquireEnum;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
@@ -36,7 +35,7 @@ import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.DetectedItemJPanel;
 import aprs.framework.database.PoseQueryElem;
 import aprs.framework.database.SocketLineReader;
-import aprs.framework.pddl.executor.PartsTray;
+import aprs.framework.database.PartsTray;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import crcl.ui.misc.MultiLineStringJPanel;
@@ -78,13 +77,12 @@ import java.io.BufferedWriter;
 import javax.swing.JTable;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import static aprs.framework.Utils.runOnDispatchThread;
+import aprs.framework.database.Slot;
+import aprs.framework.database.Tray;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
@@ -105,7 +103,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return dpu.getPartsTrayList();
     }
     
-    public PhysicalItem absSlotFromTrayAndOffset(PhysicalItem tray, PhysicalItem offsetItem) {
+    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         assert (null != dpu) :
                 ("dpu == null");
 
@@ -1301,44 +1299,69 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private Thread startVisionThread = null;
     private List<PhysicalItem> transformedVisionList = null;
 
-    public static List<PhysicalItem> transformList(List<PhysicalItem> in, PoseType transform) {
+     public  static <T extends PhysicalItem> List<T> transformList(List<T> in, PoseType transform) {
         if(null == in) {
             return null;
         }
-        List<PhysicalItem> out = new ArrayList<>();
+        List<T> out = new ArrayList<>();
         for (int i = 0; i < in.size(); i++) {
-            PhysicalItem inItem = in.get(i);
+            T inItem = in.get(i);
             PoseType newPose = CRCLPosemath.multiply(transform, inItem.toCrclPose());
-            PhysicalItem outItem = new PhysicalItem(inItem.getName(), newPose, inItem.getVisioncycle());
-            outItem.setRepeats(inItem.getRepeats());
-            outItem.setIndex(inItem.getIndex());
-            outItem.setFullName(inItem.getFullName());
-            outItem.setScore(inItem.getScore());
-            outItem.setType(inItem.getType());
-            outItem.setRotation(inItem.getRotation());
-            outItem.setSlotForSkuName(inItem.getSlotForSkuName());
-            outItem.setEmptySlotsCount(inItem.getEmptySlotsCount());
-            outItem.setTray(inItem.getTray());
+            T outItem =  (T) inItem.clone();
+            outItem.setFromCrclPoseType(newPose);
             outItem.setEmptySlotsList(transformList(inItem.getEmptySlotsList(), transform));
-            outItem.setTotalSlotsCount(inItem.getTotalSlotsCount());
-            outItem.setTimestamp(inItem.getTimestamp());
-            outItem.setMaxSlotDist(inItem.getMaxSlotDist());
-            outItem.setAbsSlotList(transformList(inItem.getAbsSlotList(),transform));
-            outItem.setDiameter(inItem.getDiameter());
+            
+//            if(inItem instanceof Slot) {
+//                outItem = (T) new Slot(inItem.getName(), newPose, inItem.getVisioncycle());
+//            } else if(inItem instanceof PartsTray) {
+//                outItem = (T) new PartsTray(inItem.getName(), newPose, inItem.getVisioncycle());
+//            } else if(inItem instanceof Tray) {
+//                outItem = (T) new Tray(inItem.getName(), newPose, inItem.getVisioncycle());
+//            } else {
+//                outItem = (T) new PhysicalItem(inItem.getName(), newPose, inItem.getVisioncycle());
+//            }
+//            outItem.setName(inItem.getName());
+//            outItem.setX(inItem.getX());
+//            outItem.setY(inItem.getY());
+//            outItem.setVisioncycle(inItem.getVisioncycle());
+//            outItem.setRepeats(inItem.getRepeats());
+//            outItem.setIndex(inItem.getIndex());
+//            outItem.setFullName(inItem.getFullName());
+//            outItem.setScore(inItem.getScore());
+//            outItem.setType(inItem.getType());
+//            outItem.setRotation(inItem.getRotation());
+//            outItem.setSlotForSkuName(inItem.getSlotForSkuName());
+//            outItem.setEmptySlotsCount(inItem.getEmptySlotsCount());
+//            outItem.setTray(inItem.getTray());
+//            outItem.setTotalSlotsCount(inItem.getTotalSlotsCount());
+//            outItem.setTimestamp(inItem.getTimestamp());
+//            outItem.setMaxSlotDist(inItem.getMaxSlotDist());
+            if(inItem instanceof Tray) {
+                Tray inTray = (Tray) inItem;
+                Tray outTray = (Tray) outItem;
+                outTray.setAbsSlotList(transformList(inTray.getAbsSlotList(),transform));
+            }
+            if(inItem instanceof Slot) {
+                Slot inSlot = (Slot) inItem;
+                Slot outSlot = (Slot) outItem;
+                outSlot.setDiameter(inSlot.getDiameter());
+                outSlot.setX_OFFSET(inSlot.getX_OFFSET());
+                outSlot.setY_OFFSET(inSlot.getY_OFFSET());
+            }
             out.add(outItem);
         }
         return out;
     }
     private volatile boolean addRepeatCountsToDatabaseNames = false;
 
-    public List<PhysicalItem> getSlotOffsets(String name) {
+    public List<Slot> getSlotOffsets(String name) {
         if (null == dpu) {
             return null;
         }
         return dpu.getSlotOffsets(name);
     }
 
-    public List<PhysicalItem> getSlots(PhysicalItem item) {
+    public List<Slot> getSlots(Tray item) {
         if (null == dpu) {
             return null;
         }
@@ -2024,7 +2047,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             List<PhysicalItem> list = new ArrayList<>();
             DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
             for (int i = 0; i < tm.getRowCount(); i++) {
-                list.add(new PhysicalItem(tm.getValueAt(i, 0).toString(),
+                list.add(PhysicalItem.newPhysicalItemNameRotXY(tm.getValueAt(i, 0).toString(),
                         Double.parseDouble(tm.getValueAt(i, 4).toString()),
                         Double.parseDouble(tm.getValueAt(i, 1).toString()),
                         Double.parseDouble(tm.getValueAt(i, 2).toString())));
@@ -2111,13 +2134,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     public void forceUpdateSingle(int row) throws NumberFormatException {
         String name = (String) jTableFromVision.getValueAt(row, 1);
-        PhysicalItem item = new PhysicalItem(name);
-        item.setRotation(Double.parseDouble(jTableFromVision.getValueAt(row, 3).toString()));
-        item.x = Double.parseDouble(jTableFromVision.getValueAt(row, 4).toString());
-        item.y = Double.parseDouble(jTableFromVision.getValueAt(row, 5).toString());
-        item.z = Double.parseDouble(jTableFromVision.getValueAt(row, 6).toString());
-        item.setScore(Double.parseDouble(jTableFromVision.getValueAt(row, 7).toString()));
-        item.setType((String) jTableFromVision.getValueAt(row, 8));
+        double rot =Double.parseDouble(jTableFromVision.getValueAt(row, 3).toString());
+        double x  = Double.parseDouble(jTableFromVision.getValueAt(row, 4).toString());
+        double y = Double.parseDouble(jTableFromVision.getValueAt(row, 5).toString());
+        double z = Double.parseDouble(jTableFromVision.getValueAt(row, 6).toString());
+        double score = Double.parseDouble(jTableFromVision.getValueAt(row, 7).toString());
+        String type = (String) jTableFromVision.getValueAt(row, 8);
+        PhysicalItem item = PhysicalItem.newPhysicalItemNameRotXYScoreType(name, rot, x, y, score, type);
+        item.z = z;
         item.setInsidePartsTray((boolean) (Boolean) jTableFromVision.getValueAt(row, 9));
         item.setInsideKitTray((boolean) (Boolean) jTableFromVision.getValueAt(row, 10));
         item.setFullName((String) jTableFromVision.getValueAt(row, 11));

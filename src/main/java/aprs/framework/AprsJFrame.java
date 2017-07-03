@@ -31,7 +31,9 @@ import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.explore.ExploreGraphDbJInternalFrame;
 import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import aprs.framework.logdisplay.LogDisplayJInternalFrame;
-import aprs.framework.pddl.executor.PartsTray;
+import aprs.framework.database.PartsTray;
+import aprs.framework.database.Slot;
+import aprs.framework.database.Tray;
 import aprs.framework.pddl.executor.PddlActionToCrclGenerator;
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.pddl.executor.PositionMap;
@@ -80,6 +82,7 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Objects;
@@ -157,7 +160,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
     
-    public List<PhysicalItem> getSlotOffsets(String name) {
+    public List<Slot> getSlotOffsets(String name) {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return this.visionToDbJInternalFrame.getSlotOffsets(name);
     }
@@ -167,7 +170,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return this.visionToDbJInternalFrame.startNewItemsImageSave(f);
     }
     
-    public List<PhysicalItem> getSlots(PhysicalItem item) {
+    public List<Slot> getSlots(Tray item) {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return this.visionToDbJInternalFrame.getSlots(item);
     }
@@ -1263,6 +1266,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     
     private void setupWindowsMenu() {
 //        jMenuWindow.removeAll();
+        
+        if(!javax.swing.SwingUtilities.isEventDispatchThread()) {
+            return;
+        }
+        if(jMenuWindow.isSelected()) {
+            return;
+        }
         int count = 1;
         ArrayList<JInternalFrame> framesList = new ArrayList<>();
         framesList.addAll(Arrays.asList(jDesktopPane1.getAllFrames()));
@@ -2454,7 +2464,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 //                .min()
 //                .orElse(Double.POSITIVE_INFINITY);
 //    }
-    public PhysicalItem absSlotFromTrayAndOffset(PhysicalItem tray, PhysicalItem offsetItem) {
+    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem);
     }
     
@@ -2480,7 +2490,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             ConcurrentMap<String, Integer> kitUsedMap = new ConcurrentHashMap<>();
             ConcurrentMap<String, Integer> ptUsedMap = new ConcurrentHashMap<>();
             for (PhysicalItem kit : kitTrays) {
-                List<PhysicalItem> slotOffsetList = getSlotOffsets(kit.getName());
+                List<Slot> slotOffsetList = getSlotOffsets(kit.getName());
                 double x = kit.x;
                 double y = kit.y;
                 double rot = kit.getRotation();
@@ -2489,7 +2499,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     shortKitName = shortKitName.substring(4);
                 }
                 int kitNumber = -1;
-                for (PhysicalItem slotOffset : slotOffsetList) {
+                for (Slot slotOffset : slotOffsetList) {
                     PhysicalItem absSlot = absSlotFromTrayAndOffset(kit, slotOffset);
                     PhysicalItem closestPart = closestPart(absSlot.x, absSlot.y, itemsList);
                     double minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
@@ -2988,13 +2998,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param itemsToPaint list of items to paint
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, List<PhysicalItem> itemsToPaint) throws IOException {
+    public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem>  itemsToPaint) throws IOException {
         if (null != object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint);
         }
     }
     
-    public void takeSimViewSnapshot(String imgLabel, List<PhysicalItem> itemsToPaint) throws IOException {
+    public void takeSimViewSnapshot(String imgLabel,  Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
         if (null != object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), itemsToPaint);
         }

@@ -21,6 +21,8 @@
  */
 package aprs.framework.pddl.executor;
 
+import aprs.framework.database.Slot;
+import aprs.framework.database.PartsTray;
 import aprs.framework.AprsJFrame;
 import aprs.framework.PddlAction;
 import aprs.framework.Utils;
@@ -31,6 +33,7 @@ import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbType;
 import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.QuerySet;
+import aprs.framework.database.Tray;
 import aprs.framework.kitinspection.KitInspectionJInternalFrame;
 import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
@@ -876,13 +879,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param itemsToPaint items to paint in the snapshot image
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, List<PhysicalItem> itemsToPaint) throws IOException {
+    public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem>  itemsToPaint) throws IOException {
         if (null != aprsJFrame) {
             aprsJFrame.takeSimViewSnapshot(f, itemsToPaint);
         }
     }
 
-    public void takeSimViewSnapshot(String imgLabel, List<PhysicalItem> itemsToPaint) throws IOException {
+    public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
         if (null != aprsJFrame) {
             aprsJFrame.takeSimViewSnapshot(imgLabel, itemsToPaint);
         }
@@ -891,26 +894,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private List<PhysicalItem> poseCacheToDetectedItemList() {
         List<PhysicalItem> l = new ArrayList<>();
         for (Entry<String, PoseType> entry : poseCache.entrySet()) {
-            l.add(new PhysicalItem(entry.getKey(), entry.getValue(), 0));
+            l.add(PhysicalItem.newPhysicalItemNamePoseVisionCycle(entry.getKey(), entry.getValue(), 0));
         }
         return Collections.unmodifiableList(l);
     }
 
-    private List<PhysicalItem> slotsToDetectedItemList(Collection<Slot> slots) {
-        List<PhysicalItem> l = new ArrayList<>();
-        for (Slot slot : slots) {
-            l.add(new PhysicalItem(slot.getSlotName(), slot.getSlotPose(), 0));
-        }
-        l.addAll(poseCacheToDetectedItemList());
-        return Collections.unmodifiableList(l);
-    }
 
     private List<PhysicalItem> posesToDetectedItemList(Collection<PoseType> poses) {
         List<PhysicalItem> l = new ArrayList<>();
         int i = 0;
         for (PoseType pose : poses) {
             i++;
-            l.add(new PhysicalItem("pose_" + i, pose, 0));
+            l.add(PhysicalItem.newPhysicalItemNamePoseVisionCycle("pose_" + i, pose, 0));
         }
         l.addAll(poseCacheToDetectedItemList());
         return Collections.unmodifiableList(l);
@@ -1068,7 +1063,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             new PmCartesian(correctPartsTray.getPartsTrayPose().getPoint().getX(), correctPartsTray.getPartsTrayPose().getPoint().getY(), 0),
                             correctPartsTray.getPartsTrayName());
                     takeSimViewSnapshot("inspectKit.correctPartsTray.slotList",
-                            slotsToDetectedItemList(correctPartsTray.getSlotList()));
+                            correctPartsTray.getSlotList());
                 } catch (IOException ex) {
                     Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -1128,8 +1123,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #7ef904\">&nbsp;&nbsp;The kit is complete</h3><br>");
                 } else {
                     try {
-                        takeSimViewSnapshot(aprsJFrame.createTempFile("inspectKit-slotList", ".PNG"), slotsToDetectedItemList(slotList));
-                        takeSimViewSnapshot(aprsJFrame.createTempFile("inspectKit-EmptySlotSet", ".PNG"), slotsToDetectedItemList(EmptySlotSet));
+                        takeSimViewSnapshot(aprsJFrame.createTempFile("inspectKit-slotList", ".PNG"), slotList);
+                        takeSimViewSnapshot(aprsJFrame.createTempFile("inspectKit-EmptySlotSet", ".PNG"), EmptySlotSet);
                     } catch (IOException ex) {
                         Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -1308,7 +1303,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     partsTray.setRotation(rotation);
                 }
                 if (c >= dpuPartsTrayListItems.size()) {
-                    dpuPartsTrayListItems.add(new PhysicalItem(pt.getPartsTrayName(), pt.getRotation(), ptX, ptY));
+                    dpuPartsTrayListItems.add(new Tray(pt.getPartsTrayName(), pt.getRotation(), ptX, ptY));
                 }
             }
 
@@ -1355,11 +1350,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
             try {
                 takeSimViewSnapshot(aprsJFrame.createTempFile("PlacePartSlotPoseList", ".PNG"), posesToDetectedItemList(PlacePartSlotPoseList));
-                takeSimViewSnapshot(aprsJFrame.createTempFile("partsTray.getSlotList", ".PNG"), slotsToDetectedItemList(slotList));
+                takeSimViewSnapshot(aprsJFrame.createTempFile("partsTray.getSlotList", ".PNG"), slotList);
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
-            partsTrayListItems.add(new PhysicalItem(partsTray.getPartsTrayName(), partsTray.getRotation(), partsTrayPoseX, partsTrayPoseY));
+            partsTrayListItems.add(new Tray(partsTray.getPartsTrayName(), partsTray.getRotation(), partsTrayPoseX, partsTrayPoseY));
             if (count > 0) {
                 try {
                     takeSimViewSnapshot(aprsJFrame.createTempFile("dpuPartsTrayList", ".PNG"), dpuPartsTrayListItems);
