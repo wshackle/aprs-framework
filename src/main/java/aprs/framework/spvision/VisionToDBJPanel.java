@@ -1306,7 +1306,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         List<T> out = new ArrayList<>();
         for (int i = 0; i < in.size(); i++) {
             T inItem = in.get(i);
-            PoseType newPose = CRCLPosemath.multiply(transform, inItem.toCrclPose());
+            PoseType newPose = CRCLPosemath.multiply(transform, inItem.getPose());
             T outItem =  (T) inItem.clone();
             outItem.setFromCrclPoseType(newPose);
             outItem.setEmptySlotsList(transformList(inItem.getEmptySlotsList(), transform));

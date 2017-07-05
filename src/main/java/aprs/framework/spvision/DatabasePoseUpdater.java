@@ -934,6 +934,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         item.setTray(tray);
         item.setSlotForSkuName(offsetItem.getSlotForSkuName());
         item.setVisioncycle(tray.getVisioncycle());
+        item.setPrpName(offsetItem.getPrpName());
         return item;
     }
 
@@ -996,6 +997,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
             item.setTray(tray);
             item.setVisioncycle(tray.getVisioncycle());
             item.setSlotForSkuName(offsetItem.getSlotForSkuName());
+            item.setPrpName(offsetItem.getPrpName());
             ret.add(item);
         }
         return ret;

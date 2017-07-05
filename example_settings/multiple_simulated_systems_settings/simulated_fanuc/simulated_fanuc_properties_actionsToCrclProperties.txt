@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1497
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1579
 afterMoveToLookForDwellTime=5.0
 approachZOffset=50.0
 doInspectKit=true
@@ -10,8 +10,8 @@ kitInspectDistThreshold=20.0
 lastLookDwellTime=1.0
 lookDwellTime=5.0
 lookForXYZ=200.0,200.0,-50.0
-manualPartNames=[null, null, null, null, null, null, null, null, null, null]
-manualSlotNames=[null, null, null, null, null, null, null, null, null, null]
+manualPartNames=[part_large_gear_in_pt_1, part_medium_gear_in_pt_2, part_medium_gear_in_pt_1, null, null, null, null, null, null, null]
+manualSlotNames=[empty_slot_1_for_large_gear_in_kit_m2l1_vessel_1, empty_slot_2_for_medium_gear_in_kit_m2l1_vessel_1, empty_slot_1_for_medium_gear_in_kit_m2l1_vessel_1, null, null, null, null, null, null, null]
 pddl.output=../../../example_pddl/fanuc_demo_actions.txt
 pddl.reverse_output=../../../example_pddl/reverse_fanuc_demo_actions.txt
 placePartSlotArgIndex=0

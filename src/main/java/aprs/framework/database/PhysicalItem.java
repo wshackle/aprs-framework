@@ -215,9 +215,6 @@ public class PhysicalItem extends PM_CARTESIAN {
         return Math.sqrt(dx * dx + dy * dy);
     }
     
-    public PoseType toCrclPose() {
-        return pose(point(x, y, z), vector(vxi, vxj, vxk), vector(vzi, vzj, vzk));
-    }
 
     @Override
     public String toString() {
