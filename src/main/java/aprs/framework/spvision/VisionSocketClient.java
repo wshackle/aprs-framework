@@ -228,18 +228,15 @@ public class VisionSocketClient implements AutoCloseable {
             for (i = 0; i < fa.length - 5; i += 6) {
 //                PhysicalItem ci = new PhysicalItem(fa[i]);
                 String name = fa[i];
-                if("*".equals(name)) {
-                    if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Ignoring item with name=" +name + " in field " + (i) + " in " + line + "\n");
-                    }
+                if ("*".equals(name)) {
+                    String errMsg = "Ignoring item with name=" + name + " in field " + (i) + " in " + line + "\n";
+                    logErr(displayInterface, errMsg);
                     continue;
                 }
                 boolean missingVal = false;
-                for (int j = 0; j < 6; j++) {
+                for (int j = 0; j < 5; j++) {
                     if (fa[i + j].length() < 1) {
-                        if (null != displayInterface && displayInterface.isDebug()) {
-                            displayInterface.addLogMessage("Ignoring item with empty field  at position =" + (i + j) + " in " + line + "\n");
-                        }
+                        logErr(displayInterface, "Ignoring item with empty field  at position =" + (i + j) + " in " + line + "\n");
                         missingVal = true;
                         break;
                     }
@@ -249,31 +246,28 @@ public class VisionSocketClient implements AutoCloseable {
                 }
                 double rot = Double.parseDouble(fa[i + 1]);
                 if (!Double.isFinite(rot)) {
-                    if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Ignoring item with invalid rotation  at position =" + (i + 1) + " of " +(fa[i+1])+"in " + line + "\n");
-                    }
+                    logErr(displayInterface, "Ignoring item with invalid rotation  at position =" + (i + 1) + " of " + (fa[i + 1]) + "in " + line + "\n");
                     continue;
                 }
                 double x = Double.parseDouble(fa[i + 2]);
                 if (!Double.isFinite(x)) {
-                    if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Ignoring item with invalid x  at position =" + (i + 2) + " of " +(fa[i+2])+"in " + line + "\n");
-                    }
+                    logErr(displayInterface, "Ignoring item with invalid x  at position =" + (i + 2) + " of " + (fa[i + 2]) + "in " + line + "\n");
                     continue;
                 }
                 double y = Double.parseDouble(fa[i + 3]);
                 if (!Double.isFinite(y)) {
-                    if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Ignoring item with invalid y  at position =" + (i + 3) + " of " +(fa[i+3])+"in " + line + "\n");
-                    }
+                    logErr(displayInterface,"Ignoring item with invalid y  at position =" + (i + 3) + " of " + (fa[i + 3]) + "in " + line + "\n");
                     continue;
                 }
-                double score = Double.parseDouble(fa[i + 4]);
-                if (!Double.isFinite(score)) {
-                    if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("Ignoring item with invalid score  at position =" + (i + 4) + " of " +(fa[i+4])+"in " + line + "\n");
+                double score = 0.0;
+                if (fa[i + 4].length() > 0) {
+                    score = Double.parseDouble(fa[i + 4]);
+                    if (!Double.isFinite(score)) {
+                        if (null != displayInterface && displayInterface.isDebug()) {
+                            displayInterface.addLogMessage("Ignoring item with invalid score  at position =" + (i + 4) + " of " + (fa[i + 4]) + "in " + line + "\n");
+                        }
+                        continue;
                     }
-                    continue;
                 }
                 String type = fa[i + 5];
                 PhysicalItem ci = PhysicalItem.newPhysicalItemNameRotXYScoreType(name, rot, x, y, score, type);
@@ -310,6 +304,15 @@ public class VisionSocketClient implements AutoCloseable {
             }
         }
         return listOut;
+    }
+
+    private static void logErr(final VisionToDBJFrameInterface displayInterface1, String errMsg) {
+        if (null != displayInterface1 && displayInterface1.isDebug()) {
+            displayInterface1.addLogMessage(errMsg);
+        }
+//        else {
+//            System.err.println(errMsg);
+//        }
     }
 
     private int prevVisionListSize = -1;
