@@ -905,6 +905,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void disconnectVision() {
         stopVisionStartThread();
         closeVision();
+        Exception ex = new IllegalStateException("visionDisconnected");
+        notifyFinishedUpdatingListenerExceptionally(ex);
+        notifyNextUpdateListenersExceptionally(ex);
+        notifySingleUpdateListenersExceptionally(ex);
+        aprsJFrame.setTitleErrorString("vision disconnected");
     }
 
     public void closeVision() {
@@ -1527,6 +1532,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public XFuture<List<PhysicalItem>> getNextUpdate() {
         XFuture<List<PhysicalItem>> ret = new XFuture<>("getNextUpdate");
         nextUpdateListeners.add(ret);
+        if(null == visionClient || !visionClient.isConnected()) {
+            disconnectVision();
+        }
         return ret;
     }
 
@@ -1556,6 +1564,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         XFuture<Void> ret = new XFuture<>("getUpdatesFinished");
         finishedUpdateListeners.add(ret);
+        if(null == visionClient || !visionClient.isConnected()) {
+            disconnectVision();
+        }
         return ret;
     }
 
@@ -1608,7 +1619,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             future = finishedUpdateListeners.pollFirst();
         }
     }
+    
+    private void notifyFinishedUpdatingListenerExceptionally(Exception ex) {
+        XFuture future = finishedUpdateListeners.pollFirst();
+        while (future != null) {
+            future.completeExceptionally(ex);
+            future = finishedUpdateListeners.pollFirst();
+        }
+    }
 
+    
     private void startVisionInternal(Map<String, String> argsMap) {
         closeVision();
         if (null == visionClient) {

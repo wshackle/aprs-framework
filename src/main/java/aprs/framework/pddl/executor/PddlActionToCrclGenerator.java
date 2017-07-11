@@ -2593,6 +2593,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private Map<String, Integer> lastRequiredPartsMap = null;
+    
+    public void clearLastRequiredPartsMap() {
+        if(null != lastRequiredPartsMap) {
+            lastRequiredPartsMap.clear();
+        }
+        lastRequiredPartsMap = null;
+    }
 
     private void endProgram(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         if (atLookForPosition) {
@@ -2730,13 +2737,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private void addSlowLimitedMoveUpFromCurrent(List<MiddleCommandType> out) {
-//        addSetSlowSpeed(out);
-//        double limit = Double.POSITIVE_INFINITY;
-//        PointType pt = getLookForXYZ();
-//        if (null != pt) {
-//            limit = pt.getZ();
-//        }
-//        addMoveUpFromCurrent(out, approachZOffset, limit);
+        addSetSlowSpeed(out);
+        double limit = Double.POSITIVE_INFINITY;
+        PointType pt = getLookForXYZ();
+        if (null != pt) {
+            limit = pt.getZ();
+        }
+        addMoveUpFromCurrent(out, approachZOffset, limit);
     }
 
 //    private void addOpenGripper(List<MiddleCommandType> out, PoseType pose) {

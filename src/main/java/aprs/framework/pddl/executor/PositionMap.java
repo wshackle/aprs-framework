@@ -195,7 +195,7 @@ public class PositionMap {
             double offsetX = (offsetXIndex >= 0 ? Double.parseDouble(a[offsetXIndex]) : 0);
             double offsetY = (offsetYIndex >= 0 ? Double.parseDouble(a[offsetYIndex]) : 0);
             double offsetZ = (offsetZIndex >= 0 ? Double.parseDouble(a[offsetZIndex]) : 0);
-            String label = (labelIndex >= 0 ? a[labelIndex]:"");
+            String label = (labelIndex >= 0 && labelIndex < a.length ? a[labelIndex]:"");
             errmapList.add(PositionMapEntry.pointOffsetLabelEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ,label));
         }
 //        errmapList = errmapStringsList.stream().map(a -> {

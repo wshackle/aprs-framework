@@ -373,7 +373,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private void handleActionCompleted(PddlActionToCrclGenerator.ActionCallbackInfo actionInfo) {
-        if(currentActionIndex != actionInfo.getActionIndex()) {
+        if (currentActionIndex != actionInfo.getActionIndex()) {
             System.out.println("actionInfo = " + actionInfo);
             System.out.println("currentActionIndex = " + currentActionIndex);
         }
@@ -1421,7 +1421,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             saveProperties();
         }
     }
-    
+
     public XFuture<Boolean> startActions() {
         this.abortProgram();
         try {
@@ -1572,11 +1572,22 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         props.putAll(getTableOptions());
         props.put(MANUAL_PART_NAMES, Arrays.toString(getComboPartNames(10)));
         props.put(MANUAL_SLOT_NAMES, Arrays.toString(getComboSlotNames(10)));
-        props.put(POS_ERROR_MAP_FILES, Arrays.toString(positionMapJPanel1.getPositionMapFileNames()));
+        props.put(POS_ERROR_MAP_FILES, Arrays.toString(getRelPathPositionMapFileNames()));
 //        try (FileWriter fw = new FileWriter(propertiesFile)) {
 //            props.store(fw, "");
 //        }
         Utils.saveProperties(propertiesFile, props);
+    }
+
+    private String[] getRelPathPositionMapFileNames() {
+        String[] origNames = positionMapJPanel1.getPositionMapFileNames();
+        String[] newNames = new String[origNames.length];
+        for (int i = 0; i < newNames.length; i++) {
+            String origName = origNames[i];
+            String newName = makeShortPath(propertiesFile, origName);
+            newNames[i] = newName;
+        }
+        return newNames;
     }
 
     private void updateActionFileStrings() {
@@ -1636,7 +1647,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             updateComboPartModel();
             updateComboSlotModel();
             String canonName = f.getCanonicalPath();
-            if(!jTextFieldPddlOutputActions.getText().equals(canonName)) {
+            if (!jTextFieldPddlOutputActions.getText().equals(canonName)) {
                 jTextFieldPddlOutputActions.setText(canonName);
                 updateActionFileStrings();
             }
@@ -1714,8 +1725,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return pddlActionToCrclGenerator.incrementAndGetCommandId();
     }
 
-    
-    
     private CRCLProgramType createEmptyProgram() {
         CRCLProgramType program = new CRCLProgramType();
         InitCanonType initCmd = new InitCanonType();
@@ -2252,27 +2261,27 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         return part;
     }
-    
+
     private void updateComboPartModel() {
         DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
         boolean first = true;
-        for(PddlAction action : actionsList) {
-            switch(action.getType()) {
+        for (PddlAction action : actionsList) {
+            switch (action.getType()) {
                 case "fake-take-part":
                 case "take-part":
-                    if(action.getArgs().length > 0) {
+                    if (action.getArgs().length > 0) {
                         boolean found = false;
                         String part = action.getArgs()[0];
                         for (int i = 0; i < cbm.getSize(); i++) {
-                            if(cbm.getElementAt(i).equals(part)) {
+                            if (cbm.getElementAt(i).equals(part)) {
                                 found = true;
                                 break;
                             }
                         }
-                        if(!found) {
+                        if (!found) {
                             cbm.insertElementAt(part, 0);
                         }
-                        if(first){
+                        if (first) {
                             cbm.setSelectedItem(part);
                             first = false;
                         }
@@ -2285,22 +2294,22 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void updateComboSlotModel() {
         DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
         boolean first = true;
-        for(PddlAction action : actionsList) {
-            switch(action.getType()) {
+        for (PddlAction action : actionsList) {
+            switch (action.getType()) {
                 case "place-part":
-                    if(action.getArgs().length > 0) {
+                    if (action.getArgs().length > 0) {
                         boolean found = false;
                         String slot = action.getArgs()[0];
                         for (int i = 0; i < cbm.getSize(); i++) {
-                            if(cbm.getElementAt(i).equals(slot)) {
+                            if (cbm.getElementAt(i).equals(slot)) {
                                 found = true;
                                 break;
                             }
                         }
-                        if(!found) {
+                        if (!found) {
                             cbm.insertElementAt(slot, 0);
                         }
-                        if(first){
+                        if (first) {
                             cbm.setSelectedItem(slot);
                             first = false;
                         }
@@ -2309,7 +2318,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         }
     }
-    
+
     public String getComboSlot() {
         String slot = jComboBoxManualSlotName.getSelectedItem().toString();
         DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
@@ -2845,7 +2854,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         System.out.println("lastCheckAbortSafeAbortRequested = " + lastCheckAbortSafeAbortRequested);
         System.out.println("lastCheckSafeAbortTime = " + lastCheckSafeAbortTime);
         System.out.println("lastReplanAfterCrclBlock = " + lastReplanAfterCrclBlock);
-        
+
 //        private volatile String lastCheckAbortCurrentPart = null;
 //    private volatile boolean lastCheckAbortSafeAbortRequested = false;
 //    private volatile long lastCheckSafeAbortTime = 0;
@@ -3044,6 +3053,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                             + "," + poseFromDb.getPoint().getZ();
                     System.out.println("poseFromDbString = " + poseFromDbString);
                     PoseType curPose = aprsJFrame.getCurrentPose();
+                    assert (null != curPose) :
+                            "aprsJFrame.getCurrentPose() returned null";
                     String curPoseString
                             = String.format("%.1f, %.1f, %.1f",
                                     curPose.getPoint().getX(),
@@ -3411,6 +3422,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private boolean lastReplanAfterCrclBlock = false;
+
     private XFuture<Boolean> doPddlActionsSection() {
         try {
             CRCLProgramType program = pddlActionSectionToCrcl();
@@ -3794,6 +3806,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             PddlAction lookForAction = new PddlAction("", "look-for-part",
                     new String[]{}, "cost");
             lookForActionsList.add(lookForAction);
+            pddlActionToCrclGenerator.clearPoseCache();
             List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(lookForActionsList, this.replanFromIndex, options);
             CRCLProgramType program = createEmptyProgram();
             jTextFieldIndex.setText(Integer.toString(replanFromIndex));
@@ -3812,7 +3825,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private XFuture<Void> checkDbSupplierPublisher() throws IOException {
         if (null != this.pddlActionToCrclGenerator && pddlActionToCrclGenerator.isConnected()) {
-            return XFuture.completedFutureWithName("checkDbSupplierPublisher.completedFuture",null);
+            return XFuture.completedFutureWithName("checkDbSupplierPublisher.completedFuture", null);
         }
         if (null != dbSetupSupplier) {
             try {
@@ -4011,7 +4024,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     }
                 }
             }
-            
 
             String errorMapFiles = props.getProperty(POS_ERROR_MAP_FILES, "");
             if (null != errorMapFiles && errorMapFiles.length() > 0) {
@@ -4022,7 +4034,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         continue;
                     }
                     String fname = emf.trim();
-                    if (fname.length() < 1) {
+                    if (fname.length() < 1 ||"null".equals(fname)) {
                         continue;
                     }
                     File f = new File(fname);
@@ -4031,6 +4043,22 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                             positionMapJPanel1.addPositionMapFile(f);
                         } catch (PositionMap.BadErrorMapFormatException ex) {
                             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    } else {
+                        String fullPath = propertiesFile.getParentFile().toPath().resolve(fname).normalize().toString();
+//                    System.out.println("fullPath = " + fullPath);
+                        f = new File(fullPath);
+                        if (f.exists()) {
+                            try {
+                                positionMapJPanel1.addPositionMapFile(f);
+                            } catch (PositionMap.BadErrorMapFormatException ex) {
+                                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        } else {
+                            String errString ="Can't load errorMapFile : "+fname +"   or "+fullPath;
+                            setErrorString(errString);
+                            System.err.println(errString);
+//                            aprsJFrame.setTitleErrorString(errorString);
                         }
                     }
                 }
@@ -4050,10 +4078,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 cbm.addElement(pna[i]);
             }
         }
-        
+
         String manualSlotNames = props.getProperty(MANUAL_SLOT_NAMES, "");
         String sna[] = manualSlotNames.split("[ \t,\\[\\]\\{\\}]+");
-        
+
         cbm
                 = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
         cbm.removeAllElements();
