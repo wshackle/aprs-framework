@@ -61,6 +61,8 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
@@ -83,8 +85,17 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         viewAreas = new ArrayList<>();
         setupMultiLineTable(jTableQueries, 1, editTableArea, viewAreas);
         jTextFieldDBLoginTimeout.setText(Integer.toString(DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT));
+        ((DefaultTableModel) jTableQueries.getModel()).addTableModelListener(queriesTableModelListener);
     }
 
+    private final TableModelListener queriesTableModelListener = (TableModelEvent e) -> {
+        setMapUpToDate(e);
+    };
+    
+    private void setMapUpToDate(TableModelEvent evt) {
+         mapUpToDate = false;
+    }
+    
 //    private static List<String> getClasspathEntriesByPath(String path) throws IOException {
 //        InputStream is = DbMain.class.getClassLoader().getResourceAsStream(path);
 //        if(null == is) {
@@ -513,6 +524,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private void jButtonDisconnectDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDisconnectDBActionPerformed
 //        this.closeDB();
         connected = false;
+        setDbSetup(getDbSetup());
         notifyAllDbSetupListeners();
         System.out.println("Disconnected from database.");
         jTextAreaConnectErrors.setText("Disconnected from database.");
@@ -550,27 +562,17 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }//GEN-LAST:event_jButtonBrowseActionPerformed
 
+    private volatile String lastResourceDirSet = null;
+
     private void jComboBoxResourceDirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxResourceDirActionPerformed
         try {
             Object item = this.jComboBoxResourceDir.getSelectedItem();
-            if (null != item) {
+            if (null != item && !item.equals(lastResourceDirSet)) {
                 String resDirSuffix = item.toString();
                 if (null != resDirSuffix && !"none".equals(resDirSuffix)) {
+                    this.lastResourceDirSet = resDirSuffix;
                     jComboBoxResourceDir.setSelectedItem(resDirSuffix);
-
-                    if (resDirSuffix == null) {
-                        resDirSuffix = "neo4j/v1/";
-                    }
-                    if (!resDirSuffix.startsWith("/")) {
-                        resDirSuffix = "/" + resDirSuffix;
-                    }
-                    if (!resDirSuffix.endsWith("/")) {
-                        resDirSuffix = resDirSuffix + "/";
-                    }
-                    String resDir = RESOURCE_BASE + resDirSuffix;
-                    Map<DbQueryEnum, DbQueryInfo> queriesMap
-                            = DbSetupBuilder.readResourceQueriesDirectory(resDir);
-                    loadQueriesMap(queriesMap, () -> {
+                    updateResDirSuffix(resDirSuffix, () -> {
                         if (!updatingFromDbSetup) {
                             notifyAllDbSetupListeners();
                         }
@@ -581,6 +583,25 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, iOException);
         }
     }//GEN-LAST:event_jComboBoxResourceDirActionPerformed
+
+    private void updateResDirSuffix(String resDirSuffix, Runnable r) throws IOException {
+        mapUpToDate = false;
+        if (resDirSuffix == null) {
+            resDirSuffix = "neo4j/v1/";
+        }
+        if (!resDirSuffix.startsWith("/")) {
+            resDirSuffix = "/" + resDirSuffix;
+        }
+        if (!resDirSuffix.endsWith("/")) {
+            resDirSuffix = resDirSuffix + "/";
+        }
+        String resDir = RESOURCE_BASE + resDirSuffix;
+        map
+                = DbSetupBuilder.readResourceQueriesDirectory(resDir);
+        mapUpToDate = true;
+        loadQueriesMap(map, r);
+    }
+
 
     private void jButtonBrowseExternalDirectoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBrowseExternalDirectoryActionPerformed
         JFileChooser chooser = new JFileChooser();
@@ -689,7 +710,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             boolean queriesMapReloaded = false;
             if (null != queryDir) {
                 if (internal) {
+                    lastResourceDirSet = queryDir;
                     jComboBoxResourceDir.setSelectedItem(queryDir);
+                    updateResDirSuffix(queryDir, null);
+                    queriesMapReloaded = true;
                 } else if (!Objects.equals(queryDir, jTextFieldQueriesDirectory.getText())) {
                     loadExternalQueriesDirectory(new File(queryDir));
                     queriesMapReloaded = true;
@@ -701,6 +725,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     loadQueriesMap(queriesMap, null);
                 }
             }
+        } catch (IOException ex) {
+            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             updatingFromDbSetup = false;
         }
@@ -808,15 +834,25 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         });
     }
 
-    private Map<DbQueryEnum, DbQueryInfo> map = null;
+    private volatile Map<DbQueryEnum, DbQueryInfo> map = null;
+    private volatile boolean mapUpToDate = false;
 
     public Map<DbQueryEnum, DbQueryInfo> getQueriesMap() {
+        if (null != map && mapUpToDate) {
+            return map;
+        }
+        mapUpToDate = false;
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             map = getQueriesMapInternal();
+            mapUpToDate = true;
         } else {
             try {
                 javax.swing.SwingUtilities.invokeAndWait(() -> {
+                    if (null != map && mapUpToDate) {
+                        return;
+                    }
                     map = getQueriesMapInternal();
+                    mapUpToDate = true;
                 });
             } catch (InterruptedException | InvocationTargetException ex) {
                 Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -825,7 +861,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         return map;
     }
 
-    private Map<DbQueryEnum, DbQueryInfo> getQueriesMapInternal() {
+    private synchronized Map<DbQueryEnum, DbQueryInfo> getQueriesMapInternal() {
         Map<DbQueryEnum, DbQueryInfo> map = new EnumMap<>(DbQueryEnum.class);
         DefaultTableModel model = (DefaultTableModel) jTableQueries.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
@@ -889,7 +925,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private ExecutorService notifyService = Executors.newSingleThreadExecutor(new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
-            Thread thread = new Thread(r, "dbSetupNotifyThread."+this.toString());
+            Thread thread = new Thread(r, "dbSetupNotifyThread." + this.toString());
             thread.setDaemon(true);
             return thread;
         }
@@ -916,6 +952,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         futures = new ArrayList<>();
         if (notifyService != null) {
             final DbSetup thisDbSetup = DbSetupJPanel.this.getDbSetup();
+            System.out.println("thisDbSetup = " + thisDbSetup);
+            System.out.println("thisDbSetup.getQueriesMap() = " + thisDbSetup.getQueriesMap());
             Future<?> future
                     = notifyService.submit(new Runnable() {
                         @Override
@@ -1050,7 +1088,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         return "DbSetupJPanel{" + "aprsJFrame=" + aprsJFrame + ", connected=" + connected + '}';
     }
 
-    
     private volatile boolean restoringProperties = false;
 
     public Map<String, String> updateArgsMap() {
@@ -1221,6 +1258,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             }
             String resDirSuffix = _argsMap.get("resDir");
             if (null != resDirSuffix) {
+                this.lastResourceDirSet = resDirSuffix;
                 jComboBoxResourceDir.setSelectedItem(resDirSuffix);
             }
             if (useQueriesResource) {

@@ -102,7 +102,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
         return dpu.getPartsTrayList();
     }
-    
+
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         assert (null != dpu) :
                 ("dpu == null");
@@ -1010,7 +1010,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 double ro = Double.parseDouble(rotationOffsetString);
                 jTextFieldRotationOffset.setText(Double.toString(ro));
                 if (null != dpu) {
-                    dpu.setRotationOffset(ro);
+                    dpu.setRotationOffset(Math.toRadians(ro));
                 }
             }
 
@@ -1136,9 +1136,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
+    private volatile boolean lastSetDbConnectedVal = false;
+
     public void setDBConnected(boolean _val) {
         try {
-            dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(_val).build());
+            if (null == dbSetupPublisher.getDbSetup() || dbSetupPublisher.getDbSetup().isConnected() != _val) {
+                dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(_val).build());
+            }
             this.jLabelDatabaseStatus.setText(_val ? "CONNECTED" : "DISCONNECTED");
             this.jLabelDatabaseStatus.setBackground(_val ? Color.GREEN : Color.RED);
             if (_val) {
@@ -1155,6 +1159,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (null != dpu) {
                 this.jCheckBoxForceUpdates.setSelected(dpu.isForceUpdates());
             }
+            lastSetDbConnectedVal = _val;
         } catch (Exception ex) {
             this.jLabelDatabaseStatus.setText("DISCONNECTED");
             this.jLabelDatabaseStatus.setBackground(Color.RED);
@@ -1250,11 +1255,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                             x.setRotationOffset(ro);
                         }
                         VisionToDBJPanel.this.dpu = x;
+                        Utils.runOnDispatchThread(() -> setDBConnected(null != dbSetup && dbSetup.isConnected() && checkConnected()));
                     });
             if (null != dpu) {
                 dpu.setRotationOffset(ro);
             }
-            setDBConnected(true);
+            if (null == dbSetup || !dbSetup.isConnected()) {
+                Utils.runOnDispatchThread(() -> setDBConnected(false));
+            }
         } catch (Exception exception) {
 
             StringWriter sw = new StringWriter();
@@ -1263,6 +1271,15 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             System.err.println(exception.getLocalizedMessage());
             System.err.println("Connect to database failed.");
         }
+    }
+
+    private boolean checkConnected() {
+        try {
+            return null != dpu && dpu.getSqlConnection() != null && !dpu.getSqlConnection().isClosed();
+        } catch (SQLException ex) {
+            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
     }
 
     @Override
@@ -1304,18 +1321,18 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private Thread startVisionThread = null;
     private List<PhysicalItem> transformedVisionList = null;
 
-     public  static <T extends PhysicalItem> List<T> transformList(List<T> in, PoseType transform) {
-        if(null == in) {
+    public static <T extends PhysicalItem> List<T> transformList(List<T> in, PoseType transform) {
+        if (null == in) {
             return null;
         }
         List<T> out = new ArrayList<>();
         for (int i = 0; i < in.size(); i++) {
             T inItem = in.get(i);
             PoseType newPose = CRCLPosemath.multiply(transform, inItem.getPose());
-            T outItem =  (T) inItem.clone();
+            T outItem = (T) inItem.clone();
             outItem.setFromCrclPoseType(newPose);
             outItem.setEmptySlotsList(transformList(inItem.getEmptySlotsList(), transform));
-            
+
 //            if(inItem instanceof Slot) {
 //                outItem = (T) new Slot(inItem.getName(), newPose, inItem.getVisioncycle());
 //            } else if(inItem instanceof PartsTray) {
@@ -1341,12 +1358,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //            outItem.setTotalSlotsCount(inItem.getTotalSlotsCount());
 //            outItem.setTimestamp(inItem.getTimestamp());
 //            outItem.setMaxSlotDist(inItem.getMaxSlotDist());
-            if(inItem instanceof Tray) {
+            if (inItem instanceof Tray) {
                 Tray inTray = (Tray) inItem;
                 Tray outTray = (Tray) outItem;
-                outTray.setAbsSlotList(transformList(inTray.getAbsSlotList(),transform));
+                outTray.setAbsSlotList(transformList(inTray.getAbsSlotList(), transform));
             }
-            if(inItem instanceof Slot) {
+            if (inItem instanceof Slot) {
                 Slot inSlot = (Slot) inItem;
                 Slot outSlot = (Slot) outItem;
                 outSlot.setDiameter(inSlot.getDiameter());
@@ -1445,7 +1462,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     if (failures > maxRequiredPartFailures) {
                         setEnableDatabaseUpdates(false);
                         aprsJFrame.setTitleErrorString(msg);
-                        IllegalStateException ex =  new IllegalStateException(msg);
+                        IllegalStateException ex = new IllegalStateException(msg);
                         notifyNextUpdateListenersExceptionally(ex);
                         notifySingleUpdateListenersExceptionally(ex);
                         throw ex;
@@ -1469,6 +1486,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.setRequiredParts(requiredParts);
         if (null != dpu) {
             dpu.setEnableDatabaseUpdates(enableDatabaseUpdates);
+        } else if (enableDatabaseUpdates) {
+            throw new IllegalStateException("Database not connected (dpu == null) ");
         }
         if (enableDatabaseUpdates != jCheckBoxDbUpdateEnabled.isSelected()) {
             jCheckBoxDbUpdateEnabled.setSelected(enableDatabaseUpdates);
@@ -1518,8 +1537,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             future.complete(unmodifiableList);
         }
     }
-    
-     private void notifySingleUpdateListenersExceptionally(Throwable ex) {
+
+    private void notifySingleUpdateListenersExceptionally(Throwable ex) {
         XFuture<List<PhysicalItem>> future;
         setEnableDatabaseUpdates(false);
         while (null != (future = singleUpdateListeners.poll())) {
@@ -1532,7 +1551,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public XFuture<List<PhysicalItem>> getNextUpdate() {
         XFuture<List<PhysicalItem>> ret = new XFuture<>("getNextUpdate");
         nextUpdateListeners.add(ret);
-        if(null == visionClient || !visionClient.isConnected()) {
+        if (null == visionClient || !visionClient.isConnected()) {
             disconnectVision();
         }
         return ret;
@@ -1545,7 +1564,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             future.complete(unmodifiableList);
         }
     }
-    
+
     private void notifyNextUpdateListenersExceptionally(Throwable ex) {
         XFuture<List<PhysicalItem>> future;
         while (null != (future = nextUpdateListeners.poll())) {
@@ -1564,7 +1583,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         XFuture<Void> ret = new XFuture<>("getUpdatesFinished");
         finishedUpdateListeners.add(ret);
-        if(null == visionClient || !visionClient.isConnected()) {
+        if (null == visionClient || !visionClient.isConnected()) {
             disconnectVision();
         }
         return ret;
@@ -1572,43 +1591,48 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     @Override
     public void visionClientUpdateRecieved(List<PhysicalItem> visionList, String line) {
-        if (acquire == AcquireEnum.OFF) {
-            return;
-        }
-        if (acquire == AcquireEnum.ONCE) {
-            acquire = AcquireEnum.OFF;
-            if (null != commandReplyPrintStream) {
-                commandReplyPrintStream.println("acquire=" + acquire);
+        try {
+            if (acquire == AcquireEnum.OFF) {
+                return;
             }
-        }
+            if (acquire == AcquireEnum.ONCE) {
+                acquire = AcquireEnum.OFF;
+                if (null != commandReplyPrintStream) {
+                    commandReplyPrintStream.println("acquire=" + acquire);
+                }
+            }
 
-        if (null != dpu && null != dpu.getSqlConnection()) {
-            if (dpu.isEnableDatabaseUpdates()) {
-                if (!checkRequiredParts(visionList)) {
-                    return;
+            if (null != dpu && null != dpu.getSqlConnection()) {
+                if (dpu.isEnableDatabaseUpdates()) {
+                    if (!checkRequiredParts(visionList)) {
+                        return;
+                    }
                 }
-            }
-            updating = true;
-            PoseType transform = getTransformPose();
-            dpu.setDisplayInterface(this);
-            List<PhysicalItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
-            if (null != transform) {
-                transformedVisionList = transformList(visionListWithEmptySlots, transform);
-                List<PhysicalItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
-                if(!singleUpdateListeners.isEmpty()) {
+                updating = true;
+                PoseType transform = getTransformPose();
+                dpu.setDisplayInterface(this);
+                List<PhysicalItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
+                if (null != transform) {
+                    transformedVisionList = transformList(visionListWithEmptySlots, transform);
+                    List<PhysicalItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
+                    if (!singleUpdateListeners.isEmpty()) {
+                        setEnableDatabaseUpdates(false);
+                        notifySingleUpdateListeners(l);
+                    }
+                    runOnDispatchThread(() -> this.updateInfo(l, line));
+                } else {
+                    List<PhysicalItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCountsToDatabaseNames, false);
+                    runOnDispatchThread(() -> this.updateInfo(l, line));
+                }
+                updating = false;
+                if (!finishedUpdateListeners.isEmpty()) {
                     setEnableDatabaseUpdates(false);
-                    notifySingleUpdateListeners(l);
+                    notifyFinishedUpdatingListeners();
                 }
-                runOnDispatchThread(() -> this.updateInfo(l, line));
-            } else {
-                List<PhysicalItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCountsToDatabaseNames, false);
-                runOnDispatchThread(() -> this.updateInfo(l, line));
             }
-            updating = false;
-            if (!finishedUpdateListeners.isEmpty()) {
-                setEnableDatabaseUpdates(false);
-                notifyFinishedUpdatingListeners();
-            }
+        } catch (Throwable throwable) {
+            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, throwable);
+            aprsJFrame.setTitleErrorString(throwable.getMessage());
         }
     }
 
@@ -1619,7 +1643,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             future = finishedUpdateListeners.pollFirst();
         }
     }
-    
+
     private void notifyFinishedUpdatingListenerExceptionally(Exception ex) {
         XFuture future = finishedUpdateListeners.pollFirst();
         while (future != null) {
@@ -1628,7 +1652,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    
     private void startVisionInternal(Map<String, String> argsMap) {
         closeVision();
         if (null == visionClient) {
@@ -1702,8 +1725,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (null != dpu) {
                 dpu.close();
                 dpu = null;
+                runOnDispatchThread(() -> setDBConnected(false));
+            } else if (lastSetDbConnectedVal) {
+                runOnDispatchThread(() -> setDBConnected(false));
             }
-            runOnDispatchThread(() -> setDBConnected(false));
         } catch (Exception ex) {
             addLogMessage(ex);
         }
@@ -2064,6 +2089,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void takeSnapshot(File f) {
         try {
+            if (null == dpu) {
+                System.err.println("Can't take snapshot(" + f + ") when database not connected.");
+                return;
+            }
             List<PhysicalItem> list = new ArrayList<>();
             DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
             for (int i = 0; i < tm.getRowCount(); i++) {
@@ -2154,8 +2183,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     public void forceUpdateSingle(int row) throws NumberFormatException {
         String name = (String) jTableFromVision.getValueAt(row, 1);
-        double rot =Double.parseDouble(jTableFromVision.getValueAt(row, 3).toString());
-        double x  = Double.parseDouble(jTableFromVision.getValueAt(row, 4).toString());
+        double rot = Double.parseDouble(jTableFromVision.getValueAt(row, 3).toString());
+        double x = Double.parseDouble(jTableFromVision.getValueAt(row, 4).toString());
         double y = Double.parseDouble(jTableFromVision.getValueAt(row, 5).toString());
         double z = Double.parseDouble(jTableFromVision.getValueAt(row, 6).toString());
         double score = Double.parseDouble(jTableFromVision.getValueAt(row, 7).toString());
@@ -2422,7 +2451,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     @Override
     public void accept(DbSetup setup) {
         if (setup.isConnected()) {
-            if (lastSetup == null || !lastSetup.isConnected()) {
+            if (lastSetup == null || !lastSetup.isConnected() || !checkConnected()) {
                 connectDB(setup);
                 lastSetup = setup;
                 oldDbType = setup.getDbType();

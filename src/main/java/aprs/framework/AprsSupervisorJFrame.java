@@ -1580,6 +1580,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void jMenuItemSafeAbortAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSafeAbortAllActionPerformed
         lastFutureReturned = safeAbortAll();
+        lastFutureReturned.thenRun(() -> immediateAbortAll());
+        jCheckBoxMenuItemContinousDemo.setSelected(false);
+        jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
+        jCheckBoxMenuItemPauseResumeTest.setSelected(false);
+        jCheckBoxMenuItemRandomTest.setSelected(false);
     }//GEN-LAST:event_jMenuItemSafeAbortAllActionPerformed
 
     private void jMenuItemImmediateAbortAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImmediateAbortAllActionPerformed
@@ -1590,6 +1595,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemContinousDemo.setSelected(false);
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         jCheckBoxMenuItemRandomTest.setSelected(false);
+        jCheckBoxMenuItemPauseResumeTest.setSelected(false);
         jCheckBoxMenuItemPause.setSelected(false);
     }//GEN-LAST:event_jMenuItemImmediateAbortAllActionPerformed
 

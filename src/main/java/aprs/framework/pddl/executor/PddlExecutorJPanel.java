@@ -30,6 +30,7 @@ import static aprs.framework.Utils.autoResizeTableColWidths;
 import static aprs.framework.Utils.autoResizeTableRowHeights;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
+import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.spvision.VisionToDBJPanel;
 import crcl.base.CRCLCommandInstanceType;
@@ -204,6 +205,7 @@ import static crcl.utils.CRCLPosemath.vector;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  *
@@ -1660,11 +1662,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public void refresh() {
+        String origErrorString = this.getErrorString();
         String fname = jTextFieldPddlOutputActions.getText();
         File f = new File(fname);
         if (f.exists() && f.canRead()) {
             try {
                 loadActionsFile(f);
+                if (this.getErrorString() == origErrorString) {
+                    setErrorString(null);
+                }
             } catch (IOException ex) {
                 Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1710,11 +1716,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return dbSetupSupplier;
     }
 
+    private final DbSetupListener dbSetupListener = new DbSetupListener() {
+        @Override
+        public void accept(DbSetup setup) {
+            handleNewDbSetup(setup);
+        }
+    };
+
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {
         this.dbSetupSupplier = dbSetupSupplier;
         try {
             dbSetupPublisher = dbSetupSupplier.call();
-            dbSetupPublisher.addDbSetupListener(this::handleNewDbSetup);
+            dbSetupPublisher.addDbSetupListener(dbSetupListener);
         } catch (Exception ex) {
             Logger.getLogger(VisionToDBJPanel.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -2888,6 +2901,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != lastContinueActionFuture) {
             lastContinueActionFuture.printStatus(System.out);
         }
+
+        System.out.println("checkDbSupplierPublisherFuturesList = " + checkDbSupplierPublisherFuturesList);
     }
 
     private volatile boolean startSafeAbortRunningProgram = false;
@@ -3823,40 +3838,54 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
+    private volatile List<Future<?>> checkDbSupplierPublisherFuturesList = null;
+
     private XFuture<Void> checkDbSupplierPublisher() throws IOException {
         if (null != this.pddlActionToCrclGenerator && pddlActionToCrclGenerator.isConnected()) {
             return XFuture.completedFutureWithName("checkDbSupplierPublisher.completedFuture", null);
         }
+        XFuture<Void> f1 = new XFuture<>("checkDbSupplierPublisher.f1");
+        newDbSetupFutures.add(f1);
         if (null != dbSetupSupplier) {
             try {
                 dbSetupPublisher = dbSetupSupplier.call();
-                dbSetupPublisher.addDbSetupListener(this::handleNewDbSetup);
+                dbSetupPublisher.addDbSetupListener(dbSetupListener);
 
             } catch (Exception ex) {
                 Logger.getLogger(VisionToDBJPanel.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
+//        XFuture<Void> f2;
         if (null != dbSetupPublisher) {
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
-            List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
-            return XFuture.runAsync("checkDbSupplierPublisherRunAsync", () -> {
-                for (Future<?> f : futures) {
-                    if (!f.isDone() && !f.isCancelled()) {
-                        try {
-                            f.get();
-
-                        } catch (InterruptedException | ExecutionException ex) {
-                            Logger.getLogger(PddlExecutorJPanel.class
-                                    .getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                }
-            });
+            checkDbSupplierPublisherFuturesList = dbSetupPublisher.notifyAllDbSetupListeners();
+//            final List<Future<?>> futures = new ArrayList<>();
+//            futures.addAll(origFuturesList);
+//            f2=  XFuture.runAsync("checkDbSupplierPublisherRunAsync", () -> {
+//                try {
+//                    for (Future<?> f : futures) {
+//                        if (!f.isDone() && !f.isCancelled()) {
+//                            try {
+//                                f.get();
+//                                
+//                            } catch (Exception ex) {
+//                                Logger.getLogger(PddlExecutorJPanel.class
+//                                        .getName()).log(Level.SEVERE, null, ex);
+//                            }
+//                        }
+//                    }
+//                } catch (Exception e) {
+//                    Logger.getLogger(PddlExecutorJPanel.class
+//                                        .getName()).log(Level.SEVERE, null, e);
+//                }
+//            });
         } else {
             System.err.println("dbSetupPublisher == null");
+//            f2 = new XFuture<>("checkDbSupplierPublisher.f2.dbSetupPublisher==null");
+            f1.completeExceptionally(new IllegalStateException("dbSetupPublisher == null"));
         }
-        return XFuture.completedFutureWithName("checkDbSupplierPublisher.completedFuture3", null);
+        return f1; //XFuture.allOf("checkDbSupplierPublisher.all", f1,f2);
     }
 
     public void setOption(String key, String val) {
@@ -4034,7 +4063,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         continue;
                     }
                     String fname = emf.trim();
-                    if (fname.length() < 1 ||"null".equals(fname)) {
+                    if (fname.length() < 1 || "null".equals(fname)) {
                         continue;
                     }
                     File f = new File(fname);
@@ -4055,7 +4084,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                                 Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         } else {
-                            String errString ="Can't load errorMapFile : "+fname +"   or "+fullPath;
+                            String errString = "Can't load errorMapFile : " + fname + "   or " + fullPath;
                             setErrorString(errString);
                             System.err.println(errString);
 //                            aprsJFrame.setTitleErrorString(errorString);
@@ -4124,9 +4153,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public void close() throws Exception {
     }
 
+    final ConcurrentLinkedDeque<XFuture<Void>> newDbSetupFutures = new ConcurrentLinkedDeque<>();
+
     private void handleNewDbSetup(DbSetup setup) {
         if (null != pddlActionToCrclGenerator) {
-            pddlActionToCrclGenerator.accept(setup);
+            pddlActionToCrclGenerator.setDbSetup(setup)
+                    .thenRun(() -> {
+                        XFuture<Void> f = newDbSetupFutures.poll();
+                        while (f != null) {
+                            f.complete(null);
+                            f = newDbSetupFutures.poll();
+                        }
+                    });
         }
     }
 

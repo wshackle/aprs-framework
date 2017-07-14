@@ -315,7 +315,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param dbSetup new database setup object to use.
      */
-    public void setDbSetup(DbSetup dbSetup) {
+    public XFuture<Void> setDbSetup(DbSetup dbSetup) {
 
         this.dbSetup = dbSetup;
         if (null != this.dbSetup && this.dbSetup.isConnected()) {
@@ -323,12 +323,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 throw new IllegalArgumentException("dbSetup.getDbType() =" + dbSetup.getDbType());
             }
             if (dbConnection == null) {
+                XFuture<Void> ret = new XFuture<>("PddlActionToCrclGenerator.setDbSetup");
                 try {
                     final StackTraceElement stackTraceElemArray[] = Thread.currentThread().getStackTrace();
                     DbSetupBuilder.connect(dbSetup).handle((c, ex) -> {
                         if (null != c) {
                             Utils.runOnDispatchThread(() -> {
                                 setDbConnection(c);
+                                ret.complete(null);
                             });
                         }
                         if (null != ex) {
@@ -345,6 +347,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                 }
                                 aprsJFrame.setTitleErrorString("Database error: " + ex.toString());
                             }
+                            ret.completeExceptionally(ex);
                         }
                         return c;
                     });
@@ -352,9 +355,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 } catch (Exception ex) {
                     Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                return ret;
             }
+            return XFuture.completedFutureWithName("setDbSetup.(dbConnection!=null)", null);
         } else {
             setDbConnection(null);
+            return XFuture.completedFutureWithName("setDbSetup.setDbConnnection(null)", null);
         }
     }
 
@@ -471,6 +477,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options)
             throws IllegalStateException, SQLException {
 
+        if (null == qs) {
+            throw new IllegalStateException("Database not setup and connected.");
+        }
         this.options = options;
         crclNumber++;
         List<MiddleCommandType> cmds = new ArrayList<>();
@@ -601,16 +610,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void clearKitsToCheck(PddlAction action, List<MiddleCommandType> cmds) {
         kitsToCheck.clear();
     }
-    
+
 //    private void waitForUser(CrclCommandWrapper wrapper) {
 //        Utils.supplyOnDispatchThread(() -> JOptionPane.showConfirmDialog(null, "Continue?")).join();
 //    }
-
     private void pause(PddlAction action, List<MiddleCommandType> cmds) {
-        addMarkerCommand(cmds, "pause",x -> aprsJFrame.pause());
+        addMarkerCommand(cmds, "pause", x -> aprsJFrame.pause());
     }
 
-    
     private void addKitToCheck(PddlAction action, List<MiddleCommandType> cmds) {
         KitToCheck kit = new KitToCheck();
         kit.name = action.getArgs()[0];
@@ -2305,21 +2312,24 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private void addMoveUpFromCurrent(List<MiddleCommandType> cmds, double offset, double limit) {
-        MoveToType moveToCmd = new MoveToType();
-        moveToCmd.setMoveStraight(true);
-        moveToCmd.setEndPosition(CRCLPosemath.identityPose());
-        addOptionalCommand(moveToCmd, cmds, (CrclCommandWrapper wrapper) -> {
+
+        MessageType origMessageCmd = new MessageType();
+        origMessageCmd.setMessage("moveUpFromCurrent");
+        setCommandId(origMessageCmd);
+        addOptionalCommand(origMessageCmd, cmds, (CrclCommandWrapper wrapper) -> {
             MiddleCommandType cmd = wrapper.getWrappedCommand();
             if (cmd instanceof MoveToType) {
                 MoveToType mtCmd = (MoveToType) cmd;
                 PoseType pose = aprsJFrame.getCurrentPose();
                 if (pose == null || pose.getPoint() == null || pose.getPoint().getZ() >= (limit - 1e-6)) {
                     MessageType messageCommand = new MessageType();
-                    setCommandId(messageCommand);
                     messageCommand.setMessage("moveUpFromCurrent NOT needed.");
                     wrapper.setWrappedCommand(messageCommand);
                 } else {
-                    moveToCmd.setEndPosition(copyAndAddZ(aprsJFrame.getCurrentPose(), offset, limit));
+                    MoveToType moveToCmd = new MoveToType();
+                    moveToCmd.setEndPosition(copyAndAddZ(pose, offset, limit));
+                    moveToCmd.setMoveStraight(true);
+                    wrapper.setWrappedCommand(moveToCmd);
                 }
             }
         });
@@ -2593,9 +2603,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private Map<String, Integer> lastRequiredPartsMap = null;
-    
+
     public void clearLastRequiredPartsMap() {
-        if(null != lastRequiredPartsMap) {
+        if (null != lastRequiredPartsMap) {
             lastRequiredPartsMap.clear();
         }
         lastRequiredPartsMap = null;
@@ -2863,7 +2873,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         checkSettings();
         String slotName = action.getArgs()[placePartSlotArgIndex];
-        
+
         placePartBySlotName(slotName, out, action);
 
     }

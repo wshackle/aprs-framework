@@ -107,9 +107,13 @@ public class VisionSocketClient implements AutoCloseable {
             listToSend.addAll(visionList);
             synchronized (listListeners) {
                 for (int i = 0; i < listListeners.size(); i++) {
-                    VisionSocketClientListener listener = listListeners.get(i);
-                    if (null != listener) {
-                        listener.visionClientUpdateRecieved(listToSend, this.getLine());
+                    try {
+                        VisionSocketClientListener listener = listListeners.get(i);
+                        if (null != listener) {
+                            listener.visionClientUpdateRecieved(listToSend, this.getLine());
+                        }
+                    } catch (Exception e) {
+                        Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, null, e);
                     }
                 }
             }
@@ -256,7 +260,7 @@ public class VisionSocketClient implements AutoCloseable {
                 }
                 double y = Double.parseDouble(fa[i + 3]);
                 if (!Double.isFinite(y)) {
-                    logErr(displayInterface,"Ignoring item with invalid y  at position =" + (i + 3) + " of " + (fa[i + 3]) + "in " + line + "\n");
+                    logErr(displayInterface, "Ignoring item with invalid y  at position =" + (i + 3) + " of " + (fa[i + 3]) + "in " + line + "\n");
                     continue;
                 }
                 double score = 0.0;

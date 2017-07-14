@@ -25,6 +25,7 @@ package aprs.framework;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupJInternalFrame;
+import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.PhysicalItem;
@@ -88,6 +89,7 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -420,7 +422,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public XFuture<Void> startSafeAbortAndDisconnectAsync() {
         startSafeAbortAndDisconnectAsyncFuture
                 = this.pddlExecutorJInternalFrame1.startSafeAbort()
-                        .thenRunAsync(this::disconnectRobot);
+                .thenRunAsync(this::disconnectRobot);
         return startSafeAbortAndDisconnectAsyncFuture;
     }
 
@@ -890,6 +892,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             setTitleErrorString("Error starting motoman crcl server:" + ex.getMessage());
+            if (null != motomanCrclServerJInternalFrame) {
+                motomanCrclServerJInternalFrame.setVisible(true);
+                addInternalFrame(motomanCrclServerJInternalFrame);
+            }
         }
     }
 
@@ -902,21 +908,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private ExecutorService connectService = Executors.newSingleThreadExecutor();
-    private Future connectDatabaseFuture = null;
+    private XFuture connectDatabaseFuture = null;
 
-    private void startConnectDatabase() {
+    private XFuture<Boolean> startConnectDatabase() {
+        XFuture<Boolean> f = waitDbConnected();
         if (closing) {
             throw new IllegalStateException("Attempt to start connect database when already closing.");
         }
         System.out.println("Starting connect to database ...");
-        jCheckBoxMenuItemConnectDatabase.setSelected(true);
-        jCheckBoxMenuItemConnectDatabase.setEnabled(true);
         DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
         DbSetup setup = dbSetupPublisher.getDbSetup();
         if (setup.getDbType() == null || setup.getDbType() == DbType.NONE) {
             throw new IllegalStateException("Can not connect to database with setup.getDbType() = " + setup.getDbType());
         }
-        connectDatabaseFuture = connectService.submit(this::connectDatabase);
+        connectDatabaseFuture = XFuture.runAsync("connectDatabase", this::connectDatabase, connectService);
+        //connectService.submit(this::connectDatabase);
+        return f;
     }
 
     private void connectDatabase() {
@@ -926,6 +933,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             DbSetup setup = dbSetupPublisher.getDbSetup();
             if (setup.getDbType() == null || setup.getDbType() == DbType.NONE) {
                 throw new IllegalStateException("Can not connect to database with setup.getDbType() = " + setup.getDbType());
+            }
+            if(setup.getQueriesMap().isEmpty()) {
+                 throw new IllegalStateException("Can not connect to database with getQueriesMap().isEmpty()");
             }
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             futures = dbSetupPublisher.notifyAllDbSetupListeners();
@@ -937,6 +947,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     f.get();
                 }
             }
+            jCheckBoxMenuItemConnectDatabase.setEnabled(true);
             System.out.println("Finished connect to database.");
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -1526,9 +1537,24 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     };
 
+    private volatile boolean dbConnected = false;
+
     private void updateDbConnectedCheckBox(DbSetup setup) {
+        dbConnected = setup.isConnected();
         jCheckBoxMenuItemConnectDatabase.setSelected(setup.isConnected());
+        XFuture<Boolean> f = dbConnectedWaiters.poll();
+        while (f != null) {
+            f.complete(dbConnected);
+            f = dbConnectedWaiters.poll();
+        }
     }
+    
+    private final DbSetupListener dbSetupListener = new DbSetupListener() {
+        @Override
+        public void accept(DbSetup setup) {
+            updateDbConnectedCheckBox(setup);
+        }
+    };
 
     private void createDbSetupFrame() {
         if (null == dbSetupJInternalFrame) {
@@ -1537,14 +1563,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             dbSetupJInternalFrame.pack();
             dbSetupJInternalFrame.loadRecent();
             jDesktopPane1.add(dbSetupJInternalFrame, JLayeredPane.DEFAULT_LAYER);
-            dbSetupJInternalFrame.getDbSetupPublisher().addDbSetupListener(this::updateDbConnectedCheckBox);
+            dbSetupJInternalFrame.getDbSetupPublisher().addDbSetupListener(dbSetupListener);
             if (null != dbSetup) {
                 DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
                 if (null != pub) {
                     pub.setDbSetup(dbSetup);
                 }
             }
-
         }
     }
 
@@ -2472,14 +2497,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         List<PhysicalItem> itemsList = getSimviewItems();
         Map<String, Integer> requiredItemsMap
                 = itemsList.stream()
-                        .filter(this::isWithinLimits)
-                        .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
+                .filter(this::isWithinLimits)
+                .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
         String requiredItemsString
                 = requiredItemsMap
-                        .entrySet()
-                        .stream()
-                        .map(entry -> entry.getKey() + "=" + entry.getValue())
-                        .collect(Collectors.joining(" "));
+                .entrySet()
+                .stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining(" "));
         List<PhysicalItem> kitTrays = itemsList.stream()
                 .filter(x -> "KT".equals(x.getType()))
                 .collect(Collectors.toList());
@@ -2532,8 +2557,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }
                 ps.println("(add-kit-to-check " + kit.getName() + " "
                         + slotPrpToPartSkuMap.entrySet().stream()
-                                .map(e -> e.getKey() + "=" + e.getValue())
-                                .collect(Collectors.joining(" "))
+                        .map(e -> e.getKey() + "=" + e.getValue())
+                        .collect(Collectors.joining(" "))
                         + ")");
             }
             ps.println("(pause)");
@@ -2780,6 +2805,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private final ConcurrentLinkedDeque<XFuture<Boolean>> dbConnectedWaiters = new ConcurrentLinkedDeque<>();
+
+    private XFuture<Boolean> waitDbConnected() {
+        XFuture<Boolean> f = new XFuture<>("waitDbConnected");
+        dbConnectedWaiters.add(f);
+        return f;
+    }
+
     /**
      * Start the PDDL actions currently loaded in the executor from the
      * beginning.
@@ -2799,9 +2832,27 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(true);
         }
+        if (null != motomanCrclServerJInternalFrame) {
+            if (this.getRobotName().toUpperCase().contains("MOTOMAN")) {
+                if (!motomanCrclServerJInternalFrame.isCrclMotoplusConnected()) {
+                    try {
+                        motomanCrclServerJInternalFrame.connectCrclMotoplus();
+                    } catch (IOException ex) {
+                        Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                if (!motomanCrclServerJInternalFrame.isCrclMotoplusConnected()) {
+                    setTitleErrorString("Motoman CRCL Server not connected.");
+                }
+            }
+        }
         takeSnapshots("startActions");
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.refresh();
+            if (!dbConnected) {
+                return startConnectDatabase().
+                        thenCompose(x -> pddlExecutorJInternalFrame1.startActions());
+            }
             return pddlExecutorJInternalFrame1.startActions();
         } else {
             return XFuture.completedFuture(false);
@@ -3526,7 +3577,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     Future disconnectDatabaseFuture = null;
 
     private void startDisconnectDatabase() {
-        jCheckBoxMenuItemConnectDatabase.setSelected(false);
         jCheckBoxMenuItemConnectDatabase.setEnabled(false);
         if (null != connectDatabaseFuture) {
             connectDatabaseFuture.cancel(true);
@@ -3538,6 +3588,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void disconnectDatabase() {
 
         try {
+            dbConnected = false;
             if (null != connectDatabaseFuture) {
                 connectDatabaseFuture.cancel(true);
                 connectDatabaseFuture = null;
@@ -3558,7 +3609,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }
             }
             System.out.println("Finished disconnect from database.");
-
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
