@@ -64,6 +64,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return actionsToCrclJPanel1.checkSafeAbort(supplier);
     }
     
+     public XFuture<Boolean> lookForParts() {
+        return actionsToCrclJPanel1.lookForParts();
+    }
+     
     /**
      * Modify the given pose by applying all of the currently added position maps.
      * 

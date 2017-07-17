@@ -934,8 +934,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             if (setup.getDbType() == null || setup.getDbType() == DbType.NONE) {
                 throw new IllegalStateException("Can not connect to database with setup.getDbType() = " + setup.getDbType());
             }
-            if(setup.getQueriesMap().isEmpty()) {
-                 throw new IllegalStateException("Can not connect to database with getQueriesMap().isEmpty()");
+            if (setup.getQueriesMap().isEmpty()) {
+                throw new IllegalStateException("Can not connect to database with getQueriesMap().isEmpty()");
             }
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             futures = dbSetupPublisher.notifyAllDbSetupListeners();
@@ -1548,7 +1548,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             f = dbConnectedWaiters.poll();
         }
     }
-    
+
     private final DbSetupListener dbSetupListener = new DbSetupListener() {
         @Override
         public void accept(DbSetup setup) {
@@ -1709,6 +1709,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jCheckBoxMenuItemEnableDebugDumpstacks = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetPoseMaxLimits = new javax.swing.JMenuItem();
         jMenuItemSetPoseMinLimits = new javax.swing.JMenuItem();
+        jCheckBoxMenuItemSnapshotImageSize = new javax.swing.JCheckBoxMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
@@ -1719,6 +1720,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenuItemDebugAction = new javax.swing.JMenuItem();
         jCheckBoxMenuItemForceFakeTake = new javax.swing.JCheckBoxMenuItem();
         jMenuItemCreateActionListFromVision = new javax.swing.JMenuItem();
+        jMenuItemLookFor = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
@@ -1940,6 +1942,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
         jMenu4.add(jMenuItemSetPoseMinLimits);
 
+        jCheckBoxMenuItemSnapshotImageSize.setText("Snapshot Image size (800 x 600 )");
+        jCheckBoxMenuItemSnapshotImageSize.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemSnapshotImageSizeActionPerformed(evt);
+            }
+        });
+        jMenu4.add(jCheckBoxMenuItemSnapshotImageSize);
+
         jMenuBar1.add(jMenu4);
 
         jMenuExecute.setText("Execute");
@@ -2016,6 +2026,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenuExecute.add(jMenuItemCreateActionListFromVision);
+
+        jMenuItemLookFor.setText("Look For");
+        jMenuItemLookFor.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemLookForActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemLookFor);
 
         jMenuBar1.add(jMenuExecute);
 
@@ -2372,11 +2390,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_jMenuItemContinueActionListActionPerformed
 
     private void jMenuItemCreateActionListFromVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCreateActionListFromVisionActionPerformed
-        try {
-            createActionListFromVision();
-        } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        createActionListFromVision();
     }//GEN-LAST:event_jMenuItemCreateActionListFromVisionActionPerformed
 
     private void jMenuItemSetPoseMinLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPoseMinLimitsActionPerformed
@@ -2396,6 +2410,33 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setMaxLimit(cart);
         }
     }//GEN-LAST:event_jMenuItemSetPoseMaxLimitsActionPerformed
+
+    private void jCheckBoxMenuItemSnapshotImageSizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemSnapshotImageSizeActionPerformed
+        if (jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            String newSnapshotImageSize = JOptionPane.showInputDialog(this, "New Snapshot Image Size",
+                    String.format("%d x %d ", snapShotWidth, snapShotHeight));
+            if (newSnapshotImageSize != null && newSnapshotImageSize.length() > 0) {
+                String sa[] = newSnapshotImageSize.split("[ \tx,]+");
+                if (sa.length == 2) {
+                    snapShotWidth = Integer.parseInt(sa[0]);
+                    snapShotHeight = Integer.parseInt(sa[1]);
+                    setImageSizeMenuText();
+                }
+            }
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemSnapshotImageSizeActionPerformed
+
+    private void jMenuItemLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLookForActionPerformed
+        lookForParts();
+    }//GEN-LAST:event_jMenuItemLookForActionPerformed
+
+    public XFuture<Boolean> lookForParts() {
+        return pddlExecutorJInternalFrame1.lookForParts();
+    }
+
+    private void setImageSizeMenuText() {
+        jCheckBoxMenuItemSnapshotImageSize.setText(String.format("Snapshot Image size (%d x %d )", snapShotWidth, snapShotHeight));
+    }
 
     public boolean isWithinMaxLimits(PmCartesian cart) {
         return cart != null
@@ -2493,89 +2534,93 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem);
     }
 
-    public void createActionListFromVision() throws IOException {
-        List<PhysicalItem> itemsList = getSimviewItems();
-        Map<String, Integer> requiredItemsMap
-                = itemsList.stream()
-                .filter(this::isWithinLimits)
-                .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
-        String requiredItemsString
-                = requiredItemsMap
-                .entrySet()
-                .stream()
-                .map(entry -> entry.getKey() + "=" + entry.getValue())
-                .collect(Collectors.joining(" "));
-        List<PhysicalItem> kitTrays = itemsList.stream()
-                .filter(x -> "KT".equals(x.getType()))
-                .collect(Collectors.toList());
-        System.out.println("requiredItemsString = " + requiredItemsString);
-        File f = createTempFile("actionList", ".txt");
-        try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
-            ps.println("(clear-kits-to-check)");
-            ps.println("(look-for-parts 0 " + requiredItemsString + ")");
-            ConcurrentMap<String, Integer> kitUsedMap = new ConcurrentHashMap<>();
-            ConcurrentMap<String, Integer> ptUsedMap = new ConcurrentHashMap<>();
-            List<String> kitToCheckStrings = new ArrayList<>();
-            for (PhysicalItem kit : kitTrays) {
-                Map<String, String> slotPrpToPartSkuMap = new HashMap<>();
-                List<Slot> slotOffsetList = getSlotOffsets(kit.getName());
-                double x = kit.x;
-                double y = kit.y;
-                double rot = kit.getRotation();
-                String shortKitName = kit.getName();
-                if (shortKitName.startsWith("sku_")) {
-                    shortKitName = shortKitName.substring(4);
-                }
-                int kitNumber = -1;
-                for (Slot slotOffset : slotOffsetList) {
-                    PhysicalItem absSlot = absSlotFromTrayAndOffset(kit, slotOffset);
-                    PhysicalItem closestPart = closestPart(absSlot.x, absSlot.y, itemsList);
-                    double minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
-                    if (minDist < 20) {
-                        int pt_used_num = ptUsedMap.compute(closestPart.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
-                        String shortPartName = closestPart.getName();
-                        if (shortPartName.startsWith("sku_")) {
-                            shortPartName = shortPartName.substring(4);
-                        }
-                        String partName = shortPartName + "_in_pt_" + pt_used_num;
-                        ps.println("(take-part " + partName + ")");
-                        String shortSkuName = slotOffset.getSlotForSkuName();
-                        if (shortSkuName.startsWith("sku_")) {
-                            shortSkuName = shortSkuName.substring(4);
-                        }
-                        if (shortSkuName.startsWith("part_")) {
-                            shortSkuName = shortSkuName.substring(5);
-                        }
-                        if (kitNumber < 0) {
-                            kitNumber = kitUsedMap.compute(kit.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
-                        }
-                        String slotName = "empty_slot_" + slotOffset.getPrpName().substring(slotOffset.getPrpName().lastIndexOf("_") + 1) + "_for_" + shortSkuName + "_in_" + shortKitName + "_" + kitNumber;
-                        ps.println("(place-part " + slotName + ")");
-                        slotPrpToPartSkuMap.put(slotOffset.getPrpName(), closestPart.getName());
-                    } else {
-                        slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
+    public void createActionListFromVision() {
+        try {
+            List<PhysicalItem> itemsList = getSimviewItems();
+            Map<String, Integer> requiredItemsMap
+                    = itemsList.stream()
+                    .filter(this::isWithinLimits)
+                    .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
+            String requiredItemsString
+                    = requiredItemsMap
+                    .entrySet()
+                    .stream()
+                    .map(entry -> entry.getKey() + "=" + entry.getValue())
+                    .collect(Collectors.joining(" "));
+            List<PhysicalItem> kitTrays = itemsList.stream()
+                    .filter(x -> "KT".equals(x.getType()))
+                    .collect(Collectors.toList());
+            System.out.println("requiredItemsString = " + requiredItemsString);
+            File f = createTempFile("actionList", ".txt");
+            try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
+                ps.println("(clear-kits-to-check)");
+                ps.println("(look-for-parts 0 " + requiredItemsString + ")");
+                ConcurrentMap<String, Integer> kitUsedMap = new ConcurrentHashMap<>();
+                ConcurrentMap<String, Integer> ptUsedMap = new ConcurrentHashMap<>();
+                List<String> kitToCheckStrings = new ArrayList<>();
+                for (PhysicalItem kit : kitTrays) {
+                    Map<String, String> slotPrpToPartSkuMap = new HashMap<>();
+                    List<Slot> slotOffsetList = getSlotOffsets(kit.getName());
+                    double x = kit.x;
+                    double y = kit.y;
+                    double rot = kit.getRotation();
+                    String shortKitName = kit.getName();
+                    if (shortKitName.startsWith("sku_")) {
+                        shortKitName = shortKitName.substring(4);
                     }
+                    int kitNumber = -1;
+                    for (Slot slotOffset : slotOffsetList) {
+                        PhysicalItem absSlot = absSlotFromTrayAndOffset(kit, slotOffset);
+                        PhysicalItem closestPart = closestPart(absSlot.x, absSlot.y, itemsList);
+                        double minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
+                        if (minDist < 20) {
+                            int pt_used_num = ptUsedMap.compute(closestPart.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
+                            String shortPartName = closestPart.getName();
+                            if (shortPartName.startsWith("sku_")) {
+                                shortPartName = shortPartName.substring(4);
+                            }
+                            String partName = shortPartName + "_in_pt_" + pt_used_num;
+                            ps.println("(take-part " + partName + ")");
+                            String shortSkuName = slotOffset.getSlotForSkuName();
+                            if (shortSkuName.startsWith("sku_")) {
+                                shortSkuName = shortSkuName.substring(4);
+                            }
+                            if (shortSkuName.startsWith("part_")) {
+                                shortSkuName = shortSkuName.substring(5);
+                            }
+                            if (kitNumber < 0) {
+                                kitNumber = kitUsedMap.compute(kit.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
+                            }
+                            String slotName = "empty_slot_" + slotOffset.getPrpName().substring(slotOffset.getPrpName().lastIndexOf("_") + 1) + "_for_" + shortSkuName + "_in_" + shortKitName + "_" + kitNumber;
+                            ps.println("(place-part " + slotName + ")");
+                            slotPrpToPartSkuMap.put(slotOffset.getPrpName(), closestPart.getName());
+                        } else {
+                            slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
+                        }
+                    }
+                    kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
+                            + slotPrpToPartSkuMap.entrySet().stream()
+                            .map(e -> e.getKey() + "=" + e.getValue())
+                            .collect(Collectors.joining(" "))
+                            + ")");
                 }
-                kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
-                        + slotPrpToPartSkuMap.entrySet().stream()
-                        .map(e -> e.getKey() + "=" + e.getValue())
-                        .collect(Collectors.joining(" "))
-                        + ")");
+
+                ps.println("(look-for-parts 2)");
+                ps.println("(clear-kits-to-check)");
+                for (String kitToCheckString : kitToCheckStrings) {
+                    ps.println(kitToCheckString);
+                }
+                ps.println("(check-kits)");
+                ps.println("(clear-kits-to-check)");
+                ps.println("(end-program)");
             }
-            
-            ps.println("(look-for-parts 2)");
-            ps.println("(clear-kits-to-check)");
-            for(String kitToCheckString : kitToCheckStrings) {
-                ps.println(kitToCheckString);
+            if (null != pddlExecutorJInternalFrame1) {
+                pddlExecutorJInternalFrame1.setReverseFlag(false);
+                pddlExecutorJInternalFrame1.loadActionsFile(f);
+                pddlExecutorJInternalFrame1.setReverseFlag(jCheckBoxMenuItemReverse.isSelected());
             }
-            ps.println("(check-kits)");
-            ps.println("(clear-kits-to-check)");
-            ps.println("(end-program)");
-        }
-        if (null != pddlExecutorJInternalFrame1) {
-            pddlExecutorJInternalFrame1.setReverseFlag(false);
-            pddlExecutorJInternalFrame1.loadActionsFile(f);
-            pddlExecutorJInternalFrame1.setReverseFlag(jCheckBoxMenuItemReverse.isSelected());
+        } catch (IOException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -2984,35 +3029,76 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         lastAprsPropertiesFileFile = getDefaultLastPropertiesFileFile();
     }
 
-//    private final DbSetupListener toVisListener = new DbSetupListener() {
-//        @Override
-//        public void accept(DbSetup setup) {
-//            Utils.runOnDispatchThread(() -> {
-//                dbSetup = setup;
-//                if (null != visionToDbJInternalFrame) {
-//                    DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
-//                    publishDbSetup(pub, setup);
-//                }
-//            });
-//        }
-//    };
-//    private final DbSetupListener toDbListener = new DbSetupListener() {
-//        @Override
-//        public void accept(DbSetup setup) {
-//            Utils.runOnDispatchThread(() -> {
-//                dbSetup = setup;
-//                if (null != dbSetupJInternalFrame) {
-//                    DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
-//                    publishDbSetup(pub, setup);
-//                }
-//            });
-//        }
-//
-//    };
     private void publishDbSetup(DbSetupPublisher pub, DbSetup setup) {
         if (null != pub && setup.getDbType() != DbType.NONE && setup.getDbType() != null) {
-//            saveDbSetup();
             pub.setDbSetup(setup);
+        }
+    }
+
+    private int snapShotWidth = 800;
+    private int snapShotHeight = 600;
+
+    /**
+     * Take a snapshot of the view of objects positions and save it in the
+     * specified file, optionally highlighting a pose with a label.
+     *
+     * @param f file to save snapshot image to
+     * @param pose optional pose to mark or null
+     * @param label optional label for pose or null
+     * @throws IOException if writing the file fails
+     */
+    public void takeSimViewSnapshot(File f, PoseType pose, String label) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(f, pose, label, snapShotWidth, snapShotHeight);
+        }
+    }
+
+    public void takeSimViewSnapshot(File f, PointType point, String label) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
+        }
+    }
+
+    public void takeSimViewSnapshot(File f, PmCartesian point, String label) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
+        }
+    }
+
+    public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pose, poseLabel, snapShotWidth, snapShotHeight);
+        }
+    }
+
+    public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, snapShotWidth, snapShotHeight);
+        }
+    }
+
+    public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, snapShotWidth, snapShotHeight);
+        }
+    }
+
+    /**
+     ** Take a snapshot of the view of objects positions passed in the list.
+     *
+     * @param f file to save snapshot image to
+     * @param itemsToPaint list of items to paint
+     * @throws IOException if writing the file fails
+     */
+    public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, snapShotWidth, snapShotHeight);
+        }
+    }
+
+    public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            this.object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), itemsToPaint, snapShotWidth, snapShotHeight);
         }
     }
 
@@ -3025,39 +3111,39 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param label optional label for pose or null
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, PoseType pose, String label) throws IOException {
-        if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.takeSnapshot(f, pose, label);
+    public void takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(f, pose, label, w, h);
         }
     }
 
-    public void takeSimViewSnapshot(File f, PointType point, String label) throws IOException {
-        if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.takeSnapshot(f, point, label);
+    public void takeSimViewSnapshot(File f, PointType point, String label, int w, int h) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         }
     }
 
-    public void takeSimViewSnapshot(File f, PmCartesian point, String label) throws IOException {
-        if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.takeSnapshot(f, point, label);
+    public void takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         }
     }
 
-    public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
-        if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pose, poseLabel);
+    public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pose, poseLabel, w, h);
         }
     }
 
-    public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel) throws IOException {
-        if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel);
+    public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, w, h);
         }
     }
 
-    public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
-        if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel);
+    public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) throws IOException {
+        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, w, h);
         }
     }
 
@@ -3068,15 +3154,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param itemsToPaint list of items to paint
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
+    public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException {
         if (null != object2DViewJInternalFrame) {
-            this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint);
+            this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, w, h);
         }
     }
 
-    public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
+    public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException {
         if (null != object2DViewJInternalFrame) {
-            this.object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), itemsToPaint);
+            this.object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), itemsToPaint, w, h);
         }
     }
 
@@ -3219,6 +3305,20 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != minLimitString && minLimitString.trim().length() > 0) {
             setMinLimit(PmCartesian.valueOf(minLimitString));
         }
+
+        String snapShotEnableString = props.getProperty("snapShotEnable");
+        if (null != snapShotEnableString && snapShotEnableString.trim().length() > 0) {
+            jCheckBoxMenuItemSnapshotImageSize.setSelected(Boolean.valueOf(snapShotEnableString));
+        }
+        String snapShotWidthString = props.getProperty("snapShotWidth");
+        if (null != snapShotWidthString && snapShotWidthString.trim().length() > 0) {
+            snapShotWidth = Integer.parseInt(snapShotWidthString);
+        }
+        String snapShotHeightString = props.getProperty("snapShotHeight");
+        if (null != snapShotHeightString && snapShotHeightString.trim().length() > 0) {
+            snapShotHeight = Integer.parseInt(snapShotHeightString);
+        }
+        setImageSizeMenuText();
         String taskNameString = props.getProperty(APRSTASK_PROPERTY_NAME);
         if (null != taskNameString) {
             setTaskName(taskNameString);
@@ -3308,6 +3408,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         propsMap.put(STARTUPKITINSPECTION, Boolean.toString(jCheckBoxMenuItemKitInspectionStartup.isSelected()));
         propsMap.put("maxLimit", maxLimit.toString());
         propsMap.put("minLimit", minLimit.toString());
+        propsMap.put("snapShotEnable", Boolean.toString(jCheckBoxMenuItemSnapshotImageSize.isSelected()));
+        propsMap.put("snapShotWidth", Integer.toString(snapShotWidth));
+        propsMap.put("snapShotHeight", Integer.toString(snapShotHeight));
         setDefaultRobotName();
         propsMap.put(APRSROBOT_PROPERTY_NAME, robotName);
         if (null != taskName) {
@@ -3458,6 +3561,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemSnapshotImageSize;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupCRCLWebApp;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupFanucCRCLServer;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupMotomanCRCLServer;
@@ -3481,6 +3585,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JMenuItem jMenuItemImmediateAbort;
     private javax.swing.JMenuItem jMenuItemLoadProperties;
     private javax.swing.JMenuItem jMenuItemLoadPropertiesFile;
+    private javax.swing.JMenuItem jMenuItemLookFor;
     private javax.swing.JMenuItem jMenuItemReset;
     private javax.swing.JMenuItem jMenuItemSaveProperties;
     private javax.swing.JMenuItem jMenuItemSavePropsAs;

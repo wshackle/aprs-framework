@@ -654,12 +654,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     .stream()
                     .filter(slot -> slot.getType().equals("S"))
                     .peek(slot -> {
-                       slot.setVxi(xAxis.getI());
-                       slot.setVxj(xAxis.getJ());
-                       slot.setVxk(xAxis.getK());
-                       slot.setVzi(zAxis.getI());
-                       slot.setVzj(zAxis.getJ());
-                       slot.setVzk(zAxis.getK());
+                        slot.setVxi(xAxis.getI());
+                        slot.setVxj(xAxis.getJ());
+                        slot.setVxk(xAxis.getK());
+                        slot.setVzi(zAxis.getI());
+                        slot.setVzj(zAxis.getJ());
+                        slot.setVzk(zAxis.getK());
                     })
                     .collect(Collectors.toList());
         } catch (SQLException ex) {
@@ -722,59 +722,64 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 System.out.println("");
             }
             Map<String, Integer> prefixCountMap = new HashMap<>();
-            for (KitToCheck kit : kitsToFix) {
-                List<String> kitInstanceNames = getKitInstanceNames(kit.name);
-                for (String kitInstanceName : kitInstanceNames) {
+            if (!kitsToFix.isEmpty()) {
+                for (KitToCheck kit : kitsToFix) {
+                    List<String> kitInstanceNames = getKitInstanceNames(kit.name);
+                    for (String kitInstanceName : kitInstanceNames) {
 
-                    if (matchedKitInstanceNames.contains(kitInstanceName)) {
-                        continue;
-                    }
-                    List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
-                            (String n) -> getAbsSlotListForKitInstance(kit.name, n));
-
-                    takeSimViewSnapshot(aprsJFrame.createTempFile("absSlots_" + kitInstanceName, ".PNG"), absSlots);
-                    for (Slot absSlot : absSlots) {
-                        String absSlotPrpName = absSlot.getPrpName();
-                        PhysicalItem closestItem = parts.stream()
-                                .min(Comparator.comparing(absSlot::distFromXY))
-                                .orElse(null);
-                        String itemSkuName = "empty";
-                        if (null != closestItem && closestItem.distFromXY(absSlot) < absSlot.getDiameter() / 2.0) {
-                            itemSkuName = closestItem.origName;
+                        if (matchedKitInstanceNames.contains(kitInstanceName)) {
+                            continue;
                         }
-                        if (!kit.slotMap.get(absSlotPrpName).equals(itemSkuName)) {
+                        List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
+                                (String n) -> getAbsSlotListForKitInstance(kit.name, n));
 
-                            if (!itemSkuName.equals("empty")) {
-                                takePartByPose(cmds, visionToRobotPose(closestItem.getPose()));
-                                String shortSkuName = itemSkuName;
-                                if (shortSkuName.startsWith("sku_")) {
-                                    shortSkuName = shortSkuName.substring(4);
-                                }
-                                if (shortSkuName.startsWith("part_")) {
-                                    shortSkuName = shortSkuName.substring(5);
-                                }
-                                String slotPrefix = "empty_slot_for_" + shortSkuName + "_in_" + shortSkuName + "_vessel";
-                                int count = prefixCountMap.compute(slotPrefix,
-                                        (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
-                                lastTakenPart = closestItem.getName();
-                                placePartBySlotName(slotPrefix + "_" + count, cmds, action);
+                        takeSimViewSnapshot(aprsJFrame.createTempFile("absSlots_" + kitInstanceName, ".PNG"), absSlots);
+                        for (Slot absSlot : absSlots) {
+                            String absSlotPrpName = absSlot.getPrpName();
+                            PhysicalItem closestItem = parts.stream()
+                                    .min(Comparator.comparing(absSlot::distFromXY))
+                                    .orElse(null);
+                            String itemSkuName = "empty";
+                            if (null != closestItem && closestItem.distFromXY(absSlot) < absSlot.getDiameter() / 2.0) {
+                                itemSkuName = closestItem.origName;
                             }
-                            String shortSkuName = kit.slotMap.get(absSlotPrpName);
-                            if (shortSkuName.startsWith("sku_")) {
-                                shortSkuName = shortSkuName.substring(4);
+                            String slotItemSkuName = kit.slotMap.get(absSlotPrpName);
+                            if (null != slotItemSkuName && !slotItemSkuName.equals(itemSkuName)) {
+
+                                if (!itemSkuName.equals("empty")) {
+                                    takePartByPose(cmds, visionToRobotPose(closestItem.getPose()));
+                                    String shortSkuName = itemSkuName;
+                                    if (shortSkuName.startsWith("sku_")) {
+                                        shortSkuName = shortSkuName.substring(4);
+                                    }
+                                    if (shortSkuName.startsWith("part_")) {
+                                        shortSkuName = shortSkuName.substring(5);
+                                    }
+                                    String slotPrefix = "empty_slot_for_" + shortSkuName + "_in_" + shortSkuName + "_vessel";
+                                    int count = prefixCountMap.compute(slotPrefix,
+                                            (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
+                                    lastTakenPart = closestItem.getName();
+                                    placePartBySlotName(slotPrefix + "_" + count, cmds, action);
+                                }
+                                if (!slotItemSkuName.equals("empty")) {
+                                    String shortSkuName = slotItemSkuName;
+                                    if (shortSkuName.startsWith("sku_")) {
+                                        shortSkuName = shortSkuName.substring(4);
+                                    }
+                                    String partNamePrefix = shortSkuName + "_in_pt";
+                                    int count = prefixCountMap.compute(partNamePrefix,
+                                            (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
+                                    takePartByName(partNamePrefix + "_" + count, null, cmds);
+                                    placePartByPose(cmds, visionToRobotPose(absSlot.getPose()));
+                                }
                             }
-                            String partNamePrefix = shortSkuName + "_in_pt";
-                            int count = prefixCountMap.compute(partNamePrefix,
-                                    (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
-                            takePartByName(partNamePrefix + "_" + count, null, cmds);
-                            placePartByPose(cmds, visionToRobotPose(absSlot.getPose()));
                         }
+                        matchedKitInstanceNames.add(kitInstanceName);
                     }
-                    matchedKitInstanceNames.add(kitInstanceName);
+                    System.out.println("matchedKitInstanceNames = " + matchedKitInstanceNames);
+                    System.out.println("kitsToFix = " + kitsToFix);
+                    System.out.println("");
                 }
-                System.out.println("matchedKitInstanceNames = " + matchedKitInstanceNames);
-                System.out.println("kitsToFix = " + kitsToFix);
-                System.out.println("");
             }
         } catch (IOException ex) {
             Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -979,6 +984,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 pout = pm.correctPose(pout);
             }
         }
+        pout.setXAxis(xAxis);
+        pout.setZAxis(zAxis);
         return pout;
     }
 
@@ -1899,21 +1906,28 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @throws SQLException if query fails.
      */
-    public PoseType getPose(String posename) throws SQLException {
-        final AtomicReference<SQLException> getNewPoseFromDbException = new AtomicReference<>();
+    public PoseType getPose(String posename) throws SQLException, IllegalStateException {
+        final AtomicReference<Exception> getNewPoseFromDbException = new AtomicReference<>();
         PoseType pose = poseCache.computeIfAbsent(posename,
                 (String key) -> {
                     try {
                         return getNewPoseFromDb(key);
-                    } catch (SQLException ex) {
+                    } catch (Exception ex) {
                         getNewPoseFromDbException.set(ex);
                     }
                     return null;
                 }
         );
-        SQLException ex = getNewPoseFromDbException.getAndSet(null);
+        Exception ex = getNewPoseFromDbException.getAndSet(null);
         if (null != ex) {
-            throw ex;
+            if (ex instanceof SQLException) {
+                throw new SQLException(ex);
+            } else if (ex instanceof RuntimeException) {
+                throw new RuntimeException(ex);
+            } else if (ex instanceof IllegalStateException) {
+                throw new IllegalStateException(ex);
+            }
+            throw new IllegalStateException(ex);
         }
         if (null != pose) {
             for (Entry<String, PoseType> entry : poseCache.entrySet()) {

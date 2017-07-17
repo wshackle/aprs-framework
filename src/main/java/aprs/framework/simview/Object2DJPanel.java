@@ -1000,7 +1000,7 @@ public class Object2DJPanel extends JPanel {
 
         Font origFont = g2d.getFont();
 
-        float fsize = this.getWidth() / (2.0f * maxNameLength);
+        float fsize = this.getWidth() / (2.2f * maxNameLength);
         if (fsize > 24.f) {
             fsize = 24.f;
         }

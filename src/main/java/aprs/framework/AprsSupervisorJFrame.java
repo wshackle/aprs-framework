@@ -2044,14 +2044,21 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBoxMenuItemContinousDemoRevFirstActionPerformed
 
     private void jMenuItemScanAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemScanAllActionPerformed
+        XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame aprsSys = aprsSystems.get(i);
             try {
-                aprsSys.createActionListFromVision();
-            } catch (IOException ex) {
+                futures[i] = aprsSys.lookForParts().thenRun(() -> aprsSys.createActionListFromVision());
+            } catch (Exception ex) {
                 Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
+        XFuture.allOf(futures).thenRun(() -> {
+            showMessageFullScreen("Scans Complete", 80.0f,
+                                SplashScreen.getRobotArmImage(),
+                                SplashScreen.getBlueWhiteGreenColorList(), gd);
+        });
     }//GEN-LAST:event_jMenuItemScanAllActionPerformed
 
     public XFuture<Void> startRandomTest() {

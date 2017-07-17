@@ -11,5 +11,11 @@
 (place-part empty_slot_for_medium_gear_in_medium_gear_vessel_4)
 (take-part part_large_gear_in_kt_2 )
 (place-part empty_slot_for_large_gear_in_large_gear_vessel_2)
+(look-for-parts 2)
+(clear-kits-to-check)
+(add-kit-to-check sku_kit_m2l1_vessel kit_m2l1_vessel_mg_2=empty kit_m2l1_vessel_mg_1=empty kit_m2l1_vessel_lg_1=empty)
+(add-kit-to-check sku_kit_m2l1_vessel kit_m2l1_vessel_mg_2=empty kit_m2l1_vessel_mg_1=empty kit_m2l1_vessel_lg_1=empty)
+(check-kits)
+(clear-kits-to-check)
 (end-program)
 

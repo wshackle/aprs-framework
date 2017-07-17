@@ -1586,6 +1586,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         String[] newNames = new String[origNames.length];
         for (int i = 0; i < newNames.length; i++) {
             String origName = origNames[i];
+            if(null == origName) {
+                return Arrays.copyOfRange(newNames, 0, i);
+            }
             String newName = makeShortPath(propertiesFile, origName);
             newNames[i] = newName;
         }

@@ -155,6 +155,26 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     public void takeSnapshot(File f,Collection<? extends PhysicalItem>  itemsToPaint) throws IOException {
         this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint);
     }
+    
+    @Override
+    public void takeSnapshot(File f, PoseType pose, String label, int w, int h) throws IOException {
+        object2DOuterJPanel1.takeSnapshot(f, pose, label,w,h);
+    }
+    
+    @Override
+    public void takeSnapshot(File f, PointType point, String label, int w, int h) throws IOException {
+        object2DOuterJPanel1.takeSnapshot(f, point, label,w,h);
+    }
+    
+    @Override
+    public void takeSnapshot(File f, PmCartesian point, String label, int w, int h) throws IOException {
+        object2DOuterJPanel1.takeSnapshot(f, point, label,w,h);
+    }
+    
+    @Override
+    public void takeSnapshot(File f,Collection<? extends PhysicalItem>  itemsToPaint, int w, int h) throws IOException {
+        this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint,w,h);
+    }
 
     @Override
     public void dispose() {
