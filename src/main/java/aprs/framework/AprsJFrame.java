@@ -2515,6 +2515,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             ps.println("(look-for-parts 0 " + requiredItemsString + ")");
             ConcurrentMap<String, Integer> kitUsedMap = new ConcurrentHashMap<>();
             ConcurrentMap<String, Integer> ptUsedMap = new ConcurrentHashMap<>();
+            List<String> kitToCheckStrings = new ArrayList<>();
             for (PhysicalItem kit : kitTrays) {
                 Map<String, String> slotPrpToPartSkuMap = new HashMap<>();
                 List<Slot> slotOffsetList = getSlotOffsets(kit.getName());
@@ -2555,15 +2556,20 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
                     }
                 }
-                ps.println("(add-kit-to-check " + kit.getName() + " "
+                kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                         + slotPrpToPartSkuMap.entrySet().stream()
                         .map(e -> e.getKey() + "=" + e.getValue())
                         .collect(Collectors.joining(" "))
                         + ")");
             }
-            ps.println("(pause)");
+            
             ps.println("(look-for-parts 2)");
+            ps.println("(clear-kits-to-check)");
+            for(String kitToCheckString : kitToCheckStrings) {
+                ps.println(kitToCheckString);
+            }
             ps.println("(check-kits)");
+            ps.println("(clear-kits-to-check)");
             ps.println("(end-program)");
         }
         if (null != pddlExecutorJInternalFrame1) {

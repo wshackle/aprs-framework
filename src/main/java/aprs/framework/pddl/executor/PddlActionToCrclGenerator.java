@@ -653,6 +653,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             return aprsJFrame.getSlots(tray)
                     .stream()
                     .filter(slot -> slot.getType().equals("S"))
+                    .peek(slot -> {
+                       slot.setVxi(xAxis.getI());
+                       slot.setVxj(xAxis.getJ());
+                       slot.setVxk(xAxis.getK());
+                       slot.setVzi(zAxis.getI());
+                       slot.setVzj(zAxis.getJ());
+                       slot.setVzk(zAxis.getK());
+                    })
                     .collect(Collectors.toList());
         } catch (SQLException ex) {
             Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -674,7 +682,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
         List<KitToCheck> kitsToFix = new ArrayList<>(kitsToCheck);
-        List<String> matchedKitInstanceNames = new ArrayList<>();
+        Set<String> matchedKitInstanceNames = new HashSet<>();
 
         try {
             for (KitToCheck kit : kitsToCheck) {
@@ -725,7 +733,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             (String n) -> getAbsSlotListForKitInstance(kit.name, n));
 
                     takeSimViewSnapshot(aprsJFrame.createTempFile("absSlots_" + kitInstanceName, ".PNG"), absSlots);
-                    boolean allSlotsCorrect = true;
                     for (Slot absSlot : absSlots) {
                         String absSlotPrpName = absSlot.getPrpName();
                         PhysicalItem closestItem = parts.stream()
@@ -763,6 +770,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             placePartByPose(cmds, visionToRobotPose(absSlot.getPose()));
                         }
                     }
+                    matchedKitInstanceNames.add(kitInstanceName);
                 }
                 System.out.println("matchedKitInstanceNames = " + matchedKitInstanceNames);
                 System.out.println("kitsToFix = " + kitsToFix);

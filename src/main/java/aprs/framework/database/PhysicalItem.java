@@ -84,9 +84,9 @@ public class PhysicalItem extends PM_CARTESIAN {
     private String prpName;
 
     public PoseType getPose() {
-        return pose(point(x,y,z),vector(vxi,vxj,vxk),vector(vzi,vzj,vzk));
+        return pose(point(x, y, z), vector(vxi, vxj, vxk), vector(vzi, vzj, vzk));
     }
-    
+
     /**
      * Get the value of prpName
      *
@@ -113,7 +113,7 @@ public class PhysicalItem extends PM_CARTESIAN {
     public static PhysicalItem newPhysicalItemNameRotXY(String name, double rotation, double x, double y) {
         return new PhysicalItem(name, rotation, x, y);
     }
-    
+
     protected PhysicalItem(String name, double rotation, double x, double y) {
         this(name);
         this.rotation = rotation;
@@ -144,24 +144,25 @@ public class PhysicalItem extends PM_CARTESIAN {
     }
 
     public static PhysicalItem newPhysicalItemNameRotXYScoreType(String name, double rotation, double x, double y, double score, String type) {
-        switch(type) {
+        switch (type) {
             case "KT":
-            case "PT": 
+            case "PT":
                 return new Tray(name, rotation, x, y, score, type);
-                
+
             case "S":
+            case "SLOT":
             case "ES":
                 return new Slot(name, rotation, x, y, score, type);
-                
+
             case "P":
                 return new PhysicalItem(name, rotation, x, y, score, type);
-                
+
             default:
-                throw new IllegalArgumentException("type ="+type);
+                throw new IllegalArgumentException("type =" + type);
 //                return new PhysicalItem(name, rotation, x, y, score, type);
         }
     }
-    
+
     protected PhysicalItem(String name, double rotation, double x, double y, double score, String type) {
         this(name, rotation, x, y);
         this.score = score;
@@ -171,7 +172,7 @@ public class PhysicalItem extends PM_CARTESIAN {
     public static PhysicalItem newPhysicalItemNamePoseVisionCycle(String name, PoseType pose, int visioncycle) {
         return new PhysicalItem(name, pose, visioncycle);
     }
-    
+
     protected PhysicalItem(String name, PoseType pose, int visioncycle) {
         this(name);
         setFromCrclPoseType(pose);
@@ -206,15 +207,11 @@ public class PhysicalItem extends PM_CARTESIAN {
         return dist(other.x, other.y);
     }
 
-    
-        
-
     public double dist(double otherx, double othery) {
         double dx = x - otherx;
         double dy = y - othery;
         return Math.sqrt(dx * dx + dy * dy);
     }
-    
 
     @Override
     public String toString() {
@@ -489,7 +486,6 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.newSlotOffsetResultMap = newSlotOffsetResultMap;
     }
 
-    
     @Override
     public PhysicalItem clone() {
         return (PhysicalItem) super.clone();

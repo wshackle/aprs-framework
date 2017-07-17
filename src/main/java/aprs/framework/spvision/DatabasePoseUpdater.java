@@ -934,7 +934,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         double y = offsetItem.y;
         double angle = normAngle(tray.getRotation() + rotationOffset);
 
-        Slot item = new Slot(name, 0,
+        Slot item = new Slot(name, angle,
                 tray.x + x * Math.cos(angle) - y * Math.sin(angle),
                 tray.y + x * Math.sin(angle) + y * Math.cos(angle)
         );
@@ -944,6 +944,13 @@ public class DatabasePoseUpdater implements AutoCloseable {
         item.setSlotForSkuName(offsetItem.getSlotForSkuName());
         item.setVisioncycle(tray.getVisioncycle());
         item.setPrpName(offsetItem.getPrpName());
+        item.setZ(tray.z);
+        item.setVxi(tray.getVxi());
+        item.setVxj(tray.getVxj());
+        item.setVxk(tray.getVxk());
+        item.setVzi(tray.getVzi());
+        item.setVzj(tray.getVzj());
+        item.setVzk(tray.getVzk());
         return item;
     }
 
