@@ -314,6 +314,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * Set the database setup object.
      *
      * @param dbSetup new database setup object to use.
+     * @return future providing status on  when the connection is complete.
      */
     public XFuture<Void> setDbSetup(DbSetup dbSetup) {
 
@@ -1737,6 +1738,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param action PDDL action
      * @param out list of commands to append to
+     * @param nextPlacePartAction action to be checked to see if part should be skipped
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if database query fails
      */

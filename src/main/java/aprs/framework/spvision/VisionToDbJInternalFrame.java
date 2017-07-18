@@ -278,6 +278,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
      * Set the value of enableDatabaseUpdates
      *
      * @param enableDatabaseUpdates new value of enableDatabaseUpdates
+     * @param requiredParts map of part names to required number of each type of part
      */
     public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
         visionToDBJPanel.setEnableDatabaseUpdates(enableDatabaseUpdates, requiredParts);

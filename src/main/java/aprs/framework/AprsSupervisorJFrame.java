@@ -2687,6 +2687,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * Set the value of setupFile
      *
      * @param f new value of setupFile
+     * @throws java.io.IOException can not save last setup file
      */
     public void setSetupFile(File f) throws IOException {
         if (!Objects.equal(this.setupFile, f)) {

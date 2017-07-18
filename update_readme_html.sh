@@ -8,9 +8,15 @@
 
 markdown README.md  | sed 's#?raw=true##g' | sed 's#img src="/#img src="#g' > readme.html
 
+mkdir -p src/main/javadoc
+touch src/main/javadoc/overview.html
+echo "<html><body>" > src/main/javadoc/overview.html
+cat readme.html >>  src/main/javadoc/overview.html
+echo "</body></html>" >> src/main/javadoc/overview.html
 
 # As a convenience we try to launch firefox to view the new html.
-firefox readme.html &
+firefox src/main/javadoc/overview.html &
+netbeans --open-file src/main/javadoc/overview.html
 
 
 

@@ -53,6 +53,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import rcs.posemath.PmCartesian;
 import static aprs.framework.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import java.awt.Dimension;
 import java.util.Collection;
 import java.util.stream.StreamSupport;
 
@@ -294,7 +295,7 @@ public class Object2DJPanel extends JPanel {
         }
         Graphics2D g2d = img.createGraphics();
         g2d.setColor(this.getBackground());
-        g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
+        g2d.fillRect(0, 0, w,h);
         g2d.setColor(this.getForeground());
         List<PhysicalItem> itemsToPaint = getItemsToPaint();
         if (autoscale) {
@@ -332,11 +333,11 @@ public class Object2DJPanel extends JPanel {
                     maxY = y;
                 }
             }
-            this.paintItems(g2d, itemsToPaint, null, minX, minY, maxX, maxY);
-            paintHighlightedPose(point, g2d, label, minX, minY, maxX, maxY);
+            this.paintItems(g2d, itemsToPaint, null, minX, minY, maxX, maxY,w,h);
+            paintHighlightedPose(point, g2d, label, minX, minY, maxX, maxY,w,h);
         } else {
             this.paintComponent(g2d);
-            paintHighlightedPose(point, g2d, label, this.minX, this.minY, this.maxX, this.maxY);
+            paintHighlightedPose(point, g2d, label, this.minX, this.minY, this.maxX, this.maxY,w,h);
         }
         ImageIO.write(img, type, f);
         try {
@@ -379,21 +380,21 @@ public class Object2DJPanel extends JPanel {
         }
         Graphics2D g2d = img.createGraphics();
         g2d.setColor(this.getBackground());
-        g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
+        g2d.fillRect(0, 0, w,h);
         g2d.setColor(this.getForeground());
         boolean origUseSepNames = this.useSeparateNames;
         this.useSeparateNames = true;
         if (autoscale) {
-            paintWithAutoScale(itemsToPaint, null, g2d);
+            paintWithAutoScale(itemsToPaint, null, g2d,w,h);
         } else {
-            paintItems(g2d, itemsToPaint, null, minX, minY, maxX, maxY);
+            paintItems(g2d, itemsToPaint, null, minX, minY, maxX, maxY,w,h);
         }
         this.useSeparateNames = origUseSepNames;
         ImageIO.write(img, type, f);
         System.out.println("Saved snapshot to " + f.getCanonicalPath());
     }
 
-    public void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, PhysicalItem selectedItem, Graphics2D g2d) {
+    public void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, PhysicalItem selectedItem, Graphics2D g2d,int w, int h) {
         double minX = Double.POSITIVE_INFINITY;
         double maxX = Double.NEGATIVE_INFINITY;
         double minY = Double.POSITIVE_INFINITY;
@@ -412,21 +413,23 @@ public class Object2DJPanel extends JPanel {
                 maxY = item.y;
             }
         }
-        this.paintItems(g2d, itemsToPaint, selectedItem, minX, minY, maxX, maxY);
+        this.paintItems(g2d, itemsToPaint, selectedItem, minX, minY, maxX, maxY,w,h);
     }
 
-    public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY) {
+    public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY,int w,int h) {
         PointType point = pose.getPoint();
         if (null != point) {
-            paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY);
+            paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY,w,h);
         }
     }
 
-    public void paintHighlightedPose(PointType point, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY) {
-        paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY);
+    public void paintHighlightedPose(PointType point, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY,int w,int h) {
+        paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY,w,h);
     }
 
-    public void paintHighlightedPose(PmCartesian point, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY) {
+    public void paintHighlightedPose(PmCartesian point, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY,
+            int width,
+            int height) {
         if (null != point) {
             if (label == null) {
                 label = "(null)";
@@ -441,37 +444,37 @@ public class Object2DJPanel extends JPanel {
 
             switch (displayAxis) {
                 case POS_X_POS_Y:
-                    displayMaxX = (this.getSize().width - 15) / scale + minX;
+                    displayMaxX = (width - 15) / scale + minX;
                     displayMinX = (0 - 15) / scale + minX;
 
-                    displayMinY = maxY - (this.getSize().height - 20) / scale;
+                    displayMinY = maxY - (height - 20) / scale;
                     displayMaxY = maxY - (0 - 20) / scale;
 //                g2d.translate((itemx - minX) * scale + 15, (maxY - itemy) * scale + 20);
                     break;
 
                 case POS_Y_NEG_X:
-                    displayMaxX = (this.getSize().height - 20) / scale + minX;
+                    displayMaxX = (height - 20) / scale + minX;
                     displayMinX = (0 - 15) / scale + minX;
 
-                    displayMinY = (this.getSize().width - 15) / scale + minY;
+                    displayMinY = (width - 15) / scale + minY;
                     displayMaxY = (0 - 20) / scale + minY;
 //                g2d.translate((itemy - minY) * scale + 15, (itemx - minX) * scale + 20);
                     break;
 
                 case NEG_X_NEG_Y:
-                    displayMaxX = maxX - (this.getSize().width - 15) / scale;
+                    displayMaxX = maxX - (width - 15) / scale;
                     displayMinX = maxX - (0 - 15) / scale;
 
-                    displayMinY = (this.getSize().height - 20) / scale + minY;
+                    displayMinY = (height - 20) / scale + minY;
                     displayMaxY = (0 - 20) / scale + minY;
 //                g2d.translate((maxX - itemx) * scale + 15, (itemy - minY) * scale + 20);
                     break;
 
                 case NEG_Y_POS_X:
-                    displayMaxX = maxX - (this.getSize().height - 20) / scale;
+                    displayMaxX = maxX - (height - 20) / scale;
                     displayMinX = maxX - (0 - 15) / scale;
 
-                    displayMinY = (this.getSize().width - 15) / scale + minY;
+                    displayMinY = (width - 15) / scale + minY;
                     displayMaxY = (0 - 20) / scale + minY;
 //                g2d.translate((maxY - itemy) * scale + 15, (maxX - itemx) * scale + 20);
                     break;
@@ -770,11 +773,14 @@ public class Object2DJPanel extends JPanel {
         if (selectedItemIndex >= 0 && selectedItemIndex < itemsToPaint.size()) {
             selectedItem = itemsToPaint.get(selectedItemIndex);
         }
+        Dimension dim = this.getSize();
+        int w = dim.width;
+        int h = dim.height;
         if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
             if (this.autoscale || !Double.isFinite(this.minX) || !Double.isFinite(this.minY) || !Double.isFinite(maxX) || !Double.isFinite(maxY)) {
-                paintWithAutoScale(itemsToPaint, selectedItem, g2d);
+                paintWithAutoScale(itemsToPaint, selectedItem, g2d,w,h);
             } else {
-                paintItems(g2d, itemsToPaint, selectedItem, this.minX, this.minY, this.maxX, this.maxY);
+                paintItems(g2d, itemsToPaint, selectedItem, this.minX, this.minY, this.maxX, this.maxY,w,h);
             }
         }
     }
@@ -893,7 +899,9 @@ public class Object2DJPanel extends JPanel {
             double minX,
             double minY,
             double maxX,
-            double maxY) {
+            double maxY,
+            int width,
+            int height) {
         origTransform = g2d.getTransform();
 
         int maxNameLength
@@ -909,14 +917,14 @@ public class Object2DJPanel extends JPanel {
         switch (displayAxis) {
             case POS_X_POS_Y:
             case NEG_X_NEG_Y:
-                scale_x = (this.getSize().width / 2 - 10) / (maxX - minX);
-                scale_y = (this.getSize().height - 60) / (maxY - minY);
+                scale_x = (width / 2 - 10) / (maxX - minX);
+                scale_y = (height - 60) / (maxY - minY);
                 break;
 
             case POS_Y_NEG_X:
             case NEG_Y_POS_X:
-                scale_x = (this.getSize().width / 2 - 10) / (maxY - minY);
-                scale_y = (this.getSize().height - 60) / (maxX - minX);
+                scale_x = (width / 2 - 10) / (maxY - minY);
+                scale_y = (height - 60) / (maxX - minX);
                 break;
         }
 //        if (useSeparateNames) {
@@ -941,42 +949,42 @@ public class Object2DJPanel extends JPanel {
 
         switch (displayAxis) {
             case POS_X_POS_Y:
-                displayMaxX = (this.getSize().width - 15) / scale + minX;
+                displayMaxX = (width - 15) / scale + minX;
                 displayMinX = (0 - 15) / scale + minX;
 
-                displayMinY = maxY - (this.getSize().height - 20) / scale;
+                displayMinY = maxY - (height - 20) / scale;
                 displayMaxY = maxY - (0 - 20) / scale;
 //                g2d.translate((itemx - minX) * scale + 15, (maxY - itemy) * scale + 20);
                 break;
 
             case POS_Y_NEG_X:
-                displayMaxX = (this.getSize().height - 20) / scale + minX;
+                displayMaxX = (height - 20) / scale + minX;
                 displayMinX = (0 - 15) / scale + minX;
 
-                displayMinY = (this.getSize().width - 15) / scale + minY;
+                displayMinY = (width - 15) / scale + minY;
                 displayMaxY = (0 - 20) / scale + minY;
 //                g2d.translate((itemy - minY) * scale + 15, (itemx - minX) * scale + 20);
                 break;
 
             case NEG_X_NEG_Y:
-                displayMaxX = maxX - (this.getSize().width - 15) / scale;
+                displayMaxX = maxX - (width - 15) / scale;
                 displayMinX = maxX - (0 - 15) / scale;
 
-                displayMinY = (this.getSize().height - 20) / scale + minY;
+                displayMinY = (height - 20) / scale + minY;
                 displayMaxY = (0 - 20) / scale + minY;
 //                g2d.translate((maxX - itemx) * scale + 15, (itemy - minY) * scale + 20);
                 break;
 
             case NEG_Y_POS_X:
-                displayMaxX = maxX - (this.getSize().height - 20) / scale;
+                displayMaxX = maxX - (height - 20) / scale;
                 displayMinX = maxX - (0 - 15) / scale;
 
-                displayMinY = (this.getSize().width - 15) / scale + minY;
+                displayMinY = (width - 15) / scale + minY;
                 displayMaxY = (0 - 20) / scale + minY;
 //                g2d.translate((maxY - itemy) * scale + 15, (maxX - itemx) * scale + 20);
                 break;
         }
-        g2d.drawString(String.format("MinX,MinY = (%.2f,%.2f), MaxX,MaxY= (%.2f,%.2f), scale=%.2f", minX, minY, maxX, maxY, scale), 10, this.getSize().height - 10);
+        g2d.drawString(String.format("MinX,MinY = (%.2f,%.2f), MaxX,MaxY= (%.2f,%.2f), scale=%.2f", minX, minY, maxX, maxY, scale), 10, height - 10);
         //        System.out.println("scale = " + scale);
         Collection<? extends PhysicalItem> displayItems = itemsToPaint;
         if (useSeparateNames) {
@@ -1197,7 +1205,7 @@ public class Object2DJPanel extends JPanel {
         }
         if (this.showCurrentXY) {
             this.translate(g2d, currentX, currentY, minX, minY, maxX, maxY);
-//            g2d.drawString(String.format("CurrentXY = %.2f,%.2f", currentX, currentY), 10, this.getSize().height - 10);
+//            g2d.drawString(String.format("CurrentXY = %.2f,%.2f", currentX, currentY), 10, height - 10);
             Color origColor = g2d.getColor();
             g2d.setColor(Color.red);
             g2d.drawLine(-10, 0, 10, 0);

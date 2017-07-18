@@ -1,8 +1,13 @@
-#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:2944
+#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:3504
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 aprs.robotName=Sim_Motoman
 aprs.taskName=Shared Table
 crclWebApp.httpPort=8081
+maxLimit= { x=+10000.000, y=+10000.000, z=+10000.000 } 
+minLimit= { x=-10000.000, y=-10000.000, z=-10000.000 } 
+snapShotEnable=true
+snapShotHeight=700
+snapShotWidth=900
 startup.connectdatabase=true
 startup.connectvision=true
 startup.crclWebApp=false

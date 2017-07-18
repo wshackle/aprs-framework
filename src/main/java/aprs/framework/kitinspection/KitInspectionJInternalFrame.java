@@ -255,6 +255,8 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
 
     /**
      * Returns an ImageIcon, or null if the path was invalid.
+     * @param path resource path to image
+     * @return new image
      */
     public ImageIcon createImageIcon(String path) {
         java.net.URL imgURL = getClass().getResource(path);

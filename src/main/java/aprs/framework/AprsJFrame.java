@@ -418,6 +418,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * returns. The status of this action can be monitored with the returned
      * future. * @return a future that can be tested or used to wait until the
      * abort and disconnect is completed.
+     * @return future providing info on when complete
      */
     public XFuture<Void> startSafeAbortAndDisconnectAsync() {
         startSafeAbortAndDisconnectAsyncFuture
@@ -990,6 +991,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    /**
+     * Initialize the frame with the previously saved settings if available.
+     */
     final public void defaultInit() {
         initLoggerWindow();
         try {
@@ -1005,6 +1009,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         commonInit();
     }
 
+    /**
+     * Initialize the frame ignoring any previously saved settings.
+     */
     final public void emptyInit() {
         initLoggerWindow();
         commonInit();
@@ -3109,6 +3116,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param f file to save snapshot image to
      * @param pose optional pose to mark or null
      * @param label optional label for pose or null
+     * @param w width of snapshot image
+     * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) throws IOException {
@@ -3117,30 +3126,87 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    
+    /**
+     * Take a snapshot of the view of objects positions and save it in the
+     * specified file, optionally highlighting a pose with a label.
+     *
+     * @param f file to save snapshot image to
+     * @param point optional point to mark or null
+     * @param label optional label for pose or null
+     * @param w width of snapshot image
+     * @param h height of snapshot image
+     * @throws IOException if writing the file fails
+     */
     public void takeSimViewSnapshot(File f, PointType point, String label, int w, int h) throws IOException {
         if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         }
     }
 
+    /**
+     * Take a snapshot of the view of objects positions and save it in the
+     * specified file, optionally highlighting a pose with a label.
+     *
+     * @param f file to save snapshot image to
+     * @param point optional point to mark or null
+     * @param label optional label for pose or null
+     * @param w width of snapshot image
+     * @param h height of snapshot image
+     * @throws IOException if writing the file fails
+     */
     public void takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) throws IOException {
         if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         }
     }
 
+    
+    /**
+     * Take a snapshot of the view of objects positions and save it in the
+     * specified file, optionally highlighting a pose with a label.
+     *
+     * @param imgLabel label to included in filename
+     * @param pose optional pose to mark or null
+     * @param poseLabel optional label for pose or null
+     * @param w width of snapshot image
+     * @param h height of snapshot image
+     * @throws IOException if writing the file fails
+     */
     public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) throws IOException {
         if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pose, poseLabel, w, h);
         }
     }
 
+    /**
+     * Take a snapshot of the view of objects positions and save it in the
+     * specified file, optionally highlighting a pose with a label.
+     *
+     * @param imgLabel label to included in filename
+     * @param pt optional point to mark or null
+     * @param pointLabel optional label for point or null
+     * @param w width of snapshot image
+     * @param h height of snapshot image
+     * @throws IOException if writing the file fails
+     */
     public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) throws IOException {
         if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, w, h);
         }
     }
 
+    /**
+     * Take a snapshot of the view of objects positions and save it in the
+     * specified file, optionally highlighting a pose with a label.
+     *
+     * @param imgLabel label to included in filename
+     * @param pt optional point to mark or null
+     * @param pointLabel optional label for point or null
+     * @param w width of snapshot image
+     * @param h height of snapshot image
+     * @throws IOException if writing the file fails
+     */
     public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) throws IOException {
         if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, w, h);
@@ -3152,6 +3218,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @param f file to save snapshot image to
      * @param itemsToPaint list of items to paint
+     * @param w width of snapshot image
+     * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException {
@@ -3817,6 +3885,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Set the value of enableDatabaseUpdates
      *
      * @param enableDatabaseUpdates new value of enableDatabaseUpdates
+     * @param requiredParts map of part names to required number of each part type
      */
     public void setEnableVisionToDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
         visionToDbJInternalFrame.setEnableDatabaseUpdates(enableDatabaseUpdates, requiredParts);

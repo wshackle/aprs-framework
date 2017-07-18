@@ -50,39 +50,42 @@ public class ColorTextJPanel extends javax.swing.JPanel {
     }
 
     /**
-     * Creates new form ColorTextJPanel
+     * Set the labels and icon images for the left and right panels.
+     *
+     * @param leftLabel label for left panel
+     * @param leftImage image icon for left panel
+     * @param rightLabel label for right panel
+     * @param rightImage image icon for right panel
      */
-    public void setLabelsAndIcons(String label1, Icon img1, String label2, Icon img2) {
-        try {
-            jLabelRobotText1.setText(label1);
-            jLabelRobotText2.setText(label2);
-            jLabelRobotIcon1.setIcon(img1);
-            jLabelRobotIcon2.setIcon(img2);
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
+    public void setLabelsAndIcons(String leftLabel, Icon leftImage, String rightLabel, Icon rightImage) {
+        jLabelRobotTextLeft.setText(leftLabel);
+        jLabelRobotTextRight.setText(rightLabel);
+        jLabelRobotIconLeft.setIcon(leftImage);
+        jLabelRobotIconRight.setIcon(rightImage);
     }
-    
+
     private static final Class THIS_CLASS = aprs.framework.colortextdisplay.ColorTextJPanel.class;
-    
+
     public static Icon getRobotIcon(String name) {
-        if(name == null || name.length() < 1) {
+        if (name == null || name.length() < 1) {
             return null;
         }
-        if(name.toUpperCase().contains("MOTOMAN")) {
+        if (name.toUpperCase().contains("MOTOMAN")) {
             return new javax.swing.ImageIcon(THIS_CLASS.getResource("/aprs/framework/screensplash/motoman_small.png"));
-        } else if(name.toUpperCase().contains("FANUC")) {
+        } else if (name.toUpperCase().contains("FANUC")) {
             return new javax.swing.ImageIcon(THIS_CLASS.getResource("/aprs/framework/screensplash/fanuc_small.png"));
         } else {
-            return new javax.swing.ImageIcon(THIS_CLASS.getResource("/aprs/framework/screensplash/"+name.toLowerCase()+"_small.png"));
+            return new javax.swing.ImageIcon(THIS_CLASS.getResource("/aprs/framework/screensplash/" + name.toLowerCase() + "_small.png"));
         }
     }
-    
-    
+
     public static final int COLORTEXT_SOCKET_PORT = 23444;
 
     private SocketLineReader reader;
 
+    /**
+     * Start a separate thread to read a socket for messages to change colors etc.
+     */
     public void startReader() {
         SocketLineReader readerTmp = null;
         try {
@@ -94,6 +97,9 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         this.reader = readerTmp;
     }
 
+    /**
+     * Stop thread and close socket created with startReader.
+     */
     public void stopReader() {
         if (null != reader) {
             reader.close();
@@ -114,8 +120,8 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         Color color2 = Color.decode(colorStrings[0]);
         ps.println("color2 = " + color2);
         Utils.runOnDispatchThread(() -> {
-            jPanel1.setBackground(color1);
-            jPanel2.setBackground(color2);
+            jPanelRight.setBackground(color1);
+            jPanelLeft.setBackground(color2);
         });
     }
 
@@ -128,96 +134,96 @@ public class ColorTextJPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel3 = new javax.swing.JPanel();
-        jPanel2 = new javax.swing.JPanel();
-        jLabelRobotText1 = new javax.swing.JLabel();
-        jLabelRobotIcon1 = new javax.swing.JLabel();
-        jPanel1 = new javax.swing.JPanel();
-        jLabelRobotText2 = new javax.swing.JLabel();
-        jLabelRobotIcon2 = new javax.swing.JLabel();
+        jPanelBoth = new javax.swing.JPanel();
+        jPanelLeft = new javax.swing.JPanel();
+        jLabelRobotTextLeft = new javax.swing.JLabel();
+        jLabelRobotIconLeft = new javax.swing.JLabel();
+        jPanelRight = new javax.swing.JPanel();
+        jLabelRobotTextRight = new javax.swing.JLabel();
+        jLabelRobotIconRight = new javax.swing.JLabel();
 
-        jPanel2.setBackground(new java.awt.Color(204, 204, 255));
-        jPanel2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        jPanelLeft.setBackground(new java.awt.Color(204, 204, 255));
+        jPanelLeft.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        jLabelRobotText1.setFont(new java.awt.Font("DejaVu Sans", 0, 36)); // NOI18N
-        jLabelRobotText1.setText("Motoman");
+        jLabelRobotTextLeft.setFont(new java.awt.Font("DejaVu Sans", 0, 36)); // NOI18N
+        jLabelRobotTextLeft.setText("Motoman");
 
-        jLabelRobotIcon1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aprs/framework/screensplash/motoman_small.png"))); // NOI18N
+        jLabelRobotIconLeft.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aprs/framework/screensplash/motoman_small.png"))); // NOI18N
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanelLeftLayout = new javax.swing.GroupLayout(jPanelLeft);
+        jPanelLeft.setLayout(jPanelLeftLayout);
+        jPanelLeftLayout.setHorizontalGroup(
+            jPanelLeftLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelLeftLayout.createSequentialGroup()
+                .addGroup(jPanelLeftLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelLeftLayout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jLabelRobotText1))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabelRobotTextLeft))
+                    .addGroup(jPanelLeftLayout.createSequentialGroup()
                         .addGap(34, 34, 34)
-                        .addComponent(jLabelRobotIcon1)))
+                        .addComponent(jLabelRobotIconLeft)))
                 .addContainerGap(14, Short.MAX_VALUE))
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        jPanelLeftLayout.setVerticalGroup(
+            jPanelLeftLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelLeftLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabelRobotText1)
+                .addComponent(jLabelRobotTextLeft)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabelRobotIcon1)
+                .addComponent(jLabelRobotIconLeft)
                 .addContainerGap(14, Short.MAX_VALUE))
         );
 
-        jPanel1.setBackground(new java.awt.Color(204, 204, 255));
-        jPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        jPanelRight.setBackground(new java.awt.Color(204, 204, 255));
+        jPanelRight.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        jLabelRobotText2.setFont(new java.awt.Font("DejaVu Sans", 0, 36)); // NOI18N
-        jLabelRobotText2.setText("Fanuc");
+        jLabelRobotTextRight.setFont(new java.awt.Font("DejaVu Sans", 0, 36)); // NOI18N
+        jLabelRobotTextRight.setText("Fanuc");
 
-        jLabelRobotIcon2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aprs/framework/screensplash/fanuc_small.png"))); // NOI18N
+        jLabelRobotIconRight.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aprs/framework/screensplash/fanuc_small.png"))); // NOI18N
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanelRightLayout = new javax.swing.GroupLayout(jPanelRight);
+        jPanelRight.setLayout(jPanelRightLayout);
+        jPanelRightLayout.setHorizontalGroup(
+            jPanelRightLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelRightLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabelRobotText2)
-                    .addComponent(jLabelRobotIcon2))
+                .addGroup(jPanelRightLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabelRobotTextRight)
+                    .addComponent(jLabelRobotIconRight))
                 .addContainerGap(55, Short.MAX_VALUE))
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        jPanelRightLayout.setVerticalGroup(
+            jPanelRightLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelRightLayout.createSequentialGroup()
                 .addGap(8, 8, 8)
-                .addComponent(jLabelRobotText2)
+                .addComponent(jLabelRobotTextRight)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabelRobotIcon2)
+                .addComponent(jLabelRobotIconRight)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanelBothLayout = new javax.swing.GroupLayout(jPanelBoth);
+        jPanelBoth.setLayout(jPanelBothLayout);
+        jPanelBothLayout.setHorizontalGroup(
+            jPanelBothLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelBothLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanelLeft, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanelRight, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jPanel1, jPanel2});
+        jPanelBothLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jPanelLeft, jPanelRight});
 
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
+        jPanelBothLayout.setVerticalGroup(
+            jPanelBothLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelBothLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(jPanelBothLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanelRight, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanelLeft, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -227,26 +233,26 @@ public class ColorTextJPanel extends javax.swing.JPanel {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanelBoth, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanelBoth, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabelRobotIcon1;
-    private javax.swing.JLabel jLabelRobotIcon2;
-    private javax.swing.JLabel jLabelRobotText1;
-    private javax.swing.JLabel jLabelRobotText2;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
+    private javax.swing.JLabel jLabelRobotIconLeft;
+    private javax.swing.JLabel jLabelRobotIconRight;
+    private javax.swing.JLabel jLabelRobotTextLeft;
+    private javax.swing.JLabel jLabelRobotTextRight;
+    private javax.swing.JPanel jPanelBoth;
+    private javax.swing.JPanel jPanelLeft;
+    private javax.swing.JPanel jPanelRight;
     // End of variables declaration//GEN-END:variables
 }
