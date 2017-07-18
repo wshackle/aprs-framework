@@ -2044,6 +2044,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBoxMenuItemContinousDemoRevFirstActionPerformed
 
     private void jMenuItemScanAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemScanAllActionPerformed
+        scanAll();
+    }//GEN-LAST:event_jMenuItemScanAllActionPerformed
+
+    private XFuture<Void>  scanAllInternal() {
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame aprsSys = aprsSystems.get(i);
@@ -2054,13 +2058,20 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
         }
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
-        XFuture.allOf(futures).thenRun(() -> {
+        return XFuture.allOf("scanAllInternall",futures).thenRun(() -> {
             showMessageFullScreen("Scans Complete", 80.0f,
-                                SplashScreen.getRobotArmImage(),
-                                SplashScreen.getBlueWhiteGreenColorList(), gd);
+                    SplashScreen.getRobotArmImage(),
+                    SplashScreen.getBlueWhiteGreenColorList(), gd);
         });
-    }//GEN-LAST:event_jMenuItemScanAllActionPerformed
+    }
 
+    
+    public XFuture<Void> scanAll() {
+        return Utils.runOnDispatchThread(this::enableAllRobots)
+                .thenCompose("startAll.checkEnabledAll", x -> checkEnabledAll())
+                .thenCompose(ok -> checkOkElse(ok, this::scanAllInternal, this::showCheckEnabledErrorSplash));
+    }
+    
     public XFuture<Void> startRandomTest() {
         connectAll();
         return checkEnabledAll()
