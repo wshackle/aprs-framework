@@ -3825,6 +3825,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     new String[]{}, "cost");
             lookForActionsList.add(lookForAction);
             pddlActionToCrclGenerator.clearPoseCache();
+            pddlActionToCrclGenerator.clearLastRequiredPartsMap();
             List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(lookForActionsList, this.replanFromIndex, options);
             CRCLProgramType program = createEmptyProgram();
             jTextFieldIndex.setText(Integer.toString(replanFromIndex));
