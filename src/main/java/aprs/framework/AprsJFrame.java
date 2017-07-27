@@ -2879,7 +2879,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setCommandID(emptyProgram.getInitCanon());
             setCommandID(emptyProgram.getEndCanon());
             return startCRCLProgram(emptyProgram)
-                    .thenApply("startCheckEnabled.finish." + robotName + "." + taskName, x -> {
+                    .thenApply("startCheckEnabled.finish." + robotName + "." + taskName, 
+                            x -> {
                         System.out.println("startCheckEnabled finishing with " + x);
                         return x;
                     });

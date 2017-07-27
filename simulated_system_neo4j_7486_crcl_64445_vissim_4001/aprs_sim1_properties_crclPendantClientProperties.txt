@@ -43,7 +43,7 @@ java.awt.Container outerContainer=crcl.ui.client.PendantClientJInternalFrame[,0,
 java.awt.Window outerWindow=aprs.framework.AprsJFrame[frame1,441,62,1072x787,invalid,layout=java.awt.BorderLayout,title=APRS : Simulated_Motoman : 2 2L2S Kits : DONE : Running InitCanonType,resizable,normal,defaultCloseOperation=DISPOSE_ON_CLOSE,rootPane=javax.swing.JRootPane[,1,26,1070x760,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@52300372,flags=16777673,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true]
 double rpyJogIncrement=3.0
 crcl.base.CRCLStatusType status=crcl.base.CRCLStatusType@73f8268e
-java.lang.String version=1.4-SNAPSHOT
+java.lang.String version=1.5-SNAPSHOT
 Schema versions = {CRCLProgramInstance.xsd=2016Apr15, CRCLStatus.xsd=2016Apr15, CRCLCommands.xsd=2016Apr15, CRCLCommandInstance.xsd=2016Apr15, DataPrimitives.xsd=2016Apr15}
 java.io.File propertiesFile=/mnt/ubuntu/home/shackle/aprs-framework/simulated_system_neo4j_7486_crcl_64445_vissim_4001/aprs_sim1_properties_crclPendantClientProperties.txt
 java.lang.String host=localhost

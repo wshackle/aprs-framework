@@ -35,7 +35,7 @@ boolean fontSet=true
 boolean foregroundSet=true
 java.lang.String host=localhost
 int port=64444
-java.lang.String version=1.4-SNAPSHOT
+java.lang.String version=1.5-SNAPSHOT
 Schema versions = {CRCLProgramInstance.xsd=2014Jul2, CRCLStatus.xsd=2017May01, CRCLCommands.xsd=2014Jul2, CRCLCommandInstance.xsd=2014Jul2, DataPrimitives.xsd=2014Jul2}
 # could not invokegetStatus
 # could not invokegetCurrentPose

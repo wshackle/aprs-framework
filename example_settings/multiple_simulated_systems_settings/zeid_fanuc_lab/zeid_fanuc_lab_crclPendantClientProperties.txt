@@ -37,7 +37,7 @@ int port=64444
 crcl.base.CRCLStatusType status=crcl.base.CRCLStatusType@cf6912c
 crcl.base.PoseType currentPose=crcl.base.PoseType@397b5420
 java.io.File propertiesFile=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\example_settings\multiple_simulated_systems_settings\zeid_fanuc_lab\zeid_fanuc_lab_crclPendantClientProperties.txt
-java.lang.String version=1.4-SNAPSHOT
+java.lang.String version=1.5-SNAPSHOT
 Schema versions = {CRCLProgramInstance.xsd=2016Apr15, CRCLStatus.xsd=2016Apr15, CRCLCommands.xsd=2016Apr15, CRCLCommandInstance.xsd=2016Apr15, DataPrimitives.xsd=2016Apr15}
 crcl.base.CRCLProgramType program=crcl.base.CRCLProgramType@5d78cd9f
 java.util.Optional currentStatus=Optional[crcl.base.CRCLStatusType@cf6912c]

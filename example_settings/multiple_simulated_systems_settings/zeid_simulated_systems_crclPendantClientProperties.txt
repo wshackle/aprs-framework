@@ -36,7 +36,7 @@ java.lang.String host=localhost
 int port=64444
 # could not invokegetCurrentPose
 java.io.File propertiesFile=C:\Users\zeid\Documents\NetBeansProjects\aprs-framework\example_settings\multiple_simulated_systems_settings\zeid_simulated_systems_crclPendantClientProperties.txt
-java.lang.String version=1.4-SNAPSHOT
+java.lang.String version=1.5-SNAPSHOT
 Schema versions = {CRCLProgramInstance.xsd=2016Apr15, CRCLStatus.xsd=2016Apr15, CRCLCommands.xsd=2016Apr15, CRCLCommandInstance.xsd=2016Apr15, DataPrimitives.xsd=2016Apr15}
 # could not invokegetStatus
 # could not invokegetCurrentProgramCommand
