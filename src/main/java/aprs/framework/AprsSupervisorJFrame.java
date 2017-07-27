@@ -2069,9 +2069,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
     
     public XFuture<Void> scanAll() {
+        resetAll();
         return Utils.runOnDispatchThread(this::enableAllRobots)
                 .thenCompose("startAll.checkEnabledAll", x -> checkEnabledAll())
-                .thenCompose(ok -> checkOkElse(ok, this::scanAllInternal, this::showCheckEnabledErrorSplash));
+                .thenCompose("scanAll2",ok -> checkOkElse(ok, this::scanAllInternal, this::showCheckEnabledErrorSplash));
     }
     
     public XFuture<Void> startRandomTest() {
@@ -2292,10 +2293,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     
     public XFuture<Void> startContinousDemoRevFirst() {
         connectAll();
+        final XFuture<?> lfr = this.lastFutureReturned;
         continousDemoFuture
                 = checkEnabledAll()
+                .thenCompose("startContinousDemoRevFirst.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr))
                 .thenCompose("startContinousDemoRevFirst.startReverseActions", x -> startReverseActions())
-                .thenCompose("continueContinousDeomo.checkEnabledAll", x -> checkEnabledAll())
+                .thenCompose("startContinousDemoRevFirst.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr))
+                .thenCompose("startContinousDemoRevFirst.checkEnabledAll", x -> checkEnabledAll())
                 .thenCompose("startContinousDemoRevFirst", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
         return continousDemoFuture;
     }

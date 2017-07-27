@@ -176,6 +176,15 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint,w,h);
     }
 
+    public boolean isSimulated() {
+        return this.object2DOuterJPanel1.isSimulated();
+    }
+    
+    
+    public boolean isConnected() {
+        return this.object2DOuterJPanel1.isConnected();
+    }
+    
     @Override
     public void dispose() {
         super.dispose();

@@ -2209,7 +2209,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             reverseDataFileString = props.getProperty("reverse_datafile");
             dataFileString = props.getProperty("datafile");
-            reloadDataFile();
+            
             String xmaxymaxString = props.getProperty("xmaxymax");
             if (null != xmaxymaxString) {
                 setMaxXMaxYText(xmaxymaxString);
@@ -2227,6 +2227,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (connected) {
                     connect();
                 }
+            }
+            if(jCheckBoxSimulated.isSelected() || !jCheckBoxConnected.isSelected()) {
+                reloadDataFile();
             }
             String displayAxisString = props.getProperty("displayAxis");
             if (displayAxisString != null && displayAxisString.length() > 0) {
@@ -2254,6 +2257,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 object2DJPanel1.setUseSeparateNames(useSeparateNames);
             }
         }
+    }
+    
+    public boolean isSimulated() {
+        return jCheckBoxSimulated.isSelected();
+    }
+    
+    public boolean isConnected() {
+        return jCheckBoxConnected.isSelected();
     }
 
     private String dataFileString = null;

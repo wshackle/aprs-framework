@@ -418,6 +418,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * returns. The status of this action can be monitored with the returned
      * future. * @return a future that can be tested or used to wait until the
      * abort and disconnect is completed.
+     *
      * @return future providing info on when complete
      */
     public XFuture<Void> startSafeAbortAndDisconnectAsync() {
@@ -646,7 +647,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             lastRunProgramFuture = pendantClientJInternalFrame.runCurrentProgram();
             return lastRunProgramFuture;
         }
-        XFuture<Boolean> ret = new XFuture<>("startCRCLProgram");
+        XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
         ret.complete(false);
         return ret;
     }
@@ -1416,8 +1417,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         String newTitle = "APRS : " + ((robotName != null) ? robotName : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : "
                 + stateDescription
                 + ((titleErrorString != null) ? ": " + titleErrorString : "");
-        if (newTitle.length() > 70) {
-            newTitle = newTitle.substring(0, 70) + " ... ";
+        if (newTitle.length() > 90) {
+            newTitle = newTitle.substring(0, 90) + " ... ";
         }
         if (!oldTitle.equals(newTitle)) {
             setTitle(newTitle);
@@ -2554,11 +2555,20 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     .stream()
                     .map(entry -> entry.getKey() + "=" + entry.getValue())
                     .collect(Collectors.joining(" "));
+            System.out.println("requiredItemsString = " + requiredItemsString);
             List<PhysicalItem> kitTrays = itemsList.stream()
                     .filter(x -> "KT".equals(x.getType()))
                     .collect(Collectors.toList());
-            System.out.println("requiredItemsString = " + requiredItemsString);
+            if (kitTrays.isEmpty()) {
+                if (JOptionPane.YES_OPTION
+                        != JOptionPane.showConfirmDialog(this, "Create action list with no kit trays?")) {
+                    setTitleErrorString("createActionListFromVision: No kit trays");
+                    throw new IllegalStateException("No kit trays");
+                }
+            }
+
             File f = createTempFile("actionList", ".txt");
+            boolean allEmpty = true;
             try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
                 ps.println("(clear-kits-to-check)");
                 ps.println("(look-for-parts 0 " + requiredItemsString + ")");
@@ -2601,6 +2611,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                             String slotName = "empty_slot_" + slotOffset.getPrpName().substring(slotOffset.getPrpName().lastIndexOf("_") + 1) + "_for_" + shortSkuName + "_in_" + shortKitName + "_" + kitNumber;
                             ps.println("(place-part " + slotName + ")");
                             slotPrpToPartSkuMap.put(slotOffset.getPrpName(), closestPart.getName());
+                            allEmpty = false;
                         } else {
                             slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
                         }
@@ -2621,6 +2632,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 ps.println("(clear-kits-to-check)");
                 ps.println("(end-program)");
             }
+            if (allEmpty) {
+                System.out.println("itemsList = " + itemsList);
+                System.out.println("kitTrays = " + kitTrays);
+                System.out.println("requiredItemsString = " + requiredItemsString);
+                if (JOptionPane.YES_OPTION
+                        != JOptionPane.showConfirmDialog(this, "Create action list with all trays empty?")) {
+                    setTitleErrorString("createActionListFromVision: All kit trays empty");
+                    throw new IllegalStateException("All kit trays empty");
+                }
+            }
             if (null != pddlExecutorJInternalFrame1) {
                 pddlExecutorJInternalFrame1.setReverseFlag(false);
                 pddlExecutorJInternalFrame1.loadActionsFile(f);
@@ -2628,6 +2649,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            setTitleErrorString("createActionListFromVision: " + ex.getMessage());
         }
     }
 
@@ -2635,7 +2657,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != object2DViewJInternalFrame) {
             return object2DViewJInternalFrame.getItems();
         }
-        return Collections.emptyList();
+        throw new IllegalStateException("object2DViewJInternalFrame is null");
     }
 
     public void setForceFakeTakeFlag(boolean val) {
@@ -2751,7 +2773,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != object2DViewJInternalFrame) {
             try {
                 object2DViewJInternalFrame.setReverseFlag(reverseFlag);
-                object2DViewJInternalFrame.reloadDataFile();
+                if (object2DViewJInternalFrame.isSimulated() || !object2DViewJInternalFrame.isConnected()) {
+                    object2DViewJInternalFrame.reloadDataFile();
+                }
             } catch (IOException ex) {
                 Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -2784,12 +2808,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public void reset() {
+        clearErrors();
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(true);
         }
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.refresh();
         }
+        clearErrors();
     }
 
     private void setCommandID(CRCLCommandType cmd) {
@@ -2853,7 +2879,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setCommandID(emptyProgram.getInitCanon());
             setCommandID(emptyProgram.getEndCanon());
             return startCRCLProgram(emptyProgram)
-                    .thenApply(x -> {
+                    .thenApply("startCheckEnabled.finish." + robotName + "." + taskName, x -> {
                         System.out.println("startCheckEnabled finishing with " + x);
                         return x;
                     });
@@ -3126,7 +3152,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    
     /**
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
@@ -3161,7 +3186,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    
     /**
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
@@ -3885,7 +3909,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Set the value of enableDatabaseUpdates
      *
      * @param enableDatabaseUpdates new value of enableDatabaseUpdates
-     * @param requiredParts map of part names to required number of each part type
+     * @param requiredParts map of part names to required number of each part
+     * type
      */
     public void setEnableVisionToDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
         visionToDbJInternalFrame.setEnableDatabaseUpdates(enableDatabaseUpdates, requiredParts);
