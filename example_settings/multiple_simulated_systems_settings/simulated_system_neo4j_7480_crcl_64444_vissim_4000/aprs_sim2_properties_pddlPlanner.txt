@@ -1,8 +1,0 @@
-#
-#Wed Dec 14 15:58:18 EST 2016
-pddl.addargs=-I -n
-pddl.planner.host=localhost
-program.executable=popf3-clp
-pddl.planner.ssh=false
-pddl.problem=problem-a2b1c1.pddl
-pddl.domain=domain-kitting.pddl

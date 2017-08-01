@@ -424,7 +424,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public XFuture<Void> startSafeAbortAndDisconnectAsync() {
         startSafeAbortAndDisconnectAsyncFuture
                 = this.pddlExecutorJInternalFrame1.startSafeAbort()
-                .thenRunAsync(this::disconnectRobot);
+                        .thenRunAsync(this::disconnectRobot);
         return startSafeAbortAndDisconnectAsyncFuture;
     }
 
@@ -1718,6 +1718,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenuItemSetPoseMaxLimits = new javax.swing.JMenuItem();
         jMenuItemSetPoseMinLimits = new javax.swing.JMenuItem();
         jCheckBoxMenuItemSnapshotImageSize = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemReloadSimFilesOnReverse = new javax.swing.JCheckBoxMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
@@ -1957,6 +1958,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenu4.add(jCheckBoxMenuItemSnapshotImageSize);
+
+        jCheckBoxMenuItemReloadSimFilesOnReverse.setText("Reload Sim Files on Reverse");
+        jMenu4.add(jCheckBoxMenuItemReloadSimFilesOnReverse);
 
         jMenuBar1.add(jMenu4);
 
@@ -2547,14 +2551,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             List<PhysicalItem> itemsList = getSimviewItems();
             Map<String, Integer> requiredItemsMap
                     = itemsList.stream()
-                    .filter(this::isWithinLimits)
-                    .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
+                            .filter(this::isWithinLimits)
+                            .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
             String requiredItemsString
                     = requiredItemsMap
-                    .entrySet()
-                    .stream()
-                    .map(entry -> entry.getKey() + "=" + entry.getValue())
-                    .collect(Collectors.joining(" "));
+                            .entrySet()
+                            .stream()
+                            .map(entry -> entry.getKey() + "=" + entry.getValue())
+                            .collect(Collectors.joining(" "));
             System.out.println("requiredItemsString = " + requiredItemsString);
             List<PhysicalItem> kitTrays = itemsList.stream()
                     .filter(x -> "KT".equals(x.getType()))
@@ -2618,8 +2622,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     }
                     kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                             + slotPrpToPartSkuMap.entrySet().stream()
-                            .map(e -> e.getKey() + "=" + e.getValue())
-                            .collect(Collectors.joining(" "))
+                                    .map(e -> e.getKey() + "=" + e.getValue())
+                                    .collect(Collectors.joining(" "))
                             + ")");
                 }
 
@@ -2765,16 +2769,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     }
                 });
     }
-
+    
     public void setReverseFlag(boolean reverseFlag) {
+        setReverseFlag(reverseFlag, true);
+    }
+
+    public void setReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
         if (jCheckBoxMenuItemReverse.isSelected() != reverseFlag) {
             jCheckBoxMenuItemReverse.setSelected(reverseFlag);
         }
         if (null != object2DViewJInternalFrame) {
             try {
                 object2DViewJInternalFrame.setReverseFlag(reverseFlag);
-                if (object2DViewJInternalFrame.isSimulated() || !object2DViewJInternalFrame.isConnected()) {
-                    object2DViewJInternalFrame.reloadDataFile();
+                if (reloadSimFiles && jCheckBoxMenuItemReloadSimFilesOnReverse.isSelected()) {
+                    if (object2DViewJInternalFrame.isSimulated() || !object2DViewJInternalFrame.isConnected()) {
+                        object2DViewJInternalFrame.reloadDataFile();
+                    }
                 }
             } catch (IOException ex) {
                 Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -2808,9 +2818,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public void reset() {
+        reset(true);
+    }
+
+    public void reset(boolean reloadSimFiles) {
         clearErrors();
         if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.refresh(true);
+            object2DViewJInternalFrame.refresh(reloadSimFiles);
         }
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.refresh();
@@ -2879,11 +2893,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setCommandID(emptyProgram.getInitCanon());
             setCommandID(emptyProgram.getEndCanon());
             return startCRCLProgram(emptyProgram)
-                    .thenApply("startCheckEnabled.finish." + robotName + "." + taskName, 
+                    .thenApply("startCheckEnabled.finish." + robotName + "." + taskName,
                             x -> {
-                        System.out.println("startCheckEnabled finishing with " + x);
-                        return x;
-                    });
+                                System.out.println("startCheckEnabled finishing with " + x);
+                                return x;
+                            });
         } catch (JAXBException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             return XFuture.completedFuture(false);
@@ -2915,7 +2929,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             jCheckBoxMenuItemPause.setSelected(false);
         }
         if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.refresh(true);
+            object2DViewJInternalFrame.refresh(jCheckBoxMenuItemReloadSimFilesOnReverse.isSelected());
         }
         if (null != motomanCrclServerJInternalFrame) {
             if (this.getRobotName().toUpperCase().contains("MOTOMAN")) {
@@ -3390,24 +3404,28 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         } else {
             setDefaultRobotName();
         }
-        String maxLimitString = props.getProperty("maxLimit");
+        String maxLimitString = props.getProperty(MAX_LIMIT_PROP);
         if (null != maxLimitString && maxLimitString.trim().length() > 0) {
             setMaxLimit(PmCartesian.valueOf(maxLimitString));
         }
-        String minLimitString = props.getProperty("minLimit");
+        String minLimitString = props.getProperty(MIN_LIMIT_PROP);
         if (null != minLimitString && minLimitString.trim().length() > 0) {
             setMinLimit(PmCartesian.valueOf(minLimitString));
         }
 
-        String snapShotEnableString = props.getProperty("snapShotEnable");
+        String reloadSimFilesOnReverseString = props.getProperty(RELOAD_SIM_FILES_ON_REVERSE_PROP);
+        if (null != reloadSimFilesOnReverseString && reloadSimFilesOnReverseString.trim().length() > 0) {
+            jCheckBoxMenuItemSnapshotImageSize.setSelected(Boolean.valueOf(reloadSimFilesOnReverseString));
+        }
+        String snapShotEnableString = props.getProperty(SNAP_SHOT_ENABLE_PROP);
         if (null != snapShotEnableString && snapShotEnableString.trim().length() > 0) {
             jCheckBoxMenuItemSnapshotImageSize.setSelected(Boolean.valueOf(snapShotEnableString));
         }
-        String snapShotWidthString = props.getProperty("snapShotWidth");
+        String snapShotWidthString = props.getProperty(SNAP_SHOT_WIDTH_PROP);
         if (null != snapShotWidthString && snapShotWidthString.trim().length() > 0) {
             snapShotWidth = Integer.parseInt(snapShotWidthString);
         }
-        String snapShotHeightString = props.getProperty("snapShotHeight");
+        String snapShotHeightString = props.getProperty(SNAP_SHOT_HEIGHT_PROP);
         if (null != snapShotHeightString && snapShotHeightString.trim().length() > 0) {
             snapShotHeight = Integer.parseInt(snapShotHeightString);
         }
@@ -3499,11 +3517,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         propsMap.put(CRCLWEBAPPPORT, Integer.toString(crclWebServerHttpPort));
         propsMap.put(STARTUP_ACTIVE_WIN, activeWin.toString());
         propsMap.put(STARTUPKITINSPECTION, Boolean.toString(jCheckBoxMenuItemKitInspectionStartup.isSelected()));
-        propsMap.put("maxLimit", maxLimit.toString());
-        propsMap.put("minLimit", minLimit.toString());
-        propsMap.put("snapShotEnable", Boolean.toString(jCheckBoxMenuItemSnapshotImageSize.isSelected()));
-        propsMap.put("snapShotWidth", Integer.toString(snapShotWidth));
-        propsMap.put("snapShotHeight", Integer.toString(snapShotHeight));
+        propsMap.put(MAX_LIMIT_PROP, maxLimit.toString());
+        propsMap.put(MIN_LIMIT_PROP, minLimit.toString());
+        propsMap.put(SNAP_SHOT_ENABLE_PROP, Boolean.toString(jCheckBoxMenuItemSnapshotImageSize.isSelected()));
+        propsMap.put(SNAP_SHOT_WIDTH_PROP, Integer.toString(snapShotWidth));
+        propsMap.put(SNAP_SHOT_HEIGHT_PROP, Integer.toString(snapShotHeight));
+        propsMap.put(RELOAD_SIM_FILES_ON_REVERSE_PROP, Boolean.toString(jCheckBoxMenuItemReloadSimFilesOnReverse.isSelected()));
         setDefaultRobotName();
         propsMap.put(APRSROBOT_PROPERTY_NAME, robotName);
         if (null != taskName) {
@@ -3563,6 +3582,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             DbSetupBuilder.savePropertiesFile(dbPropsFile, dbSetup);
         }
     }
+    private static final String RELOAD_SIM_FILES_ON_REVERSE_PROP = "reloadSimFilesOnReverse";
+    private static final String SNAP_SHOT_HEIGHT_PROP = "snapShotHeight";
+    private static final String SNAP_SHOT_WIDTH_PROP = "snapShotWidth";
+    private static final String SNAP_SHOT_ENABLE_PROP = "snapShotEnable";
+    private static final String MIN_LIMIT_PROP = "minLimit";
+    private static final String MAX_LIMIT_PROP = "maxLimit";
     private static final String STARTUP_ACTIVE_WIN = "STARTUP_ACTIVE_WIN";
     private static final String APRSTASK_PROPERTY_NAME = "aprs.taskName";
     private static final String APRSROBOT_PROPERTY_NAME = "aprs.robotName";
@@ -3652,6 +3677,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemForceFakeTake;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKitInspectionStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReloadSimFilesOnReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemSnapshotImageSize;
