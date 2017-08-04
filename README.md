@@ -69,7 +69,7 @@ Neo4J Database Install
 The most recent demo uses the Neo4J Community Edition version 2.3. This can be 
 downloaded by going to
 
-   1.  Go to http:\\neo4j.com
+   1.  Go to https://neo4j.com/
    2.  Follow "Download" link on the top-right
    3.  Follow "Other releases" link to https://neo4j.com/download/other-releases/
    4.  Get the tar or zip file rather than the exe of dmg file for your operating system in the community column in the center at the bottom
