@@ -1586,7 +1586,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         String[] newNames = new String[origNames.length];
         for (int i = 0; i < newNames.length; i++) {
             String origName = origNames[i];
-            if(null == origName) {
+            if (null == origName) {
                 return Arrays.copyOfRange(newNames, 0, i);
             }
             String newName = makeShortPath(propertiesFile, origName);
@@ -2506,9 +2506,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         this.customRunnablesIndex = 0;
         this.replanRunnable = this.customReplanRunnable;
         return this.randomDropOff()
-                .thenCompose(x -> recursiveSupplyBoolean(x, () -> this.lookForParts()))
-                .thenCompose(x -> recursiveSupplyBoolean(x, () -> this.recordAndCompletTestPickup()))
-                .thenCompose(x -> recursiveSupplyBoolean(x, () -> this.randomDropOff()));
+                .thenCompose("randomTest.lookForParts",
+                        x -> recursiveSupplyBoolean(x, () -> this.lookForParts()))
+                .thenCompose("randomTest.recordAndCompletTestPickup",
+                        x -> recursiveSupplyBoolean(x, () -> this.recordAndCompletTestPickup()))
+                .thenCompose("randomTest.randomDropOff",
+                        x -> recursiveSupplyBoolean(x, () -> this.randomDropOff()));
 //        } catch (IOException ex) {
 //            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
 //            XFuture<Boolean> ret = new XFuture<>();
@@ -3105,11 +3108,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
             String jointVals
                     = jointList
-                    .stream()
-                    .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                    .map(JointStatusType::getJointPosition)
-                    .map(Objects::toString)
-                    .collect(Collectors.joining(","));
+                            .stream()
+                            .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                            .map(JointStatusType::getJointPosition)
+                            .map(Objects::toString)
+                            .collect(Collectors.joining(","));
             System.out.println("jointVals = " + jointVals);
             DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
             boolean keyFound = false;
@@ -3376,7 +3379,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 () -> {
                     try {
                         return checkDbSupplierPublisher()
-                        .thenComposeAsync(x -> doPddlActionsSection());
+                                .thenComposeAsync("generateCrcl(" + aprsJFrame.getTaskName() + ").doPddlActionsSection(" + pddlActionToCrclGenerator.getLastIndex() + " out of " + actionsList.size() + ")",
+                                        x -> doPddlActionsSection());
                     } catch (IOException ex) {
                         Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         XFuture<Boolean> xf = new XFuture<>("generateCrclException");
@@ -3452,12 +3456,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 lastReplanAfterCrclBlock = replanAfterCrclBlock;
                 if (replanAfterCrclBlock) {
                     return startCrclProgram(program)
-                            .thenCompose(this::recursiveApplyGenerateCrcl);
+                            .thenCompose("doPddlActionsSection.recursiveApplyGenerateCrcl(" + pddlActionToCrclGenerator.getLastIndex() + " out of " + actionsList.size() + ")",
+                                    this::recursiveApplyGenerateCrcl);
                 } else {
-                    return startCrclProgram(program).thenApply(x2 -> {
-                        runProgramCompleteRunnables();
-                        return x2;
-                    });
+                    return startCrclProgram(program)
+                            .thenApply("doPddlActionsSection.runProgramCompleteRunnables",
+                                    x2 -> {
+                                        runProgramCompleteRunnables();
+                                        return x2;
+                                    });
                 }
             } else {
                 setCrclProgram(program);
@@ -3836,7 +3843,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return startCrclProgram(program);
         } catch (IllegalStateException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            XFuture<Boolean> future = new XFuture<>("lookForPartsException");
+            XFuture<Boolean> future = new  XFuture<> ("lookForPartsException");
             future.completeExceptionally(ex);
             return future;
         }
@@ -3845,8 +3852,20 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private volatile List<Future<?>> checkDbSupplierPublisherFuturesList = null;
 
     private XFuture<Void> checkDbSupplierPublisher() throws IOException {
-        if (null != this.pddlActionToCrclGenerator && pddlActionToCrclGenerator.isConnected()) {
-            return XFuture.completedFutureWithName("checkDbSupplierPublisher.completedFuture", null);
+        if (null == this.pddlActionToCrclGenerator) {
+            XFuture<Void> ret = new XFuture<Void>("checkDbSupplierPublisher(null==pddlActionToCrclGenerator)");
+            ret.completeExceptionally(new IllegalStateException("checkDbSupplierPublisher(null==pddlActionToCrclGenerator)"));
+            return ret;
+        }
+        if (pddlActionToCrclGenerator.isConnected()) {
+            try {
+                return XFuture.completedFutureWithName("checkDbSupplierPublisher.alreadyConnected." + pddlActionToCrclGenerator.getDbConnection().getMetaData().getURL(), null);
+            } catch (SQLException ex) {
+                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                XFuture<Void> ret = new XFuture<Void>("checkDbSupplierPublisher.alreadyConnected.withException");
+                ret.completeExceptionally(ex);
+                return ret;
+            }
         }
         XFuture<Void> f1 = new XFuture<>("checkDbSupplierPublisher.f1");
         newDbSetupFutures.add(f1);

@@ -140,9 +140,9 @@
               <Group type="102" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="jButtonPrevMulti4" linkSize="1" alignment="0" min="-2" pref="442" max="-2" attributes="0"/>
-                      <Component id="jButtonPrevMulti2" linkSize="1" alignment="0" max="32767" attributes="0"/>
-                      <Component id="jButtonPrevSingle" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                      <Component id="jButtonOpenSingle" alignment="0" min="-2" pref="442" max="-2" attributes="0"/>
+                      <Component id="jButtonNewSingle" alignment="0" max="32767" attributes="0"/>
+                      <Component id="jButtonPrevSingle" alignment="0" max="32767" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
@@ -152,18 +152,18 @@
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="jButtonPrevSingle" linkSize="2" min="-2" max="-2" attributes="0"/>
+                  <Component id="jButtonPrevSingle" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="jButtonPrevMulti2" linkSize="2" min="-2" max="-2" attributes="0"/>
+                  <Component id="jButtonNewSingle" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="jButtonPrevMulti4" linkSize="2" min="-2" max="-2" attributes="0"/>
+                  <Component id="jButtonOpenSingle" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
       </Layout>
       <SubComponents>
-        <Component class="javax.swing.JButton" name="jButtonPrevMulti2">
+        <Component class="javax.swing.JButton" name="jButtonNewSingle">
           <Properties>
             <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
               <Font name="DejaVu Sans" size="18" style="0"/>
@@ -171,7 +171,7 @@
             <Property name="text" type="java.lang.String" value="New "/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonPrevMulti2ActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonNewSingleActionPerformed"/>
           </Events>
         </Component>
         <Component class="javax.swing.JButton" name="jButtonPrevSingle">
@@ -185,7 +185,7 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonPrevSingleActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JButton" name="jButtonPrevMulti4">
+        <Component class="javax.swing.JButton" name="jButtonOpenSingle">
           <Properties>
             <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
               <Font name="DejaVu Sans" size="18" style="0"/>
@@ -193,7 +193,7 @@
             <Property name="text" type="java.lang.String" value="Open "/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonPrevMulti4ActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonOpenSingleActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>

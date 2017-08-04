@@ -380,6 +380,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return taskName;
     }
 
+    public XFuture<Void> getSafeAbortFuture() {
+        return safeAbortFuture;
+    }
+
+    public XFuture<Boolean> getLastRunProgramFuture() {
+        return lastRunProgramFuture;
+    }
+
+    public XFuture<Boolean> getLastResumeFuture() {
+        return lastResumeFuture;
+    }
+
+    
     private volatile XFuture<Void> safeAbortFuture = null;
 
     /**
@@ -408,7 +421,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return safeAbortFuture;
     }
 
-    private volatile XFuture<Void> startSafeAbortAndDisconnectAsyncFuture = null;
 
     /**
      * Safely abort the current CRCL program and then disconnect from the
@@ -422,10 +434,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return future providing info on when complete
      */
     public XFuture<Void> startSafeAbortAndDisconnectAsync() {
-        startSafeAbortAndDisconnectAsyncFuture
+        safeAbortFuture
                 = this.pddlExecutorJInternalFrame1.startSafeAbort()
                         .thenRunAsync(this::disconnectRobot);
-        return startSafeAbortAndDisconnectAsyncFuture;
+        return safeAbortFuture;
     }
 
     /**
@@ -1135,7 +1147,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    private void closeAllWindows() {
+    public void closeAllWindows() {
         try {
             closePddlPlanner();
 
@@ -2721,6 +2733,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         String details = getDetailsString();
         System.out.println("details = " + details);
         System.out.println("lastContinueCrclProgramResult = " + lastContinueCrclProgramResult);
+        System.out.println("lastStartActionsFuture = " + lastStartActionsFuture);
+        if (null != lastStartActionsFuture) {
+            lastStartActionsFuture.printStatus(System.out);
+        }
         System.out.println("continousDemoFuture = " + continousDemoFuture);
         if (null != continousDemoFuture) {
             continousDemoFuture.printStatus(System.out);
@@ -2736,10 +2752,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         System.out.println("lastResumeFuture = " + lastRunProgramFuture);
         if (null != lastRunProgramFuture) {
             lastRunProgramFuture.printStatus(System.out);
-        }
-        System.out.println("startSafeAbortAndDisconnectAsyncFuture = " + startSafeAbortAndDisconnectAsyncFuture);
-        if (null != startSafeAbortAndDisconnectAsyncFuture) {
-            startSafeAbortAndDisconnectAsyncFuture.printStatus(System.out);
         }
         System.out.println("isConnected = " + isConnected());
         System.out.println("isPaused = " + isPaused());
@@ -2758,12 +2770,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public XFuture<Void> startContinousDemo(boolean reverseFirst) {
         this.setReverseFlag(reverseFirst);
         return startCheckEnabled()
-                .thenCompose(x -> {
+                .thenCompose("starContinousDemo(task="+getTaskName()+")",
+                        x -> {
                     if (x) {
                         return startActions()
-                                .thenRun(() -> setReverseFlag(!reverseFirst))
-                                .thenCompose(x2 -> startActions())
-                                .thenCompose(x2 -> x ? startContinousDemo(reverseFirst) : XFuture.completedFutureWithName("startContinousDemo.completedFutureWithName", null));
+                                .thenRun("starContinousDemo(task="+getTaskName()+").setReverseFlag",
+                                        () -> setReverseFlag(!reverseFirst))
+                                .thenCompose("starContinousDemo(task="+getTaskName()+").startActions",
+                                        x2 -> startActions())
+                                .thenCompose("starContinousDemo(task="+getTaskName()+").recurse",
+                                        x2 -> x ? startContinousDemo(reverseFirst) : XFuture.completedFutureWithName("startContinousDemo.completedFutureWithName", null));
                     } else {
                         return Utils.runOnDispatchThread(() -> jCheckBoxMenuItemContinousDemo.setSelected(false));
                     }
@@ -2912,6 +2928,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return f;
     }
 
+    private volatile XFuture<Boolean> lastStartActionsFuture = null;
+
+    public XFuture<Boolean> getLastStartActionsFuture() {
+        return lastStartActionsFuture;
+    }
+    
+    
+    
     /**
      * Start the PDDL actions currently loaded in the executor from the
      * beginning.
@@ -2952,10 +2976,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 return startConnectDatabase().
                         thenCompose(x -> pddlExecutorJInternalFrame1.startActions());
             }
-            return pddlExecutorJInternalFrame1.startActions();
+            lastStartActionsFuture = pddlExecutorJInternalFrame1.startActions();
         } else {
-            return XFuture.completedFuture(false);
+            lastStartActionsFuture=  XFuture.completedFuture(false);
         }
+        return lastStartActionsFuture;
     }
 
     public void showKitInspection() {

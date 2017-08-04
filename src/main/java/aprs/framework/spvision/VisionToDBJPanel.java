@@ -1860,14 +1860,18 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private XFuture<Void> queryDatabase() throws InterruptedException, ExecutionException {
         if (null != dpu) {
-            return dpu.queryDatabase().thenCompose(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
+            return dpu.queryDatabase()
+                    .thenCompose("VisionToDB.queryDatabase.updataPoseQueryInfo",
+                            l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
         return XFuture.completedFutureWithName("queryDatabase.null==dpu", null);
     }
 
     private XFuture<Void> startQueryDatabaseNew() {
         if (null != dpu) {
-            return dpu.queryDatabaseNew().thenCompose(l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
+            return dpu.queryDatabaseNew()
+                    .thenCompose("VisionToDB.startQueryDatabaseNew.updataPoseQueryInfo",
+                            l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
         return XFuture.completedFutureWithName("startQueryDatabaseNew.null==dpu", null);
     }

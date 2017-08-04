@@ -792,12 +792,19 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private volatile SQLException getSlotOffsetsNewSqlException = null;
 
+    private final ConcurrentHashMap<String,Integer> failuresMap = new ConcurrentHashMap<>();
+    private static final List<Slot> failedSlotOffsets = Collections.emptyList();
+    
     public List<Slot> getSlotOffsetsNew(PhysicalItem tray) {
         if (null == getTraySlotsParamTypes) {
             throw new IllegalArgumentException("getTraySlotsParamTypes is null");
         }
         if (null == get_tray_slots_statement) {
             throw new IllegalArgumentException("get_tray_slots_statement is null");
+        }
+        Integer failuresI = failuresMap.get(tray.getName());
+        if(failuresI != null && failuresI.compareTo(2) > 0) {
+            return failedSlotOffsets;
         }
         getSlotOffsetsNewSqlException = null;
         List<Slot> ret = new ArrayList<>();
@@ -883,8 +890,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     System.err.println("getTraySlotsQueryStringFilled=");
                     System.err.println(getTraySlotsQueryStringFilled);
                     System.err.println("Returned 0 items.");
+                    System.err.println("url="+getURL());
                     System.err.println("");
-                    return null;
+                    int failures = failuresMap.compute(tray.getName(), (name,count) -> (count==null)?1:(count+1));
+                    if(failures < 2) {
+                        throw new IllegalStateException("Can't get items for tray"+ tray+" url="+getURL()+" getTraySlotsQueryStringFilled=\n"+getTraySlotsQueryStringFilled);
+                    } else {
+                        return failedSlotOffsets;
+                    }
                 }
             }
         } catch (SQLException ex) {

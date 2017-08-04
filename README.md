@@ -62,12 +62,116 @@ OR
       * Netbeans will open a maven project with File -> Open Project just like Netbeans generated Ant projects.
       * IntelliJ and Eclipse both have options to import maven projects.
 
+Neo4J Database Install
+-----
+
+
+The most recent demo uses the Neo4J Community Edition version 2.3. This can be 
+downloaded by going to
+
+   1.  Go to http:\\neo4j.com
+   2.  Follow "Download" link on the top-right
+   3.  Follow "Other releases" link to https://neo4j.com/download/other-releases/
+   4.  Get the tar or zip file rather than the exe of dmg file for your operating system in the community column in the center at the bottom
+of the page with the latest 2.3.?? version. Using the tar or zip file make it
+easier to setup multiple instances. 
+   5.  Extract the tar or zip into two seperate directories. (One for Motoman, and one for Fanuc or their simulations)
+
+
+    # For example
+    mkdir motoman-neo4j-database
+    cd motoman-neo4j-database/
+    tar -xzf ~/Downloads/neo4j-community-2.3.11-unix.tar.gz 
+    cd ..
+    mkdir fanuc-neo4j-database
+    cd fanuc-neo4j-database/
+    tar -xzf ~/Downloads/neo4j-community-2.3.11-unix.tar.gz 
+
+  6.  Change the ports for the motoman directory. By editing the text file "motoman-neo4j-database/neo4j-community-2.3.11/conf/neo4j-server.properties".
+    
+Replace
+
+    # http port (for all data, administrative, and UI access)
+    org.neo4j.server.webserver.port=7474
+
+with
+
+    # http port (for all data, administrative, and UI access)
+    org.neo4j.server.webserver.port=7496
+
+Replace
+
+    # https port (for all data, administrative, and UI access)
+    org.neo4j.server.webserver.https.port=7473
+
+
+with
+
+    # https port (for all data, administrative, and UI access)
+    org.neo4j.server.webserver.https.port=7495
+
+
+   7.  Change the ports for the fanuc directory. By editing the text file "fanuc-neo4j-database/neo4j-community-2.3.11/conf/neo4j-server.properties".
+    
+Replace
+
+    # http port (for all data, administrative, and UI access)
+    org.neo4j.server.webserver.port=7474
+
+with
+
+    # http port (for all data, administrative, and UI access)
+    org.neo4j.server.webserver.port=7494
+
+Replace
+
+    # https port (for all data, administrative, and UI access)
+    org.neo4j.server.webserver.https.port=7473
+
+
+with
+
+    # https port (for all data, administrative, and UI access)
+    org.neo4j.server.webserver.https.port=7493
+
+   9.  Extract the data from the zip file into the fanuc data directory
+
+    
+    cd ~/fanuc-neo4j-database/neo4j-community-2.3.11/data
+    unzip ~/aprs-framework/neo4j-database-backup/fanucworkcell-28-feb-2017.zip 
+
+
+   10.  Extract the data from the zip file into the motoman data directory
+
+    
+    cd ~/motoman-neo4j-database/neo4j-community-2.3.11/data
+    unzip ~/aprs-framework/neo4j-database-backup/fanucworkcell-28-feb-2017.zip 
+
+   11. Start the fanuc database.
+
+     cd ~/fanuc-neo4j-database/neo4j-community-2.3.11/
+     bin/neo4j start
+
+   12. Login to the web interface for the fanuc database. Open a web browser to http://localhost:7494/.
+   13. Use username "neo4j" and the password "neo4j" to login the first time.
+   14. You will be asked to change the password. Change it to "password".
+   15. Start the motoman database.
+
+     cd ~/motoman-neo4j-database/neo4j-community-2.3.11/
+     bin/neo4j start
+
+   16. Login to the web interface for the motoman database. Open a web browser to http://localhost:7496/.
+   17. Use username "neo4j" and the password "neo4j" to login the first time.
+   18. You will be asked to change the password. Change it to "password".
+
+   19. When done, one can stop both databases by running bin/neo4j stop from the each directory.
+
 
 
 Run
 ---
 
-The graphical user interface can be launched from within an IDE with the project 
+The graphical user interface with the default launcher can be launched from within an IDE with the project 
 open or from the command-line with the command:
 
 For linux:
@@ -77,6 +181,17 @@ For linux:
 For Windows:
 
     run.bat
+
+Or directly with:
+
+    java -jar target/aprs-framework-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+
+To run with the simulated Fanuc/Motoman demo add the arguments "--openMulti example_settings/multiple_simulated_systems_settings/multisim9.csv"
+
+eg.
+
+    ./run.sh --openMulti example_settings/multiple_simulated_systems_settings/multisim9.csv 
 
 
 Launcher

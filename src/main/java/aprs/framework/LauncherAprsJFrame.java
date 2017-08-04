@@ -22,8 +22,10 @@
  */
 package aprs.framework;
 
+import java.awt.HeadlessException;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,9 +56,9 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         jButtonOpenMulti = new javax.swing.JButton();
         jButtonNewMulti = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
-        jButtonPrevMulti2 = new javax.swing.JButton();
+        jButtonNewSingle = new javax.swing.JButton();
         jButtonPrevSingle = new javax.swing.JButton();
-        jButtonPrevMulti4 = new javax.swing.JButton();
+        jButtonOpenSingle = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS Launcher");
@@ -119,11 +121,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Single Workcell System", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("DejaVu Sans", 1, 24))); // NOI18N
 
-        jButtonPrevMulti2.setFont(new java.awt.Font("DejaVu Sans", 0, 18)); // NOI18N
-        jButtonPrevMulti2.setText("New ");
-        jButtonPrevMulti2.addActionListener(new java.awt.event.ActionListener() {
+        jButtonNewSingle.setFont(new java.awt.Font("DejaVu Sans", 0, 18)); // NOI18N
+        jButtonNewSingle.setText("New ");
+        jButtonNewSingle.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonPrevMulti2ActionPerformed(evt);
+                jButtonNewSingleActionPerformed(evt);
             }
         });
 
@@ -135,11 +137,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             }
         });
 
-        jButtonPrevMulti4.setFont(new java.awt.Font("DejaVu Sans", 0, 18)); // NOI18N
-        jButtonPrevMulti4.setText("Open ");
-        jButtonPrevMulti4.addActionListener(new java.awt.event.ActionListener() {
+        jButtonOpenSingle.setFont(new java.awt.Font("DejaVu Sans", 0, 18)); // NOI18N
+        jButtonOpenSingle.setText("Open ");
+        jButtonOpenSingle.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonPrevMulti4ActionPerformed(evt);
+                jButtonOpenSingleActionPerformed(evt);
             }
         });
 
@@ -150,27 +152,22 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButtonPrevMulti4, javax.swing.GroupLayout.PREFERRED_SIZE, 442, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonPrevMulti2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jButtonOpenSingle, javax.swing.GroupLayout.PREFERRED_SIZE, 442, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonNewSingle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jButtonPrevSingle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
-
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jButtonPrevMulti2, jButtonPrevMulti4, jButtonPrevSingle});
-
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jButtonPrevSingle)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonPrevMulti2)
+                .addComponent(jButtonNewSingle)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonPrevMulti4)
+                .addComponent(jButtonOpenSingle)
                 .addContainerGap())
         );
-
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {jButtonPrevMulti2, jButtonPrevMulti4, jButtonPrevSingle});
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -197,58 +194,100 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonPrevMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevMultiActionPerformed
+        prevMulti();
+        this.setVisible(false);
+        this.dispose();
+    }//GEN-LAST:event_jButtonPrevMultiActionPerformed
+
+    private static void prevMulti() {
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
         amsFrame.startColorTextReader();
         amsFrame.loadPrevSetup();
         amsFrame.loadPrevPosMapFile();
         amsFrame.setVisible(true);
-        this.setVisible(false);
-        this.dispose();
-    }//GEN-LAST:event_jButtonPrevMultiActionPerformed
+    }
 
     private void jButtonNewMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonNewMultiActionPerformed
-        AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
-        amsFrame.startColorTextReader();
-        amsFrame.setVisible(true);
+        newMulti();
         this.setVisible(false);
         this.dispose();
-        amsFrame.browseSaveSetupAs();
     }//GEN-LAST:event_jButtonNewMultiActionPerformed
 
-    private void jButtonOpenMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenMultiActionPerformed
+    private static void newMulti() {
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
         amsFrame.startColorTextReader();
         amsFrame.setVisible(true);
-        this.setVisible(false);
-        amsFrame.browseOpenSetup();
-        amsFrame.loadPrevPosMapFile();
-        this.dispose();
+        amsFrame.browseSaveSetupAs();
+    }
+
+    private void jButtonOpenMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenMultiActionPerformed
+        try {
+            openMulti(null);
+            this.setVisible(false);
+            this.dispose();
+        } catch (IOException ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jButtonOpenMultiActionPerformed
 
+    private static void openMulti(String args[]) throws IOException {
+        AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
+        amsFrame.startColorTextReader();
+        amsFrame.setVisible(true);
+        if(null == args || args.length < 1) {
+            amsFrame.browseOpenSetup();
+        } else {
+            amsFrame.loadSetupFile(new File(args[0]));
+        }
+        amsFrame.loadPrevPosMapFile();
+    }
+
     private void jButtonPrevSingleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevSingleActionPerformed
-        AprsJFrame aFrame = new AprsJFrame();
-        aFrame.defaultInit();
-        aFrame.setVisible(true);
+        prevSingle();
         this.setVisible(false);
         this.dispose();
     }//GEN-LAST:event_jButtonPrevSingleActionPerformed
 
-    private void jButtonPrevMulti2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevMulti2ActionPerformed
+    private static void prevSingle() {
         AprsJFrame aFrame = new AprsJFrame();
-        aFrame.emptyInit();
+        aFrame.defaultInit();
         aFrame.setVisible(true);
-        this.setVisible(false);
-        this.dispose();
-    }//GEN-LAST:event_jButtonPrevMulti2ActionPerformed
+    }
 
-    private void jButtonPrevMulti4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevMulti4ActionPerformed
+    private void jButtonNewSingleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonNewSingleActionPerformed
+        newSingle();
+        this.setVisible(false);
+        this.dispose();
+    }//GEN-LAST:event_jButtonNewSingleActionPerformed
+
+    private static void newSingle() {
         AprsJFrame aFrame = new AprsJFrame();
         aFrame.emptyInit();
         aFrame.setVisible(true);
-        this.setVisible(false);
-        aFrame.browseOpenPropertiesFile();
-        this.dispose();
-    }//GEN-LAST:event_jButtonPrevMulti4ActionPerformed
+    }
+
+    private void jButtonOpenSingleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenSingleActionPerformed
+        try {
+            openSingle(null);
+            this.setVisible(false);
+            this.dispose();
+        } catch (IOException ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonOpenSingleActionPerformed
+
+    private static void openSingle(String args[]) throws IOException {
+        AprsJFrame aFrame = new AprsJFrame();
+        aFrame.emptyInit();
+        aFrame.setVisible(true);
+        if(null == args || args.length < 1) {
+            aFrame.browseOpenPropertiesFile();
+        } else {
+            aFrame.closeAllWindows();
+            aFrame.setPropertiesFile(new File(args[0]));
+            aFrame.loadProperties();
+        }
+    }
 
     private void checkFiles() {
         File f = AprsJFrame.getDefaultPropertiesFile();
@@ -268,7 +307,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         } catch (IOException ex) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if(f != null && f.exists()) {
+        if (f != null && f.exists()) {
             try {
                 jButtonPrevMulti.setToolTipText("Open " + f.getCanonicalPath() + " ");
                 jButtonPrevMulti.setEnabled(true);
@@ -311,6 +350,51 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
+                if (null != args && args.length > 0) {
+                    try {
+                        String argsLeft[] = Arrays.copyOfRange(args, 1, args.length);
+                        switch (args[0]) {
+                            case "--prevMulti":
+                                prevMulti();
+                                break;
+                                
+                            case "--openMulti":
+                                openMulti(argsLeft);
+                                break;
+                                
+                            case "--newMulti":
+                                newMulti();
+                                break;
+                                
+                            case "--prevSingle":
+                                prevSingle();
+                                break;
+                                
+                            case "--openSingle":
+                                openSingle(argsLeft);
+                                break;
+                                
+                            case "--newSingle":
+                                newSingle();
+                                break;
+                                
+                            default:
+                                System.err.println("Invalid argumens args=" + Arrays.toString(args));
+                                System.err.println("args[0] must be one of:");
+                                System.err.println("--prevMulti");
+                                System.err.println("--openMulti");
+                                System.err.println("--newMulti");
+                                System.err.println("--prevSingle");
+                                System.err.println("--openSingle");
+                                System.err.println("--newSingle");
+                                System.err.println("");
+                                break;
+                        }
+                        return;
+                    } catch (IOException ex) {
+                        Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
                 LauncherAprsJFrame lFrame = new LauncherAprsJFrame();
                 lFrame.checkFiles();
                 lFrame.setVisible(true);
@@ -320,10 +404,10 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonNewMulti;
+    private javax.swing.JButton jButtonNewSingle;
     private javax.swing.JButton jButtonOpenMulti;
+    private javax.swing.JButton jButtonOpenSingle;
     private javax.swing.JButton jButtonPrevMulti;
-    private javax.swing.JButton jButtonPrevMulti2;
-    private javax.swing.JButton jButtonPrevMulti4;
     private javax.swing.JButton jButtonPrevSingle;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;

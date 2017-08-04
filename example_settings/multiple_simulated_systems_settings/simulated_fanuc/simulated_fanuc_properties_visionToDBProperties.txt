@@ -1,7 +1,7 @@
-#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:2349
+#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:2353
 --acquirestate=ON
 --commandport=4001
---dbhost=ying-220.el.nist.gov
+--dbhost=localhost
 --dbname=neo4j
 --dbpasswd=password
 --dbport=7494
@@ -15,7 +15,7 @@ NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com.port=24789
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.name=fanuc-demo
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.passwd=XqL05QDsHL2Th9zNANXK
 NEO4J.hobby-pllolmbeoeaggbkeelldmkol.dbs.graphenedb.com_24789.user=fanuc-demo
-NEO4J.host=ying-220.el.nist.gov
+NEO4J.host=localhost
 NEO4J.localhost.port=7494
 NEO4J.localhost_4000.name=neo4j
 NEO4J.localhost_4000.passwd=
@@ -29,17 +29,6 @@ NEO4J.localhost_7486.user=neo4j
 NEO4J.localhost_7494.name=neo4j
 NEO4J.localhost_7494.passwd=password
 NEO4J.localhost_7494.user=neo4j
-NEO4J.ying-220.el.nist.gov.port=7494
-NEO4J.ying-220.el.nist.gov_7494.name=neo4j
-NEO4J.ying-220.el.nist.gov_7494.passwd=password
-NEO4J.ying-220.el.nist.gov_7494.user=neo4j
-NEO4J.ying-220.el.nist.gov_7496.name=neo4j
-NEO4J.ying-220.el.nist.gov_7496.passwd=password
-NEO4J.ying-220.el.nist.gov_7496.user=neo4j
-NEO4J.ying-220.mxnet.mel.nist.gov.port=7494
-NEO4J.ying-220.mxnet.mel.nist.gov_7494.name=neo4j
-NEO4J.ying-220.mxnet.mel.nist.gov_7494.passwd=password
-NEO4J.ying-220.mxnet.mel.nist.gov_7494.user=neo4j
 rotationOffset=0.0
 transform.point.x=0.0
 transform.point.y=0.0
