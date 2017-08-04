@@ -149,16 +149,35 @@ with
 
    11. Start the fanuc database.
 
+On Linux 
+
+
      cd ~/fanuc-neo4j-database/neo4j-community-2.3.11/
      bin/neo4j start
+
+On  Windows
+
+
+     start neo4j-community-2.3.11-fanuc\bin\Neo4j.bat
+
 
    12. Login to the web interface for the fanuc database. Open a web browser to http://localhost:7494/.
    13. Use username "neo4j" and the password "neo4j" to login the first time.
    14. You will be asked to change the password. Change it to "password".
    15. Start the motoman database.
 
+On Linux
+
+
      cd ~/motoman-neo4j-database/neo4j-community-2.3.11/
      bin/neo4j start
+
+On  Windows
+
+
+     start neo4j-community-2.3.11-motoman\bin\Neo4j.bat
+
+
 
    16. Login to the web interface for the motoman database. Open a web browser to http://localhost:7496/.
    17. Use username "neo4j" and the password "neo4j" to login the first time.
