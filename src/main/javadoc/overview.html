@@ -62,9 +62,122 @@ be started/stopped simultaneously or for robots to be transferred between the sy
 </ul></li>
 </ul>
 
+<h2>Neo4J Database Install</h2>
+
+<p>The most recent demo uses the Neo4J Community Edition version 2.3. This can be 
+downloaded by going to</p>
+
+<ol>
+<li>Go to https://neo4j.com/</li>
+<li>Follow "Download" link on the top-right</li>
+<li>Follow "Other releases" link to https://neo4j.com/download/other-releases/</li>
+<li>Get the tar or zip file rather than the exe of dmg file for your operating system in the community column in the center at the bottom
+of the page with the latest 2.3.?? version. Using the tar or zip file will make it
+easier to setup multiple instances. </li>
+<li><p>Extract the tar or zip into two seperate directories. (One for Motoman, and one for Fanuc or their simulations)</p>
+
+<pre><code>mkdir motoman-neo4j-database
+cd motoman-neo4j-database/
+tar -xzf ~/Downloads/neo4j-community-2.3.11-unix.tar.gz 
+cd ..
+mkdir fanuc-neo4j-database
+cd fanuc-neo4j-database/
+tar -xzf ~/Downloads/neo4j-community-2.3.11-unix.tar.gz
+</code></pre></li>
+<li><p>Change the ports for the motoman directory. By editing the text file "motoman-neo4j-database/neo4j-community-2.3.11/conf/neo4j-server.properties".</p>
+
+<p>Replace</p>
+
+<pre><code># http port (for all data, administrative, and UI access)
+org.neo4j.server.webserver.port=7474
+</code></pre>
+
+<p>with</p>
+
+<pre><code># http port (for all data, administrative, and UI access)
+org.neo4j.server.webserver.port=7496
+</code></pre>
+
+<p>Replace</p>
+
+<pre><code># https port (for all data, administrative, and UI access)
+org.neo4j.server.webserver.https.port=7473
+</code></pre>
+
+<p>with</p>
+
+<pre><code># https port (for all data, administrative, and UI access)
+org.neo4j.server.webserver.https.port=7495
+</code></pre></li>
+<li><p>Change the ports for the fanuc directory. By editing the text file "fanuc-neo4j-database/neo4j-community-2.3.11/conf/neo4j-server.properties".</p>
+
+<p>Replace</p>
+
+<pre><code># http port (for all data, administrative, and UI access)
+org.neo4j.server.webserver.port=7474
+</code></pre>
+
+<p>with</p>
+
+<pre><code># http port (for all data, administrative, and UI access)
+org.neo4j.server.webserver.port=7494
+</code></pre>
+
+<p>Replace</p>
+
+<pre><code># https port (for all data, administrative, and UI access)
+org.neo4j.server.webserver.https.port=7473
+</code></pre>
+
+<p>with</p>
+
+<pre><code># https port (for all data, administrative, and UI access)
+org.neo4j.server.webserver.https.port=7493
+</code></pre></li>
+<li><p>Extract the data from the zip file into the fanuc data directory</p>
+
+<p>cd ~/fanuc-neo4j-database/neo4j-community-2.3.11/data
+unzip ~/aprs-framework/neo4j-database-backup/fanucworkcell-28-feb-2017.zip </p></li>
+<li><p>Extract the data from the zip file into the motoman data directory</p>
+
+<p>cd ~/motoman-neo4j-database/neo4j-community-2.3.11/data
+unzip ~/aprs-framework/neo4j-database-backup/fanucworkcell-28-feb-2017.zip </p></li>
+<li><p>Start the fanuc database.</p>
+
+<p>On Linux </p>
+
+<pre><code> cd ~/fanuc-neo4j-database/neo4j-community-2.3.11/
+ bin/neo4j start
+</code></pre>
+
+<p>On  Windows</p>
+
+<pre><code> start neo4j-community-2.3.11-fanuc\bin\Neo4j.bat
+</code></pre></li>
+<li><p>Login to the web interface for the fanuc database by opening a web browser to http://localhost:7494/.</p></li>
+<li>Use username "neo4j" and the password "neo4j" to login the first time.</li>
+<li>You will be asked to change the password. Change it to "password".</li>
+<li><p>Start the motoman database.</p>
+
+<p>On Linux</p>
+
+<pre><code> cd ~/motoman-neo4j-database/neo4j-community-2.3.11/
+ bin/neo4j start
+</code></pre>
+
+<p>On  Windows</p>
+
+<pre><code> start neo4j-community-2.3.11-motoman\bin\Neo4j.bat
+</code></pre></li>
+<li><p>Login to the web interface for the motoman database by opening a web browser to http://localhost:7496/.</p></li>
+<li>Use username "neo4j" and the password "neo4j" to login the first time.</li>
+<li>You will be asked to change the password. Change it to "password"</li>
+<li>When done, one can stop both databases by running bin/neo4j stop from the each directory.</li>
+</ol>
+
 <h2>Run</h2>
 
-<p>The graphical user interface can be launched from within an IDE with the project 
+<p>The graphical user interface with the default launcher can be launched from within an IDE with the project 
 open or from the command-line with the command:</p>
 
 <p>For linux:</p>
@@ -77,11 +190,24 @@ open or from the command-line with the command:</p>
 <pre><code>run.bat
 </code></pre>
 
+<p>Or directly with:</p>
+
+<pre><code>java -jar target/aprs-framework-1.0-SNAPSHOT-jar-with-dependencies.jar
+</code></pre>
+
+<p>To run with the simulated Fanuc/Motoman demo add the arguments "--openMulti example<em>settings/multiple</em>simulated<em>systems</em>settings/multisim9.csv"</p>
+
+<p>eg.</p>
+
+<pre><code>./run.sh --openMulti example_settings/multiple_simulated_systems_settings/multisim9.csv
+</code></pre>
+
 <h1>Launcher</h1>
 
 <p><img src="Screenshots/LauncherAprs.png" alt="Screenshot of Launcher" title="" /></p>
 
-<p>When the the program starts the user will be shown a small launcher window. 
+<p>When the the program starts without a command line argument to go directly to another
+window, the user will be shown a small launcher window. 
 To allow the user to open an existing single or multi workcell system, begin with a
 new system or open the most recently used system if one exists.</p>
 
