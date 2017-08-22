@@ -96,6 +96,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private DbSetupPublisher dbSetupPublisher;
 
+    /**
+     * Get the most recent list of parts and kit trays from  the vision system.
+     * This will not block waiting for the vision system or database but could
+     * return null or an empty list if the vision system has not been connected or
+     * no frame has been received.
+     * @return list of trays
+     */
     public List<PartsTray> getPartsTrayList() {
         assert (null != dpu) :
                 ("dpu == null");
@@ -907,7 +914,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         closeVision();
         Exception ex = new IllegalStateException("visionDisconnected");
         notifyFinishedUpdatingListenerExceptionally(ex);
-        notifyNextUpdateListenersExceptionally(ex);
+//        notifyNextUpdateListenersExceptionally(ex);
         notifySingleUpdateListenersExceptionally(ex);
         aprsJFrame.setTitleErrorString("vision disconnected");
     }
@@ -1121,9 +1128,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             appendLogDisplay("\nupdateInfo(\n\t_list=" + visionList + ",\n\tline =" + line + "\n\t)\r\n");
         }
         autoResizeTableColWidths(jTableFromVision);
-        if (dpu.isEnableDatabaseUpdates()) {
-            notifyNextUpdateListeners(visionList);
-        }
+//        if (dpu.isEnableDatabaseUpdates()) {
+//            notifyNextUpdateListeners(visionList);
+//        }
     }
 
     public void setVisionConnected(boolean _val) {
@@ -1463,7 +1470,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         setEnableDatabaseUpdates(false);
                         aprsJFrame.setTitleErrorString(msg);
                         IllegalStateException ex = new IllegalStateException(msg);
-                        notifyNextUpdateListenersExceptionally(ex);
+//                        notifyNextUpdateListenersExceptionally(ex);
                         notifySingleUpdateListenersExceptionally(ex);
                         throw ex;
                     } else {
@@ -1522,6 +1529,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>> singleUpdateListeners
             = new ConcurrentLinkedDeque<>();
 
+    /**
+     * Asynchronously get a list of PhysicalItems updated in one frame from 
+     * the vision system.
+     * @return future with list of items updated in the next frame from the vision 
+     */
     public XFuture<List<PhysicalItem>> getSingleUpdate() {
         setEnableDatabaseUpdates(true);
         XFuture<List<PhysicalItem>> ret = new XFuture<>("getSingleUpdate");
@@ -1545,32 +1557,32 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             future.completeExceptionally(ex);
         }
     }
-    private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>> nextUpdateListeners
-            = new ConcurrentLinkedDeque<>();
-
-    public XFuture<List<PhysicalItem>> getNextUpdate() {
-        XFuture<List<PhysicalItem>> ret = new XFuture<>("getNextUpdate");
-        nextUpdateListeners.add(ret);
-        if (null == visionClient || !visionClient.isConnected()) {
-            disconnectVision();
-        }
-        return ret;
-    }
-
-    private void notifyNextUpdateListeners(List<PhysicalItem> l) {
-        XFuture<List<PhysicalItem>> future;
-        List<PhysicalItem> unmodifiableList = Collections.unmodifiableList(l);
-        while (null != (future = nextUpdateListeners.poll())) {
-            future.complete(unmodifiableList);
-        }
-    }
-
-    private void notifyNextUpdateListenersExceptionally(Throwable ex) {
-        XFuture<List<PhysicalItem>> future;
-        while (null != (future = nextUpdateListeners.poll())) {
-            future.completeExceptionally(ex);
-        }
-    }
+//    private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>> nextUpdateListeners
+//            = new ConcurrentLinkedDeque<>();
+//
+//    public XFuture<List<PhysicalItem>> getNextUpdate() {
+//        XFuture<List<PhysicalItem>> ret = new XFuture<>("getNextUpdate");
+//        nextUpdateListeners.add(ret);
+//        if (null == visionClient || !visionClient.isConnected()) {
+//            disconnectVision();
+//        }
+//        return ret;
+//    }
+//
+//    private void notifyNextUpdateListeners(List<PhysicalItem> l) {
+//        XFuture<List<PhysicalItem>> future;
+//        List<PhysicalItem> unmodifiableList = Collections.unmodifiableList(l);
+//        while (null != (future = nextUpdateListeners.poll())) {
+//            future.complete(unmodifiableList);
+//        }
+//    }
+//
+//    private void notifyNextUpdateListenersExceptionally(Throwable ex) {
+//        XFuture<List<PhysicalItem>> future;
+//        while (null != (future = nextUpdateListeners.poll())) {
+//            future.completeExceptionally(ex);
+//        }
+//    }
 
     private volatile boolean updating = false;
 

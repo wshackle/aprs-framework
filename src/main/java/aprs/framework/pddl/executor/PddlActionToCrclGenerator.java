@@ -95,8 +95,9 @@ import java.util.Collection;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.util.Comparator;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import javax.swing.JOptionPane;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -120,6 +121,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
+    public int getCrclNumber() {
+        return crclNumber.get();
+    }
+
     private java.sql.Connection dbConnection;
     private DbSetup dbSetup;
     private boolean closeDbConnection = true;
@@ -128,7 +133,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private Set<Slot> EmptySlotSet;
     private List<PoseType> PlacePartSlotPoseList = null;
     private boolean takeSnapshots = false;
-    private int crclNumber = 0;
+    private final AtomicInteger crclNumber = new AtomicInteger();
     private final ConcurrentMap<String, PoseType> poseCache = new ConcurrentHashMap<>();
     private KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
@@ -314,7 +319,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * Set the database setup object.
      *
      * @param dbSetup new database setup object to use.
-     * @return future providing status on  when the connection is complete.
+     * @return future providing status on when the connection is complete.
      */
     public XFuture<Void> setDbSetup(DbSetup dbSetup) {
 
@@ -476,134 +481,149 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws SQLException if query of the database failed
      */
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options)
-            throws IllegalStateException, SQLException {
+            throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException {
 
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
-        this.options = options;
-        crclNumber++;
+        if (aprsJFrame.isRunningCrclProgram()) {
+            throw new IllegalStateException("already running crcl while trying to generate it");
+        }
         List<MiddleCommandType> cmds = new ArrayList<>();
-        if (null == actionToCrclIndexes || actionToCrclIndexes.length != actions.size()) {
-            actionToCrclIndexes = new int[actions.size()];
-        }
-        for (int i = startingIndex; i < actionToCrclIndexes.length; i++) {
-            actionToCrclIndexes[i] = -1;
-        }
-        if (null == actionToCrclLabels || actionToCrclLabels.length != actions.size()) {
-            actionToCrclLabels = new String[actions.size()];
-        }
-        for (int i = startingIndex; i < actionToCrclLabels.length; i++) {
-            actionToCrclLabels[i] = "UNDEFINED";
-        }
-        if (null == actionToCrclTakenPartsNames || actionToCrclTakenPartsNames.length != actions.size()) {
-            actionToCrclTakenPartsNames = new String[actions.size()];
-        }
-        if (startingIndex == 0) {
-            this.lastTakenPart = null;
-            this.unitsSet = false;
-            this.rotSpeedSet = false;
-        }
-        addSetUnits(cmds);
-        for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
+        int blockingCount = aprsJFrame.startBlockingCrclPrograms();
 
-            PddlAction action = actions.get(lastIndex);
-            System.out.println("action = " + action);
-            takeSnapshots("gc_actions.get(" + lastIndex + ")=" + action, null, null);
+        try {
+            this.options = options;
+            final int crclNumber = this.crclNumber.incrementAndGet();
+
+            if (null == actionToCrclIndexes || actionToCrclIndexes.length != actions.size()) {
+                actionToCrclIndexes = new int[actions.size()];
+            }
+            for (int i = startingIndex; i < actionToCrclIndexes.length; i++) {
+                actionToCrclIndexes[i] = -1;
+            }
+            if (null == actionToCrclLabels || actionToCrclLabels.length != actions.size()) {
+                actionToCrclLabels = new String[actions.size()];
+            }
+            for (int i = startingIndex; i < actionToCrclLabels.length; i++) {
+                actionToCrclLabels[i] = "UNDEFINED";
+            }
+            if (null == actionToCrclTakenPartsNames || actionToCrclTakenPartsNames.length != actions.size()) {
+                actionToCrclTakenPartsNames = new String[actions.size()];
+            }
+            if (startingIndex == 0) {
+                this.lastTakenPart = null;
+                this.unitsSet = false;
+                this.rotSpeedSet = false;
+            }
+            addSetUnits(cmds);
+            takeSnapshots("generate(startingIndex=" + startingIndex + ",crclNumber=" + crclNumber + ")", null, null);
+            for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
+
+                PddlAction action = actions.get(lastIndex);
+                System.out.println("action = " + action);
+                takeSnapshots("gc_actions.get(" + lastIndex + ")=" + action, null, null);
 //            try {
-            final int startMarkIndex = lastIndex;
-            String start_action_string = "start_" + startMarkIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
-            addTakeSnapshots(cmds, start_action_string, null, null);
-            switch (action.getType()) {
-                case "take-part":
-                    takePart(action, cmds, getNextPlacePartAction(lastIndex, actions));
-                    break;
+                final int startMarkIndex = lastIndex;
+                String start_action_string = "start_" + startMarkIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                addTakeSnapshots(cmds, start_action_string, null, null, this.crclNumber.get());
+                switch (action.getType()) {
+                    case "take-part":
+                        takePart(action, cmds, getNextPlacePartAction(lastIndex, actions));
+                        break;
 
-                case "fake-take-part":
-                    fakeTakePart(action, cmds);
-                    break;
+                    case "fake-take-part":
+                        fakeTakePart(action, cmds);
+                        break;
 
-                case "test-part-position":
-                    testPartPosition(action, cmds);
-                    break;
-                case "look-for-part":
-                case "look-for-parts":
-                    lookForParts(action, cmds, (lastIndex < 2),
-                            doInspectKit ? (lastIndex == actions.size() - 1) : (lastIndex >= actions.size() - 2)
-                    );
-                    actionToCrclIndexes[lastIndex] = cmds.size();
-                    actionToCrclLabels[lastIndex] = "";
-                    actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
-                    final int markerIndex = lastIndex;
-                     {
-                        String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
-                        addMarkerCommand(cmds, end_action_string,
-                                (CrclCommandWrapper wrapper) -> {
-                                    notifyActionCompletedListeners(markerIndex, action);
-                                });
-                    }
-                    return cmds;
+                    case "test-part-position":
+                        testPartPosition(action, cmds);
+                        break;
+                    case "look-for-part":
+                    case "look-for-parts":
+                        lookForParts(action, cmds, (lastIndex < 2),
+                                doInspectKit ? (lastIndex == actions.size() - 1) : (lastIndex >= actions.size() - 2)
+                        );
+                        actionToCrclIndexes[lastIndex] = cmds.size();
+                        actionToCrclLabels[lastIndex] = "";
+                        actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
+                        final int markerIndex = lastIndex;
+                         {
+                            String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                            addMarkerCommand(cmds, end_action_string,
+                                    (CrclCommandWrapper wrapper) -> {
+                                        notifyActionCompletedListeners(markerIndex, action);
+                                    });
+                        }
+                        return cmds;
 
-                case "end-program":
-                    endProgram(action, cmds);
-                    actionToCrclIndexes[lastIndex] = cmds.size();
-                    actionToCrclLabels[lastIndex] = "";
-                    actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
-                    final int endMarkerIndex = lastIndex;
-                     {
-                        String end_action_string = "end_" + endMarkerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
-                        addMarkerCommand(cmds, end_action_string,
-                                (CrclCommandWrapper wrapper) -> {
-                                    notifyActionCompletedListeners(endMarkerIndex, action);
-                                });
-                    }
-                    return cmds;
+                    case "end-program":
+                        endProgram(action, cmds);
+                        actionToCrclIndexes[lastIndex] = cmds.size();
+                        actionToCrclLabels[lastIndex] = "";
+                        actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
+                        final int endMarkerIndex = lastIndex;
+                         {
+                            String end_action_string = "end_" + endMarkerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                            addMarkerCommand(cmds, end_action_string,
+                                    (CrclCommandWrapper wrapper) -> {
+                                        notifyActionCompletedListeners(endMarkerIndex, action);
+                                    });
+                        }
+                        return cmds;
 
-                case "place-part":
-                    placePart(action, cmds);
-                    break;
+                    case "place-part":
+                        placePart(action, cmds);
+                        break;
 
-                case "pause":
-                    pause(action, cmds);
-                    break;
+                    case "pause":
+                        pause(action, cmds);
+                        break;
 
-                case "inspect-kit": {
-                    if (doInspectKit) {
-                        try {
-                            inspectKit(action, cmds);
-                        } catch (Exception ex) {
-                            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    case "inspect-kit": {
+                        assert (startingIndex == lastIndex) : "inspect-kit startingIndex(" + startingIndex + ") != lastIndex(" + lastIndex + ")";
+                        if (doInspectKit) {
+                            try {
+                                inspectKit(action, cmds);
+                            } catch (Exception ex) {
+                                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         }
                     }
+                    break;
+
+                    case "clear-kits-to-check":
+                        clearKitsToCheck(action, cmds);
+                        break;
+
+                    case "add-kit-to-check":
+                        addKitToCheck(action, cmds);
+                        break;
+
+                    case "check-kits":
+                        checkKits(action, cmds);
+                        break;
+
+                    default:
+                        throw new IllegalArgumentException("unrecognized action " + action + " at index " + lastIndex);
                 }
-                break;
 
-                case "clear-kits-to-check":
-                    clearKitsToCheck(action, cmds);
-                    break;
-
-                case "add-kit-to-check":
-                    addKitToCheck(action, cmds);
-                    break;
-
-                case "check-kits":
-                    checkKits(action, cmds);
-                    break;
-
-                default:
-                    throw new IllegalArgumentException("unrecognized action " + action + " at index " + lastIndex);
+                actionToCrclIndexes[lastIndex] = cmds.size();
+                actionToCrclLabels[lastIndex] = "";
+                actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
+                final int markerIndex = lastIndex;
+                String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                addMarkerCommand(cmds, end_action_string,
+                        (CrclCommandWrapper wrapper) -> {
+                            notifyActionCompletedListeners(markerIndex, action);
+                        });
+                addTakeSnapshots(cmds, end_action_string, null, null, this.crclNumber.get());
             }
-
-            actionToCrclIndexes[lastIndex] = cmds.size();
-            actionToCrclLabels[lastIndex] = "";
-            actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
-            final int markerIndex = lastIndex;
-            String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
-            addMarkerCommand(cmds, end_action_string,
-                    (CrclCommandWrapper wrapper) -> {
-                        notifyActionCompletedListeners(markerIndex, action);
-                    });
-            addTakeSnapshots(cmds, end_action_string, null, null);
+            if (aprsJFrame.isRunningCrclProgram()) {
+                throw new IllegalStateException("already running crcl while trying to generate it");
+            }
+        } finally {
+            aprsJFrame.stopBlockingCrclPrograms(blockingCount);
         }
         return cmds;
     }
@@ -669,9 +689,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return null;
     }
 
-    private void checkKits(PddlAction action, List<MiddleCommandType> cmds) throws IllegalStateException, SQLException {
+    private void checkKits(PddlAction action, List<MiddleCommandType> cmds) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException {
         List<PhysicalItem> newItems = waitForCompleteVisionUpdates("checkKits", lastRequiredPartsMap);
 
+        takeSnapshots("checkKits-", null, "");
         assert (newItems != null) :
                 "newItems == null";
 
@@ -1151,9 +1172,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param label optional label for highlighted pose or null.
      */
     public void addTakeSnapshots(List<MiddleCommandType> out,
-            String title, final PoseType pose, String label) {
+            String title, final PoseType pose, String label, final int crclNumber) {
         if (takeSnapshots) {
             addMarkerCommand(out, title, x -> {
+                final int curCrclNumber = PddlActionToCrclGenerator.this.crclNumber.get();
+                if (crclNumber != curCrclNumber) {
+                    aprsJFrame.setTitleErrorString("crclNumber mismatch " + crclNumber + "!=" + curCrclNumber);
+                }
                 takeSnapshots(title, pose, label);
             });
         }
@@ -1162,9 +1187,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public void takeSnapshots(String title, PoseType pose, String label) {
         if (takeSnapshots) {
             try {
-                takeSimViewSnapshot(aprsJFrame.createTempFile(title, ".PNG"), pose, label);
-                takeDatabaseViewSnapshot(aprsJFrame.createTempFile("db_" + title, ".PNG"));
-                takeSimViewSnapshot(aprsJFrame.createTempFile("pc_" + title, ".PNG"), poseCacheToDetectedItemList());
+                String fullTitle = title + "_crclNumber-" + String.format("%03d", crclNumber.get()) + "_action-" + String.format("%03d", lastIndex);
+                takeSimViewSnapshot(aprsJFrame.createTempFile(fullTitle, ".PNG"), pose, label);
+                takeDatabaseViewSnapshot(aprsJFrame.createTempFile("db_" + fullTitle, ".PNG"));
+                takeSimViewSnapshot(aprsJFrame.createTempFile("pc_" + fullTitle, ".PNG"), poseCacheToDetectedItemList());
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1236,7 +1262,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws javax.swing.text.BadLocationException when there are bad
      * locations within a document model
      */
-    public void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException {
+    public void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException, InterruptedException, ExecutionException, IOException {
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
@@ -1257,7 +1283,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String kitSku = action.getArgs()[0];
         String inspectionID = action.getArgs()[1];
         MessageType msg = new MessageType();
-        msg.setMessage("inspect-kit " + kitSku);
+        msg.setMessage("inspect-kit " + kitSku + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
         setCommandId(msg);
         out.add(msg);
 
@@ -1738,7 +1764,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param action PDDL action
      * @param out list of commands to append to
-     * @param nextPlacePartAction action to be checked to see if part should be skipped
+     * @param nextPlacePartAction action to be checked to see if part should be
+     * skipped
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if database query fails
      */
@@ -1822,7 +1849,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
         MessageType msg = new MessageType();
-        msg.setMessage("fake-take-part " + partName);
+        msg.setMessage("fake-take-part " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
         setCommandId(msg);
         out.add(msg);
 
@@ -1859,7 +1886,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         checkSettings();
         MessageType msg = new MessageType();
-        msg.setMessage("take-part-recovery " + partName);
+        msg.setMessage("take-part-recovery " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
         setCommandId(msg);
         out.add(msg);
 
@@ -2338,8 +2365,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void addMoveUpFromCurrent(List<MiddleCommandType> cmds, double offset, double limit) {
 
         MessageType origMessageCmd = new MessageType();
-        origMessageCmd.setMessage("moveUpFromCurrent");
-        setCommandId(origMessageCmd);
+        origMessageCmd.setMessage("moveUpFromCurrent" + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
         addOptionalCommand(origMessageCmd, cmds, (CrclCommandWrapper wrapper) -> {
             MiddleCommandType cmd = wrapper.getWrappedCommand();
             if (cmd instanceof MoveToType) {
@@ -2347,7 +2373,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 PoseType pose = aprsJFrame.getCurrentPose();
                 if (pose == null || pose.getPoint() == null || pose.getPoint().getZ() >= (limit - 1e-6)) {
                     MessageType messageCommand = new MessageType();
-                    messageCommand.setMessage("moveUpFromCurrent NOT needed.");
+                    messageCommand.setMessage("moveUpFromCurrent NOT needed." + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
                     wrapper.setWrappedCommand(messageCommand);
                 } else {
                     MoveToType moveToCmd = new MoveToType();
@@ -2702,9 +2728,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
 
         addMarkerCommand(out, "lookForParts.waitForCompleteVisionUpdates", x -> {
-            waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap);
+            try {
+                waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap);
+            } catch (InterruptedException | ExecutionException | IOException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                throw new RuntimeException(ex);
+            }
         });
-        addTakeSnapshots(out, "lookForParts-" + ((action.getArgs().length == 1) ? action.getArgs()[0] : ""), null, "");
+        addTakeSnapshots(out, "lookForParts-" + ((action.getArgs().length == 1) ? action.getArgs()[0] : ""), null, "", this.crclNumber.get());
         if (action.getArgs().length >= 1) {
             if (action.getArgs()[0].startsWith("1")) {
                 addMarkerCommand(out, "Inspecting kit", x -> {
@@ -2746,28 +2777,23 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    private List<PhysicalItem> waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap) {
-        try {
-            XFuture<List<PhysicalItem>> xfl = aprsJFrame.getSingleVisionToDbUpdate();
-            aprsJFrame.refreshSimView();
-            while (!xfl.isDone()) {
-                if (!aprsJFrame.isEnableVisionToDatabaseUpdates()) {
-                    System.err.println("VisionToDatabaseUpdates not enabled as expected.");
-                    aprsJFrame.setEnableVisionToDatabaseUpdates(true, requiredPartsMap);
-                }
-                Thread.sleep(50);
-                aprsJFrame.refreshSimView();
+    private List<PhysicalItem> waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap) throws InterruptedException, ExecutionException, IOException {
+        XFuture<List<PhysicalItem>> xfl = aprsJFrame.getSingleVisionToDbUpdate();
+        aprsJFrame.refreshSimView();
+        while (!xfl.isDone()) {
+            if (!aprsJFrame.isEnableVisionToDatabaseUpdates()) {
+                System.err.println("VisionToDatabaseUpdates not enabled as expected.");
+                aprsJFrame.setEnableVisionToDatabaseUpdates(true, requiredPartsMap);
             }
-            List<PhysicalItem> l = xfl.get();
-            aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates", ".PNG"), l);
-            aprsJFrame.getUpdatesFinished().join();
-            takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates_new_database", ".PNG"));
-            clearPoseCache();
-            return l;
-        } catch (Exception ex) {
-            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            Thread.sleep(50);
+            aprsJFrame.refreshSimView();
         }
-        return null;
+        List<PhysicalItem> l = xfl.get();
+        aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates", ".PNG"), l);
+//            aprsJFrame.getUpdatesFinished().join();
+        takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates_new_database", ".PNG"));
+        clearPoseCache();
+        return l;
     }
 
     private void addSlowLimitedMoveUpFromCurrent(List<MiddleCommandType> out) {
@@ -3102,7 +3128,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void addMarkerCommand(List<MiddleCommandType> cmds, String message, CRCLCommandWrapperConsumer cb) {
         MessageType messageCmd = new MessageType();
-        messageCmd.setMessage(message);
+        messageCmd.setMessage(message + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
         setCommandId(messageCmd);
         CrclCommandWrapper wrapper = CrclCommandWrapper.wrapWithOnDone(messageCmd, cb);
         cmds.add(wrapper);

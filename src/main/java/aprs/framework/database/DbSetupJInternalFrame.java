@@ -46,6 +46,10 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
         dbSetupJPanel1.setAprsJFrame(aprsJframe);
     }
     
+    public String getStartScript() {
+        return dbSetupJPanel1.getStartScript();
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

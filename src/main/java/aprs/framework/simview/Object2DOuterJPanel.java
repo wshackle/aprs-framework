@@ -94,7 +94,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile boolean settingItems = false;
 
     @Override
-    public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
+    public void takeSnapshot(File f, PoseType pose, String label)  {
         if (null != pose) {
             takeSnapshot(f, pose.getPoint(), label);
         } else {
@@ -103,7 +103,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public void takeSnapshot(File f, PointType point, String label) throws IOException {
+    public void takeSnapshot(File f, PointType point, String label)  {
         if (null != point) {
             takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label);
         } else {
@@ -112,7 +112,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public void takeSnapshot(File f, PmCartesian point, String label) throws IOException {
+    public void takeSnapshot(File f, PmCartesian point, String label)  {
         try {
             this.object2DJPanel1.takeSnapshot(f, point, label);
             File csvDir = new File(f.getParentFile(), "csv");
@@ -125,14 +125,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try (FileWriter fw = new FileWriter(xmlFile)) {
                 fw.write(xmlString);
             }
-        } catch (JAXBException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     
      @Override
-    public void takeSnapshot(File f, PoseType pose, String label, int w, int h) throws IOException {
+    public void takeSnapshot(File f, PoseType pose, String label, int w, int h)  {
         if (null != pose) {
             takeSnapshot(f, pose.getPoint(), label,w,h);
         } else {
@@ -141,7 +141,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public void takeSnapshot(File f, PointType point, String label, int w, int h) throws IOException {
+    public void takeSnapshot(File f, PointType point, String label, int w, int h)  {
         if (null != point) {
             takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label,w,h);
         } else {
@@ -150,7 +150,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public void takeSnapshot(File f, PmCartesian point, String label, int w, int h) throws IOException {
+    public void takeSnapshot(File f, PmCartesian point, String label, int w, int h)  {
         try {
             this.object2DJPanel1.takeSnapshot(f, point, label,w,h);
             File csvDir = new File(f.getParentFile(), "csv");
@@ -163,7 +163,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try (FileWriter fw = new FileWriter(xmlFile)) {
                 fw.write(xmlString);
             }
-        } catch (JAXBException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -2318,19 +2318,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile int captured_item_index = -1;
 
     
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem>  itemsToPaint, int w , int h) throws IOException {
+    public void takeSnapshot(File f, Collection<? extends PhysicalItem>  itemsToPaint, int w , int h)  {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint,w,h);
         saveSnapshotCsv(f, itemsToPaint);
     }
 
-    private void saveSnapshotCsv(File f, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
-        File csvDir = new File(f.getParentFile(), "csv");
-        csvDir.mkdirs();
-        saveFile(new File(csvDir, f.getName() + ".csv"), itemsToPaint);
+    private void saveSnapshotCsv(File f, Collection<? extends PhysicalItem> itemsToPaint)  {
+        try {
+            File csvDir = new File(f.getParentFile(), "csv");
+            csvDir.mkdirs();
+            saveFile(new File(csvDir, f.getName() + ".csv"), itemsToPaint);
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem>  itemsToPaint) throws IOException {
+    public void takeSnapshot(File f, Collection<? extends PhysicalItem>  itemsToPaint)  {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
         saveSnapshotCsv(f, itemsToPaint);
     }

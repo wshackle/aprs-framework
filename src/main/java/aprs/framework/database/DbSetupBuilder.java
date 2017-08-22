@@ -28,7 +28,6 @@ import crcl.ui.XFuture;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -62,6 +61,7 @@ public class DbSetupBuilder {
     private String queriesDir = null;
     private boolean debug = false;
     private int loginTimeout = DEFAULT_LOGIN_TIMEOUT;
+    private String startScript = null;
 
 //    public static Map<DbQueryEnum, DbQueryInfo> getDefaultQueriesMap(DbType type) {
 //        switch (type) {
@@ -192,6 +192,7 @@ public class DbSetupBuilder {
         private final String queriesDir;
         private final boolean debug;
         private final int loginTimeout;
+        private final String startScript;
 
         private DbSetupInternal(
                 DbType type,
@@ -205,7 +206,8 @@ public class DbSetupBuilder {
                 boolean internalQueriesResourceDir,
                 String queriesDir,
                 boolean debug,
-                int loginTimeout) {
+                int loginTimeout,
+                String startScript) {
             this.type = type;
             this.host = host;
             this.port = port;
@@ -218,6 +220,7 @@ public class DbSetupBuilder {
             this.queriesDir = queriesDir;
             this.debug = debug;
             this.loginTimeout = loginTimeout;
+            this.startScript = startScript;
         }
 
         @Override
@@ -280,6 +283,11 @@ public class DbSetupBuilder {
             return loginTimeout;
         }
 
+        @Override
+        public String getStartScript() {
+            return startScript;
+        }
+
     }
 
     public DbSetupBuilder setup(DbSetup setup) {
@@ -328,7 +336,8 @@ public class DbSetupBuilder {
                 internalQueriesResourceDir,
                 queriesDir,
                 debug,
-                loginTimeout);
+                loginTimeout,
+                startScript);
     }
 
     public DbSetupBuilder type(DbType type) {
@@ -376,6 +385,11 @@ public class DbSetupBuilder {
         return this;
     }
 
+    public DbSetupBuilder startScript(String startScript) {
+        this.startScript = startScript;
+        return this;
+    }
+    
     public DbSetupBuilder dbname(String dbname) {
         if (null != dbname) {
             this.dbname = dbname;
@@ -498,6 +512,7 @@ public class DbSetupBuilder {
                 builder = builder.internalQueriesResourceDir(Boolean.valueOf(internalQueriesResourceDiriesDirString));
             }
         }
+        builder = builder.startScript(_argsMap.get("startScript"));
         return builder;
     }
 
@@ -636,14 +651,14 @@ public class DbSetupBuilder {
         if (null == propertiesFile) {
             throw new IllegalArgumentException("propertiesFile == null");
         }
-        if(dbtype == null || dbtype == DbType.NONE) {
-            throw new IllegalArgumentException("dbtype = "+dbtype);
+        if (dbtype == null || dbtype == DbType.NONE) {
+            throw new IllegalArgumentException("dbtype = " + dbtype);
         }
         if (null == setup) {
             throw new IllegalArgumentException("setup == null");
         }
         try {
-            System.out.println("Saving "+propertiesFile.getCanonicalPath());
+            System.out.println("Saving " + propertiesFile.getCanonicalPath());
         } catch (IOException ex) {
             Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -656,6 +671,7 @@ public class DbSetupBuilder {
 //                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
 //            }
 //        }
+        props.put("startScript", setup.getStartScript());
         props.put("--dbtype", dbtype.toString());
         if (host == null) {
             host = setup.getHost();
@@ -781,7 +797,7 @@ public class DbSetupBuilder {
 
             case NEO4J:
                 Class neo4jDriverClass = org.neo4j.jdbc.Driver.class;
-                
+
                 //System.out.println(" static neo4jDriverClass = " + neo4jDriverClass);
                 try {
                     neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");

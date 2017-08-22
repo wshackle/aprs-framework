@@ -7,7 +7,7 @@ connected=true
 datafile=fanuc_cart_objects.csv
 displayAxis=POS_Y_NEG_X
 dropOffThreshold=25.00
-items=sku_part_large_gear,0.0,632.87,26.9,0.95,P,sku_part_large_gear,0.0,528.65,33.8,100.0,P,sku_part_medium_gear,0.0,510.24,-157.65,0.87,P,sku_part_medium_gear,0.0,585.67,-74.38,0.84,P,sku_part_medium_gear,0.0,588.68,-153.31,0.82,P,sku_part_medium_gear,0.0,507.15,-79.58,0.81,P,sku_large_gear_vessel,0.03,573.08,29.97,0.75,PT,sku_medium_gear_vessel,0.04,546.82,-115.13,0.81,PT,sku_kit_m2l1_vessel,0.7853981633974483,360.79,-107.93,0.97,KT,sku_kit_m2l1_vessel,-0.7853981633974483,355.85,109.48,0.88,KT,
+items=sku_part_large_gear,0.0,632.87,26.9,0.95,P,sku_part_large_gear,0.0,388.2157977127888,85.81347951930944,100.0,P,sku_part_medium_gear,0.0,510.24,-157.65,0.87,P,sku_part_medium_gear,0.0,347.89243981853883,172.7496009426409,0.84,P,sku_part_medium_gear,0.0,588.68,-153.31,0.82,P,sku_part_medium_gear,0.0,292.334467388969,119.55187449201925,0.81,P,sku_large_gear_vessel,0.03,573.08,29.97,0.75,PT,sku_medium_gear_vessel,0.04,546.82,-115.13,0.81,PT,sku_kit_m2l1_vessel,0.7853981633974483,360.79,-107.93,0.97,KT,sku_kit_m2l1_vessel,-0.7853981633974483,355.85,109.48,0.88,KT,
 
 pickupDist=5.00
 posNoise=0.80

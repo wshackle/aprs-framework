@@ -158,6 +158,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jCheckBoxDebug = new javax.swing.JCheckBox();
         jLabel6 = new javax.swing.JLabel();
         jTextFieldDBLoginTimeout = new javax.swing.JTextField();
+        jLabel7 = new javax.swing.JLabel();
+        jTextFieldStartScript = new javax.swing.JTextField();
 
         jTextFieldDBPort.setText("-99");
 
@@ -312,7 +314,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jRadioButtonExternDir)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldQueriesDirectory, javax.swing.GroupLayout.DEFAULT_SIZE, 136, Short.MAX_VALUE)
+                        .addComponent(jTextFieldQueriesDirectory, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonLoadExternalDirectory)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -323,7 +325,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 190, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 192, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jRadioButtonResourceDir)
@@ -345,6 +347,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
         jTextFieldDBLoginTimeout.setText("5");
 
+        jLabel7.setText("Start Script:");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -352,6 +356,11 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(6, 6, 6)
+                        .addComponent(jLabel7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldStartScript))
                     .addComponent(jScrollPane2)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jComboBoxPropertiesFiles, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -426,6 +435,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(jTextFieldStartScript, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jComboBoxPropertiesFiles, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -434,7 +447,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     .addComponent(jButtonSave)
                     .addComponent(jCheckBoxDebug))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 91, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -719,6 +732,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     queriesMapReloaded = true;
                 }
             }
+            String startScript = setup.getStartScript();
+            if(startScript != null && startScript.length() > 0) {
+                jTextFieldStartScript.setText(startScript);
+            }
             if (!queriesMapReloaded) {
                 Map<DbQueryEnum, DbQueryInfo> queriesMap = setup.getQueriesMap();
                 if (null != queriesMap) {
@@ -919,6 +936,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 .internalQueriesResourceDir(jRadioButtonResourceDir.isSelected())
                 .queriesDir(getQueriesDir())
                 .debug(jCheckBoxDebug.isSelected())
+                .startScript(jTextFieldStartScript.getText())
                 .build();
     }
 
@@ -1072,6 +1090,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             props.put("useQueriesResource", jRadioButtonResourceDir.isSelected());
             props.put("resDir", jComboBoxResourceDir.getSelectedItem());
             props.put("queryDir", jTextFieldQueriesDirectory.getText());
+            props.put("startScript", jTextFieldStartScript.getText());
 //            try (FileWriter fw = new FileWriter(propertiesFile)) {
 //                props.store(fw, "");
 //            } catch (IOException ex) {
@@ -1108,27 +1127,27 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         return argsMap;
     }
 
-    public final void restoreProperties(DbType dbtype, String host, int port) {
-        try {
-            restoringProperties = true;
-            if (null != propertiesFile && propertiesFile.exists()) {
-                Properties props = new Properties();
-                try (FileReader fr = new FileReader(propertiesFile)) {
-                    props.load(fr);
-                } catch (IOException ex) {
-                    Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                for (String propName : props.stringPropertyNames()) {
-                    argsMap.put(propName, props.getProperty(propName));
-                }
-                updateFromArgs(argsMap, dbtype, host, port, null);
-            }
-        } catch (Exception e) {
-            addLogMessage(e);
-        } finally {
-            restoringProperties = false;
-        }
-    }
+//    public final void restoreProperties(DbType dbtype, String host, int port) {
+//        try {
+//            restoringProperties = true;
+//            if (null != propertiesFile && propertiesFile.exists()) {
+//                Properties props = new Properties();
+//                try (FileReader fr = new FileReader(propertiesFile)) {
+//                    props.load(fr);
+//                } catch (IOException ex) {
+//                    Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//                for (String propName : props.stringPropertyNames()) {
+//                    argsMap.put(propName, props.getProperty(propName));
+//                }
+//                updateFromArgs(argsMap, dbtype, host, port, null);
+//            }
+//        } catch (Exception e) {
+//            addLogMessage(e);
+//        } finally {
+//            restoringProperties = false;
+//        }
+//    }
 
     public void addLogMessage(Exception e) {
         e.printStackTrace();
@@ -1261,6 +1280,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 this.lastResourceDirSet = resDirSuffix;
                 jComboBoxResourceDir.setSelectedItem(resDirSuffix);
             }
+            String startScriptString = _argsMap.get("startScript");
+            if (null != startScriptString && startScriptString.length() > 0) {
+                jTextFieldStartScript.setText(startScriptString);
+            }
             if (useQueriesResource) {
                 jRadioButtonExternDir.setSelected(false);
                 jRadioButtonResourceDir.setSelected(true);
@@ -1325,6 +1348,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 table.setRowHeight(rowIndex, height);
             }
         }
+    }
+    
+    public String getStartScript() {
+        return jTextFieldStartScript.getText();
     }
 
     @Override
@@ -1397,6 +1424,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPasswordField jPasswordFieldDBPassword;
     private javax.swing.JRadioButton jRadioButtonExternDir;
@@ -1411,5 +1439,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private javax.swing.JTextField jTextFieldDBPort;
     private javax.swing.JTextField jTextFieldDBUser;
     private javax.swing.JTextField jTextFieldQueriesDirectory;
+    private javax.swing.JTextField jTextFieldStartScript;
     // End of variables declaration//GEN-END:variables
 }

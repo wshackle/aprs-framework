@@ -55,7 +55,16 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         return visionToDBJPanel.absSlotFromTrayAndOffset(tray, offsetItem);
     }
+    
+    
 
+    /**
+     * Get the most recent list of parts and kit trays from  the vision system.
+     * This will not block waiting for the vision system or database but could
+     * return null or an empty list if the vision system has not been connected or
+     * no frame has been received.
+     * @return list of trays
+     */
     public List<PartsTray> getPartsTrayList() {
         return visionToDBJPanel.getPartsTrayList();
     }
@@ -83,10 +92,15 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         this.visionToDBJPanel.setAprsJFrame(aprsJFrame);
     }
 
-    public XFuture<List<PhysicalItem>> getNextUpdate() {
-        return visionToDBJPanel.getNextUpdate();
-    }
+//    public XFuture<List<PhysicalItem>> getNextUpdate() {
+//        return visionToDBJPanel.getNextUpdate();
+//    }
 
+    /**
+     * Asynchronously get a list of PhysicalItems updated in one frame from 
+     * the vision system.
+     * @return future with list of items updated in the next frame from the vision 
+     */
     public XFuture<List<PhysicalItem>> getSingleUpdate() {
         return visionToDBJPanel.getSingleUpdate();
     }

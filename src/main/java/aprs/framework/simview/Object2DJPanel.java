@@ -239,7 +239,7 @@ public class Object2DJPanel extends JPanel {
         this.addedSlots = addedSlots;
     }
 
-    public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
+    public void takeSnapshot(File f, PoseType pose, String label) {
         final int w = this.getWidth();
         final int h = this.getHeight();
         if (w < 1 || h < 1) {
@@ -249,7 +249,7 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, pose, label, w, h);
     }
 
-    public void takeSnapshot(File f, PointType point, String label) throws IOException {
+    public void takeSnapshot(File f, PointType point, String label) {
         final int w = this.getWidth();
         final int h = this.getHeight();
         if (w < 1 || h < 1) {
@@ -259,7 +259,7 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, point, label, w, h);
     }
 
-    public void takeSnapshot(File f, PmCartesian point, String label) throws IOException {
+    public void takeSnapshot(File f, PmCartesian point, String label) {
         final int w = this.getWidth();
         final int h = this.getHeight();
         if (w < 1 || h < 1) {
@@ -269,7 +269,7 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, point, label, w, h);
     }
 
-    public void takeSnapshot(File f, PoseType pose, String label, final int w, final int h) throws IOException {
+    public void takeSnapshot(File f, PoseType pose, String label, final int w, final int h) {
         if (null != pose) {
             takeSnapshot(f, pose.getPoint(), label, w, h);
         } else {
@@ -278,7 +278,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    public void takeSnapshot(File f, PointType point, String label, final int w, final int h) throws IOException {
+    public void takeSnapshot(File f, PointType point, String label, final int w, final int h) {
         if (null != point) {
             takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label, w, h);
         } else {
@@ -286,64 +286,64 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    public void takeSnapshot(File f, PmCartesian point, String label, final int w, final int h) throws IOException {
-        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
-        int pindex = f.getName().lastIndexOf('.');
-        String type = "JPEG";
-        if (pindex > 0) {
-            type = f.getName().substring(pindex + 1);
-        }
-        Graphics2D g2d = img.createGraphics();
-        g2d.setColor(this.getBackground());
-        g2d.fillRect(0, 0, w,h);
-        g2d.setColor(this.getForeground());
-        List<PhysicalItem> itemsToPaint = getItemsToPaint();
-        if (autoscale) {
-            double minX = Double.POSITIVE_INFINITY;
-            double maxX = Double.NEGATIVE_INFINITY;
-            double minY = Double.POSITIVE_INFINITY;
-            double maxY = Double.NEGATIVE_INFINITY;
-            for (PhysicalItem item : itemsToPaint) {
-                if (minX > item.x) {
-                    minX = item.x;
-                }
-                if (minY > item.y) {
-                    minY = item.y;
-                }
-                if (maxX < item.x) {
-                    maxX = item.x;
-                }
-                if (maxY < item.y) {
-                    maxY = item.y;
-                }
-            }
-            if (null != point) {
-                double x = point.getX();
-                double y = point.getY();
-                if (minX > x) {
-                    minX = x;
-                }
-                if (maxX < x) {
-                    maxX = x;
-                }
-                if (minY > y) {
-                    minY = y;
-                }
-                if (maxY < y) {
-                    maxY = y;
-                }
-            }
-            this.paintItems(g2d, itemsToPaint, null, minX, minY, maxX, maxY,w,h);
-            paintHighlightedPose(point, g2d, label, minX, minY, maxX, maxY,w,h);
-        } else {
-            this.paintComponent(g2d);
-            paintHighlightedPose(point, g2d, label, this.minX, this.minY, this.maxX, this.maxY,w,h);
-        }
-        ImageIO.write(img, type, f);
+    public void takeSnapshot(File f, PmCartesian point, String label, final int w, final int h) {
         try {
+            BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
+            int pindex = f.getName().lastIndexOf('.');
+            String type = "JPEG";
+            if (pindex > 0) {
+                type = f.getName().substring(pindex + 1);
+            }
+            Graphics2D g2d = img.createGraphics();
+            g2d.setColor(this.getBackground());
+            g2d.fillRect(0, 0, w, h);
+            g2d.setColor(this.getForeground());
+            List<PhysicalItem> itemsToPaint = getItemsToPaint();
+            if (autoscale) {
+                double minX = Double.POSITIVE_INFINITY;
+                double maxX = Double.NEGATIVE_INFINITY;
+                double minY = Double.POSITIVE_INFINITY;
+                double maxY = Double.NEGATIVE_INFINITY;
+                for (PhysicalItem item : itemsToPaint) {
+                    if (minX > item.x) {
+                        minX = item.x;
+                    }
+                    if (minY > item.y) {
+                        minY = item.y;
+                    }
+                    if (maxX < item.x) {
+                        maxX = item.x;
+                    }
+                    if (maxY < item.y) {
+                        maxY = item.y;
+                    }
+                }
+                if (null != point) {
+                    double x = point.getX();
+                    double y = point.getY();
+                    if (minX > x) {
+                        minX = x;
+                    }
+                    if (maxX < x) {
+                        maxX = x;
+                    }
+                    if (minY > y) {
+                        minY = y;
+                    }
+                    if (maxY < y) {
+                        maxY = y;
+                    }
+                }
+                this.paintItems(g2d, itemsToPaint, null, minX, minY, maxX, maxY, w, h);
+                paintHighlightedPose(point, g2d, label, minX, minY, maxX, maxY, w, h);
+            } else {
+                this.paintComponent(g2d);
+                paintHighlightedPose(point, g2d, label, this.minX, this.minY, this.maxX, this.maxY, w, h);
+            }
+            ImageIO.write(img, type, f);
             System.out.println("Saved snapshot to " + f.getCanonicalPath());
-        } catch (IOException iOException) {
-            iOException.printStackTrace();
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -361,7 +361,7 @@ public class Object2DJPanel extends JPanel {
         return itemsToPaint;
     }
 
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
+    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         final int w = this.getWidth();
         final int h = this.getHeight();
         if (w < 1 || h < 1) {
@@ -371,30 +371,34 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, itemsToPaint, w, h);
     }
 
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, final int w, final int h) throws IOException {
-        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
-        int pindex = f.getName().lastIndexOf('.');
-        String type = "JPEG";
-        if (pindex > 0) {
-            type = f.getName().substring(pindex + 1);
+    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, final int w, final int h) {
+        try {
+            BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
+            int pindex = f.getName().lastIndexOf('.');
+            String type = "JPEG";
+            if (pindex > 0) {
+                type = f.getName().substring(pindex + 1);
+            }
+            Graphics2D g2d = img.createGraphics();
+            g2d.setColor(this.getBackground());
+            g2d.fillRect(0, 0, w, h);
+            g2d.setColor(this.getForeground());
+            boolean origUseSepNames = this.useSeparateNames;
+            this.useSeparateNames = true;
+            if (autoscale) {
+                paintWithAutoScale(itemsToPaint, null, g2d, w, h);
+            } else {
+                paintItems(g2d, itemsToPaint, null, minX, minY, maxX, maxY, w, h);
+            }
+            this.useSeparateNames = origUseSepNames;
+            ImageIO.write(img, type, f);
+            System.out.println("Saved snapshot to " + f.getCanonicalPath());
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
-        Graphics2D g2d = img.createGraphics();
-        g2d.setColor(this.getBackground());
-        g2d.fillRect(0, 0, w,h);
-        g2d.setColor(this.getForeground());
-        boolean origUseSepNames = this.useSeparateNames;
-        this.useSeparateNames = true;
-        if (autoscale) {
-            paintWithAutoScale(itemsToPaint, null, g2d,w,h);
-        } else {
-            paintItems(g2d, itemsToPaint, null, minX, minY, maxX, maxY,w,h);
-        }
-        this.useSeparateNames = origUseSepNames;
-        ImageIO.write(img, type, f);
-        System.out.println("Saved snapshot to " + f.getCanonicalPath());
     }
 
-    public void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, PhysicalItem selectedItem, Graphics2D g2d,int w, int h) {
+    public void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, PhysicalItem selectedItem, Graphics2D g2d, int w, int h) {
         double minX = Double.POSITIVE_INFINITY;
         double maxX = Double.NEGATIVE_INFINITY;
         double minY = Double.POSITIVE_INFINITY;
@@ -413,18 +417,18 @@ public class Object2DJPanel extends JPanel {
                 maxY = item.y;
             }
         }
-        this.paintItems(g2d, itemsToPaint, selectedItem, minX, minY, maxX, maxY,w,h);
+        this.paintItems(g2d, itemsToPaint, selectedItem, minX, minY, maxX, maxY, w, h);
     }
 
-    public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY,int w,int h) {
+    public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY, int w, int h) {
         PointType point = pose.getPoint();
         if (null != point) {
-            paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY,w,h);
+            paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY, w, h);
         }
     }
 
-    public void paintHighlightedPose(PointType point, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY,int w,int h) {
-        paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY,w,h);
+    public void paintHighlightedPose(PointType point, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY, int w, int h) {
+        paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY, w, h);
     }
 
     public void paintHighlightedPose(PmCartesian point, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY,
@@ -778,9 +782,9 @@ public class Object2DJPanel extends JPanel {
         int h = dim.height;
         if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
             if (this.autoscale || !Double.isFinite(this.minX) || !Double.isFinite(this.minY) || !Double.isFinite(maxX) || !Double.isFinite(maxY)) {
-                paintWithAutoScale(itemsToPaint, selectedItem, g2d,w,h);
+                paintWithAutoScale(itemsToPaint, selectedItem, g2d, w, h);
             } else {
-                paintItems(g2d, itemsToPaint, selectedItem, this.minX, this.minY, this.maxX, this.maxY,w,h);
+                paintItems(g2d, itemsToPaint, selectedItem, this.minX, this.minY, this.maxX, this.maxY, w, h);
             }
         }
     }

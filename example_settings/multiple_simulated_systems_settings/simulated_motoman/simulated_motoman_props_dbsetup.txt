@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.database.DbSetupBuilder.savePropertiesFile() at DbSetupBuilder.java:683
+#  Automatically saved by aprs.framework.database.DbSetupBuilder.savePropertiesFile() at DbSetupBuilder.java:699
 --dbtype=NEO4J
 NEO4J.host=localhost
 NEO4J.localhost.port=7496
@@ -7,3 +7,4 @@ NEO4J.localhost_7496.name=neo4j
 NEO4J.localhost_7496.passwd=password
 NEO4J.localhost_7496.queriesDir=neo4j/v2
 NEO4J.localhost_7496.user=neo4j
+startScript=

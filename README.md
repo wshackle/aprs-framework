@@ -180,7 +180,7 @@ easier to setup multiple instances.
 16. Login to the web interface for the motoman database by opening a web browser to http://localhost:7496/.
 17. Use username "neo4j" and the password "neo4j" to login the first time.
 18. You will be asked to change the password. Change it to "password"
-19. When done, one can stop both databases by running bin/neo4j stop from the each directory.
+19. When done, one can stop both databases by running "bin/neo4j stop" from the each directory in Linux or just closing the command window(s) in Windows.
 
 
 

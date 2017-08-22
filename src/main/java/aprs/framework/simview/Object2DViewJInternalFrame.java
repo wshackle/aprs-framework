@@ -54,7 +54,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         this.object2DOuterJPanel1.setReverseFlag(reverseFlag);
     }
     
-    public void reloadDataFile() throws IOException {
+    public void reloadDataFile() throws IOException  {
         this.object2DOuterJPanel1.reloadDataFile();
     }
     
@@ -137,42 +137,42 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
 
     @Override
-    public void takeSnapshot(File f, PoseType pose, String label) throws IOException {
+    public void takeSnapshot(File f, PoseType pose, String label)  {
         object2DOuterJPanel1.takeSnapshot(f, pose, label);
     }
     
     @Override
-    public void takeSnapshot(File f, PointType point, String label) throws IOException {
+    public void takeSnapshot(File f, PointType point, String label)  {
         object2DOuterJPanel1.takeSnapshot(f, point, label);
     }
     
     @Override
-    public void takeSnapshot(File f, PmCartesian point, String label) throws IOException {
+    public void takeSnapshot(File f, PmCartesian point, String label)  {
         object2DOuterJPanel1.takeSnapshot(f, point, label);
     }
     
     @Override
-    public void takeSnapshot(File f,Collection<? extends PhysicalItem>  itemsToPaint) throws IOException {
+    public void takeSnapshot(File f,Collection<? extends PhysicalItem>  itemsToPaint)  {
         this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint);
     }
     
     @Override
-    public void takeSnapshot(File f, PoseType pose, String label, int w, int h) throws IOException {
+    public void takeSnapshot(File f, PoseType pose, String label, int w, int h)  {
         object2DOuterJPanel1.takeSnapshot(f, pose, label,w,h);
     }
     
     @Override
-    public void takeSnapshot(File f, PointType point, String label, int w, int h) throws IOException {
+    public void takeSnapshot(File f, PointType point, String label, int w, int h)  {
         object2DOuterJPanel1.takeSnapshot(f, point, label,w,h);
     }
     
     @Override
-    public void takeSnapshot(File f, PmCartesian point, String label, int w, int h) throws IOException {
+    public void takeSnapshot(File f, PmCartesian point, String label, int w, int h)  {
         object2DOuterJPanel1.takeSnapshot(f, point, label,w,h);
     }
     
     @Override
-    public void takeSnapshot(File f,Collection<? extends PhysicalItem>  itemsToPaint, int w, int h) throws IOException {
+    public void takeSnapshot(File f,Collection<? extends PhysicalItem>  itemsToPaint, int w, int h)  {
         this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint,w,h);
     }
 

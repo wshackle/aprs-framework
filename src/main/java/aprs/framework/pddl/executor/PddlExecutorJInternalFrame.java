@@ -30,10 +30,15 @@ import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.bind.JAXBException;
 
 /**
  *
@@ -51,26 +56,25 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     public void setForceFakeTakeFlag(boolean val) {
         this.actionsToCrclJPanel1.setForceFakeTakeFlag(val);
     }
-    
+
     public boolean getForceFakeTakeFlag() {
         return actionsToCrclJPanel1.getForceFakeTakeFlag();
     }
-    
-    public void runProgramCompleteRunnables() {
-        this.actionsToCrclJPanel1.runProgramCompleteRunnables();
-    }
-    
-    public XFuture<Boolean> checkSafeAbort(Supplier<XFuture<Boolean>> supplier) {
-        return actionsToCrclJPanel1.checkSafeAbort(supplier);
-    }
-    
-     public XFuture<Boolean> lookForParts() {
+
+//    public void runProgramCompleteRunnables() {
+//        this.actionsToCrclJPanel1.runProgramCompleteRunnables();
+//    }
+//    public XFuture<Boolean> checkSafeAbortAsync(Supplier<XFuture<Boolean>> supplier) {
+//        return actionsToCrclJPanel1.checkSafeAbortAsync(supplier);
+//    }
+    public XFuture<Boolean> lookForParts() {
         return actionsToCrclJPanel1.lookForParts();
     }
-     
+
     /**
-     * Modify the given pose by applying all of the currently added position maps.
-     * 
+     * Modify the given pose by applying all of the currently added position
+     * maps.
+     *
      * @param poseIn the pose to correct or transform
      * @return pose after being corrected by all currently added position maps
      */
@@ -78,23 +82,24 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return actionsToCrclJPanel1.correctPose(poseIn);
     }
 
-    public void reloadActionsFile() throws IOException { 
+    public void reloadActionsFile() throws IOException {
         this.actionsToCrclJPanel1.reloadActionsFile();
     }
-    
+
     public void setReverseFlag(boolean reverseFlag) {
         this.actionsToCrclJPanel1.setReverseFlag(reverseFlag);
     }
-    
+
     /**
      * Apply inverses of currently added position maps in reverse order.
+     *
      * @param ptIn point to reverse correction
      * @return point in original vision/database coordinates
      */
     public PointType reverseCorrectPoint(PointType ptIn) {
         return actionsToCrclJPanel1.reverseCorrectPoint(ptIn);
     }
-    
+
     public void abortProgram() {
         actionsToCrclJPanel1.abortProgram();
     }
@@ -107,6 +112,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return this.actionsToCrclJPanel1.getCurrentActionIndex();
     }
 
+    @Override
     public List<PddlAction> getActionsList() {
         return this.actionsToCrclJPanel1.getActionsList();
     }
@@ -115,47 +121,55 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return this.actionsToCrclJPanel1.continueActionList();
     }
 
+    public void completeActionList() {
+        this.actionsToCrclJPanel1.completeActionList();
+    }
+    
+    public int getActionSetsCompleted() {
+        return actionsToCrclJPanel1.getActionSetsCompleted();
+    }
+
     public void debugAction() {
         this.actionsToCrclJPanel1.debugAction();
     }
-    
+
     public void pause() {
         this.actionsToCrclJPanel1.pause();
     }
-    
+
     public String getErrorString() {
         return this.actionsToCrclJPanel1.getErrorString();
     }
-    
+
     public void setErrorString(String errorString) {
         this.actionsToCrclJPanel1.setErrorString(errorString);
     }
-    
+
     public long incrementAndGetCommandId() {
         return this.actionsToCrclJPanel1.incrementAndGetCommandId();
     }
-    
+
     /**
      * Add a position map.
-     * 
+     *
      * The position map is similar to a transform in that it may offset
      * positions output by the executor but may also be used to change scaling
-     * or correct for non uniform distortions from the sensor system or 
+     * or correct for non uniform distortions from the sensor system or
      * imperfect kinematic functions in the robot. Multiple position maps may be
      * stacked to account for different sources of error or transformation.
-     * 
+     *
      * @param pm position map to be added
      */
-     public void addPositionMap(PositionMap pm) {
+    public void addPositionMap(PositionMap pm) {
         actionsToCrclJPanel1.addPositionMap(pm);
     }
 
     /**
      * Remove a previously added position map.
-     * 
+     *
      * @param pm position map to be removed.
      */
-     public void removePositionMap(PositionMap pm) {
+    public void removePositionMap(PositionMap pm) {
         actionsToCrclJPanel1.removePositionMap(pm);
     }
 
@@ -211,7 +225,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     public void loadActionsFile(File f) throws IOException {
         this.actionsToCrclJPanel1.loadActionsFile(f);
     }
-    
+
     @Override
     public void setActionsList(List<PddlAction> actionsList) {
         this.actionsToCrclJPanel1.setActionsList(actionsList);
@@ -245,7 +259,19 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     public XFuture<Boolean> startActions() {
         return actionsToCrclJPanel1.startActions();
     }
-    
+
+    public boolean doActions() {
+        return actionsToCrclJPanel1.doActions();
+    }
+
+    public ExecutorService getGeneateCrclService() {
+        return actionsToCrclJPanel1.getGeneateCrclService();
+    }
+
+    public void setGeneateCrclService(ExecutorService geneateCrclService) {
+        actionsToCrclJPanel1.setGeneateCrclService(geneateCrclService);
+    }
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.framework.pddl.executor.PddlExecutorJPanel actionsToCrclJPanel1;
@@ -261,11 +287,9 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         this.actionsToCrclJPanel1.autoResizeTableColWidthsPddlOutput();
     }
 
-
     public void refresh() {
         actionsToCrclJPanel1.refresh();
     }
-    
 
     @Override
     public void close() throws Exception {

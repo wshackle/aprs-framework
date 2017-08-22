@@ -42,15 +42,15 @@ public interface Object2DJFrameInterface extends CommonJFrameInterface {
     
     public void setItems(List<PhysicalItem> items);
     
-    public void takeSnapshot(File f, PointType point, String label) throws IOException;
-    public void takeSnapshot(File f, PmCartesian point, String label) throws IOException;
-    public void takeSnapshot(File f, PoseType pose, String label) throws IOException;
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) throws IOException;
+    public void takeSnapshot(File f, PointType point, String label) ;
+    public void takeSnapshot(File f, PmCartesian point, String label) ;
+    public void takeSnapshot(File f, PoseType pose, String label) ;
+    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) ;
 
     
-    public void takeSnapshot(File f, PointType point, String label, int w, int h) throws IOException;
-    public void takeSnapshot(File f, PmCartesian point, String label, int w, int h) throws IOException;
-    public void takeSnapshot(File f, PoseType pose, String label, int w, int h) throws IOException;
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException;
+    public void takeSnapshot(File f, PointType point, String label, int w, int h) ;
+    public void takeSnapshot(File f, PmCartesian point, String label, int w, int h) ;
+    public void takeSnapshot(File f, PoseType pose, String label, int w, int h) ;
+    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) ;
 
 }
