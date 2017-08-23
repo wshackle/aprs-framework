@@ -537,10 +537,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 this.rotSpeedSet = false;
             }
             addSetUnits(cmds);
-            if (debug) {
-                Thread.dumpStack();
-                System.out.println("debug generate");
-            }
+//            if (debug) {
+//                Thread.dumpStack();
+//                System.out.println("debug generate");
+//            }
             takeSnapshots("plan", "generate(start=" + startingIndex + ",crclNumber=" + crclNumber + ")", null, null);
             for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
 
@@ -2087,15 +2087,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void addCheckedOpenGripper(List<MiddleCommandType> cmds) {
         addOptionalOpenGripper(cmds, (CrclCommandWrapper ccw) -> {
-            double distToPart = aprsJFrame.getClosestRobotPartDistance();
-            if (distToPart < dropOffMin) {
-                String errString
-                        = "Can't take part when distance of " + distToPart + "  less than  " + dropOffMin;
-                double recheckDistance = aprsJFrame.getClosestRobotPartDistance();
-                System.out.println("recheckDistance = " + recheckDistance);
-                this.aprsJFrame.setTitleErrorString(errString);
-                this.aprsJFrame.pause();
-                return;
+            if (aprsJFrame.isObjectViewSimulated()) {
+                double distToPart = aprsJFrame.getClosestRobotPartDistance();
+                if (distToPart < dropOffMin) {
+                    String errString
+                            = "Can't take part when distance of " + distToPart + "  less than  " + dropOffMin;
+                    double recheckDistance = aprsJFrame.getClosestRobotPartDistance();
+                    System.out.println("recheckDistance = " + recheckDistance);
+                    this.aprsJFrame.setTitleErrorString(errString);
+                    this.aprsJFrame.pause();
+                    return;
+                }
             }
         });
     }
