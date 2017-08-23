@@ -99,7 +99,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
@@ -138,6 +140,49 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private String taskName;
 
+    private volatile long lastStartRunTime = -1;
+    private volatile long lastStopRunTime = -1;
+    private volatile long lastRunDuration = -1;
+    private volatile long lastStopDuration = -1;
+    private final AtomicLong effectiveStartRunTime = new AtomicLong(-1);
+    private final AtomicLong effectiveStopRunTime = new AtomicLong(-1);
+    private final AtomicBoolean running= new AtomicBoolean(false);
+    
+    private void setStartRunTime() {
+        long t  = System.currentTimeMillis();
+        if(!running.compareAndSet(false, true) && !effectiveStartRunTime.compareAndSet(-1,lastStartRunTime)) {
+            lastStartRunTime = t;
+            lastStopDuration = lastStartRunTime-lastStopRunTime;
+            effectiveStartRunTime.addAndGet(lastStopDuration);
+        }
+    }
+    
+    private void setStopRunTime() {
+        long t = System.currentTimeMillis();
+        if(!running.compareAndSet(true, false) && !effectiveStopRunTime.compareAndSet(-1, lastStopRunTime)) {
+            lastStopRunTime = t;
+            lastRunDuration = lastStopRunTime-lastStartRunTime;
+            effectiveStartRunTime.addAndGet(lastRunDuration);
+        }
+    }
+    
+    
+    public long getRunDuration() {
+        if(running.get()) {
+            return System.currentTimeMillis()-effectiveStartRunTime.get();
+        } else {
+            return lastStopRunTime - effectiveStartRunTime.get();
+        }
+    }
+    
+    public long getStopDuration() {
+        if(running.get()) {
+            return System.currentTimeMillis()-effectiveStartRunTime.get();
+        } else {
+            return lastStopRunTime - effectiveStartRunTime.get();
+        }
+    }
+    
     /**
      * Asynchronously get a list of PhysicalItems updated in one frame from the
      * vision system. The list will not be available until after the next frame

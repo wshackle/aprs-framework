@@ -2961,15 +2961,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public XFuture<Void> continueActionList() {
-
         XFuture<Void> ret = new XFuture<>("pddlExecutorContinueActionList");
         lastContinueActionFuture = ret;
         addProgramCompleteRunnable(() -> {
             ret.complete(null);
         });
-//        Utils.runOnDispatchThread(() -> {
         continueActionListPrivate();
-//        });
         return ret;
     }
 
@@ -2977,10 +2974,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private volatile long continueActionsListTime = 0;
 
     private void continueActionListPrivate() {
-//        if(aprsJFrame.isCrclProgramPaused() && aprsJFrame.getCrclProgram() != null) {
-//            runningProgramFuture = continueCrclProgram();
-//            return;
-//        }
         continueActionsCount.incrementAndGet();
         continueActionsListTime = System.currentTimeMillis();
         autoStart = true;
@@ -2988,9 +2981,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             setReplanFromIndex(0);
         }
         jCheckBoxReplan.setSelected(true);
-//        if (null != runningProgramFuture) {
-//            runningProgramFuture.cancelAll(true);
-//        }
         if (null != unstartedProgram) {
             runningProgramFuture = startCrclProgram(unstartedProgram);
         } else if (null != runningProgramFuture
