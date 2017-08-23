@@ -43,5 +43,15 @@
                 <exec.executable>java</exec.executable>
             </properties>
         </action>
+        <action>
+            <actionName>CUSTOM-debug_native_install</actionName>
+            <displayName>debug_native_install</displayName>
+            <goals>
+                <goal>install</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>native_installer</activatedProfile>
+            </activatedProfiles>
+        </action>
     
  </actions>

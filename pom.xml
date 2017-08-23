@@ -370,7 +370,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
-                        <version>1.2.1</version>
+                        <version>1.6.0</version>
                         <executions>
                     
                             <execution>
@@ -388,12 +388,11 @@
                                         <argument>-deploy</argument>
                                         <argument>-native</argument>
                                         <argument>installer</argument>
-                                        <argument>-BlicenseFile=license-NIST.txt</argument>
                                         <argument>-appclass</argument>
                                         <argument>${main.class}</argument>
                                         <argument>-srcfiles</argument>
                                         <argument>
-                                            ${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar:license-NIST.txt
+                                            ${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar
                                         </argument>
                                         <argument>-outdir</argument>
                                         <argument>./target</argument>
