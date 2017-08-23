@@ -50,6 +50,10 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
     
     
+    public double getClosestRobotPartDistance() {
+        return  this.object2DOuterJPanel1.getClosestRobotPartDistance();
+    }
+    
     public void setReverseFlag(boolean reverseFlag) {
         this.object2DOuterJPanel1.setReverseFlag(reverseFlag);
     }

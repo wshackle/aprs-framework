@@ -363,5 +363,54 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>native_installer</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.2.1</version>
+                        <executions>
+                    
+                            <execution>
+                                <id>deploy_native</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>
+                                        ${java.home}/../bin/javapackager
+                                    </executable>
+ 
+                                    <arguments>
+                                        <argument>-deploy</argument>
+                                        <argument>-native</argument>
+                                        <argument>installer</argument>
+                                        <argument>-BlicenseFile=license-NIST.txt</argument>
+                                        <argument>-appclass</argument>
+                                        <argument>${main.class}</argument>
+                                        <argument>-srcfiles</argument>
+                                        <argument>
+                                            ${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar:license-NIST.txt
+                                        </argument>
+                                        <argument>-outdir</argument>
+                                        <argument>./target</argument>
+                                        <argument>-name</argument>
+                                        <argument>${project.artifactId}</argument>
+                                        <argument>-outfile</argument>
+                                        <argument>
+                                            ${project.build.finalName}
+                                        </argument>
+                                        <argument>-v</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>

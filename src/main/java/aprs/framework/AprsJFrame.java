@@ -100,7 +100,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
@@ -447,6 +446,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * completed.
      */
     public XFuture<Void> startSafeAbort() {
+        takeSnapshots("startSafeAbort");
         safeAbortFuture = this.pddlExecutorJInternalFrame1.startSafeAbort()
                 .thenRun(() -> {
                     if (null != continousDemoFuture) {
@@ -454,7 +454,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         continousDemoFuture = null;
                     }
                 });
-        takeSnapshots("startSafeAbort");
         return safeAbortFuture;
     }
 
@@ -474,19 +473,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return future providing info on when complete
      */
     public XFuture<Void> startSafeAbortAndDisconnect(String name) {
-        startSafeAbortAndDisconnectThread = Thread.currentThread();
-        startSafeAbortAndDisconnectTime = System.currentTimeMillis();
-        startSafeAbortAndDisconnectStackTrace = startSafeAbortAndDisconnectThread.getStackTrace();
+        try {
+            startSafeAbortAndDisconnectThread = Thread.currentThread();
+            startSafeAbortAndDisconnectTime = System.currentTimeMillis();
+            startSafeAbortAndDisconnectStackTrace = startSafeAbortAndDisconnectThread.getStackTrace();
 
-        safeAbortFuture
-                = this.pddlExecutorJInternalFrame1.startSafeAbort()
-                        .thenCompose(name + ".disconnect." + robotName, x -> disconnectRobot());
-        return safeAbortFuture;
+            safeAbortFuture
+                    = this.pddlExecutorJInternalFrame1.startSafeAbort()
+                            .thenCompose(name + ".disconnect." + robotName, x -> disconnectRobot());
+            return safeAbortFuture;
+        } catch (Exception e) {
+            setTitleErrorString(e.toString());
+            XFuture<Void> ret = new XFuture<>("startSafeAbortAndDisconnect." + e.toString());
+            ret.completeExceptionally(e);
+            return ret;
+        }
     }
 
-    
     private volatile XFuture<Void> disconnectRobotFuture = null;
-    
+
     /**
      * Disconnect from the robot's crcl server and set robotName to null.
      *
@@ -494,7 +499,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * leaves the robotName unchanged.
      */
     public XFuture<Void> disconnectRobot() {
-        disconnectRobotFuture =  waitForPause().
+        disconnectRobotFuture = waitForPause().
                 thenRunAsync(this::disconnectRobotPrivate, connectService);
         System.out.println("disconnectRobotFuture = " + disconnectRobotFuture);
         System.out.println("connectService = " + connectService);
@@ -567,12 +572,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private volatile XFuture<Void> lastPauseFuture = null;
-    
+
     public XFuture<Void> waitForPause() {
         boolean paused = isPaused();
-        XFuture<Void> pauseFuture = new XFuture<>("pauseFuture."+paused);
+        XFuture<Void> pauseFuture = new XFuture<>("pauseFuture." + paused);
         if (paused) {
-            System.out.println("adding "+pauseFuture+" to "+futuresToCompleteOnUnPause);
+            System.out.println("adding " + pauseFuture + " to " + futuresToCompleteOnUnPause);
             futuresToCompleteOnUnPause.add(pauseFuture);
         } else {
             pauseFuture.complete(null);
@@ -611,6 +616,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return lastContinueActionListFuture;
     }
 
+    public double getClosestRobotPartDistance() {
+        return  this.object2DViewJInternalFrame.getClosestRobotPartDistance();
+    }
+    
+    public boolean isObjectViewSimulated() {
+        return this.object2DViewJInternalFrame.isSimulated();
+    }
+    
     /**
      * Set the value of taskName
      *
@@ -842,6 +855,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }
             } else {
                 sb.append("crcl_cmd= \r\n");
+            }
+            CRCLProgramType prog = getCrclProgram();
+            if(null != prog) {
+                sb.append("crcl_program_index=(").append(getCrclProgramLine()).append(" / ").append(prog.getMiddleCommand().size()).append("), ");
+                sb.append("crcl_program_name=").append(prog.getName()).append("\r\n");
             }
             pendantClientJInternalFrame.getCurrentStatus().ifPresent(status -> {
                 if (null != status.getCommandStatus()
@@ -1609,7 +1627,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         String newTitle = "APRS : " + ((robotName != null) ? robotName : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : "
                 + stateDescription
                 + ((titleErrorString != null) ? ": " + titleErrorString : "")
-                + ((pddlExecutorJInternalFrame1 != null) ?(" : "+pddlExecutorJInternalFrame1.getActionSetsCompleted()):"");
+                + ((pddlExecutorJInternalFrame1 != null) ? (" : " + pddlExecutorJInternalFrame1.getActionSetsCompleted()) : "");
         if (newTitle.length() > 90) {
             newTitle = newTitle.substring(0, 90) + " ... ";
         }
@@ -2938,7 +2956,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != lastPauseFuture) {
             lastPauseFuture.printStatus(System.out);
         }
-        
+
         System.out.println("lastContinueActionListFuture = " + lastContinueActionListFuture);
         if (null != lastContinueActionListFuture) {
             lastContinueActionListFuture.printStatus(System.out);
@@ -3213,7 +3231,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 .thenApply(taskName, x -> {
                     return pddlExecutorJInternalFrame1.doActions();
                 }
-        );
+                );
         return lastStartActionsFuture;
     }
 
@@ -3250,6 +3268,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public int getCrclProgramLine() {
+        return this.pendantClientJInternalFrame.getCurrentProgramLine();
     }
 
     private File propertiesFile;

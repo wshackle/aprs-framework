@@ -2383,19 +2383,32 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         updateTextFieldDouble(pickupDist, jTextFieldDropOffThreshold, 0.005);
         this.dropOffThreshold = dropOffThreshold;
     }
+    
+    public static class DistIndex {
+        public double dist;
+        public int index;
 
-    @Override
-    public void handlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
-        PointType ptIn = pose.getPoint();
+        public DistIndex(double dist, int index) {
+            this.dist = dist;
+            this.index = index;
+        }
+    }
 
+    
+    
+    public double getClosestRobotPartDistance() {
+        return getClosestUncorrectedDistance(aprsJFrame.getCurrentPosePoint());
+    }
+    
+    public double getClosestUncorrectedDistance(PointType ptIn) {
         PointType uncorrectedPoint = aprsJFrame.reverseCorrectPoint(ptIn);
-        currentX = uncorrectedPoint.getX();
-        currentY = uncorrectedPoint.getY();
-        jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));
-        object2DJPanel1.setCurrentX(currentX);
-        object2DJPanel1.setCurrentY(currentY);
         List<PhysicalItem> l = new ArrayList<>();
         l.addAll(getItems());
+        return getClosestDistanceIndex(uncorrectedPoint.getX(), uncorrectedPoint.getY(),l).dist;
+    }
+    
+    private DistIndex getClosestDistanceIndex(double x, double y,List<PhysicalItem> l ) {
+        
         double min_dist = Double.POSITIVE_INFINITY;
         int min_dist_index = -1;
         for (int i = 0; i < l.size(); i++) {
@@ -2412,6 +2425,25 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 min_dist = dist;
             }
         }
+        return new DistIndex(min_dist,min_dist_index);
+    }
+    
+    @Override
+    public void handlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
+        PointType ptIn = pose.getPoint();
+
+        PointType uncorrectedPoint = aprsJFrame.reverseCorrectPoint(ptIn);
+        currentX = uncorrectedPoint.getX();
+        currentY = uncorrectedPoint.getY();
+        jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));
+        object2DJPanel1.setCurrentX(currentX);
+        object2DJPanel1.setCurrentY(currentY);
+        List<PhysicalItem> l = new ArrayList<>();
+        l.addAll(getItems());
+        DistIndex di = getClosestDistanceIndex(currentX, currentY,l);
+        double min_dist = di.dist;
+        int min_dist_index = di.index;
+        
         long time = System.currentTimeMillis();
         if (min_dist < dropOffThreshold
                 && lastIsHoldingObjectExpected && !isHoldingObjectExpected

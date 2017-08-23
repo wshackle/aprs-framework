@@ -483,6 +483,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException {
 
+        
+        
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
@@ -517,12 +519,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 this.rotSpeedSet = false;
             }
             addSetUnits(cmds);
-            takeSnapshots("generate(startingIndex=" + startingIndex + ",crclNumber=" + crclNumber + ")", null, null);
+            if(debug) {
+                Thread.dumpStack();
+                System.out.println("debug generate");
+            }
+            takeSnapshots("plan","generate(start=" + startingIndex + ",crclNumber=" + crclNumber + ")", null, null);
             for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
 
                 PddlAction action = actions.get(lastIndex);
                 System.out.println("action = " + action);
-                takeSnapshots("gc_actions.get(" + lastIndex + ")=" + action, null, null);
+                takeSnapshots("plan","gc_actions.get(" + lastIndex + ")=" + action, null, null);
 //            try {
                 final int startMarkIndex = lastIndex;
                 String start_action_string = "start_" + startMarkIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
@@ -692,7 +698,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void checkKits(PddlAction action, List<MiddleCommandType> cmds) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException {
         List<PhysicalItem> newItems = waitForCompleteVisionUpdates("checkKits", lastRequiredPartsMap);
 
-        takeSnapshots("checkKits-", null, "");
+        takeSnapshots("plan","checkKits-", null, "");
         assert (newItems != null) :
                 "newItems == null";
 
@@ -1179,18 +1185,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 if (crclNumber != curCrclNumber) {
                     aprsJFrame.setTitleErrorString("crclNumber mismatch " + crclNumber + "!=" + curCrclNumber);
                 }
-                takeSnapshots(title, pose, label);
+                takeSnapshots("exec",title, pose, label);
             });
         }
     }
 
-    public void takeSnapshots(String title, PoseType pose, String label) {
+    public void takeSnapshots(String prefix, String title, PoseType pose, String label) {
         if (takeSnapshots) {
             try {
                 String fullTitle = title + "_crclNumber-" + String.format("%03d", crclNumber.get()) + "_action-" + String.format("%03d", lastIndex);
-                takeSimViewSnapshot(aprsJFrame.createTempFile(fullTitle, ".PNG"), pose, label);
-                takeDatabaseViewSnapshot(aprsJFrame.createTempFile("db_" + fullTitle, ".PNG"));
-                takeSimViewSnapshot(aprsJFrame.createTempFile("pc_" + fullTitle, ".PNG"), poseCacheToDetectedItemList());
+                takeSimViewSnapshot(aprsJFrame.createTempFile(prefix +"_"+ fullTitle, ".PNG"), pose, label);
+                takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix+"_db_" + fullTitle, ".PNG"));
+                takeSimViewSnapshot(aprsJFrame.createTempFile(prefix+"_pc_" + fullTitle, ".PNG"), poseCacheToDetectedItemList());
             } catch (IOException ex) {
                 Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1273,11 +1279,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (PlacePartSlotPoseList.isEmpty()) {
             kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;No place part slots added. </h3><br>");
             kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
-            takeSnapshots("PlacePartSlotPoseList.isEmpty()-inspect-kit-", null, "");
+            takeSnapshots("plan","PlacePartSlotPoseList.isEmpty()-inspect-kit-", null, "");
             return;
         }
         waitForCompleteVisionUpdates("inspectKit", lastRequiredPartsMap);
-        takeSnapshots("inspect-kit-", null, "");
+        takeSnapshots("plan","inspect-kit-", null, "");
 
 //        addTakeSnapshots(out, "inspect-kit-", null, "");
         String kitSku = action.getArgs()[0];
@@ -1788,12 +1794,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public void takePartByName(String partName, PddlAction nextPlacePartAction, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
-            takeSnapshots("take-part-" + partName + "", pose, partName);
+            takeSnapshots("plan","take-part-" + partName + "", pose, partName);
         }
         if (null == pose) {
             if (skipMissingParts) {
                 lastTakenPart = null;
-                takeSnapshots("skipping-take-part-" + partName + "", pose, partName);
+                takeSnapshots("plan","skipping-take-part-" + partName + "", pose, partName);
+                PoseType poseCheck = getPose(partName);
+                System.out.println("poseCheck = " + poseCheck);
                 return;
             } else {
                 throw new IllegalStateException("getPose(" + partName + ") returned null");
@@ -1805,7 +1813,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 PoseType slotPose = getPose(slot);
                 if (null == slotPose) {
                     lastTakenPart = null;
-                    takeSnapshots("skipping-take-part-next-slot-not-available-" + partName + "", pose, partName);
+                    takeSnapshots("plan","skipping-take-part-next-slot-not-available-" + partName + "", pose, partName);
                     return;
                 }
             }
@@ -1892,7 +1900,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
-            takeSnapshots("take-part-recovery-" + partName + "", pose, partName);
+            takeSnapshots("plan","take-part-recovery-" + partName + "", pose, partName);
         }
         if (null == pose) {
             if (skipMissingParts) {
@@ -2054,6 +2062,61 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //        addSettleDwell(cmds);
     }
 
+    private void addCheckedOpenGripper(List<MiddleCommandType> cmds) {
+        addOptionalOpenGripper(cmds, (CrclCommandWrapper ccw) -> {
+            double distToPart = aprsJFrame.getClosestRobotPartDistance();
+            if (distToPart < dropOffMin) {
+                String errString
+                        = "Can't take part when distance of " + distToPart + "  less than  " + dropOffMin;
+                double recheckDistance = aprsJFrame.getClosestRobotPartDistance();
+                System.out.println("recheckDistance = " + recheckDistance);
+                this.aprsJFrame.setTitleErrorString(errString);
+                this.aprsJFrame.pause();
+                return;
+            }
+        });
+    }
+
+    private double dropOffMin = 25;
+
+    /**
+     * Get the value of dropOffMin
+     *
+     * @return the value of dropOffMin
+     */
+    public double getDropOffMin() {
+        return dropOffMin;
+    }
+
+    /**
+     * Set the value of dropOffMin
+     *
+     * @param dropOffMin new value of dropOffMin
+     */
+    public void setDropOffMin(double dropOffMin) {
+        this.dropOffMin = dropOffMin;
+    }
+
+    private double pickupDistMax = 25;
+
+    /**
+     * Get the value of pickupDistMax
+     *
+     * @return the value of pickupDistMax
+     */
+    public double getPickupDistMax() {
+        return pickupDistMax;
+    }
+
+    /**
+     * Set the value of pickupDistMax
+     *
+     * @param pickupDistMax new value of pickupDistMax
+     */
+    public void setPickupDistMax(double pickupDistMax) {
+        this.pickupDistMax = pickupDistMax;
+    }
+
     /**
      * Add commands to the list that will take a part at a given pose.
      *
@@ -2085,6 +2148,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addSettleDwell(cmds);
 
         addOptionalCloseGripper(cmds, (CrclCommandWrapper ccw) -> {
+            if (aprsJFrame.isObjectViewSimulated()) {
+                double distToPart = aprsJFrame.getClosestRobotPartDistance();
+                if (distToPart > pickupDistMax) {
+                    String errString
+                            = "Can't take part when distance of " + distToPart + "  exceeds " + pickupDistMax;
+                    this.aprsJFrame.setTitleErrorString(errString);
+                    this.aprsJFrame.pause();
+                    SetEndEffectorType seeCmd = (SetEndEffectorType) ccw.getWrappedCommand();
+                    seeCmd.setSetting(1.0);
+                    setFakeTakePart(false);
+                    return;
+                }
+            }
             if (getForceFakeTakeFlag()) {
                 SetEndEffectorType seeCmd = (SetEndEffectorType) ccw.getWrappedCommand();
                 seeCmd.setSetting(1.0);
@@ -2129,7 +2205,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addSettleDwell(cmds);
 
-//       We force a failure by skipping the step that closes the gripper  addCloseGripper(cmds);
         addSettleDwell(cmds);
 
         addMoveTo(cmds, approachPose, true);
@@ -2354,6 +2429,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         setCommandId(openGripperCmd);
         openGripperCmd.setSetting(1.0);
         cmds.add(openGripperCmd);
+        
+    }
+    private void addOptionalOpenGripper(List<MiddleCommandType> cmds, CRCLCommandWrapperConsumer cb) {
+        SetEndEffectorType openGripperCmd = new SetEndEffectorType();
+        setCommandId(openGripperCmd);
+        openGripperCmd.setSetting(1.0);
+        addOptionalCommand(openGripperCmd, cmds, cb);
     }
 
     PoseType copyAndAddZ(PoseType pose_in, double offset, double limit) {
@@ -2854,6 +2936,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             return outIndex;
         }
 
+        @Override
+        public String toString() {
+            return "{action("+pddlActionIndex+")="+outIndex+":"+ action+'}';
+        }
+
     }
 
     private ConcurrentLinkedQueue<Consumer<PlacePartInfo>> placePartConsumers = new ConcurrentLinkedQueue<>();
@@ -2934,12 +3021,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             PlacePartSlotPoseList.add(pose);
         }
         if (skipMissingParts && lastTakenPart == null) {
-            takeSnapshots("skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "", pose, slotName);
+            takeSnapshots("plan","skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "", pose, slotName);
+            PoseType poseCheck = getPose(slotName);
+            System.out.println("poseCheck = " + poseCheck);
             return;
         }
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         if (takeSnapshots) {
-            takeSnapshots("place-part-" + getLastTakenPart() + "in-" + slotName + "", pose, slotName);
+            takeSnapshots("plan","place-part-" + getLastTakenPart() + "in-" + slotName + "", pose, slotName);
         }
         if (pose == null) {
             if (skipMissingParts && null != lastTakenPart) {
@@ -2949,7 +3038,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     origPose.setXAxis(xAxis);
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
-                    takeSnapshots("returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPart);
+                    takeSnapshots("plan","returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPart);
                     final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
                     addMarkerCommand(out, msg,
                             ((CrclCommandWrapper wrapper) -> {
@@ -3007,7 +3096,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         final String msg = "placed part (recovery) in " + slotName;
         if (takeSnapshots) {
             if (takeSnapshots) {
-                takeSnapshots("place-part-recovery-in-" + slotName + "", pose, slotName);
+                takeSnapshots("plan","place-part-recovery-in-" + slotName + "", pose, slotName);
             }
         }
         if (pose == null) {
@@ -3079,7 +3168,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addSettleDwell(cmds);
 
-        addOpenGripper(cmds);
+        addCheckedOpenGripper(cmds);
 
         addSettleDwell(cmds);
 
