@@ -545,7 +545,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public XFuture<Void> disconnectRobot() {
         disconnectRobotFuture = waitForPause().
-                thenRunAsync(this::disconnectRobotPrivate, connectService);
+                thenRunAsync("disconnectRobot("+getRobotName()+")",this::disconnectRobotPrivate, connectService);
         System.out.println("disconnectRobotFuture = " + disconnectRobotFuture);
         System.out.println("connectService = " + connectService);
         return disconnectRobotFuture;
