@@ -500,9 +500,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws IllegalStateException if database not connected
      * @throws SQLException if query of the database failed
      */
-    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options)
+    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException {
 
+        this.startSafeAbortRequestCount = startSafeAbortRequestCount;
         if (null == qs) {
             throw new IllegalStateException("Database not setup and connected.");
         }
@@ -2935,11 +2936,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         private final int pddlActionIndex;
         private final int outIndex;
         private CrclCommandWrapper wrapper = null;
-
-        public PlacePartInfo(PddlAction action, int pddlActionIndex, int outIndex) {
+        private final int startSafeAbortRequestCount;
+        
+        public PlacePartInfo(PddlAction action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount) {
             this.action = action;
             this.pddlActionIndex = pddlActionIndex;
             this.outIndex = outIndex;
+            this.startSafeAbortRequestCount = startSafeAbortRequestCount;
         }
 
         public CrclCommandWrapper getWrapper() {
@@ -2962,6 +2965,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             return outIndex;
         }
 
+        public int getStartSafeAbortRequestCount() {
+            return startSafeAbortRequestCount;
+        }
+        
         @Override
         public String toString() {
             return "{action(" + pddlActionIndex + ")=" + outIndex + ":" + action + '}';
@@ -3041,6 +3048,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     }
 
+    private volatile int startSafeAbortRequestCount;
+    
     public void placePartBySlotName(String slotName, List<MiddleCommandType> out, PddlAction action) throws IllegalStateException, SQLException {
         PoseType pose = getPose(slotName);
         if (null != pose) {
@@ -3065,7 +3074,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
                     takeSnapshots("plan", "returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPart);
-                    final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
+                    final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(),startSafeAbortRequestCount);
                     addMarkerCommand(out, msg,
                             ((CrclCommandWrapper wrapper) -> {
                                 try {
@@ -3089,7 +3098,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         placePartByPose(out, pose);
-        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
+        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(),startSafeAbortRequestCount);
         addMarkerCommand(out, msg,
                 ((CrclCommandWrapper wrapper) -> {
                     try {
@@ -3134,7 +3143,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setZAxis(zAxis);
         PlacePartSlotPoseList.add(pose);
         placePartByPose(out, pose);
-        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size());
+        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(),startSafeAbortRequestCount);
         addMarkerCommand(out, msg,
                 ((CrclCommandWrapper wrapper) -> {
                     System.out.println(msg + " completed at " + new Date());

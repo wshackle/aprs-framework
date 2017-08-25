@@ -111,6 +111,11 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     public int getCurrentActionIndex() {
         return this.actionsToCrclJPanel1.getCurrentActionIndex();
     }
+    
+    public int getSafeAbortRequestCount() {
+        return actionsToCrclJPanel1.getSafeAbortRequestCount();
+    }
+    
 
     @Override
     public List<PddlAction> getActionsList() {

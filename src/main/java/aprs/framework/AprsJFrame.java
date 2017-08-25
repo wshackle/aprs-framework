@@ -146,43 +146,42 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private volatile long lastStopDuration = -1;
     private final AtomicLong effectiveStartRunTime = new AtomicLong(-1);
     private final AtomicLong effectiveStopRunTime = new AtomicLong(-1);
-    private final AtomicBoolean running= new AtomicBoolean(false);
-    
+    private final AtomicBoolean running = new AtomicBoolean(false);
+
     private void setStartRunTime() {
-        long t  = System.currentTimeMillis();
-        if(!running.compareAndSet(false, true) && !effectiveStartRunTime.compareAndSet(-1,lastStartRunTime)) {
+        long t = System.currentTimeMillis();
+        if (!running.compareAndSet(false, true) && !effectiveStartRunTime.compareAndSet(-1, lastStartRunTime)) {
             lastStartRunTime = t;
-            lastStopDuration = lastStartRunTime-lastStopRunTime;
+            lastStopDuration = lastStartRunTime - lastStopRunTime;
             effectiveStartRunTime.addAndGet(lastStopDuration);
         }
     }
-    
+
     private void setStopRunTime() {
         long t = System.currentTimeMillis();
-        if(!running.compareAndSet(true, false) && !effectiveStopRunTime.compareAndSet(-1, lastStopRunTime)) {
+        if (!running.compareAndSet(true, false) && !effectiveStopRunTime.compareAndSet(-1, lastStopRunTime)) {
             lastStopRunTime = t;
-            lastRunDuration = lastStopRunTime-lastStartRunTime;
+            lastRunDuration = lastStopRunTime - lastStartRunTime;
             effectiveStartRunTime.addAndGet(lastRunDuration);
         }
     }
-    
-    
+
     public long getRunDuration() {
-        if(running.get()) {
-            return System.currentTimeMillis()-effectiveStartRunTime.get();
+        if (running.get()) {
+            return System.currentTimeMillis() - effectiveStartRunTime.get();
         } else {
             return lastStopRunTime - effectiveStartRunTime.get();
         }
     }
-    
+
     public long getStopDuration() {
-        if(running.get()) {
-            return System.currentTimeMillis()-effectiveStartRunTime.get();
+        if (running.get()) {
+            return System.currentTimeMillis() - effectiveStartRunTime.get();
         } else {
             return lastStopRunTime - effectiveStartRunTime.get();
         }
     }
-    
+
     /**
      * Asynchronously get a list of PhysicalItems updated in one frame from the
      * vision system. The list will not be available until after the next frame
@@ -545,7 +544,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public XFuture<Void> disconnectRobot() {
         disconnectRobotFuture = waitForPause().
-                thenRunAsync("disconnectRobot("+getRobotName()+")",this::disconnectRobotPrivate, connectService);
+                thenRunAsync("disconnectRobot(" + getRobotName() + ")", this::disconnectRobotPrivate, connectService);
         System.out.println("disconnectRobotFuture = " + disconnectRobotFuture);
         System.out.println("connectService = " + connectService);
         return disconnectRobotFuture;
@@ -633,6 +632,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private volatile XFuture<Void> lastContinueActionListFuture = null;
     private volatile String lastContinueActionListFutureComment = null;
+    private volatile int lastContinueStartAbortCount = -1;
 
     /**
      * Continue or start executing the currently loaded set of PDDL actions.
@@ -649,6 +649,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public XFuture<Void> continueActionList(String comment) {
         lastContinueActionListFutureComment = comment;
+        int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        lastContinueStartAbortCount = startAbortCount;
         lastContinueActionListFuture
                 = XFuture.supplyAsync("AprsJFrame.continueActionList",
                         () -> {
@@ -657,18 +659,23 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                             return null;
                         }, runProgramService)
                         .thenCompose("continueActionList.pauseCheck", x -> waitForPause())
-                        .thenRun("pddlExecutorJInternalFrame1.completeActionList", () -> pddlExecutorJInternalFrame1.completeActionList());
+                        .thenRun("pddlExecutorJInternalFrame1.completeActionList",
+                                () -> {
+                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                        pddlExecutorJInternalFrame1.completeActionList();
+                                    }
+                                });
         return lastContinueActionListFuture;
     }
 
     public double getClosestRobotPartDistance() {
-        return  this.object2DViewJInternalFrame.getClosestRobotPartDistance();
+        return this.object2DViewJInternalFrame.getClosestRobotPartDistance();
     }
-    
+
     public boolean isObjectViewSimulated() {
         return this.object2DViewJInternalFrame.isSimulated();
     }
-    
+
     /**
      * Set the value of taskName
      *
@@ -902,7 +909,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 sb.append("crcl_cmd= \r\n");
             }
             CRCLProgramType prog = getCrclProgram();
-            if(null != prog) {
+            if (null != prog) {
                 sb.append("crcl_program_index=(").append(getCrclProgramLine()).append(" / ").append(prog.getMiddleCommand().size()).append("), ");
                 sb.append("crcl_program_name=").append(prog.getName()).append("\r\n");
             }
