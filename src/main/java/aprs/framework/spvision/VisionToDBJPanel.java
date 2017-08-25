@@ -97,10 +97,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private DbSetupPublisher dbSetupPublisher;
 
     /**
-     * Get the most recent list of parts and kit trays from  the vision system.
+     * Get the most recent list of parts and kit trays from the vision system.
      * This will not block waiting for the vision system or database but could
-     * return null or an empty list if the vision system has not been connected or
-     * no frame has been received.
+     * return null or an empty list if the vision system has not been connected
+     * or no frame has been received.
+     *
      * @return list of trays
      */
     public List<PartsTray> getPartsTrayList() {
@@ -1530,9 +1531,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             = new ConcurrentLinkedDeque<>();
 
     /**
-     * Asynchronously get a list of PhysicalItems updated in one frame from 
-     * the vision system.
-     * @return future with list of items updated in the next frame from the vision 
+     * Asynchronously get a list of PhysicalItems updated in one frame from the
+     * vision system.
+     *
+     * @return future with list of items updated in the next frame from the
+     * vision
      */
     public XFuture<List<PhysicalItem>> getSingleUpdate() {
         setEnableDatabaseUpdates(true);
@@ -2123,11 +2126,20 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
             File dbLogDir = new File(f.getParentFile(), "db_log_dir");
             dbLogDir.mkdirs();
-            File csvFile = aprsJFrame.createTempFile(f.getName() + "_db", ".csv", dbLogDir);
+            String csvFnameBase = f.getName();
+            File csvFile = aprsJFrame.createTempFile(csvFnameBase + "_db", ".csv", dbLogDir);
             Utils.saveJTable(csvFile, jTableFromDatabase);
+            saveLastEnabledUpdateCsv(f);
+            aprsJFrame.takeSimViewSnapshot(f, list);
+        } catch (IOException ex) {
+            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
-            List<PhysicalItem> lastInput = dpu.getLastEnabledUpdateList();
-            if (null != lastInput && !lastInput.isEmpty()) {
+    private void saveLastEnabledUpdateCsv(File f) {
+        List<PhysicalItem> lastInput = dpu.getLastEnabledUpdateList();
+        if (null != lastInput && !lastInput.isEmpty()) {
+            try {
                 File dbInputLogDir = new File(f.getParentFile(), "visionToDb_input_dir");
                 dbInputLogDir.mkdirs();
                 File csvInputFile = Utils.createTempFile(f.getName() + "_visiontToDb", ".csv", dbInputLogDir);
@@ -2137,25 +2149,36 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         pw.println(item.getName() + "," + item.getRotation() + "," + item.x + "," + item.y + "," + item.getScore() + "," + item.getType() + "," + item.getVisioncycle() + "," + item.getRepeats() + "," + item.getFullName());
                     }
                 }
+            } catch (IOException ex) {
+                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
-            aprsJFrame.takeSimViewSnapshot(f, list);
-        } catch (IOException ex) {
-            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private void takeNewItemsSnapshot(File f) {
-        startNewItemsCheck()
-                .thenRun(() -> takeSnapshot(f));
+    private List<PhysicalItem> poseQueryToPhysicalItemList(List<PoseQueryElem> listIn) {
+        List<PhysicalItem> listOut = new ArrayList<>();
+        for (PoseQueryElem pqe : listIn) {
+            listOut.add(PhysicalItem.newPhysicalItemNameRotXY(pqe.getName(),
+                    pqe.getRot(),
+                    pqe.getX(),
+                    pqe.getY()));
+        }
+        return listOut;
+    }
+
+    public XFuture<Void> startNewItemsImageSave(File f) {
+        return dpu.queryDatabaseNew()
+                .thenApply(this::poseQueryToPhysicalItemList)
+                .thenAccept(l -> {
+                    aprsJFrame.takeSimViewSnapshot(f, l);
+                    saveLastEnabledUpdateCsv(f);
+                });
     }
 
     public XFuture<Void> startTakeSnapshot(File f) {
         return Utils.runOnDispatchThread(() -> takeSnapshot(f));
     }
 
-    public XFuture<Void> startNewItemsImageSave(File f) {
-        return Utils.runOnDispatchThread(() -> takeNewItemsSnapshot(f));
-    }
 
     private void jButtonCheckNewItemsOnlyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCheckNewItemsOnlyActionPerformed
         startNewItemsCheck();

@@ -623,6 +623,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private void cancelPauseFutures() {
+        for (XFuture<?> f : futuresToCompleteOnUnPause) {
+            f.cancelAll(true);
+        }
+    }
+    
     private volatile XFuture<Void> lastPauseFuture = null;
 
     public XFuture<Void> waitForPause() {
@@ -886,13 +892,30 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         } else {
             abortCrclProgram();
         }
+        cancelPauseFutures();
         if (null != lastResumeFuture) {
             lastResumeFuture.cancelAll(true);
             lastResumeFuture = null;
         }
+        if(null != lastPauseFuture) {
+            lastPauseFuture.cancelAll(true);
+            lastPauseFuture = null;
+        }
         if (null != lastRunProgramFuture) {
             lastRunProgramFuture.cancelAll(true);
             lastRunProgramFuture = null;
+        }
+        if (null != lastStartActionsFuture) {
+            lastStartActionsFuture.cancelAll(true);
+            lastStartActionsFuture = null;
+        }
+        if (null != lastContinueActionListFuture) {
+            lastContinueActionListFuture.cancelAll(true);
+            lastContinueActionListFuture = null;
+        }
+        if (null != disconnectRobotFuture) {
+            disconnectRobotFuture.cancelAll(true);
+            disconnectRobotFuture = null;
         }
         jCheckBoxMenuItemContinousDemo.setSelected(false);
     }
