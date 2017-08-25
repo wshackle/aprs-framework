@@ -571,6 +571,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param port (TCP) port robot's CRCL server is bound to
      */
     public XFuture<Void> connectRobot(String robotName, String host, int port) {
+        if(isConnected()
+                && !isPaused()
+                && this.robotName.equals(robotName)
+                && this.getRobotCrclHost().equals(host)
+                && this.getRobotCrclPort() == port
+                ) {
+            return XFuture.completedFuture(null);
+        }
         return waitForPause().
                 thenRunAsync(() -> connectRobotPrivate(robotName, host, port), connectService);
     }

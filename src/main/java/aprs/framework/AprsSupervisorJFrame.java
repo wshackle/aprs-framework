@@ -1037,8 +1037,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     }
                     return stealFor.disconnectRobot()
                             .thenRunAsync(() -> logEvent(stealForRobotName + " disconnnected."), supervisorExecutorService)
-                            .thenCompose(x -> stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort))
-                            .thenRun(() -> {
+                            .thenCompose(
+                                    "returnRobot."+stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort,
+                                    x -> stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort))
+                            .thenRun("returnRobot.transferOption",
+                                    () -> {
                                 logEvent(stealFrom.getTaskName() + " connected to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort);
                                 for (String opt : transferrableOptions) {
                                     if (stealForOptions.containsKey(opt)) {
@@ -1047,7 +1050,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                 }
                                 stealFor.removePositionMap(pm);
                             })
-                            .thenCompose(x -> stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort))
+                            .thenCompose(
+                                    "returnRobot."+stealFor.getTaskName() + " connect to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort,
+                                    x -> stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort))
                             .thenRun(() -> {
                                 logEvent(stealFor.getTaskName() + " connected to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort);
                                 checkRobotsUniquePorts();
@@ -1082,7 +1087,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                                 SplashScreen.getBlueWhiteGreenColorList(), gd);
                                     }, supervisorExecutorService));
                     return unstealAbortFuture
-                            .thenComposeAsync("unsteal.returnRobots1", x -> returnRobots1(returnRobot), supervisorExecutorService)
+                            .thenComposeAsync("unsteal.returnRobots1", x -> {
+                                return returnRobots1(returnRobot);
+                            }, supervisorExecutorService)
                             .thenRun("unsteal.connectAll", () -> connectAll())
                             .alwaysAsync(() ->  {
                                     allowToggles(revBlocker);
