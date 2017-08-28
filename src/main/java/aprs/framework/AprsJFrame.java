@@ -573,7 +573,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public XFuture<Void> connectRobot(String robotName, String host, int port) {
         if(isConnected()
                 && !isPaused()
-                && this.robotName.equals(robotName)
+                && null != this.robotName
+                && Objects.equals(robotName, robotName)
                 && this.getRobotCrclHost().equals(host)
                 && this.getRobotCrclPort() == port
                 ) {

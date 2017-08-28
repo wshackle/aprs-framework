@@ -694,7 +694,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                         if (!(t instanceof CancellationException)) {
                                             getLogger().log(Level.SEVERE, null, t);
                                             logEvent(t.toString());
-                                            abortEventTime = System.currentTimeMillis();
+                                            setAbortTimeCurrent();
                                             pause();
                                             Utils.runOnDispatchThread(() -> {
                                                 JOptionPane.showMessageDialog(AprsSupervisorJFrame.this, t);
@@ -764,7 +764,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                             if (!(t instanceof CancellationException)) {
                                                 logEvent(t.toString());
                                                 getLogger().log(Level.SEVERE, null, t);
-                                                abortEventTime = System.currentTimeMillis();
+                                                setAbortTimeCurrent();
                                                 pause();
                                                 Utils.runOnDispatchThread(() -> {
                                                     JOptionPane.showMessageDialog(AprsSupervisorJFrame.this, t);
@@ -812,6 +812,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
             oldLfrs.add(lastFutureReturned);
         }
+    }
+
+    private void setAbortTimeCurrent() {
+        abortEventTime = System.currentTimeMillis();
     }
 
     private XFuture<Void> stealRobot(String robotName) throws IOException, PositionMap.BadErrorMapFormatException {
@@ -886,9 +890,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 int port = sys.getRobotCrclPort();
                 if (set.contains(port)) {
                     debugAction();
-                    abortEventTime = System.currentTimeMillis();
+                    setAbortTimeCurrent();
                     pause();
-                    String msg = "two systems conneced to " + port;
+                    String msg = "two systems connected to " + port;
                     logEvent(msg);
                     throw new IllegalStateException(msg);
                 }
@@ -2247,6 +2251,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private void jMenuItemStartAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartAllActionPerformed
         prepActions();
         immediateAbortAll();
+        clearEventLog();
         connectAll();
         setReverseFlag(false);
         enableAllRobots();
@@ -2644,6 +2649,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         prepActions();
         immediateAbortAll();
+        clearEventLog();
         clearAllErrors();
         connectAll();
         setReverseFlag(false);
@@ -2671,9 +2677,17 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private volatile XFuture<Void> randomTest = null;
 
+    private void clearEventLog() {
+        abortEventTime = -1;
+        firstEventTime = -1;
+        ((DefaultTableModel) jTableEvents.getModel()).setRowCount(0);
+    }
+    
+    
     private void jCheckBoxMenuItemRandomTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemRandomTestActionPerformed
         prepActions();
         immediateAbortAll();
+        clearEventLog();
         clearAllErrors();
         connectAll();
         setReverseFlag(false);
@@ -2814,6 +2828,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemContinousDemo.setSelected(false);
         prepActions();
         immediateAbortAll();
+        clearEventLog();
         clearAllErrors();
         connectAll();
         setReverseFlag(false);
@@ -2913,6 +2928,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
         return XFuture.allOfWithName("scanAllInternall", futures).thenCompose(x -> {
+            logEvent("Scans Complete");
+            setAbortTimeCurrent();
             return showMessageFullScreen("Scans Complete", 80.0f,
                     SplashScreen.getRobotArmImage(),
                     SplashScreen.getBlueWhiteGreenColorList(), gd);
@@ -2921,11 +2938,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     public XFuture<?> scanAll() {
         resetAll(false);
+        logEvent("Scan all started.");
         return enableAndCheckAllRobots()
                 .thenCompose("scanAll2", ok -> checkOkElse(ok, this::scanAllInternal, this::showCheckEnabledErrorSplash));
     }
 
     public void startRandomTest() {
+        logEvent("Start Random Test");
         connectAll();
         enableAndCheckAllRobots()
                 .thenCompose("startRandomTest.checkOk",
@@ -3236,6 +3255,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     public XFuture<?> startContinousDemoRevFirst() {
+        logEvent("Start Continous Demo (Reverse First)");
         connectAll();
         final XFuture<?> lfr = this.lastFutureReturned;
         continousDemoFuture
@@ -3249,6 +3269,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     public XFuture<?> startContinousDemo() {
+        logEvent("Start continous demo");
         connectAll();
         continousDemoFuture
                 = enableAndCheckAllRobots()
@@ -3285,6 +3306,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private ExecutorService supervisorExecutorService = defaultSupervisorExecutorService;
 
     private XFuture<?> continueContinousDemo() {
+        logEvent("Continue Continous Demo : "+ continousDemoCycle.get());
         return continousDemoSetup()
                 .thenCompose("continouseDemo.part2", x2 -> {
                     final XFuture<?> lfr = this.lastFutureReturned;
@@ -3574,6 +3596,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     public XFuture<?> continueAll() {
+        logEvent("Continoue All : " + continousDemoCycle.get());
         stealingRobots = false;
         returnRobots3();
         XFuture<?> f = enableAndCheckAllRobots()
@@ -3583,6 +3606,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     public XFuture<?> startAll() {
+        logEvent("Start All ");
         stealingRobots = false;
         returnRobots3();
         XFuture<Boolean> f = enableAndCheckAllRobots();
@@ -3620,7 +3644,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             checkRobotsUniquePorts();
         }
         logEvent("immediateAbort");
-        abortEventTime = System.currentTimeMillis();
+        setAbortTimeCurrent();
         if (null != runTimeTimer) {
             runTimeTimer.stop();
             runTimeTimer = null;
