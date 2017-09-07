@@ -1334,7 +1334,29 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private final AtomicInteger actionSetsCompleted = new AtomicInteger();
     private final AtomicInteger actionSetsStarted = new AtomicInteger();
 
+    private AtomicInteger doingActionsStarted = new AtomicInteger();
+    private AtomicInteger doingActionsFinished = new AtomicInteger();
+    
+    private boolean isRunningProgram() {
+        return runningProgramFuture != null 
+                && !runningProgramFuture.isCancelled()
+                && !runningProgramFuture.isDone()
+                && !runningProgramFuture.isCompletedExceptionally();
+    }
+    
+    private boolean isContinuingActions() {
+        return lastContinueActionFuture != null 
+                && !lastContinueActionFuture.isCancelled()
+                && !lastContinueActionFuture.isDone()
+                && !lastContinueActionFuture.isCompletedExceptionally();
+    }
+    public boolean isDoingActions() {
+        return doingActionsStarted.get() > doingActionsFinished.get()
+                || isRunningProgram() || isContinuingActions();
+    }
+    
     public boolean doActions() {
+        final int start = doingActionsStarted.incrementAndGet();
         this.abortProgram();
         try {
             setReplanFromIndex(0);
@@ -1355,6 +1377,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             abortProgram();
             showExceptionInProgram(ex);
             throw new RuntimeException(ex);
+        } finally {
+            doingActionsFinished.incrementAndGet();
         }
     }
 
@@ -2674,7 +2698,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //            } else {
 //                this.safeAbortRunnablesVector.add(() -> sendSocket(s, "Done\r\n"));
 //            }
-            this.startSafeAbort().thenAccept(b -> sendSocket(s, "Done\r\n"));
+            this.startSafeAbort("external from "+s+":"+line).thenAccept(b -> sendSocket(s, "Done\r\n"));
         }
         jTextAreaExternalCommads.setCaretPosition(jTextAreaExternalCommads.getText().length() - 1);
     }
@@ -2897,8 +2921,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         f.complete(null);
     }
 
-    public XFuture<Void> startSafeAbort() {
-        final XFuture<Void> ret = new XFuture<>(safeAbortRequestCount.get() + ":" + safeAboutCount.get() + ":pddlExecutorStartSafeAbort." + aprsJFrame.getRunName());
+    public XFuture<Void> startSafeAbort(String name) {
+        final int startSafeAbortRequestCount = safeAbortRequestCount.get();
+        final XFuture<Void> ret = new XFuture<>( startSafeAbortRequestCount+ ":" + safeAboutCount.get() + ":"+ name + ":pddlExecutorStartSafeAbort." + aprsJFrame.getRunName());
         startSafeAbortTime = System.currentTimeMillis();
         synchronized (this) {
 //            if (null != lastSafeAbortFuture && !lastSafeAbortFuture.isDone()) {
@@ -2926,7 +2951,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private void jButtonSafeAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSafeAbortActionPerformed
-        this.startSafeAbort();
+        this.startSafeAbort("user");
     }//GEN-LAST:event_jButtonSafeAbortActionPerformed
 
     private void jButtonContinueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonContinueActionPerformed
@@ -2946,6 +2971,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     
     public boolean completeActionList() {
         try {
+            doingActionsStarted.incrementAndGet();
             autoStart = true;
             boolean ret = generateCrcl();
             if (ret && pddlActionToCrclGenerator.getLastIndex() >= actionsList.size() - 1) {
@@ -2957,6 +2983,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             abortProgram();
             showExceptionInProgram(ex);
             throw new RuntimeException(ex);
+        } finally {
+            doingActionsFinished.incrementAndGet();
         }
     }
 

@@ -149,36 +149,57 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     private void setStartRunTime() {
+        checkReadyToRun();
         long t = System.currentTimeMillis();
-        if (!running.compareAndSet(false, true) && !effectiveStartRunTime.compareAndSet(-1, lastStartRunTime)) {
+        if (running.compareAndSet(false, true)) {
+
             lastStartRunTime = t;
-            lastStopDuration = lastStartRunTime - lastStopRunTime;
-            effectiveStartRunTime.addAndGet(lastStopDuration);
+
+            if (!effectiveStartRunTime.compareAndSet(-1, t) && lastStopRunTime > 0) {
+                lastStopDuration = lastStartRunTime - lastStopRunTime;
+                effectiveStartRunTime.addAndGet(lastStopDuration);
+            }
         }
     }
 
     private void setStopRunTime() {
         long t = System.currentTimeMillis();
-        if (!running.compareAndSet(true, false) && !effectiveStopRunTime.compareAndSet(-1, lastStopRunTime)) {
+        if (running.compareAndSet(true, false)) {
             lastStopRunTime = t;
-            lastRunDuration = lastStopRunTime - lastStartRunTime;
-            effectiveStartRunTime.addAndGet(lastRunDuration);
+            if (!effectiveStopRunTime.compareAndSet(-1, t) && lastStartRunTime > 0) {
+                lastRunDuration = lastStopRunTime - lastStartRunTime;
+                effectiveStopRunTime.addAndGet(lastRunDuration);
+            }
         }
     }
 
     public long getRunDuration() {
+        long t= effectiveStartRunTime.get();
+        if(t < 0) {
+            return 0;
+        }
         if (running.get()) {
-            return System.currentTimeMillis() - effectiveStartRunTime.get();
+            return System.currentTimeMillis() - t;
         } else {
-            return lastStopRunTime - effectiveStartRunTime.get();
+            if(lastStopRunTime  < 0) {
+                return 0;
+            }
+            return lastStopRunTime - t;
         }
     }
 
     public long getStopDuration() {
-        if (running.get()) {
-            return System.currentTimeMillis() - effectiveStartRunTime.get();
+        long t = effectiveStopRunTime.get();
+        if(t < 0) {
+            return 0;
+        }
+        if (!running.get()) {
+            return System.currentTimeMillis() - t;
         } else {
-            return lastStopRunTime - effectiveStartRunTime.get();
+            if(lastStartRunTime  < 0) {
+                return 0;
+            }
+            return lastStartRunTime - t;
         }
     }
 
@@ -272,7 +293,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public String getRunName() {
         return ((this.taskName != null) ? this.taskName.replace(" ", "-") : "") + "-run-" + String.format("%03d", runNumber) + "-"
-                + ((this.robotName != null) ? this.robotName : "");
+                + ((this.robotName != null) ? this.robotName : "") + (isReverseFlag() ? "-Reverse" : "");
     }
 
     /**
@@ -436,8 +457,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param connected the new desired connected state.
      */
     public void setConnected(boolean connected) {
+        if (!connected || robotName == null || !isConnected()) {
+            enableCheckedAlready = false;
+        }
         if (null == robotName && connected) {
             printNameSetInfo();
+            setTitleErrorString("Can not connect when robotName is null");
             throw new IllegalStateException("Can not connect when robotName is null");
         }
         if (null != pendantClientJInternalFrame) {
@@ -474,6 +499,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private volatile XFuture<Void> safeAbortFuture = null;
+    private volatile XFuture<Void> safeAbortAndDisconnectFuture = null;
 
     /**
      * Attempt to safely abort the current CRCL program in a way that does not
@@ -489,14 +515,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return a future that can be tested or used to wait until the abort is
      * completed.
      */
-    public XFuture<Void> startSafeAbort() {
-        takeSnapshots("startSafeAbort");
-        safeAbortFuture = this.pddlExecutorJInternalFrame1.startSafeAbort()
+    public XFuture<Void> startSafeAbort(String comment) {
+
+        if (isAborting()) {
+            String errMsg = "startSafeAbort(" + comment + ") called when already aborting";
+            setTitleErrorString(errMsg);
+            throw new IllegalStateException(errMsg);
+        }
+        startSafeAbortThread = Thread.currentThread();
+        startSafeAbortTime = System.currentTimeMillis();
+        startSafeAbortStackTrace = startSafeAbortThread.getStackTrace();
+
+        takeSnapshots("startSafeAbort." + comment);
+        safeAbortFuture = this.pddlExecutorJInternalFrame1.startSafeAbort(comment)
                 .thenRun(() -> {
                     if (null != continousDemoFuture) {
                         continousDemoFuture.cancelAll(true);
                         continousDemoFuture = null;
                     }
+                    setStopRunTime();
                 });
         return safeAbortFuture;
     }
@@ -504,6 +541,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private volatile Thread startSafeAbortAndDisconnectThread = null;
     private volatile long startSafeAbortAndDisconnectTime = -1;
     private volatile StackTraceElement startSafeAbortAndDisconnectStackTrace[] = null;
+
+    private volatile Thread startSafeAbortThread = null;
+    private volatile long startSafeAbortTime = -1;
+    private volatile StackTraceElement startSafeAbortStackTrace[] = null;
 
     /**
      * Safely abort the current CRCL program and then disconnect from the
@@ -517,15 +558,34 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return future providing info on when complete
      */
     public XFuture<Void> startSafeAbortAndDisconnect(String name) {
+        if (isAborting()) {
+            String errMsg = "startSafeAbort(" + name + ") called when already aborting";
+            setTitleErrorString(errMsg);
+            throw new IllegalStateException(errMsg);
+        }
         try {
             startSafeAbortAndDisconnectThread = Thread.currentThread();
             startSafeAbortAndDisconnectTime = System.currentTimeMillis();
             startSafeAbortAndDisconnectStackTrace = startSafeAbortAndDisconnectThread.getStackTrace();
 
-            safeAbortFuture
-                    = this.pddlExecutorJInternalFrame1.startSafeAbort()
-                            .thenCompose(name + ".disconnect." + robotName, x -> disconnectRobot());
-            return safeAbortFuture;
+            if (isConnected()) {
+                safeAbortFuture
+                        = this.pddlExecutorJInternalFrame1.startSafeAbort(name)
+                                .thenRun(() -> {
+//                                    if (null != continousDemoFuture) {
+//                                        continousDemoFuture.cancelAll(true);
+//                                        continousDemoFuture = null;
+//                                    }
+                                    setStopRunTime();
+                                });
+                safeAbortAndDisconnectFuture
+                        = safeAbortFuture
+                                .thenRunAsync(safeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService);
+            } else {
+                safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + name + ").alreadyDisconnected", null);
+                safeAbortAndDisconnectFuture = safeAbortFuture;
+            }
+            return safeAbortAndDisconnectFuture;
         } catch (Exception e) {
             setTitleErrorString(e.toString());
             XFuture<Void> ret = new XFuture<>("startSafeAbortAndDisconnect." + e.toString());
@@ -543,6 +603,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * leaves the robotName unchanged.
      */
     public XFuture<Void> disconnectRobot() {
+        disconnectRobotCount.incrementAndGet();
+        checkReadyToDisconnect();
+        enableCheckedAlready = false;
         disconnectRobotFuture = waitForPause().
                 thenRunAsync("disconnectRobot(" + getRobotName() + ")", this::disconnectRobotPrivate, connectService);
         System.out.println("disconnectRobotFuture = " + disconnectRobotFuture);
@@ -550,7 +613,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return disconnectRobotFuture;
     }
 
+    private final AtomicInteger disconnectRobotCount = new AtomicInteger();
+
     private void disconnectRobotPrivate() {
+        checkReadyToDisconnect();
+        enableCheckedAlready = false;
+        disconnectRobotCount.incrementAndGet();
+//        if (null != continousDemoFuture) {
+//            continousDemoFuture.cancelAll(true);
+//        }
+        setStopRunTime();
         setThreadName();
         if (null != pendantClientJInternalFrame) {
             pendantClientJInternalFrame.disconnect();
@@ -571,21 +643,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param port (TCP) port robot's CRCL server is bound to
      */
     public XFuture<Void> connectRobot(String robotName, String host, int port) {
-        if(isConnected()
+        if (isConnected()
                 && !isPaused()
                 && null != this.robotName
                 && Objects.equals(robotName, robotName)
                 && this.getRobotCrclHost().equals(host)
-                && this.getRobotCrclPort() == port
-                ) {
+                && this.getRobotCrclPort() == port) {
             return XFuture.completedFuture(null);
         }
+        enableCheckedAlready = false;
         return waitForPause().
                 thenRunAsync(() -> connectRobotPrivate(robotName, host, port), connectService);
     }
 
     private void connectRobotPrivate(String robotName, String host, int port) {
         setThreadName();
+        enableCheckedAlready = false;
         if (null != pendantClientJInternalFrame) {
             setRobotName(robotName);
             pendantClientJInternalFrame.connect(host, port);
@@ -629,7 +702,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             f.cancelAll(true);
         }
     }
-    
+
     private volatile XFuture<Void> lastPauseFuture = null;
 
     public XFuture<Void> waitForPause() {
@@ -645,7 +718,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return pauseFuture;
     }
 
-    private volatile XFuture<Void> lastContinueActionListFuture = null;
+    private volatile XFuture<Boolean> lastContinueActionListFuture = null;
     private volatile String lastContinueActionListFutureComment = null;
     private volatile int lastContinueStartAbortCount = -1;
 
@@ -662,7 +735,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * underlying task.
      *
      */
-    public XFuture<Void> continueActionList(String comment) {
+    public XFuture<Boolean> continueActionList(String comment) {
+        setStartRunTime();
         lastContinueActionListFutureComment = comment;
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         lastContinueStartAbortCount = startAbortCount;
@@ -674,11 +748,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                             return null;
                         }, runProgramService)
                         .thenCompose("continueActionList.pauseCheck", x -> waitForPause())
-                        .thenRun("pddlExecutorJInternalFrame1.completeActionList",
-                                () -> {
+                        .thenApply("pddlExecutorJInternalFrame1.completeActionList",
+                                (Void x) -> {
                                     if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                        pddlExecutorJInternalFrame1.completeActionList();
+                                        return pddlExecutorJInternalFrame1.completeActionList() && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+//                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
                                     }
+                                    return false;
                                 });
         return lastContinueActionListFuture;
     }
@@ -726,16 +802,37 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public void setRobotName(String robotName) {
         if (null == robotName) {
+            disconnectRobotCount.incrementAndGet();
+            enableCheckedAlready = false;
+            checkReadyToDisconnect();
             setRobotNameNullThread = Thread.currentThread();
             setRobotNameNullStackTrace = setRobotNameNullThread.getStackTrace();
             setRobotNameNullThreadTime = System.currentTimeMillis();
         } else {
+            if (!robotName.equals(this.robotName)) {
+                enableCheckedAlready = false;
+            }
             setRobotNameNonNullThread = Thread.currentThread();
             setRobotNameNonNullStackTrace = setRobotNameNonNullThread.getStackTrace();
             setRobotNameNonNullThreadTime = System.currentTimeMillis();
         }
         this.robotName = robotName;
         Utils.runOnDispatchThread(() -> updateTitle("", ""));
+    }
+
+    private void checkReadyToDisconnect() throws IllegalStateException {
+        if (isRunningCrclProgram()) {
+            String msg = "setRobotName(null)/disconnect() called when running crcl program";
+            setTitleErrorString(msg);
+            boolean chk = isRunningCrclProgram();
+            throw new IllegalStateException(msg);
+        }
+        if (isDoingActions()) {
+            String msg = "setRobotName(null)/disconnect() called when running doing actions";
+            setTitleErrorString(msg);
+            boolean chk = isDoingActions();
+            throw new IllegalStateException(msg);
+        }
     }
 
     /**
@@ -847,6 +944,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * in the schema
      */
     public synchronized XFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException {
+        setStartRunTime();
         if (null != pendantClientJInternalFrame) {
             lastRunProgramFuture = XFuture.supplyAsync(getRunName() + ".startCRCLProgram(" + program.getName() + ")",
                     () -> {
@@ -898,7 +996,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             lastResumeFuture.cancelAll(true);
             lastResumeFuture = null;
         }
-        if(null != lastPauseFuture) {
+        if (null != lastPauseFuture) {
             lastPauseFuture.cancelAll(true);
             lastPauseFuture = null;
         }
@@ -928,6 +1026,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public String getDetailsString() {
         StringBuilder sb = new StringBuilder();
+        sb.append(this.toString()).append("\r\n");
         if (null != pendantClientJInternalFrame) {
             CRCLCommandType cmd = pendantClientJInternalFrame.getCurrentProgramCommand();
             if (null != cmd) {
@@ -950,11 +1049,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         && null != status.getCommandStatus().getStateDescription()
                         && status.getCommandStatus().getStateDescription().length() > 0) {
                     sb.append("state description = ").append(status.getCommandStatus().getStateDescription()).append("\r\n");
-                } else {
-                    sb.append("state description = \r\n");
                 }
             });
-            pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state=").append(state).append("\r\n"));
+//            pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state=").append(state).append("\r\n"));
         }
         if (null != pddlExecutorJInternalFrame1) {
             List<PddlAction> actions = pddlExecutorJInternalFrame1.getActionsList();
@@ -980,10 +1077,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         sb.append("reverseFlag=").append(jCheckBoxMenuItemReverse.isSelected()).append(", ");
         sb.append("paused=").append(jCheckBoxMenuItemPause.isSelected()).append("\r\n");
         sb.append("run_name=").append(this.getRunName()).append("\r\n");
-        sb.append("crclRunning=").append(this.isRunningCrclProgram()).append("\r\n");
         if (null != this.getCrclProgram()) {
             sb.append("crclProgramName=").append(this.getCrclProgram().getName()).append("\r\n");
         }
+        sb.append("crclRunning=").append(this.isRunningCrclProgram()).append(", ");
+        sb.append("isDoingActions=").append(isDoingActions()).append(", ");
+        sb.append("isRunning=").append(running.get()).append(", ");
+        long runDuration = getRunDuration();
+        long stopDuration = getStopDuration();
+        long totalTime = runDuration+stopDuration;
+        sb.append("runDuration=").append(Utils.runTimeToString(runDuration)).append(", ");
+        sb.append("stopDuration=").append(Utils.runTimeToString(stopDuration)).append(", ");
+        sb.append("totalDuration=").append(Utils.runTimeToString(totalTime)).append("\r\n");
         String crclClientErrString = getCrclClientErrorString();
         if (null != crclClientErrString && crclClientErrString.length() > 0
                 && !Objects.equals(titleErrorString, crclClientErrString)) {
@@ -1096,6 +1201,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private volatile String lastNewTitleErrorString = null;
 
+    private volatile StackTraceElement setTitleErrorStringTrace[] = null;
+
+    public StackTraceElement[] getSetTitleErrorStringTrace() {
+        return setTitleErrorStringTrace;
+    }
+
     /**
      * Set the title error string, which should be a short string identifying
      * the most critical problem if there is one appropriate for displaying in
@@ -1121,6 +1232,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }
                 updateTitle();
                 if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
+                    setTitleErrorStringTrace = Thread.currentThread().getStackTrace();
                     System.err.println(newTitleErrorString);
                     takeSnapshots("setTitleError_" + newTitleErrorString + "_");
                     pause();
@@ -1161,6 +1273,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     final static private AtomicInteger runProgramThreadCount = new AtomicInteger();
 
     private final int myThreadId = runProgramThreadCount.incrementAndGet();
+
+    public int getMyThreadId() {
+        return myThreadId;
+    }
 
     public String getThreadName() {
         return "AprsJframe." + myThreadId + "." + getRunName();
@@ -1697,6 +1813,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return null;
     }
 
+    public boolean isAborting() {
+        return (null != safeAbortAndDisconnectFuture && !safeAbortAndDisconnectFuture.isDone())
+                || (null != safeAbortFuture && !safeAbortFuture.isDone());
+    }
+
     private void updateTitle(String stateString, String stateDescription) {
         String oldTitle = getTitle();
         String crclClientError = getCrclClientErrorString();
@@ -1708,10 +1829,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (isPaused()) {
             stateString = "PAUSED";
         }
-        String newTitle = "APRS : " + ((robotName != null) ? robotName : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : "
+        String newTitle = "APRS : " + ((robotName != null) ? robotName + (isConnected() ? "" : "(Disconnected)") : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : "
                 + stateDescription
                 + ((titleErrorString != null) ? ": " + titleErrorString : "")
-                + ((pddlExecutorJInternalFrame1 != null) ? (" : " + pddlExecutorJInternalFrame1.getActionSetsCompleted()) : "");
+                + ((pddlExecutorJInternalFrame1 != null) ? (" : " + pddlExecutorJInternalFrame1.getActionSetsCompleted()) : "")
+                + (isAborting() ? " : Aborting" : "")
+                + (isReverseFlag() ? " : Reverse" : "");
         if (newTitle.length() > 90) {
             newTitle = newTitle.substring(0, 90) + " ... ";
         }
@@ -3080,25 +3203,101 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         System.out.println("startSafeAbortAndDisconnectTime = " + (curTime - startSafeAbortAndDisconnectTime));
     }
 
-    private XFuture<Void> continousDemoFuture = null;
+    private XFuture<Boolean> continousDemoFuture = null;
 
-    public XFuture<Void> startContinousDemo(boolean reverseFirst) {
+    private XFuture<Boolean> retryCompleteActions(String comment, int retryNumber, boolean alreadyComplete) {
+        if (alreadyComplete) {
+            return XFuture.completedFuture(true);
+        } else {
+            return continueActionList(comment + ".retry" + retryNumber)
+                    .thenComposeAsync(x -> retryCompleteActions(comment, retryNumber + 1, x), runProgramService);
+        }
+    }
+
+    public XFuture<Boolean> startContinousDemo(boolean reverseFirst) {
+        int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        int startDisconnectCount = disconnectRobotCount.get();
+        continousDemoFuture = startContinousDemo(reverseFirst, startAbortCount, startDisconnectCount);
+        return continousDemoFuture;
+    }
+
+    private XFuture<Boolean> startContinousDemo(boolean reverseFirst, int startAbortCount, int startDisconnectCount) {
+        if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount()) {
+            return XFuture.completedFuture(false);
+        }
+        setStartRunTime();
         this.setReverseFlag(reverseFirst);
-        return startCheckEnabled()
-                .thenCompose("starContinousDemo(task=" + getTaskName() + ")",
-                        x -> {
-                            if (x) {
-                                return startActions()
-                                        .thenRun("starContinousDemo(task=" + getTaskName() + ").setReverseFlag",
-                                                () -> setReverseFlag(!reverseFirst))
-                                        .thenCompose("starContinousDemo(task=" + getTaskName() + ").startActions",
-                                                x2 -> startActions())
-                                        .thenCompose("starContinousDemo(task=" + getTaskName() + ").recurse",
-                                                x2 -> x ? startContinousDemo(reverseFirst) : XFuture.completedFutureWithName("startContinousDemo.completedFutureWithName", null));
-                            } else {
-                                return Utils.runOnDispatchThread(() -> jCheckBoxMenuItemContinousDemo.setSelected(false));
-                            }
-                        });
+        continousDemoFuture = startCheckEnabled()
+                .thenApplyAsync("starContinousDemo(task=" + getTaskName() + ")",
+                        (Boolean x) -> {
+                            return doActionsWithReverse(x, reverseFirst, startAbortCount, startDisconnectCount);
+                        }, runProgramService)
+                .thenComposeAsync("starContinousDemo(task=" + getTaskName() + ").recurse",
+                        x2 -> x2 ? startContinousDemo(reverseFirst, startAbortCount, startDisconnectCount) : XFuture.completedFutureWithName("startContinousDemo.completedFutureWithName", false),
+                        runProgramService);
+        return continousDemoFuture;
+    }
+
+    private boolean doActionsWithReverse(Boolean x, boolean reverseFirst, int startAbortCount, int startDisconnectCount) throws IllegalStateException {
+        if (isReverseFlag() != reverseFirst) {
+            System.err.println("Reverse flag changed as starting continuous demo.");
+            setTitleErrorString("Reverse flag changed as starting continuous demo.");
+            throw new IllegalStateException("Reverse flag changed as starting continuous demo.");
+        }
+        if (x
+                && !isAborting()
+                && pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount
+                && startDisconnectCount == disconnectRobotCount.get()) {
+
+            boolean actionsOk = pddlExecutorJInternalFrame1.doActions();
+            if (isReverseFlag() != reverseFirst) {
+                System.err.println("Reverse flag changed as starting continuous demo.");
+                setTitleErrorString("Reverse flag changed as starting continuous demo.");
+                throw new IllegalStateException("Reverse flag changed as starting continuous demo.");
+            }
+            if (actionsOk
+                    && !isAborting()
+                    && pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount
+                    && startDisconnectCount == disconnectRobotCount.get()) {
+                setReverseFlag(!reverseFirst);
+                actionsOk = pddlExecutorJInternalFrame1.doActions();
+                return actionsOk;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public XFuture<Boolean> startPreCheckedContinousDemo(boolean reverseFirst) {
+        int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        int startDisconnectCount = disconnectRobotCount.get();
+        continousDemoFuture = startPreCheckedContinousDemo(reverseFirst, startAbortCount, startDisconnectCount);
+        return continousDemoFuture;
+    }
+
+    public XFuture<Boolean> startPreCheckedContinousDemo(boolean reverseFirst, int startAbortCount, int startDisconnectCount) {
+        if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount()) {
+            return XFuture.completedFuture(false);
+        }
+        setStartRunTime();
+        this.setReverseFlag(reverseFirst);
+        if (!enableCheckedAlready) {
+            return XFuture.completedFutureWithName("startPreCheckedContinousDemo(" + reverseFirst + "," + startAbortCount + ").!enableCheckedAlready", false);
+        }
+        continousDemoFuture = XFuture.supplyAsync("startPreCheckedContinousDemo(task=" + getTaskName() + ")",
+                () -> {
+                    return doActionsWithReverse(true, reverseFirst, startAbortCount, startDisconnectCount);
+                }, runProgramService)
+        .thenComposeAsync("startPreCheckedContinousDemo(task=" + getTaskName() + ").recurse",
+                        x2 -> x2 ? startPreCheckedContinousDemo(reverseFirst, startAbortCount, startDisconnectCount) : XFuture.completedFutureWithName("startContinousDemo.completedFutureWithName", false),
+                        runProgramService);
+        return continousDemoFuture;
+    }
+        
+
+    public boolean isReverseFlag() {
+        return jCheckBoxMenuItemReverse.isSelected();
     }
 
     public void setReverseFlag(boolean reverseFlag) {
@@ -3224,6 +3423,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private final AtomicInteger checkEnabledCount = new AtomicInteger();
 
+    private volatile boolean enableCheckedAlready = false;
+
     /**
      * Test that the robot can be connected by running an empty program.
      *
@@ -3235,6 +3436,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startCheckEnabled() {
+        setStartRunTime();
+        if (enableCheckedAlready) {
+            return XFuture.completedFutureWithName("startCheckEnabled.enableCheckedAlready", true);
+        }
         try {
             System.out.println("startCheckEnabled called.");
             if (!isConnected()) {
@@ -3248,6 +3453,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     .thenApply("startCheckEnabled.finish." + robotName + "." + taskName,
                             x -> {
                                 System.out.println("startCheckEnabled finishing with " + x);
+                                enableCheckedAlready = x;
                                 return x;
                             });
         } catch (JAXBException ex) {
@@ -3270,7 +3476,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return lastStartActionsFuture;
     }
 
-    public XFuture<Void> getContinueActionListFuture() {
+    public XFuture<Boolean> getContinueActionListFuture() {
         return lastContinueActionListFuture;
     }
 
@@ -3286,7 +3492,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startActions() {
+
+        setStartRunTime();
         runNumber++;
+        int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        lastContinueStartAbortCount = startAbortCount;
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1";
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(jCheckBoxMenuItemReloadSimFilesOnReverse.isSelected());
@@ -3313,10 +3523,30 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }, runProgramService)
                 .thenCompose("startActions.pauseCheck", x -> waitForPause())
                 .thenApply(taskName, x -> {
+                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() != startAbortCount) {
+                        return false;
+                    }
                     return pddlExecutorJInternalFrame1.doActions();
                 }
                 );
         return lastStartActionsFuture;
+    }
+
+    private void checkReadyToRun() throws IllegalStateException {
+        if (null == robotName || robotName.length() < 1) {
+            String msg = "startActions called with robotName= " + robotName;
+            setTitleErrorString(msg);
+            throw new IllegalStateException(msg);
+        }
+        if (isAborting()) {
+            String msg = "startActions called with safeAbortFuture= " + safeAbortFuture;
+            setTitleErrorString(msg);
+            throw new IllegalStateException(msg);
+        }
+    }
+
+    public boolean isDoingActions() {
+        return pddlExecutorJInternalFrame1.isDoingActions();
     }
 
     public void showKitInspection() {
@@ -4286,6 +4516,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      */
     public XFuture<Boolean> continueCrclProgram() {
+        setStartRunTime();
         if (null != pendantClientJInternalFrame) {
             return pendantClientJInternalFrame.continueCurrentProgram();
 //                    .thenApply(this::completeCrclProgramContinuation);
@@ -4342,7 +4573,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     @Override
     public String toString() {
-        return super.toString() + getTitle();
+        return getTitle();
     }
 
 }

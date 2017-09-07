@@ -135,7 +135,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private boolean takeSnapshots = false;
     private final AtomicInteger crclNumber = new AtomicInteger();
     private final ConcurrentMap<String, PoseType> poseCache = new ConcurrentHashMap<>();
-    private KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
+    private volatile KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
     private volatile boolean pauseInsteadOfRecover;
 
@@ -1282,6 +1282,32 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         kitInspectionJInternalFrame.getKitImageLabel().setIcon(kitInspectionJInternalFrame.createImageIcon(kitStatusImage));
     }
 
+    private void kitInspectionJInternalFrameKitTitleLabelSetText(String text) {
+        final KitInspectionJInternalFrame kitFrame = kitInspectionJInternalFrame;
+        if (null != kitFrame) {
+            Utils.runOnDispatchThread(() -> {
+                try {
+                    kitInspectionJInternalFrame.getKitTitleLabel().setText(text);
+                } catch (Exception ex) {
+                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        }
+    }
+
+    private void addToInspectionResultJTextPane(String text) {
+        final KitInspectionJInternalFrame kitFrame = kitInspectionJInternalFrame;
+        if (null != kitFrame) {
+            Utils.runOnDispatchThread(() -> {
+                try {
+                    kitFrame.addToInspectionResultJTextPane(text);
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        }
+    }
+
     /**
      * Inspects a finished kit to check if it is complete
      *
@@ -1301,8 +1327,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalArgumentException("action = " + action + " needs at least two arguments: kitSku inspectionID");
         }
         if (PlacePartSlotPoseList.isEmpty()) {
-            kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;No place part slots added. </h3><br>");
-            kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
+            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;No place part slots added. </h3><br>");
+            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
             takeSnapshots("plan", "PlacePartSlotPoseList.isEmpty()-inspect-kit-", null, "");
             return;
         }
@@ -1393,7 +1419,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
                 setCorrectKitImage();
                 if (numberOfPartsInKit == partDesignPartCount) {
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #7ef904\">&nbsp;&nbsp;The kit is complete</h3><br>");
+                    addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #7ef904\">&nbsp;&nbsp;The kit is complete</h3><br>");
                 } else {
                     try {
                         takeSimViewSnapshot(aprsJFrame.createTempFile("inspectKit-slotList", ".PNG"), slotList);
@@ -1404,20 +1430,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     //if (part_in_kt_found) {
                     TakenPartList.clear();
                     int nbofmissingparts = partDesignPartCount - numberOfPartsInKit;
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"background-color: #ffb5b5; color: #ffffff\">&nbsp;&nbsp;The kit is missing " + nbofmissingparts + " part(s)</h3>");
+                    addToInspectionResultJTextPane("<h3 style=\"background-color: #ffb5b5; color: #ffffff\">&nbsp;&nbsp;The kit is missing " + nbofmissingparts + " part(s)</h3>");
                     for (Slot s : EmptySlotSet) {
-                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
+                        addToInspectionResultJTextPane("&nbsp;&nbsp;Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
                     }
                     if (nbofmissingparts == 1) {
-                        kitInspectionJInternalFrame.getKitTitleLabel().setText("Missing " + nbofmissingparts + " part. Getting the new part.");
+                        kitInspectionJInternalFrameKitTitleLabelSetText("Missing " + nbofmissingparts + " part. Getting the new part.");
                     } else {
-                        kitInspectionJInternalFrame.getKitTitleLabel().setText("Missing " + nbofmissingparts + " parts. Getting the new parts.");
+                        kitInspectionJInternalFrameKitTitleLabelSetText("Missing " + nbofmissingparts + " parts. Getting the new parts.");
                     }
-                    try {
-                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;Recovering from failures</h2>");
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;Recovering from failures</h2>");
                     Map<String, List<String>> partSkuMap = new HashMap();
 
                     //-- Build a map where the key is the part sku for a slot
@@ -1444,7 +1466,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             if (partSKU.startsWith("sku_")) {
                                 partSKU = partSKU.substring(4).concat("_in_pt");
                             }
-                            kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;Getting a list of part_in_pt for sku " + partSKU + "<br>");
+                            addToInspectionResultJTextPane("&nbsp;&nbsp;Getting a list of part_in_pt for sku " + partSKU + "<br>");
 
                             //-- get list of part_in_pt based on the part sku
                             List<String> listOfParts = partSkuMap.get(partSKU);
@@ -1460,20 +1482,20 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                 PddlAction takepartrecoveryaction = PddlAction.parse("(place-part " + s.getSlotName() + ")");
                                 placePartRecovery(takepartrecoveryaction, s, out);
                             } else {
-                                // kitInspectionJInternalFrame.addToInspectionResultJTextPane("Could not find part_in_pt for sku " + partSKU + " from the database<b
-                                kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Could not find part_in_pt for sku " + partSKU + " from the database</h3><br>");
-                                kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Recovery Aborted</h3><br>");
+                                // addToInspectionResultJTextPane("Could not find part_in_pt for sku " + partSKU + " from the database<b
+                                addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Could not find part_in_pt for sku " + partSKU + " from the database</h3><br>");
+                                addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Recovery Aborted</h3><br>");
                             }
                         }
                     } else {
-                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Could not find parts in_pt from the database</h3><br>");
-                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Recovery Aborted</h3><br>");
+                        addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Could not find parts in_pt from the database</h3><br>");
+                        addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Recovery Aborted</h3><br>");
                     }
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("<br>");
+                    addToInspectionResultJTextPane("<br>");
                 }
             } else {
-                kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;The system could not identify the kit tray that was built. (kitSku=" + kitSku + ") </h3><br>");
-                kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
+                addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;The system could not identify the kit tray that was built. (kitSku=" + kitSku + ") </h3><br>");
+                addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
                 System.err.println("Trying to get correctPartsTray again ...");
                 correctPartsTray = findCorrectKitTray(kitSku);
                 System.out.println("msg = " + msg);
@@ -1703,7 +1725,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
             //part_in_kt_found=true;
         } else {
-            kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;No part_in_kt of type " + partInKt + " was found in the database<br>");
+            addToInspectionResultJTextPane("&nbsp;&nbsp;No part_in_kt of type " + partInKt + " was found in the database<br>");
             //part_in_kt_found=false;
         }
         return nbOfOccupiedSlots;
@@ -1850,13 +1872,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, (CrclCommandWrapper ccw) -> {
             System.out.println(markerMsg + " at " + new Date());
-            if (null != kitInspectionJInternalFrame) {
-                try {
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
         });
         lastTakenPart = partName;
         //inspectionList.add(partName);
@@ -1894,13 +1910,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
-            if (null != kitInspectionJInternalFrame) {
-                try {
-                    kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
         });
         lastTakenPart = partName;
         if (partName.indexOf('_') > 0) {
@@ -1944,11 +1954,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String markerMsg = "took part " + partName;
         addMarkerCommand(out, markerMsg, x -> {
             System.out.println(markerMsg + " at " + new Date());
-            try {
-                kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
-            } catch (BadLocationException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
         });
         lastTakenPart = partName;
         if (partName.indexOf('_') > 0) {
@@ -2848,37 +2854,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (action.getArgs().length >= 1) {
             if (action.getArgs()[0].startsWith("1")) {
                 addMarkerCommand(out, "Inspecting kit", x -> {
-                    kitInspectionJInternalFrame.getKitTitleLabel().setText("Inspecting kit");
-                    try {
-                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR:" + messageColorH3 + "\">&nbsp;&nbsp;Inspecting kit</h2>");
-
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class
-                                .getName()).log(Level.SEVERE, null, ex);
-                    }
+                    kitInspectionJInternalFrameKitTitleLabelSetText("Inspecting kit");
+                    addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR:" + messageColorH3 + "\">&nbsp;&nbsp;Inspecting kit</h2>");
                 });
 
             } else if (action.getArgs()[0].startsWith("0")) {
                 addMarkerCommand(out, "Building kit", x -> {
-                    kitInspectionJInternalFrame.getKitTitleLabel().setText("Building kit");
-                    try {
-                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;Building kit</h2>");
-
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class
-                                .getName()).log(Level.SEVERE, null, ex);
-                    }
+                    kitInspectionJInternalFrameKitTitleLabelSetText("Building kit");
+                    addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;Building kit</h2>");
                 });
             } else if (action.getArgs()[0].startsWith("2")) {
                 addMarkerCommand(out, "All Tasks Completed", x -> {
-                    kitInspectionJInternalFrame.getKitTitleLabel().setText("All Tasks Completed");
-                    try {
-                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;All tasks completed</h2>");
-
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class
-                                .getName()).log(Level.SEVERE, null, ex);
-                    }
+                    kitInspectionJInternalFrameKitTitleLabelSetText("All Tasks Completed");
+                    addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;All tasks completed</h2>");
                 });
             }
         } else {
@@ -2937,7 +2925,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         private final int outIndex;
         private CrclCommandWrapper wrapper = null;
         private final int startSafeAbortRequestCount;
-        
+
         public PlacePartInfo(PddlAction action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount) {
             this.action = action;
             this.pddlActionIndex = pddlActionIndex;
@@ -2968,7 +2956,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         public int getStartSafeAbortRequestCount() {
             return startSafeAbortRequestCount;
         }
-        
+
         @Override
         public String toString() {
             return "{action(" + pddlActionIndex + ")=" + outIndex + ":" + action + '}';
@@ -3049,7 +3037,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private volatile int startSafeAbortRequestCount;
-    
+
     public void placePartBySlotName(String slotName, List<MiddleCommandType> out, PddlAction action) throws IllegalStateException, SQLException {
         PoseType pose = getPose(slotName);
         if (null != pose) {
@@ -3074,20 +3062,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
                     takeSnapshots("plan", "returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPart);
-                    final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(),startSafeAbortRequestCount);
+                    final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(), startSafeAbortRequestCount);
                     addMarkerCommand(out, msg,
                             ((CrclCommandWrapper wrapper) -> {
-                                try {
-                                    if (null != kitInspectionJInternalFrame) {
-                                        kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
-                                    }
-                                    System.out.println(msg + " completed at " + new Date());
-                                    ppi.setWrapper(wrapper);
-                                    notifyPlacePartConsumers(ppi);
-                                } catch (BadLocationException ex) {
-                                    Logger.getLogger(PddlActionToCrclGenerator.class
-                                            .getName()).log(Level.SEVERE, null, ex);
-                                }
+                                addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
+                                System.out.println(msg + " completed at " + new Date());
+                                ppi.setWrapper(wrapper);
+                                notifyPlacePartConsumers(ppi);
                             }));
                     return;
                 }
@@ -3098,21 +3079,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         placePartByPose(out, pose);
-        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(),startSafeAbortRequestCount);
+        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(), startSafeAbortRequestCount);
         addMarkerCommand(out, msg,
                 ((CrclCommandWrapper wrapper) -> {
-                    try {
-                        if (null != kitInspectionJInternalFrame) {
-                            kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
-                        }
-                        System.out.println(msg + " completed at " + new Date());
-                        ppi.setWrapper(wrapper);
-                        notifyPlacePartConsumers(ppi);
-
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class
-                                .getName()).log(Level.SEVERE, null, ex);
-                    }
+                    addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
+                    System.out.println(msg + " completed at " + new Date());
+                    ppi.setWrapper(wrapper);
+                    notifyPlacePartConsumers(ppi);
                 }));
         return;
     }
@@ -3143,21 +3116,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setZAxis(zAxis);
         PlacePartSlotPoseList.add(pose);
         placePartByPose(out, pose);
-        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(),startSafeAbortRequestCount);
+        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(), startSafeAbortRequestCount);
         addMarkerCommand(out, msg,
                 ((CrclCommandWrapper wrapper) -> {
                     System.out.println(msg + " completed at " + new Date());
                     ppi.setWrapper(wrapper);
                     notifyPlacePartConsumers(ppi);
-                    if (null != kitInspectionJInternalFrame) {
-                        try {
-                            kitInspectionJInternalFrame.addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
-
-                        } catch (BadLocationException ex) {
-                            Logger.getLogger(PddlActionToCrclGenerator.class
-                                    .getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
+                    addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
                 }));
     }
 

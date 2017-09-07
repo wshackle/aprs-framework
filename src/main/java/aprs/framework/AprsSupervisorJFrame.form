@@ -209,6 +209,22 @@
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemRandomTestReverseFirstActionPerformed"/>
                   </Events>
                 </MenuItem>
+                <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemIndContinousDemo">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="(Independant) Continous Demo"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemIndContinousDemoActionPerformed"/>
+                  </Events>
+                </MenuItem>
+                <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemIndRandomToggleTest">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="(Independant) Continous Demo With Randomized Enable Toggle    "/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemIndRandomToggleTestActionPerformed"/>
+                  </Events>
+                </MenuItem>
               </SubComponents>
             </Menu>
           </SubComponents>
@@ -247,6 +263,20 @@
               <Properties>
                 <Property name="selected" type="boolean" value="true"/>
                 <Property name="text" type="java.lang.String" value="Show Full Screeen  Messages"/>
+              </Properties>
+            </MenuItem>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemFixedRandomTestSeed">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Fixed Random Test Seed ... "/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemFixedRandomTestSeedActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemPauseAllForOne">
+              <Properties>
+                <Property name="selected" type="boolean" value="true"/>
+                <Property name="text" type="java.lang.String" value="Pause All when One System Pauses"/>
               </Properties>
             </MenuItem>
           </SubComponents>
@@ -940,10 +970,13 @@
               <SubComponents>
                 <Component class="javax.swing.JTable" name="jTableEvents">
                   <Properties>
+                    <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                      <Table columnCount="2" rowCount="0">
+                      <Table columnCount="4" rowCount="0">
                         <Column editable="false" title="Time" type="java.lang.String"/>
+                        <Column editable="false" title="Locks" type="java.lang.Integer"/>
                         <Column editable="false" title="Event" type="java.lang.String"/>
+                        <Column editable="false" title="Thread" type="java.lang.String"/>
                       </Table>
                     </Property>
                   </Properties>

@@ -369,6 +369,15 @@ public class Utils {
             }
         }
     }
+    
+    static public String runTimeToString(long runningTimeMillis) {
+        long runningTimeSecondsTotal = runningTimeMillis / 1000;
+        long runningTimeHours = runningTimeSecondsTotal / 3600;
+        long runningTimeMinutes = (runningTimeSecondsTotal % 3600) / 60;
+        long runningTimeSeconds = (runningTimeSecondsTotal % 60);
+        String s = String.format("%02d:%02d:%02d", runningTimeHours, runningTimeMinutes, runningTimeSeconds) + " (" + runningTimeSecondsTotal + " Total Seconds)";
+        return s;
+    }
 
 //    public static void main(String[] args) {
 //

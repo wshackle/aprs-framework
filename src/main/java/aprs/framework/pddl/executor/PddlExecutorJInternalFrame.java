@@ -104,8 +104,8 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         actionsToCrclJPanel1.abortProgram();
     }
 
-    public XFuture<Void> startSafeAbort() {
-        return this.actionsToCrclJPanel1.startSafeAbort();
+    public XFuture<Void> startSafeAbort(String name) {
+        return this.actionsToCrclJPanel1.startSafeAbort(name);
     }
 
     public int getCurrentActionIndex() {
@@ -126,8 +126,8 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return this.actionsToCrclJPanel1.continueActionList();
     }
 
-    public void completeActionList() {
-        this.actionsToCrclJPanel1.completeActionList();
+    public boolean completeActionList() {
+        return this.actionsToCrclJPanel1.completeActionList();
     }
     
     public int getActionSetsCompleted() {
@@ -265,6 +265,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return actionsToCrclJPanel1.startActions();
     }
 
+    public boolean isDoingActions() {
+        return actionsToCrclJPanel1.isDoingActions();
+    }
+    
     public boolean doActions() {
         return actionsToCrclJPanel1.doActions();
     }
