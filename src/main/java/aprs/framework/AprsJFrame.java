@@ -3277,13 +3277,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public XFuture<Boolean> startPreCheckedContinousDemo(boolean reverseFirst, int startAbortCount, int startDisconnectCount) {
-        if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount()) {
-            return XFuture.completedFuture(false);
+        int safeAbortRequestCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        if (startAbortCount != safeAbortRequestCount) {
+            continousDemoFuture =  XFuture.completedFutureWithName("startPreCheckedContinousDemo(" + reverseFirst + "," + startAbortCount + ").safeAbortRequestCount="+safeAbortRequestCount,false);
+            return continousDemoFuture;
         }
         setStartRunTime();
         this.setReverseFlag(reverseFirst);
         if (!enableCheckedAlready) {
-            return XFuture.completedFutureWithName("startPreCheckedContinousDemo(" + reverseFirst + "," + startAbortCount + ").!enableCheckedAlready", false);
+            continousDemoFuture=  XFuture.completedFutureWithName("startPreCheckedContinousDemo(" + reverseFirst + "," + startAbortCount + ").!enableCheckedAlready", false);
+            return continousDemoFuture;
         }
         continousDemoFuture = XFuture.supplyAsync("startPreCheckedContinousDemo(task=" + getTaskName() + ")",
                 () -> {

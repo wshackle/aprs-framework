@@ -818,10 +818,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
             synchronized (get_tray_slots_statement) {
                 List<Object> paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
                 String getTraySlotsQueryStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
-                if (!enableDatabaseUpdates && dbQueryLogPrintStream != null) {
-                    dbQueryLogPrintStream.println();
-                    dbQueryLogPrintStream.println(getTraySlotsQueryStringFilled);
-                    dbQueryLogPrintStream.println();
+                try {
+                    PrintStream ps = dbQueryLogPrintStream;
+                    if (!enableDatabaseUpdates && ps != null) {
+                        ps.println();
+                        ps.println(getTraySlotsQueryStringFilled);
+                        ps.println();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
                 boolean exec_result = get_tray_slots_statement.execute();
                 if (exec_result) {
@@ -1228,21 +1233,22 @@ public class DatabasePoseUpdater implements AutoCloseable {
             if (enableDatabaseUpdates) {
                 File dbQueriesDir = new File(Utils.getlogFileDir(), "dbQueries");
                 dbQueriesDir.mkdirs();
-                dbQueryLogPrintStream = new PrintStream(new FileOutputStream(Utils.createTempFile("db_" + dbsetup.getPort(), "_log.txt", dbQueriesDir)));
+                PrintStream ps  = new PrintStream(new FileOutputStream(Utils.createTempFile("db_" + dbsetup.getPort(), "_log.txt", dbQueriesDir)));
                 for (Entry<String, List<Slot>> offsetEntry : offsetsMap.entrySet()) {
-                    dbQueryLogPrintStream.println();
-                    dbQueryLogPrintStream.println(commentStartString + " offsetsMap.key =" + offsetEntry.getKey());
+                    ps.println();
+                    ps.println(commentStartString + " offsetsMap.key =" + offsetEntry.getKey());
                     List<Slot> l = offsetEntry.getValue();
-                    dbQueryLogPrintStream.println(commentStartString + " offsetsMap.value =" + l);
+                    ps.println(commentStartString + " offsetsMap.value =" + l);
                     if (!l.isEmpty() && null != l.get(0) && null != l.get(0).getNewSlotQuery()) {
-                        dbQueryLogPrintStream.println();
-                        dbQueryLogPrintStream.println(l.get(0).getNewSlotQuery());
-                        dbQueryLogPrintStream.println();
+                        ps.println();
+                        ps.println(l.get(0).getNewSlotQuery());
+                        ps.println();
                     }
-                    dbQueryLogPrintStream.println();
+                    ps.println();
+                    dbQueryLogPrintStream=ps;
                 }
             }
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -1291,10 +1297,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
         List<PhysicalItem> itemsToVerify = new ArrayList<>();
         List<PhysicalItem> returnedList = new ArrayList<>();
         final boolean edu = this.enableDatabaseUpdates;
-        if (edu && null != dbQueryLogPrintStream) {
-            dbQueryLogPrintStream.println();
-            dbQueryLogPrintStream.println(commentStartString + " updateVisionList : start dateTimeString = " + Utils.getDateTimeString());
-            dbQueryLogPrintStream.println(commentStartString + " updateVisionList : inList = " + inList);
+        try {
+            PrintStream ps = dbQueryLogPrintStream;
+            if (edu && null != ps) {
+                ps.println();
+                ps.println(commentStartString + " updateVisionList : start dateTimeString = " + Utils.getDateTimeString());
+                ps.println(commentStartString + " updateVisionList : inList = " + inList);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         try {
             if (updateCount < 1) {
@@ -1425,12 +1436,17 @@ public class DatabasePoseUpdater implements AutoCloseable {
             assert (max_vision_cycle == min_vision_cycle) :
                     ("max_vision_cycle(" + max_vision_cycle + ") != min_vision_cycle(" + min_vision_cycle + ") in list= " + list);
 
-            if (edu && null != dbQueryLogPrintStream) {
-                dbQueryLogPrintStream.println(commentStartString + " updateVisionList : max_vision_cycle = " + max_vision_cycle);
-                dbQueryLogPrintStream.println(commentStartString + " updateVisionList : min_vision_cycle = " + min_vision_cycle);
-                dbQueryLogPrintStream.println(commentStartString + " updateVisionList : last_max_vision_cycle = " + last_max_vision_cycle);
-                dbQueryLogPrintStream.println(commentStartString + " updateVisionList : list = " + list);
-                dbQueryLogPrintStream.println();
+            try {
+                PrintStream ps = dbQueryLogPrintStream;
+                if (edu && null != ps) {
+                    ps.println(commentStartString + " updateVisionList : max_vision_cycle = " + max_vision_cycle);
+                    ps.println(commentStartString + " updateVisionList : min_vision_cycle = " + min_vision_cycle);
+                    ps.println(commentStartString + " updateVisionList : last_max_vision_cycle = " + last_max_vision_cycle);
+                    ps.println(commentStartString + " updateVisionList : list = " + list);
+                    ps.println();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
             last_max_vision_cycle = max_vision_cycle;
             long t0_nanos = System.nanoTime();
@@ -1572,11 +1588,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
             if (millis_diff > maxUpdateTimeMillis) {
                 maxUpdateTimeMillis = millis_diff;
             }
-            if (edu && null != dbQueryLogPrintStream) {
-                dbQueryLogPrintStream.println();
-                dbQueryLogPrintStream.println(commentStartString + " updateVisionList : end dateTimeString = " + Utils.getDateTimeString());
-                dbQueryLogPrintStream.println(commentStartString + " updateVisionList : millis_diff = " + millis_diff);
-                dbQueryLogPrintStream.println();
+            try {
+                PrintStream ps = dbQueryLogPrintStream;
+                if (edu && null != ps) {
+                    ps.println();
+                    ps.println(commentStartString + " updateVisionList : end dateTimeString = " + Utils.getDateTimeString());
+                    ps.println(commentStartString + " updateVisionList : millis_diff = " + millis_diff);
+                    ps.println();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
             totalListUpdates++;
             totalUpdates = poses_updated;
@@ -1822,10 +1843,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         = queryStringFilled.replace("?", Objects.toString(paramsList.get(paramIndex - 1)));
             }
         }
-        if (enableDatabaseUpdates && dbQueryLogPrintStream != null) {
-            dbQueryLogPrintStream.println();
-            dbQueryLogPrintStream.println(queryStringFilled);
-            dbQueryLogPrintStream.println();
+        try {
+            PrintStream ps = dbQueryLogPrintStream;
+            if (enableDatabaseUpdates && ps != null) {
+                ps.println();
+                ps.println(queryStringFilled);
+                ps.println();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return queryStringFilled;
     }

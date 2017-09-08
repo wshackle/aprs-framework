@@ -279,6 +279,11 @@
                 <Property name="text" type="java.lang.String" value="Pause All when One System Pauses"/>
               </Properties>
             </MenuItem>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemContDemoReverseFirst">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Reverse First for Continous Demo"/>
+              </Properties>
+            </MenuItem>
           </SubComponents>
         </Menu>
       </SubComponents>

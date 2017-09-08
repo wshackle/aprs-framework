@@ -1162,8 +1162,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private List<PhysicalItem> poseCacheToDetectedItemList() {
         List<PhysicalItem> l = new ArrayList<>();
-        for (Entry<String, PoseType> entry : poseCache.entrySet()) {
-            l.add(PhysicalItem.newPhysicalItemNamePoseVisionCycle(entry.getKey(), entry.getValue(), 0));
+        synchronized (poseCache) {
+            for (Entry<String, PoseType> entry : poseCache.entrySet()) {
+                l.add(PhysicalItem.newPhysicalItemNamePoseVisionCycle(entry.getKey(), entry.getValue(), 0));
+            }
         }
         return Collections.unmodifiableList(l);
     }
@@ -1975,43 +1977,47 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      */
     public PoseType getPose(String posename) throws SQLException, IllegalStateException {
         final AtomicReference<Exception> getNewPoseFromDbException = new AtomicReference<>();
-        PoseType pose = poseCache.computeIfAbsent(posename,
-                (String key) -> {
-                    try {
-                        return getNewPoseFromDb(key);
-                    } catch (Exception ex) {
-                        getNewPoseFromDbException.set(ex);
+        synchronized (poseCache) {
+            PoseType pose = poseCache.computeIfAbsent(posename,
+                    (String key) -> {
+                        try {
+                            return getNewPoseFromDb(key);
+                        } catch (Exception ex) {
+                            getNewPoseFromDbException.set(ex);
+                        }
+                        return null;
                     }
-                    return null;
+            );
+            Exception ex = getNewPoseFromDbException.getAndSet(null);
+            if (null != ex) {
+                if (ex instanceof SQLException) {
+                    throw new SQLException(ex);
+                } else if (ex instanceof RuntimeException) {
+                    throw new RuntimeException(ex);
+                } else if (ex instanceof IllegalStateException) {
+                    throw new IllegalStateException(ex);
                 }
-        );
-        Exception ex = getNewPoseFromDbException.getAndSet(null);
-        if (null != ex) {
-            if (ex instanceof SQLException) {
-                throw new SQLException(ex);
-            } else if (ex instanceof RuntimeException) {
-                throw new RuntimeException(ex);
-            } else if (ex instanceof IllegalStateException) {
                 throw new IllegalStateException(ex);
             }
-            throw new IllegalStateException(ex);
-        }
-        if (null != pose) {
-            for (Entry<String, PoseType> entry : poseCache.entrySet()) {
-                if (entry.getKey().equals(posename)) {
-                    continue;
+            if (null != pose) {
+                for (Entry<String, PoseType> entry : poseCache.entrySet()) {
+                    if (entry.getKey().equals(posename)) {
+                        continue;
+                    }
+                    PointType point = pose.getPoint();
+                    PointType entryPoint = entry.getValue().getPoint();
+                    double diff = CRCLPosemath.diffPoints(point, entryPoint);
+                    if (diff < 15.0) {
+                        String errMsg = "two poses in cache are too close : posename=" + posename + ",pose=" + CRCLPosemath.toString(point) + ", entry=" + entry + ", entryPoint=" + CRCLPosemath.toString(entryPoint);
+                        takeSnapshots("err", errMsg, pose, posename);
+                        throw new IllegalStateException("two poses in cache are too close : posename=" + posename + ",pose=" + CRCLPosemath.toString(point) + ", entry=" + entry + ", entryPoint=" + CRCLPosemath.toString(entryPoint));
+                    }
                 }
-                PointType point = pose.getPoint();
-                PointType entryPoint = entry.getValue().getPoint();
-                double diff = CRCLPosemath.diffPoints(point, entryPoint);
-                if (diff < 15.0) {
-                    throw new IllegalStateException("two poses in cache are too close : posename=" + posename + ",pose=" + CRCLPosemath.toString(point) + ", entry=" + entry + ", entryPoint=" + CRCLPosemath.toString(entryPoint));
-                }
+            } else {
+                System.err.println("getPose(" + posename + ") returning null.");
             }
-        } else {
-            System.err.println("getPose(" + posename + ") returning null.");
+            return pose;
         }
-        return pose;
     }
 
     private PoseType getNewPoseFromDb(String posename) throws SQLException {
@@ -2713,12 +2719,21 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         atLookForPosition = false;
     }
 
+    private volatile Thread clearPoseCacheThread = null;
+    private volatile StackTraceElement clearPoseCacheTrace[] = null;
+
     public void clearPoseCache() {
-        poseCache.clear();
+        clearPoseCacheThread = Thread.currentThread();
+        clearPoseCacheTrace = clearPoseCacheThread.getStackTrace();
+        synchronized (poseCache) {
+            poseCache.clear();
+        }
     }
 
     public Map<String, PoseType> getPoseCache() {
-        return Collections.unmodifiableMap(poseCache);
+        synchronized (poseCache) {
+            return Collections.unmodifiableMap(poseCache);
+        }
     }
 
     public boolean checkAtLookForPosition() {
