@@ -828,13 +828,22 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private XFuture<Void> stealRobot(String robotName) throws IOException, PositionMap.BadErrorMapFormatException {
+        Set<String> names = new HashSet<>();
         for (int i = 0; i < aprsSystems.size() - 1; i++) {
             AprsJFrame sys = aprsSystems.get(i);
-            if (sys != null && Objects.equals(sys.getRobotName(), robotName)) {
-                return stealRobot(aprsSystems.get(i + 1), aprsSystems.get(i));
+            if (null != sys) {
+                names.add(sys.getRobotName());
+                if (Objects.equals(sys.getRobotName(), robotName)) {
+                    return stealRobot(aprsSystems.get(i + 1), aprsSystems.get(i));
+                }
             }
         }
-        return XFuture.completedFutureWithName("stealRobot(" + robotName + ").completedFuture", null);
+        String errMsg = "Robot " + robotName + " not found in " + names;
+        System.out.println("aprsSystems = " + aprsSystems);
+        System.err.println(errMsg);
+        showErrorSplash(errMsg);
+        throw new IllegalStateException(errMsg);
+//        return XFuture.completedFutureWithName("stealRobot(" + robotName + ").completedFuture", null);
     }
 
     final private static String transferrableOptions[] = new String[]{
@@ -2429,7 +2438,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemPause.setSelected(false);
         immediateAbortAll(true);
         resumeForPrepOnly();
-        if(!origIgnoreFlag) {
+        if (!origIgnoreFlag) {
             ignoreTitleErrors.set(false);
         }
     }
@@ -3891,7 +3900,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             tasksNames.append(",");
         }
         continousDemoFuture = XFuture.allOfWithName("continueSingleContinousDemo.allOf(" + tasksNames.toString() + ")", futures);
-        if(null != randomTest) {
+        if (null != randomTest) {
             resetMainRandomTestFuture();
         }
         return ret;
