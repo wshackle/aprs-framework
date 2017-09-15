@@ -3123,6 +3123,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (jCheckBoxMenuItemPause.isSelected()) {
             jCheckBoxMenuItemPause.setSelected(false);
         }
+        clearErrors();
+        if (null != pendantClientJInternalFrame) {
+            pendantClientJInternalFrame.unpauseCrclProgram();
+        }
         notifyPauseFutures();
         String methodName = "resume";
         takeSnapshots(methodName);
