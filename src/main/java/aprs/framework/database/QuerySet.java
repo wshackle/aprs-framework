@@ -22,7 +22,9 @@
  */
 package aprs.framework.database;
 
+import aprs.framework.AprsJFrame;
 import aprs.framework.pddl.executor.TraySlotDesign;
+import aprs.framework.spvision.UpdateResults;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.VectorType;
@@ -707,6 +709,16 @@ public class QuerySet implements QuerySetInterface {
         return getPose(name, false, 0);
     }
 
+    private AprsJFrame aprsJFrame = null;
+
+    public AprsJFrame getAprsJFrame() {
+        return aprsJFrame;
+    }
+
+    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+        this.aprsJFrame = aprsJFrame;
+    }
+    
     public PoseType getPose(String name, boolean requireNew, int visionCycleNewDiffThreshold) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
@@ -827,7 +839,9 @@ public class QuerySet implements QuerySetInterface {
                 if (debug) {
                     System.out.println("maxVisionCycleString = " + maxVisionCycleString);
                 }
+                 
                 if (requireNew && maxVisionCycle > visionCycle + visionCycleNewDiffThreshold) {
+                    printDebugUpdateResultsMap(name);
                     return null;
                 }
             } else {
@@ -846,6 +860,23 @@ public class QuerySet implements QuerySetInterface {
 //            }
         }
         return pose;
+    }
+
+    private void printDebugUpdateResultsMap(String name) {
+        if(null != aprsJFrame) {
+            Map<String,UpdateResults> updateMap = aprsJFrame.getDbUpdatesResultMap();
+            UpdateResults ur = updateMap.get(name);
+            System.out.println("ur = " + ur);
+            System.out.println("updateMap = " + updateMap);
+            for(Map.Entry<String,UpdateResults> entry : updateMap.entrySet()) {
+                PhysicalItem item = entry.getValue().getLastDetectedItem();
+                if(null != item) {
+                    System.out.println(entry.getKey()+"\t"+item.getVisioncycle());
+                } else {
+                    System.out.println(entry.getKey()+"\tnull");
+                }
+            }
+        }
     }
 
     

@@ -513,6 +513,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         List<MiddleCommandType> cmds = new ArrayList<>();
         int blockingCount = aprsJFrame.startBlockingCrclPrograms();
 
+        ActionCallbackInfo acbi = lastAcbi.get();
+        if (null != acbi) {
+            if (startingIndex < acbi.actionIndex) {
+                if (startingIndex != 0 || acbi.actionIndex < acbi.actions.size() - 2) {
+                    String errString = "generate called with startingIndex=" + startingIndex + " and acbi.actionIndex=" + acbi.actionIndex + ", lastIndex=" + lastIndex + ", acbi=" + acbi.toString();
+                    System.err.println(errString);
+                    aprsJFrame.setTitleErrorString(errString);
+                    throw new IllegalStateException(errString);
+                }
+            }
+        }
         try {
             this.options = options;
             final int crclNumber = this.crclNumber.incrementAndGet();
@@ -542,6 +553,30 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //                Thread.dumpStack();
 //                System.out.println("debug generate");
 //            }
+
+            List<PhysicalItem> newItems=null;
+            if (startingIndex > 0 && null != acbi && null != acbi.action) {
+                switch (acbi.action.getType()) {
+
+                    case "look-for-part":
+                    case "look-for-parts":
+                        newItems = waitForCompleteVisionUpdates("generate(start=" + startingIndex + ",crclNumber=" + crclNumber + ")", lastRequiredPartsMap);
+
+                        assert (newItems != null) :
+                                "newItems == null";
+
+                        synchronized (poseCache) {
+                            for (PhysicalItem item : newItems) {
+                                poseCache.put(item.getFullName(), item.getPose());
+                            }
+                        }
+                        break;
+                        
+                    default:
+                        break;
+                }
+            }
+
             takeSnapshots("plan", "generate(start=" + startingIndex + ",crclNumber=" + crclNumber + ")", null, null);
             for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
 
@@ -577,7 +612,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
                             addMarkerCommand(cmds, end_action_string,
                                     (CrclCommandWrapper wrapper) -> {
-                                        notifyActionCompletedListeners(markerIndex, action);
+                                        notifyActionCompletedListeners(markerIndex, action, wrapper, actions);
                                     });
                         }
                         return cmds;
@@ -592,7 +627,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             String end_action_string = "end_" + endMarkerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
                             addMarkerCommand(cmds, end_action_string,
                                     (CrclCommandWrapper wrapper) -> {
-                                        notifyActionCompletedListeners(endMarkerIndex, action);
+                                        notifyActionCompletedListeners(endMarkerIndex, action, wrapper, actions);
                                     });
                         }
                         return cmds;
@@ -640,7 +675,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
                 addMarkerCommand(cmds, end_action_string,
                         (CrclCommandWrapper wrapper) -> {
-                            notifyActionCompletedListeners(markerIndex, action);
+                            notifyActionCompletedListeners(markerIndex, action, wrapper, actions);
                         });
                 addTakeSnapshots(cmds, end_action_string, null, null, this.crclNumber.get());
             }
@@ -717,9 +752,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void checkKits(PddlAction action, List<MiddleCommandType> cmds) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException {
         List<PhysicalItem> newItems = waitForCompleteVisionUpdates("checkKits", lastRequiredPartsMap);
 
-        takeSnapshots("plan", "checkKits-", null, "");
         assert (newItems != null) :
                 "newItems == null";
+
+        synchronized (poseCache) {
+            for (PhysicalItem item : newItems) {
+                poseCache.put(item.getFullName(), item.getPose());
+            }
+        }
+        takeSnapshots("plan", "checkKits-", null, "");
 
         List<PhysicalItem> parts = newItems.stream()
                 .filter(x -> !x.getName().startsWith("empty_slot"))
@@ -2015,13 +2056,24 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
             } else {
                 System.err.println("getPose(" + posename + ") returning null.");
+                PoseType poseCheck = debugGetNewPoseFromDb(posename);
+                System.out.println("poseCheck = " + poseCheck);
             }
             return pose;
         }
     }
 
     private PoseType getNewPoseFromDb(String posename) throws SQLException {
+        qs.setAprsJFrame(aprsJFrame);
         PoseType pose = qs.getPose(posename, requireNewPoses, visionCycleNewDiffThreshold);
+        return pose;
+    }
+
+    private PoseType debugGetNewPoseFromDb(String posename) throws SQLException {
+        boolean origDebug = qs.isDebug();
+        qs.setDebug(true);
+        PoseType pose = qs.getPose(posename, requireNewPoses, visionCycleNewDiffThreshold);
+        qs.setDebug(origDebug);
         return pose;
     }
 
@@ -3259,10 +3311,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         private final int actionIndex;
         private final PddlAction action;
+        private final CrclCommandWrapper wrapper;
+        private final List<PddlAction> actions;
 
-        public ActionCallbackInfo(int actionIndex, PddlAction action) {
+        public ActionCallbackInfo(int actionIndex, PddlAction action, CrclCommandWrapper wrapper, List<PddlAction> actions) {
             this.actionIndex = actionIndex;
             this.action = action;
+            this.wrapper = wrapper;
+            this.actions = actions;
         }
 
         public int getActionIndex() {
@@ -3272,6 +3328,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         public PddlAction getAction() {
             return action;
         }
+
+        @Override
+        public String toString() {
+            return "ActionCallbackInfo{" + "actionIndex=" + actionIndex + ", action=" + action + ", wrapper=" + wrapper + ", actions=" + actions + '}';
+        }
+
     }
 
     final private ConcurrentLinkedDeque<Consumer<ActionCallbackInfo>> actionCompletedListeners = new ConcurrentLinkedDeque<>();
@@ -3294,8 +3356,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         actionCompletedListeners.remove(listener);
     }
 
-    private void notifyActionCompletedListeners(int actionIndex, PddlAction action) {
-        ActionCallbackInfo acbi = new ActionCallbackInfo(actionIndex, action);
+    private AtomicReference<ActionCallbackInfo> lastAcbi = new AtomicReference<>();
+
+    private void notifyActionCompletedListeners(int actionIndex, PddlAction action, CrclCommandWrapper wrapper, List<PddlAction> actions) {
+        ActionCallbackInfo acbi = new ActionCallbackInfo(actionIndex, action, wrapper, actions);
+        lastAcbi.set(acbi);
         for (Consumer<ActionCallbackInfo> listener : actionCompletedListeners) {
             listener.accept(acbi);
         }

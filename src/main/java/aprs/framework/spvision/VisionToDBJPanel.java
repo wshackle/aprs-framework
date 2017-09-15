@@ -178,6 +178,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return dpu;
     }
 
+    public Map<String, UpdateResults> getUpdatesResultMap() {
+        if (null == dpu) {
+            return Collections.emptyMap();
+        }
+        return Collections.unmodifiableMap(dpu.getUpdateResultsMap());
+    }
+
     private void updateTransformFromTable() {
         try {
             PoseType pose = getTransformPose();
@@ -1456,8 +1463,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (null != requiredParts) {
             for (Entry<String, Integer> entry : requiredParts.entrySet()) {
                 String name = entry.getKey();
+                if(name.startsWith("sku_") && name.length()>4) {
+                    name = name.substring(4);
+                }
+                String matchName = name;
                 int required = entry.getValue();
-                long found = list.stream().filter(item -> item.getName().startsWith(name) || item.getName().startsWith("sku_" + name)).count();
+                long found = list.stream().filter(item -> item.getName().startsWith(matchName) || item.getName().startsWith("sku_" + matchName)).count();
                 if (required > found) {
                     int failures = checkRequiredPartFailures.incrementAndGet();
                     String msg = "Found only " + found + " of " + name + " when " + required + " needed."
@@ -1627,9 +1638,33 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 PoseType transform = getTransformPose();
                 dpu.setDisplayInterface(this);
                 List<PhysicalItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
+                if (dpu.isEnableDatabaseUpdates()) {
+                    if (!checkRequiredParts(visionListWithEmptySlots)) {
+                        System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
+                        System.err.println("checkRequiredPart(" + visionListWithEmptySlots + ") false but checkRequiredParts(" + visionList + ") true");
+                        return;
+                    }
+                }
                 if (null != transform) {
                     transformedVisionList = transformList(visionListWithEmptySlots, transform);
+                    if (dpu.isEnableDatabaseUpdates()) {
+                        if (!checkRequiredParts(transformedVisionList)) {
+                            System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
+                            System.err.println("checkRequiredPart(" + transformedVisionList + ") false but checkRequiredParts(" + visionList + ") true");
+                            return;
+                        }
+                    }
                     List<PhysicalItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
+                    if (dpu.isEnableDatabaseUpdates()) {
+                        if (!checkRequiredParts(l)) {
+                            System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
+                            System.err.println("checkRequiredPart(" + l + ") false but checkRequiredParts(" + visionList + ") true");
+                            boolean chkAgain= checkRequiredParts(l);
+                            chkAgain= checkRequiredParts(transformedVisionList);
+                            List<PhysicalItem> l2 = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
+                            return;
+                        }
+                    }
                     if (!singleUpdateListeners.isEmpty()) {
                         setEnableDatabaseUpdates(false);
                         notifySingleUpdateListeners(l);

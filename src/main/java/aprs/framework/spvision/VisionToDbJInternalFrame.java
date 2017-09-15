@@ -34,6 +34,7 @@ import crcl.ui.XFuture;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -296,5 +297,9 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
      */
     public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
         visionToDBJPanel.setEnableDatabaseUpdates(enableDatabaseUpdates, requiredParts);
+    }
+    
+    public Map<String,UpdateResults> getUpdatesResultMap() {
+        return visionToDBJPanel.getUpdatesResultMap();
     }
 }
