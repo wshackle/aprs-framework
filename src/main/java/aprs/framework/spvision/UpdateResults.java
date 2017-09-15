@@ -172,6 +172,11 @@ public class UpdateResults {
     public int getStatementExecutionCount() {
         return statementExecutionCount;
     }
+    
+    public int incrementStatementExecutionCount() {
+        statementExecutionCount++;
+        return statementExecutionCount;
+    }
 
     /**
      * @param statementExecutionCount the statementExecutionCount to set

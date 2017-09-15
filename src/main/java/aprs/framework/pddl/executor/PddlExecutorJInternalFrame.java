@@ -126,8 +126,8 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return this.actionsToCrclJPanel1.continueActionList();
     }
 
-    public boolean completeActionList() {
-        return this.actionsToCrclJPanel1.completeActionList();
+    public boolean completeActionList(String comment,int startAbortCount) {
+        return this.actionsToCrclJPanel1.completeActionList(comment,startAbortCount);
     }
     
     public int getActionSetsCompleted() {
@@ -269,8 +269,8 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return actionsToCrclJPanel1.isDoingActions();
     }
     
-    public boolean doActions() {
-        return actionsToCrclJPanel1.doActions();
+    public boolean doActions(String comment, int safeAbortCount) {
+        return actionsToCrclJPanel1.doActions(comment,safeAbortCount);
     }
 
     public ExecutorService getGeneateCrclService() {

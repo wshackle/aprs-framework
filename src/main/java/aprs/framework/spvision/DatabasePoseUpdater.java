@@ -62,6 +62,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -603,6 +604,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
             displayInterface.addLogMessage("" + System.lineSeparator());
         }
         List<String> colNames = null;
+        String logMsg = null;
+        int rowCount = 0;
         try (ResultSet rs = query_all_new_statement.executeQuery()) {
             if (null != rs) {
                 ResultSetMetaData meta = rs.getMetaData();
@@ -611,6 +614,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     colNames.add(meta.getColumnName(colIndex));
                 }
                 while (rs.next()) {
+                    rowCount++;
                     if (debug) {
                         StringBuilder sb = new StringBuilder();
                         for (int j = 1; j <= rs.getMetaData().getColumnCount(); j++) {
@@ -619,8 +623,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             String str = "{ (" + j + "/" + rs.getMetaData().getColumnCount() + ") columnName = " + columnName + ", val = " + val + " }, ";
                             sb.append(str);
                         }
+                        logMsg = sb.toString();
                         if (null != displayInterface) {
-                            displayInterface.addLogMessage(sb.toString());
+                            displayInterface.addLogMessage(logMsg);
                         }
                     }
                     Map<DbParamTypeEnum, String> resultMap
@@ -635,13 +640,20 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     ));
                 }
             }
-        } catch (SQLException sQLException) {
-            sQLException.printStackTrace();
+        } catch (Exception exception) {
+            exception.printStackTrace();
             if (null != displayInterface) {
-                displayInterface.addLogMessage(sQLException.getMessage() + System.lineSeparator());
+                displayInterface.addLogMessage(exception.getMessage() + System.lineSeparator());
+                displayInterface.addLogMessage("rowCount = " + rowCount + System.lineSeparator());
                 displayInterface.addLogMessage("colNames = " + colNames + System.lineSeparator());
+                displayInterface.addLogMessage("queryAllNewString = " + System.lineSeparator() + queryAllNewString + System.lineSeparator());
             } else {
                 System.err.println("colNames = " + colNames);
+                System.err.println("rowCount=\n" + rowCount);
+                System.err.println("queryAllNewString=\n" + queryAllNewString);
+                System.err.println("logMsg=" + logMsg);
+                System.err.println("");
+                System.out.println("");
             }
         }
         return l;
@@ -727,7 +739,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
     public static volatile int poses_updated = 0;
     public static volatile List<PoseQueryElem> displayList = null;
 
-    private final Map<String, UpdateResults> updateResultsMap = new HashMap<>();
+    private final Map<String, UpdateResults> updateResultsMap = new ConcurrentHashMap<>();
 
     private boolean forceUpdates = true;
 
@@ -792,9 +804,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
     private volatile SQLException getSlotOffsetsNewSqlException = null;
 
-    private final ConcurrentHashMap<String,Integer> failuresMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Integer> failuresMap = new ConcurrentHashMap<>();
     private static final List<Slot> failedSlotOffsets = Collections.emptyList();
-    
+
     public List<Slot> getSlotOffsetsNew(PhysicalItem tray) {
         if (null == getTraySlotsParamTypes) {
             throw new IllegalArgumentException("getTraySlotsParamTypes is null");
@@ -803,7 +815,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
             throw new IllegalArgumentException("get_tray_slots_statement is null");
         }
         Integer failuresI = failuresMap.get(tray.getName());
-        if(failuresI != null && failuresI.compareTo(2) > 0) {
+        if (failuresI != null && failuresI.compareTo(2) > 0) {
             return failedSlotOffsets;
         }
         getSlotOffsetsNewSqlException = null;
@@ -895,11 +907,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     System.err.println("getTraySlotsQueryStringFilled=");
                     System.err.println(getTraySlotsQueryStringFilled);
                     System.err.println("Returned 0 items.");
-                    System.err.println("url="+getURL());
+                    System.err.println("url=" + getURL());
                     System.err.println("");
-                    int failures = failuresMap.compute(tray.getName(), (name,count) -> (count==null)?1:(count+1));
-                    if(failures < 2) {
-                        throw new IllegalStateException("Can't get items for tray"+ tray+" url="+getURL()+" getTraySlotsQueryStringFilled=\n"+getTraySlotsQueryStringFilled);
+                    int failures = failuresMap.compute(tray.getName(), (name, count) -> (count == null) ? 1 : (count + 1));
+                    if (failures < 2) {
+                        throw new IllegalStateException("Can't get items for tray" + tray + " url=" + getURL() + " getTraySlotsQueryStringFilled=\n" + getTraySlotsQueryStringFilled);
                     } else {
                         return failedSlotOffsets;
                     }
@@ -914,8 +926,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     public double normAngle(double angleIn) {
-        if(!Double.isFinite(angleIn) || angleIn > 10.0 || angleIn < -10.0) {
-            throw new IllegalArgumentException("angleIn="+angleIn+" (must be in radians)");
+        if (!Double.isFinite(angleIn) || angleIn > 10.0 || angleIn < -10.0) {
+            throw new IllegalArgumentException("angleIn=" + angleIn + " (must be in radians)");
         }
         double angleOut = angleIn;
         if (angleOut > Math.PI) {
@@ -1050,9 +1062,9 @@ public class DatabasePoseUpdater implements AutoCloseable {
         final long timestamp = System.currentTimeMillis();
         prevParts
                 = prevParts.stream()
-                .filter((PhysicalItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
-                .filter((PhysicalItem prevPart) -> closestDist(prevPart, parts) < 25.0)
-                .collect(Collectors.toCollection(() -> new ArrayList<PhysicalItem>()));
+                        .filter((PhysicalItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
+                        .filter((PhysicalItem prevPart) -> closestDist(prevPart, parts) < 25.0)
+                        .collect(Collectors.toCollection(() -> new ArrayList<PhysicalItem>()));
         prevParts.addAll(parts);
         return slots.stream()
                 .filter(slot -> closestDist(slot, prevParts) > 25.0)
@@ -1128,20 +1140,20 @@ public class DatabasePoseUpdater implements AutoCloseable {
 //                        .collect(Collectors.toList());
         List<Tray> kitTrays
                 = itemList.stream()
-                .filter((PhysicalItem item) -> "KT".equals(item.getType()))
-                .filter(Tray.class::isInstance)
-                .map(Tray.class::cast)
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "KT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
         List<Tray> partTrays
                 = itemList.stream()
-                .filter((PhysicalItem item) -> "PT".equals(item.getType()))
-                .filter(Tray.class::isInstance)
-                .map(Tray.class::cast)
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "PT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
         List<PhysicalItem> parts
                 = itemList.stream()
-                .filter((PhysicalItem item) -> "P".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "P".equals(item.getType()))
+                        .collect(Collectors.toList());
         List<PhysicalItem> fullList = new ArrayList<>();
         List<Slot> bestKitTrayEmptySlots = findBestEmptyTraySlots(kitTrays, parts);
         List<Slot> bestPartTrayEmptySlots = findBestEmptyTraySlots(partTrays, parts);
@@ -1233,7 +1245,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
             if (enableDatabaseUpdates) {
                 File dbQueriesDir = new File(Utils.getlogFileDir(), "dbQueries");
                 dbQueriesDir.mkdirs();
-                PrintStream ps  = new PrintStream(new FileOutputStream(Utils.createTempFile("db_" + dbsetup.getPort(), "_log.txt", dbQueriesDir)));
+                PrintStream ps = new PrintStream(new FileOutputStream(Utils.createTempFile("db_" + dbsetup.getPort(), "_log.txt", dbQueriesDir)));
                 for (Entry<String, List<Slot>> offsetEntry : offsetsMap.entrySet()) {
                     ps.println();
                     ps.println(commentStartString + " offsetsMap.key =" + offsetEntry.getKey());
@@ -1245,7 +1257,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         ps.println();
                     }
                     ps.println();
-                    dbQueryLogPrintStream=ps;
+                    dbQueryLogPrintStream = ps;
                 }
             }
         } catch (Exception ex) {
@@ -1314,16 +1326,16 @@ public class DatabasePoseUpdater implements AutoCloseable {
             updateCount++;
             List<Tray> partsTrays
                     = inList.stream()
-                    .filter((PhysicalItem item) -> "PT".equals(item.getType()))
-                    .filter(Tray.class::isInstance)
-                    .map(Tray.class::cast)
-                    .collect(Collectors.toList());
+                            .filter((PhysicalItem item) -> "PT".equals(item.getType()))
+                            .filter(Tray.class::isInstance)
+                            .map(Tray.class::cast)
+                            .collect(Collectors.toList());
             List<Tray> kitTrays
                     = inList.stream()
-                    .filter((PhysicalItem item) -> "KT".equals(item.getType()))
-                    .filter(Tray.class::isInstance)
-                    .map(Tray.class::cast)
-                    .collect(Collectors.toList());
+                            .filter((PhysicalItem item) -> "KT".equals(item.getType()))
+                            .filter(Tray.class::isInstance)
+                            .map(Tray.class::cast)
+                            .collect(Collectors.toList());
 
             List<PhysicalItem> list = inList;
             for (int i = 0; i < list.size(); i++) {
@@ -1359,12 +1371,12 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                 List<PhysicalItem> parts
                         = inList.stream()
-                        .filter((PhysicalItem item) -> "P".equals(item.getType()))
-                        .collect(Collectors.toList());
+                                .filter((PhysicalItem item) -> "P".equals(item.getType()))
+                                .collect(Collectors.toList());
                 List<PhysicalItem> emptySlots
                         = list.stream()
-                        .filter((PhysicalItem item) -> "ES".equals(item.getType()))
-                        .collect(Collectors.toList());
+                                .filter((PhysicalItem item) -> "ES".equals(item.getType()))
+                                .collect(Collectors.toList());
                 Comparator<PhysicalItem> kitComparator
                         = comparingLong((PhysicalItem kt) -> (kt.getEmptySlotsCount() < 1) ? Long.MAX_VALUE : kt.getEmptySlotsCount());
                 kitTrays.sort(kitComparator);
@@ -1395,10 +1407,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
 
                         PhysicalItem bestSlotFiller
                                 = firstSortParts.stream()
-                                .filter((PhysicalItem p) -> p.isInsidePartsTray())
-                                .filter((PhysicalItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
-                                .findFirst()
-                                .orElse(null);
+                                        .filter((PhysicalItem p) -> p.isInsidePartsTray())
+                                        .filter((PhysicalItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
+                                        .findFirst()
+                                        .orElse(null);
                         if (null != bestSlotFiller) {
                             slotFillers.add(bestSlotFiller);
                             firstSortParts.remove(bestSlotFiller);
@@ -1414,7 +1426,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 list.addAll(kitTrays);
                 list.addAll(emptySlots);
             }
-            if(list.isEmpty()) {
+            if (list.isEmpty()) {
                 System.err.println("updateVisionList : list is empty.");
                 return returnedList;
             }
@@ -1526,20 +1538,22 @@ public class DatabasePoseUpdater implements AutoCloseable {
                     ur.setVerified(false);
 
                     try {
-                        ur.setLastDetectedItem(ci);
-                        if (null != displayInterface && displayInterface.isDebug()) {
-                            displayInterface.addLogMessage("updateStringFilled = \r\n" + updateStringFilled + "\r\n");
-                        }
+
                         if (edu) {
+                            ur.setLastDetectedItem(ci);
+                            if (null != displayInterface && displayInterface.isDebug()) {
+                                displayInterface.addLogMessage("updateStringFilled = \r\n" + updateStringFilled + "\r\n");
+                            }
                             updates = internalDatabaseUpdate(stmnt, batchUrs, ur, updates, updatedCount);
+                            ur.setUpdateStringFilled(updateStringFilled);
+                            ur.incrementStatementExecutionCount();
                         } else {
                             updates = 0;
                         }
                     } catch (Exception exception) {
                         ur.setException(exception);
                     }
-                    ur.setUpdateStringFilled(updateStringFilled);
-                    ur.setStatementExecutionCount(ur.getStatementExecutionCount() + 1);
+
                     updateResultsMap.put(ci.getFullName(), ur);
                     if (null != ur.getException()) {
                         throw new RuntimeException("ur=" + ur, ur.getException());
@@ -1627,63 +1641,72 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return returnedList;
     }
 
-    private int internalDatabaseUpdate(PreparedStatement stmnt, List<UpdateResults> batchUrs, UpdateResults ur, int updates, int updatedCount) throws SQLException {
-        if (useBatch) {
-            stmnt.addBatch();
-            batchUrs.add(ur);
-            updates++;
-        } else {
-            boolean exec_result = stmnt.execute();
-            if (null != displayInterface && displayInterface.isDebug()) {
-                displayInterface.addLogMessage(" update_statement.execute() returned  " + exec_result + "\r\n");
-            }
-            if (exec_result) {
-                try (ResultSet rs = stmnt.getResultSet()) {
-                    if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("update_statement.getResultSet() = " + rs + "\r\n");
-                    }
-                    List<Map<String, String>> resultSetMapList = new ArrayList<>();
-                    while (rs.next()) {
-                        ResultSetMetaData meta = rs.getMetaData();
-                        Map<String, String> resultMap = new LinkedHashMap<>();
-                        if (null != displayInterface && displayInterface.isDebug()) {
-                            displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
-                        }
-                        for (int j = 1; j <= meta.getColumnCount(); j++) {
-                            String name = meta.getColumnName(j);
-                            String value = rs.getObject(name, Object.class).toString();
-                            if (j == 1 && updatedCount < 0 && name.startsWith("count")) {
-                                try {
-                                    updatedCount = Integer.parseInt(value);
-                                } catch (NumberFormatException nfe) {
-                                }
-                            }
-                            resultMap.put(name, value);
-                        }
-                        resultSetMapList.add(resultMap);
-                        if (null != displayInterface
-                                && displayInterface.isDebug()
-                                && resultMap.keySet().size() > 0) {
-                            displayInterface.addLogMessage("resultMap=" + resultMap.toString() + System.lineSeparator());
-                        }
-                    }
-                    ur.setLastResultSetMapList(resultSetMapList);
-                }
+    private int internalDatabaseUpdate(PreparedStatement stmnt, List<UpdateResults> batchUrs, UpdateResults ur, int updates, int updatedCount) {
+        try {
+            if (useBatch) {
+                stmnt.addBatch();
+                batchUrs.add(ur);
+                updates++;
             } else {
-                updatedCount = stmnt.getUpdateCount();
-            }
-            if (null != displayInterface && displayInterface.isDebug()) {
-                displayInterface.addLogMessage("update_statement.execute() returned = " + exec_result + "\r\n");
-                displayInterface.addLogMessage("update_statement.getUpdateCount() returned = " + updatedCount + "\r\n");
-            }
-            if (updatedCount > 1) {
-                updatedCount = 1;
-            }
-            ur.setUpdateCount(updatedCount);
-            ur.setTotalUpdateCount(updatedCount + ur.getTotalUpdateCount());
-            ur.setReturnedResultSet(exec_result);
+                boolean exec_result = stmnt.execute();
+                if (null != displayInterface && displayInterface.isDebug()) {
+                    displayInterface.addLogMessage(" update_statement.execute() returned  " + exec_result + "\r\n");
+                }
+                if (exec_result) {
+                    try (ResultSet rs = stmnt.getResultSet()) {
+                        if (null != displayInterface && displayInterface.isDebug()) {
+                            displayInterface.addLogMessage("update_statement.getResultSet() = " + rs + "\r\n");
+                        }
+                        List<Map<String, String>> resultSetMapList = new ArrayList<>();
+                        while (rs.next()) {
+                            ResultSetMetaData meta = rs.getMetaData();
+                            Map<String, String> resultMap = new LinkedHashMap<>();
+                            if (null != displayInterface && displayInterface.isDebug()) {
+                                displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
+                            }
+                            for (int j = 1; j <= meta.getColumnCount(); j++) {
+                                String name = meta.getColumnName(j);
+                                String value = rs.getObject(name, Object.class).toString();
+                                if (j == 1 && updatedCount < 0 && name.startsWith("count")) {
+                                    try {
+                                        updatedCount = Integer.parseInt(value);
+                                    } catch (NumberFormatException nfe) {
+                                    }
+                                }
+                                resultMap.put(name, value);
+                            }
+                            resultSetMapList.add(resultMap);
+                            if (null != displayInterface
+                                    && displayInterface.isDebug()
+                                    && resultMap.keySet().size() > 0) {
+                                displayInterface.addLogMessage("resultMap=" + resultMap.toString() + System.lineSeparator());
+                            }
+                        }
+                        ur.setLastResultSetMapList(resultSetMapList);
+                    }
+                } else {
+                    updatedCount = stmnt.getUpdateCount();
+                }
+                if (null != displayInterface && displayInterface.isDebug()) {
+                    displayInterface.addLogMessage("update_statement.execute() returned = " + exec_result + "\r\n");
+                    displayInterface.addLogMessage("update_statement.getUpdateCount() returned = " + updatedCount + "\r\n");
+                }
+                if (updatedCount > 1) {
+                    updatedCount = 1;
+                }
+                ur.setUpdateCount(updatedCount);
+                ur.setTotalUpdateCount(updatedCount + ur.getTotalUpdateCount());
+                ur.setReturnedResultSet(exec_result);
 //                    poses_updated += update_statement.getUpdateCount();
-            poses_updated++;
+                poses_updated++;
+            }
+        } catch (Exception ex) {
+            if (null != displayInterface && displayInterface.isDebug()) {
+                displayInterface.addLogMessage("Exception :  " + ex + "\r\n");
+                displayInterface.addLogMessage("ur = " + ur + "\r\n");
+            }
+            Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println("ur = " + ur);
         }
         return updates;
     }
@@ -1952,7 +1975,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return sku;
     }
 
-    private final ExecutorService pqExecServ = Executors.newSingleThreadExecutor();
+    private final ExecutorService pqExecServ = Executors.newSingleThreadExecutor(new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r);
+            thread.setName("pqExecServ." + thread.getName() + this.toString());
+            thread.setDaemon(true);
+            return thread;
+        }
+    });
 
     public XFuture<List<PoseQueryElem>> queryDatabase() {
         return XFuture.supplyAsync("queryDatabase", () -> Collections.unmodifiableList(getDirectPoseList()), pqExecServ);
