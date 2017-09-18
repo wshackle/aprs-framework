@@ -841,7 +841,7 @@ public class QuerySet implements QuerySetInterface {
                 }
                  
                 if (requireNew && maxVisionCycle > visionCycle + visionCycleNewDiffThreshold) {
-                    printDebugUpdateResultsMap(name);
+//                    printDebugUpdateResultsMap(name);
                     return null;
                 }
             } else {

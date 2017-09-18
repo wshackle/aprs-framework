@@ -1088,7 +1088,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         sb.append("crclRunning=").append(this.isRunningCrclProgram()).append(", ");
         sb.append("isDoingActions=").append(isDoingActions()).append(", ");
-        sb.append("isRunning=").append(running.get()).append(", ");
+        sb.append("isRunning=").append(running.get()).append("\r\n");
         long runDuration = getRunDuration();
         long stopDuration = getStopDuration();
         long totalTime = runDuration+stopDuration;
@@ -2818,6 +2818,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (jCheckBoxMenuItemPause.isSelected()) {
             pause();
         } else {
+            clearErrors();
             resume();
         }
         if (null != continousDemoFuture) {
@@ -3120,6 +3121,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private volatile XFuture<Boolean> lastResumeFuture = null;
 
     public void resume() {
+        if(this.titleErrorString != null && this.titleErrorString.length() > 0) {
+            throw new IllegalStateException("Can't resume when titleErrorString set to "+titleErrorString);
+        }
+        String crclClientErrString = getCrclClientErrorString();
+        if(crclClientErrString != null && crclClientErrString.length() > 0) {
+            throw new IllegalStateException("Can't resume when crclClientErrString set to "+crclClientErrString);
+        }
         if (jCheckBoxMenuItemPause.isSelected()) {
             jCheckBoxMenuItemPause.setSelected(false);
         }
@@ -3128,6 +3136,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pendantClientJInternalFrame.unpauseCrclProgram();
         }
         notifyPauseFutures();
+        clearErrors();
         String methodName = "resume";
         takeSnapshots(methodName);
 //        if(null != pendantClientJInternalFrame
