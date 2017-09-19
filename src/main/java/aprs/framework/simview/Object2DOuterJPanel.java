@@ -1595,7 +1595,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setDisplayAxis((DisplayAxis) jComboBoxDisplayAxis.getSelectedItem());
     }//GEN-LAST:event_jComboBoxDisplayAxisActionPerformed
 
-    private void loadFile(File f) throws IOException {
+    public void loadFile(File f) throws IOException {
 
         try {
             takeSnapshot(aprsJFrame.createTempFile("before_loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");

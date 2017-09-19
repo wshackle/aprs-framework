@@ -522,7 +522,21 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         return null;
     }
+    
+    public static File getLastSimTeachFile() throws IOException {
+        if (lastSimTeachFileFile.exists()) {
+            return new File(readFirstLine(lastSimTeachFileFile));
+        }
+        return null;
+    }
 
+    public static File getLastSimTeachPropertiesFile() throws IOException {
+        if (lastSimTeachFileFile.exists()) {
+            return new File(readFirstLine(lastSimTeachFileFile));
+        }
+        return null;
+    }
+    
     public static File getLastPosMapFile() throws IOException {
         if (lastPosMapFileFile.exists()) {
             return new File(readFirstLine(lastPosMapFileFile));
@@ -546,6 +560,31 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
+    public void loadSimTeachFile(File f) throws IOException {
+        object2DOuterJPanel1.loadFile(f);
+    }
+    
+    public void loadSimTeachPropertiesFile(File f) throws IOException {
+        object2DOuterJPanel1.setPropertiesFile(f);
+        object2DOuterJPanel1.loadProperties();
+    }
+    
+    public void loadPrevSimTeach() {
+        try {
+            File simTeach = getLastSimTeachFile();
+            if (null != simTeach && simTeach.exists()) {
+                loadSimTeachFile(simTeach);
+            }
+        } catch (IOException ex) {
+            log(Level.SEVERE, null, ex);
+            try {
+                closeAllAprsSystems();
+            } catch (IOException ex1) {
+                log(Level.SEVERE, null, ex1);
+            }
+        }
+    }
+    
     public void loadPrevPosMapFile() {
         try {
             File posFile = getLastPosMapFile();
@@ -1480,6 +1519,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private final static File lastSetupFileFile = new File(System.getProperty("aprsLastMultiSystemSetupFile", System.getProperty("user.home") + File.separator + ".lastAprsSetupFile.txt"));
+    private final static File lastSimTeachFileFile = new File(System.getProperty("aprsLastMultiSystemSimTeachFile", System.getProperty("user.home") + File.separator + ".lastAprsSimTeachFile.txt"));
+    private final static File lastTeachPropertiesFileFile = new File(System.getProperty("aprsLastMultiSystemTeachPropertiesFile", System.getProperty("user.home") + File.separator + ".lastAprsTeachPropertiesFile.txt"));
     private final static File lastPosMapFileFile = new File(System.getProperty("aprsLastMultiSystemPosMapFile", System.getProperty("user.home") + File.separator + ".lastAprsPosMapFile.txt"));
 
     /**
@@ -1537,6 +1578,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jTextFieldEventsMax = new javax.swing.JTextField();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldRunningTime = new javax.swing.JTextField();
+        jPanelTeachTable = new javax.swing.JPanel();
+        object2DOuterJPanel1 = new aprs.framework.simview.Object2DOuterJPanel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
         jMenuItemSaveSetup = new javax.swing.JMenuItem();
@@ -2041,6 +2084,24 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         );
 
         jTabbedPane2.addTab("Events", jPanel2);
+
+        javax.swing.GroupLayout jPanelTeachTableLayout = new javax.swing.GroupLayout(jPanelTeachTable);
+        jPanelTeachTable.setLayout(jPanelTeachTableLayout);
+        jPanelTeachTableLayout.setHorizontalGroup(
+            jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTeachTableLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1049, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanelTeachTableLayout.setVerticalGroup(
+            jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTeachTableLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 631, Short.MAX_VALUE))
+        );
+
+        jTabbedPane2.addTab("Teach", jPanelTeachTable);
 
         jMenuFile.setText("File");
 
@@ -4530,6 +4591,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     }
 
+    private File lastSimTeachFile = null;
+    
+    private void saveLastSimTeachFile(File f) throws IOException {
+        lastSimTeachFile = f;
+        try (PrintWriter pw = new PrintWriter(new FileWriter(lastSimTeachFileFile))) {
+            pw.println(f.getCanonicalPath());
+        }
+
+    }
     private File lastPosMapFile = null;
 
     private void saveLastPosMapFile(File f) throws IOException {
@@ -4995,6 +5065,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanelRobots;
     private javax.swing.JPanel jPanelTasks;
     private javax.swing.JPanel jPanelTasksAndRobots;
+    private javax.swing.JPanel jPanelTeachTable;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
@@ -5014,5 +5085,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JTextField jTextFieldRunningTime;
     private javax.swing.JTextField jTextFieldSelectedPosMapFilename;
     private javax.swing.JTree jTreeSelectedFuture;
+    private aprs.framework.simview.Object2DOuterJPanel object2DOuterJPanel1;
     // End of variables declaration//GEN-END:variables
 }
