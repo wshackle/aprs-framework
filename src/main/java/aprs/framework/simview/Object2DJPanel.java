@@ -23,6 +23,7 @@
 package aprs.framework.simview;
 
 import aprs.framework.AprsJFrame;
+import aprs.framework.SlotOffsetProvider;
 import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.Slot;
 import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
@@ -831,6 +832,7 @@ public class Object2DJPanel extends JPanel {
      */
     public void setAprsJFrame(AprsJFrame aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
+        setSlotOffsetProvider(aprsJFrame);
     }
 
     private boolean showAddedSlotPositions;
@@ -876,15 +878,25 @@ public class Object2DJPanel extends JPanel {
     public List<PhysicalItem> computeAbsSlotPositions(List<PhysicalItem> l) {
         List<PhysicalItem> absSlotList = new ArrayList<>();
         for (PhysicalItem item : l) {
-            if (null != aprsJFrame && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
+            if (null != slotOffsetProvider && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
                 absSlotList.addAll(computeSlotPositions(item));
             }
         }
         return absSlotList;
     }
+    
+    private SlotOffsetProvider slotOffsetProvider = null;
+
+    public SlotOffsetProvider getSlotOffsetProvider() {
+        return slotOffsetProvider;
+    }
+
+    public void setSlotOffsetProvider(SlotOffsetProvider slotOffsetProvider) {
+        this.slotOffsetProvider = slotOffsetProvider;
+    }
 
     public List<PhysicalItem> computeSlotPositions(PhysicalItem item) {
-        List<Slot> offsets = aprsJFrame.getSlotOffsets(item.getName());
+        List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName());
         List<PhysicalItem> slotList = new ArrayList<>();
         if (null != offsets) {
             for (PhysicalItem offset : offsets) {
@@ -1142,8 +1154,8 @@ public class Object2DJPanel extends JPanel {
             g2d.setColor(item.getLabelColor());
             g2d.draw(item.getDisplayRect());
             try {
-                if (null != aprsJFrame && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
-                    List<Slot> offsets = aprsJFrame.getSlotOffsets(item.getName());
+                if (null != slotOffsetProvider && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
+                    List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName());
                     if (null != offsets) {
                         for (PhysicalItem offset : offsets) {
 //                            if (viewRotations) {

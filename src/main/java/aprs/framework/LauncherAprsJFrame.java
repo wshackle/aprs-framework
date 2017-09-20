@@ -204,6 +204,8 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         amsFrame.startColorTextReader();
         amsFrame.loadPrevSetup();
         amsFrame.loadPrevPosMapFile();
+        amsFrame.loadPrevSimTeach();
+        amsFrame.loadPrevTeachProperties();
         amsFrame.setVisible(true);
     }
 
@@ -234,12 +236,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
         amsFrame.startColorTextReader();
         amsFrame.setVisible(true);
-        if(null == args || args.length < 1) {
+        if (null == args || args.length < 1) {
             amsFrame.browseOpenSetup();
         } else {
             amsFrame.loadSetupFile(new File(args[0]));
         }
         amsFrame.loadPrevPosMapFile();
+        amsFrame.loadPrevSimTeach();
+        amsFrame.loadPrevTeachProperties();
     }
 
     private void jButtonPrevSingleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevSingleActionPerformed
@@ -280,7 +284,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         AprsJFrame aFrame = new AprsJFrame();
         aFrame.emptyInit();
         aFrame.setVisible(true);
-        if(null == args || args.length < 1) {
+        if (null == args || args.length < 1) {
             aFrame.browseOpenPropertiesFile();
         } else {
             aFrame.closeAllWindows();
@@ -357,27 +361,27 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                             case "--prevMulti":
                                 prevMulti();
                                 break;
-                                
+
                             case "--openMulti":
                                 openMulti(argsLeft);
                                 break;
-                                
+
                             case "--newMulti":
                                 newMulti();
                                 break;
-                                
+
                             case "--prevSingle":
                                 prevSingle();
                                 break;
-                                
+
                             case "--openSingle":
                                 openSingle(argsLeft);
                                 break;
-                                
+
                             case "--newSingle":
                                 newSingle();
                                 break;
-                                
+
                             default:
                                 System.err.println("Invalid argumens args=" + Arrays.toString(args));
                                 System.err.println("args[0] must be one of:");

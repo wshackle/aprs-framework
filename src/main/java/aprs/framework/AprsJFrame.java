@@ -123,7 +123,7 @@ import rcs.posemath.PmCartesian;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, AutoCloseable {
+public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, AutoCloseable,SlotOffsetProvider {
 
     private VisionToDbJInternalFrame visionToDbJInternalFrame = null;
     private PddlExecutorJInternalFrame pddlExecutorJInternalFrame1 = null;
@@ -2988,12 +2988,23 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem);
     }
-
-    public void createActionListFromVision() {
+    
+     public void createActionListFromVision() {
         try {
-            List<PhysicalItem> itemsList = getSimviewItems();
+            List<PhysicalItem> requiredItems = getSimviewItems();
+            List<PhysicalItem> teachItems = requiredItems;
+            
+        } catch (Exception ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            setTitleErrorString("createActionListFromVision: " + ex.getMessage());
+        }
+     }
+     
+    public void createActionListFromVision( List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems) {
+
+        try {
             Map<String, Integer> requiredItemsMap
-                    = itemsList.stream()
+                    = requiredItems.stream()
                             .filter(this::isWithinLimits)
                             .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
             String requiredItemsString
@@ -3003,7 +3014,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                             .map(entry -> entry.getKey() + "=" + entry.getValue())
                             .collect(Collectors.joining(" "));
             System.out.println("requiredItemsString = " + requiredItemsString);
-            List<PhysicalItem> kitTrays = itemsList.stream()
+            List<PhysicalItem> kitTrays = teachItems.stream()
                     .filter(x -> "KT".equals(x.getType()))
                     .collect(Collectors.toList());
             if (kitTrays.isEmpty()) {
@@ -3035,8 +3046,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     int kitNumber = -1;
                     for (Slot slotOffset : slotOffsetList) {
                         PhysicalItem absSlot = absSlotFromTrayAndOffset(kit, slotOffset);
-                        PhysicalItem closestPart = closestPart(absSlot.x, absSlot.y, itemsList);
-                        double minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
+                        PhysicalItem closestPart = closestPart(absSlot.x, absSlot.y, teachItems);
+                        double minDist = Double.POSITIVE_INFINITY;
+                        if(null != closestPart) {
+                            minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
+                        }
                         if (minDist < 20) {
                             int pt_used_num = ptUsedMap.compute(closestPart.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
                             String shortPartName = closestPart.getName();
@@ -3080,7 +3094,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 ps.println("(end-program)");
             }
             if (allEmpty) {
-                System.out.println("itemsList = " + itemsList);
+                System.out.println("requiredItems = " + requiredItems);
+                System.out.println("teachItems = " + teachItems);
                 System.out.println("kitTrays = " + kitTrays);
                 System.out.println("requiredItemsString = " + requiredItemsString);
                 if (JOptionPane.YES_OPTION

@@ -23,6 +23,7 @@
 package aprs.framework.simview;
 
 import aprs.framework.AprsJFrame;
+import aprs.framework.SlotOffsetProvider;
 import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
 import aprs.framework.database.PhysicalItem;
@@ -118,12 +119,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             saveFile(new File(csvDir, f.getName() + ".csv"));
-            File xmlDir = new File(f.getParentFile(), "crclStatusXml");
-            xmlDir.mkdirs();
-            String xmlString = CRCLSocket.getUtilSocket().statusToPrettyString(aprsJFrame.getCurrentStatus(), false);
-            File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
-            try (FileWriter fw = new FileWriter(xmlFile)) {
-                fw.write(xmlString);
+            if (null != aprsJFrame) {
+                File xmlDir = new File(f.getParentFile(), "crclStatusXml");
+                xmlDir.mkdirs();
+                String xmlString = CRCLSocket.getUtilSocket().statusToPrettyString(aprsJFrame.getCurrentStatus(), false);
+                File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
+                try (FileWriter fw = new FileWriter(xmlFile)) {
+                    fw.write(xmlString);
+                }
             }
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -165,6 +168,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private boolean forceOutputFlag;
+
+    /**
+     * Get the value of forceOutputFlag
+     *
+     * @return the value of forceOutputFlag
+     */
+    public boolean isForceOutputFlag() {
+        return forceOutputFlag;
+    }
+
+    /**
+     * Set the value of forceOutputFlag
+     *
+     * @param forceOutputFlag new value of forceOutputFlag
+     */
+    public void setForceOutputFlag(boolean forceOutputFlag) {
+        this.forceOutputFlag = forceOutputFlag;
     }
 
     public void refresh(boolean loadFile) {
@@ -304,15 +327,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 double x = (double) jTableItems.getValueAt(row, 2);
                 double y = (double) jTableItems.getValueAt(row, 3);
                 double rot = Math.toRadians((double) jTableItems.getValueAt(row, 4));
-                Tray trayItem = new Tray(name, rot, x, y);
-                List<Slot> l = aprsJFrame.getSlotOffsets(name);
-                for (Slot s : l) {
-                    Slot absItem = aprsJFrame.absSlotFromTrayAndOffset(trayItem, s);
+                if (null != slotOffsetProvider) {
+                    Tray trayItem = new Tray(name, rot, x, y);
+                    List<Slot> l = slotOffsetProvider.getSlotOffsets(name);
+                    for (Slot s : l) {
+                        Slot absItem = slotOffsetProvider.absSlotFromTrayAndOffset(trayItem, s);
 
 //                    double sx = x + s.x * Math.cos(rot) + s.y * Math.sin(rot);
 //                    double sy = y - s.x * Math.sin(rot) + s.y * Math.cos(rot);
-                    double minDist = minDist(absItem.x, absItem.y, items);
-                    tm.addRow(new Object[]{s.getSlotForSkuName(), minDist < 20.0, absItem.x, absItem.y, minDist});
+                        double minDist = minDist(absItem.x, absItem.y, items);
+                        tm.addRow(new Object[]{s.getSlotForSkuName(), minDist < 20.0, absItem.x, absItem.y, minDist});
+                    }
                 }
                 break;
 
@@ -337,7 +362,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int origSelectedRow = jtable.getSelectedRow();
         int origSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jtable.getRowCount())
-                        ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
+                ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
 
         RowSorter rowSorter = jtable.getRowSorter();
         if (null != rowSorter) {
@@ -356,7 +381,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         int newSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jtable.getRowCount())
-                        ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
+                ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
         if (newSelectedRowIndex > 0 && newSelectedRowIndex == origSelectedRowIndex) {
             DefaultListSelectionModel dlsm;
             ListSelectionModel lsm = jtable.getSelectionModel();
@@ -1271,6 +1296,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         disconnect();
     }//GEN-LAST:event_jCheckBoxSimulatedActionPerformed
 
+    public void setSimulatedAndDisconnect() {
+        this.jCheckBoxConnected.setSelected(false);
+        this.jCheckBoxSimulated.setSelected(true);
+        setSimulatedInternal(true);
+        disconnect();
+    }
+
     private VisionSocketServer visionSocketServer = null;
     private VisionSocketClient visionSocketClient = null;
 
@@ -1403,6 +1435,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private void publishCurrentItems() {
+        if (forceOutputFlag) {
+            return;
+        }
         if (jCheckBoxShuffleSimulatedUpdates.isSelected() || simulatedDropRate > 0.01 || jCheckBoxAddPosNoise.isSelected()) {
             List<PhysicalItem> l = new ArrayList<>();
             List<PhysicalItem> origList = getItems();
@@ -1595,10 +1630,25 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setDisplayAxis((DisplayAxis) jComboBoxDisplayAxis.getSelectedItem());
     }//GEN-LAST:event_jComboBoxDisplayAxisActionPerformed
 
+    public File createTempFile(String prefix, String suffix) throws IOException {
+        if (null == aprsJFrame) {
+            return Utils.createTempFile(prefix, suffix);
+        }
+
+        return aprsJFrame.createTempFile(prefix, suffix);
+    }
+
+    public File createTempFile(String prefix, String suffix, File dir) throws IOException {
+        if (null == aprsJFrame) {
+            return Utils.createTempFile(prefix, suffix, dir);
+        }
+        return aprsJFrame.createTempFile(prefix, suffix, dir);
+    }
+
     public void loadFile(File f) throws IOException {
 
         try {
-            takeSnapshot(aprsJFrame.createTempFile("before_loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
+            takeSnapshot(createTempFile("before_loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
         } catch (IOException ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1611,17 +1661,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldFilename.setText(f.getCanonicalPath());
         javax.swing.SwingUtilities.invokeLater(() -> {
             try {
-                takeSnapshot(aprsJFrame.createTempFile("loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
+                takeSnapshot(createTempFile("loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
     }
 
-    private void saveFile(File f) throws IOException {
-
+    public void saveFile(File f) throws IOException {
         saveFile(f, getItems());
-
     }
 
     private void saveFile(File f, Collection<? extends PhysicalItem> items) throws IOException {
@@ -1709,6 +1757,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void setAprsJFrame(AprsJFrame aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
         this.object2DJPanel1.setAprsJFrame(aprsJFrame);
+        setSlotOffsetProvider(aprsJFrame);
+    }
+
+    private SlotOffsetProvider slotOffsetProvider = null;
+
+    public SlotOffsetProvider getSlotOffsetProvider() {
+        return slotOffsetProvider;
+    }
+
+    public void setSlotOffsetProvider(SlotOffsetProvider slotOffsetProvider) {
+        this.slotOffsetProvider = slotOffsetProvider;
+        this.object2DJPanel1.setSlotOffsetProvider(slotOffsetProvider);
     }
 
     public void connectCurrentPosition() {
@@ -1796,13 +1856,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jCheckBoxAddPosNoiseActionPerformed
 
     private void jCheckBoxViewOutputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxViewOutputActionPerformed
-        object2DJPanel1.setShowOutputItems(jCheckBoxViewOutput.isSelected() && jCheckBoxViewOutput.isSelected());
-        if (object2DJPanel1.isShowOutputItems()) {
+        setShowOutputItems(jCheckBoxViewOutput.isSelected());
+    }//GEN-LAST:event_jCheckBoxViewOutputActionPerformed
+
+    public void setShowOutputItems(boolean showOutputItems) {
+        object2DJPanel1.setShowOutputItems(showOutputItems);
+        if (!showOutputItems) {
             setItemsInternal(getItems());
         } else {
             setOutputItemsInternal(getOutputItems());
         }
-    }//GEN-LAST:event_jCheckBoxViewOutputActionPerformed
+        if (showOutputItems != jCheckBoxViewOutput.isSelected()) {
+            jCheckBoxViewOutput.setSelected(showOutputItems);
+        }
+    }
 
     private void jTextFieldSimDropRateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldSimDropRateActionPerformed
         setSimulatedDropRate(Double.parseDouble(jTextFieldSimDropRate.getText().trim()));
@@ -1850,10 +1917,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (jCheckBoxSimulationUpdateAsNeeded.isSelected()) {
             return;
         }
-        refresh(false);
+        if (!forceOutputFlag) {
+            refresh(false);
+        }
     }
 
     private void setupSimUpdateTimer() {
+        if (forceOutputFlag) {
+            return;
+        }
         if (null != simUpdateTimer) {
             simUpdateTimer.stop();
             simUpdateTimer = null;
@@ -2469,14 +2541,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     if (true) {
                         System.out.println("Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
                         try {
-                            takeSnapshot(aprsJFrame.createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                            takeSnapshot(createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
                         } catch (IOException ex) {
                             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 } else {
                     try {
-                        takeSnapshot(aprsJFrame.createTempFile("failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                        takeSnapshot(createTempFile("failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -2488,14 +2560,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (true) {
                     System.out.println("Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
                     try {
-                        takeSnapshot(aprsJFrame.createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                        takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
                 if (captured_item_index < 0) {
                     try {
-                        takeSnapshot(aprsJFrame.createTempFile("failed_to_drop_part_", ".PNG"), (PmCartesian) null, "");
+                        takeSnapshot(createTempFile("failed_to_drop_part_", ".PNG"), (PmCartesian) null, "");
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
