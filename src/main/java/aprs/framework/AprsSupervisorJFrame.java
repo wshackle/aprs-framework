@@ -33,10 +33,12 @@ import aprs.framework.pddl.executor.PositionMap;
 import aprs.framework.pddl.executor.PositionMapEntry;
 import aprs.framework.pddl.executor.PositionMapJPanel;
 import aprs.framework.screensplash.SplashScreen;
+import com.google.gwt.thirdparty.guava.common.io.Files;
 import crcl.base.CRCLStatusType;
 import crcl.base.CommandStateEnumType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
+import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GraphicsDevice;
@@ -45,6 +47,7 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -52,9 +55,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.Socket;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
@@ -69,6 +77,7 @@ import java.util.EventObject;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
@@ -123,6 +132,12 @@ import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
@@ -1738,6 +1753,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemRandomTestReverseFirst = new javax.swing.JMenuItem();
         jCheckBoxMenuItemIndContinousDemo = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemIndRandomToggleTest = new javax.swing.JCheckBoxMenuItem();
+        jMenuItemRunCustom = new javax.swing.JMenuItem();
         jMenuOptions = new javax.swing.JMenu();
         jCheckBoxMenuItemDisableTextPopups = new javax.swing.JCheckBoxMenuItem();
         jMenuItemStartColorTextDisplay = new javax.swing.JMenuItem();
@@ -2468,6 +2484,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
         });
         jMenuActionsAdditionalTests.add(jCheckBoxMenuItemIndRandomToggleTest);
+
+        jMenuItemRunCustom.setText("Run custom code");
+        jMenuItemRunCustom.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemRunCustomActionPerformed(evt);
+            }
+        });
+        jMenuActionsAdditionalTests.add(jMenuItemRunCustom);
 
         jMenuActions.add(jMenuActionsAdditionalTests);
 
@@ -3526,6 +3550,121 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jComboBoxTeachSystemViewActionPerformed
 
+    public AprsJFrame getSysByTask(String s) {
+        for (AprsJFrame sys : aprsSystems) {
+            if (sys.getTaskName().startsWith(s)) {
+                return sys;
+            }
+        }
+        return null;
+    }
+
+    private final String INIT_CUSTOM_CODE = "package custom;\n"
+            + "import aprs.framework.*; \n"
+            + "import java.util.function.Consumer;\n\n"
+            + "public class Custom\n\timplements Consumer<AprsSupervisorJFrame> {\n"
+            + "\tpublic void accept(AprsSupervisorJFrame sup) {\n"
+            + "\t\t// PUT YOUR CODE HERE:\n"
+            + "\t\tSystem.out.println(\"sys = \"+sup.getSysByTask(\"Fanuc Cart\"));"
+            + "\t}\n"
+            + "}\n";
+
+    private String customCode = INIT_CUSTOM_CODE;
+
+    private void jMenuItemRunCustomActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemRunCustomActionPerformed
+        runCustomCode();
+    }//GEN-LAST:event_jMenuItemRunCustomActionPerformed
+
+    private void runCustomCode() {
+        try {
+
+            customCode = MultiLineStringJPanel.editText(customCode);
+            File customDir = Paths.get(System.getProperty("user.home"), ".aprs", "custom").toFile();
+            customDir.delete();
+            customDir.mkdirs();
+            File tmpFile = new File(customDir, "Custom.java");
+            System.out.println("tmpFile = " + tmpFile.getCanonicalPath());
+            File[] files1 = {tmpFile};
+
+            Files.write(customCode.getBytes(), tmpFile);
+            java.util.function.Consumer c = null;
+            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+            if (null != compiler) {
+                ClassLoader cl = ClassLoader.getSystemClassLoader();
+
+                URL[] origUrls = ((URLClassLoader) cl).getURLs();
+
+                StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+
+                Iterable<? extends JavaFileObject> compilationUnits1
+                        = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(files1));
+                String classPath = Arrays.stream(origUrls)
+                        .map(Objects::toString)
+                        .map(s -> s.startsWith("file:") ? s.substring(4) : s)
+                        .collect(Collectors.joining(File.pathSeparator));
+                System.out.println("classPath = " + classPath);
+                DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+                compiler.getTask(null, fileManager, diagnostics, Arrays.asList("-cp", classPath), null, compilationUnits1).call();
+                StringBuilder errBuilder = new StringBuilder();
+                for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+                    String err = String.format("%s:%d %s %n",
+                            diagnostic.getSource().toUri(),
+                            diagnostic.getLineNumber(),
+                            diagnostic.getMessage(Locale.US));
+                    errBuilder.append(err);
+                }
+                String fullErr = errBuilder.toString();
+                boolean origDisableShowText = crcl.ui.misc.MultiLineStringJPanel.disableShowText;
+                if (fullErr.length() > 0) {
+                    crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
+                    MultiLineStringJPanel.showText(fullErr).thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
+                    if (!customCode.contains("class Custom")) {
+                        customCode = INIT_CUSTOM_CODE;
+                    }
+                    return;
+                }
+                URL[] urls = new URL[origUrls.length + 1];
+                System.arraycopy(origUrls, 0, urls, 0, origUrls.length);
+                urls[urls.length - 1] = tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL();
+                //tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL()};
+                System.out.println("urls = " + Arrays.toString(urls));
+                ClassLoader loader = new URLClassLoader(urls);
+                Class clss = loader.loadClass("custom.Custom");
+                Object obj = clss.newInstance();
+                Method acceptMethod = clss.getMethod("accept", AprsSupervisorJFrame.class);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                PrintStream origOut = System.out;
+
+                try (PrintStream ps = new PrintStream(baos)) {
+                    System.setOut(ps);
+                    acceptMethod.invoke(obj, this);
+                    String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+                    System.setOut(origOut);
+                    System.out.println("content = " + content);
+                    if (content.length() > 0) {
+                        crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
+                        MultiLineStringJPanel.showText(content).thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
+
+                    }
+                } finally {
+                    crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText;
+                    System.setOut(origOut);
+                }
+            }
+        } catch (Exception exception) {
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, exception);
+            StringWriter sw = new StringWriter();
+            exception.printStackTrace(new PrintWriter(sw));
+            String trace = sw.toString();
+            boolean origDisableShowText = crcl.ui.misc.MultiLineStringJPanel.disableShowText;
+            crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
+            MultiLineStringJPanel.showText(trace).thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
+            if (!customCode.contains("class Custom")) {
+                customCode = INIT_CUSTOM_CODE;
+            }
+        }
+    }
+
     private void setTeachSystemFilter(AprsJFrame sys) {
         if (null == sys) {
             object2DOuterJPanel1.setForceOutputFlag(false);
@@ -3729,7 +3868,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             allowTogglesCount.incrementAndGet();
             LockInfo lockInfo = toggleBlockerMap.remove(blockerName);
             String blockerList = toggleBlockerMap.keySet().toString();
-            
+
             if (null == lockInfo) {
                 logEvent("allowToggle called for blocker " + blockerName + " not in toggleBlockerMap " + toggleBlockerMap);
             } else {
@@ -3740,7 +3879,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     totalBlockTime.addAndGet(blockTime);
                 }
                 logEvent("allowToggles(" + blockerName + ") after " + blockTime + "ms : blockers=" + blockerList + ", totalBlockTime=" + (totalBlockTime.get() / 1000) + "s");
-                
+
             }
 //        if(blockTime > 20000) {
 //            System.out.println("blockTime = " + blockTime);
@@ -5415,6 +5554,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemLoadSetup;
     private javax.swing.JMenuItem jMenuItemRemoveSelectedSystem;
     private javax.swing.JMenuItem jMenuItemResetAll;
+    private javax.swing.JMenuItem jMenuItemRunCustom;
     private javax.swing.JMenuItem jMenuItemSafeAbortAll;
     private javax.swing.JMenuItem jMenuItemSaveAll;
     private javax.swing.JMenuItem jMenuItemSavePosMaps;
