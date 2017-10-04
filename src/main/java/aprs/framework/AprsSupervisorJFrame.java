@@ -2676,7 +2676,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemContDemoReverseFirst.setText("Reverse First for Continous Demo");
         jMenuOptions.add(jCheckBoxMenuItemContDemoReverseFirst);
 
-        jCheckBoxMenuItemUseTeachCamera.setSelected(true);
         jCheckBoxMenuItemUseTeachCamera.setText("Use Teach Camera");
         jMenuOptions.add(jCheckBoxMenuItemUseTeachCamera);
 
