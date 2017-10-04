@@ -413,13 +413,15 @@ public class DatabasePoseUpdater implements AutoCloseable {
                             throw new RuntimeException(ex);
                         }
                     })
-                    .handle((Void x, Throwable ex) -> {
-                        if (null != ex) {
-                            Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
-                            return null;
-                        }
-                        return dpu;
-                    });
+                    .handle(
+                            "DatabasePoseUpdater.handleDbConnect",
+                            (Void x, Throwable ex) -> {
+                                if (null != ex) {
+                                    Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+                                    return null;
+                                }
+                                return dpu;
+                            });
         } catch (SQLException ex) {
             Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
             XFuture xf = new XFuture("createDatabasePoseUpdaterExeption");

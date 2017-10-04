@@ -22,17 +22,9 @@
  */
 package aprs.framework.colortextdisplay;
 
-import aprs.framework.Utils;
-import aprs.framework.database.SocketLineReader;
-import java.awt.Color;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
- *
+ * JFrame for testing the ColorTextJPanel as a standalone program.
+ * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class ColorTextJFrame extends javax.swing.JFrame {
@@ -44,6 +36,9 @@ public class ColorTextJFrame extends javax.swing.JFrame {
         initComponents();
     }
 
+    /**
+     * Start the color text reader for the internal ColorTextJPanel.
+     */
     public void startColorTextReader() {
         colorTextJPanel1.startReader();
     }

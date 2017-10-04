@@ -26,11 +26,22 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- *
+ * Instances of PDDL (Planning Domain Definition Language) Actions
+ * 
+ * An ordered list of actions is the typical output of a PDDL planner.
+ * The list may be read from a file or generated automatically.
+ * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class PddlAction {
 
+    /**
+     * Create an instance from the required parameters.
+     * @param label string added to the display table 
+     * @param type  the kind of action to be performed  
+     * @param args arguments for the action
+     * @param cost cost as reported by planner
+     */
     public PddlAction(String label, String type, String[] args, String cost) {
         this.label = label;
         this.type = type;
@@ -121,6 +132,13 @@ public class PddlAction {
         return cost;
     }
 
+    /**
+     * Convert a string typically taken from on line in the file created by the PDDL planner to
+     * create a corresponding object instance.
+     * 
+     * @param s string to parse
+     * @return corresponding object instance
+     */
     public static PddlAction parse(String s) {
        
 

@@ -69,13 +69,30 @@ public class Utils {
     private Utils() {
     }
 
+    /**
+     * A Runnable that may throw  a checked exception.
+     */
     public static interface RunnableWithThrow {
 
+        /**
+         * Run method to implement.
+         * @throws Exception exception occurred
+         */
         public void run() throws Exception;
     }
 
+    /**
+     * Extension of XFuture which extends CompleteableFuture specifically for
+     * operations that are happening on the Swing event dispatch thread.
+     * 
+     * @param <T> type of object that may eventually be returned with get etc.
+     */
     public static class SwingFuture<T> extends XFuture<T> {
 
+        /**
+         * Complete a new SwingFuture with name attached for later logging/debugging/visualization 
+         * @param name optional name for tracking futures
+         */
         public SwingFuture(String name) {
             super(name);
         }
@@ -101,6 +118,12 @@ public class Utils {
     private static String createAssertErrorString(CRCLCommandType cmd, long id) {
         return "command id being reduced id="+id+", cmd="+CRCLSocket.cmdToString(cmd);
     }
+    
+    /**
+     * Set the command ID and check that it is at-least as high as current id.
+     * @param cmd
+     * @param id
+     */
     public static void setCommandID(CRCLCommandType cmd, long id) {
         assert cmd.getCommandID() <= id:
                 createAssertErrorString(cmd,id);
@@ -129,6 +152,10 @@ public class Utils {
         }
     }
 
+    /**
+     * Get the current directory used for creating new log files.
+     * @return log file directory
+     */
     public static File getlogFileDir() {
         return new LogFileDirGetter().getLogFileDir();
     }
@@ -148,16 +175,37 @@ public class Utils {
         return prefixOut;
     }
     
+    /**
+     * Create a new temporary file in the current log file directory adding a timestamp
+     * and limiting the name length.
+     * @param prefix prefix for the new file name
+     * @param suffix suffix for the new file name
+     * @return new temporary file
+     * @throws IOException file can not be created
+     */
     public static File createTempFile(String prefix, String suffix) throws IOException {
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, getlogFileDir());
     }
 
+    /**
+     * Create a new temporary file in the given directory adding a timestamp
+     * and limiting the name length.
+     * @param prefix prefix for the new file name
+     * @param suffix suffix for the new file name
+     * @param dir directory to store new log file
+     * @return new temporary file
+     * @throws IOException file can not be created
+     */
     public static File createTempFile(String prefix, String suffix, File dir) throws IOException {
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, dir);
     }
     
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmmss.SSS");
     
+    /**
+     * Get the current date and time in the default format.
+     * @return date and time in formatted string
+     */
     public static String getDateTimeString() {
         Date date = new Date();
         return dateFormat.format(date);
@@ -165,12 +213,20 @@ public class Utils {
 
     private static final DateFormat timeFormat = new SimpleDateFormat("HHmmss.SSS");
     
+    /**
+     * Get the current time in the default format.
+     * @return  time in formatted string
+     */
     public static String getTimeString() {
         Date date = new Date();
         return timeFormat.format(date);
     }
 
-    
+    /**
+     * Run something on the dispatch thread that may throw a checked exception.
+     * @param r object with run method to call
+     * @return future that provides info on when the method completes.
+     */
     public static SwingFuture<Void> runOnDispatchThreadWithCatch(final RunnableWithThrow r) {
         SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThreadWithCatch");
         try {
@@ -185,24 +241,35 @@ public class Utils {
                         r.run();
                         ret.complete(null);
                     } catch (Exception ex) {
-                        ret.completeExceptionally(ex);
                         Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+                        ret.completeExceptionally(ex);
                     }
                 });
                 return ret;
             }
         } catch (Throwable exception) {
 
-            ret.completeExceptionally(exception);
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, exception);
+            ret.completeExceptionally(exception);
             return ret;
         }
     }
 
+    /**
+     * Run something on the dispatch thread.
+     * @param r object with run method to call
+     * @return future that provides info on when the method completes.
+     */
     public static SwingFuture<Void> runOnDispatchThread(final Runnable r) {
         return runOnDispatchThread("runOnDispatchThread", r);
     }
 
+    /**
+     * Run something on the dispatch thread and attach a name to it for debugging/logging/visualization.
+     * @param name optional name for better debugging/logging/visualization
+     * @param r object with run method to call
+     * @return future that provides info on when the method completes.
+     */
     public static SwingFuture<Void> runOnDispatchThread(String name, final Runnable r) {
         SwingFuture<Void> ret = new SwingFuture<>(name);
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
@@ -210,8 +277,8 @@ public class Utils {
                 r.run();
                 ret.complete(null);
             } catch (Exception e) {
-                e.printStackTrace();
                 ret.completeExceptionally(e);
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, name, e);
             }
 
             return ret;
@@ -221,7 +288,7 @@ public class Utils {
                     r.run();
                     ret.complete(null);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, name, e);
                     ret.completeExceptionally(e);
                 }
             });
@@ -229,6 +296,12 @@ public class Utils {
         }
     }
 
+    /**
+     * Call a method that returns a value on the dispatch thread.
+     * @param <R> type of return of the caller
+     * @param s supplier object with get method to be called.
+     * @return future that will make the return value accessible when the call is complete.
+     */
     public static <R> SwingFuture<R> supplyOnDispatchThread(final Supplier<R> s) {
         SwingFuture<R> ret = new SwingFuture<>("supplyOnDispatchThread");
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
@@ -249,6 +322,12 @@ public class Utils {
         }
     }
 
+    /**
+     * Call a method that returns a future of a value on the dispatch thread.
+     * @param <R> type of return of the caller
+     * @param s supplier object with get method to be called.
+     * @return future that will make the return value accessible when the call is complete.
+     */
     public static <R> XFuture<R> composeOnDispatchThread(final Supplier<XFuture<R>> s) {
         XFuture<XFuture<R>> ret = new SwingFuture<>("composeOnDispatchThread");
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
@@ -259,6 +338,11 @@ public class Utils {
         }
     }
 
+    /**
+     * Adjust the widths of each column of a table to match the max width of each 
+     * value in the table.
+     * @param table table to be resized
+     */
     public static void autoResizeTableColWidths(JTable table) {
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -297,6 +381,11 @@ public class Utils {
         }
     }
 
+    /**
+     * Adjust the heights of each row of a table to match the max height of each 
+     * value in the table.
+     * @param table table to be resized
+     */
     static public void autoResizeTableRowHeights(JTable table) {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
@@ -319,6 +408,11 @@ public class Utils {
         }
     }
 
+    /**
+     * Save a set of properties to a file, with a replacement for the backslashes in windows filenames. 
+     * @param file file to save
+     * @param props properties to save
+     */
     public static void saveProperties(File file, Properties props) {
         List<String> names = new ArrayList<String>();
         for (Object key : props.keySet()) {
@@ -336,12 +430,17 @@ public class Utils {
                 value = value.replaceAll("\\\\", Matcher.quoteReplacement("\\\\"));
                 pw.println(name + "=" + value);
             }
-//            props.store(pw, "");
         } catch (IOException ex) {
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
+    /**
+     * Save a JTable to a file.
+     * @param f file the save table data to
+     * @param jtable table to get data from
+     * @throws IOException file could not be written
+     */
     public static void saveJTable(File f, JTable jtable) throws IOException {
         try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT)) {
             TableModel tm = jtable.getModel();
@@ -370,6 +469,11 @@ public class Utils {
         }
     }
     
+    /**
+     * Convert a run time in milliseconds to a formatted string.
+     * @param runningTimeMillis
+     * @return formatted string
+     */
     static public String runTimeToString(long runningTimeMillis) {
         long runningTimeSecondsTotal = runningTimeMillis / 1000;
         long runningTimeHours = runningTimeSecondsTotal / 3600;
@@ -379,15 +483,4 @@ public class Utils {
         return s;
     }
 
-//    public static void main(String[] args) {
-//
-//        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-//        //get current date time with Date()
-//        Date date = new Date();
-//        System.out.println(dateFormat.format(date));
-//
-//        //get current date time with Calendar()
-//        Calendar cal = Calendar.getInstance();
-//        System.out.println(dateFormat.format(cal.getTime()));
-//    }
 }

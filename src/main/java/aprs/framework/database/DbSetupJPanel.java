@@ -36,6 +36,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -91,11 +92,11 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private final TableModelListener queriesTableModelListener = (TableModelEvent e) -> {
         setMapUpToDate(e);
     };
-    
+
     private void setMapUpToDate(TableModelEvent evt) {
-         mapUpToDate = false;
+        mapUpToDate = false;
     }
-    
+
 //    private static List<String> getClasspathEntriesByPath(String path) throws IOException {
 //        InputStream is = DbMain.class.getClassLoader().getResourceAsStream(path);
 //        if(null == is) {
@@ -506,27 +507,30 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             connected = true;
             DbSetup setup = this.getDbSetup();
             final StackTraceElement stackTraceElemArray[] = Thread.currentThread().getStackTrace();
-            DbSetupBuilder.connect(setup).handle((c, e) -> Utils.runOnDispatchThread(() -> {
-                if (null != e) {
-                    connected = false;
-                    Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, e);
-                    System.err.println("Called from :");
-                    for (int i = 0; i < stackTraceElemArray.length; i++) {
-                        System.err.println(stackTraceElemArray[i]);
-                    }
-                    System.err.println("Exception handled at ");
-                    if (aprsJFrame.isEnableDebugDumpstacks()) {
-                        Thread.dumpStack();
-                    }
-                    if (null != aprsJFrame) {
-                        aprsJFrame.setTitleErrorString("Database error: " + e.toString());
-                    }
-                }
-                notifyAllDbSetupListeners();
-                if (null != c) {
-                    jTextAreaConnectErrors.setText("Connected to database of type " + setup.getDbType() + "\n as user " + setup.getDbUser() + " on host " + setup.getHost() + "\n with port " + setup.getPort() + "\n using queries from " + setup.getQueriesDir());
-                }
-            }));
+            DbSetupBuilder.connect(setup)
+                    .handle(
+                            "jButtonConnectDBActionPerformed.handleDbConnect",
+                            (Connection c, Throwable e) -> Utils.runOnDispatchThread(() -> {
+                                if (null != e) {
+                                    connected = false;
+                                    Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, e);
+                                    System.err.println("Called from :");
+                                    for (int i = 0; i < stackTraceElemArray.length; i++) {
+                                        System.err.println(stackTraceElemArray[i]);
+                                    }
+                                    System.err.println("Exception handled at ");
+                                    if (aprsJFrame.isEnableDebugDumpstacks()) {
+                                        Thread.dumpStack();
+                                    }
+                                    if (null != aprsJFrame) {
+                                        aprsJFrame.setTitleErrorString("Database error: " + e.toString());
+                                    }
+                                }
+                                notifyAllDbSetupListeners();
+                                if (null != c) {
+                                    jTextAreaConnectErrors.setText("Connected to database of type " + setup.getDbType() + "\n as user " + setup.getDbUser() + " on host " + setup.getHost() + "\n with port " + setup.getPort() + "\n using queries from " + setup.getQueriesDir());
+                                }
+                            }));
         } catch (Exception ex) {
             jTextAreaConnectErrors.setText(ex + "\nCaused by :\n" + ex.getCause());
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -733,7 +737,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 }
             }
             String startScript = setup.getStartScript();
-            if(startScript != null && startScript.length() > 0) {
+            if (startScript != null && startScript.length() > 0) {
                 jTextFieldStartScript.setText(startScript);
             }
             if (!queriesMapReloaded) {
@@ -1148,7 +1152,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 //            restoringProperties = false;
 //        }
 //    }
-
     public void addLogMessage(Exception e) {
         e.printStackTrace();
     }
@@ -1349,7 +1352,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             }
         }
     }
-    
+
     public String getStartScript() {
         return jTextFieldStartScript.getText();
     }

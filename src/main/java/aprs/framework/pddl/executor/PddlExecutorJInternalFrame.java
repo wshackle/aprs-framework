@@ -67,7 +67,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
 //    public XFuture<Boolean> checkSafeAbortAsync(Supplier<XFuture<Boolean>> supplier) {
 //        return actionsToCrclJPanel1.checkSafeAbortAsync(supplier);
 //    }
-    public XFuture<Boolean> lookForParts() {
+    public XFuture<Boolean> startLookForParts() {
         return actionsToCrclJPanel1.lookForParts();
     }
 
@@ -273,12 +273,9 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return actionsToCrclJPanel1.doActions(comment,safeAbortCount);
     }
 
-    public ExecutorService getGeneateCrclService() {
-        return actionsToCrclJPanel1.getGeneateCrclService();
-    }
 
     public void setGeneateCrclService(ExecutorService geneateCrclService) {
-        actionsToCrclJPanel1.setGeneateCrclService(geneateCrclService);
+        actionsToCrclJPanel1.setGenerateCrclService(geneateCrclService);
     }
 
 

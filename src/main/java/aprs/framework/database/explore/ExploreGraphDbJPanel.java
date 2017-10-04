@@ -1211,30 +1211,31 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                 if (setup.getDbType() == DbType.NEO4J || setup.getDbType() == DbType.NEO4J_BOLT) {
                     final StackTraceElement stackTraceElemArray[] = Thread.currentThread().getStackTrace();
                     DbSetupBuilder.connect(setup)
-                            .handle((c, ex) -> {
-                                if (null != c) {
-                                    Utils.runOnDispatchThread(() -> {
-                                        setConnection(c);
-                                    });
-                                }
-                                if (null != ex) {
-                                    Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                                    System.err.println("Called from :");
-                                    for (int i = 0; i < stackTraceElemArray.length; i++) {
-                                        System.err.println(stackTraceElemArray[i]);
-                                    }
-                                    System.err.println("");
-                                    System.err.println("Exception handled at ");
-
-                                    if (null != aprsJFrame) {
-                                        if (aprsJFrame.isEnableDebugDumpstacks()) {
-                                            Thread.dumpStack();
+                            .handle("ExploreGraphDb.handle db connect",
+                                    (Connection c, Throwable ex) -> {
+                                        if (null != c) {
+                                            Utils.runOnDispatchThread(() -> {
+                                                setConnection(c);
+                                            });
                                         }
-                                        aprsJFrame.setTitleErrorString("Database error: " + ex.toString());
-                                    }
-                                }
-                                return c;
-                            });
+                                        if (null != ex) {
+                                            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                            System.err.println("Called from :");
+                                            for (int i = 0; i < stackTraceElemArray.length; i++) {
+                                                System.err.println(stackTraceElemArray[i]);
+                                            }
+                                            System.err.println("");
+                                            System.err.println("Exception handled at ");
+
+                                            if (null != aprsJFrame) {
+                                                if (aprsJFrame.isEnableDebugDumpstacks()) {
+                                                    Thread.dumpStack();
+                                                }
+                                                aprsJFrame.setTitleErrorString("Database error: " + ex.toString());
+                                            }
+                                        }
+                                        return c;
+                                    });
 
                     //.thenAccept(conn -> Utils.runOnDispatchThread(() -> setConnection(conn)));
                     System.out.println("ExploreGraph connected to database of on host " + setup.getHost() + " with port " + setup.getPort());

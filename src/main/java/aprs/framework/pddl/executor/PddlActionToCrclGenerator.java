@@ -59,6 +59,7 @@ import crcl.base.SetTransSpeedType;
 import crcl.base.TransSpeedAbsoluteType;
 import crcl.base.VectorType;
 import crcl.ui.XFuture;
+import crcl.ui.client.PendantClientInner;
 import crcl.utils.CrclCommandWrapper;
 import crcl.utils.CRCLPosemath;
 import java.sql.Connection;
@@ -352,31 +353,33 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 XFuture<Void> ret = new XFuture<>("PddlActionToCrclGenerator.setDbSetup");
                 try {
                     final StackTraceElement stackTraceElemArray[] = Thread.currentThread().getStackTrace();
-                    DbSetupBuilder.connect(dbSetup).handle((c, ex) -> {
-                        if (null != c) {
-                            Utils.runOnDispatchThread(() -> {
-                                setDbConnection(c);
-                                ret.complete(null);
-                            });
-                        }
-                        if (null != ex) {
-                            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                            System.err.println("Called from :");
-                            for (int i = 0; i < stackTraceElemArray.length; i++) {
-                                System.err.println(stackTraceElemArray[i]);
-                            }
-                            System.err.println("");
-                            System.err.println("Exception handled at ");
-                            if (null != aprsJFrame) {
-                                if (aprsJFrame.isEnableDebugDumpstacks()) {
-                                    Thread.dumpStack();
+                    DbSetupBuilder.connect(dbSetup).handle(
+                            "PddlActionToCrclGenerator.handleDbConnect",
+                            (Connection c, Throwable ex) -> {
+                                if (null != c) {
+                                    Utils.runOnDispatchThread(() -> {
+                                        setDbConnection(c);
+                                        ret.complete(null);
+                                    });
                                 }
-                                aprsJFrame.setTitleErrorString("Database error: " + ex.toString());
-                            }
-                            ret.completeExceptionally(ex);
-                        }
-                        return c;
-                    });
+                                if (null != ex) {
+                                    Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                    System.err.println("Called from :");
+                                    for (int i = 0; i < stackTraceElemArray.length; i++) {
+                                        System.err.println(stackTraceElemArray[i]);
+                                    }
+                                    System.err.println("");
+                                    System.err.println("Exception handled at ");
+                                    if (null != aprsJFrame) {
+                                        if (aprsJFrame.isEnableDebugDumpstacks()) {
+                                            Thread.dumpStack();
+                                        }
+                                        aprsJFrame.setTitleErrorString("Database error: " + ex.toString());
+                                    }
+                                    ret.completeExceptionally(ex);
+                                }
+                                return c;
+                            });
                     System.out.println("PddlActionToCrclGenerator connected to database of type " + dbSetup.getDbType() + " on host " + dbSetup.getHost() + " with port " + dbSetup.getPort());
                 } catch (Exception ex) {
                     Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
@@ -495,13 +498,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param actions list of PDDL Actions
      * @param startingIndex starting index into list of PDDL actions
      * @param options options to use as commands are generated
+     * @param startSafeAbortRequestCount abort request count taken when higher level action was started
+     *        this method will immediately abort if the request count is now already higher
      * @return list of CRCL commands
      *
      * @throws IllegalStateException if database not connected
      * @throws SQLException if query of the database failed
      */
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
-            throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException {
+            throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException {
 
         this.startSafeAbortRequestCount = startSafeAbortRequestCount;
         if (null == qs) {
@@ -516,7 +521,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         ActionCallbackInfo acbi = lastAcbi.get();
         if (null != acbi) {
             if (startingIndex < acbi.actionIndex) {
-                if (startingIndex != 0 || acbi.actionIndex < acbi.actions.size() - 2) {
+                if (startingIndex != 0 || acbi.actionIndex < acbi.getActionsSize() - 2) {
                     String errString = "generate called with startingIndex=" + startingIndex + " and acbi.actionIndex=" + acbi.actionIndex + ", lastIndex=" + lastIndex + ", acbi=" + acbi.toString();
                     System.err.println(errString);
                     aprsJFrame.setTitleErrorString(errString);
@@ -554,7 +559,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //                System.out.println("debug generate");
 //            }
 
-            List<PhysicalItem> newItems=null;
+            List<PhysicalItem> newItems = null;
             if (startingIndex > 0 && null != acbi && null != acbi.action) {
                 switch (acbi.action.getType()) {
 
@@ -571,7 +576,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             }
                         }
                         break;
-                        
+
                     default:
                         break;
                 }
@@ -3313,14 +3318,21 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         private final PddlAction action;
         private final CrclCommandWrapper wrapper;
         private final List<PddlAction> actions;
+        private final int actionsSize;
 
         public ActionCallbackInfo(int actionIndex, PddlAction action, CrclCommandWrapper wrapper, List<PddlAction> actions) {
             this.actionIndex = actionIndex;
             this.action = action;
             this.wrapper = wrapper;
-            this.actions = actions;
+            this.actions = Collections.unmodifiableList(new ArrayList<>(actions));
+            actionsSize = this.actions.size();
         }
 
+        public int getActionsSize() {
+            return actionsSize;
+        }
+
+        
         public int getActionIndex() {
             return actionIndex;
         }

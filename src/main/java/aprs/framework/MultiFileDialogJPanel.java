@@ -170,7 +170,7 @@ public class MultiFileDialogJPanel extends javax.swing.JPanel {
     private JDialog dialog = null;
     private boolean cancelled = false;
 
-    public void loadMap(Map<String, String> map) {
+    private void loadMap(Map<String, String> map) {
         DefaultTableModel model = (DefaultTableModel) jTableFiles.getModel();
         model.setRowCount(0);
         for (Map.Entry<String, String> entry : map.entrySet()) {
@@ -178,7 +178,7 @@ public class MultiFileDialogJPanel extends javax.swing.JPanel {
         }
     }
 
-    public Map<String, String> getMap() {
+    private Map<String, String> getMap() {
         if (cancelled) {
             return null;
         }
@@ -190,6 +190,15 @@ public class MultiFileDialogJPanel extends javax.swing.JPanel {
         return mapOut;
     }
 
+    /**
+     * Show a dialog where the user can select multiple files for different purposes each with its own label string.
+     * 
+     * @param owner frame owner for the dialog
+     * @param title title string
+     * @param modal should the dialog be modal
+     * @param mapIn initial map of labels to filenames
+     * @return
+     */
     public static Map<String, String> showMultiFileDialog(Frame owner, String title, boolean modal, Map<String, String> mapIn) {
         MultiFileDialogJPanel panel = new MultiFileDialogJPanel();
         panel.loadMap(mapIn);

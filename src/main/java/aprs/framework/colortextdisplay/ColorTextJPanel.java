@@ -66,6 +66,13 @@ public class ColorTextJPanel extends javax.swing.JPanel {
 
     private static final Class THIS_CLASS = aprs.framework.colortextdisplay.ColorTextJPanel.class;
 
+    /**
+     * Get the Icon for the given robot name.
+     * The Icon files are normally stored as resources in the same jar.
+     * 
+     * @param name name of the robot
+     * @return icon
+     */
     public static Icon getRobotIcon(String name) {
         if (name == null || name.length() < 1) {
             return null;
@@ -79,6 +86,10 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         }
     }
 
+    /**
+     * Default TCP port for providing the color and text labels to indicate
+     * when robots are disabled.
+     */
     public static final int COLORTEXT_SOCKET_PORT = 23444;
 
     private SocketLineReader reader;

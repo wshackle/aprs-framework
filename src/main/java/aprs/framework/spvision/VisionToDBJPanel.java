@@ -1463,7 +1463,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (null != requiredParts) {
             for (Entry<String, Integer> entry : requiredParts.entrySet()) {
                 String name = entry.getKey();
-                if(name.startsWith("sku_") && name.length()>4) {
+                if (name.startsWith("sku_") && name.length() > 4) {
                     name = name.substring(4);
                 }
                 String matchName = name;
@@ -1627,9 +1627,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     commandReplyPrintStream.println("acquire=" + acquire);
                 }
             }
-
+            
             if (null != dpu && null != dpu.getSqlConnection()) {
-                if (dpu.isEnableDatabaseUpdates()) {
+                boolean origEnableDbUpdates = dpu.isEnableDatabaseUpdates();
+                if (origEnableDbUpdates && dpu.isEnableDatabaseUpdates()) {
                     if (!checkRequiredParts(visionList)) {
                         return;
                     }
@@ -1638,7 +1639,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 PoseType transform = getTransformPose();
                 dpu.setDisplayInterface(this);
                 List<PhysicalItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
-                if (dpu.isEnableDatabaseUpdates()) {
+                if (origEnableDbUpdates && dpu.isEnableDatabaseUpdates()) {
                     if (!checkRequiredParts(visionListWithEmptySlots)) {
                         System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
                         System.err.println("checkRequiredPart(" + visionListWithEmptySlots + ") false but checkRequiredParts(" + visionList + ") true");
@@ -1647,7 +1648,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 }
                 if (null != transform) {
                     transformedVisionList = transformList(visionListWithEmptySlots, transform);
-                    if (dpu.isEnableDatabaseUpdates()) {
+                    if (origEnableDbUpdates && dpu.isEnableDatabaseUpdates()) {
                         if (!checkRequiredParts(transformedVisionList)) {
                             System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
                             System.err.println("checkRequiredPart(" + transformedVisionList + ") false but checkRequiredParts(" + visionList + ") true");
@@ -1655,12 +1656,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         }
                     }
                     List<PhysicalItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
-                    if (dpu.isEnableDatabaseUpdates()) {
+                    if (origEnableDbUpdates && dpu.isEnableDatabaseUpdates()) {
                         if (!checkRequiredParts(l)) {
                             System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
                             System.err.println("checkRequiredPart(" + l + ") false but checkRequiredParts(" + visionList + ") true");
-                            boolean chkAgain= checkRequiredParts(l);
-                            chkAgain= checkRequiredParts(transformedVisionList);
+                            boolean chkAgain = checkRequiredParts(l);
+                            chkAgain = checkRequiredParts(transformedVisionList);
                             List<PhysicalItem> l2 = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
                             return;
                         }
@@ -2227,14 +2228,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private void jButtonShowImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonShowImageActionPerformed
-//        try {
-////            DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
-////            tm.setRowCount(0);
-////            queryDatabaseNew().thenRun(this::callShowDatabaseTableImage);
-//            
-//        } catch (InterruptedException | ExecutionException ex) {
-//            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//        }
         showDatabaseTableImage();
     }//GEN-LAST:event_jButtonShowImageActionPerformed
 
