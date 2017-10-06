@@ -1643,6 +1643,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public void refresh() {
+        pddlActionToCrclGenerator.reset();
         String origErrorString = this.getErrorString();
         String fname = jTextFieldPddlOutputActions.getText();
         File f = new File(fname);
@@ -2041,15 +2042,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             autoStart = false;
             setReplanFromIndex(0);
-            if (null != runningProgramFuture) {
-                runningProgramFuture.cancelAll(true);
-            }
+            cancelRunProgramFuture();
             runningProgramFuture = generateCrclAsync();
         } catch (IOException | IllegalStateException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
             abortProgram();
         }
     }//GEN-LAST:event_jButtonGenerateCRCLActionPerformed
+
+    private void cancelRunProgramFuture() {
+        if (null != runningProgramFuture) {
+            runningProgramFuture.cancelAll(true);
+        }
+    }
 
     private void jButtonPddlOutputViewEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlOutputViewEditActionPerformed
         try {
@@ -2248,9 +2253,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             autoStart = true;
 //            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
-            if (null != runningProgramFuture) {
-                runningProgramFuture.cancelAll(true);
-            }
+            cancelRunProgramFuture();
             runningProgramFuture = this.takePart(part);
         } catch (IOException | IllegalStateException | SQLException | InterruptedException | PendantClientInner.ConcurrentBlockProgramsException | ExecutionException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -2367,9 +2370,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             autoStart = true;
 //            this.jTextFieldLookForCount.setText(Integer.toString(lookForCount));
             String part = getComboPart();
-            if (null != runningProgramFuture) {
-                runningProgramFuture.cancelAll(true);
-            }
+            cancelRunProgramFuture();
             runningProgramFuture = this.lookForParts();
         } catch (Exception e) {
             showExceptionInProgram(e);
@@ -2389,9 +2390,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             autoStart = true;
 //            this.jTextFieldReturnCount.setText(Integer.toString(returnCount));
             String part = getComboPart();
-            if (null != runningProgramFuture) {
-                runningProgramFuture.cancelAll(true);
-            }
+            cancelRunProgramFuture();
             runningProgramFuture = this.returnPart(part);
         } catch (IOException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -2675,9 +2674,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             setReplanFromIndex(0);
             autoStart = true;
             jCheckBoxReplan.setSelected(true);
-            if (null != runningProgramFuture) {
-                runningProgramFuture.cancelAll(true);
-            }
+            cancelRunProgramFuture();
             runningProgramFuture = generateCrclAsync();
         } catch (IOException | IllegalStateException | SQLException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -3062,9 +3059,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
             String slot = getComboSlot();
-            if (null != runningProgramFuture) {
-                runningProgramFuture.cancelAll(true);
-            }
+            cancelRunProgramFuture();
             runningProgramFuture = this.placePartSlot(part, slot);
         } catch (IOException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -3084,9 +3079,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             autoStart = true;
 //            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
-            if (null != runningProgramFuture) {
-                runningProgramFuture.cancelAll(true);
-            }
+            cancelRunProgramFuture();
             runningProgramFuture = this.testPartPosition(part);
         } catch (IOException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);

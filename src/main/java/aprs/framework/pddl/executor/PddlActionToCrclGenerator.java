@@ -492,14 +492,28 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     /**
+     * Set state/history/cache variables back to their initial values.
+     */
+    public void reset() {
+        lastAcbi.set(null);
+        this.lastTakenPart = null;
+        this.unitsSet = false;
+        this.rotSpeedSet = false;
+        lastIndex=0;
+        clearPoseCache();
+        clearLastRequiredPartsMap();
+    }
+
+    /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
      *
      * @param actions list of PDDL Actions
      * @param startingIndex starting index into list of PDDL actions
      * @param options options to use as commands are generated
-     * @param startSafeAbortRequestCount abort request count taken when higher level action was started
-     *        this method will immediately abort if the request count is now already higher
+     * @param startSafeAbortRequestCount abort request count taken when higher
+     * level action was started this method will immediately abort if the
+     * request count is now already higher
      * @return list of CRCL commands
      *
      * @throws IllegalStateException if database not connected
@@ -3332,7 +3346,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             return actionsSize;
         }
 
-        
         public int getActionIndex() {
             return actionIndex;
         }

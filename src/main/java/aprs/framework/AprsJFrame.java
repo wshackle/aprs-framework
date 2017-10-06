@@ -629,7 +629,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         continuousDemoFuture = null;
                     }
                     setStopRunTime();
-                });
+                }).thenComposeAsync(x -> waitAllLastFutures(),runProgramService);
         return safeAbortFuture;
     }
 
@@ -678,7 +678,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 //                                    }
                                     setStopRunTime();
                                 })
-                                .thenRunAsync(safeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService);
+                                .thenCompose(x -> waitAllLastFutures())
+                                .thenRunAsync(safeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
+                                .thenComposeAsync(x -> waitAllLastFutures(),runProgramService);
             } else {
                 safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected", null);
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -691,7 +693,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             return ret;
         }
     }
+    
+    private XFuture<Void> wait(XFuture<?> f) {
+        if(null == f || f.isCancelled() || f.isCompletedExceptionally() || f.isDone()) {
+            return XFuture.completedFutureWithName("waitReady f="+f, null);
+        } else {
+            return f.handle((x,t) -> null);
+        }
+    }
 
+    private XFuture<Void> waitAllLastFutures() {
+       return XFuture.allOf(wait(lastContinueActionListFuture),
+               wait(lastRunProgramFuture),
+               wait(lastStartActionsFuture));
+    }
+    
+    
     /**
      * Get a map of updates that were attempted the last time data was received
      * from the vision system.
@@ -1145,6 +1162,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != disconnectRobotFuture) {
             disconnectRobotFuture.cancelAll(true);
             disconnectRobotFuture = null;
+        }
+        if (null != safeAbortAndDisconnectFuture) {
+            safeAbortAndDisconnectFuture.cancelAll(true);
+            safeAbortAndDisconnectFuture = null;
+        }
+        if (null != safeAbortFuture) {
+            safeAbortFuture.cancelAll(true);
+            safeAbortFuture = null;
         }
         jCheckBoxMenuItemContinuousDemo.setSelected(false);
     }
