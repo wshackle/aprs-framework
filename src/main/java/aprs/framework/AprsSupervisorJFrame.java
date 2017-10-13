@@ -2910,6 +2910,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         if (!origIgnoreFlag) {
             ignoreTitleErrors.set(false);
         }
+        abortEventTime = -1;
         return returnRobots("prepActions");
     }
 
@@ -3447,6 +3448,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         for (int i = 0; i < aprsSystems.size(); i++) {
             aprsSystems.get(i).reset(reloadSimFiles);
         }
+        abortEventTime = -1;
+        firstEventTime = -1;
     }
 
     private void jCheckBoxMenuItemPauseResumeTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseResumeTestActionPerformed
