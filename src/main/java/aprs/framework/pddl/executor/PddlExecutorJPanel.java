@@ -461,6 +461,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jScrollPanePositionTable = new javax.swing.JScrollPane();
         jTablePositionCache = new javax.swing.JTable();
         jButtonClearPoseCache = new javax.swing.JButton();
+        jPanelOpOuter = new javax.swing.JPanel();
         jButtonClear = new javax.swing.JButton();
         jCheckBoxDebug = new javax.swing.JCheckBox();
         jButtonAbort = new javax.swing.JButton();
@@ -1170,6 +1171,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         );
 
         jTabbedPane1.addTab("Pose Cache", jPanelContainerPoseCache);
+
+        javax.swing.GroupLayout jPanelOpOuterLayout = new javax.swing.GroupLayout(jPanelOpOuter);
+        jPanelOpOuter.setLayout(jPanelOpOuterLayout);
+        jPanelOpOuterLayout.setHorizontalGroup(
+            jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 1024, Short.MAX_VALUE)
+        );
+        jPanelOpOuterLayout.setVerticalGroup(
+            jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 248, Short.MAX_VALUE)
+        );
+
+        jTabbedPane1.addTab("tab7", jPanelOpOuter);
 
         jButtonClear.setText("Clear");
         jButtonClear.addActionListener(new java.awt.event.ActionListener() {
@@ -4183,6 +4197,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JPanel jPanelCrcl;
     private javax.swing.JPanel jPanelExternalControl;
     private javax.swing.JPanel jPanelInnerManualControl;
+    private javax.swing.JPanel jPanelOpOuter;
     private javax.swing.JPanel jPanelOuterManualControl;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;

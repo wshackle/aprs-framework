@@ -5,9 +5,9 @@
  */
 package aprs.framework.optaplanner.actionmodel;
 
-import static aprs.framework.optaplanner.actionmodel.ActionType.DROPOFF;
-import static aprs.framework.optaplanner.actionmodel.ActionType.END;
-import static aprs.framework.optaplanner.actionmodel.ActionType.PICKUP;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.DROPOFF;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.PICKUP;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,11 +23,11 @@ import org.optaplanner.core.api.domain.variable.PlanningVariableGraphType;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @PlanningEntity
-public class Action implements ActionInterface {
+public class OpAction implements OpActionInterface {
 
     private final static AtomicInteger idCounter = new AtomicInteger();
     
-    public Action(String name,double x, double y, ActionType actionType, String partType) {
+    public OpAction(String name,double x, double y, OpActionType actionType, String partType) {
         this.name = name;
         this.location = new Point2D.Double(x, y);
         this.actionType = actionType;
@@ -35,7 +35,7 @@ public class Action implements ActionInterface {
         this.id = idCounter.incrementAndGet()+1;
     }
 
-    public Action() {
+    public OpAction() {
         this.id = idCounter.incrementAndGet()+1;
     }
 
@@ -71,16 +71,16 @@ public class Action implements ActionInterface {
 
     @PlanningVariable(graphType = PlanningVariableGraphType.CHAINED,
             valueRangeProviderRefs = {"possibleNextActions", "endActions"})
-    private ActionInterface next;
+    private OpActionInterface next;
 
-    private ActionType actionType;
+    private OpActionType actionType;
 
     @Override
-    public ActionType getActionType() {
+    public OpActionType getActionType() {
         return actionType;
     }
 
-    public void setActionType(ActionType actionType) {
+    public void setActionType(OpActionType actionType) {
         this.actionType = actionType;
     }
 
@@ -95,26 +95,26 @@ public class Action implements ActionInterface {
         this.partType = partType;
     }
 
-    private final List<ActionInterface> possibleNextActions = new ArrayList<>();
+    private final List<OpActionInterface> possibleNextActions = new ArrayList<>();
 
     @ValueRangeProvider(id = "possibleNextActions")
-    public List<ActionInterface> getPossibleNextActions() {
+    public List<OpActionInterface> getPossibleNextActions() {
         return possibleNextActions;
     }
 
     @Override
-    public ActionInterface getNext() {
+    public OpActionInterface getNext() {
         return next;
     }
 
-    public void setNext(ActionInterface next) {
+    public void setNext(OpActionInterface next) {
 //        if(!checkNextAction(next)) {
 //            throw new IllegalStateException("Settting next for "+this+" to "+next+" : possibles="+getPossibleNextActions());
 //        }
         this.next = next;
     }
 
-    public boolean checkNextAction(ActionInterface possibleNextAction) {
+    public boolean checkNextAction(OpActionInterface possibleNextAction) {
         switch (actionType) {
             case START:
                 return (possibleNextAction.getActionType() == PICKUP);
@@ -130,8 +130,8 @@ public class Action implements ActionInterface {
         }
     }
 
-    public void addPossibleNextActions(List<? extends ActionInterface> allActions) {
-        for (ActionInterface action : allActions) {
+    public void addPossibleNextActions(List<? extends OpActionInterface> allActions) {
+        for (OpActionInterface action : allActions) {
             if (checkNextAction(action)) {
                 possibleNextActions.add(action);
             }
@@ -152,8 +152,8 @@ public class Action implements ActionInterface {
 
     @Override
     public String toString() {
-        if(next instanceof Action) {
-            return name +" -> "+((Action)next).name+"("+cost()+")";
+        if(next instanceof OpAction) {
+            return name +" -> "+((OpAction)next).name+"("+cost()+")";
         } else if(null != next) {
             return name +" -> "+next.getActionType()+"("+cost()+")";
         }

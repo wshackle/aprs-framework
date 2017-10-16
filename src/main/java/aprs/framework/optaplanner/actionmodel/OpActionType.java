@@ -9,7 +9,7 @@ package aprs.framework.optaplanner.actionmodel;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public enum ActionType {
+public enum OpActionType {
     PICKUP,
     DROPOFF,
     START,

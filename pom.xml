@@ -113,6 +113,11 @@
             <version>${optiplanner.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.optaplanner</groupId>
+            <artifactId>optaplanner-benchmark</artifactId>
+            <version>${optiplanner.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.drools</groupId>
             <artifactId>drools-compiler</artifactId>
             <version>${optiplanner.version}</version>

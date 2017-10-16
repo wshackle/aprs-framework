@@ -5,32 +5,32 @@
  */
 package aprs.framework.optaplanner.actionmodel.score;
 
-import aprs.framework.optaplanner.actionmodel.Action;
-import aprs.framework.optaplanner.actionmodel.ActionInterface;
-import aprs.framework.optaplanner.actionmodel.ActionPlan;
-import static aprs.framework.optaplanner.actionmodel.ActionType.END;
-import static aprs.framework.optaplanner.actionmodel.ActionType.START;
+import aprs.framework.optaplanner.actionmodel.OpAction;
+import aprs.framework.optaplanner.actionmodel.OpActionPlan;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScore;
 import org.optaplanner.core.impl.score.director.easy.EasyScoreCalculator;
+import aprs.framework.optaplanner.actionmodel.OpActionInterface;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class EasyActionPlanScoreCalculator implements EasyScoreCalculator<ActionPlan> {
+public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpActionPlan> {
 
     @Override
-    public HardSoftBigDecimalScore calculateScore(ActionPlan solution) {
+    public HardSoftBigDecimalScore calculateScore(OpActionPlan solution) {
         double costTotal = 0;
         int ends = 0;
         int nulls = 0;
         int starts = 0;
         int startlength = 0;
         int badNexts = 0;
-        for(Action action: solution.getActions()) {
+        for(OpAction action: solution.getActions()) {
             if(action.getNext() == null) {
                 nulls++;
             } else if(action.getNext().getActionType() == END) {
@@ -42,15 +42,15 @@ public class EasyActionPlanScoreCalculator implements EasyScoreCalculator<Action
             costTotal += action.cost();
             Set<String> visited = new HashSet<>();
             if(action.getActionType() == START) {
-                ActionInterface tmp = action;
+                OpActionInterface tmp = action;
                 if(!solution.getActions().contains(tmp)) {
                     throw new IllegalStateException(tmp +" not in "+solution.getActions());
                 }
                 while(tmp != null
                         && tmp.getActionType() != END
-                        && tmp instanceof Action
-                        && !visited.contains(((Action)tmp).getName())) {
-                    visited.add(((Action)tmp).getName());
+                        && tmp instanceof OpAction
+                        && !visited.contains(((OpAction)tmp).getName())) {
+                    visited.add(((OpAction)tmp).getName());
                     startlength++;
                     tmp = tmp.getNext();
                 }

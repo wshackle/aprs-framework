@@ -5,18 +5,18 @@
  */
 package aprs.framework.optaplanner.actionmodel;
 
-import static aprs.framework.optaplanner.actionmodel.ActionType.END;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
 import java.awt.geom.Point2D;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class EndAction  implements ActionInterface{
+public class OpEndAction  implements OpActionInterface{
 
     private Point2D.Double location;
     
-    public EndAction() {
+    public OpEndAction() {
         location = new Point2D.Double();
     }
     
@@ -25,12 +25,12 @@ public class EndAction  implements ActionInterface{
     }
     
     @Override
-    public ActionInterface getNext() {
+    public OpActionInterface getNext() {
         return this;
     }
 
     @Override
-    public ActionType getActionType() {
+    public OpActionType getActionType() {
         return END;
     }
 

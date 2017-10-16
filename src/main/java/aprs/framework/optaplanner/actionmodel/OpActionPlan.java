@@ -5,8 +5,8 @@
  */
 package aprs.framework.optaplanner.actionmodel;
 
-import static aprs.framework.optaplanner.actionmodel.ActionType.END;
-import static aprs.framework.optaplanner.actionmodel.ActionType.START;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -24,72 +24,69 @@ import org.optaplanner.core.api.domain.solution.drools.ProblemFactProperty;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@PlanningSolution(solutionCloner = ActionPlanCloner.class)
-public class ActionPlan {
+@PlanningSolution(solutionCloner = OpActionPlanCloner.class)
+public class OpActionPlan {
 
     @ProblemFactProperty
-    EndAction endAction = new EndAction();
+    OpEndAction endAction = new OpEndAction();
 
-    public EndAction getEndAction() {
+    public OpEndAction getEndAction() {
         return endAction;
     }
 
-    public void setEndAction(EndAction endAction) {
+    public void setEndAction(OpEndAction endAction) {
         this.endAction = endAction;
     }
 
     @ProblemFactCollectionProperty
-    private List<EndAction> endActions = Collections.singletonList(endAction);
+    private List<OpEndAction> endActions = Collections.singletonList(endAction);
 
     @ValueRangeProvider(id = "endActions")
-    public List<EndAction> getEndActions() {
+    public List<OpEndAction> getEndActions() {
         return endActions;
     }
 
-    public void setEndActions(List<EndAction> endActions) {
+    public void setEndActions(List<OpEndAction> endActions) {
         this.endActions = endActions;
     }
     
 
     @PlanningEntityCollectionProperty
-    private List<Action> actions;
+    private List<OpAction> actions;
 
-    public List<Action> getActions() {
+    public List<OpAction> getActions() {
         return actions;
     }
 
-    public void setActions(List<Action> actions) {
+    public void setActions(List<OpAction> actions) {
         this.actions = actions;
     }
 
     public void initNextActions() {
-        List<ActionInterface> unusedActions = new ArrayList<>(actions);
+        List<OpActionInterface> unusedActions = new ArrayList<>(actions);
         unusedActions.addAll(endActions);
-        List<ActionInterface> allActions = new ArrayList<>(unusedActions);
-        Action startAction = null;
-        for (Action action : actions) {
-            action.addPossibleNextActions(allActions);
-            if (action.getActionType() == START) {
-                startAction = action;
-            }
+        List<OpActionInterface> allActions = new ArrayList<>(unusedActions);
+        OpAction startAction = findStartAction();
+        for (OpAction act : actions) {
+            act.addPossibleNextActions(allActions);
         }
-        List<Action> newActions = new ArrayList<>();
+        List<OpAction> newActions = new ArrayList<>();
         if (null != startAction) {
             newActions.add(startAction);
             unusedActions.remove(startAction);
         }
         while (startAction != null) {
-            Action action = startAction;
+            OpAction action = startAction;
 
             startAction = null;
-            for (ActionInterface nxtAction : action.getPossibleNextActions()) {
+            for (OpActionInterface nxtAction : action.getPossibleNextActions()) {
                 if (unusedActions.contains(nxtAction)) {
                     unusedActions.remove(nxtAction);
 
                     action.setNext(nxtAction);
-                    if (nxtAction.getActionType() != END && nxtAction instanceof Action) {
-                        newActions.add((Action) nxtAction);
-                        startAction = (Action) nxtAction;
+                    if (nxtAction.getActionType() != END && nxtAction instanceof OpAction) {
+                        newActions.add((OpAction) nxtAction);
+                        startAction = (OpAction) nxtAction;
                     } 
                     break;
                 }
@@ -113,24 +110,19 @@ public class ActionPlan {
 
     @Override
     public String toString() {
-        Action startAction = null;
         double totalCost = 0;
-        for (Action action : actions) {
-            if (action.getActionType() == START) {
-                startAction = action;
-            }
-        }
+        OpAction startAction = findStartAction();
         StringBuilder sb = new StringBuilder();
-        ActionInterface tmp = startAction;
+        OpActionInterface tmp = startAction;
         Set<String> visited = new HashSet<>();
-        List<ActionInterface> notInList = new ArrayList<>();
+        List<OpActionInterface> notInList = new ArrayList<>();
         while (tmp != null && tmp.getActionType() != END) {
             if (tmp != startAction) {
                 sb.append(" -> ");
             }
-            if (tmp instanceof Action) {
+            if (tmp instanceof OpAction) {
                 boolean inList = false;
-                for (Action action : actions) {
+                for (OpAction action : actions) {
                     if(action == tmp) {
                         inList = true;
                         break;
@@ -139,7 +131,7 @@ public class ActionPlan {
                 if(!inList) {
                     notInList.add(tmp);
                 }
-                Action actionTmp = (Action) tmp;
+                OpAction actionTmp = (OpAction) tmp;
                 visited.add(actionTmp.getName());
                 totalCost += actionTmp.cost();
                 sb.append(actionTmp.getName());
@@ -155,7 +147,7 @@ public class ActionPlan {
             sb.append(" notInList(").append(notInList).append(")");
         }
         double recheckCost = 0;
-        for (Action action : this.getActions()) {
+        for (OpAction action : this.getActions()) {
             recheckCost += action.cost();
             if (!visited.contains(action.getName())) {
                 sb.append(" NOT_VISITED(").append(action.getName()).append(") ");
@@ -168,6 +160,16 @@ public class ActionPlan {
             sb.append(" recheckCost(").append(recheckCost).append(") ");
         }
         return sb.toString();
+    }
+
+    public OpAction findStartAction() {
+        OpAction startAction = null;
+        for (OpAction action : actions) {
+            if (action.getActionType() == START) {
+                startAction = action;
+            }
+        }
+        return startAction;
     }
 
 }

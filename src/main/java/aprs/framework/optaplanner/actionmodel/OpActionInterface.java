@@ -11,17 +11,17 @@ import java.awt.geom.Point2D;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface ActionInterface {
+public interface OpActionInterface {
 
     public int getId();
     
     public String getName();
     
-    public ActionType getActionType();
+    public OpActionType getActionType();
 
     public String getPartType();
 
-    public ActionInterface getNext();
+    public OpActionInterface getNext();
     
     public Point2D.Double getLocation();
 }

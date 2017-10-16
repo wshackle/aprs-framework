@@ -13,6 +13,7 @@
 .attach_pid*
 hs_err_pid*
 /target
+/local
 
 # log and err files
 run*.log
