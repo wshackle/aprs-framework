@@ -12,9 +12,9 @@ import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
-import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScore;
 import org.optaplanner.core.impl.score.director.easy.EasyScoreCalculator;
 import aprs.framework.optaplanner.actionmodel.OpActionInterface;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 
 /**
  *
@@ -23,7 +23,7 @@ import aprs.framework.optaplanner.actionmodel.OpActionInterface;
 public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpActionPlan> {
 
     @Override
-    public HardSoftBigDecimalScore calculateScore(OpActionPlan solution) {
+    public HardSoftLongScore calculateScore(OpActionPlan solution) {
         double costTotal = 0;
         int ends = 0;
         int nulls = 0;
@@ -36,7 +36,7 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
             } else if(action.getNext().getActionType() == END) {
                 ends++;
             } 
-            if(!action.checkNextAction(action.getNext())) {
+            else if(!action.checkNextAction(action.getNext())) {
                 badNexts++;
             }
             costTotal += action.cost();
@@ -56,7 +56,9 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
                 }
             }
         }
-        HardSoftBigDecimalScore score = HardSoftBigDecimalScore.valueOf(BigDecimal.valueOf(-Math.abs(startlength-solution.getActions().size())-Math.abs(1-ends) - 2*nulls - badNexts),BigDecimal.valueOf(-costTotal));
+        long hardScoreLong = -Math.abs(startlength-solution.getActions().size())-Math.abs(1-ends) - 2*nulls - badNexts;
+        long softScoreLong = (long) (-1000.0*costTotal);
+        HardSoftLongScore score = HardSoftLongScore.valueOf(hardScoreLong,softScoreLong);
 //        System.out.println("solution = " + solution);
 //        System.out.println("score = " + score);
         return score;

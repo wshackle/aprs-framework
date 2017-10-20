@@ -35,6 +35,11 @@ import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.QuerySet;
 import aprs.framework.database.Tray;
 import aprs.framework.kitinspection.KitInspectionJInternalFrame;
+import aprs.framework.optaplanner.OpDisplayJPanel;
+import aprs.framework.optaplanner.actionmodel.OpAction;
+import aprs.framework.optaplanner.actionmodel.OpActionPlan;
+import aprs.framework.optaplanner.actionmodel.OpActionType;
+import aprs.framework.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
 import crcl.base.AngleUnitEnumType;
@@ -95,10 +100,13 @@ import java.util.function.Consumer;
 import java.util.Collection;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.awt.geom.Point2D;
 import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
+import org.optaplanner.core.api.solver.Solver;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -124,6 +132,129 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     public int getCrclNumber() {
         return crclNumber.get();
+    }
+
+    private static String posNameToType(String partName) {
+        if (partName.startsWith("empty_slot")) {
+            int for_index = partName.indexOf("_for_");
+            if (for_index > 0) {
+                partName = partName.substring(for_index + 5);
+            }
+        }
+        if (partName.startsWith("part_")) {
+            partName = partName.substring(5);
+        }
+        int in_index = partName.indexOf("_in_");
+        if (in_index > 0) {
+            return partName.substring(0, in_index);
+        }
+        return partName;
+    }
+
+    public List<PddlAction> opActionsToPddlActions(List<? extends OpAction> listIn, int start) {
+        List<PddlAction> ret = new ArrayList<>();
+        for (int i = start; i < listIn.size(); i++) {
+            OpAction opa = listIn.get(i);
+            String name = opa.getName();
+            if ("start".equals(name)) {
+                continue;
+            }
+            int dindex = name.indexOf("-[");
+            if (dindex > 0) {
+                String type = name.substring(0, dindex);
+                String args[] = name.substring(dindex + 2).split("[,{}\\-\\[\\]]+");
+                ret.add(new PddlAction("", type, args, "" + opa.cost()));
+            }
+        }
+        return ret;
+    }
+
+    private Solver<OpActionPlan> solver;
+
+    /**
+     * Get the value of solver
+     *
+     * @return the value of solver
+     */
+    public Solver<OpActionPlan> getSolver() {
+        return solver;
+    }
+
+    /**
+     * Set the value of solver
+     *
+     * @param solver new value of solver
+     */
+    public void setSolver(Solver<OpActionPlan> solver) {
+        this.solver = solver;
+    }
+
+    public List<OpAction> pddlActionsToOpActions(List<? extends PddlAction> listIn, int start) throws SQLException {
+        return pddlActionsToOpActions(listIn, start, null);
+    }
+
+    private List<OpAction> pddlActionsToOpActions(List<? extends PddlAction> listIn, int start, int endl[]) throws SQLException {
+        List<OpAction> ret = new ArrayList<>();
+        boolean moveOccurred = false;
+        PointType lookForPt = getLookForXYZ();
+        ret.add(new OpAction("start", lookForPt.getX(), lookForPt.getY(), OpActionType.START, "NONE"));
+        for (int i = start; i < listIn.size(); i++) {
+            PddlAction pa = listIn.get(i);
+
+            switch (pa.getType()) {
+
+                case "take-part":
+                case "fake-take-part":
+                case "test-part-position":
+                    String partName = pa.getArgs()[takePartArgIndex];
+                    PoseType partPose = getPose(partName);
+                    if (null == partPose) {
+                        throw new IllegalStateException("null == partPose: partName=" + partName + ",start=" + start + ",i=" + i + ",pa=" + pa);
+                    }
+                    PointType partPt = partPose.getPoint();
+                    ret.add(new OpAction(pa.toString(), partPt.getX(), partPt.getY(), OpActionType.PICKUP, posNameToType(partName)));
+                    if (!moveOccurred) {
+                        if (null != endl && endl.length > 0) {
+                            endl[0] = i;
+                        }
+                        moveOccurred = true;
+                    }
+                    break;
+
+                case "place-part":
+                    String slotName = pa.getArgs()[placePartSlotArgIndex];
+                    PoseType slotPose = getPose(slotName);
+                    if (null == slotPose) {
+                        throw new IllegalStateException("null == slotPose: slotName=" + slotName + ",start=" + start + ",i=" + i + ",pa=" + pa);
+                    }
+                    PointType slotPt = slotPose.getPoint();
+                    ret.add(new OpAction(pa.toString(), slotPt.getX(), slotPt.getY(), OpActionType.DROPOFF, posNameToType(slotName)));
+                    if (!moveOccurred) {
+                        if (null != endl && endl.length > 0) {
+                            endl[0] = i;
+                        }
+                        moveOccurred = true;
+                    }
+                    break;
+
+                case "look-for-part":
+                case "look-for-parts":
+                    if (moveOccurred) {
+                        if (null != endl && endl.length > 1) {
+                            endl[1] = i;
+                        }
+                        return ret;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        if (null != endl && endl.length > 1) {
+            endl[1] = listIn.size();
+        }
+        return ret;
     }
 
     private java.sql.Connection dbConnection;
@@ -255,7 +386,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     && qs.getDbConnection() == dbConnection
                     && qs.isConnected();
         } catch (SQLException ex) {
-            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return false;
     }
@@ -309,7 +440,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     }
                     qs = null;
                 } catch (SQLException ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 }
             }
             this.dbConnection = dbConnection;
@@ -320,9 +451,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 qs = null;
             }
         } catch (SQLException ex) {
-            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
-            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
 
     }
@@ -382,7 +513,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             });
                     System.out.println("PddlActionToCrclGenerator connected to database of type " + dbSetup.getDbType() + " on host " + dbSetup.getHost() + " with port " + dbSetup.getPort());
                 } catch (Exception ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 }
                 return ret;
             }
@@ -435,7 +566,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private Map<String, String> options = null;
 
-    private int lastIndex;
+    private final AtomicInteger lastIndex = new AtomicInteger();
+    private volatile List<PddlAction> lastActionsList = null;
+
+    public boolean atLastIndex() {
+        final int idx = getLastIndex();
+        if (idx == 0 && lastActionsList == null) {
+            return true;
+        }
+        if (null == lastActionsList) {
+            throw new IllegalStateException("null == lastActionsList");
+        }
+        return idx >= lastActionsList.size()-1;
+    }
 
     /**
      * Get the value of index of the last PDDL action planned.
@@ -443,16 +586,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @return the value of lastIndex
      */
     public int getLastIndex() {
-        return lastIndex;
+        return lastIndex.get();
     }
 
-    /**
-     * Set the value ofindex of the last PDDL action planned.
-     *
-     * @param lastIndex new value of lastIndex
-     */
-    public void setLastIndex(int lastIndex) {
-        this.lastIndex = lastIndex;
+    private void setLastActionsIndex(List<PddlAction> actionsList, int index) {
+
+        this.lastActionsList = actionsList;
+        lastIndex.set(index);
+    }
+
+    private int incLastActionsIndex(List<PddlAction> actionsList) {
+
+        this.lastActionsList = actionsList;
+        return lastIndex.incrementAndGet();
     }
 
     /**
@@ -499,9 +645,54 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.lastTakenPart = null;
         this.unitsSet = false;
         this.rotSpeedSet = false;
-        lastIndex=0;
+        setLastActionsIndex(null, 0);
         clearPoseCache();
         clearLastRequiredPartsMap();
+    }
+
+    private OpDisplayJPanel opDisplayJPanelSolution;
+
+    /**
+     * Get the value of opDisplayJPanelSolution
+     *
+     * @return the value of opDisplayJPanelSolution
+     */
+    public OpDisplayJPanel getOpDisplayJPanelSolution() {
+        return opDisplayJPanelSolution;
+    }
+
+    /**
+     * Set the value of opDisplayJPanelSolution
+     *
+     * @param opDisplayJPanelSolution new value of opDisplayJPanelSolution
+     */
+    public void setOpDisplayJPanelSolution(OpDisplayJPanel opDisplayJPanelSolution) {
+        this.opDisplayJPanelSolution = opDisplayJPanelSolution;
+    }
+
+    private OpDisplayJPanel opDisplayJPanelInput;
+
+    /**
+     * Get the value of opDisplayJPanelInput
+     *
+     * @return the value of opDisplayJPanelInput
+     */
+    public OpDisplayJPanel getOpDisplayJPanelInput() {
+        return opDisplayJPanelInput;
+    }
+
+    /**
+     * Set the value of opDisplayJPanelInput
+     *
+     * @param opDisplayJPanelInput new value of opDisplayJPanelInput
+     */
+    public void setOpDisplayJPanelInput(OpDisplayJPanel opDisplayJPanelInput) {
+        this.opDisplayJPanelInput = opDisplayJPanelInput;
+    }
+
+    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
+            throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException {
+        return generate(actions, startingIndex, options, startSafeAbortRequestCount, true, null);
     }
 
     /**
@@ -514,13 +705,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param startSafeAbortRequestCount abort request count taken when higher
      * level action was started this method will immediately abort if the
      * request count is now already higher
+     * @param replan run optaplanner to replan provided actions
+     * @param origActions actions before being passed through optaplanner
      * @return list of CRCL commands
      *
      * @throws IllegalStateException if database not connected
      * @throws SQLException if query of the database failed
      */
-    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
+    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount, boolean replan, List<PddlAction> origActions)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException {
+
+        if (null != solver && replan) {
+            return runOptaPlanner(actions, startingIndex, options, startSafeAbortRequestCount);
+        }
 
         this.startSafeAbortRequestCount = startSafeAbortRequestCount;
         if (null == qs) {
@@ -544,6 +741,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         }
         try {
+
             this.options = options;
             final int crclNumber = this.crclNumber.incrementAndGet();
 
@@ -597,18 +795,21 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
 
             takeSnapshots("plan", "generate(start=" + startingIndex + ",crclNumber=" + crclNumber + ")", null, null);
-            for (lastIndex = startingIndex; lastIndex < actions.size(); lastIndex++) {
+            final List<PddlAction> fixedActionsCopy = Collections.unmodifiableList(new ArrayList<>(actions));
+            final List<PddlAction> fixedOrigActionsCopy = (origActions==null)?null:Collections.unmodifiableList(new ArrayList<>(actions));
+            
+            for (this.setLastActionsIndex(actions, startingIndex); getLastIndex() < actions.size(); incLastActionsIndex(actions)) {
 
-                PddlAction action = actions.get(lastIndex);
+                final int idx = getLastIndex();
+                PddlAction action = actions.get(idx);
                 System.out.println("action = " + action);
-                takeSnapshots("plan", "gc_actions.get(" + lastIndex + ")=" + action, null, null);
+                takeSnapshots("plan", "gc_actions.get(" + idx + ")=" + action, null, null);
 //            try {
-                final int startMarkIndex = lastIndex;
-                String start_action_string = "start_" + startMarkIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                String start_action_string = "start_" + idx + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
                 addTakeSnapshots(cmds, start_action_string, null, null, this.crclNumber.get());
                 switch (action.getType()) {
                     case "take-part":
-                        takePart(action, cmds, getNextPlacePartAction(lastIndex, actions));
+                        takePart(action, cmds, getNextPlacePartAction(idx, actions));
                         break;
 
                     case "fake-take-part":
@@ -620,33 +821,31 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         break;
                     case "look-for-part":
                     case "look-for-parts":
-                        lookForParts(action, cmds, (lastIndex < 2),
-                                doInspectKit ? (lastIndex == actions.size() - 1) : (lastIndex >= actions.size() - 2)
+                        lookForParts(action, cmds, (idx < 2),
+                                doInspectKit ? (idx == actions.size() - 1) : (idx >= actions.size() - 2)
                         );
-                        actionToCrclIndexes[lastIndex] = cmds.size();
-                        actionToCrclLabels[lastIndex] = "";
-                        actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
-                        final int markerIndex = lastIndex;
+                        actionToCrclIndexes[idx] = cmds.size();
+                        actionToCrclLabels[idx] = "";
+                        actionToCrclTakenPartsNames[idx] = this.lastTakenPart;
                          {
-                            String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                            String end_action_string = "end_" + idx + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
                             addMarkerCommand(cmds, end_action_string,
                                     (CrclCommandWrapper wrapper) -> {
-                                        notifyActionCompletedListeners(markerIndex, action, wrapper, actions);
+                                        notifyActionCompletedListeners(idx, action, wrapper, fixedActionsCopy, fixedOrigActionsCopy);
                                     });
                         }
                         return cmds;
 
                     case "end-program":
                         endProgram(action, cmds);
-                        actionToCrclIndexes[lastIndex] = cmds.size();
-                        actionToCrclLabels[lastIndex] = "";
-                        actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
-                        final int endMarkerIndex = lastIndex;
+                        actionToCrclIndexes[idx] = cmds.size();
+                        actionToCrclLabels[idx] = "";
+                        actionToCrclTakenPartsNames[idx] = this.lastTakenPart;
                          {
-                            String end_action_string = "end_" + endMarkerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                            String end_action_string = "end_" + idx + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
                             addMarkerCommand(cmds, end_action_string,
                                     (CrclCommandWrapper wrapper) -> {
-                                        notifyActionCompletedListeners(endMarkerIndex, action, wrapper, actions);
+                                        notifyActionCompletedListeners(idx, action, wrapper, fixedActionsCopy, fixedOrigActionsCopy);
                                     });
                         }
                         return cmds;
@@ -660,12 +859,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         break;
 
                     case "inspect-kit": {
-                        assert (startingIndex == lastIndex) : "inspect-kit startingIndex(" + startingIndex + ") != lastIndex(" + lastIndex + ")";
+                        assert (startingIndex == idx) : "inspect-kit startingIndex(" + startingIndex + ") != lastIndex(" + idx + ")";
                         if (doInspectKit) {
                             try {
                                 inspectKit(action, cmds);
                             } catch (Exception ex) {
-                                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                                logger.log(Level.SEVERE, null, ex);
                             }
                         }
                     }
@@ -684,17 +883,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         break;
 
                     default:
-                        throw new IllegalArgumentException("unrecognized action " + action + " at index " + lastIndex);
+                        throw new IllegalArgumentException("unrecognized action " + action + " at index " + idx);
                 }
 
-                actionToCrclIndexes[lastIndex] = cmds.size();
-                actionToCrclLabels[lastIndex] = "";
-                actionToCrclTakenPartsNames[lastIndex] = this.lastTakenPart;
-                final int markerIndex = lastIndex;
-                String end_action_string = "end_" + markerIndex + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                actionToCrclIndexes[idx] = cmds.size();
+                actionToCrclLabels[idx] = "";
+                actionToCrclTakenPartsNames[idx] = this.lastTakenPart;
+                String end_action_string = "end_" + idx + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
                 addMarkerCommand(cmds, end_action_string,
                         (CrclCommandWrapper wrapper) -> {
-                            notifyActionCompletedListeners(markerIndex, action, wrapper, actions);
+                            notifyActionCompletedListeners(idx, action, wrapper, fixedActionsCopy, fixedOrigActionsCopy);
                         });
                 addTakeSnapshots(cmds, end_action_string, null, null, this.crclNumber.get());
             }
@@ -707,13 +905,92 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return cmds;
     }
 
+    private static final AtomicInteger ropCount = new AtomicInteger();
+    
+    private List<MiddleCommandType> runOptaPlanner(List<PddlAction> actions, int startingIndex, Map<String, String> options1, int startSafeAbortRequestCount1) throws IllegalStateException, InterruptedException, SQLException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException {
+        int rc = ropCount.incrementAndGet();
+        System.out.println("runOptaPlanner: rc = " + rc);
+        long t0 = System.currentTimeMillis();
+        this.options = options1;
+        if ( actions.size() < 1) {
+            throw new IllegalArgumentException( "actions.size() = " + actions.size()+",rc="+rc);
+        }
+        List<PddlAction> fullReplanPddlActions = optimizePddlActionsWithOptaPlanner(actions, startingIndex);
+        if (fullReplanPddlActions.size() != actions.size() || fullReplanPddlActions.size() < 1) {
+            throw new IllegalStateException("fullReplanPddlActions.size() = " + fullReplanPddlActions.size() + ",actions.size() = " + actions.size()+",rc="+rc);
+        }
+        if(fullReplanPddlActions == actions) {
+            return generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, null);
+        }
+        List<PddlAction> copyFullReplanPddlActions = new ArrayList<>(fullReplanPddlActions);
+        List<PddlAction> origActions = new ArrayList<>(actions);
+        long t1 = System.currentTimeMillis();
+        System.out.println("runOptaPlanner: (t1-t0) = " + (t1-t0)+",rc="+rc);
+        synchronized (actions) {
+            actions.clear();
+            actions.addAll(fullReplanPddlActions);
+        }
+        long t2 = System.currentTimeMillis();
+        System.out.println("runOptaPlanner: (t2-t0) = " + (t2-t0)+",rc="+rc);
+        if (fullReplanPddlActions.size() != actions.size() || actions.size() < 1) {
+            System.out.println("copyFullReplanPddlActions = " + copyFullReplanPddlActions);
+            throw new IllegalStateException("fullReplanPddlActions.size() = " + fullReplanPddlActions.size() + ",actions.size() = " + actions.size()+",rc="+rc);
+        }
+        List<MiddleCommandType> newCmds = generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, origActions);
+        long t3 = System.currentTimeMillis();
+        System.out.println("runOptaPlanner: (t3-t0) = " + (t3-t0)+",rc="+rc);
+        return newCmds;
+    }
+
+    private List<PddlAction> optimizePddlActionsWithOptaPlanner(List<PddlAction> actions, int startingIndex) throws SQLException {
+        int endl[] = new int[2];
+        PointType lookForPt = getLookForXYZ();
+        if (null == lookForPt) {
+            throw new IllegalStateException("null == lookForPT, startingIndex="+startingIndex+", actions="+actions);
+        }
+        List<OpAction> opActions = pddlActionsToOpActions(actions, startingIndex, endl);
+        if (opActions.size() < 3) {
+            logger.warning("opActions.size()=" + opActions.size());
+            return actions;
+        }
+        OpActionPlan inputPlan = new OpActionPlan();
+        inputPlan.setActions(opActions);
+        inputPlan.getEndAction().setLocation(new Point2D.Double(lookForPt.getX(), lookForPt.getY()));
+        inputPlan.initNextActions();
+        EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+        HardSoftLongScore score = calculator.calculateScore(inputPlan);
+        double inScore = (score.getSoftScore() / 1000.0);
+        OpActionPlan solvedPlan = solver.solve(inputPlan);
+        List<PddlAction> fullReplanPddlActions = new ArrayList<>();
+        List<PddlAction> skippedPddlActions = actions.subList(0, startingIndex > endl[0] ? startingIndex : endl[0]);
+        System.out.println("skippedPddlActions = " + skippedPddlActions);
+        fullReplanPddlActions.addAll(skippedPddlActions);
+        List<PddlAction> newPddlActions = opActionsToPddlActions(solvedPlan.orderedActions(), 0);
+        System.out.println("newPddlActions = " + newPddlActions);
+        List<PddlAction> replacedPddlActions = actions.subList(endl[0], endl[1]);
+        System.out.println("replacedPddlActions = " + replacedPddlActions);
+        fullReplanPddlActions.addAll(newPddlActions);
+        List<PddlAction> laterPddlActions = actions.subList(endl[1], actions.size());
+        System.out.println("laterPddlActions = " + laterPddlActions);
+        fullReplanPddlActions.addAll(laterPddlActions);
+        double solveScore = (solvedPlan.getScore().getSoftScore() / 1000.0);
+        if (null != this.opDisplayJPanelInput) {
+            this.opDisplayJPanelInput.setOpActionPlan(inputPlan);
+            this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.1f mm ", -inScore));
+        }
+        if (null != this.opDisplayJPanelSolution) {
+
+            this.opDisplayJPanelSolution.setOpActionPlan(solvedPlan);
+            this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.1f mm ", -solveScore));
+        }
+        System.out.println("Score improved:" + (solveScore - inScore));
+        return fullReplanPddlActions;
+    }
+
     private void clearKitsToCheck(PddlAction action, List<MiddleCommandType> cmds) {
         kitsToCheck.clear();
     }
 
-//    private void waitForUser(CrclCommandWrapper wrapper) {
-//        Utils.supplyOnDispatchThread(() -> JOptionPane.showConfirmDialog(null, "Continue?")).join();
-//    }
     private void pause(PddlAction action, List<MiddleCommandType> cmds) {
         addMarkerCommand(cmds, "pause", x -> aprsJFrame.pause());
     }
@@ -733,7 +1010,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     .map(PartsTray::getPartsTrayName)
                     .collect(Collectors.toList());
         } catch (SQLException ex) {
-            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return null;
     }
@@ -763,7 +1040,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     })
                     .collect(Collectors.toList());
         } catch (SQLException ex) {
-            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return null;
     }
@@ -894,7 +1171,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -1279,12 +1556,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public void takeSnapshots(String prefix, String title, PoseType pose, String label) {
         if (takeSnapshots) {
             try {
-                String fullTitle = title + "_crclNumber-" + String.format("%03d", crclNumber.get()) + "_action-" + String.format("%03d", lastIndex);
+                String fullTitle = title + "_crclNumber-" + String.format("%03d", crclNumber.get()) + "_action-" + String.format("%03d", getLastIndex());
                 takeSimViewSnapshot(aprsJFrame.createTempFile(prefix + "_" + fullTitle, ".PNG"), pose, label);
                 takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix + "_db_" + fullTitle, ".PNG"));
                 takeSimViewSnapshot(aprsJFrame.createTempFile(prefix + "_pc_" + fullTitle, ".PNG"), poseCacheToDetectedItemList());
             } catch (IOException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -1351,7 +1628,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 try {
                     kitInspectionJInternalFrame.getKitTitleLabel().setText(text);
                 } catch (Exception ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 }
             });
         }
@@ -1364,7 +1641,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 try {
                     kitFrame.addToInspectionResultJTextPane(text);
                 } catch (BadLocationException ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 }
             });
         }
@@ -1426,7 +1703,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     takeSimViewSnapshot("inspectKit.correctPartsTray.slotList",
                             correctPartsTray.getSlotList());
                 } catch (IOException ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 }
                 EmptySlotSet = new HashSet<Slot>();
                 int numberOfPartsInKit = 0;
@@ -1487,7 +1764,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         takeSimViewSnapshot(aprsJFrame.createTempFile("inspectKit-slotList", ".PNG"), slotList);
                         takeSimViewSnapshot(aprsJFrame.createTempFile("inspectKit-EmptySlotSet", ".PNG"), EmptySlotSet);
                     } catch (IOException ex) {
-                        Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                        logger.log(Level.SEVERE, null, ex);
                     }
                     //if (part_in_kt_found) {
                     TakenPartList.clear();
@@ -1709,7 +1986,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 takeSimViewSnapshot(aprsJFrame.createTempFile("PlacePartSlotPoseList", ".PNG"), posesToDetectedItemList(PlacePartSlotPoseList));
                 takeSimViewSnapshot(aprsJFrame.createTempFile("partsTray.getSlotList", ".PNG"), slotList);
             } catch (IOException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
             }
             partsTrayListItems.add(new Tray(partsTray.getPartsTrayName(), partsTray.getRotation(), partsTrayPoseX, partsTrayPoseY));
             if (count > 0) {
@@ -1717,7 +1994,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     takeSimViewSnapshot(aprsJFrame.createTempFile("dpuPartsTrayList", ".PNG"), dpuPartsTrayListItems);
                     takeSimViewSnapshot(aprsJFrame.createTempFile("partsTrayList", ".PNG"), partsTrayListItems);
                 } catch (IOException ex) {
-                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 }
                 correctPartsTray = partsTray;
                 System.out.println("Found partstray: " + partsTray.getPartsTrayName());
@@ -1728,7 +2005,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             takeSimViewSnapshot(aprsJFrame.createTempFile("dpuPartsTrayList", ".PNG"), dpuPartsTrayListItems);
             takeSimViewSnapshot(aprsJFrame.createTempFile("partsTrayList", ".PNG"), partsTrayListItems);
         } catch (IOException ex) {
-            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         System.err.println("findCorrectKitTray(" + kitSku + ") returning null. partsTraysList=" + partsTraysList);
         return null;
@@ -2358,7 +2635,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     throw new Exception("bad rpyString = \"" + rpyString + "\", rpyFields=" + Arrays.toString(rpyFields));
                 }
             } catch (Exception ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
             }
         }
         if (xAxis == null) {
@@ -2688,6 +2965,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     PointType getLookForXYZ() {
+        if (null == options) {
+            logger.warning("getLookForXYZ : null == options");
+            return null;
+        }
         String lookforXYZSring = options.get("lookForXYZ");
         if (null == lookforXYZSring) {
             return null;
@@ -2698,6 +2979,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         return point(Double.parseDouble(lookForXYZFields[0]), Double.parseDouble(lookForXYZFields[1]), Double.parseDouble(lookForXYZFields[2]));
     }
+    private final Logger logger = Logger.getLogger(PddlActionToCrclGenerator.class.getName());
 
     private volatile boolean atLookForPosition = false;
 
@@ -2932,7 +3214,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             try {
                 waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap);
             } catch (InterruptedException | ExecutionException | IOException ex) {
-                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
                 throw new RuntimeException(ex);
             }
         });
@@ -3148,7 +3430,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
                     takeSnapshots("plan", "returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPart);
-                    final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(), startSafeAbortRequestCount);
+                    final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount);
                     addMarkerCommand(out, msg,
                             ((CrclCommandWrapper wrapper) -> {
                                 addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
@@ -3165,7 +3447,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         placePartByPose(out, pose);
-        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(), startSafeAbortRequestCount);
+        final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount);
         addMarkerCommand(out, msg,
                 ((CrclCommandWrapper wrapper) -> {
                     addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
@@ -3202,7 +3484,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         pose.setZAxis(zAxis);
         PlacePartSlotPoseList.add(pose);
         placePartByPose(out, pose);
-        final PlacePartInfo ppi = new PlacePartInfo(action, lastIndex, out.size(), startSafeAbortRequestCount);
+        final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount);
         addMarkerCommand(out, msg,
                 ((CrclCommandWrapper wrapper) -> {
                     System.out.println(msg + " completed at " + new Date());
@@ -3332,13 +3614,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         private final PddlAction action;
         private final CrclCommandWrapper wrapper;
         private final List<PddlAction> actions;
+        private final List<PddlAction> origActions;
         private final int actionsSize;
 
-        public ActionCallbackInfo(int actionIndex, PddlAction action, CrclCommandWrapper wrapper, List<PddlAction> actions) {
+        public ActionCallbackInfo(int actionIndex, PddlAction action, CrclCommandWrapper wrapper, List<PddlAction> actions, List<PddlAction> origActions) {
             this.actionIndex = actionIndex;
             this.action = action;
             this.wrapper = wrapper;
-            this.actions = Collections.unmodifiableList(new ArrayList<>(actions));
+            this.actions = actions;
+            this.origActions = origActions;
             actionsSize = this.actions.size();
         }
 
@@ -3352,6 +3636,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         public PddlAction getAction() {
             return action;
+        }
+
+        public CrclCommandWrapper getWrapper() {
+            return wrapper;
+        }
+
+        public List<PddlAction> getActions() {
+            return actions;
+        }
+
+        public List<PddlAction> getOrigActions() {
+            return origActions;
         }
 
         @Override
@@ -3383,8 +3679,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private AtomicReference<ActionCallbackInfo> lastAcbi = new AtomicReference<>();
 
-    private void notifyActionCompletedListeners(int actionIndex, PddlAction action, CrclCommandWrapper wrapper, List<PddlAction> actions) {
-        ActionCallbackInfo acbi = new ActionCallbackInfo(actionIndex, action, wrapper, actions);
+    private void notifyActionCompletedListeners(int actionIndex, PddlAction action, CrclCommandWrapper wrapper, List<PddlAction> actions, List<PddlAction> origActions) {
+        ActionCallbackInfo acbi = new ActionCallbackInfo(actionIndex, action, wrapper, actions, origActions);
         lastAcbi.set(acbi);
         for (Consumer<ActionCallbackInfo> listener : actionCompletedListeners) {
             listener.accept(acbi);

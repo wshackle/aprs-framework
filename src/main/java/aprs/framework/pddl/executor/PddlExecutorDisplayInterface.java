@@ -53,8 +53,10 @@ public interface PddlExecutorDisplayInterface extends DisplayInterface {
      * Set the current list of actions.
      * @param actionsList new list of actions to use
      */
-    public void setActionsList(List<PddlAction> actionsList);
+//    public void setActionsList(List<PddlAction> actionsList);
 
+    public void clearActionsList();
+    
     /**
      * Add the action to the list of actions.
      * @param action action to add.

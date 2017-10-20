@@ -231,10 +231,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         this.actionsToCrclJPanel1.loadActionsFile(f);
     }
 
-    @Override
-    public void setActionsList(List<PddlAction> actionsList) {
-        this.actionsToCrclJPanel1.setActionsList(actionsList);
-    }
+//    @Override
+//    public void setActionsList(List<PddlAction> actionsList) {
+//        this.actionsToCrclJPanel1.setActionsList(actionsList);
+//    }
 
     @Override
     public void addAction(PddlAction action) {
@@ -319,5 +319,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     @Override
     public AprsJFrame getAprsJFrame() {
         return actionsToCrclJPanel1.getAprsJFrame();
+    }
+
+    @Override
+    public void clearActionsList() {
+        actionsToCrclJPanel1.clearActionsList();
     }
 }

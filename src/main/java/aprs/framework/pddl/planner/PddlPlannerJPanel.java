@@ -542,11 +542,11 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         return actionsToCrclJInternalFrame1.getActionsList();
     }
 
-    public void setActionsList(List<PddlAction> actionsList) {
-        if (null != actionsToCrclJInternalFrame1) {
-            actionsToCrclJInternalFrame1.setActionsList(actionsList);
-        }
-    }
+//    public void setActionsList(List<PddlAction> actionsList) {
+//        if (null != actionsToCrclJInternalFrame1) {
+//            actionsToCrclJInternalFrame1.setActionsList(actionsList);
+//        }
+//    }
 
     private void addAction(PddlAction action) {
         if (null != actionsToCrclJInternalFrame1) {
@@ -982,8 +982,15 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         }
     }
 
+    private void clearActionsList() {
+        if(null != actionsToCrclJInternalFrame1) {
+            actionsToCrclJInternalFrame1.clearActionsList();
+        }
+    }
     public void runPddlPlannerOnce() throws IOException {
-        this.setActionsList(new ArrayList<>());
+       
+        
+        clearActionsList();
         if (this.jCheckBoxSsh.isSelected()) {
             runPddlPlannerOnceSsh();
             return;

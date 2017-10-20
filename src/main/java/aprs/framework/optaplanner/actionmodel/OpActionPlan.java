@@ -17,8 +17,8 @@ import org.optaplanner.core.api.domain.solution.PlanningScore;
 import org.optaplanner.core.api.domain.solution.PlanningSolution;
 import org.optaplanner.core.api.domain.solution.drools.ProblemFactCollectionProperty;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
-import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScore;
 import org.optaplanner.core.api.domain.solution.drools.ProblemFactProperty;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 
 /**
  *
@@ -56,6 +56,20 @@ public class OpActionPlan {
 
     public List<OpAction> getActions() {
         return actions;
+    }
+    
+    
+    public List<OpAction> orderedActions() {
+        List<OpAction> orderedActions = new ArrayList<>();
+        OpAction start = findStartAction();
+        orderedActions.add(start);
+        OpActionInterface nxt = start.getNext();
+        while(nxt instanceof OpAction) {
+            OpAction nxtAction = (OpAction) nxt;
+            orderedActions.add(nxtAction);
+            nxt = nxtAction.getNext();
+        }
+        return orderedActions;
     }
 
     public void setActions(List<OpAction> actions) {
@@ -97,14 +111,14 @@ public class OpActionPlan {
         System.out.println("actions = " + actions);
     }
 
-    private HardSoftBigDecimalScore score;
+    private HardSoftLongScore score;
 
     @PlanningScore
-    public HardSoftBigDecimalScore getScore() {
+    public HardSoftLongScore getScore() {
         return score;
     }
 
-    public void setScore(HardSoftBigDecimalScore score) {
+    public void setScore(HardSoftLongScore score) {
         this.score = score;
     }
 

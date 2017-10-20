@@ -19,7 +19,7 @@
 
     <localSearch>
         <termination>
-            <unimprovedMillisecondsSpentLimit>300</unimprovedMillisecondsSpentLimit>
+            <unimprovedMillisecondsSpentLimit>50</unimprovedMillisecondsSpentLimit>
         </termination>
     </localSearch>
 

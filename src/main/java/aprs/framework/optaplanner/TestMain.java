@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScore;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
 
@@ -58,7 +58,7 @@ public class TestMain {
         showPlan(ap, "shuffled");
         System.out.println("ap = " + ap);
         EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
-        HardSoftBigDecimalScore score = calculator.calculateScore(ap);
+        HardSoftLongScore score = calculator.calculateScore(ap);
         System.out.println("score = " + score);
         SolverFactory<OpActionPlan> solverFactory = SolverFactory.createFromXmlResource(
                 "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");

@@ -32,6 +32,10 @@ import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
+import aprs.framework.optaplanner.OpDisplayJPanel;
+import aprs.framework.optaplanner.actionmodel.OpAction;
+import aprs.framework.optaplanner.actionmodel.OpActionPlan;
+import aprs.framework.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import aprs.framework.spvision.VisionToDBJPanel;
 import crcl.base.CRCLCommandInstanceType;
 import crcl.base.CRCLCommandType;
@@ -91,7 +95,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
-import java.util.Vector;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -109,9 +112,14 @@ import javax.swing.JPopupMenu;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.awt.geom.Point2D;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
+import org.optaplanner.core.api.solver.Solver;
+import org.optaplanner.core.api.solver.SolverFactory;
 
 /**
  *
@@ -462,6 +470,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jTablePositionCache = new javax.swing.JTable();
         jButtonClearPoseCache = new javax.swing.JButton();
         jPanelOpOuter = new javax.swing.JPanel();
+        opDisplayJPanelInput = new aprs.framework.optaplanner.OpDisplayJPanel();
+        opDisplayJPanelSolution = new aprs.framework.optaplanner.OpDisplayJPanel();
         jButtonClear = new javax.swing.JButton();
         jCheckBoxDebug = new javax.swing.JCheckBox();
         jButtonAbort = new javax.swing.JButton();
@@ -472,6 +482,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonContinue = new javax.swing.JButton();
         jButtonPause = new javax.swing.JButton();
         jCheckBoxForceFakeTake = new javax.swing.JCheckBox();
+        jCheckBoxEnableOptaPlanner = new javax.swing.JCheckBox();
 
         jLabel6.setText("Pddl Output Actions");
 
@@ -871,7 +882,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonGridTest)))
-                .addContainerGap(13, Short.MAX_VALUE))
+                .addContainerGap(154, Short.MAX_VALUE))
         );
 
         jPanelInnerManualControlLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
@@ -967,7 +978,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPositionMapLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 972, Short.MAX_VALUE)
+                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1168, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelContainerPositionMapLayout.setVerticalGroup(
@@ -1019,7 +1030,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             .addGroup(jPanelExternalControlLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelExternalControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 966, Short.MAX_VALUE)
+                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 1162, Short.MAX_VALUE)
                     .addGroup(jPanelExternalControlLayout.createSequentialGroup()
                         .addComponent(jLabel16)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1150,11 +1161,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jButtonClearPoseCache)
-                .addContainerGap(875, Short.MAX_VALUE))
+                .addContainerGap(1071, Short.MAX_VALUE))
             .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 972, Short.MAX_VALUE)
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 1168, Short.MAX_VALUE)
                     .addContainerGap()))
         );
         jPanelContainerPoseCacheLayout.setVerticalGroup(
@@ -1172,18 +1183,58 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         jTabbedPane1.addTab("Pose Cache", jPanelContainerPoseCache);
 
+        opDisplayJPanelInput.setLabel("Input");
+        opDisplayJPanelInput.setLabelFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
+        opDisplayJPanelInput.setLabelPos(new java.awt.Point(200, 20));
+
+        javax.swing.GroupLayout opDisplayJPanelInputLayout = new javax.swing.GroupLayout(opDisplayJPanelInput);
+        opDisplayJPanelInput.setLayout(opDisplayJPanelInputLayout);
+        opDisplayJPanelInputLayout.setHorizontalGroup(
+            opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 578, Short.MAX_VALUE)
+        );
+        opDisplayJPanelInputLayout.setVerticalGroup(
+            opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+
+        opDisplayJPanelSolution.setLabel("Output");
+        opDisplayJPanelSolution.setLabelFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
+        opDisplayJPanelSolution.setLabelPos(new java.awt.Point(200, 20));
+
+        javax.swing.GroupLayout opDisplayJPanelSolutionLayout = new javax.swing.GroupLayout(opDisplayJPanelSolution);
+        opDisplayJPanelSolution.setLayout(opDisplayJPanelSolutionLayout);
+        opDisplayJPanelSolutionLayout.setHorizontalGroup(
+            opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 578, Short.MAX_VALUE)
+        );
+        opDisplayJPanelSolutionLayout.setVerticalGroup(
+            opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 236, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout jPanelOpOuterLayout = new javax.swing.GroupLayout(jPanelOpOuter);
         jPanelOpOuter.setLayout(jPanelOpOuterLayout);
         jPanelOpOuterLayout.setHorizontalGroup(
             jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1024, Short.MAX_VALUE)
+            .addGroup(jPanelOpOuterLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(opDisplayJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(opDisplayJPanelSolution, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanelOpOuterLayout.setVerticalGroup(
             jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 248, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOpOuterLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(opDisplayJPanelSolution, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(opDisplayJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
-        jTabbedPane1.addTab("tab7", jPanelOpOuter);
+        jTabbedPane1.addTab("OptaPlanner", jPanelOpOuter);
 
         jButtonClear.setText("Clear");
         jButtonClear.addActionListener(new java.awt.event.ActionListener() {
@@ -1250,6 +1301,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         });
 
+        jCheckBoxEnableOptaPlanner.setText("Enable OptaPlanner");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -1271,6 +1324,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jButtonGenerateCRCL)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxForceFakeTake)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxEnableOptaPlanner)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jCheckBoxDebug)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1336,7 +1391,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jButtonGenerateCRCL)
                     .addComponent(jCheckBoxForceFakeTake)
                     .addComponent(jCheckBoxDebug)
-                    .addComponent(jButtonAbort))
+                    .addComponent(jButtonAbort)
+                    .addComponent(jCheckBoxEnableOptaPlanner))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -1392,7 +1448,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 runningProgramFuture.cancel(true);
             }
             boolean ret = generateCrcl(comment, startAbortCount);
-            if (ret && pddlActionToCrclGenerator.getLastIndex() >= actionsList.size() - 1) {
+            if (ret && atLastAction()) {
                 actionSetsCompleted.set(actionSetsStarted.get());
             }
             return ret;
@@ -1422,7 +1478,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             runningProgramFuture = generateCrclAsync()
                     .thenApply(x -> {
-                        if (x && pddlActionToCrclGenerator.getLastIndex() >= actionsList.size() - 1) {
+                        if (x && atLastAction()) {
                             actionSetsCompleted.set(actionSetsStarted.get());
                         }
                         return x;
@@ -1443,7 +1499,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //    public void setPddlActionToCrclGenerator(PddlActionToCrclGenerator pddlActionToCrclGenerator) {
 //        this.pddlActionToCrclGenerator = pddlActionToCrclGenerator;
 //    }
-    private List<PddlAction> actionsList;
+    private final List<PddlAction> actionsList = Collections.synchronizedList(new ArrayList<>());
+    private final List<PddlAction> readOnlyActionsList = Collections.unmodifiableList(actionsList);
 
     /**
      * Get the value of actionsList
@@ -1452,19 +1509,35 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      */
     @Override
     public List<PddlAction> getActionsList() {
-        return actionsList;
+        return readOnlyActionsList;
     }
 
-    /**
-     * Set the value of actionsList
-     *
-     * @param actionsList new value of actionsList
-     */
+//    /**
+//     * Set the value of actionsList
+//     *
+//     * @param actionsList new value of actionsList
+//     */
+//    @Override
+//    public void setActionsList(List<PddlAction> actionsList) {
+//        this.actionsList = actionsList;
+//        DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
+//        model.setNumRows(0);
+//    }
+    
     @Override
-    public void setActionsList(List<PddlAction> actionsList) {
-        this.actionsList = actionsList;
-        DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
-        model.setNumRows(0);
+    public void clearActionsList() {
+        synchronized (actionsList) {
+            if (actionsList.size() > 0) {
+                if (!pddlActionToCrclGenerator.atLastIndex()) {
+                    System.err.println("clearing actionsList when not at last index");
+                }
+                actionsList.clear();
+                Utils.runOnDispatchThread(() -> {
+                    DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
+                    model.setNumRows(0);
+                });
+            }
+        }
     }
 
     private File propertiesFile;
@@ -1567,9 +1640,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         props.put(MANUAL_PART_NAMES, Arrays.toString(getComboPartNames(10)));
         props.put(MANUAL_SLOT_NAMES, Arrays.toString(getComboSlotNames(10)));
         props.put(POS_ERROR_MAP_FILES, Arrays.toString(getRelPathPositionMapFileNames()));
-//        try (FileWriter fw = new FileWriter(propertiesFile)) {
-//            props.store(fw, "");
-//        }
+        props.put(ENABLE_OPTA_PLANNER, Boolean.toString(jCheckBoxEnableOptaPlanner.isSelected()));
         Utils.saveProperties(propertiesFile, props);
     }
 
@@ -1601,7 +1672,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     @Override
     public void addAction(PddlAction action) {
         if (null != action) {
-            this.getActionsList().add(action);
+            this.actionsList.add(action);
             DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
             model.addRow(new Object[]{model.getRowCount(), -1, action.getLabel(), action.getType(), Arrays.toString(action.getArgs()), action.getCost()});
         }
@@ -1620,6 +1691,22 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
+    private static final SolverFactory<OpActionPlan> solverFactory = createSolverFactory();
+
+    static private SolverFactory<OpActionPlan> createSolverFactory() {
+        try {
+            return SolverFactory.createFromXmlResource(
+                    "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Solver<OpActionPlan> solver = null;
+
+    private static volatile boolean firstLoad = true;
+
     public void loadActionsFile(File f) throws IOException {
         if (null != f && f.exists()) {
             if (f.isDirectory()) {
@@ -1630,12 +1717,87 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 System.err.println("Can not loadActionsFile \"" + f + "\" : it is not readable.");
                 return;
             }
-            this.setActionsList(new ArrayList<>());
+
+            List<String> lines = new ArrayList<>();
             try (BufferedReader br = new BufferedReader(new FileReader(f))) {
                 String line;
                 while (null != (line = br.readLine())) {
+                    lines.add(line);
+                }
+            }
+            synchronized (actionsList) {
+                clearActionsList();
+                for (String line : lines) {
                     addAction(PddlAction.parse(line));
                 }
+            }
+            try {
+                if (pddlActionToCrclGenerator.isConnected()) {
+                    pddlActionToCrclGenerator.clearPoseCache();
+                    pddlActionToCrclGenerator.setOptions(getTableOptions());
+                    PointType lookForPt = pddlActionToCrclGenerator.getLookForXYZ();
+                    if (null != lookForPt && jCheckBoxEnableOptaPlanner.isSelected()) {
+                        if (firstLoad) {
+                            OpDisplayJPanel.clearColorMap();
+                            firstLoad = false;
+                        }
+                        List<OpAction> opActions;
+                        synchronized (actionsList) {
+                            opActions = pddlActionToCrclGenerator.pddlActionsToOpActions(actionsList, 0);
+                        }
+                        OpActionPlan worstPlan = null;
+                        double worstScore = Double.POSITIVE_INFINITY;
+                        OpActionPlan bestPlan = null;
+                        double bestScore = Double.NEGATIVE_INFINITY;
+                        if (null == solver) {
+                            synchronized (solverFactory) {
+                                solver = solverFactory.buildSolver();
+                            }
+                        }
+                        solver.addEventListener(e -> System.out.println(e.getTimeMillisSpent() + ", " + e.getNewBestScore()));
+
+                        for (int i = 0; i < 10; i++) {
+
+                            Collections.shuffle(opActions);
+                            OpActionPlan inputPlan = new OpActionPlan();
+                            inputPlan.setActions(opActions);
+
+                            inputPlan.getEndAction().setLocation(new Point2D.Double(lookForPt.getX(), lookForPt.getY()));
+                            inputPlan.initNextActions();
+
+                            EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+                            HardSoftLongScore score = calculator.calculateScore(inputPlan);
+                            double inScore = (score.getSoftScore() / 1000.0);
+                            if (inScore > bestScore) {
+                                bestPlan = inputPlan;
+                                bestScore = inScore;
+                            }
+                            if (inScore < worstScore) {
+                                worstPlan = inputPlan;
+                                worstScore = inScore;
+                            }
+//                        OpDisplayJPanel.showPlan(inputPlan, "Input : " + score);
+
+                            OpActionPlan solvedPlan = solver.solve(inputPlan);
+                            double solveScore = (solvedPlan.getScore().getSoftScore() / 1000.0);
+                            if (solveScore > bestScore) {
+                                bestPlan = solvedPlan;
+                                bestScore = solveScore;
+                            }
+                            if (solveScore < worstScore) {
+                                worstPlan = solvedPlan;
+                                worstScore = solveScore;
+                            }
+                        }
+                        this.opDisplayJPanelInput.setOpActionPlan(worstPlan);
+                        this.opDisplayJPanelSolution.setOpActionPlan(bestPlan);
+                        this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.1f mm ", -worstScore));
+                        this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.1f mm ", -bestScore));
+//                        OpDisplayJPanel.showPlan(solvedPlan, "Output : " + solvedPlan.getScore());
+                    }
+                }
+            } catch (SQLException sQLException) {
+                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, sQLException);
             }
             autoResizeTableColWidthsPddlOutput();
             jCheckBoxReplan.setSelected(false);
@@ -2204,7 +2366,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public void clearAll() {
         clearAllCount.incrementAndGet();
         clearAllTime = System.currentTimeMillis();
-        this.setActionsList(new ArrayList<>());
+        clearActionsList();
         DefaultTableModel model = (DefaultTableModel) jTableCrclProgram.getModel();
         model.setRowCount(0);
         setReplanFromIndex(0);
@@ -2300,28 +2462,30 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void updateComboPartModel() {
         DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
         boolean first = true;
-        for (PddlAction action : actionsList) {
-            switch (action.getType()) {
-                case "fake-take-part":
-                case "take-part":
-                    if (action.getArgs().length > 0) {
-                        boolean found = false;
-                        String part = action.getArgs()[0];
-                        for (int i = 0; i < cbm.getSize(); i++) {
-                            if (cbm.getElementAt(i).equals(part)) {
-                                found = true;
-                                break;
+        synchronized (actionsList) {
+            for (PddlAction action : actionsList) {
+                switch (action.getType()) {
+                    case "fake-take-part":
+                    case "take-part":
+                        if (action.getArgs().length > 0) {
+                            boolean found = false;
+                            String part = action.getArgs()[0];
+                            for (int i = 0; i < cbm.getSize(); i++) {
+                                if (cbm.getElementAt(i).equals(part)) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                cbm.insertElementAt(part, 0);
+                            }
+                            if (first) {
+                                cbm.setSelectedItem(part);
+                                first = false;
                             }
                         }
-                        if (!found) {
-                            cbm.insertElementAt(part, 0);
-                        }
-                        if (first) {
-                            cbm.setSelectedItem(part);
-                            first = false;
-                        }
-                    }
-                    break;
+                        break;
+                }
             }
         }
     }
@@ -2329,27 +2493,29 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void updateComboSlotModel() {
         DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
         boolean first = true;
-        for (PddlAction action : actionsList) {
-            switch (action.getType()) {
-                case "place-part":
-                    if (action.getArgs().length > 0) {
-                        boolean found = false;
-                        String slot = action.getArgs()[0];
-                        for (int i = 0; i < cbm.getSize(); i++) {
-                            if (cbm.getElementAt(i).equals(slot)) {
-                                found = true;
-                                break;
+        synchronized (actionsList) {
+            for (PddlAction action : actionsList) {
+                switch (action.getType()) {
+                    case "place-part":
+                        if (action.getArgs().length > 0) {
+                            boolean found = false;
+                            String slot = action.getArgs()[0];
+                            for (int i = 0; i < cbm.getSize(); i++) {
+                                if (cbm.getElementAt(i).equals(slot)) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                cbm.insertElementAt(slot, 0);
+                            }
+                            if (first) {
+                                cbm.setSelectedItem(slot);
+                                first = false;
                             }
                         }
-                        if (!found) {
-                            cbm.insertElementAt(slot, 0);
-                        }
-                        if (first) {
-                            cbm.setSelectedItem(slot);
-                            first = false;
-                        }
-                    }
-                    break;
+                        break;
+                }
             }
         }
     }
@@ -3008,7 +3174,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             doingActionsStarted.incrementAndGet();
             autoStart = true;
             boolean ret = generateCrcl(comment, startSafeAbortRequestCount);
-            if (ret && pddlActionToCrclGenerator.getLastIndex() >= actionsList.size() - 1) {
+            if (ret && atLastAction()) {
                 actionSetsCompleted.set(actionSetsStarted.get());
             }
             return ret;
@@ -3449,7 +3615,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //        int startSafeAbortRequestCount = safeAbortRequestCount.get();
         boolean doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
         if (doSafeAbort) {
-            return pddlActionToCrclGenerator.getLastIndex() >= actionsList.size() - 1;
+            return atLastAction();
         }
         checkDbSupplierPublisher();
         int abortReplanFromIndex = replanFromIndex;
@@ -3459,14 +3625,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return true;
         }
         boolean replanAfterCrclBlock
-                = pddlActionToCrclGenerator.getLastIndex() < actionsList.size() - 1
+                = (!pddlActionToCrclGenerator.atLastIndex())
                 && jCheckBoxReplan.isSelected();
         lastReplanAfterCrclBlock = replanAfterCrclBlock;
         while (replanAfterCrclBlock && autoStart) {
             doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
             if (doSafeAbort) {
                 setReplanFromIndex(abortReplanFromIndex);
-                return pddlActionToCrclGenerator.getLastIndex() >= actionsList.size() - 1;
+                return atLastAction();
             }
             if (!runCrclProgram(program)) {
                 checkSafeAbort(startSafeAbortRequestCount);
@@ -3474,7 +3640,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
             if (doSafeAbort) {
-                return pddlActionToCrclGenerator.getLastIndex() >= actionsList.size() - 1;
+                return atLastAction();
             }
             abortReplanFromIndex = replanFromIndex;
             program = pddlActionSectionToCrcl();
@@ -3487,7 +3653,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
             if (doSafeAbort) {
                 setReplanFromIndex(abortReplanFromIndex);
-                return pddlActionToCrclGenerator.getLastIndex() >= actionsList.size() - 1;
+                return atLastAction();
             }
             if (!runCrclProgram(program)) {
                 checkSafeAbort(startSafeAbortRequestCount);
@@ -3496,6 +3662,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         checkSafeAbort(startSafeAbortRequestCount);
         return true;
+    }
+
+    private boolean atLastAction() {
+        boolean ret = pddlActionToCrclGenerator.atLastIndex();
+        if (ret) {
+            System.out.println("pddlActionToCrclGenerator.getLastIndex() = " + pddlActionToCrclGenerator.getLastIndex());
+            System.out.println("actionsList.size() = " + actionsList.size());
+        }
+        return ret;
+
     }
 
     private XFuture<Boolean> generateCrclAsync() throws IOException, IllegalStateException, SQLException {
@@ -3507,18 +3683,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
 
         return checkSafeAbortAsync(() -> {
-                    try {
-                        return checkDbSupplierPublisherAsync()
-                                .thenComposeAsync("generateCrcl(" + aprsJFrame.getTaskName() + ").doPddlActionsSection(" + pddlActionToCrclGenerator.getLastIndex() + " out of " + actionsList.size() + ")",
-                                        x -> doPddlActionsSectionAsync(startSafeAbortRequestCount),
-                                        generateCrclService);
-                    } catch (IOException ex) {
-                        Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                        XFuture<Boolean> xf = new XFuture<>("generateCrclException");
-                        xf.completeExceptionally(ex);
-                        return xf;
-                    }
-                }, startSafeAbortRequestCount
+            try {
+                return checkDbSupplierPublisherAsync()
+                        .thenComposeAsync("generateCrcl(" + aprsJFrame.getTaskName() + ").doPddlActionsSection(" + pddlActionToCrclGenerator.getLastIndex() + " out of " + actionsList.size() + ")",
+                                x -> doPddlActionsSectionAsync(startSafeAbortRequestCount),
+                                generateCrclService);
+            } catch (IOException ex) {
+                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                XFuture<Boolean> xf = new XFuture<>("generateCrclException");
+                xf.completeExceptionally(ex);
+                return xf;
+            }
+        }, startSafeAbortRequestCount
         );
     }
 
@@ -3528,6 +3704,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             replanFromIndex = 0;
         }
         pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
+        if (jCheckBoxEnableOptaPlanner.isSelected()) {
+            if (null == solver) {
+                synchronized (solverFactory) {
+                    solver = solverFactory.buildSolver();
+                }
+            }
+            pddlActionToCrclGenerator.setSolver(solver);
+            pddlActionToCrclGenerator.setOpDisplayJPanelInput(opDisplayJPanelInput);
+            pddlActionToCrclGenerator.setOpDisplayJPanelSolution(opDisplayJPanelSolution);
+        } else {
+            pddlActionToCrclGenerator.setSolver(null);
+        }
         crclStartActionIndex = this.replanFromIndex;
         currentActionIndex = crclStartActionIndex;
         if (null != aprsJFrame) {
@@ -3544,7 +3732,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //                Thread.currentThread().setName("pddlActionSectionToCrcl:" + getActionsCrclName() + ":" + origName);
 //            }
 //        }
-        List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(actionsList, this.replanFromIndex, options, safeAbortRequestCount.get());
+        List<MiddleCommandType> cmds;
+        synchronized (actionsList) {
+            cmds = pddlActionToCrclGenerator.generate(actionsList, this.replanFromIndex, options, safeAbortRequestCount.get());
+        }
         int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
         indexes = Arrays.copyOf(indexes, indexes.length);
         setCrclIndexes(indexes);
@@ -4169,6 +4360,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonTestPickup;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxEnableExternalControlPort;
+    private javax.swing.JCheckBox jCheckBoxEnableOptaPlanner;
     private javax.swing.JCheckBox jCheckBoxForceFakeTake;
     private javax.swing.JCheckBox jCheckBoxNeedLookFor;
     private javax.swing.JCheckBox jCheckBoxReplan;
@@ -4232,6 +4424,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JTextField jTextFieldTestYMax;
     private javax.swing.JTextField jTextFieldTestYMin;
     private javax.swing.JTextField jTextFieldTestZ;
+    private aprs.framework.optaplanner.OpDisplayJPanel opDisplayJPanelInput;
+    private aprs.framework.optaplanner.OpDisplayJPanel opDisplayJPanelSolution;
     private aprs.framework.pddl.executor.PositionMapJPanel positionMapJPanel1;
     // End of variables declaration//GEN-END:variables
 
@@ -4257,6 +4451,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             String autostartString = props.getProperty(PDDLCRCLAUTOSTART);
             if (null != autostartString) {
                 this.autoStart = Boolean.valueOf(autostartString);
+            }
+            String enableOptaPlannerString = props.getProperty(ENABLE_OPTA_PLANNER);
+            if (null != enableOptaPlannerString) {
+                boolean enableOptaPlanner = Boolean.valueOf(enableOptaPlannerString);
+                jCheckBoxEnableOptaPlanner.setSelected(enableOptaPlanner);
             }
             for (String name : props.stringPropertyNames()) {
                 if (!name.equals(PDDLCRCLAUTOSTART)
@@ -4319,6 +4518,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         }
     }
+    private static final String ENABLE_OPTA_PLANNER = "enableOptaPlanner";
 
     private void loadComboModels(Properties props) {
         String manualPartNames = props.getProperty(MANUAL_PART_NAMES, "");
