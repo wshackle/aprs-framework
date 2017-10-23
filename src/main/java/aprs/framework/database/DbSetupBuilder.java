@@ -389,7 +389,7 @@ public class DbSetupBuilder {
         this.startScript = startScript;
         return this;
     }
-    
+
     public DbSetupBuilder dbname(String dbname) {
         if (null != dbname) {
             this.dbname = dbname;
@@ -671,7 +671,9 @@ public class DbSetupBuilder {
 //                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
 //            }
 //        }
-        props.put("startScript", setup.getStartScript());
+        if (null != setup.getStartScript()) {
+            props.put("startScript", setup.getStartScript());
+        }
         props.put("--dbtype", dbtype.toString());
         if (host == null) {
             host = setup.getHost();
