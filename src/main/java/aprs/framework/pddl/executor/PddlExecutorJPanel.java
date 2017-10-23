@@ -1523,7 +1523,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //        DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
 //        model.setNumRows(0);
 //    }
-    
     @Override
     public void clearActionsList() {
         synchronized (actionsList) {
@@ -1707,7 +1706,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private static volatile boolean firstLoad = true;
 
-    public void loadActionsFile(File f) throws IOException {
+    public void loadActionsFile(File f, boolean showInOptaPlanner) throws IOException {
         if (null != f && f.exists()) {
             if (f.isDirectory()) {
                 System.err.println("Can not loadActionsFile \"" + f + "\" : it is a directory instead of a text file.");
@@ -1732,7 +1731,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 }
             }
             try {
-                if (pddlActionToCrclGenerator.isConnected()) {
+                if (showInOptaPlanner && pddlActionToCrclGenerator.isConnected()) {
                     pddlActionToCrclGenerator.clearPoseCache();
                     pddlActionToCrclGenerator.setOptions(getTableOptions());
                     PointType lookForPt = pddlActionToCrclGenerator.getLookForXYZ();
@@ -1796,8 +1795,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //                        OpDisplayJPanel.showPlan(solvedPlan, "Output : " + solvedPlan.getScore());
                     }
                 }
-            } catch (SQLException sQLException) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, sQLException);
+            } catch (Exception ex) {
+                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
             autoResizeTableColWidthsPddlOutput();
             jCheckBoxReplan.setSelected(false);
@@ -1825,7 +1824,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         File f = new File(fname);
         if (f.exists() && f.canRead()) {
             try {
-                loadActionsFile(f);
+                loadActionsFile(f, true);
                 if (this.getErrorString() == origErrorString) {
                     setErrorString(null);
                 }
@@ -1838,7 +1837,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void jButtonLoadPddlActionsFromFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadPddlActionsFromFileActionPerformed
         try {
             browseActionsFile();
-            loadActionsFile(new File(jTextFieldPddlOutputActions.getText()));
+            loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
 
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
@@ -1848,7 +1847,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
         try {
-            loadActionsFile(new File(jTextFieldPddlOutputActions.getText()));
+            loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
 
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
@@ -1858,7 +1857,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void jTextFieldPddlOutputActionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPddlOutputActionsActionPerformed
         try {
-            loadActionsFile(new File(jTextFieldPddlOutputActions.getText()));
+            loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
 
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
@@ -3318,11 +3317,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
             String jointVals
                     = jointList
-                            .stream()
-                            .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                            .map(JointStatusType::getJointPosition)
-                            .map(Objects::toString)
-                            .collect(Collectors.joining(","));
+                    .stream()
+                    .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                    .map(JointStatusType::getJointPosition)
+                    .map(Objects::toString)
+                    .collect(Collectors.joining(","));
             System.out.println("jointVals = " + jointVals);
             DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
             boolean keyFound = false;
@@ -3619,6 +3618,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         checkDbSupplierPublisher();
         int abortReplanFromIndex = replanFromIndex;
+        if (jCheckBoxEnableOptaPlanner.isSelected()) {
+            this.opDisplayJPanelInput.setOpActionPlan(null);
+            this.opDisplayJPanelSolution.setOpActionPlan(null);
+            this.opDisplayJPanelInput.setLabel("Input");
+            this.opDisplayJPanelSolution.setLabel("Output");
+        }
         CRCLProgramType program = pddlActionSectionToCrcl();
         if (!autoStart) {
             setCrclProgram(crclProgram);
@@ -4552,14 +4557,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (null != output) {
             File f = new File(output);
             if (f.exists() && f.canRead() && !f.isDirectory()) {
-                loadActionsFile(f);
+                loadActionsFile(f, true);
                 jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
             } else {
                 String fullPath = propertiesFile.getParentFile().toPath().resolve(output).normalize().toString();
 //                    System.out.println("fullPath = " + fullPath);
                 f = new File(fullPath);
                 if (f.exists() && f.canRead() && !f.isDirectory()) {
-                    loadActionsFile(f);
+                    loadActionsFile(f, true);
                     jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
                 } else {
                     String fullPath2 = propertiesFile.getParentFile().toPath().resolveSibling(output).normalize().toString();
@@ -4567,7 +4572,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     f = new File(fullPath2);
                     if (f.exists() && f.canRead() && !f.isDirectory()) {
                         jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
-                        loadActionsFile(f);
+                        loadActionsFile(f, true);
                     }
                 }
             }

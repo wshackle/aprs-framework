@@ -164,7 +164,9 @@ public class OpDisplayJPanel extends JPanel {
      */
     public void setOpActionPlan(OpActionPlan opActionPlan) {
         this.opActionPlan = opActionPlan;
-        this.repaint();
+        if (null != opActionPlan) {
+            this.repaint();
+        }
     }
 
     @Override

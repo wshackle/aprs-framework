@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:3436
+#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:4663
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 aprs.robotName=Fanuc
 aprs.taskName=Fanuc Cart
@@ -7,6 +7,7 @@ fanuc.crclLocalPort=64444
 fanuc.robotHost=192.168.1.34
 maxLimit= { x=+700.000, y=+200.000, z=+1000.000 } 
 minLimit= { x=+200.000, y=-200.000, z=-1000.000 } 
+reloadSimFilesOnReverse=false
 snapShotEnable=true
 snapShotHeight=700
 snapShotWidth=900

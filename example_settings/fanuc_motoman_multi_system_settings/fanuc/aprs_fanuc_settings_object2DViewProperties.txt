@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:2073
+#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:2142
 --visionhost=agility.el.nist.gov
 --visionport=5001
 addPosNoise=false
@@ -7,12 +7,11 @@ connected=true
 datafile=fanuc_cart_objects_capture_april_13_2017.csv
 displayAxis=POS_Y_NEG_X
 dropOffThreshold=25.00
-items=sku_part_large_gear,0.0,601.49,58.73,0.97,P,sku_part_large_gear,0.0,581.99,165.85,0.94,P,sku_part_medium_gear,0.0,650.54,-94.21,0.96,P,sku_part_medium_gear,0.0,573.04,-168.29,0.94,P,sku_part_medium_gear,0.0,647.96,-168.75,0.91,P,sku_part_medium_gear,0.0,412.24,-111.09,0.5,P,sku_large_gear_vessel,0.18159265358979315,592.06,108.57,0.89,PT,sku_medium_gear_vessel,-0.03,610.12,-129.76,0.83,PT,sku_kit_m2l1_vessel,-0.96,383.54,-132.38,0.61,KT,sku_kit_m2l1_vessel,2.02,356.13,123.07,0.68,KT,
+items=sku_part_large_gear,0.0,504.87,35.87,0.97,P,sku_part_large_gear,0.0,383.55,-93.98,0.97,P,sku_part_medium_gear,0.0,543.9,-164.73,0.95,P,sku_part_medium_gear,0.0,355.49,173.65,0.93,P,sku_part_medium_gear,0.0,426.75,-185.86,0.92,P,sku_part_medium_gear,0.0,423.36,134.56,0.87,P,sku_large_gear_vessel,-0.7615926535897932,541.47,77.09,0.9,PT,sku_medium_gear_vessel,0.1,575.81,-121.81,0.92,PT,sku_kit_m2l1_vessel,2.6,364.33,106.32,0.57,KT,sku_kit_m2l1_vessel,0.05,386.32,-130.62,0.59,KT,
 
 pickupDist=5.00
 posNoise=1.00
-reverseFlag=false
-reverse_datafile=fanuc_cart_objects_capture_jan_11_2017_combined_modified.csv
+reverseFlag=true
 rotNoise=1.00
 separatenames=true
 showrotations=false
