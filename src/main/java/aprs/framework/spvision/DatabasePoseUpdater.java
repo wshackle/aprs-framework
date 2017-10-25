@@ -74,6 +74,15 @@ import java.util.stream.Collectors;
  */
 public class DatabasePoseUpdater implements AutoCloseable {
 
+    public boolean isConnected() {
+        try {
+            return null != con && !con.isClosed();
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+    }
+    
     private Connection con;
     private PreparedStatement update_statement;
     private PreparedStatement pre_vision_clean_statement;

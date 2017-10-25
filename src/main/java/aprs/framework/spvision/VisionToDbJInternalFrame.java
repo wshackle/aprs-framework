@@ -57,7 +57,9 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return visionToDBJPanel.absSlotFromTrayAndOffset(tray, offsetItem);
     }
     
-    
+    public boolean isDbConnected() {
+        return visionToDBJPanel.isDbConnected();
+    }
 
     /**
      * Get the most recent list of parts and kit trays from  the vision system.

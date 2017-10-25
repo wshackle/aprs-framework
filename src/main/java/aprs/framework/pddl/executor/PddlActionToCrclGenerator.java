@@ -256,7 +256,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
                 case "look-for-part":
                 case "look-for-parts":
-                    if (moveOccurred) {
+                    if (true) {
                         if (null != endl && endl.length > 1) {
                             endl[1] = i;
                         }

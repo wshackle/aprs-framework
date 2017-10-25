@@ -629,7 +629,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         continuousDemoFuture = null;
                     }
                     setStopRunTime();
-                }).thenComposeAsync(x -> waitAllLastFutures(),runProgramService);
+                }).thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
         return safeAbortFuture;
     }
 
@@ -671,16 +671,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
                 safeAbortAndDisconnectFuture
                         = safeAbortFuture
-                                .thenRun(() -> {
+                        .thenRun(() -> {
 //                                    if (null != continousDemoFuture) {
 //                                        continousDemoFuture.cancelAll(true);
 //                                        continousDemoFuture = null;
 //                                    }
-                                    setStopRunTime();
-                                })
-                                .thenCompose(x -> waitAllLastFutures())
-                                .thenRunAsync(safeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
-                                .thenComposeAsync(x -> waitAllLastFutures(),runProgramService);
+                            setStopRunTime();
+                        })
+                        .thenCompose(x -> waitAllLastFutures())
+                        .thenRunAsync(safeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
+                        .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
             } else {
                 safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected", null);
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -693,22 +693,21 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             return ret;
         }
     }
-    
+
     private XFuture<Void> wait(XFuture<?> f) {
-        if(null == f || f.isCancelled() || f.isCompletedExceptionally() || f.isDone()) {
-            return XFuture.completedFutureWithName("waitReady f="+f, null);
+        if (null == f || f.isCancelled() || f.isCompletedExceptionally() || f.isDone()) {
+            return XFuture.completedFutureWithName("waitReady f=" + f, null);
         } else {
-            return f.handle((x,t) -> null);
+            return f.handle((x, t) -> null);
         }
     }
 
     private XFuture<Void> waitAllLastFutures() {
-       return XFuture.allOf(wait(lastContinueActionListFuture),
-               wait(lastRunProgramFuture),
-               wait(lastStartActionsFuture));
+        return XFuture.allOf(wait(lastContinueActionListFuture),
+                wait(lastRunProgramFuture),
+                wait(lastStartActionsFuture));
     }
-    
-    
+
     /**
      * Get a map of updates that were attempted the last time data was received
      * from the vision system.
@@ -877,15 +876,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                             takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
                             return null;
                         }, runProgramService)
-                        .thenCompose("continueActionList.pauseCheck" + comment, x -> waitForPause())
-                        .thenApply("pddlExecutorJInternalFrame1.completeActionList" + comment,
-                                (Void x) -> {
-                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                .thenCompose("continueActionList.pauseCheck" + comment, x -> waitForPause())
+                .thenApply("pddlExecutorJInternalFrame1.completeActionList" + comment,
+                        (Void x) -> {
+                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
-                                    }
-                                    return false;
-                                });
+                            }
+                            return false;
+                        });
         return lastContinueActionListFuture;
     }
 
@@ -3210,14 +3209,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         try {
             Map<String, Integer> requiredItemsMap
                     = requiredItems.stream()
-                            .filter(this::isWithinLimits)
-                            .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
+                    .filter(this::isWithinLimits)
+                    .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
             String requiredItemsString
                     = requiredItemsMap
-                            .entrySet()
-                            .stream()
-                            .map(entry -> entry.getKey() + "=" + entry.getValue())
-                            .collect(Collectors.joining(" "));
+                    .entrySet()
+                    .stream()
+                    .map(entry -> entry.getKey() + "=" + entry.getValue())
+                    .collect(Collectors.joining(" "));
             System.out.println("requiredItemsString = " + requiredItemsString);
             List<PhysicalItem> kitTrays = teachItems.stream()
                     .filter(x -> "KT".equals(x.getType()))
@@ -3284,8 +3283,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     }
                     kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                             + slotPrpToPartSkuMap.entrySet().stream()
-                                    .map(e -> e.getKey() + "=" + e.getValue())
-                                    .collect(Collectors.joining(" "))
+                            .map(e -> e.getKey() + "=" + e.getValue())
+                            .collect(Collectors.joining(" "))
                             + ")");
                 }
 
@@ -3390,7 +3389,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void takeSnapshots(String comment) {
         try {
             takeSimViewSnapshot(createTempFile(comment, ".PNG"), (PmCartesian) null, (String) null);
-            startVisionToDbNewItemsImageSave(createTempFile(comment + "_new_database_items", ".PNG"));
+            if (null != visionToDbJInternalFrame && visionToDbJInternalFrame.isDbConnected()) {
+                startVisionToDbNewItemsImageSave(createTempFile(comment + "_new_database_items", ".PNG"));
+            }
         } catch (IOException ex) {
             Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -3748,12 +3749,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     lastMessage = "";
                 }
                 takeSnapshots("pause :" + lastMessage + ":" + cmdString);
+            } else if (null == lastMessage) {
+                takeSnapshots("pause");
             } else {
-                if (null == lastMessage) {
-                    takeSnapshots("pause");
-                } else {
-                    takeSnapshots("pause :" + lastMessage);
-                }
+                takeSnapshots("pause :" + lastMessage);
             }
         }
         this.pauseCrclProgram();
