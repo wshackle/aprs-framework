@@ -118,6 +118,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return dpu.absSlotFromTrayAndOffset(tray, offsetItem);
     }
 
+    public boolean isDbConnected() {
+        return null != dpu && dpu.isConnected();
+    }
     /**
      * Creates new form VisionToDBJPanel
      */
@@ -2168,6 +2171,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public XFuture<Void> startNewItemsImageSave(File f) {
+        if(null == dpu) {
+            throw new NullPointerException("null == dpu");
+        }
         return dpu.queryDatabaseNew()
                 .thenApply(this::poseQueryToPhysicalItemList)
                 .thenAccept(l -> {

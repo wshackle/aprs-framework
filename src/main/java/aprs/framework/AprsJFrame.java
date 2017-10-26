@@ -91,7 +91,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -104,6 +106,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
@@ -713,7 +716,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
                 safeAbortAndDisconnectFuture
                         = safeAbortFuture
-                                .thenRun(() -> {
+                        .thenRun(() -> {
 //                                    if (null != continousDemoFuture) {
 //                                        continousDemoFuture.cancelAll(true);
 //                                        continousDemoFuture = null;
@@ -918,15 +921,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                             takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
                             return null;
                         }, runProgramService)
-                        .thenCompose("continueActionList.pauseCheck" + comment, x -> waitForPause())
-                        .thenApply("pddlExecutorJInternalFrame1.completeActionList" + comment,
-                                (Void x) -> {
-                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                .thenCompose("continueActionList.pauseCheck" + comment, x -> waitForPause())
+                .thenApply("pddlExecutorJInternalFrame1.completeActionList" + comment,
+                        (Void x) -> {
+                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
-                                    }
-                                    return false;
-                                });
+                            }
+                            return false;
+                        });
         return lastContinueActionListFuture;
     }
 
@@ -3329,6 +3332,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return true;
     }
 
+    
     /**
      * Use the provided list of items create a set of actions that will fill
      * empty trays to match.Load this list into the PDDL executor.
@@ -3447,7 +3451,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void takeSnapshots(String comment) {
         try {
             takeSimViewSnapshot(createTempFile(comment, ".PNG"), (PmCartesian) null, (String) null);
-            startVisionToDbNewItemsImageSave(createTempFile(comment + "_new_database_items", ".PNG"));
+            if (null != visionToDbJInternalFrame && visionToDbJInternalFrame.isDbConnected()) {
+                startVisionToDbNewItemsImageSave(createTempFile(comment + "_new_database_items", ".PNG"));
+            }
         } catch (IOException ex) {
             Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -3805,12 +3811,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     lastMessage = "";
                 }
                 takeSnapshots("pause :" + lastMessage + ":" + cmdString);
+            } else if (null == lastMessage) {
+                takeSnapshots("pause");
             } else {
-                if (null == lastMessage) {
-                    takeSnapshots("pause");
-                } else {
-                    takeSnapshots("pause :" + lastMessage);
-                }
+                takeSnapshots("pause :" + lastMessage);
             }
         }
         this.pauseCrclProgram();
