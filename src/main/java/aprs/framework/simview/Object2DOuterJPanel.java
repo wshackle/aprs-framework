@@ -73,16 +73,30 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import javax.xml.bind.JAXBException;
 import rcs.posemath.PmCartesian;
 import static aprs.framework.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 import java.util.Collection;
+import javax.swing.JDialog;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener, PendantClientJPanel.CurrentPoseListener {
+
+    public static List<PhysicalItem> showAndModifyData(List<PhysicalItem> itemsIn, SlotOffsetProvider sop, double minX, double minY, double maxX, double maxY) {
+        JDialog diag = new JDialog();
+        diag.setModal(true);
+        Object2DOuterJPanel panel = new Object2DOuterJPanel();
+        panel.setViewLimits(minX, minY, maxX, maxY);
+        panel.setSlotOffsetProvider(sop);
+        panel.setItems(itemsIn);
+        panel.setSimulatedAndDisconnect();
+        diag.add(panel);
+        diag.pack();
+        diag.setVisible(true);
+        return panel.getItems();
+    }
 
     public List<PhysicalItem> getItems() {
         return object2DJPanel1.getItems();
@@ -227,11 +241,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //        Map<String, Integer> namesMap = countNames(items);
 //        if (null != origNamesMap) {
 //            for (Entry<String, Integer> entry : namesMap.entrySet()) {
-//                String name = entry.getKey();
+//                String slotMaxDistExpansion = entry.getKey();
 //                int count = entry.getValue();
-//                int origCount = origNamesMap.getOrDefault(name, 0);
+//                int origCount = origNamesMap.getOrDefault(slotMaxDistExpansion, 0);
 //                if (count > origCount) {
-//                    System.err.println("name =" + name + ", count = " + count + ", origCount=" + origCount);
+//                    System.err.println("slotMaxDistExpansion =" + slotMaxDistExpansion + ", count = " + count + ", origCount=" + origCount);
 //                }
 //            }
 //        } else {
@@ -280,36 +294,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return minDist(sx, sy, items) < 20.0;
     }
 
-//    private static boolean cbmContains(DefaultComboBoxModel cbm, Object o) {
-//        for (int i = 0; i < cbm.getSize(); i++) {
-//            if(Objects.equals(o, cbm.getElementAt(i))) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
     private void loadTraySlotInfo(List<PhysicalItem> items) {
-//        DefaultComboBoxModel cbm = 
-//                (DefaultComboBoxModel) jComboBoxTray.getModel();
-//        List<String> trayNames = 
-//                items.stream()
-//                .filter(x -> x.getType().equals("KT") ||  x.getType().equals("PT"))
-//                .map(PhysicalItem::getName)
-//                .collect(Collectors.toList());
-//        for(String trayName : trayNames) {
-//            if(!cbmContains(cbm, trayName)) {
-//                cbm.addElement(trayName);
-//            }
-//        }
-//        for (int i = 0; i < cbm.getSize(); i++) {
-//            if(!trayNames.contains(cbm.getElementAt(i))) {
-//                cbm.removeElementAt(i);
-//                i--;
-//            }
-//        }
-//        if(null == cbm.getSelectedItem() && cbm.getSize() > 0) {
-//            cbm.setSelectedItem(cbm.getElementAt(0));
-//        }
         DefaultTableModel tm = (DefaultTableModel) jTableTraySlots.getModel();
         tm.setRowCount(0);
         if (object2DJPanel1.isShowOutputItems()) {
@@ -330,13 +315,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (null != slotOffsetProvider) {
                     Tray trayItem = new Tray(name, rot, x, y);
                     List<Slot> l = slotOffsetProvider.getSlotOffsets(name);
-                    for (Slot s : l) {
-                        Slot absItem = slotOffsetProvider.absSlotFromTrayAndOffset(trayItem, s);
+                    if (null != l) {
+                        for (Slot s : l) {
+                            Slot absItem = slotOffsetProvider.absSlotFromTrayAndOffset(trayItem, s);
 
 //                    double sx = x + s.x * Math.cos(rot) + s.y * Math.sin(rot);
 //                    double sy = y - s.x * Math.sin(rot) + s.y * Math.cos(rot);
-                        double minDist = minDist(absItem.x, absItem.y, items);
-                        tm.addRow(new Object[]{s.getSlotForSkuName(), minDist < 20.0, absItem.x, absItem.y, minDist});
+                            double minDist = minDist(absItem.x, absItem.y, items);
+                            tm.addRow(new Object[]{s.getSlotForSkuName(), minDist < 20.0, absItem.x, absItem.y, minDist});
+                        }
                     }
                 }
                 break;
@@ -359,6 +346,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private void loadItemsToTable(List<PhysicalItem> items, JTable jtable) {
+        boolean origSettingItems = settingItems;
+        settingItems = true;
         int origSelectedRow = jtable.getSelectedRow();
         int origSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jtable.getRowCount())
@@ -372,7 +361,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         model.setRowCount(0);
         for (int i = 0; i < items.size(); i++) {
             PhysicalItem item = items.get(i);
-            model.addRow(new Object[]{i, item.getName(), item.x, item.y, Math.toDegrees(item.getRotation()), item.getType(), item.getScore()});
+            Object rowObjects[] = new Object[]{i, item.getName(), item.x, item.y, Math.toDegrees(item.getRotation()), item.getType(), item.getScore()};
+            model.addRow(rowObjects);
         }
         autoResizeTableColWidths(jtable);
         if (null != rowSorter) {
@@ -394,6 +384,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             dlsm.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
             jtable.setSelectionModel(dlsm);
         }
+        settingItems = origSettingItems;
     }
 
     public List<PhysicalItem> computeAbsSlotPositions(List<PhysicalItem> l) {
@@ -1490,6 +1481,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         double min_y = object2DJPanel1.getMinY();
         double max_y = object2DJPanel1.getMaxY();
         if (null != draggedItem) {
+            double orig_x = draggedItem.x;
+            double orig_y = draggedItem.y;
             switch (object2DJPanel1.getDisplayAxis()) {
                 case POS_X_POS_Y:
                     draggedItem.x = ((evt.getX() - 15) / scale) + min_x;
@@ -1513,6 +1506,25 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
 //            draggedItem.x = ((evt.getX() - 15) / scale) + min_x;
 //            draggedItem.y = max_y - ((evt.getY() - 20) / scale);
+            double xdiff = draggedItem.x - orig_x;
+            double ydiff = draggedItem.y - orig_y;
+            List<PhysicalItem> origItems = this.getItems();
+            if (draggedItem.getMaxSlotDist() > 0) {
+                for (int i = 0; i < origItems.size(); i++) {
+                    PhysicalItem item = origItems.get(i);
+                    if (item == draggedItem) {
+                        continue;
+                    }
+                    if (item.getMaxSlotDist() > 0) {
+                        continue;
+                    }
+                    if (item.dist(orig_x, orig_y) > draggedItem.getMaxSlotDist() * object2DJPanel1.getSlotMaxDistExpansion()) {
+                        continue;
+                    }
+                    item.x += xdiff;
+                    item.y += ydiff;
+                }
+            }
             this.setItems(this.getItems());
         }
     }//GEN-LAST:event_object2DJPanel1MouseDragged
@@ -1576,6 +1588,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         String txt = jTextFieldMaxXMaxY.getText().trim();
         setMaxXMaxYText(txt);
     }//GEN-LAST:event_jTextFieldMaxXMaxYActionPerformed
+
+    public void setViewLimits(double minX, double minY, double maxX, double maxY) {
+        String minXMinYString = String.format("%.3f,%.3f", minX, minY);
+        jTextFieldMinXMinY.setText(minXMinYString);
+        jTextFieldCurrentXY.setText(minXMinYString);
+        setMinXMinYText(minXMinYString);
+        String maxXMaxYString = String.format("%.3f,%.3f", maxX, maxY);
+        jTextFieldMaxXMaxY.setText(maxXMaxYString);
+        setMaxXMaxYText(maxXMaxYString);
+        this.jCheckBoxAutoscale.setSelected(false);
+        object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
+    }
 
     public void setMaxXMaxYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");

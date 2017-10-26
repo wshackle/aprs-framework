@@ -28,7 +28,7 @@ import crcl.base.PoseType;
  *
  * @author zeid
  */
-public class Slot  extends PhysicalItem {
+public class Slot extends PhysicalItem {
 
     private int ID;
     private String SlotName;
@@ -41,6 +41,38 @@ public class Slot  extends PhysicalItem {
     private PoseType SlotPose;
     private double diameter;
 
+    private String slotIndexString;
+
+    /**
+     * Get the value of slotIndexString
+     *
+     * @return the value of slotIndexString
+     */
+    public String getSlotIndexString() {
+        return slotIndexString;
+    }
+
+    /**
+     * Set the value of slotIndexString
+     *
+     * @param slotIndexString new value of slotIndexString
+     */
+    public void setSlotIndexString(String slotIndexString) {
+        this.slotIndexString = slotIndexString;
+    }
+
+    public static Slot slotFromTrayPartNameIndexRotationXY(Tray tray,String partName,int index, double rotation, double x, double y) {
+        String slotName = "slot_"+index+"_for_"+partName;
+        Slot slot = new Slot(slotName,rotation,x,y);
+        slot.setIndex(index);
+        slot.setSlotIndexString(""+index);
+        slot.setSlotForSkuName(partName);
+        slot.setFullName(slotName);
+        slot.setPrpName(slotName);
+        slot.setTray(tray);
+        return slot;
+    }
+    
     public Slot(String SlotName) {
         super(SlotName);
         this.SlotName = SlotName;
@@ -64,7 +96,6 @@ public class Slot  extends PhysicalItem {
         Y_OFFSET = y;
     }
 
-    
     public PoseType getSlotPose() {
         return this.SlotPose;
     }
@@ -104,7 +135,6 @@ public class Slot  extends PhysicalItem {
 //    public void setExternalShapeModelFileName(String ExternalShapeModelFileName) {
 //        this.ExternalShapeModelFileName = ExternalShapeModelFileName;
 //    }
-
 //    public String getExternalShapeModelFormatName() {
 //        return ExternalShapeModelFormatName;
 //    }
@@ -112,7 +142,6 @@ public class Slot  extends PhysicalItem {
 //    public void setExternalShapeModelFormatName(String ExternalShapeModelFormatName) {
 //        this.ExternalShapeModelFormatName = ExternalShapeModelFormatName;
 //    }
-
     public double getX_OFFSET() {
         return X_OFFSET;
     }
@@ -144,10 +173,10 @@ public class Slot  extends PhysicalItem {
     public void setDiameter(double diameter) {
         this.diameter = diameter;
     }
-    
+
     @Override
     public Slot clone() {
         return (Slot) super.clone();
     }
-    
+
 }

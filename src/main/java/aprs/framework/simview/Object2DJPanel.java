@@ -84,7 +84,7 @@ public class Object2DJPanel extends JPanel {
         this.displayAxis = displayAxis;
         this.repaint();
     }
-    public static final List<PhysicalItem> EXAMPLES_ITEMS_LIST = Arrays.asList(// PhysicalItem(String name, double rotation, double x, double y, double score, String type)
+    public static final List<PhysicalItem> EXAMPLES_ITEMS_LIST = Arrays.asList(// PhysicalItem(String slotMaxDistExpansion, double rotation, double x, double y, double score, String type)
             newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", 0.10, 700.45, -140.82, 0.99, "P"),
             newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", 0.79, 528.60, -122.51, 0.95, "P"),
             newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", -0.60, 529.98, 213.96, 0.94, "P"),
@@ -900,7 +900,12 @@ public class Object2DJPanel extends JPanel {
         List<PhysicalItem> slotList = new ArrayList<>();
         if (null != offsets) {
             for (PhysicalItem offset : offsets) {
-                slotList.add(newPhysicalItemNameRotXYScoreType("slot_" + offset.getPrpName(), 0.0,
+                String prpName = offset.getPrpName();
+                String slotDisplayName = "slot_" +prpName;
+                if(slotDisplayName.startsWith("slot_slot_")) {
+                    slotDisplayName = slotDisplayName.substring(5);
+                }
+                slotList.add(newPhysicalItemNameRotXYScoreType( slotDisplayName, 0.0,
                         item.x + (offset.x * Math.cos(item.getRotation()) + offset.y * Math.sin(item.getRotation())),
                         item.y + (-offset.x * Math.sin(item.getRotation()) + offset.y * Math.cos(item.getRotation())),
                         item.getScore(), "S"));
@@ -1181,7 +1186,8 @@ public class Object2DJPanel extends JPanel {
 //                        -2.5,
 //                        5.0, 5.0, 0.0, 360.0, Arc2D.OPEN));
                 if (item.getMaxSlotDist() > 0) {
-                    g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() * scale, -item.getMaxSlotDist() * scale, item.getMaxSlotDist() * 2.0 * scale, item.getMaxSlotDist() * 2.0 * scale, 0.0, 360.0, Arc2D.OPEN));
+//                    g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() * scale, -item.getMaxSlotDist() * scale, item.getMaxSlotDist() * 2.0 * scale, item.getMaxSlotDist() * 2.0 * scale, 0.0, 360.0, Arc2D.OPEN));
+                    g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() * scale*slotMaxDistExpansion, -item.getMaxSlotDist() * scale*slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * scale*slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * scale*slotMaxDistExpansion, 0.0, 360.0, Arc2D.OPEN));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -1230,6 +1236,15 @@ public class Object2DJPanel extends JPanel {
             g2d.setTransform(origTransform);
         }
 
+    }
+    public double slotMaxDistExpansion = 1.25;
+
+    public double getSlotMaxDistExpansion() {
+        return slotMaxDistExpansion;
+    }
+
+    public void setSlotMaxDistExpansion(double slotMaxDistExpansion) {
+        this.slotMaxDistExpansion = slotMaxDistExpansion;
     }
 
     public double getMaxX() {

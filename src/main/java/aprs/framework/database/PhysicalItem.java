@@ -32,11 +32,9 @@ import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import rcs.posemath.PM_CARTESIAN;
-import rcs.posemath.PmCartesian;
 
 /**
  * This is a general holder for anything that might have a position associated
@@ -62,7 +60,7 @@ public class PhysicalItem extends PM_CARTESIAN {
     private double vzk = 1;
     private double score = 100.0;
     private int visioncycle;
-    private String type;
+    private String type ="P";
     private AffineTransform displayTransform;
     private AffineTransform origTransform;
     private AffineTransform relTransform;
@@ -87,6 +85,30 @@ public class PhysicalItem extends PM_CARTESIAN {
         return pose(point(x, y, z), vector(vxi, vxj, vxk), vector(vzi, vzj, vzk));
     }
 
+    public void setPose(PoseType pose) {
+        if(null == pose) {
+            throw new IllegalArgumentException("null == pose");
+        }
+        PointType pt = pose.getPoint();
+        if(null != pt) {
+            x = pt.getX();
+            y = pt.getY();
+            z = pt.getZ();
+        }
+        VectorType xvec = pose.getXAxis();
+        if(null != xvec) {
+            vxi = xvec.getI();
+            vxj = xvec.getJ();
+            vxk = xvec.getK();
+            rotation = Math.atan2(vxj, vxi);
+        }
+        VectorType zvec = pose.getXAxis();
+        if(null != zvec) {
+            vzi = zvec.getI();
+            vzj = zvec.getJ();
+            vzk = zvec.getK();
+        }
+    }
     /**
      * Get the value of prpName
      *
@@ -138,9 +160,6 @@ public class PhysicalItem extends PM_CARTESIAN {
             default:
                 break;
         }
-//        if(Math.abs(rotation) > Math.PI/2.0) {
-//            System.out.println("this = " + this);
-//        }
     }
 
     public static PhysicalItem newPhysicalItemNameRotXYScoreType(String name, double rotation, double x, double y, double score, String type) {

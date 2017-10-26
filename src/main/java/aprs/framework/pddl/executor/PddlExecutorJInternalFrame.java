@@ -30,15 +30,11 @@ import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.xml.bind.JAXBException;
+import java.util.function.Function;
 
 /**
  *
@@ -59,6 +55,24 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
 
     public boolean getForceFakeTakeFlag() {
         return actionsToCrclJPanel1.getForceFakeTakeFlag();
+    }
+    
+    /**
+     * Get the value of externalGetPoseFunction
+     *
+     * @return the value of externalGetPoseFunction
+     */
+    public Function<String, PoseType> getExternalGetPoseFunction() {
+        return actionsToCrclJPanel1.getExternalGetPoseFunction();
+    }
+
+    /**
+     * Set the value of externalGetPoseFunction
+     *
+     * @param externalGetPoseFunction new value of externalGetPoseFunction
+     */
+    public void setExternalGetPoseFunction(Function<String, PoseType> externalGetPoseFunction) {
+        this.actionsToCrclJPanel1.setExternalGetPoseFunction(externalGetPoseFunction);
     }
 
 //    public void runProgramCompleteRunnables() {
@@ -231,6 +245,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         this.actionsToCrclJPanel1.loadActionsFile(f, false);
     }
 
+    public void loadActionsList(Iterable<PddlAction> newActions) {
+        this.actionsToCrclJPanel1.loadActionsList(newActions);
+    }
+    
 //    @Override
 //    public void setActionsList(List<PddlAction> actionsList) {
 //        this.actionsToCrclJPanel1.setActionsList(actionsList);

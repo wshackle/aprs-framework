@@ -53,6 +53,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
 //        DbMain.setDisplayInterface(this);
     }
 
+    @Override
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         return visionToDBJPanel.absSlotFromTrayAndOffset(tray, offsetItem);
     }

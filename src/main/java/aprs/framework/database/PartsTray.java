@@ -45,12 +45,12 @@ public class PartsTray extends Tray {
     private PoseType PartsTrayPose;
 
     public PartsTray(String PartsTrayName) {
-        super(PartsTrayName);
+        super(PartsTrayName,0.0,0.0,0.0,1.0,"PT");
         this.PartsTrayName = PartsTrayName;
     }
 
     public PartsTray(String name, double rotation, double x, double y) {
-        super(name, rotation, x, y);
+        super(name, rotation, x, y,1.0,"PT");
     }
 
     public PartsTray(String name, double rotation, double x, double y, double score, String type) {

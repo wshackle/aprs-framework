@@ -22,6 +22,7 @@
  */
 package aprs.framework.spvision;
 
+import aprs.framework.SlotOffsetProvider;
 import aprs.framework.Utils;
 import aprs.framework.database.DbParamTypeEnum;
 import aprs.framework.database.DbQueryEnum;
@@ -38,7 +39,6 @@ import aprs.framework.database.Tray;
 import crcl.ui.XFuture;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -67,12 +67,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class DatabasePoseUpdater implements AutoCloseable {
+public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
     private Connection con;
     private PreparedStatement update_statement;
@@ -987,7 +988,11 @@ public class DatabasePoseUpdater implements AutoCloseable {
     }
 
     public List<Slot> getSlots(Tray tray) {
-        List<Slot> offsets = getSlotOffsets(tray);
+        return getSlots(tray, this);
+    }
+
+    public static List<Slot> getSlots(Tray tray, SlotOffsetProvider sop) {
+        List<Slot> offsets = sop.getSlotOffsets(tray.getName());
         List<Slot> ret = new ArrayList<>();
         String tray_name = tray.getName();
         if (tray_name.startsWith("sku_")) {
@@ -999,11 +1004,10 @@ public class DatabasePoseUpdater implements AutoCloseable {
         tray.setTotalSlotsCount(offsets.size());
         tray.setAbsSlotList(new ArrayList<>());
         for (Slot offsetItem : offsets) {
-
+            if (null == offsetItem.getTray()) {
+                throw new IllegalStateException("null == offsetItem.getTray() : offsetItem=" + offsetItem + ", tray=" + tray);
+            }
             if (offsetItem.getTray() != tray) {
-//                System.err.println("offsetItem.getTray() != tray");
-//                System.out.println("offsetItem.getTray() = " + offsetItem.getTray());
-//                System.out.println("tray = " + tray);
                 if (!Objects.equals(offsetItem.getTray().getName(), tray.getName())
                         && !Objects.equals("sku_" + offsetItem.getTray().getName(), tray.getName())) {
                     throw new IllegalStateException("Offset seems to belong to the wrong tray : offsetItem=" + offsetItem + ", tray=" + tray);
@@ -1015,29 +1019,33 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 tray.setMaxSlotDist(offsetMag);
             }
             String sku_name = offsetItem.getName();
-            Slot item = absSlotFromTrayAndOffset(tray, offsetItem);
+            Slot item = sop.absSlotFromTrayAndOffset(tray, offsetItem);
             ret.add(item);
             tray.getAbsSlotList().add(item);
             String composedName = "empty_slot_for_" + sku_name + "_in_" + tray_name;
             if (tray.getType().equals("KT")) {
-                String prpName = offsetItem.getPrpName();
-                if (null != prpName) {
-                    try {
-                        int uindex = prpName.lastIndexOf('_');
-                        int slot_index = Integer.parseInt(prpName.substring(uindex + 1).trim());
-                        if (slot_index > 0) {
-                            composedName = "empty_slot_" + slot_index + "_for_" + sku_name + "_in_" + tray_name;
+                try {
+                    String slotIndexString = offsetItem.getSlotIndexString();
+                    int slot_index = 0;
+                    if (null == slotIndexString) {
+                        String prpName = offsetItem.getPrpName();
+                        if (null != prpName) {
+                            int uindex = prpName.lastIndexOf('_');
+                            slot_index = Integer.parseInt(prpName.substring(uindex + 1).trim());
+                            slotIndexString = "" + slot_index;
+                            offsetItem.setSlotIndexString(slotIndexString);
                         }
-                    } catch (Exception exception) {
-                        System.err.println("prpName=" + prpName);
-                        exception.printStackTrace();
+                    } else {
+                        slot_index = Integer.parseInt(slotIndexString);
                     }
+                    if (slot_index > 0) {
+                        composedName = "empty_slot_" + slotIndexString + "_for_" + sku_name + "_in_" + tray_name;
+                    }
+                } catch (Exception exception) {
+                    System.err.println("offsetItem=" + offsetItem);
+                    exception.printStackTrace();
                 }
             }
-//            if (sku_name.contains("medium") && tray_name.contains("large")) {
-//                throw new IllegalStateException("WTF");
-//            }
-//            System.out.println("composedName = " + composedName);
             item = new Slot(composedName, item.getRotation(),
                     item.x,
                     item.y);
@@ -1051,29 +1059,35 @@ public class DatabasePoseUpdater implements AutoCloseable {
         return ret;
     }
 
-    public double closestDist(PhysicalItem subject, List<PhysicalItem> l) {
+    public static double closestDist(PhysicalItem subject, List<PhysicalItem> l) {
         return l.stream()
                 .mapToDouble(item -> subject.distFromXY(item))
                 .min()
                 .orElse(Double.POSITIVE_INFINITY);
     }
 
-    private volatile ArrayList<PhysicalItem> prevParts = new ArrayList<>();
+    private final ArrayList<PhysicalItem> prevParts = new ArrayList<>();
 
-    public List<Slot> findEmptySlots(List<Slot> slots, List<PhysicalItem> parts) {
+    public static List<Slot> findEmptySlots(List<Slot> slots, List<PhysicalItem> parts, List<PhysicalItem> prevParts) {
         final long timestamp = System.currentTimeMillis();
-        prevParts
-                = prevParts.stream()
-                        .filter((PhysicalItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
-                        .filter((PhysicalItem prevPart) -> closestDist(prevPart, parts) < 25.0)
-                        .collect(Collectors.toCollection(() -> new ArrayList<PhysicalItem>()));
-        prevParts.addAll(parts);
+
+        List<PhysicalItem> newPrevParts
+                = (prevParts == null) ? new ArrayList<>()
+                        : prevParts.stream()
+                                .filter((PhysicalItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
+                                .filter((PhysicalItem prevPart) -> closestDist(prevPart, parts) < 25.0)
+                                .collect(Collectors.toCollection(() -> new ArrayList<PhysicalItem>()));
+        newPrevParts.addAll(parts);
+        if (null != prevParts) {
+            prevParts.clear();
+            prevParts.addAll(newPrevParts);
+        }
         return slots.stream()
                 .filter(slot -> closestDist(slot, prevParts) > 25.0)
                 .collect(Collectors.toList());
     }
 
-    private List<Slot> findAllEmptyTraySlots(List<Tray> trays, List<PhysicalItem> parts) {
+    public static List<Slot> findAllEmptyTraySlots(List<Tray> trays, List<PhysicalItem> parts, SlotOffsetProvider sop, List<PhysicalItem> prevParts) {
         List<Slot> emptySlots = new ArrayList<>();
         ConcurrentHashMap<String, Integer> nameCountMap = new ConcurrentHashMap<>();
         for (Tray tray : trays) {
@@ -1090,16 +1104,20 @@ public class DatabasePoseUpdater implements AutoCloseable {
             }
             tray.setFullName(tray.getFullName() + "_" + count);
             count++;
-            List<Slot> slots = getSlots(tray);
+            List<Slot> slots = getSlots(tray, sop);
             if (null != slots) {
-                emptySlots.addAll(findEmptySlots(slots, parts));
+                emptySlots.addAll(findEmptySlots(slots, parts, prevParts));
             }
         }
         return emptySlots;
     }
 
-    public List<Slot> findBestEmptyTraySlots(List<Tray> kitTrays, List<PhysicalItem> parts) {
-        List<Slot> emptySlots = findAllEmptyTraySlots(kitTrays, parts);
+    public static List<Slot> findBestEmptyTraySlots(
+            List<Tray> kitTrays,
+            List<PhysicalItem> parts,
+            SlotOffsetProvider sop,
+            List<PhysicalItem> prevParts) {
+        List<Slot> emptySlots = findAllEmptyTraySlots(kitTrays, parts, sop, prevParts);
         for (PhysicalItem kitTrayItem : kitTrays) {
             kitTrayItem.setEmptySlotsList(emptySlots.stream()
                     .filter((PhysicalItem slotItem) -> "ES".equals(slotItem.getType()))
@@ -1136,10 +1154,14 @@ public class DatabasePoseUpdater implements AutoCloseable {
     private boolean doPrefEmptySlotsFiltering = true;
 
     public List<PhysicalItem> addEmptyTraySlots(List<PhysicalItem> itemList) {
-//        List<DetectedItem> partsTrays
-//                = list.stream()
-//                        .filter((PhysicalItem item) -> "PT".equals(item.type))
-//                        .collect(Collectors.toList());
+        return addEmptyTraySlots(itemList, this, prevParts);
+    }
+
+    public static List<PhysicalItem> addEmptyTraySlots(
+            List<PhysicalItem> itemList,
+            SlotOffsetProvider sop,
+            List<PhysicalItem> prevParts) {
+
         List<Tray> kitTrays
                 = itemList.stream()
                         .filter((PhysicalItem item) -> "KT".equals(item.getType()))
@@ -1157,8 +1179,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
                         .filter((PhysicalItem item) -> "P".equals(item.getType()))
                         .collect(Collectors.toList());
         List<PhysicalItem> fullList = new ArrayList<>();
-        List<Slot> bestKitTrayEmptySlots = findBestEmptyTraySlots(kitTrays, parts);
-        List<Slot> bestPartTrayEmptySlots = findBestEmptyTraySlots(partTrays, parts);
+        List<Slot> bestKitTrayEmptySlots = findBestEmptyTraySlots(kitTrays, parts, sop, prevParts);
+        List<Slot> bestPartTrayEmptySlots = findBestEmptyTraySlots(partTrays, parts, sop, prevParts);
         fullList.addAll(kitTrays);
         fullList.addAll(partTrays);
         fullList.addAll(parts);
@@ -1178,7 +1200,7 @@ public class DatabasePoseUpdater implements AutoCloseable {
         }
     }
 
-    public int bestIndex(PhysicalItem item, List<PhysicalItem> slotList) {
+    static public int bestIndex(PhysicalItem item, List<PhysicalItem> slotList) {
         int bestIndexRet = Integer.MAX_VALUE;
         double minDist = Double.POSITIVE_INFINITY;
         for (int i = 0; i < slotList.size(); i++) {
@@ -1302,11 +1324,6 @@ public class DatabasePoseUpdater implements AutoCloseable {
             boolean addRepeatCountsToName,
             boolean keepFullNames) {
 
-//        // FIXME: myRotionOffset is public and static and used in
-//        // PddlActionToCrclGenerator.findCorrectKitTray 
-//        // FIXME:  this is not thread-safe and will not work with multiple 
-//        // systems being used. 
-//        myRotationOffset = this.rotationOffset;
         partsTrayList = new ArrayList();
         List<PhysicalItem> itemsToVerify = new ArrayList<>();
         List<PhysicalItem> returnedList = new ArrayList<>();
@@ -1326,108 +1343,8 @@ public class DatabasePoseUpdater implements AutoCloseable {
                 pre_vision_clean_statement.execute();
             }
             updateCount++;
-            List<Tray> partsTrays
-                    = inList.stream()
-                            .filter((PhysicalItem item) -> "PT".equals(item.getType()))
-                            .filter(Tray.class::isInstance)
-                            .map(Tray.class::cast)
-                            .collect(Collectors.toList());
-            List<Tray> kitTrays
-                    = inList.stream()
-                            .filter((PhysicalItem item) -> "KT".equals(item.getType()))
-                            .filter(Tray.class::isInstance)
-                            .map(Tray.class::cast)
-                            .collect(Collectors.toList());
-
             List<PhysicalItem> list = inList;
-            for (int i = 0; i < list.size(); i++) {
-                PhysicalItem ci = list.get(i);
-                if (null == ci || ci.getName().compareTo("*") == 0) {
-                    continue;
-                }
-                if (ci.getName().startsWith("sku_")) {
-                    ci.setName(ci.getName().substring(4));
-                }
-                if ("P".equals(ci.getType())) {
-                    if (ci.isInsideKitTray() || inside(kitTrays, ci, 10)) {
-                        ci.setName(ci.getName() + "_in_kt");
-                        if (!keepFullNames) {
-                            ci.setFullName(ci.getName());
-                        }
-                        ci.setInsideKitTray(true);
-                    } else if (ci.isInsidePartsTray() || inside(partsTrays, ci, 10)) {
-                        ci.setName(ci.getName() + "_in_pt");
-                        if (!keepFullNames) {
-                            ci.setFullName(ci.getName());
-                        }
-                        ci.setInsidePartsTray(true);
-                    }
-                }
-                if (!keepFullNames) {
-                    if (ci.getName() != null && ci.getName().length() > 0 && (ci.getFullName() == null || ci.getFullName().length() < 1)) {
-                        ci.setFullName(ci.getName());
-                    }
-                }
-            }
-            if (doPrefEmptySlotsFiltering) {
-
-                List<PhysicalItem> parts
-                        = inList.stream()
-                                .filter((PhysicalItem item) -> "P".equals(item.getType()))
-                                .collect(Collectors.toList());
-                List<PhysicalItem> emptySlots
-                        = list.stream()
-                                .filter((PhysicalItem item) -> "ES".equals(item.getType()))
-                                .collect(Collectors.toList());
-                Comparator<PhysicalItem> kitComparator
-                        = comparingLong((PhysicalItem kt) -> (kt.getEmptySlotsCount() < 1) ? Long.MAX_VALUE : kt.getEmptySlotsCount());
-                kitTrays.sort(kitComparator);
-                List<PhysicalItem> firstSortParts = new ArrayList<>();
-                firstSortParts.addAll(parts);
-                firstSortParts.sort(comparingDouble((PhysicalItem p) -> distDiff(p, kitTrays)));
-                Map<PhysicalItem, List<PhysicalItem>> partsByTray
-                        = new TreeMap<>(kitComparator);
-                List<PhysicalItem> matchedParts = new ArrayList<>();
-                for (int i = 0; i < kitTrays.size(); i++) {
-                    PhysicalItem kit = kitTrays.get(i);
-                    //System.out.println("kit fullname::: "+kit.fullName);
-                    //System.out.println("kit x::: "+kit.getX());
-                    //System.out.println("kit y::: "+kit.getY());
-                    //System.out.println("kit rotation::: "+kit.rotation);
-                    PartsTray partstray = new PartsTray(kit.getFullName());
-                    partstray.setX(kit.getX());
-                    partstray.setY(kit.getY());
-                    partstray.setRotation(kit.getRotation());
-
-                    partsTrayList.add(partstray);
-                    if (null == kit.getEmptySlotsList()) {
-                        continue;
-                    }
-                    List<PhysicalItem> slotFillers = new ArrayList<>();
-                    for (int j = 0; j < kit.getEmptySlotsList().size(); j++) {
-                        PhysicalItem slot = kit.getEmptySlotsList().get(j);
-
-                        PhysicalItem bestSlotFiller
-                                = firstSortParts.stream()
-                                        .filter((PhysicalItem p) -> p.isInsidePartsTray())
-                                        .filter((PhysicalItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
-                                        .findFirst()
-                                        .orElse(null);
-                        if (null != bestSlotFiller) {
-                            slotFillers.add(bestSlotFiller);
-                            firstSortParts.remove(bestSlotFiller);
-                        }
-                    }
-                    slotFillers.sort(comparingInt((PhysicalItem slotFiller) -> bestIndex(slotFiller, kit.getEmptySlotsList())));
-                    matchedParts.addAll(slotFillers);
-                }
-                list = new ArrayList<>();
-                list.addAll(matchedParts);
-                list.addAll(firstSortParts);
-                list.addAll(partsTrays);
-                list.addAll(kitTrays);
-                list.addAll(emptySlots);
-            }
+            list = preProcessItemList(inList, false, keepFullNames, doPrefEmptySlotsFiltering, partsTrayList);
             if (list.isEmpty()) {
                 System.err.println("updateVisionList : list is empty.");
                 return returnedList;
@@ -1641,6 +1558,138 @@ public class DatabasePoseUpdater implements AutoCloseable {
         lcopy.addAll(returnedList);
         lastEnabledUpdateList = lcopy;
         return returnedList;
+    }
+
+    static public List<PhysicalItem> preProcessItemList(Iterable<? extends PhysicalItem> inputItems, boolean keepNames, boolean keepFullNames, boolean doPrefEmptySlotsFiltering, List<PartsTray> partsTrayList) {
+        List<Tray> partsTrays
+                = StreamSupport.stream(inputItems.spliterator(), false)
+                        .filter((PhysicalItem item) -> "PT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
+        List<Tray> kitTrays
+                = StreamSupport.stream(inputItems.spliterator(), false)
+                        .filter((PhysicalItem item) -> "KT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
+        normalizeNames(inputItems, kitTrays, keepNames, keepFullNames, partsTrays);
+        if (doPrefEmptySlotsFiltering) {
+            return filterEmptySlots(inputItems, kitTrays, partsTrays, partsTrayList);
+        }
+        List<PhysicalItem> outList = new ArrayList<>();
+        for (PhysicalItem item : inputItems) {
+            outList.add(item);
+        }
+        return outList;
+    }
+
+    static public void normalizeNames(
+            Iterable<? extends PhysicalItem> inputItems,
+            List<Tray> kitTrays,
+            boolean keepNames,
+            boolean keepFullNames,
+            List<Tray> partsTrays) {
+        for (PhysicalItem ci : inputItems) {
+            if (null == ci || ci.getName().compareTo("*") == 0) {
+                continue;
+            }
+            String name = ci.getName();
+            if (name.startsWith("sku_")) {
+                name = name.substring(4);
+                if (!keepNames) {
+                    ci.setName(name);
+                }
+            }
+            if ("P".equals(ci.getType())) {
+                if (ci.isInsideKitTray() || inside(kitTrays, ci, 10)) {
+                    name = name + "_in_kt";
+                    if (!keepNames) {
+                        ci.setName(name);
+                    }
+                    if (!keepFullNames) {
+                        ci.setFullName(name);
+                    }
+                    ci.setInsideKitTray(true);
+                } else if (ci.isInsidePartsTray() || inside(partsTrays, ci, 10)) {
+                    name = name + "_in_pt";
+                    if (!keepNames) {
+                        ci.setName(name);
+                    }
+                    if (!keepFullNames) {
+                        ci.setFullName(name);
+                    }
+                    ci.setInsidePartsTray(true);
+                }
+            }
+            if (!keepFullNames) {
+                if (name != null && name.length() > 0 && (ci.getFullName() == null || ci.getFullName().length() < 1)) {
+                    ci.setFullName(name);
+                }
+            }
+        }
+    }
+
+    static public List<PhysicalItem> filterEmptySlots(Iterable<? extends PhysicalItem> inputItems, List<Tray> kitTrays, List<Tray> partsTrays, List<PartsTray> partsTrayOutList) {
+        List<PhysicalItem> parts
+                = StreamSupport.stream(inputItems.spliterator(), false)
+                        .filter((PhysicalItem item) -> "P".equals(item.getType()))
+                        .collect(Collectors.toList());
+        List<PhysicalItem> emptySlots
+                = StreamSupport.stream(inputItems.spliterator(), false)
+                        .filter((PhysicalItem item) -> "ES".equals(item.getType()))
+                        .collect(Collectors.toList());
+        Comparator<PhysicalItem> kitComparator
+                = comparingLong((PhysicalItem kt) -> (kt.getEmptySlotsCount() < 1) ? Long.MAX_VALUE : kt.getEmptySlotsCount());
+        kitTrays.sort(kitComparator);
+        List<PhysicalItem> firstSortParts = new ArrayList<>();
+        firstSortParts.addAll(parts);
+        firstSortParts.sort(comparingDouble((PhysicalItem p) -> distDiff(p, kitTrays)));
+        Map<PhysicalItem, List<PhysicalItem>> partsByTray
+                = new TreeMap<>(kitComparator);
+        List<PhysicalItem> matchedParts = new ArrayList<>();
+        for (int i = 0; i < kitTrays.size(); i++) {
+            PhysicalItem kit = kitTrays.get(i);
+            //System.out.println("kit fullname::: "+kit.fullName);
+            //System.out.println("kit x::: "+kit.getX());
+            //System.out.println("kit y::: "+kit.getY());
+            //System.out.println("kit rotation::: "+kit.rotation);
+            PartsTray partstray = new PartsTray(kit.getFullName());
+            partstray.setX(kit.getX());
+            partstray.setY(kit.getY());
+            partstray.setRotation(kit.getRotation());
+
+            if (null != partsTrayOutList) {
+                partsTrayOutList.add(partstray);
+            }
+            if (null == kit.getEmptySlotsList()) {
+                continue;
+            }
+            List<PhysicalItem> slotFillers = new ArrayList<>();
+            for (int j = 0; j < kit.getEmptySlotsList().size(); j++) {
+                PhysicalItem slot = kit.getEmptySlotsList().get(j);
+
+                PhysicalItem bestSlotFiller
+                        = firstSortParts.stream()
+                                .filter((PhysicalItem p) -> p.isInsidePartsTray())
+                                .filter((PhysicalItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
+                                .findFirst()
+                                .orElse(null);
+                if (null != bestSlotFiller) {
+                    slotFillers.add(bestSlotFiller);
+                    firstSortParts.remove(bestSlotFiller);
+                }
+            }
+            slotFillers.sort(comparingInt((PhysicalItem slotFiller) -> bestIndex(slotFiller, kit.getEmptySlotsList())));
+            matchedParts.addAll(slotFillers);
+        }
+        List<PhysicalItem> list = new ArrayList<>();
+        list.addAll(matchedParts);
+        list.addAll(firstSortParts);
+        list.addAll(partsTrays);
+        list.addAll(kitTrays);
+        list.addAll(emptySlots);
+        return list;
     }
 
     private int internalDatabaseUpdate(PreparedStatement stmnt, List<UpdateResults> batchUrs, UpdateResults ur, int updates, int updatedCount) {

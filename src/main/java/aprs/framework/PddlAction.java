@@ -173,5 +173,8 @@ public class PddlAction {
         return type + "-" + Arrays.toString(args);
     }
 
+    public String asPddlLine() {
+        return ("("+type +" "+String.join(" ", args)+")");
+    }
     
 }

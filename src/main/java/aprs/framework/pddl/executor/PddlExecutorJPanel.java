@@ -24,6 +24,7 @@ package aprs.framework.pddl.executor;
 
 import aprs.framework.AprsJFrame;
 import aprs.framework.PddlAction;
+import aprs.framework.SlotOffsetProvider;
 import aprs.framework.Utils;
 import aprs.framework.Utils.RunnableWithThrow;
 import static aprs.framework.Utils.autoResizeTableColWidths;
@@ -32,10 +33,12 @@ import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
+import aprs.framework.database.PhysicalItem;
 import aprs.framework.optaplanner.OpDisplayJPanel;
 import aprs.framework.optaplanner.actionmodel.OpAction;
 import aprs.framework.optaplanner.actionmodel.OpActionPlan;
 import aprs.framework.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
+import aprs.framework.simview.Object2DOuterJPanel;
 import aprs.framework.spvision.VisionToDBJPanel;
 import crcl.base.CRCLCommandInstanceType;
 import crcl.base.CRCLCommandType;
@@ -117,6 +120,8 @@ import java.util.Collections;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
+import javax.swing.JDialog;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
@@ -126,6 +131,17 @@ import org.optaplanner.core.api.solver.SolverFactory;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecutorDisplayInterface, PendantClientJPanel.ProgramLineListener {
+
+    public static List<PddlAction> showActionsList(List<PddlAction> actionsIn) {
+        JDialog diag = new JDialog();
+        diag.setModal(true);
+        PddlExecutorJPanel panel = new PddlExecutorJPanel();
+        panel.loadActionsList(actionsIn);
+        diag.add(panel);
+        diag.pack();
+        diag.setVisible(true);
+        return panel.getActionsList();
+    }
 
     /**
      * Creates new form ActionsToCrclJPanel
@@ -350,6 +366,24 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             out[i] = table.getModel().getValueAt(row, i);
         }
         return out;
+    }
+    
+    /**
+     * Get the value of externalGetPoseFunction
+     *
+     * @return the value of externalGetPoseFunction
+     */
+    public Function<String, PoseType> getExternalGetPoseFunction() {
+        return pddlActionToCrclGenerator.getExternalGetPoseFunction();
+    }
+
+    /**
+     * Set the value of externalGetPoseFunction
+     *
+     * @param externalGetPoseFunction new value of externalGetPoseFunction
+     */
+    public void setExternalGetPoseFunction(Function<String, PoseType> externalGetPoseFunction) {
+        this.pddlActionToCrclGenerator.setExternalGetPoseFunction(externalGetPoseFunction);
     }
 
 //    private final TableModelListener traySlotModelListener = new TableModelListener() {
@@ -1531,12 +1565,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     System.err.println("clearing actionsList when not at last index");
                 }
                 actionsList.clear();
-                Utils.runOnDispatchThread(() -> {
-                    DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
-                    model.setNumRows(0);
-                });
             }
         }
+        Utils.runOnDispatchThread(() -> {
+            DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
+            model.setRowCount(0);
+        });
     }
 
     private File propertiesFile;
@@ -1672,8 +1706,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public void addAction(PddlAction action) {
         if (null != action) {
             this.actionsList.add(action);
-            DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
-            model.addRow(new Object[]{model.getRowCount(), -1, action.getLabel(), action.getType(), Arrays.toString(action.getArgs()), action.getCost()});
+
+            double cost = 0.0;
+            try {
+                cost = Double.parseDouble(action.getCost());
+            } catch (NumberFormatException ex) {
+                // ignore 
+            }
+            final double finalCost = cost;
+            Utils.runOnDispatchThread(() -> {
+                DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
+                model.addRow(new Object[]{model.getRowCount(), -1, action.getLabel(), action.getType(), Arrays.toString(action.getArgs()), finalCost});
+            });
         }
     }
 
@@ -1706,6 +1750,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private static volatile boolean firstLoad = true;
 
+    public void loadActionsList(Iterable<? extends PddlAction> newActions) {
+        synchronized (actionsList) {
+            clearActionsList();
+            for (PddlAction action : newActions) {
+                addAction(action);
+            }
+        }
+        finishLoadActionsList(jTextFieldPddlOutputActions.getText());
+    }
+
     public void loadActionsFile(File f, boolean showInOptaPlanner) throws IOException {
         if (null != f && f.exists()) {
             if (f.isDirectory()) {
@@ -1732,83 +1786,92 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             try {
                 if (showInOptaPlanner && pddlActionToCrclGenerator.isConnected()) {
-                    pddlActionToCrclGenerator.clearPoseCache();
-                    pddlActionToCrclGenerator.setOptions(getTableOptions());
-                    PointType lookForPt = pddlActionToCrclGenerator.getLookForXYZ();
-                    if (null != lookForPt && jCheckBoxEnableOptaPlanner.isSelected()) {
-                        if (firstLoad) {
-                            OpDisplayJPanel.clearColorMap();
-                            firstLoad = false;
-                        }
-                        List<OpAction> opActions;
-                        synchronized (actionsList) {
-                            opActions = pddlActionToCrclGenerator.pddlActionsToOpActions(actionsList, 0);
-                        }
-                        OpActionPlan worstPlan = null;
-                        double worstScore = Double.POSITIVE_INFINITY;
-                        OpActionPlan bestPlan = null;
-                        double bestScore = Double.NEGATIVE_INFINITY;
-                        if (null == solver) {
-                            synchronized (solverFactory) {
-                                solver = solverFactory.buildSolver();
-                            }
-                        }
-                        solver.addEventListener(e -> System.out.println(e.getTimeMillisSpent() + ", " + e.getNewBestScore()));
-
-                        for (int i = 0; i < 10; i++) {
-
-                            Collections.shuffle(opActions);
-                            OpActionPlan inputPlan = new OpActionPlan();
-                            inputPlan.setActions(opActions);
-
-                            inputPlan.getEndAction().setLocation(new Point2D.Double(lookForPt.getX(), lookForPt.getY()));
-                            inputPlan.initNextActions();
-
-                            EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
-                            HardSoftLongScore score = calculator.calculateScore(inputPlan);
-                            double inScore = (score.getSoftScore() / 1000.0);
-                            if (inScore > bestScore) {
-                                bestPlan = inputPlan;
-                                bestScore = inScore;
-                            }
-                            if (inScore < worstScore) {
-                                worstPlan = inputPlan;
-                                worstScore = inScore;
-                            }
-//                        OpDisplayJPanel.showPlan(inputPlan, "Input : " + score);
-
-                            OpActionPlan solvedPlan = solver.solve(inputPlan);
-                            double solveScore = (solvedPlan.getScore().getSoftScore() / 1000.0);
-                            if (solveScore > bestScore) {
-                                bestPlan = solvedPlan;
-                                bestScore = solveScore;
-                            }
-                            if (solveScore < worstScore) {
-                                worstPlan = solvedPlan;
-                                worstScore = solveScore;
-                            }
-                        }
-                        this.opDisplayJPanelInput.setOpActionPlan(worstPlan);
-                        this.opDisplayJPanelSolution.setOpActionPlan(bestPlan);
-                        this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.1f mm ", -worstScore));
-                        this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.1f mm ", -bestScore));
-//                        OpDisplayJPanel.showPlan(solvedPlan, "Output : " + solvedPlan.getScore());
-                    }
+                    showLoadedPlanOptaPlanner();
                 }
             } catch (Exception ex) {
                 Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
+            String canonName = f.getCanonicalPath();
+            finishLoadActionsList(canonName);
+        }
+    }
+
+    private void finishLoadActionsList(String canonName) {
+        Utils.runOnDispatchThread(() -> {
             autoResizeTableColWidthsPddlOutput();
             jCheckBoxReplan.setSelected(false);
             setReplanFromIndex(0);
             jTextFieldIndex.setText("0");
             updateComboPartModel();
             updateComboSlotModel();
-            String canonName = f.getCanonicalPath();
+
             if (!jTextFieldPddlOutputActions.getText().equals(canonName)) {
                 jTextFieldPddlOutputActions.setText(canonName);
                 updateActionFileStrings();
             }
+        });
+    }
+
+    private void showLoadedPlanOptaPlanner() throws SQLException {
+        pddlActionToCrclGenerator.clearPoseCache();
+        pddlActionToCrclGenerator.setOptions(getTableOptions());
+        PointType lookForPt = pddlActionToCrclGenerator.getLookForXYZ();
+        if (null != lookForPt && jCheckBoxEnableOptaPlanner.isSelected()) {
+            if (firstLoad) {
+                OpDisplayJPanel.clearColorMap();
+                firstLoad = false;
+            }
+            List<OpAction> opActions;
+            synchronized (actionsList) {
+                opActions = pddlActionToCrclGenerator.pddlActionsToOpActions(actionsList, 0);
+            }
+            OpActionPlan worstPlan = null;
+            double worstScore = Double.POSITIVE_INFINITY;
+            OpActionPlan bestPlan = null;
+            double bestScore = Double.NEGATIVE_INFINITY;
+            if (null == solver) {
+                synchronized (solverFactory) {
+                    solver = solverFactory.buildSolver();
+                }
+            }
+            solver.addEventListener(e -> System.out.println(e.getTimeMillisSpent() + ", " + e.getNewBestScore()));
+
+            for (int i = 0; i < 10; i++) {
+
+                Collections.shuffle(opActions);
+                OpActionPlan inputPlan = new OpActionPlan();
+                inputPlan.setActions(opActions);
+
+                inputPlan.getEndAction().setLocation(new Point2D.Double(lookForPt.getX(), lookForPt.getY()));
+                inputPlan.initNextActions();
+
+                EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+                HardSoftLongScore score = calculator.calculateScore(inputPlan);
+                double inScore = (score.getSoftScore() / 1000.0);
+                if (inScore > bestScore) {
+                    bestPlan = inputPlan;
+                    bestScore = inScore;
+                }
+                if (inScore < worstScore) {
+                    worstPlan = inputPlan;
+                    worstScore = inScore;
+                }
+                OpActionPlan solvedPlan = solver.solve(inputPlan);
+                double solveScore = (solvedPlan.getScore().getSoftScore() / 1000.0);
+                if (solveScore > bestScore) {
+                    bestPlan = solvedPlan;
+                    bestScore = solveScore;
+                }
+                if (solveScore < worstScore) {
+                    worstPlan = solvedPlan;
+                    worstScore = solveScore;
+                }
+            }
+            this.opDisplayJPanelInput.setOpActionPlan(worstPlan);
+            this.opDisplayJPanelSolution.setOpActionPlan(bestPlan);
+            this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.1f mm ", -worstScore));
+            this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.1f mm ", -bestScore));
+//                        OpDisplayJPanel.showPlan(solvedPlan, "Output : " + solvedPlan.getScore());
         }
     }
 
@@ -3317,11 +3380,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
             String jointVals
                     = jointList
-                    .stream()
-                    .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                    .map(JointStatusType::getJointPosition)
-                    .map(Objects::toString)
-                    .collect(Collectors.joining(","));
+                            .stream()
+                            .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                            .map(JointStatusType::getJointPosition)
+                            .map(Objects::toString)
+                            .collect(Collectors.joining(","));
             System.out.println("jointVals = " + jointVals);
             DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
             boolean keyFound = false;

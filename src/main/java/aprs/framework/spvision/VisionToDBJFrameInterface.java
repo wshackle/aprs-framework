@@ -22,12 +22,12 @@
  */
 package aprs.framework.spvision;
 
+import aprs.framework.SlotOffsetProvider;
 import aprs.framework.database.CommonJFrameInterface;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.PoseQueryElem;
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -36,7 +36,7 @@ import java.util.concurrent.Callable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface VisionToDBJFrameInterface extends CommonJFrameInterface {
+public interface VisionToDBJFrameInterface extends CommonJFrameInterface,SlotOffsetProvider {
 
     public void setAquiring(String s);
 

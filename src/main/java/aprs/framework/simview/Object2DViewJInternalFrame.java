@@ -23,6 +23,7 @@
 package aprs.framework.simview;
 
 import aprs.framework.AprsJFrame;
+import aprs.framework.SlotOffsetProvider;
 import aprs.framework.database.PhysicalItem;
 import crcl.base.PointType;
 import crcl.base.PoseType;
@@ -107,6 +108,10 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return object2DOuterJPanel1.getItems();
     }
 
+    public void setViewLimits(double minX, double minY, double maxX, double maxY) {
+        object2DOuterJPanel1.setViewLimits(minX, minY, maxX, maxY);
+    }
+    
     @Override
     public void setItems(List<PhysicalItem> items) {
         object2DOuterJPanel1.setItems(items);
@@ -134,6 +139,10 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     
     public void setAprsJFrame(AprsJFrame aprsJFrame) {
         object2DOuterJPanel1.setAprsJFrame(aprsJFrame);
+    }
+    
+    public void setSlotOffsetProvider(SlotOffsetProvider slotOffsetProvider) {
+        object2DOuterJPanel1.setSlotOffsetProvider(slotOffsetProvider);
     }
 
     public AprsJFrame getAprsJFrame() {

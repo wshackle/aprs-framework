@@ -26,6 +26,7 @@ import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.PoseQueryElem;
+import aprs.framework.database.Slot;
 import aprs.framework.simview.Object2DJFrame;
 import java.awt.Frame;
 import java.awt.event.WindowEvent;
@@ -309,5 +310,15 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
         if(null != this.visionToDBJPanel) {
             this.visionToDBJPanel.updateResultsMap(_map);
         }
+    }
+
+    @Override
+    public List<Slot> getSlotOffsets(String name) {
+        return visionToDBJPanel.getSlotOffsets(name);
+    }
+
+    @Override
+    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
+        return visionToDBJPanel.absSlotFromTrayAndOffset(tray, offsetItem);
     }
 }

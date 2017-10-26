@@ -104,6 +104,7 @@ import java.awt.geom.Point2D;
 import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
@@ -375,27 +376,35 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.positionMaps = errorMap;
     }
 
-//    public List<TraySlotDesign> getAllTraySlotDesigns() throws SQLException {
-//        return qs.getAllTraySlotDesigns();
-//    }
-//
-//    public List<TraySlotDesign> getSingleTraySlotDesign(String partDesignName, String trayDesignName) throws SQLException {
-//        return qs.getSingleTraySlotDesign(partDesignName, trayDesignName);
-//    }
-//
-//    public void setSingleTraySlotDesign(TraySlotDesign tsd) throws SQLException {
-//        qs.setSingleTraySlotDesign(tsd);
-//    }
-//
-//    public void newSingleTraySlotDesign(TraySlotDesign tsd) throws SQLException {
-//        qs.newSingleTraySlotDesign(tsd);
-//    }
+    private Function<String, PoseType> externalGetPoseFunction = null;
+
+    /**
+     * Get the value of externalGetPoseFunction
+     *
+     * @return the value of externalGetPoseFunction
+     */
+    public Function<String, PoseType> getExternalGetPoseFunction() {
+        return externalGetPoseFunction;
+    }
+
+    /**
+     * Set the value of externalGetPoseFunction
+     *
+     * @param externalGetPoseFunction new value of externalGetPoseFunction
+     */
+    public void setExternalGetPoseFunction(Function<String, PoseType> externalGetPoseFunction) {
+        this.externalGetPoseFunction = externalGetPoseFunction;
+    }
+
     /**
      * Check if this is connected to the database.
      *
      * @return is this generator connected to the database.
      */
     public synchronized boolean isConnected() {
+        if(null != externalGetPoseFunction) {
+            return true;
+        }
         try {
             return null != dbConnection
                     && null != qs
@@ -1875,13 +1884,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return this.aprsJFrame.getVisionToDBRotationOffset();
     }
 
-//    private List<DetectedItem>  partsTrayListToDetectedItemList(List<PartsTray> listIn) {
-//        List<DetectedItem>  listOut = new ArrayList<>();
-//        for(PartsTray partsTray : listIn) {
-//            listOut.add(new PhysicalItem(partsTray.getPartsTrayName(), partsTray.getRotation(), partsTray.getX(), partsTray.getY()));
-//        }
-//        return listOut;
-//    }
     /**
      * Function that finds the correct kit tray from the database using the sku
      * kitSku
@@ -2334,6 +2336,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws SQLException if query fails.
      */
     public PoseType getPose(String posename) throws SQLException, IllegalStateException {
+        if(null != externalGetPoseFunction) {
+            return externalGetPoseFunction.apply(posename);
+        }
         final AtomicReference<Exception> getNewPoseFromDbException = new AtomicReference<>();
         synchronized (poseCache) {
             PoseType pose = poseCache.computeIfAbsent(posename,
