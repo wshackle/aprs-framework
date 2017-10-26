@@ -190,12 +190,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     public List<OpAction> pddlActionsToOpActions(List<? extends PddlAction> listIn, int start) throws SQLException {
-        return pddlActionsToOpActions(listIn, start, null);
+        return pddlActionsToOpActions(listIn, start, null, null,null);
     }
 
     int skippedActions = 0;
 
-    private List<OpAction> pddlActionsToOpActions(List<? extends PddlAction> listIn, int start, int endl[]) throws SQLException {
+    private List<OpAction> pddlActionsToOpActions(List<? extends PddlAction> listIn, int start, int endl[], List<OpAction> skippedOpActionsList,List<PddlAction> skippedPddlActionsList) throws SQLException {
         List<OpAction> ret = new ArrayList<>();
         boolean moveOccurred = false;
         PointType lookForPt = getLookForXYZ();
@@ -206,7 +206,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             PddlAction pa = listIn.get(i);
 
             switch (pa.getType()) {
-
                 case "take-part":
                 case "fake-take-part":
                 case "test-part-position":
@@ -215,6 +214,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     if (null == partPose) {
                         if (skipMissingParts) {
                             skippedActions++;
+                            if(null != skippedPddlActionsList) {
+                                skippedPddlActionsList.add(pa);
+                            }
                             skipNextPlace = true;
                         } else {
                             throw new IllegalStateException("null == partPose: partName=" + partName + ",start=" + start + ",i=" + i + ",pa=" + pa);
@@ -233,25 +235,37 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     break;
 
                 case "place-part":
-                    if (!skipNextPlace) {
-                        String slotName = pa.getArgs()[placePartSlotArgIndex];
-                        PoseType slotPose = getPose(slotName);
-                        if (null == slotPose) {
+                    String slotName = pa.getArgs()[placePartSlotArgIndex];
+                    PoseType slotPose = getPose(slotName);
+                    if (null == slotPose) {
+                        if (skipMissingParts) {
+                            skippedActions++;
+                            if(null != skippedPddlActionsList) {
+                                skippedPddlActionsList.add(pa);
+                            }
+                            skipNextPlace = true;
+                        } else {
                             throw new IllegalStateException("null == slotPose: slotName=" + slotName + ",start=" + start + ",i=" + i + ",pa=" + pa);
                         }
-                        PointType slotPt = slotPose.getPoint();
-                        ret.add(new OpAction(pa.toString(), slotPt.getX(), slotPt.getY(), OpActionType.DROPOFF, posNameToType(slotName)));
-                        if (!moveOccurred) {
-                            if (null != endl && endl.length > 0) {
-                                endl[0] = i;
-                            }
-                            moveOccurred = true;
-                        }
                     } else {
-                        skippedActions++;
-                        skipNextPlace = false;
+                        PointType slotPt = slotPose.getPoint();
+                        OpAction placePartOpAction = new OpAction(pa.toString(), slotPt.getX(), slotPt.getY(), OpActionType.DROPOFF, posNameToType(slotName));
+                        if (!skipNextPlace) {
+                            ret.add(placePartOpAction);
+                            if (!moveOccurred) {
+                                if (null != endl && endl.length > 0) {
+                                    endl[0] = i;
+                                }
+                                moveOccurred = true;
+                            }
+                        } else {
+                            skippedActions++;
+                            if (null != skippedOpActionsList) {
+                                skippedOpActionsList.add(placePartOpAction);
+                            }
+                            skipNextPlace = false;
+                        }
                     }
-
                     break;
 
                 case "look-for-part":
@@ -965,10 +979,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == lookForPt) {
             throw new IllegalStateException("null == lookForPT, startingIndex=" + startingIndex + ", actions=" + actions);
         }
-        List<OpAction> opActions = pddlActionsToOpActions(actions, startingIndex, endl);
+        List<OpAction> skippedOpActionsList = new ArrayList<>(); 
+        List<PddlAction> skippedPddlActionsList = new ArrayList<>();
+        List<OpAction> opActions = pddlActionsToOpActions(actions, startingIndex, endl, skippedOpActionsList,skippedPddlActionsList);
         if (opActions.size() < 3) {
             logger.warning("opActions.size()=" + opActions.size());
             return actions;
+        }
+        if(skippedActions > 0) {
+            System.out.println("skippedPddlActionsList = " + skippedPddlActionsList);
         }
         OpActionPlan inputPlan = new OpActionPlan();
         inputPlan.setActions(opActions);
@@ -978,20 +997,42 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         HardSoftLongScore score = calculator.calculateScore(inputPlan);
         double inScore = (score.getSoftScore() / 1000.0);
         OpActionPlan solvedPlan = solver.solve(inputPlan);
-        List<PddlAction> fullReplanPddlActions = new ArrayList<>();
-        List<PddlAction> skippedPddlActions = actions.subList(0, startingIndex > endl[0] ? startingIndex : endl[0]);
-        System.out.println("skippedPddlActions = " + skippedPddlActions);
-        fullReplanPddlActions.addAll(skippedPddlActions);
-        List<PddlAction> newPddlActions = opActionsToPddlActions(solvedPlan.orderedActions(), 0);
-        System.out.println("newPddlActions = " + newPddlActions);
-        List<PddlAction> replacedPddlActions = actions.subList(endl[0], endl[1]);
-        System.out.println("replacedPddlActions = " + replacedPddlActions);
-        fullReplanPddlActions.addAll(newPddlActions);
-        List<PddlAction> laterPddlActions = actions.subList(endl[1], actions.size());
-        System.out.println("laterPddlActions = " + laterPddlActions);
-        fullReplanPddlActions.addAll(laterPddlActions);
         double solveScore = (solvedPlan.getScore().getSoftScore() / 1000.0);
+        for (int i = 0; i < skippedOpActionsList.size(); i++) {
+            OpAction skippedAction = skippedOpActionsList.get(i);
+            for (int j = 0; j < 10; j++) {
+                OpAction repAction = opActions.get(j);
+                if (skippedAction.getActionType() == repAction.getActionType()
+                        && skippedAction.getPartType().equals(repAction.getPartType())) {
+                    List<OpAction> altActions = new ArrayList<>(opActions);
+                    altActions.set(j, skippedAction);
+                    OpActionPlan altInputPlan = new OpActionPlan();
+                    altInputPlan.setActions(opActions);
+                    altInputPlan.getEndAction().setLocation(new Point2D.Double(lookForPt.getX(), lookForPt.getY()));
+                    altInputPlan.initNextActions();
+                    OpActionPlan altSolvedPlan = solver.solve(altInputPlan);
+                    double altSolvedScore = (altSolvedPlan.getScore().getSoftScore() / 1000.0);
+                    if (altSolvedScore > solveScore) {
+                        solvedPlan = altSolvedPlan;
+                        solveScore = altSolvedScore;
+                    }
+                }
+            }
+        }
+        System.out.println("Score improved:" + (solveScore - inScore));
         if (Math.abs(solveScore - inScore) > 0.1) {
+            List<PddlAction> fullReplanPddlActions = new ArrayList<>();
+            List<PddlAction> skippedPddlActions = actions.subList(0, startingIndex > endl[0] ? startingIndex : endl[0]);
+            System.out.println("skippedPddlActions = " + skippedPddlActions);
+            fullReplanPddlActions.addAll(skippedPddlActions);
+            List<PddlAction> newPddlActions = opActionsToPddlActions(solvedPlan.orderedActions(), 0);
+            System.out.println("newPddlActions = " + newPddlActions);
+            List<PddlAction> replacedPddlActions = actions.subList(endl[0], endl[1]);
+            System.out.println("replacedPddlActions = " + replacedPddlActions);
+            fullReplanPddlActions.addAll(newPddlActions);
+            List<PddlAction> laterPddlActions = actions.subList(endl[1], actions.size());
+            System.out.println("laterPddlActions = " + laterPddlActions);
+            fullReplanPddlActions.addAll(laterPddlActions);
             if (null != this.opDisplayJPanelInput) {
                 if (null == opDisplayJPanelInput.getOpActionPlan()) {
                     this.opDisplayJPanelInput.setOpActionPlan(inputPlan);
@@ -1003,9 +1044,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 this.opDisplayJPanelSolution.setOpActionPlan(solvedPlan);
                 this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.1f mm ", -solveScore));
             }
+            return fullReplanPddlActions;
         }
-        System.out.println("Score improved:" + (solveScore - inScore));
-        return fullReplanPddlActions;
+        return actions;
     }
 
     private void clearKitsToCheck(PddlAction action, List<MiddleCommandType> cmds) {
