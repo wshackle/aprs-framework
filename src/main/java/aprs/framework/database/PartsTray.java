@@ -44,13 +44,22 @@ public class PartsTray extends Tray {
 //    private double y; now in super class PhysicalItem
     private PoseType PartsTrayPose;
 
+    public static PartsTray newPartsTrayFromSkuIdRotXY(String sku,int id,double rotation, double x, double y) {
+        PartsTray pt = new PartsTray(sku+"_"+id,rotation,x,y);
+        pt.setSku(sku);
+        pt.setPartsTraySku(sku);
+        pt.setIndex(id);
+        return pt;
+    }
+    
+    
     public PartsTray(String PartsTrayName) {
-        super(PartsTrayName,0.0,0.0,0.0,1.0,"PT");
+        super(PartsTrayName, 0.0, 0.0, 0.0, 1.0, "PT");
         this.PartsTrayName = PartsTrayName;
     }
 
     public PartsTray(String name, double rotation, double x, double y) {
-        super(name, rotation, x, y,1.0,"PT");
+        super(name, rotation, x, y, 1.0, "PT");
     }
 
     public PartsTray(String name, double rotation, double x, double y, double score, String type) {
@@ -60,9 +69,7 @@ public class PartsTray extends Tray {
     public PartsTray(String name, PoseType pose, int visioncycle) {
         super(name, pose, visioncycle);
     }
-    
-    
-    
+
 //    These are now inherited from super class PhysicalItem
 //    public double getX() {
 //        return x;
@@ -87,7 +94,6 @@ public class PartsTray extends Tray {
 //    public void setRotation(double Rotation) {
 //        this.Rotation = Rotation;
 //    }
-
     public String getPartsTrayName() {
         return PartsTrayName;
     }
@@ -113,6 +119,7 @@ public class PartsTray extends Tray {
     }
 
     public void setPartsTraySku(String PartsTraySku) {
+        setSku(PartsTraySku);
         this.PartsTraySku = PartsTraySku;
     }
 //
@@ -155,9 +162,9 @@ public class PartsTray extends Tray {
     public void setpartsTrayPose(PoseType PartsTrayPose) {
         this.PartsTrayPose = PartsTrayPose;
     }
-    
+
     @Override
     public PartsTray clone() {
-        return  (PartsTray) super.clone();
+        return (PartsTray) super.clone();
     }
 }

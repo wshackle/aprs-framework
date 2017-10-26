@@ -37,6 +37,7 @@ import aprs.framework.database.Slot;
 import aprs.framework.database.Tray;
 import aprs.framework.learninggoals.GoalLearner;
 import aprs.framework.pddl.executor.PddlActionToCrclGenerator;
+import aprs.framework.pddl.executor.PddlActionToCrclGenerator.PoseProvider;
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.pddl.executor.PositionMap;
 import aprs.framework.pddl.planner.PddlPlannerJInternalFrame;
@@ -91,9 +92,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -105,8 +104,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
@@ -171,21 +168,21 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return the value of externalGetPoseFunction
      */
-    public Function<String, PoseType> getPddlExecExternalGetPoseFunction() {
+    public PoseProvider getPddlExecExternalPoseProvider() {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1";
-        return pddlExecutorJInternalFrame1.getExternalGetPoseFunction();
+        return pddlExecutorJInternalFrame1.getExternalPoseProvider();
     }
 
     /**
      * Set the value of externalGetPoseFunction
      *
-     * @param externalGetPoseFunction new value of externalGetPoseFunction
+     * @param externalPoseProvider new value of externalGetPoseFunction
      */
-    public void setPddlExecExternalGetPoseFunction(Function<String, PoseType> externalGetPoseFunction) {
+    public void setPddlExecExternalPoseProvider(PoseProvider externalPoseProvider) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1";
-        this.pddlExecutorJInternalFrame1.setExternalGetPoseFunction(externalGetPoseFunction);
+        this.pddlExecutorJInternalFrame1.setExternalPoseProvider(externalPoseProvider);
     }
-    
+
     private void setStopRunTime() {
         long t = System.currentTimeMillis();
         if (running.compareAndSet(true, false)) {
@@ -307,7 +304,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     @Override
     public List<Slot> getSlotOffsets(String name) {
-        if(null != externalSlotOffsetProvider) {
+        if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.getSlotOffsets(name);
         }
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
@@ -716,7 +713,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
                 safeAbortAndDisconnectFuture
                         = safeAbortFuture
-                        .thenRun(() -> {
+                                .thenRun(() -> {
 //                                    if (null != continousDemoFuture) {
 //                                        continousDemoFuture.cancelAll(true);
 //                                        continousDemoFuture = null;
@@ -921,15 +918,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                             takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
                             return null;
                         }, runProgramService)
-                .thenCompose("continueActionList.pauseCheck" + comment, x -> waitForPause())
-                .thenApply("pddlExecutorJInternalFrame1.completeActionList" + comment,
-                        (Void x) -> {
-                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                        .thenCompose("continueActionList.pauseCheck" + comment, x -> waitForPause())
+                        .thenApply("pddlExecutorJInternalFrame1.completeActionList" + comment,
+                                (Void x) -> {
+                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
-                            }
-                            return false;
-                        });
+                                    }
+                                    return false;
+                                });
         return lastContinueActionListFuture;
     }
 
@@ -2013,18 +2010,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return ActiveWinEnum.OTHER;
     }
 
+    public List<PhysicalItem> getSimItemsData() {
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("null == object2DViewJInternalFrame)");
+        }
+        return object2DViewJInternalFrame.getItems();
+    }
+
     public void setSimItemsData(List<PhysicalItem> items) {
-        if(null != object2DViewJInternalFrame) {
+        if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setItems(items);
         }
     }
-    
-    public void setSimViewLimits(double minX, double minY, double maxX, double maxY ){
-        if(null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.setViewLimits(minX,minY,maxX,maxY);
+
+    public void setSimViewLimits(double minX, double minY, double maxX, double maxY) {
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.setViewLimits(minX, minY, maxX, maxY);
         }
     }
-    
+
     public void startObject2DJinternalFrame() {
         try {
             boolean alreadySelected = jCheckBoxMenuItemStartupObject2DView.isSelected();
@@ -2034,7 +2038,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             object2DViewJInternalFrame = new Object2DViewJInternalFrame();
             updateSubPropertiesFiles();
             object2DViewJInternalFrame.setAprsJFrame(this);
-            if(null != externalSlotOffsetProvider) {
+            if (null != externalSlotOffsetProvider) {
                 object2DViewJInternalFrame.setSlotOffsetProvider(externalSlotOffsetProvider);
             }
             object2DViewJInternalFrame.loadProperties();
@@ -2182,7 +2186,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void startPendantClientJInternalFrame() {
         try {
             boolean alreadySelected = jCheckBoxMenuItemStartupRobotCrclGUI.isSelected();
-            if(!alreadySelected) {
+            if (!alreadySelected) {
                 jCheckBoxMenuItemStartupRobotCrclGUI.setSelected(true);
             }
             pendantClientJInternalFrame = new PendantClientJInternalFrame();
@@ -2217,8 +2221,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void startSimServerJInternalFrame() {
         try {
             if (null == simServerJInternalFrame) {
-                boolean alreadySelected =jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected();
-                if(!alreadySelected) {
+                boolean alreadySelected = jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected();
+                if (!alreadySelected) {
                     jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(true);
                 }
                 simServerJInternalFrame = new SimServerJInternalFrame(false);
@@ -3278,7 +3282,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     @Override
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
-        if(null != externalSlotOffsetProvider) {
+        if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem);
         }
         return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem);
@@ -3332,7 +3336,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return true;
     }
 
-    
     /**
      * Use the provided list of items create a set of actions that will fill
      * empty trays to match.Load this list into the PDDL executor.
@@ -3976,11 +3979,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param comment
      * @return future of the underlying task to execute the actions.
      */
-    public XFuture<Boolean> startActionsList( Iterable<PddlAction> actions) {
+    public XFuture<Boolean> startActionsList(Iterable<PddlAction> actions) {
         this.pddlExecutorJInternalFrame1.loadActionsList(actions);
         return startActions("");
     }
-    
+
     /**
      * Start the PDDL actions currently loaded in the executor from the
      * beginning.
@@ -4026,7 +4029,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     return null;
                 }, runProgramService)
                 .thenCompose("startActions.pauseCheck.comment=" + comment + ", startRunNumber" + startRunNumber, x -> waitForPause())
-                .thenApply(taskName, x -> {
+                .thenApplyAsync(taskName, x -> {
                     if (runNumber != startRunNumber) {
                         throw new IllegalStateException("runNumbeChanged");
                     }
@@ -4042,7 +4045,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         throw new IllegalStateException("runNumbeChanged");
                     }
                     return ret;
-                }
+                }, runProgramService
                 );
         return lastStartActionsFuture;
     }
@@ -4641,43 +4644,43 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     activateFrame(object2DViewJInternalFrame);
                 }
                 break;
-                
+
             case CRCL_CLIENT_WINDOW:
                 if (null != pendantClientJInternalFrame) {
                     activateFrame(pendantClientJInternalFrame);
                 }
                 break;
-                
+
             case DATABASE_SETUP_WINDOW:
                 if (null != dbSetupJInternalFrame) {
                     activateFrame(dbSetupJInternalFrame);
                 }
                 break;
-                
+
             case ERRLOG_WINDOW:
                 if (null != logDisplayJInternalFrame) {
                     activateFrame(logDisplayJInternalFrame);
                 }
                 break;
-                
+
             case PDDL_EXECUTOR_WINDOW:
                 if (null != pddlExecutorJInternalFrame1) {
                     activateFrame(pddlExecutorJInternalFrame1);
                 }
                 break;
-                
+
             case PDDL_PLANNER_WINDOW:
                 if (null != pddlPlannerJInternalFrame) {
                     activateFrame(pddlPlannerJInternalFrame);
                 }
                 break;
-                
+
             case VISION_TO_DB_WINDOW:
                 if (null != visionToDbJInternalFrame) {
                     activateFrame(visionToDbJInternalFrame);
                 }
                 break;
-                
+
             case KIT_INSPECTION_WINDOW:
                 if (null != kitInspectionJInternalFrame) {
                     activateFrame(kitInspectionJInternalFrame);
@@ -4694,8 +4697,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         this.activeWin = activeWin;
         showActiveWin();
     }
-    
-    
 
     @Override
     public void saveProperties() throws IOException {

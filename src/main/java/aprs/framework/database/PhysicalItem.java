@@ -47,8 +47,17 @@ import rcs.posemath.PM_CARTESIAN;
 public class PhysicalItem extends PM_CARTESIAN {
 
     final public String origName;
+    private String sku;
     private String name;
     private String fullName;
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
     private int repeats;
     private int index;
     private double rotation;

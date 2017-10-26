@@ -25,6 +25,7 @@ package aprs.framework.pddl.executor;
 import aprs.framework.AprsJFrame;
 import aprs.framework.PddlAction;
 import aprs.framework.database.DbSetupPublisher;
+import aprs.framework.pddl.executor.PddlActionToCrclGenerator.PoseProvider;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
@@ -62,17 +63,17 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
      *
      * @return the value of externalGetPoseFunction
      */
-    public Function<String, PoseType> getExternalGetPoseFunction() {
-        return actionsToCrclJPanel1.getExternalGetPoseFunction();
+    public PoseProvider getExternalPoseProvider() {
+        return actionsToCrclJPanel1.getExternalPoseProvider();
     }
 
     /**
      * Set the value of externalGetPoseFunction
      *
-     * @param externalGetPoseFunction new value of externalGetPoseFunction
+     * @param externalGetPoseProvider new value of externalGetPoseFunction
      */
-    public void setExternalGetPoseFunction(Function<String, PoseType> externalGetPoseFunction) {
-        this.actionsToCrclJPanel1.setExternalGetPoseFunction(externalGetPoseFunction);
+    public void setExternalPoseProvider(PoseProvider externalGetPoseProvider) {
+        this.actionsToCrclJPanel1.setExternalPoseProvider(externalGetPoseProvider);
     }
 
 //    public void runProgramCompleteRunnables() {

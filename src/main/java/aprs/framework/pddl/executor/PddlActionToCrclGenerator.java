@@ -191,12 +191,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     public List<OpAction> pddlActionsToOpActions(List<? extends PddlAction> listIn, int start) throws SQLException {
-        return pddlActionsToOpActions(listIn, start, null, null,null);
+        return pddlActionsToOpActions(listIn, start, null, null, null);
     }
 
     int skippedActions = 0;
 
-    private List<OpAction> pddlActionsToOpActions(List<? extends PddlAction> listIn, int start, int endl[], List<OpAction> skippedOpActionsList,List<PddlAction> skippedPddlActionsList) throws SQLException {
+    private List<OpAction> pddlActionsToOpActions(List<? extends PddlAction> listIn, int start, int endl[], List<OpAction> skippedOpActionsList, List<PddlAction> skippedPddlActionsList) throws SQLException {
         List<OpAction> ret = new ArrayList<>();
         boolean moveOccurred = false;
         PointType lookForPt = getLookForXYZ();
@@ -215,7 +215,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     if (null == partPose) {
                         if (skipMissingParts) {
                             skippedActions++;
-                            if(null != skippedPddlActionsList) {
+                            if (null != skippedPddlActionsList) {
                                 skippedPddlActionsList.add(pa);
                             }
                             skipNextPlace = true;
@@ -241,7 +241,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     if (null == slotPose) {
                         if (skipMissingParts) {
                             skippedActions++;
-                            if(null != skippedPddlActionsList) {
+                            if (null != skippedPddlActionsList) {
                                 skippedPddlActionsList.add(pa);
                             }
                             skipNextPlace = true;
@@ -390,24 +390,33 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.positionMaps = errorMap;
     }
 
-    private Function<String, PoseType> externalGetPoseFunction = null;
+    public static interface PoseProvider {
+
+        public List<PhysicalItem> getNewPhysicalItems();
+
+        public PoseType getPose(String name);
+        
+        public List<String> getInstanceNames(String skuName);
+    }
+
+    private PoseProvider externalPoseProvider = null;
 
     /**
-     * Get the value of externalGetPoseFunction
+     * Get the value of externalPoseProvider
      *
-     * @return the value of externalGetPoseFunction
+     * @return the value of externalPoseProvider
      */
-    public Function<String, PoseType> getExternalGetPoseFunction() {
-        return externalGetPoseFunction;
+    public PoseProvider getExternalPoseProvider() {
+        return externalPoseProvider;
     }
 
     /**
-     * Set the value of externalGetPoseFunction
+     * Set the value of externalPoseProvider
      *
-     * @param externalGetPoseFunction new value of externalGetPoseFunction
+     * @param externalPoseProvider new value of externalPoseProvider
      */
-    public void setExternalGetPoseFunction(Function<String, PoseType> externalGetPoseFunction) {
-        this.externalGetPoseFunction = externalGetPoseFunction;
+    public void setExternalPoseProvider(PoseProvider externalPoseProvider) {
+        this.externalPoseProvider = externalPoseProvider;
     }
 
     /**
@@ -416,7 +425,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @return is this generator connected to the database.
      */
     public synchronized boolean isConnected() {
-        if(null != externalGetPoseFunction) {
+        if (null != externalPoseProvider) {
             return true;
         }
         try {
@@ -760,9 +769,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
 
         this.startSafeAbortRequestCount = startSafeAbortRequestCount;
-        if (null == qs) {
-            throw new IllegalStateException("Database not setup and connected.");
-        }
+        checkDbReady();
         if (aprsJFrame.isRunningCrclProgram()) {
             throw new IllegalStateException("already running crcl while trying to generate it");
         }
@@ -817,7 +824,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
                     case "look-for-part":
                     case "look-for-parts":
-                        newItems = waitForCompleteVisionUpdates("generate(start=" + startingIndex + ",crclNumber=" + crclNumber + ")", lastRequiredPartsMap);
+                        if (null == externalPoseProvider) {
+                            newItems = waitForCompleteVisionUpdates("generate(start=" + startingIndex + ",crclNumber=" + crclNumber + ")", lastRequiredPartsMap);
+                        } else {
+                            newItems = externalPoseProvider.getNewPhysicalItems();
+                        }
 
                         assert (newItems != null) :
                                 "newItems == null";
@@ -827,6 +838,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                 poseCache.put(item.getFullName(), item.getPose());
                             }
                         }
+
                         break;
 
                     default:
@@ -988,14 +1000,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null == lookForPt) {
             throw new IllegalStateException("null == lookForPT, startingIndex=" + startingIndex + ", actions=" + actions);
         }
-        List<OpAction> skippedOpActionsList = new ArrayList<>(); 
+        List<OpAction> skippedOpActionsList = new ArrayList<>();
         List<PddlAction> skippedPddlActionsList = new ArrayList<>();
-        List<OpAction> opActions = pddlActionsToOpActions(actions, startingIndex, endl, skippedOpActionsList,skippedPddlActionsList);
+        List<OpAction> opActions = pddlActionsToOpActions(actions, startingIndex, endl, skippedOpActionsList, skippedPddlActionsList);
         if (opActions.size() < 3) {
             logger.warning("opActions.size()=" + opActions.size());
             return actions;
         }
-        if(skippedActions > 0) {
+        if (skippedActions > 0) {
             System.out.println("skippedPddlActionsList = " + skippedPddlActionsList);
         }
         OpActionPlan inputPlan = new OpActionPlan();
@@ -1077,6 +1089,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private List<String> getPartTrayInstancesFromSkuName(String skuName) {
         try {
+            if(null != externalPoseProvider) {
+                return externalPoseProvider.getInstanceNames(skuName);
+            }
             return qs.getPartsTrays(skuName).stream()
                     .map(PartsTray::getPartsTrayName)
                     .collect(Collectors.toList());
@@ -1117,8 +1132,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private void checkKits(PddlAction action, List<MiddleCommandType> cmds) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException {
-        List<PhysicalItem> newItems = waitForCompleteVisionUpdates("checkKits", lastRequiredPartsMap);
-
+        List<PhysicalItem> newItems;
+        if (null == externalPoseProvider) {
+            newItems = waitForCompleteVisionUpdates("checkKits", lastRequiredPartsMap);
+        } else {
+            newItems = externalPoseProvider.getNewPhysicalItems();
+        }
         assert (newItems != null) :
                 "newItems == null";
 
@@ -1629,7 +1648,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             try {
                 String fullTitle = title + "_crclNumber-" + String.format("%03d", crclNumber.get()) + "_action-" + String.format("%03d", getLastIndex());
                 takeSimViewSnapshot(aprsJFrame.createTempFile(prefix + "_" + fullTitle, ".PNG"), pose, label);
-                takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix + "_db_" + fullTitle, ".PNG"));
+                if (null == externalPoseProvider) {
+                    takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix + "_db_" + fullTitle, ".PNG"));
+                }
                 takeSimViewSnapshot(aprsJFrame.createTempFile(prefix + "_pc_" + fullTitle, ".PNG"), poseCacheToDetectedItemList());
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, null, ex);
@@ -1662,9 +1683,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws SQLException if database query fails
      */
     public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
-        if (null == qs) {
-            throw new IllegalStateException("Database not setup and connected.");
-        }
+        checkDbReady();
         checkSettings();
         String partName = action.getArgs()[0];
 
@@ -1729,9 +1748,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * locations within a document model
      */
     public void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException, InterruptedException, ExecutionException, IOException {
-        if (null == qs) {
-            throw new IllegalStateException("Database not setup and connected.");
-        }
+        checkDbReady();
         checkSettings();
         if (action.getArgs().length < 2) {
             throw new IllegalArgumentException("action = " + action + " needs at least two arguments: kitSku inspectionID");
@@ -1742,7 +1759,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             takeSnapshots("plan", "PlacePartSlotPoseList.isEmpty()-inspect-kit-", null, "");
             return;
         }
-        waitForCompleteVisionUpdates("inspectKit", lastRequiredPartsMap);
+        if (null == externalPoseProvider) {
+            waitForCompleteVisionUpdates("inspectKit", lastRequiredPartsMap);
+        }
         takeSnapshots("plan", "inspect-kit-", null, "");
 
 //        addTakeSnapshots(out, "inspect-kit-", null, "");
@@ -2225,9 +2244,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws SQLException if database query fails
      */
     public void takePart(PddlAction action, List<MiddleCommandType> out, PddlAction nextPlacePartAction) throws IllegalStateException, SQLException {
-        if (null == qs) {
-            throw new IllegalStateException("Database not setup and connected.");
-        }
+        checkDbReady();
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
 
@@ -2294,9 +2311,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws SQLException if database query fails
      */
     public void fakeTakePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
-        if (null == qs) {
-            throw new IllegalStateException("Database not setup and connected.");
-        }
+        checkDbReady();
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
         MessageType msg = new MessageType();
@@ -2322,9 +2337,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     public void takePartRecovery(String partName, List<MiddleCommandType> out) throws SQLException, BadLocationException {
-        if (null == qs) {
-            throw new IllegalStateException("Database not setup and connected.");
-        }
+        checkDbReady();
 
         if (partName.indexOf('_') < 0) {
             throw new IllegalArgumentException("partName must contain an underscore: partName=" + partName);
@@ -2377,8 +2390,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws SQLException if query fails.
      */
     public PoseType getPose(String posename) throws SQLException, IllegalStateException {
-        if(null != externalGetPoseFunction) {
-            return externalGetPoseFunction.apply(posename);
+        if (null != externalPoseProvider) {
+            return externalPoseProvider.getPose(posename);
         }
         final AtomicReference<Exception> getNewPoseFromDbException = new AtomicReference<>();
         synchronized (poseCache) {
@@ -3225,9 +3238,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         lastTestApproachPose = null;
         checkSettings();
-        if (null == qs) {
-            throw new IllegalStateException("Database not setup and connected.");
-        }
+        checkDbReady();
         if (null == kitInspectionJInternalFrame) {
             kitInspectionJInternalFrame = aprsJFrame.getKitInspectionJInternalFrame();
         }
@@ -3260,9 +3271,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (!atLookForPosition) {
             addMoveToLookForPosition(out);
             addAfterMoveToLookForDwell(out);
-            addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
-                aprsJFrame.setEnableVisionToDatabaseUpdates(true, immutableRequiredPartsMap);
-            });
+            if (null == externalPoseProvider) {
+                addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
+                    aprsJFrame.setEnableVisionToDatabaseUpdates(true, immutableRequiredPartsMap);
+                });
+            }
             if (firstAction) {
                 addFirstLookDwell(out);
             } else if (lastAction) {
@@ -3271,20 +3284,23 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 addLookDwell(out);
             }
         } else {
-            addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
-                aprsJFrame.setEnableVisionToDatabaseUpdates(true, immutableRequiredPartsMap);
-            });
+            if (null == externalPoseProvider) {
+                addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
+                    aprsJFrame.setEnableVisionToDatabaseUpdates(true, immutableRequiredPartsMap);
+                });
+            }
             addSkipLookDwell(out);
         }
-
-        addMarkerCommand(out, "lookForParts.waitForCompleteVisionUpdates", x -> {
-            try {
-                waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap);
-            } catch (InterruptedException | ExecutionException | IOException ex) {
-                logger.log(Level.SEVERE, null, ex);
-                throw new RuntimeException(ex);
-            }
-        });
+        if (null == externalPoseProvider) {
+            addMarkerCommand(out, "lookForParts.waitForCompleteVisionUpdates", x -> {
+                try {
+                    waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap);
+                } catch (InterruptedException | ExecutionException | IOException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                    throw new RuntimeException(ex);
+                }
+            });
+        }
         addTakeSnapshots(out, "lookForParts-" + ((action.getArgs().length == 1) ? action.getArgs()[0] : ""), null, "", this.crclNumber.get());
         if (action.getArgs().length >= 1) {
             if (action.getArgs()[0].startsWith("1")) {
@@ -3306,6 +3322,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         } else {
             TakenPartList.clear();
+        }
+    }
+
+    private void checkDbReady() throws IllegalStateException {
+        if (null == externalPoseProvider) {
+            if (null == qs) {
+                throw new IllegalStateException("Database not setup and connected.");
+            }
         }
     }
 
@@ -3458,9 +3482,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws SQLException if database query fails
      */
     private void placePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
-        if (null == qs) {
-            throw new IllegalStateException("Database not setup and connected.");
-        }
+        checkDbReady();
         if (null == PlacePartSlotPoseList) {
             PlacePartSlotPoseList = new ArrayList();
         }
@@ -3526,9 +3548,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private void placePartRecovery(PddlAction action, Slot slot, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException {
-        if (null == qs) {
-            throw new IllegalStateException("Database not setup and connected.");
-        }
+        checkDbReady();
         if (null == PlacePartSlotPoseList) {
             PlacePartSlotPoseList = new ArrayList();
         }

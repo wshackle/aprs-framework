@@ -373,8 +373,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      *
      * @return the value of externalGetPoseFunction
      */
-    public Function<String, PoseType> getExternalGetPoseFunction() {
-        return pddlActionToCrclGenerator.getExternalGetPoseFunction();
+    public PddlActionToCrclGenerator.PoseProvider getExternalPoseProvider() {
+        return pddlActionToCrclGenerator.getExternalPoseProvider();
     }
 
     /**
@@ -382,8 +382,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      *
      * @param externalGetPoseFunction new value of externalGetPoseFunction
      */
-    public void setExternalGetPoseFunction(Function<String, PoseType> externalGetPoseFunction) {
-        this.pddlActionToCrclGenerator.setExternalGetPoseFunction(externalGetPoseFunction);
+    public void setExternalPoseProvider(PddlActionToCrclGenerator.PoseProvider externalGetPoseFunction) {
+        this.pddlActionToCrclGenerator.setExternalPoseProvider(externalGetPoseFunction);
     }
 
 //    private final TableModelListener traySlotModelListener = new TableModelListener() {

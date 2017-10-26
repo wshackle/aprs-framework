@@ -49,6 +49,11 @@ public class Tray extends PhysicalItem {
         super(name, pose, visioncycle);
     }
     
+//    public Slot addNewSlot(String partName,int index, double rotation, double x, double y) {
+//        Slot slot =  Slot.slotFromTrayPartNameIndexRotationXY(this, partName,index,rotation,x,y);
+//        return slot;
+//    }
+//    
     private List<Slot> absSlotList = null;
 
     /**

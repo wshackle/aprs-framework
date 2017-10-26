@@ -83,7 +83,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             return false;
         }
     }
-    
+
     private Connection con;
     private PreparedStatement update_statement;
     private PreparedStatement pre_vision_clean_statement;
@@ -1092,7 +1092,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             prevParts.addAll(newPrevParts);
         }
         return slots.stream()
-                .filter(slot -> closestDist(slot, prevParts) > 25.0)
+                .filter(slot -> closestDist(slot, newPrevParts) > 25.0)
                 .collect(Collectors.toList());
     }
 
@@ -1167,24 +1167,24 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     }
 
     public static List<PhysicalItem> addEmptyTraySlots(
-            List<PhysicalItem> itemList,
+            Iterable<? extends PhysicalItem> inputItems,
             SlotOffsetProvider sop,
             List<PhysicalItem> prevParts) {
 
         List<Tray> kitTrays
-                = itemList.stream()
+                = StreamSupport.stream(inputItems.spliterator(), false)
                         .filter((PhysicalItem item) -> "KT".equals(item.getType()))
                         .filter(Tray.class::isInstance)
                         .map(Tray.class::cast)
                         .collect(Collectors.toList());
         List<Tray> partTrays
-                = itemList.stream()
+                = StreamSupport.stream(inputItems.spliterator(), false)
                         .filter((PhysicalItem item) -> "PT".equals(item.getType()))
                         .filter(Tray.class::isInstance)
                         .map(Tray.class::cast)
                         .collect(Collectors.toList());
         List<PhysicalItem> parts
-                = itemList.stream()
+                = StreamSupport.stream(inputItems.spliterator(), false)
                         .filter((PhysicalItem item) -> "P".equals(item.getType()))
                         .collect(Collectors.toList());
         List<PhysicalItem> fullList = new ArrayList<>();
@@ -1353,7 +1353,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             }
             updateCount++;
             List<PhysicalItem> list = inList;
-            list = preProcessItemList(inList, false, keepFullNames, doPrefEmptySlotsFiltering, partsTrayList);
+            list = preProcessItemList(inList, false, keepFullNames, doPrefEmptySlotsFiltering, addRepeatCountsToName, partsTrayList);
             if (list.isEmpty()) {
                 System.err.println("updateVisionList : list is empty.");
                 return returnedList;
@@ -1438,12 +1438,6 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     assert (null != stmnt) :
                             ("stmt == null");
 
-                    if (addRepeatCountsThisItem) {
-                        ci.setRepeats((int) repeatsMap.compute(ci.getName(), (String name, Integer reps) -> (reps != null) ? (reps + 1) : 0));
-                        if (!keepFullNames) {
-                            ci.setFullName(ci.getName() + "_" + (ci.getRepeats() + 1));
-                        }
-                    }
                     returnedList.add(ci);
                     List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, stmnt);
                     String updateStringFilled = fillQueryString(statementString, paramsList);
@@ -1569,7 +1563,17 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return returnedList;
     }
 
-    static public List<PhysicalItem> preProcessItemList(Iterable<? extends PhysicalItem> inputItems, boolean keepNames, boolean keepFullNames, boolean doPrefEmptySlotsFiltering, List<PartsTray> partsTrayList) {
+    public static List<PhysicalItem> processItemList(Iterable<? extends PhysicalItem> inputItems, SlotOffsetProvider sop) {
+        List<PhysicalItem> listWithEmptySlots
+                = DatabasePoseUpdater.addEmptyTraySlots(inputItems, sop, null);
+        return DatabasePoseUpdater.preProcessItemList(listWithEmptySlots);
+    }
+
+    static public List<PhysicalItem> preProcessItemList(Iterable<? extends PhysicalItem> inputItems) {
+        return preProcessItemList(inputItems, true, false, true, true, null);
+    }
+
+    static public List<PhysicalItem> preProcessItemList(Iterable<? extends PhysicalItem> inputItems, boolean keepNames, boolean keepFullNames, boolean doPrefEmptySlotsFiltering, boolean addRepeatCountsToName, List<PartsTray> partsTrayList) {
         List<Tray> partsTrays
                 = StreamSupport.stream(inputItems.spliterator(), false)
                         .filter((PhysicalItem item) -> "PT".equals(item.getType()))
@@ -1583,12 +1587,38 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         .map(Tray.class::cast)
                         .collect(Collectors.toList());
         normalizeNames(inputItems, kitTrays, keepNames, keepFullNames, partsTrays);
+        List<PhysicalItem> outList = null;
         if (doPrefEmptySlotsFiltering) {
-            return filterEmptySlots(inputItems, kitTrays, partsTrays, partsTrayList);
+            outList = filterEmptySlots(inputItems, kitTrays, partsTrays, partsTrayList);
         }
-        List<PhysicalItem> outList = new ArrayList<>();
-        for (PhysicalItem item : inputItems) {
-            outList.add(item);
+        if (null == outList) {
+            outList = new ArrayList<>();
+            for (PhysicalItem item : inputItems) {
+                outList.add(item);
+            }
+        }
+
+        Map<String, Integer> repeatsMap = new HashMap<String, Integer>();
+        for (int i = 0; i < outList.size(); i++) {
+            PhysicalItem ci = outList.get(i);
+            if (null == ci || ci.getName().compareTo("*") == 0) {
+                continue;
+            }
+            boolean addRepeatCountsThisItem = addRepeatCountsToName;
+            if (addRepeatCountsThisItem) {
+                ci.setRepeats((int) repeatsMap.compute(ci.getName(), (String name, Integer reps) -> (reps != null) ? (reps + 1) : 0));
+                if (!keepFullNames) {
+                    String origFullName = ci.getFullName();
+                    String fn = origFullName;
+                    if (fn == null || fn.length() < 1) {
+                        fn = ci.getName();
+                    }
+                    while (fn.length() > 1 && Character.isDigit(fn.charAt(fn.length() - 1))) {
+                        fn = fn.substring(0, fn.length() - 1);
+                    }
+                    ci.setFullName(fn + "_" + (ci.getRepeats() + 1));
+                }
+            }
         }
         return outList;
     }
