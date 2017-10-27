@@ -3884,6 +3884,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems()));
         }
     }
+    
+    
 
     private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()

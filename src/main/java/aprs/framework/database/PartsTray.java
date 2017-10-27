@@ -45,9 +45,10 @@ public class PartsTray extends Tray {
     private PoseType PartsTrayPose;
 
     public static PartsTray newPartsTrayFromSkuIdRotXY(String sku,int id,double rotation, double x, double y) {
-        PartsTray pt = new PartsTray(sku+"_"+id,rotation,x,y);
+        PartsTray pt = new PartsTray(sku,rotation,x,y);
         pt.setSku(sku);
         pt.setPartsTraySku(sku);
+        pt.setFullName(sku+"_"+id);
         pt.setIndex(id);
         return pt;
     }

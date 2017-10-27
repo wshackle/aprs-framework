@@ -330,10 +330,23 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return list of slots
      */
     public List<Slot> getSlots(Tray tray) {
+        if(null != externalSlotOffsetProvider) {
+            return externalSlotOffsetProvider.getSlotOffsets(tray.getName());
+        }
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
         return this.visionToDbJInternalFrame.getSlots(tray);
     }
 
+    public void setSimViewTrackCurrentPos(boolean v) {
+        this.object2DViewJInternalFrame.setTrackCurrentPos(v);
+    }
+    
+    public void simViewSimulateAndDisconnect() {
+        if(null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.setSimulatedAndDisconnect();
+        }
+    }
+    
     /**
      * Get a rotational offset in radians between the vision system and the
      * database coordinate system.

@@ -165,9 +165,8 @@ public class GoalLearnerTest {
         gl.setSlotOffsetProvider(sop);
         boolean allEmptyA[] = new boolean[1];
         List<PddlAction> actions = gl.createActionListFromVision(newTrainingData, allEmptyA);
-        for (PddlAction act : actions) {
-            System.out.println(act.asPddlLine());
-        }
+        
+        printActionsList(actions);
 
         // Create some data to test against.
         // Trays will be at new positions and all gears in the parts trays
@@ -194,70 +193,91 @@ public class GoalLearnerTest {
 //        PddlExecutorJPanel.showActionsList(actions);
 
         javax.swing.SwingUtilities.invokeLater(() -> {
-            AprsJFrame aFrame = new AprsJFrame();
-            aFrame.emptyInit();
-            aFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            aFrame.setExternalSlotOffsetProvider(sop);
-            aFrame.startActionsToCrclJInternalFrame();
-            aFrame.startObject2DJinternalFrame();
-            PoseProvider poseProvider = new PoseProvider() {
-
-                List<PhysicalItem> rawList;
-                List<PhysicalItem> fullDbList;
-                Map<String, PoseType> poseMap;
-                Map<String, List<PhysicalItem>> instanceMap;
-                Map<String, List<String>> instanceNameMap;
-                
-                @Override
-                public List<PhysicalItem> getNewPhysicalItems() {
-                    rawList
-                            = aFrame.getSimItemsData();
-                    if(null == rawList) {
-                        rawList = testData;
-                    }
-                    fullDbList = DatabasePoseUpdater.processItemList(testData, sop);
-                    System.out.println("fullDbList = " + fullDbList);
-                    poseMap
-                            = fullDbList.stream()
-                                    .collect(Collectors.toMap(PhysicalItem::getFullName, PhysicalItem::getPose));
-                    instanceMap = fullDbList.stream()
-                                    .filter(item -> item.getSku() != null)
-                                    .collect(Collectors.groupingBy(PhysicalItem::getSku));
-                    instanceNameMap = new HashMap<>();
-                    for(Entry<String, List<PhysicalItem>> entry : instanceMap.entrySet()) {
-                        List<String> names = entry.getValue().stream().map(PhysicalItem::getFullName).collect(Collectors.toList());
-                        instanceNameMap.put(entry.getKey(), names);
-                    }
-                            
-                    return fullDbList;
-                }
-
-                @Override
-                public PoseType getPose(String name) {
-                    if (null == poseMap) {
-                        getNewPhysicalItems();
-                    }
-                    return poseMap.get(name);
-                }
-
-                @Override
-                public List<String> getInstanceNames(String skuName) {
-                   if(null == instanceNameMap) {
-                       getNewPhysicalItems();
-                   }
-                   return instanceNameMap.get(skuName);
-                }
-            };
-            aFrame.setPddlExecExternalPoseProvider(poseProvider);
-            aFrame.startSimServerJInternalFrame();
-            aFrame.startPendantClientJInternalFrame();
-            aFrame.setRobotName("SimulatedRobot");
-            aFrame.setSimItemsData(testData);
-            aFrame.setSimViewLimits(-100, -100, +500, +500);
-            aFrame.setActiveWin(ActiveWinEnum.SIMVIEW_WINDOW);
-            aFrame.setVisible(true);
+            AprsJFrame aFrame = createSimpleSimViewer(sop,testData);
             aFrame.startActionsList(actions);
         });
+    }
+
+    private static void printActionsList(List<PddlAction> actions) {
+        for (PddlAction act : actions) {
+            System.out.println(act.asPddlLine());
+        }
+    }
+
+    private static AprsJFrame createSimpleSimViewer(SlotOffsetProvider sop, List<PhysicalItem> testData) {
+        AprsJFrame aFrame = new AprsJFrame();
+        aFrame.emptyInit();
+        aFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        aFrame.setExternalSlotOffsetProvider(sop);
+        aFrame.startActionsToCrclJInternalFrame();
+        aFrame.startObject2DJinternalFrame();
+        PoseProvider poseProvider = new PoseProvider() {
+            
+            List<PhysicalItem> rawList;
+            List<PhysicalItem> fullDbList;
+            Map<String, PoseType> poseMap;
+            Map<String, List<PhysicalItem>> instanceMap;
+            Map<String, List<String>> instanceNameMap;
+            
+            @Override
+            public List<PhysicalItem> getNewPhysicalItems() {
+                rawList
+                        = aFrame.getSimItemsData();
+                if(null == rawList) {
+                    rawList = testData;
+                }
+                fullDbList = DatabasePoseUpdater.processItemList(testData, sop);
+                System.out.println("fullDbList = " + fullDbList);
+                poseMap
+                        = fullDbList.stream()
+                                .collect(Collectors.toMap(PhysicalItem::getFullName, PhysicalItem::getPose));
+                instanceMap = fullDbList.stream()
+                        .filter(item -> item.getSku() != null)
+                        .collect(Collectors.groupingBy(PhysicalItem::getSku));
+                instanceNameMap = new HashMap<>();
+                for(Entry<String, List<PhysicalItem>> entry : instanceMap.entrySet()) {
+                    List<String> names = entry.getValue().stream().map(PhysicalItem::getFullName).collect(Collectors.toList());
+                    instanceNameMap.put(entry.getKey(), names);
+                }
+                
+                return fullDbList;
+            }
+            
+            @Override
+            public PoseType getPose(String name) {
+                if (null == poseMap) {
+                    getNewPhysicalItems();
+                }
+                return poseMap.get(name);
+            }
+            
+            @Override
+            public List<String> getInstanceNames(String skuName) {
+                if(null == instanceNameMap) {
+                    getNewPhysicalItems();
+                }
+                return instanceNameMap.get(skuName);
+            }
+        };
+//        System.out.println("poseProvider.getInstanceNames(tray1.getName()) = " + poseProvider.getInstanceNames(tray1.getName()));
+//        System.out.println("poseProvider.getInstanceNames(tray2.getName()) = " + poseProvider.getInstanceNames(tray2.getName()));
+//        System.out.println("poseProvider.getInstanceNames(tray3.getName()) = " + poseProvider.getInstanceNames(tray3.getName()));
+//        List<PhysicalItem> l = poseProvider.getNewPhysicalItems();
+//        System.out.printf("%10s\t%20s\t%20s\n","Sku","Name","FullName");
+//        for(PhysicalItem item : l) {
+//            System.out.printf("%10s\t%20s\t%20s\n",item.getSku(),item.getName(),item.getFullName());
+//        }
+        aFrame.setPddlExecExternalPoseProvider(poseProvider);
+        aFrame.startSimServerJInternalFrame();
+        aFrame.startPendantClientJInternalFrame();
+        aFrame.setRobotName("SimulatedRobot");
+        aFrame.setSimItemsData(testData);
+        aFrame.setSimViewLimits(-100, -100, +500, +500);
+        aFrame.simViewSimulateAndDisconnect();
+        aFrame.setSimViewTrackCurrentPos(true);
+        aFrame.setActiveWin(ActiveWinEnum.SIMVIEW_WINDOW);
+        aFrame.setVisible(true);
+        return aFrame;
     }
 
 }

@@ -63,7 +63,7 @@ public class Slot extends PhysicalItem {
 
     public static Slot slotFromTrayPartNameIndexRotationXY(Tray tray,String partName,int index, double rotation, double x, double y) {
         String slotName = "slot_"+index+"_for_"+partName;
-        Slot slot = new Slot(slotName,rotation,x,y);
+        Slot slot = new Slot(partName,rotation,x,y);
         slot.setIndex(index);
         slot.setSlotIndexString(""+index);
         slot.setSlotForSkuName(partName);

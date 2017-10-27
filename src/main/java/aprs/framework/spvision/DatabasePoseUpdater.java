@@ -1613,7 +1613,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     if (fn == null || fn.length() < 1) {
                         fn = ci.getName();
                     }
-                    while (fn.length() > 1 && Character.isDigit(fn.charAt(fn.length() - 1))) {
+                    while (fn.length() > 1 && (Character.isDigit(fn.charAt(fn.length() - 1)) || fn.charAt(fn.length()-1)=='_')) {
                         fn = fn.substring(0, fn.length() - 1);
                     }
                     ci.setFullName(fn + "_" + (ci.getRepeats() + 1));

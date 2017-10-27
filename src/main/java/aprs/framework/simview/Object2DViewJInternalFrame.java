@@ -204,5 +204,11 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         this.object2DOuterJPanel1.dispose();
     }
     
+    public void setTrackCurrentPos(boolean v) {
+        this.object2DOuterJPanel1.setTrackCurrentPos(v);
+    }
     
+    public void setSimulatedAndDisconnect() {
+        this.object2DOuterJPanel1.setSimulatedAndDisconnect();
+    }
 }

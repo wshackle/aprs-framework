@@ -1993,6 +1993,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public void setTrackCurrentPos(boolean v) {
+        if(jCheckBoxShowCurrent.isSelected() != v) {
+            jCheckBoxShowCurrent.setSelected(v);
+        }
         object2DJPanel1.setShowCurrentXY(v);
         if (v) {
             connectCurrentPosition();

@@ -31,7 +31,8 @@ import crcl.base.PoseType;
 public class KitTray extends Tray {
 
     public static KitTray newKitTrayFromSkuIdRotXY(String sku,int id,double rotation, double x, double y) {
-        KitTray kt = new KitTray(sku+"_"+id,rotation,x,y);
+        KitTray kt = new KitTray(sku,rotation,x,y);
+        kt.setFullName(sku+"_"+id);
         kt.setSku(sku);
         kt.setIndex(id);
         return kt;
