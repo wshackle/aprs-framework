@@ -32,7 +32,6 @@ import aprs.framework.database.PartsTray;
 import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.Slot;
 import aprs.framework.database.Tray;
-import aprs.framework.pddl.executor.PddlExecutorJPanel;
 import aprs.framework.simview.Object2DOuterJPanel;
 import aprs.framework.spvision.DatabasePoseUpdater;
 import crcl.base.PoseType;
@@ -49,11 +48,109 @@ import aprs.framework.pddl.executor.PddlActionToCrclGenerator.PoseProvider;
 import java.util.Map.Entry;
 
 /**
- *
+ * Test/Demo of the GoalLearner
+ * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class GoalLearnerTest {
 
+    /**
+     * Demonstrate the GoalLearner by first presenting a set of data to learn
+     * from that can be modified by the user, passing it to the GoalLearner
+     * and then running the created plan on a simulated robot.
+     * 
+     * The passed SlotOffsetProvider replaces the need for a database, and the
+     * PoseProvider replaces the need for a live camera and computer vision system.
+     * 
+     * This is the only externally callable method in this class.
+     * 
+     * @param args not used
+     */
+    public static void main(String[] args) {
+
+        // Create a mapping of KitTray's to Lists of relative slot offsets.
+        // This would otherwise be obtained from the database.
+        Map<String, List<Slot>> map = new HashMap<>();
+
+        // Kit Tray has 4 slots two for small gears and two for large gears
+        KitTray tray1 = KitTray.newKitTrayFromSkuIdRotXY("kitTray", 1, 0, 50, 50);
+        Slot s11 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "small_gear", 1, 0.0, +50, +50);
+        addMap(s11, map);
+        Slot s12 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "small_gear", 2, 0.0, -50, +50);
+        addMap(s12, map);
+        Slot s13 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "large_gear", 1, 0.0, +50, -50);
+        addMap(s13, map);
+        Slot s14 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "large_gear", 2, 0.0, -50, -50);
+        addMap(s14, map);
+
+        // Small gear parts tray has two slots for small gears
+        PartsTray tray2 = PartsTray.newPartsTrayFromSkuIdRotXY("smallPartsTray", 1, 0, 200, 200);
+        Slot s21 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 1, 0.0, +50, +50);
+        addMap(s21, map);
+        Slot s22 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 2, 0.0, -50, +50);
+        addMap(s22, map);
+
+        // Large gear parts tray has two slots for large gears
+        PartsTray tray3 = PartsTray.newPartsTrayFromSkuIdRotXY("largePartsTray", 1, 0, 400, 400);
+        Slot s31 = Slot.slotFromTrayPartNameIndexRotationXY(tray3, "large_gear", 1, 0.0, +50, +50);
+        addMap(s31, map);
+        Slot s32 = Slot.slotFromTrayPartNameIndexRotationXY(tray3, "large_gear", 2, 0.0, -50, +50);
+        addMap(s32, map);
+
+        // The slot offset provider is a simple replacement for the part of 
+        // the database that would normally be used. (Retrieving from the HashMap instead.)
+        SlotOffsetProvider sop = new HashMapSlotOffsetProvider(map);
+
+        List<PhysicalItem> trainingData = new ArrayList<>();
+
+        addList(tray1, s11, "small_gear", sop, trainingData);
+        addList(tray1, s13, "large_gear", sop, trainingData);
+        addList(tray2, s22, "small_gear", sop, trainingData);
+        addList(tray3, s13, "large_gear", sop, trainingData);
+
+        List<PhysicalItem> newTrainingData
+                = Object2DOuterJPanel.showAndModifyData(trainingData, sop, -100, -100, +500, +500);
+        GoalLearner gl = new GoalLearner();
+        gl.setSlotOffsetProvider(sop);
+        boolean allEmptyA[] = new boolean[1];
+        List<PddlAction> actions = gl.createActionListFromVision(newTrainingData, allEmptyA);
+
+        printActionsList(actions);
+
+        // Create some data to test against.
+        // Trays will be at new positions and all gears in the parts trays
+        // rather than some in the kit tray
+        Random random = new Random(System.nanoTime());
+        tray1.x = random.nextDouble() * 100.0;
+        tray1.y = random.nextDouble() * 100.0;
+        tray1.setRotation(random.nextDouble() * 2 * Math.PI);
+        tray2.x = random.nextDouble() * 100.0 + 150.0;
+        tray2.y = random.nextDouble() * 100.0 + 150.0;
+        tray2.setRotation(random.nextDouble() * 2 * Math.PI);
+        tray3.x = random.nextDouble() * 100.0 + 300.0;
+        tray3.y = random.nextDouble() * 100.0 + 300.0;
+        tray3.setRotation(random.nextDouble() * 2 * Math.PI);
+
+        List<PhysicalItem> testData = new ArrayList<>();
+
+        testData.add(tray1);
+        addList(tray2, s21, "small_gear", sop, testData);
+        addList(tray2, s22, "small_gear", sop, testData);
+        addList(tray3, s31, "large_gear", sop, testData);
+        addList(tray3, s32, "large_gear", sop, testData);
+
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            AprsJFrame aFrame = createSimpleSimViewer(sop, testData);
+            aFrame.startActionsList(actions);
+        });
+    }
+    
+    // There is no need to ever create an instance of this class.
+    // just use the static main method.
+    private GoalLearnerTest() {
+        
+    }
+    
     private static class HashMapSlotOffsetProvider implements SlotOffsetProvider {
 
         final Map<String, List<Slot>> map;
@@ -117,86 +214,7 @@ public class GoalLearnerTest {
         l.add(item);
     }
 
-    public static void main(String[] args) {
-
-        // Create a mapping of KitTray's to Lists of relative slot offsets.
-        // This would otherwise be obtained from the database.
-        Map<String, List<Slot>> map = new HashMap<>();
-
-        // Kit Tray has 4 slots two for small gears and two for large gears
-        KitTray tray1 = KitTray.newKitTrayFromSkuIdRotXY("kitTray",1, 0, 100, 200);
-        Slot s11 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "small_gear", 1, 0.0, +50, +50);
-        addMap(s11, map);
-        Slot s12 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "small_gear", 2, 0.0, -50, +50);
-        addMap(s12, map);
-        Slot s13 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "large_gear", 1, 0.0, +50, -50);
-        addMap(s13, map);
-        Slot s14 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "large_gear", 2, 0.0, -50, -50);
-        addMap(s14, map);
-
-        // Small gear parts tray has two slots for small gears
-        PartsTray tray2 =  PartsTray.newPartsTrayFromSkuIdRotXY("smallPartsTray",1, 0, 200, 300);
-        Slot s21 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 1, 0.0, +50, +50);
-        addMap(s21, map);
-        Slot s22 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 2, 0.0, -50, +50);
-        addMap(s22, map);
-
-        // Large gear parts tray has two slots for large gears
-        PartsTray tray3 = PartsTray.newPartsTrayFromSkuIdRotXY("largePartsTray",1, 0, 300, 400);
-        Slot s31 = Slot.slotFromTrayPartNameIndexRotationXY(tray3, "large_gear", 1, 0.0, +50, +50);
-        addMap(s31, map);
-        Slot s32 = Slot.slotFromTrayPartNameIndexRotationXY(tray3, "large_gear", 2, 0.0, -50, +50);
-        addMap(s32, map);
-
-        // The slot offset provider is a simple replacement for the part of 
-        // the database that would normally be used. (Retrieving from the HashMap instead.)
-        SlotOffsetProvider sop = new HashMapSlotOffsetProvider(map);
-
-        List<PhysicalItem> trainingData = new ArrayList<>();
-
-        addList(tray1, s11, "small_gear", sop, trainingData);
-        addList(tray1, s13, "large_gear", sop, trainingData);
-        addList(tray2, s22, "small_gear", sop, trainingData);
-        addList(tray3, s13, "large_gear", sop, trainingData);
-
-        List<PhysicalItem> newTrainingData
-                = Object2DOuterJPanel.showAndModifyData(trainingData, sop, -100, -100, +500, +500);
-        GoalLearner gl = new GoalLearner();
-        gl.setSlotOffsetProvider(sop);
-        boolean allEmptyA[] = new boolean[1];
-        List<PddlAction> actions = gl.createActionListFromVision(newTrainingData, allEmptyA);
-        
-        printActionsList(actions);
-
-        // Create some data to test against.
-        // Trays will be at new positions and all gears in the parts trays
-        // rather than some in the kit tray
-        Random random = new Random(System.nanoTime());
-        tray1.x = random.nextDouble() * 100.0;
-        tray1.y = random.nextDouble() * 100.0;
-        tray1.setRotation(random.nextDouble() * 2 * Math.PI);
-        tray2.x = random.nextDouble() * 100.0 + 150.0;
-        tray2.y = random.nextDouble() * 100.0 + 150.0;
-        tray2.setRotation(random.nextDouble() * 2 * Math.PI);
-        tray3.x = random.nextDouble() * 100.0 + 300.0;
-        tray3.y = random.nextDouble() * 100.0 + 300.0;
-        tray3.setRotation(random.nextDouble() * 2 * Math.PI);
-
-        List<PhysicalItem> testData = new ArrayList<>();
-
-        testData.add(tray1);
-        addList(tray2, s21, "small_gear", sop, testData);
-        addList(tray2, s22, "small_gear", sop, testData);
-        addList(tray3, s31, "large_gear", sop, testData);
-        addList(tray3, s32, "large_gear", sop, testData);
-
-//        PddlExecutorJPanel.showActionsList(actions);
-
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            AprsJFrame aFrame = createSimpleSimViewer(sop,testData);
-            aFrame.startActionsList(actions);
-        });
-    }
+    
 
     private static void printActionsList(List<PddlAction> actions) {
         for (PddlAction act : actions) {
@@ -212,37 +230,37 @@ public class GoalLearnerTest {
         aFrame.startActionsToCrclJInternalFrame();
         aFrame.startObject2DJinternalFrame();
         PoseProvider poseProvider = new PoseProvider() {
-            
+
             List<PhysicalItem> rawList;
             List<PhysicalItem> fullDbList;
             Map<String, PoseType> poseMap;
             Map<String, List<PhysicalItem>> instanceMap;
             Map<String, List<String>> instanceNameMap;
-            
+
             @Override
             public List<PhysicalItem> getNewPhysicalItems() {
                 rawList
                         = aFrame.getSimItemsData();
-                if(null == rawList) {
+                if (null == rawList) {
                     rawList = testData;
                 }
                 fullDbList = DatabasePoseUpdater.processItemList(testData, sop);
                 System.out.println("fullDbList = " + fullDbList);
                 poseMap
                         = fullDbList.stream()
-                                .collect(Collectors.toMap(PhysicalItem::getFullName, PhysicalItem::getPose));
+                        .collect(Collectors.toMap(PhysicalItem::getFullName, PhysicalItem::getPose));
                 instanceMap = fullDbList.stream()
                         .filter(item -> item.getSku() != null)
                         .collect(Collectors.groupingBy(PhysicalItem::getSku));
                 instanceNameMap = new HashMap<>();
-                for(Entry<String, List<PhysicalItem>> entry : instanceMap.entrySet()) {
+                for (Entry<String, List<PhysicalItem>> entry : instanceMap.entrySet()) {
                     List<String> names = entry.getValue().stream().map(PhysicalItem::getFullName).collect(Collectors.toList());
                     instanceNameMap.put(entry.getKey(), names);
                 }
-                
+
                 return fullDbList;
             }
-            
+
             @Override
             public PoseType getPose(String name) {
                 if (null == poseMap) {
@@ -250,23 +268,16 @@ public class GoalLearnerTest {
                 }
                 return poseMap.get(name);
             }
-            
+
             @Override
             public List<String> getInstanceNames(String skuName) {
-                if(null == instanceNameMap) {
+                if (null == instanceNameMap) {
                     getNewPhysicalItems();
                 }
                 return instanceNameMap.get(skuName);
             }
         };
-//        System.out.println("poseProvider.getInstanceNames(tray1.getName()) = " + poseProvider.getInstanceNames(tray1.getName()));
-//        System.out.println("poseProvider.getInstanceNames(tray2.getName()) = " + poseProvider.getInstanceNames(tray2.getName()));
-//        System.out.println("poseProvider.getInstanceNames(tray3.getName()) = " + poseProvider.getInstanceNames(tray3.getName()));
-//        List<PhysicalItem> l = poseProvider.getNewPhysicalItems();
-//        System.out.printf("%10s\t%20s\t%20s\n","Sku","Name","FullName");
-//        for(PhysicalItem item : l) {
-//            System.out.printf("%10s\t%20s\t%20s\n",item.getSku(),item.getName(),item.getFullName());
-//        }
+
         aFrame.setPddlExecExternalPoseProvider(poseProvider);
         aFrame.startSimServerJInternalFrame();
         aFrame.startPendantClientJInternalFrame();

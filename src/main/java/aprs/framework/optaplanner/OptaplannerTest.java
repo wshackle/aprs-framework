@@ -25,7 +25,7 @@ import org.optaplanner.core.api.solver.SolverFactory;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class TestMain {
+public class OptaplannerTest {
 
     public static void main(String[] args) {
 // assume SLF4J is bound to logback in the current environment
@@ -55,10 +55,11 @@ public class TestMain {
         ap.setActions(shuffledList);
         ap.getEndAction().setLocation(new Point2D.Double(7, 0));
         ap.initNextActions();
-        showPlan(ap, "shuffled");
+        
         System.out.println("ap = " + ap);
         EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
         HardSoftLongScore score = calculator.calculateScore(ap);
+        showPlan(ap, "Input : "+score.getSoftScore());
         System.out.println("score = " + score);
         SolverFactory<OpActionPlan> solverFactory = SolverFactory.createFromXmlResource(
                 "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
@@ -74,6 +75,6 @@ public class TestMain {
         System.out.println("solvedActionPlan.getActions() = " + solvedActionPlan.getActions());
         score = calculator.calculateScore(solvedActionPlan);
         System.out.println("score = " + score);
-        showPlan(solvedActionPlan, "solved");
+        showPlan(solvedActionPlan, "Solution: "+score.getSoftScore());
     }
 }
