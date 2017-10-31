@@ -148,6 +148,8 @@ public class GoalLearner {
      * can begin
      * @param teachItems list of trays and items in the trays as they should be
      * when complete.
+     * @param allEmptyA optional array to pass where value of whether all trays were empty will be stored.
+     * 
      * @return a list of actions than can be run to move parts from trays to
      * recreate the same configuration
      */

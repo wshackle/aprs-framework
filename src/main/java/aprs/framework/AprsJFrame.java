@@ -326,7 +326,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     /**
      * Get a list of slots associated with a particular tray.
      *
-     * @param tray
+     * @param tray tray to obtain list of slots
      * @return list of slots
      */
     public List<Slot> getSlots(Tray tray) {
@@ -3401,7 +3401,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Get the list of items displayed in the Object 2D view, they may be
      * simulated or received from the vision system.
      *
-     * @return
+     * @return list of items displayed in the Object 2D view
      */
     public List<PhysicalItem> getObjectViewItems() {
         if (null != object2DViewJInternalFrame) {
@@ -3989,7 +3989,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * underlying task. The boolean contained in the future will be true only if
      * all actions appear to succeed.
      *
-     * @param comment
+     * @param actions list of actions to execute
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startActionsList(Iterable<PddlAction> actions) {
@@ -4006,7 +4006,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * underlying task. The boolean contained in the future will be true only if
      * all actions appear to succeed.
      *
-     * @param comment
+     * @param comment comment used for tracking/logging tasks starting the actions
+     * 
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startActions(String comment) {
@@ -5197,10 +5198,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * standard timestamp string.
      *
      * @param prefix string filename will begin with
-     * @param suffix string filename will end with (typically an extention eg
-     * ".csv")
-     * @return
-     * @throws IOException
+     * @param suffix string filename will end with 
+     *               (typically an extention eg ".csv")
+     * 
+     * @return reference to created file
+     * @throws IOException directory doesn't exist etc.
+     * 
      */
     public File createTempFile(String prefix, String suffix) throws IOException {
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, getlogFileDir());
@@ -5211,11 +5214,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * timestamp string.
      *
      * @param prefix string filename will begin with
-     * @param suffix string filename will end with (typically an extention eg
-     * ".csv")
+     * @param suffix string filename will end with 
+     *             (typically an extention eg  ".csv")
+     * 
+     * 
      * @param dir directory to create file in
-     * @return
-     * @throws IOException
+     * @return reference to created file
+     * 
+     * @throws IOException directory doesn't exist etc.
      */
     public File createTempFile(String prefix, String suffix, File dir) throws IOException {
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, dir);

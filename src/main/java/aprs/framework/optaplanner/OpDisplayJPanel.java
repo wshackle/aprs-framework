@@ -53,27 +53,24 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 /**
- *
+ * Class for displaying either a solved or initial OpActionPlan, plotting the
+ * 2D route for the robot to pickup and dropoff some set of parts at the given
+ * destinations.
+ * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class OpDisplayJPanel extends JPanel {
 
-//    private static final EnumMap<OpActionType, Shape> actionTypeShapeMap = createActionTypeShapeMap();
-//
-//    private static EnumMap<OpActionType, Shape> createActionTypeShapeMap() {
-//        EnumMap<OpActionType, Shape> map = new EnumMap(OpActionType.class);
-//        map.put(OpActionType.END, new Arc2D.Double(0, 0, 10, 10, 0, 45, Arc2D.PIE));
-//        map.put(OpActionType.START, new Arc2D.Double(0, 0, 10, 10, 45, 90, Arc2D.PIE));
-//        map.put(OpActionType.PICKUP, new Arc2D.Double(0, 0, 10, 10, 90, 135, Arc2D.PIE));
-//        map.put(OpActionType.DROPOFF, new Arc2D.Double(0, 0, 10, 10, 135, 180, Arc2D.PIE));
-//
-//        return map;
-//    }
-    public static void showPlan(OpActionPlan p, String title) {
+    /**
+     * Show a window showing the 
+     * @param plan plan to show
+     * @param title title of new window
+     */
+    public static void showPlan(OpActionPlan plan, String title) {
         javax.swing.SwingUtilities.invokeLater(() -> {
             JFrame frm = new JFrame();
             frm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frm.add(new OpDisplayJPanel(p));
+            frm.add(new OpDisplayJPanel(plan));
             frm.pack();
             frm.setSize(new Dimension(600, 600));
             frm.setTitle(title);
@@ -81,15 +78,28 @@ public class OpDisplayJPanel extends JPanel {
         });
     }
 
+    /**
+     * Show a default test plan for testing.
+     * @param args not used
+     */
     public static void main(String[] args) {
         showPlan(createTestInitPlan(), "testInit");
     }
 
+    /**
+     * Create OpDisplayJPanel from an existing plan.
+     * 
+     * @param opActionPlan plan to show
+     */
     public OpDisplayJPanel(OpActionPlan opActionPlan) {
         this.opActionPlan = opActionPlan;
         this.setBackground(Color.white);
     }
 
+    /**
+     * Create a OpDisplayJPanel showing a default test plan.
+     *
+     */
     public OpDisplayJPanel() {
         this.setBackground(Color.white);
         OpActionPlan ap = createTestInitPlan();
@@ -119,17 +129,14 @@ public class OpDisplayJPanel extends JPanel {
         return ap;
     }
 
+    /**
+     * Clear the map associating parts carried with colors.
+     */
     public static void clearColorMap() {
         partsColorsMap.clear();
     }
 
     private static final ConcurrentHashMap<String, Color> partsColorsMap = new ConcurrentHashMap<>();
-
-    private static final Random rng = new Random();
-
-    private static Color randColor() {
-        return new Color(rng.nextInt(155) + 50, rng.nextInt(155) + 50, rng.nextInt(155) + 50);
-    }
 
     private static Color[] colors = new Color[]{
         Color.BLUE,
@@ -308,16 +315,6 @@ public class OpDisplayJPanel extends JPanel {
                 }
             }
         }
-//        keyY += 15;
-//        
-//        for (Map.Entry<OpActionType, Shape> entry : actionTypeShapeMap.entrySet()) {
-//            AffineTransform origTransform = g2d.getTransform();
-//            g2d.translate(10, keyY);
-//            g2d.draw(entry.getValue());
-//            g2d.setTransform(origTransform);
-//            g2d.drawString(entry.getKey().toString(), 40, keyY);
-//            keyY += 15;
-//        }
     }
 
     private boolean keyVisible = true;

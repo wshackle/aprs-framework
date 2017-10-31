@@ -197,7 +197,7 @@ public class MultiFileDialogJPanel extends javax.swing.JPanel {
      * @param title title string
      * @param modal should the dialog be modal
      * @param mapIn initial map of labels to filenames
-     * @return
+     * @return map after modification by user
      */
     public static Map<String, String> showMultiFileDialog(Frame owner, String title, boolean modal, Map<String, String> mapIn) {
         MultiFileDialogJPanel panel = new MultiFileDialogJPanel();

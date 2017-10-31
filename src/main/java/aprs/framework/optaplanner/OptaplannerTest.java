@@ -1,7 +1,24 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * This software is public domain software, however it is preferred
+ * that the following disclaimers be attached.
+ * Software Copywrite/Warranty Disclaimer
+ * 
+ * This software was developed at the National Institute of Standards and
+ * Technology by employees of the Federal Government in the course of their
+ * official duties. Pursuant to title 17 Section 105 of the United States
+ * Code this software is not subject to copyright protection and is in the
+ * public domain.
+ * 
+ * This software is experimental. NIST assumes no responsibility whatsoever 
+ * for its use by other parties, and makes no guarantees, expressed or 
+ * implied, about its quality, reliability, or any other characteristic. 
+ * We would appreciate acknowledgement if the software is used. 
+ * This software can be redistributed and/or modified freely provided 
+ * that any derivative works bear some notice that they are derived from it, 
+ * and any modified versions bear some notice that they have been modified.
+ * 
+ *  See http://www.copyright.gov/title17/92chap1.html#105
+ * 
  */
 package aprs.framework.optaplanner;
 
@@ -22,19 +39,26 @@ import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
 
 /**
- *
+ * Class for Demonstrating/Testing the use of OptaPlanner to optimize a 
+ * plan for picking up a set of parts to put in slots in a kit.
+ * 
+ * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class OptaplannerTest {
 
+    /**
+     *Create an example random task to optimize a plan for, run OptaPlanner
+     * and display the results.
+     * 
+     * @param args not used
+     */
     public static void main(String[] args) {
-// assume SLF4J is bound to logback in the current environment
-//        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-//        // print logback's internal status
-//        StatusPrinter.print(lc);
         OpActionPlan ap = new OpActionPlan();
 
         Random rand = new Random();
+        
+        // Create an initial plan with some set of parts to pickup and drop off.
         List<OpAction> initList = Arrays.asList(
                 new OpAction("pickup A3", 5 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A"),
                 new OpAction("dropoff A3", 6 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A"),
@@ -53,24 +77,32 @@ public class OptaplannerTest {
         List<OpAction> shuffledList = new ArrayList<>(initList);
         Collections.shuffle(shuffledList);
         ap.setActions(shuffledList);
+        
+        // Set the location to return to after the task is complete.
         ap.getEndAction().setLocation(new Point2D.Double(7, 0));
         ap.initNextActions();
         
         System.out.println("ap = " + ap);
+        
+        // Manually get an score for the initial plan just for display.
         EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
         HardSoftLongScore score = calculator.calculateScore(ap);
+        
+        // Show a window with the initial plan.
         showPlan(ap, "Input : "+score.getSoftScore());
         System.out.println("score = " + score);
         SolverFactory<OpActionPlan> solverFactory = SolverFactory.createFromXmlResource(
                 "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
 
-//        PlannerBenchmarkFactory benchmarkFactory = PlannerBenchmarkFactory.createFromSolverFactory(solverFactory);
-//        PlannerBenchmark plannerBenchmark = benchmarkFactory.buildPlannerBenchmark(ap);
-//        plannerBenchmark.benchmark();
         Solver<OpActionPlan> solver = solverFactory.buildSolver();
-        long start = System.currentTimeMillis();
-        solver.addEventListener(e -> System.out.println(e.getTimeMillisSpent() + ", " + e.getNewBestScore()));
+        
+        // Setup callback to have the solver print some status as it runs.
+        solver.addEventListener(e -> System.out.println("After " +e.getTimeMillisSpent() + "ms the best score is " + e.getNewBestScore()));
+        
+        // Run the solver.
         OpActionPlan solvedActionPlan = solver.solve(ap);
+        
+        // Print the results
         System.out.println("solvedActionPlan = " + solvedActionPlan);
         System.out.println("solvedActionPlan.getActions() = " + solvedActionPlan.getActions());
         score = calculator.calculateScore(solvedActionPlan);

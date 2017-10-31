@@ -121,8 +121,8 @@ public class Utils {
     
     /**
      * Set the command ID and check that it is at-least as high as current id.
-     * @param cmd
-     * @param id
+     * @param cmd command to set id of.
+     * @param id new id for command.
      */
     public static void setCommandID(CRCLCommandType cmd, long id) {
         assert cmd.getCommandID() <= id:
@@ -471,7 +471,7 @@ public class Utils {
     
     /**
      * Convert a run time in milliseconds to a formatted string.
-     * @param runningTimeMillis
+     * @param runningTimeMillis time in milliseconds
      * @return formatted string
      */
     static public String runTimeToString(long runningTimeMillis) {

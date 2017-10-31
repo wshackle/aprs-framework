@@ -395,7 +395,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         public List<PhysicalItem> getNewPhysicalItems();
 
         public PoseType getPose(String name);
-        
+
         public List<String> getInstanceNames(String skuName);
     }
 
@@ -760,9 +760,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @throws IllegalStateException if database not connected
      * @throws SQLException if query of the database failed
+     * @throws java.lang.InterruptedException another thread called
+     *              Thread.interrupt() while retrieving data from database
+     * 
+     * @throws crcl.ui.client.PendantClientInner.ConcurrentBlockProgramsException
+     *    pendant client in a state blocking program execution
+     * @throws java.util.concurrent.ExecutionException exception occurred in another thread servicing the waitForCompleteVisionUpdates
      */
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount, boolean replan, List<PddlAction> origActions)
-            throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException {
+            throws IllegalStateException, SQLException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException {
 
         if (null != solver && replan) {
             return runOptaPlanner(actions, startingIndex, options, startSafeAbortRequestCount);
@@ -959,7 +965,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private static final AtomicInteger ropCount = new AtomicInteger();
 
-    private List<MiddleCommandType> runOptaPlanner(List<PddlAction> actions, int startingIndex, Map<String, String> options1, int startSafeAbortRequestCount1) throws IllegalStateException, InterruptedException, SQLException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException {
+    private List<MiddleCommandType> runOptaPlanner(List<PddlAction> actions, int startingIndex, Map<String, String> options1, int startSafeAbortRequestCount1)
+            throws IllegalStateException, InterruptedException, SQLException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException {
         int rc = ropCount.incrementAndGet();
         System.out.println("runOptaPlanner: rc = " + rc);
         long t0 = System.currentTimeMillis();
@@ -1089,7 +1096,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private List<String> getPartTrayInstancesFromSkuName(String skuName) {
         try {
-            if(null != externalPoseProvider) {
+            if (null != externalPoseProvider) {
                 return externalPoseProvider.getInstanceNames(skuName);
             }
             return qs.getPartsTrays(skuName).stream()
@@ -1131,7 +1138,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return null;
     }
 
-    private void checkKits(PddlAction action, List<MiddleCommandType> cmds) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException {
+    private void checkKits(PddlAction action, List<MiddleCommandType> cmds)
+            throws IllegalStateException, SQLException, InterruptedException, ExecutionException {
         List<PhysicalItem> newItems;
         if (null == externalPoseProvider) {
             newItems = waitForCompleteVisionUpdates("checkKits", lastRequiredPartsMap);
@@ -1629,6 +1637,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param title title to add to snapshot filename
      * @param pose optional pose to highlight in snapshot or null
      * @param label optional label for highlighted pose or null.
+     * @param crclNumber number incremented with each new CRCL program generated
+     *          (used for catching some potential concurrency problems)
+     * 
      */
     public void addTakeSnapshots(List<MiddleCommandType> out,
             String title, final PoseType pose, String label, final int crclNumber) {
@@ -1745,9 +1756,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if query fails
      * @throws javax.swing.text.BadLocationException when there are bad
-     * locations within a document model
+     *                  locations within a document model
+     * 
+     * @throws java.lang.InterruptedException interrupted with Thread.interrupt()
+     * 
+     * @throws java.util.concurrent.ExecutionException wrapped exception in another thread
+     *  servicing waitForCompleteVisionUpdates
+     * 
      */
-    public void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException, InterruptedException, ExecutionException, IOException {
+    private void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException, InterruptedException, ExecutionException {
         checkDbReady();
         checkSettings();
         if (action.getArgs().length < 2) {
@@ -3295,7 +3312,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             addMarkerCommand(out, "lookForParts.waitForCompleteVisionUpdates", x -> {
                 try {
                     waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap);
-                } catch (InterruptedException | ExecutionException | IOException ex) {
+                } catch (InterruptedException | ExecutionException ex) {
                     logger.log(Level.SEVERE, null, ex);
                     throw new RuntimeException(ex);
                 }
@@ -3333,7 +3350,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    private List<PhysicalItem> waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap) throws InterruptedException, ExecutionException, IOException {
+    private List<PhysicalItem> waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap)
+            throws InterruptedException, ExecutionException {
         XFuture<List<PhysicalItem>> xfl = aprsJFrame.getSingleVisionToDbUpdate();
         aprsJFrame.refreshSimView();
         while (!xfl.isDone()) {
@@ -3345,9 +3363,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             aprsJFrame.refreshSimView();
         }
         List<PhysicalItem> l = xfl.get();
-        aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates", ".PNG"), l);
-//            aprsJFrame.getUpdatesFinished().join();
-        takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates_new_database", ".PNG"));
+        try {
+            aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates", ".PNG"), l);
+            takeDatabaseViewSnapshot(aprsJFrame.createTempFile(prefix + "_waitForCompleteVisionUpdates_new_database", ".PNG"));
+        } catch (IOException ioException) {
+            logger.log(Level.SEVERE, null, ioException);
+        }
         clearPoseCache();
         return l;
     }

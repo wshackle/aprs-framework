@@ -4342,7 +4342,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * Set the reverseFlag for all systems. When the reverseFlag is set systems
      * empty kit trays and put parts back in parts trays.
      *
-     * @param reverseFlag
+     * @param reverseFlag false to move parts from parts trays to kitTrays or true to move parts from kitTrays to partsTrays
      */
     public void setAllReverseFlag(boolean reverseFlag) {
         logEvent("setAllReverseFlag(" + reverseFlag + ")");
