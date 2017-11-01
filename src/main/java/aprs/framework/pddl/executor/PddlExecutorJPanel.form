@@ -432,9 +432,28 @@
                                       <Component id="jTextFieldGridSize" min="-2" pref="62" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jButtonGridTest" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jButtonRecordToolChangerPose" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jTextFieldToolChangerPose" min="-2" pref="388" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="jButtonGotoToolChangerApproach" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jLabel13" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jTextFieldToolChangerApproachZOffset" min="-2" pref="84" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jButtonGotoToolChangerPose" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jButtonDropTool" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jButtonPickupTool" min="-2" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
-                              <EmptySpace pref="154" max="32767" attributes="0"/>
+                              <EmptySpace pref="194" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -507,8 +526,20 @@
                                   <Component id="jLabel12" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="jTextFieldGridSize" alignment="3" min="-2" pref="28" max="-2" attributes="0"/>
                                   <Component id="jButtonGridTest" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jButtonRecordToolChangerPose" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jTextFieldToolChangerPose" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="72" max="32767" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="jButtonGotoToolChangerApproach" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel13" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jTextFieldToolChangerApproachZOffset" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jButtonGotoToolChangerPose" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jButtonDropTool" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jButtonPickupTool" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace pref="38" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -797,6 +828,66 @@
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonRecordLookForJointsActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="jButtonRecordToolChangerPose">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Record Tool Changer Pose"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonRecordToolChangerPoseActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="jLabel7">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Tool Changer Pose:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="jTextFieldToolChangerPose">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="0,0,0,0,0,0"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="jButtonGotoToolChangerApproach">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Goto Tool Changer Approach"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonGotoToolChangerApproachActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="jLabel13">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Z Offset:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="jTextFieldToolChangerApproachZOffset">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="100.0"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="jButtonGotoToolChangerPose">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Goto Tool Changer Pose"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonGotoToolChangerPoseActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="jButtonDropTool">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Drop Tool"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonDropToolActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="jButtonPickupTool">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Pickup Tool"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonPickupToolActionPerformed"/>
                       </Events>
                     </Component>
                   </SubComponents>

@@ -45,6 +45,7 @@ import crcl.base.ActuateJointsType;
 import crcl.base.AngleUnitEnumType;
 import crcl.base.CRCLCommandType;
 import crcl.base.CRCLStatusType;
+import crcl.base.CloseToolChangerType;
 import crcl.base.DwellType;
 import crcl.base.JointSpeedAccelType;
 import crcl.base.JointStatusType;
@@ -53,6 +54,7 @@ import crcl.base.LengthUnitEnumType;
 import crcl.base.MessageType;
 import crcl.base.MiddleCommandType;
 import crcl.base.MoveToType;
+import crcl.base.OpenToolChangerType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.RotSpeedAbsoluteType;
@@ -104,7 +106,6 @@ import java.awt.geom.Point2D;
 import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
@@ -739,6 +740,29 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.opDisplayJPanelInput = opDisplayJPanelInput;
     }
 
+    /**
+     * Generate a list of CRCL commands from a list of PddlActions starting with
+     * the given index, using the provided optons.
+     *
+     * @param actions list of PDDL Actions
+     * @param startingIndex starting index into list of PDDL actions
+     * @param options options to use as commands are generated
+     * @param startSafeAbortRequestCount abort request count taken when higher
+     * level action was started this method will immediately abort if the
+     * request count is now already higher
+     * @return list of CRCL commands
+     *
+     * @throws IllegalStateException if database not connected
+     * @throws SQLException if query of the database failed
+     * @throws java.lang.InterruptedException another thread called
+     * Thread.interrupt() while retrieving data from database
+     *
+     * @throws
+     * crcl.ui.client.PendantClientInner.ConcurrentBlockProgramsException
+     * pendant client in a state blocking program execution
+     * @throws java.util.concurrent.ExecutionException exception occurred in
+     * another thread servicing the waitForCompleteVisionUpdates
+     */
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException {
         return generate(actions, startingIndex, options, startSafeAbortRequestCount, true, null);
@@ -761,11 +785,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws IllegalStateException if database not connected
      * @throws SQLException if query of the database failed
      * @throws java.lang.InterruptedException another thread called
-     *              Thread.interrupt() while retrieving data from database
-     * 
-     * @throws crcl.ui.client.PendantClientInner.ConcurrentBlockProgramsException
-     *    pendant client in a state blocking program execution
-     * @throws java.util.concurrent.ExecutionException exception occurred in another thread servicing the waitForCompleteVisionUpdates
+     * Thread.interrupt() while retrieving data from database
+     *
+     * @throws
+     * crcl.ui.client.PendantClientInner.ConcurrentBlockProgramsException
+     * pendant client in a state blocking program execution
+     * @throws java.util.concurrent.ExecutionException exception occurred in
+     * another thread servicing the waitForCompleteVisionUpdates
      */
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount, boolean replan, List<PddlAction> origActions)
             throws IllegalStateException, SQLException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException {
@@ -893,6 +919,22 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                     });
                         }
                         return cmds;
+
+                    case "goto-tool-changer-approach":
+                        gotoToolChangerApproach(action, cmds);
+                        break;
+
+                    case "goto-tool-changer-pose":
+                        gotoToolChangerPose(action, cmds);
+                        break;
+
+                    case "drop-tool":
+                        dropTool(action, cmds);
+                        break;
+
+                    case "pickup-tool":
+                        pickupTool(action, cmds);
+                        break;
 
                     case "end-program":
                         endProgram(action, cmds);
@@ -1638,8 +1680,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param pose optional pose to highlight in snapshot or null
      * @param label optional label for highlighted pose or null.
      * @param crclNumber number incremented with each new CRCL program generated
-     *          (used for catching some potential concurrency problems)
-     * 
+     * (used for catching some potential concurrency problems)
+     *
      */
     public void addTakeSnapshots(List<MiddleCommandType> out,
             String title, final PoseType pose, String label, final int crclNumber) {
@@ -1756,13 +1798,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if query fails
      * @throws javax.swing.text.BadLocationException when there are bad
-     *                  locations within a document model
-     * 
-     * @throws java.lang.InterruptedException interrupted with Thread.interrupt()
-     * 
-     * @throws java.util.concurrent.ExecutionException wrapped exception in another thread
-     *  servicing waitForCompleteVisionUpdates
-     * 
+     * locations within a document model
+     *
+     * @throws java.lang.InterruptedException interrupted with
+     * Thread.interrupt()
+     *
+     * @throws java.util.concurrent.ExecutionException wrapped exception in
+     * another thread servicing waitForCompleteVisionUpdates
+     *
      */
     private void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException, InterruptedException, ExecutionException {
         checkDbReady();
@@ -2213,6 +2256,26 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             // System.out.println("---- Distance between part and slot = " + dist);
         }
         return isPartInSlot;
+    }
+
+    private int toolChangePosArgIndex = 0;
+
+    /**
+     * Get the value of toolChangePosArgIndex
+     *
+     * @return the value of toolChangePosArgIndex
+     */
+    public int getToolChangePosArgIndex() {
+        return toolChangePosArgIndex;
+    }
+
+    /**
+     * Set the value of toolChangePosArgIndex
+     *
+     * @param toolChangePosArgIndex new value of toolChangePosArgIndex
+     */
+    public void setToolChangePosArgIndex(int toolChangePosArgIndex) {
+        this.toolChangePosArgIndex = toolChangePosArgIndex;
     }
 
     private int takePartArgIndex;
@@ -2964,6 +3027,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         cmds.add(closeGrippeerCmd);
     }
 
+    private void addOpenToolChanger(List<MiddleCommandType> cmds) {
+        OpenToolChangerType openToolChangerCmd = new OpenToolChangerType();
+        setCommandId(openToolChangerCmd);
+        cmds.add(openToolChangerCmd);
+    }
+
+    private void addCloseToolChanger(List<MiddleCommandType> cmds) {
+        CloseToolChangerType openToolChangerCmd = new CloseToolChangerType();
+        setCommandId(openToolChangerCmd);
+        cmds.add(openToolChangerCmd);
+    }
+
     private void addMoveTo(List<MiddleCommandType> cmds, PoseType poseAbove, boolean straight) {
         MoveToType moveAboveCmd = new MoveToType();
         setCommandId(moveAboveCmd);
@@ -3180,6 +3255,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
+    private volatile Thread putPoseCacheThread = null;
+    private volatile StackTraceElement putPoseCacheTrace[] = null;
+
+    public void putPoseCache(String name, PoseType pose) {
+        putPoseCacheThread = Thread.currentThread();
+        putPoseCacheTrace = putPoseCacheThread.getStackTrace();
+        synchronized (poseCache) {
+            poseCache.put(name, CRCLPosemath.copy(pose));
+        }
+    }
+
     public Map<String, PoseType> getPoseCache() {
         synchronized (poseCache) {
             return Collections.unmodifiableMap(poseCache);
@@ -3340,6 +3426,80 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         } else {
             TakenPartList.clear();
         }
+    }
+
+    private double approachToolChangerZOffset = 100.0;
+
+    /**
+     * Get the value of approachToolChangerZOffset
+     *
+     * @return the value of approachToolChangerZOffset
+     */
+    public double getApproachToolChangerZOffset() {
+        return approachToolChangerZOffset;
+    }
+
+    /**
+     * Set the value of approachToolChangerZOffset
+     *
+     * @param approachToolChangerZOffset new value of approachToolChangerZOffset
+     */
+    public void setApproachToolChangerZOffset(double approachToolChangerZOffset) {
+        this.approachToolChangerZOffset = approachToolChangerZOffset;
+    }
+
+    private void gotoToolChangerApproach(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+
+        lastTestApproachPose = null;
+        String toolChangerPosName = action.getArgs()[toolChangePosArgIndex];
+        checkSettings();
+        checkDbReady();
+        PoseType pose = getPose(toolChangerPosName);
+        gotoToolChangerApproachByPose(pose, out);
+    }
+
+    private void gotoToolChangerApproachByPose(PoseType pose, List<MiddleCommandType> out) {
+        PoseType approachPose = CRCLPosemath.copy(pose);
+        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachToolChangerZOffset);
+        addSetSlowSpeed(out);
+        addMoveTo(out, approachPose, false);
+    }
+
+    private void dropTool(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+        lastTestApproachPose = null;
+        String toolChangerPosName = action.getArgs()[toolChangePosArgIndex];
+        checkSettings();
+        checkDbReady();
+        PoseType pose = getPose(toolChangerPosName);
+        gotoToolChangerApproachByPose(pose, out);
+        addSetSlowSpeed(out);
+        addMoveTo(out, pose, false);
+        addOpenToolChanger(out);
+        gotoToolChangerApproachByPose(pose, out);
+    }
+
+    private void pickupTool(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+        lastTestApproachPose = null;
+        String toolChangerPosName = action.getArgs()[toolChangePosArgIndex];
+        checkSettings();
+        checkDbReady();
+        PoseType pose = getPose(toolChangerPosName);
+        gotoToolChangerApproachByPose(pose, out);
+        addSetSlowSpeed(out);
+        addMoveTo(out, pose, false);
+        addCloseToolChanger(out);
+        gotoToolChangerApproachByPose(pose, out);
+    }
+
+    private void gotoToolChangerPose(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+
+        lastTestApproachPose = null;
+        String toolChangerPosName = action.getArgs()[toolChangePosArgIndex];
+        checkSettings();
+        checkDbReady();
+        PoseType pose = getPose(toolChangerPosName);
+        addSetSlowSpeed(out);
+        addMoveTo(out, pose, false);
     }
 
     private void checkDbReady() throws IllegalStateException {

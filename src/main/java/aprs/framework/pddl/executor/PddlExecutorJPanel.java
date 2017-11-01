@@ -24,7 +24,6 @@ package aprs.framework.pddl.executor;
 
 import aprs.framework.AprsJFrame;
 import aprs.framework.PddlAction;
-import aprs.framework.SlotOffsetProvider;
 import aprs.framework.Utils;
 import aprs.framework.Utils.RunnableWithThrow;
 import static aprs.framework.Utils.autoResizeTableColWidths;
@@ -33,12 +32,10 @@ import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
-import aprs.framework.database.PhysicalItem;
 import aprs.framework.optaplanner.OpDisplayJPanel;
 import aprs.framework.optaplanner.actionmodel.OpAction;
 import aprs.framework.optaplanner.actionmodel.OpActionPlan;
 import aprs.framework.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
-import aprs.framework.simview.Object2DOuterJPanel;
 import aprs.framework.spvision.VisionToDBJPanel;
 import crcl.base.CRCLCommandInstanceType;
 import crcl.base.CRCLCommandType;
@@ -57,6 +54,7 @@ import crcl.ui.XFuture;
 import crcl.ui.client.PendantClientInner;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.utils.CRCLException;
+import crcl.utils.CRCLPosemath;
 import crcl.utils.CRCLSocket;
 import java.awt.Component;
 import java.awt.Desktop;
@@ -120,11 +118,13 @@ import java.util.Collections;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Function;
 import javax.swing.JDialog;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
+import rcs.posemath.PmCartesian;
+import rcs.posemath.PmException;
+import rcs.posemath.PmRpy;
 
 /**
  *
@@ -367,7 +367,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         return out;
     }
-    
+
     /**
      * Get the value of externalGetPoseFunction
      *
@@ -482,6 +482,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonTest = new javax.swing.JButton();
         jButtonRecord = new javax.swing.JButton();
         jButtonRecordLookForJoints = new javax.swing.JButton();
+        jButtonRecordToolChangerPose = new javax.swing.JButton();
+        jLabel7 = new javax.swing.JLabel();
+        jTextFieldToolChangerPose = new javax.swing.JTextField();
+        jButtonGotoToolChangerApproach = new javax.swing.JButton();
+        jLabel13 = new javax.swing.JLabel();
+        jTextFieldToolChangerApproachZOffset = new javax.swing.JTextField();
+        jButtonGotoToolChangerPose = new javax.swing.JButton();
+        jButtonDropTool = new javax.swing.JButton();
+        jButtonPickupTool = new javax.swing.JButton();
         jPanelContainerPositionMap = new javax.swing.JPanel();
         positionMapJPanel1 = new aprs.framework.pddl.executor.PositionMapJPanel();
         jScrollPaneExternalControl = new javax.swing.JScrollPane();
@@ -821,6 +830,49 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         });
 
+        jButtonRecordToolChangerPose.setText("Record Tool Changer Pose");
+        jButtonRecordToolChangerPose.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonRecordToolChangerPoseActionPerformed(evt);
+            }
+        });
+
+        jLabel7.setText("Tool Changer Pose:");
+
+        jTextFieldToolChangerPose.setText("0,0,0,0,0,0");
+
+        jButtonGotoToolChangerApproach.setText("Goto Tool Changer Approach");
+        jButtonGotoToolChangerApproach.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonGotoToolChangerApproachActionPerformed(evt);
+            }
+        });
+
+        jLabel13.setText("Z Offset:");
+
+        jTextFieldToolChangerApproachZOffset.setText("100.0");
+
+        jButtonGotoToolChangerPose.setText("Goto Tool Changer Pose");
+        jButtonGotoToolChangerPose.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonGotoToolChangerPoseActionPerformed(evt);
+            }
+        });
+
+        jButtonDropTool.setText("Drop Tool");
+        jButtonDropTool.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDropToolActionPerformed(evt);
+            }
+        });
+
+        jButtonPickupTool.setText("Pickup Tool");
+        jButtonPickupTool.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonPickupToolActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelInnerManualControlLayout = new javax.swing.GroupLayout(jPanelInnerManualControl);
         jPanelInnerManualControl.setLayout(jPanelInnerManualControlLayout);
         jPanelInnerManualControlLayout.setHorizontalGroup(
@@ -915,8 +967,26 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonGridTest)))
-                .addContainerGap(154, Short.MAX_VALUE))
+                        .addComponent(jButtonGridTest)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonRecordToolChangerPose)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldToolChangerPose, javax.swing.GroupLayout.PREFERRED_SIZE, 388, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                        .addComponent(jButtonGotoToolChangerApproach)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel13)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldToolChangerApproachZOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonGotoToolChangerPose)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonDropTool)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonPickupTool)))
+                .addContainerGap(194, Short.MAX_VALUE))
         );
 
         jPanelInnerManualControlLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
@@ -981,8 +1051,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel12)
                     .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonGridTest))
-                .addContainerGap(72, Short.MAX_VALUE))
+                    .addComponent(jButtonGridTest)
+                    .addComponent(jButtonRecordToolChangerPose)
+                    .addComponent(jLabel7)
+                    .addComponent(jTextFieldToolChangerPose, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonGotoToolChangerApproach)
+                    .addComponent(jLabel13)
+                    .addComponent(jTextFieldToolChangerApproachZOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonGotoToolChangerPose)
+                    .addComponent(jButtonDropTool)
+                    .addComponent(jButtonPickupTool))
+                .addContainerGap(38, Short.MAX_VALUE))
         );
 
         jScrollPane2.setViewportView(jPanelInnerManualControl);
@@ -3380,11 +3461,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
             String jointVals
                     = jointList
-                            .stream()
-                            .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                            .map(JointStatusType::getJointPosition)
-                            .map(Objects::toString)
-                            .collect(Collectors.joining(","));
+                    .stream()
+                    .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                    .map(JointStatusType::getJointPosition)
+                    .map(Objects::toString)
+                    .collect(Collectors.joining(","));
             System.out.println("jointVals = " + jointVals);
             DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
             boolean keyFound = false;
@@ -3419,6 +3500,94 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void jCheckBoxForceFakeTakeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxForceFakeTakeActionPerformed
         setForceFakeTakeFlag(jCheckBoxForceFakeTake.isSelected());
     }//GEN-LAST:event_jCheckBoxForceFakeTakeActionPerformed
+
+    private PoseType toolChangerPose = null;
+
+    private void jButtonRecordToolChangerPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolChangerPoseActionPerformed
+        try {
+            toolChangerPose = aprsJFrame.getCurrentPose();
+            PmRpy rpy = CRCLPosemath.toPmRpy(toolChangerPose);
+            PmCartesian cart = CRCLPosemath.toPmCartesian(toolChangerPose.getPoint());
+            jTextFieldToolChangerPose.setText(
+                    String.format("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f",
+                            cart.x, cart.y, cart.z, Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y)
+                    ));
+        } catch (PmException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonRecordToolChangerPoseActionPerformed
+
+    private void jButtonGotoToolChangerApproachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGotoToolChangerApproachActionPerformed
+        try {
+            if (null != currentPart) {
+                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
+            }
+            setReplanFromIndex(0);
+            abortProgram();
+            lookForCount++;
+            clearAll();
+            autoStart = true;
+            cancelRunProgramFuture();
+            runningProgramFuture = this.gotoToolChangerApproach();
+        } catch (Exception e) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, e);
+            showExceptionInProgram(e);
+        }
+    }//GEN-LAST:event_jButtonGotoToolChangerApproachActionPerformed
+
+    private void jButtonGotoToolChangerPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGotoToolChangerPoseActionPerformed
+        try {
+            if (null != currentPart) {
+                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
+            }
+            setReplanFromIndex(0);
+            abortProgram();
+            lookForCount++;
+            clearAll();
+            autoStart = true;
+            cancelRunProgramFuture();
+            runningProgramFuture = this.gotoToolChangerPose();
+        } catch (Exception e) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, e);
+            showExceptionInProgram(e);
+        }
+    }//GEN-LAST:event_jButtonGotoToolChangerPoseActionPerformed
+
+    private void jButtonDropToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDropToolActionPerformed
+       try {
+            if (null != currentPart) {
+                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
+            }
+            setReplanFromIndex(0);
+            abortProgram();
+            lookForCount++;
+            clearAll();
+            autoStart = true;
+            cancelRunProgramFuture();
+            runningProgramFuture = this.dropTool();
+        } catch (Exception e) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, e);
+            showExceptionInProgram(e);
+        }
+    }//GEN-LAST:event_jButtonDropToolActionPerformed
+
+    private void jButtonPickupToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPickupToolActionPerformed
+       try {
+            if (null != currentPart) {
+                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
+            }
+            setReplanFromIndex(0);
+            abortProgram();
+            lookForCount++;
+            clearAll();
+            autoStart = true;
+            cancelRunProgramFuture();
+            runningProgramFuture = this.pickupTool();
+        } catch (Exception e) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, e);
+            showExceptionInProgram(e);
+        }
+    }//GEN-LAST:event_jButtonPickupToolActionPerformed
 
     private void clearPoseCache() {
         pddlActionToCrclGenerator.clearPoseCache();
@@ -4286,6 +4455,122 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
+    public XFuture<Boolean> gotoToolChangerApproach() {
+        try {
+            Map<String, String> options = getTableOptions();
+            replanFromIndex = 0;
+            List<PddlAction> gototToolChangerApproachActionsList = new ArrayList<>();
+            PddlAction gototToolChangerApproachAction
+                    = new PddlAction("",
+                            "goto-tool-changer-approach",
+                            new String[]{"toolChangePos1"}, "cost");
+            gototToolChangerApproachActionsList.add(gototToolChangerApproachAction);
+            pddlActionToCrclGenerator.clearPoseCache();
+            pddlActionToCrclGenerator.clearLastRequiredPartsMap();
+            pddlActionToCrclGenerator.putPoseCache("toolChangePos1", toolChangerPose);
+            List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(gototToolChangerApproachActionsList, this.replanFromIndex, options, safeAbortRequestCount.get());
+            CRCLProgramType program = createEmptyProgram();
+            jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+            program.getMiddleCommand().clear();
+            program.getMiddleCommand().addAll(cmds);
+            setCommandId(program.getEndCanon());
+            replanStarted.set(false);
+            return startCrclProgram(program);
+        } catch (IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
+            future.completeExceptionally(ex);
+            return future;
+        }
+    }
+
+    public XFuture<Boolean> gotoToolChangerPose() {
+        try {
+            Map<String, String> options = getTableOptions();
+            replanFromIndex = 0;
+            List<PddlAction> gototToolChangerApproachActionsList = new ArrayList<>();
+            PddlAction gototToolChangerApproachAction
+                    = new PddlAction("",
+                            "goto-tool-changer-pose",
+                            new String[]{"toolChangePos1"}, "cost");
+            gototToolChangerApproachActionsList.add(gototToolChangerApproachAction);
+            pddlActionToCrclGenerator.clearPoseCache();
+            pddlActionToCrclGenerator.clearLastRequiredPartsMap();
+            pddlActionToCrclGenerator.putPoseCache("toolChangePos1", toolChangerPose);
+            List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(gototToolChangerApproachActionsList, this.replanFromIndex, options, safeAbortRequestCount.get());
+            CRCLProgramType program = createEmptyProgram();
+            jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+            program.getMiddleCommand().clear();
+            program.getMiddleCommand().addAll(cmds);
+            setCommandId(program.getEndCanon());
+            replanStarted.set(false);
+            return startCrclProgram(program);
+        } catch (IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
+            future.completeExceptionally(ex);
+            return future;
+        }
+    }
+
+    public XFuture<Boolean> dropTool() {
+        try {
+            Map<String, String> options = getTableOptions();
+            replanFromIndex = 0;
+            List<PddlAction> gototToolChangerApproachActionsList = new ArrayList<>();
+            PddlAction gototToolChangerApproachAction
+                    = new PddlAction("",
+                            "drop-tool",
+                            new String[]{"toolChangePos1"}, "cost");
+            gototToolChangerApproachActionsList.add(gototToolChangerApproachAction);
+            pddlActionToCrclGenerator.clearPoseCache();
+            pddlActionToCrclGenerator.clearLastRequiredPartsMap();
+            pddlActionToCrclGenerator.putPoseCache("toolChangePos1", toolChangerPose);
+            List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(gototToolChangerApproachActionsList, this.replanFromIndex, options, safeAbortRequestCount.get());
+            CRCLProgramType program = createEmptyProgram();
+            jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+            program.getMiddleCommand().clear();
+            program.getMiddleCommand().addAll(cmds);
+            setCommandId(program.getEndCanon());
+            replanStarted.set(false);
+            return startCrclProgram(program);
+        } catch (IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
+            future.completeExceptionally(ex);
+            return future;
+        }
+    }
+    
+    public XFuture<Boolean> pickupTool() {
+        try {
+            Map<String, String> options = getTableOptions();
+            replanFromIndex = 0;
+            List<PddlAction> gototToolChangerApproachActionsList = new ArrayList<>();
+            PddlAction gototToolChangerApproachAction
+                    = new PddlAction("",
+                            "pickup-tool",
+                            new String[]{"toolChangePos1"}, "cost");
+            gototToolChangerApproachActionsList.add(gototToolChangerApproachAction);
+            pddlActionToCrclGenerator.clearPoseCache();
+            pddlActionToCrclGenerator.clearLastRequiredPartsMap();
+            pddlActionToCrclGenerator.putPoseCache("toolChangePos1", toolChangerPose);
+            List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(gototToolChangerApproachActionsList, this.replanFromIndex, options, safeAbortRequestCount.get());
+            CRCLProgramType program = createEmptyProgram();
+            jTextFieldIndex.setText(Integer.toString(replanFromIndex));
+            program.getMiddleCommand().clear();
+            program.getMiddleCommand().addAll(cmds);
+            setCommandId(program.getEndCanon());
+            replanStarted.set(false);
+            return startCrclProgram(program);
+        } catch (IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
+            future.completeExceptionally(ex);
+            return future;
+        }
+    }
+    
     private volatile List<Future<?>> checkDbSupplierPublisherFuturesList = null;
 
     private void checkDbSupplierPublisher() throws IOException {
@@ -4403,8 +4688,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonClearPoseCache;
     private javax.swing.JButton jButtonContRandomTest;
     private javax.swing.JButton jButtonContinue;
+    private javax.swing.JButton jButtonDropTool;
     private javax.swing.JButton jButtonGenerateAndRun;
     private javax.swing.JButton jButtonGenerateCRCL;
+    private javax.swing.JButton jButtonGotoToolChangerApproach;
+    private javax.swing.JButton jButtonGotoToolChangerPose;
     private javax.swing.JButton jButtonGridTest;
     private javax.swing.JButton jButtonLoad;
     private javax.swing.JButton jButtonLoadPddlActionsFromFile;
@@ -4412,12 +4700,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonNewLogFile;
     private javax.swing.JButton jButtonPause;
     private javax.swing.JButton jButtonPddlOutputViewEdit;
+    private javax.swing.JButton jButtonPickupTool;
     private javax.swing.JButton jButtonPlacePart;
     private javax.swing.JButton jButtonRandDropOff;
     private javax.swing.JButton jButtonRecord;
     private javax.swing.JButton jButtonRecordFail;
     private javax.swing.JButton jButtonRecordLookForJoints;
     private javax.swing.JButton jButtonRecordSuccess;
+    private javax.swing.JButton jButtonRecordToolChangerPose;
     private javax.swing.JButton jButtonReset;
     private javax.swing.JButton jButtonReturn;
     private javax.swing.JButton jButtonSafeAbort;
@@ -4438,6 +4728,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
@@ -4450,6 +4741,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanelContainerPoseCache;
@@ -4492,6 +4784,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JTextField jTextFieldTestYMax;
     private javax.swing.JTextField jTextFieldTestYMin;
     private javax.swing.JTextField jTextFieldTestZ;
+    private javax.swing.JTextField jTextFieldToolChangerApproachZOffset;
+    private javax.swing.JTextField jTextFieldToolChangerPose;
     private aprs.framework.optaplanner.OpDisplayJPanel opDisplayJPanelInput;
     private aprs.framework.optaplanner.OpDisplayJPanel opDisplayJPanelSolution;
     private aprs.framework.pddl.executor.PositionMapJPanel positionMapJPanel1;
