@@ -114,7 +114,12 @@ import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.awt.geom.Point2D;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -491,6 +496,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonGotoToolChangerPose = new javax.swing.JButton();
         jButtonDropTool = new javax.swing.JButton();
         jButtonPickupTool = new javax.swing.JButton();
+        jLabel21 = new javax.swing.JLabel();
+        jComboBoxToolChangerPosName = new javax.swing.JComboBox<>();
         jPanelContainerPositionMap = new javax.swing.JPanel();
         positionMapJPanel1 = new aprs.framework.pddl.executor.PositionMapJPanel();
         jScrollPaneExternalControl = new javax.swing.JScrollPane();
@@ -873,6 +880,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         });
 
+        jLabel21.setText("Tool Change Posename:");
+
+        jComboBoxToolChangerPosName.setEditable(true);
+
         javax.swing.GroupLayout jPanelInnerManualControlLayout = new javax.swing.GroupLayout(jPanelInnerManualControl);
         jPanelInnerManualControl.setLayout(jPanelInnerManualControlLayout);
         jPanelInnerManualControlLayout.setHorizontalGroup(
@@ -985,8 +996,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonDropTool)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonPickupTool)))
-                .addContainerGap(194, Short.MAX_VALUE))
+                        .addComponent(jButtonPickupTool)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel21)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jComboBoxToolChangerPosName, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(67, Short.MAX_VALUE))
         );
 
         jPanelInnerManualControlLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
@@ -1062,7 +1077,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jTextFieldToolChangerApproachZOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButtonGotoToolChangerPose)
                     .addComponent(jButtonDropTool)
-                    .addComponent(jButtonPickupTool))
+                    .addComponent(jButtonPickupTool)
+                    .addComponent(jLabel21)
+                    .addComponent(jComboBoxToolChangerPosName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(38, Short.MAX_VALUE))
         );
 
@@ -1620,6 +1637,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void resetReadOnlyActionsList() {
         readOnlyActionsList = Collections.unmodifiableList(new ArrayList<>(actionsList));
     }
+
     /**
      * Get the value of actionsList
      *
@@ -1911,8 +1929,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             List<OpAction> opActions;
             int startIndex = 0;
             for (int i = 0; i < actionsList.size(); i++) {
-                if(actionsList.get(i).getType() =="look-for-parts") {
-                    startIndex = i+1;
+                if (actionsList.get(i).getType() == "look-for-parts") {
+                    startIndex = i + 1;
                     break;
                 }
             }
@@ -1920,7 +1938,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 opActions = pddlActionToCrclGenerator.pddlActionsToOpActions(actionsList, 0);
                 resetReadOnlyActionsList();
             }
-            if(opActions.size() < 2) {
+            if (opActions.size() < 2) {
                 return;
             }
             OpActionPlan worstPlan = null;
@@ -3520,11 +3538,110 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setForceFakeTakeFlag(jCheckBoxForceFakeTake.isSelected());
     }//GEN-LAST:event_jCheckBoxForceFakeTakeActionPerformed
 
-    private PoseType toolChangerPose = null;
+    private volatile PoseType toolChangerPose = null;
+    private volatile String toolChangerPoseName = null;
+    private final Map<String, PoseType> toolChangerPoseMap = new ConcurrentHashMap<>();
+
+    private String toolChangerPoseMapFileName = null;
+
+    private void loadToolChangerPoseMap() {
+        if(null == propertiesFile || !propertiesFile.exists()) {
+            return;
+        }
+        toolChangerPoseMapFileName = propertiesFile.getName() + ".toolChangerPoses.txt";
+        File f = new File(propertiesFile.getParent(), toolChangerPoseMapFileName);
+        if(!f.exists()) {
+            return;
+        }
+        int lineNumber = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String line;
+            while (null != (line = br.readLine())) {
+                try {
+                    lineNumber++;
+                    String[] kv = line.split("=");
+                    if (kv.length != 2) {
+                        System.err.println("Invalid line:" + line + " in file " + f + ", lineNumber=" + lineNumber + ",kv=" + Arrays.toString(kv));
+                        continue;
+                    }
+                    String key = kv[0];
+                    String value = kv[1];
+                    String poseParts[] = value.split(",");
+                    if (poseParts.length != 6) {
+                        System.err.println("Invalid line:" + line + " in file " + f + ", lineNumber=" + lineNumber + ",kv=" + Arrays.toString(kv) + ",poseParts=" + Arrays.toString(poseParts));
+                        continue;
+                    }
+                    PmCartesian cart = new PmCartesian(Double.parseDouble(poseParts[0]), Double.parseDouble(poseParts[1]), Double.parseDouble(poseParts[2]));
+                    PmRpy rpy = new PmRpy(Math.toRadians(Double.parseDouble(poseParts[3])), Math.toRadians(Double.parseDouble(poseParts[4])), Math.toRadians(Double.parseDouble(poseParts[5])));
+                    PoseType pose = CRCLPosemath.toPoseType(cart, rpy);
+                    toolChangerPoseMap.put(key, pose);
+                    DefaultComboBoxModel cbm = (DefaultComboBoxModel)jComboBoxToolChangerPosName.getModel();
+                    boolean keyFound = false;
+                    for (int i = 0; i < cbm.getSize(); i++) {
+                        String cbmValue = (String) cbm.getElementAt(i);
+                        if(cbmValue.equals(key)) {
+                            keyFound = true;
+                            break;
+                        }
+                    }
+                    if(!keyFound) {
+                        jComboBoxToolChangerPosName.addItem(key);
+                    }
+                } catch (Exception ex) {
+                    System.err.println("line=" + line + ", file=" + f + ",lineNumber=" + lineNumber);
+                    Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void saveToolChangerPoseMap() {
+        if(toolChangerPoseMap.isEmpty()) {
+            return;
+        }
+        if(null == propertiesFile || !propertiesFile.exists()) {
+            return;
+        }
+        toolChangerPoseMapFileName = propertiesFile.getName() + ".toolChangerPoses.txt";
+        File f = new File(propertiesFile.getParent(), toolChangerPoseMapFileName);
+        try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
+            Set<String> keySet = toolChangerPoseMap.keySet();
+            List<String> sortedKeys = new ArrayList<>(keySet);
+            Collections.sort(sortedKeys);
+            for (String key : sortedKeys) {
+                try {
+                    PoseType pose = toolChangerPoseMap.get(key);
+                    if (null != pose) {
+                        PmCartesian tran = CRCLPosemath.toPmCartesian(pose.getPoint());
+                        PmRpy rpy = CRCLPosemath.toPmRpy(pose);
+                        ps.printf("%s=%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
+                                key, tran.x, tran.y, tran.z, Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y));
+                    }
+                } catch (Exception ex) {
+                    System.err.println("key=" + key);
+                    Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     private void jButtonRecordToolChangerPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolChangerPoseActionPerformed
         try {
+            toolChangerPoseName = (String) jComboBoxToolChangerPosName.getSelectedItem();
+            if (null == toolChangerPoseName
+                    || toolChangerPoseName.length() < 1
+                    || !toolChangerPoseMap.containsKey(toolChangerPoseName)) {
+                toolChangerPoseName = "toolChangerPose" + (toolChangerPoseMap.size() + jComboBoxToolChangerPosName.getItemCount() + 1);
+                jComboBoxToolChangerPosName.addItem(toolChangerPoseName);
+                jComboBoxToolChangerPosName.setSelectedItem(toolChangerPoseName);
+            }
             toolChangerPose = aprsJFrame.getCurrentPose();
+            toolChangerPoseMap.put(toolChangerPoseName, toolChangerPose);
+            saveToolChangerPoseMap();
             PmRpy rpy = CRCLPosemath.toPmRpy(toolChangerPose);
             PmCartesian cart = CRCLPosemath.toPmCartesian(toolChangerPose.getPoint());
             jTextFieldToolChangerPose.setText(
@@ -3573,7 +3690,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jButtonGotoToolChangerPoseActionPerformed
 
     private void jButtonDropToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDropToolActionPerformed
-       try {
+        try {
             if (null != currentPart) {
                 this.jComboBoxManualObjectName.setSelectedItem(currentPart);
             }
@@ -3591,7 +3708,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jButtonDropToolActionPerformed
 
     private void jButtonPickupToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPickupToolActionPerformed
-       try {
+        try {
             if (null != currentPart) {
                 this.jComboBoxManualObjectName.setSelectedItem(currentPart);
             }
@@ -3943,7 +4060,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try {
                 return checkDbSupplierPublisherAsync()
                         .thenComposeAsync("generateCrcl(" + aprsJFrame.getTaskName() + ").doPddlActionsSection(" + pddlActionToCrclGenerator.getLastIndex() + " out of " + actionsList.size() + ")",
-                                x -> doPddlActionsSectionAsync(startSafeAbortRequestCount,0),
+                                x -> doPddlActionsSectionAsync(startSafeAbortRequestCount, 0),
                                 generateCrclService);
             } catch (IOException ex) {
                 Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -4562,7 +4679,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return future;
         }
     }
-    
+
     public XFuture<Boolean> pickupTool() {
         try {
             Map<String, String> options = getTableOptions();
@@ -4591,7 +4708,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return future;
         }
     }
-    
+
     private volatile List<Future<?>> checkDbSupplierPublisherFuturesList = null;
 
     private void checkDbSupplierPublisher() throws IOException {
@@ -4745,6 +4862,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JCheckBox jCheckBoxReplan;
     private javax.swing.JComboBox<String> jComboBoxManualObjectName;
     private javax.swing.JComboBox<String> jComboBoxManualSlotName;
+    private javax.swing.JComboBox<String> jComboBoxToolChangerPosName;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -4758,6 +4876,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -4899,8 +5018,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     }
                 }
             }
+            loadToolChangerPoseMap();
         }
     }
+    
     private static final String ENABLE_OPTA_PLANNER = "enableOptaPlanner";
 
     private void loadComboModels(Properties props) {
