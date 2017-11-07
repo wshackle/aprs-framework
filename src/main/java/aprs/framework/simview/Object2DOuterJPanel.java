@@ -295,15 +295,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private void loadTraySlotInfo(List<PhysicalItem> items) {
+        int row = jTableItems.getSelectedRow();
+        if (row < 0) {
+            return;
+        }
         DefaultTableModel tm = (DefaultTableModel) jTableTraySlots.getModel();
         tm.setRowCount(0);
         if (object2DJPanel1.isShowOutputItems()) {
             return;
         }
-        int row = jTableItems.getSelectedRow();
-        if (row < 0) {
-            return;
-        }
+        
         String type = (String) jTableItems.getValueAt(row, 5);
         switch (type) {
             case "PT":

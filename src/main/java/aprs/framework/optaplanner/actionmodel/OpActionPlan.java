@@ -5,13 +5,19 @@
  */
 package aprs.framework.optaplanner.actionmodel;
 
+import static aprs.framework.optaplanner.actionmodel.OpActionType.DROPOFF;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.collections.api.collection.MutableCollection;
+import org.eclipse.collections.api.multimap.MutableMultimap;
+import org.eclipse.collections.impl.factory.Lists;
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
 import org.optaplanner.core.api.domain.solution.PlanningScore;
 import org.optaplanner.core.api.domain.solution.PlanningSolution;
@@ -49,7 +55,6 @@ public class OpActionPlan {
     public void setEndActions(List<OpEndAction> endActions) {
         this.endActions = endActions;
     }
-    
 
     @PlanningEntityCollectionProperty
     private List<OpAction> actions;
@@ -57,14 +62,13 @@ public class OpActionPlan {
     public List<OpAction> getActions() {
         return actions;
     }
-    
-    
+
     public List<OpAction> orderedActions() {
         List<OpAction> orderedActions = new ArrayList<>();
         OpAction start = findStartAction();
         orderedActions.add(start);
         OpActionInterface nxt = start.getNext();
-        while(nxt instanceof OpAction) {
+        while (nxt instanceof OpAction) {
             OpAction nxtAction = (OpAction) nxt;
             orderedActions.add(nxtAction);
             nxt = nxtAction.getNext();
@@ -77,6 +81,19 @@ public class OpActionPlan {
     }
 
     public void initNextActions() {
+
+        MutableMultimap<String, OpAction> multimapWithList
+                = Lists.mutable.ofAll(actions)
+                        .select(a -> a.getActionType() == PICKUP || a.getActionType() == DROPOFF)
+                        .groupBy(a -> a.getPartType());
+        for (String partType : multimapWithList.keySet()) {
+            MutableCollection<OpAction> theseActions = multimapWithList.get(partType);
+            long pickupCount = theseActions.count(a -> a.getActionType() == PICKUP);
+            long dropoffCount = theseActions.count(a -> a.getActionType() == DROPOFF);
+            for (long j = dropoffCount; j < pickupCount; j++) {
+                actions.add(new OpAction("fake_dropoff_" + partType + "_" + j, 0, 0, FAKE_DROPOFF, partType));
+            }
+        }
         List<OpActionInterface> unusedActions = new ArrayList<>(actions);
         unusedActions.addAll(endActions);
         List<OpActionInterface> allActions = new ArrayList<>(unusedActions);
@@ -101,7 +118,7 @@ public class OpActionPlan {
                     if (nxtAction.getActionType() != END && nxtAction instanceof OpAction) {
                         newActions.add((OpAction) nxtAction);
                         startAction = (OpAction) nxtAction;
-                    } 
+                    }
                     break;
                 }
             }
@@ -130,25 +147,42 @@ public class OpActionPlan {
         OpActionInterface tmp = startAction;
         Set<String> visited = new HashSet<>();
         List<OpActionInterface> notInList = new ArrayList<>();
+        int maxCount = actions.size();
+        int count = 0;
         while (tmp != null && tmp.getActionType() != END) {
+            count++;
+            if (count >= maxCount) {
+                break;
+            }
             if (tmp != startAction) {
                 sb.append(" -> ");
             }
             if (tmp instanceof OpAction) {
                 boolean inList = false;
                 for (OpAction action : actions) {
-                    if(action == tmp) {
+                    if (action == tmp) {
                         inList = true;
                         break;
                     }
                 }
-                if(!inList) {
+                if (!inList) {
                     notInList.add(tmp);
                 }
                 OpAction actionTmp = (OpAction) tmp;
                 visited.add(actionTmp.getName());
+                if (actionTmp.getNext() == null) {
+                    sb.append(" -> ");
+                    tmp = null;
+                    break;
+                }
                 totalCost += actionTmp.cost();
                 sb.append(actionTmp.getName());
+                OpActionInterface effNext = actionTmp.effectiveNext();
+                if (null != effNext && effNext != actionTmp.getNext()) {
+                    sb.append("(effectiveNext=");
+                    sb.append(effNext.getName());
+                    sb.append(")");
+                }
                 sb.append(String.format("(%.2f)", actionTmp.cost()));
             } else {
                 sb.append(tmp.getActionType());
@@ -157,11 +191,23 @@ public class OpActionPlan {
         }
         sb.append(": ");
         sb.append(totalCost);
-        if(notInList.size() > 0) {
+        if (notInList.size() > 0) {
             sb.append(" notInList(").append(notInList).append(")");
         }
         double recheckCost = 0;
+        count = 0;
         for (OpAction action : this.getActions()) {
+            count++;
+            if (count >= maxCount) {
+                break;
+            }
+            if (action.getNext() == null) {
+                sb.append(" NULL_NEXT");
+                if (!visited.contains(action.getName())) {
+                    sb.append(" NOT_VISITED(").append(action.getName()).append(") ");
+                }
+                continue;
+            }
             recheckCost += action.cost();
             if (!visited.contains(action.getName())) {
                 sb.append(" NOT_VISITED(").append(action.getName()).append(") ");

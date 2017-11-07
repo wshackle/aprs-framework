@@ -12,6 +12,7 @@ package aprs.framework.optaplanner.actionmodel;
 public enum OpActionType {
     PICKUP,
     DROPOFF,
+    FAKE_DROPOFF,
     START,
     END
 }

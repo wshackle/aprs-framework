@@ -361,8 +361,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         XFuture cancelledDependant = xf.getCanceledDependant();
                         if (xf.isCancelled() || cancelledDependant != null) {
                             setBackground(Color.YELLOW);
-                            if(null != cancelledDependant) {
-                                 setText(xf.getName() + " : " + cancelledDependant.cancelString());
+                            if (null != cancelledDependant) {
+                                setText(xf.getName() + " : " + cancelledDependant.cancelString());
                             }
                         } else if (xf.isCompletedExceptionally()) {
                             setBackground(Color.RED);
@@ -3066,11 +3066,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemIndRandomToggleTest.setSelected(false);
         mainFuture = lastFutureReturned;
         ignoreTitleErrors.set(false);
-        for(XFuture f: systemContinueMap.values()) {
+        for (XFuture f : systemContinueMap.values()) {
             f.cancelAll(stealingRobots);
         }
         systemContinueMap.clear();
-        for(XFuture f: debugSystemContinueMap.values()) {
+        for (XFuture f : debugSystemContinueMap.values()) {
             f.cancelAll(stealingRobots);
         }
         debugSystemContinueMap.clear();
@@ -3411,6 +3411,21 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void jMenuItemResetAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemResetAllActionPerformed
         resetAll();
+        cancelAll(true);
+        cancelAllStealUnsteal(true);
+        jCheckBoxMenuItemPause.setSelected(false);
+        jCheckBoxMenuItemContDemoReverseFirst.setSelected(false);
+        jCheckBoxMenuItemContinousDemo.setSelected(false);
+        jCheckBoxMenuItemIndContinousDemo.setSelected(false);
+        jCheckBoxMenuItemIndRandomToggleTest.setSelected(false);
+        jCheckBoxMenuItemRandomTest.setSelected(false);
+        jCheckBoxMenuItemPauseResumeTest.setSelected(false);
+        clearAllErrors();
+        resume();
+        resetAll();
+        connectAll();
+        setAllReverseFlag(false);
+        enableAllRobots();
     }//GEN-LAST:event_jMenuItemResetAllActionPerformed
 
     /**
@@ -3884,8 +3899,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems()));
         }
     }
-    
-    
 
     private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()
@@ -4342,7 +4355,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * Set the reverseFlag for all systems. When the reverseFlag is set systems
      * empty kit trays and put parts back in parts trays.
      *
-     * @param reverseFlag false to move parts from parts trays to kitTrays or true to move parts from kitTrays to partsTrays
+     * @param reverseFlag false to move parts from parts trays to kitTrays or
+     * true to move parts from kitTrays to partsTrays
      */
     public void setAllReverseFlag(boolean reverseFlag) {
         logEvent("setAllReverseFlag(" + reverseFlag + ")");

@@ -39,6 +39,10 @@ import aprs.framework.optaplanner.OpDisplayJPanel;
 import aprs.framework.optaplanner.actionmodel.OpAction;
 import aprs.framework.optaplanner.actionmodel.OpActionPlan;
 import aprs.framework.optaplanner.actionmodel.OpActionType;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.PICKUP;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
 import aprs.framework.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
@@ -67,6 +71,7 @@ import crcl.base.TransSpeedAbsoluteType;
 import crcl.base.VectorType;
 import crcl.ui.XFuture;
 import crcl.ui.client.PendantClientInner;
+import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CrclCommandWrapper;
 import crcl.utils.CRCLPosemath;
 import java.sql.Connection;
@@ -102,13 +107,20 @@ import java.util.function.Consumer;
 import java.util.Collection;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import crcl.utils.CRCLSocket;
 import java.awt.geom.Point2D;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import javax.xml.parsers.ParserConfigurationException;
+import org.eclipse.collections.api.collection.MutableCollection;
+import org.eclipse.collections.api.multimap.MutableMultimap;
+import org.eclipse.collections.impl.factory.Lists;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
+import org.xml.sax.SAXException;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -155,8 +167,26 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     public List<PddlAction> opActionsToPddlActions(List<? extends OpAction> listIn, int start) {
         List<PddlAction> ret = new ArrayList<>();
+        OUTER:
         for (int i = start; i < listIn.size(); i++) {
             OpAction opa = listIn.get(i);
+            if (null != opa.getActionType()) {
+                switch (opa.getActionType()) {
+                    case START:
+                        continue;
+                    case FAKE_DROPOFF:
+                        continue;
+                    case END:
+                        break OUTER;
+                    default:
+                        break;
+                }
+            }
+            if (i < listIn.size() - 1
+                    && opa.getActionType() == PICKUP
+                    && listIn.get(i + 1).getActionType() == FAKE_DROPOFF) {
+                continue;
+            }
             String name = opa.getName();
             if ("start".equals(name)) {
                 continue;
@@ -166,6 +196,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 String type = name.substring(0, dindex);
                 String args[] = name.substring(dindex + 2).split("[,{}\\-\\[\\]]+");
                 ret.add(new PddlAction("", type, args, "" + opa.cost()));
+            } else {
+                throw new IllegalArgumentException("i=" + i + ",name=" + name + ",opa=" + opa + ",listIn=" + listIn + ",start=" + start);
             }
         }
         return ret;
@@ -219,7 +251,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             if (null != skippedPddlActionsList) {
                                 skippedPddlActionsList.add(pa);
                             }
-                            skipNextPlace = true;
+//                            skipNextPlace = true;
                         } else {
                             throw new IllegalStateException("null == partPose: partName=" + partName + ",start=" + start + ",i=" + i + ",pa=" + pa);
                         }
@@ -765,7 +797,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      */
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException {
-        return generate(actions, startingIndex, options, startSafeAbortRequestCount, true, null);
+        return generate(actions, startingIndex, options, startSafeAbortRequestCount, true, null, null);
     }
 
     /**
@@ -780,6 +812,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * request count is now already higher
      * @param replan run optaplanner to replan provided actions
      * @param origActions actions before being passed through optaplanner
+     * @param newItems optional list of newItems if the list has already been
+     * retreived
      * @return list of CRCL commands
      *
      * @throws IllegalStateException if database not connected
@@ -787,13 +821,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws java.lang.InterruptedException another thread called
      * Thread.interrupt() while retrieving data from database
      *
-     * @throws
-     * crcl.ui.client.PendantClientInner.ConcurrentBlockProgramsException
-     * pendant client in a state blocking program execution
      * @throws java.util.concurrent.ExecutionException exception occurred in
      * another thread servicing the waitForCompleteVisionUpdates
      */
-    public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount, boolean replan, List<PddlAction> origActions)
+    private List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount, boolean replan, List<PddlAction> origActions, List<PhysicalItem> newItems)
             throws IllegalStateException, SQLException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException {
 
         if (null != solver && replan) {
@@ -850,16 +881,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //                System.out.println("debug generate");
 //            }
 
-            List<PhysicalItem> newItems = null;
             if (startingIndex > 0 && null != acbi && null != acbi.action) {
                 switch (acbi.action.getType()) {
 
                     case "look-for-part":
                     case "look-for-parts":
-                        if (null == externalPoseProvider) {
-                            newItems = waitForCompleteVisionUpdates("generate(start=" + startingIndex + ",crclNumber=" + crclNumber + ")", lastRequiredPartsMap);
-                        } else {
-                            newItems = externalPoseProvider.getNewPhysicalItems();
+                        if (null == newItems) {
+                            if (null == externalPoseProvider) {
+                                newItems = waitForCompleteVisionUpdates("generate(start=" + startingIndex + ",crclNumber=" + crclNumber + ")", lastRequiredPartsMap);
+                            } else {
+                                newItems = externalPoseProvider.getNewPhysicalItems();
+                            }
                         }
 
                         assert (newItems != null) :
@@ -1016,12 +1048,26 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (actions.size() < 1) {
             throw new IllegalArgumentException("actions.size() = " + actions.size() + ",rc=" + rc);
         }
-        List<PddlAction> fullReplanPddlActions = optimizePddlActionsWithOptaPlanner(actions, startingIndex);
+        List<PhysicalItem> newItems;
+        if (null == externalPoseProvider) {
+            newItems = waitForCompleteVisionUpdates("runOptaPlanner(start=" + startingIndex + ",crclNumber=" + crclNumber + ")", lastRequiredPartsMap);
+        } else {
+            newItems = externalPoseProvider.getNewPhysicalItems();
+        }
+        assert (newItems != null) :
+                "newItems == null";
+
+        synchronized (poseCache) {
+            for (PhysicalItem item : newItems) {
+                poseCache.put(item.getFullName(), item.getPose());
+            }
+        }
+        List<PddlAction> fullReplanPddlActions = optimizePddlActionsWithOptaPlanner(actions, startingIndex, newItems);
         if (Math.abs(fullReplanPddlActions.size() - actions.size()) > skippedActions || fullReplanPddlActions.size() < 1) {
             throw new IllegalStateException("fullReplanPddlActions.size() = " + fullReplanPddlActions.size() + ",actions.size() = " + actions.size() + ",rc=" + rc + ", skippedActions=" + skippedActions);
         }
         if (fullReplanPddlActions == actions) {
-            return generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, null);
+            return generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, null, newItems);
         }
         List<PddlAction> copyFullReplanPddlActions = new ArrayList<>(fullReplanPddlActions);
         List<PddlAction> origActions = new ArrayList<>(actions);
@@ -1037,13 +1083,58 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             System.out.println("copyFullReplanPddlActions = " + copyFullReplanPddlActions);
             throw new IllegalStateException("fullReplanPddlActions.size() = " + fullReplanPddlActions.size() + ",actions.size() = " + actions.size() + ",rc=" + rc + ", skippedActions=" + skippedActions);
         }
-        List<MiddleCommandType> newCmds = generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, origActions);
+        if (debug) {
+            showPddlActionsList(actions);
+        }
+//        actions.add(startingIndex, new PddlAction("", "pause", new String[0], ""));
+        List<MiddleCommandType> newCmds = generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, origActions, newItems);
+        if (debug) {
+            showCmdList(newCmds);
+        }
         long t3 = System.currentTimeMillis();
         System.out.println("runOptaPlanner: (t3-t0) = " + (t3 - t0) + ",rc=" + rc);
         return newCmds;
     }
 
-    private List<PddlAction> optimizePddlActionsWithOptaPlanner(List<PddlAction> actions, int startingIndex) throws SQLException {
+    private void showPddlActionsList(List<PddlAction> actions) throws InterruptedException {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < actions.size(); i++) {
+            sb.append(i);
+            sb.append(" ");
+            sb.append(actions.get(i).asPddlLine());
+            sb.append("\n");
+        }
+        try {
+            javax.swing.SwingUtilities.invokeAndWait(() -> {
+                String actionsText = MultiLineStringJPanel.editText(sb.toString());
+            });
+        } catch (InvocationTargetException ex) {
+            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void showCmdList(List<MiddleCommandType> newCmds) throws InterruptedException {
+        StringBuilder cmdSb = new StringBuilder();
+        for (int i = 0; i < newCmds.size(); i++) {
+            try {
+                cmdSb.append(i);
+                cmdSb.append(" ");
+                cmdSb.append(CRCLSocket.getUtilSocket().commandToSimpleString(newCmds.get(i)));
+                cmdSb.append("\n");
+            } catch (ParserConfigurationException | SAXException | IOException ex) {
+                Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        try {
+            javax.swing.SwingUtilities.invokeAndWait(() -> {
+                String newCmdsText = MultiLineStringJPanel.editText(cmdSb.toString());
+            });
+        } catch (InvocationTargetException ex) {
+            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private List<PddlAction> optimizePddlActionsWithOptaPlanner(List<PddlAction> actions, int startingIndex, List<PhysicalItem> items) throws SQLException, InterruptedException, ExecutionException {
         int endl[] = new int[2];
         PointType lookForPt = getLookForXYZ();
         if (null == lookForPt) {
@@ -1052,6 +1143,33 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         List<OpAction> skippedOpActionsList = new ArrayList<>();
         List<PddlAction> skippedPddlActionsList = new ArrayList<>();
         List<OpAction> opActions = pddlActionsToOpActions(actions, startingIndex, endl, skippedOpActionsList, skippedPddlActionsList);
+        if (!aprsJFrame.isReverseFlag()) {
+//            List<PhysicalItem> items = waitForCompleteVisionUpdates("runOptaPlanner", lastRequiredPartsMap);
+            MutableMultimap<String, PhysicalItem> availItemsMap
+                    = Lists.mutable.ofAll(items)
+                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                            .groupBy(item -> posNameToType(item.getName()));
+
+            MutableMultimap<String, PddlAction> takePartMap
+                    = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
+                            .select(action -> action.getType().equals("take-part"))
+                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+
+            for (String partTypeName : takePartMap.keySet()) {
+                MutableCollection<PhysicalItem> thisPartTypeItems
+                        = availItemsMap.get(partTypeName);
+                MutableCollection<PddlAction> thisPartTypeActions
+                        = takePartMap.get(partTypeName);
+                if (thisPartTypeItems.size() > thisPartTypeActions.size() && thisPartTypeActions.size() > 0) {
+                    for (PhysicalItem item : thisPartTypeItems) {
+                        if (0 == thisPartTypeActions.count(action -> action.getArgs()[takePartArgIndex].equals(item.getFullName()))) {
+                            opActions.add(new OpAction("take-part" + "-" + Arrays.toString(new String[]{item.getFullName()}), item.x, item.y, OpActionType.PICKUP, partTypeName));
+//                            modifiedActions.add(new PddlAction("", "take-part", new String[]{item.getFullName()}, ""));
+                        }
+                    }
+                }
+            }
+        }
         if (opActions.size() < 3) {
             logger.warning("opActions.size()=" + opActions.size());
             return actions;
@@ -1068,27 +1186,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         double inScore = (score.getSoftScore() / 1000.0);
         OpActionPlan solvedPlan = solver.solve(inputPlan);
         double solveScore = (solvedPlan.getScore().getSoftScore() / 1000.0);
-        for (int i = 0; i < skippedOpActionsList.size(); i++) {
-            OpAction skippedAction = skippedOpActionsList.get(i);
-            for (int j = 0; j < 10; j++) {
-                OpAction repAction = opActions.get(j);
-                if (skippedAction.getActionType() == repAction.getActionType()
-                        && skippedAction.getPartType().equals(repAction.getPartType())) {
-                    List<OpAction> altActions = new ArrayList<>(opActions);
-                    altActions.set(j, skippedAction);
-                    OpActionPlan altInputPlan = new OpActionPlan();
-                    altInputPlan.setActions(opActions);
-                    altInputPlan.getEndAction().setLocation(new Point2D.Double(lookForPt.getX(), lookForPt.getY()));
-                    altInputPlan.initNextActions();
-                    OpActionPlan altSolvedPlan = solver.solve(altInputPlan);
-                    double altSolvedScore = (altSolvedPlan.getScore().getSoftScore() / 1000.0);
-                    if (altSolvedScore > solveScore) {
-                        solvedPlan = altSolvedPlan;
-                        solveScore = altSolvedScore;
-                    }
-                }
-            }
-        }
         System.out.println("Score improved:" + (solveScore - inScore));
         if (Math.abs(solveScore - inScore) > 0.1) {
             List<PddlAction> fullReplanPddlActions = new ArrayList<>();

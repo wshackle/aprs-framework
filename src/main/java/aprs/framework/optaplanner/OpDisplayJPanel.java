@@ -28,6 +28,7 @@ import aprs.framework.optaplanner.actionmodel.OpActionPlan;
 import aprs.framework.optaplanner.actionmodel.OpActionType;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.DROPOFF;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
 import aprs.framework.optaplanner.actionmodel.OpEndAction;
@@ -41,28 +42,37 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.ToolTipManager;
+import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.impl.factory.Lists;
 
 /**
- * Class for displaying either a solved or initial OpActionPlan, plotting the
- * 2D route for the robot to pickup and dropoff some set of parts at the given
+ * Class for displaying either a solved or initial OpActionPlan, plotting the 2D
+ * route for the robot to pickup and dropoff some set of parts at the given
  * destinations.
- * 
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class OpDisplayJPanel extends JPanel {
 
     /**
-     * Show a window showing the 
+     * Show a window showing the
+     *
      * @param plan plan to show
      * @param title title of new window
      */
@@ -80,20 +90,39 @@ public class OpDisplayJPanel extends JPanel {
 
     /**
      * Show a default test plan for testing.
+     *
      * @param args not used
      */
     public static void main(String[] args) {
         showPlan(createTestInitPlan(), "testInit");
     }
 
+    private final MouseMotionListener mml = new MouseMotionListener() {
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            OpDisplayJPanel.this.mouseDragged(e);
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            OpDisplayJPanel.this.mouseMoved(e);
+        }
+    };
+
     /**
      * Create OpDisplayJPanel from an existing plan.
-     * 
+     *
      * @param opActionPlan plan to show
      */
     public OpDisplayJPanel(OpActionPlan opActionPlan) {
         this.opActionPlan = opActionPlan;
+        privateInit();
+    }
+
+    private void privateInit() {
         this.setBackground(Color.white);
+        ToolTipManager.sharedInstance().registerComponent(this);
+        this.addMouseMotionListener(mml);
     }
 
     /**
@@ -101,9 +130,9 @@ public class OpDisplayJPanel extends JPanel {
      *
      */
     public OpDisplayJPanel() {
-        this.setBackground(Color.white);
         OpActionPlan ap = createTestInitPlan();
         this.opActionPlan = ap;
+        privateInit();
     }
 
     static private OpActionPlan createTestInitPlan() {
@@ -176,11 +205,23 @@ public class OpDisplayJPanel extends JPanel {
         }
     }
 
+    private double minX, minY, maxX, maxY, xdiff, ydiff;
+
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
 
         super.paintComponent(g);
+
+        if (null == opActionPlan
+                || null == opActionPlan.getActions()
+                || opActionPlan.getActions().isEmpty()) {
+            return;
+        }
+        MutableMap<OpActionType, Integer> typeCountMap
+                = Lists.adapt(opActionPlan.getActions())
+                        .countBy(OpAction::getActionType)
+                        .toMapOfItemToCount();
 
         Dimension dim = this.getSize();
         if (dim.width < 1 || dim.height < 1) {
@@ -191,10 +232,10 @@ public class OpDisplayJPanel extends JPanel {
             OpEndAction endAction = opActionPlan.getEndAction();
             List<OpAction> actions = opActionPlan.getActions();
             if (null != endAction && null != actions) {
-                double minX = Double.POSITIVE_INFINITY;
-                double minY = Double.POSITIVE_INFINITY;
-                double maxX = Double.NEGATIVE_INFINITY;
-                double maxY = Double.NEGATIVE_INFINITY;
+                minX = Double.POSITIVE_INFINITY;
+                minY = Double.POSITIVE_INFINITY;
+                maxX = Double.NEGATIVE_INFINITY;
+                maxY = Double.NEGATIVE_INFINITY;
                 if (null != endAction.getLocation()) {
                     Point2D.Double endloc = endAction.getLocation();
                     if (minX > endloc.x) {
@@ -225,8 +266,8 @@ public class OpDisplayJPanel extends JPanel {
                         maxY = loc.y;
                     }
                 }
-                double xdiff = (maxX - minX);
-                double ydiff = (maxY - minY);
+                xdiff = (maxX - minX);
+                ydiff = (maxY - minY);
 
                 OpActionInterface prevAction = null;
                 OpActionInterface action = opActionPlan.findStartAction();
@@ -239,18 +280,40 @@ public class OpDisplayJPanel extends JPanel {
                     ly = labelPos.y;
                     h = dim.height - ly;
                 }
+                Set<OpAction> numLabeledItems = new HashSet<>();
+                for (OpAction actionToPaintBackground : opActionPlan.getActions()) {
+                    int x = keyWidth + (int) ((0.9 * (actionToPaintBackground.getLocation().x - minX) / xdiff) * w + 0.05 * w);
+                    int y = ly + (int) ((0.9 * (actionToPaintBackground.getLocation().y - minY) / ydiff) * h + 0.05 * h);
+                    paintBackgroundSymbol(g2d, x, y, actionToPaintBackground);
+                    if (!numLabeledItems.contains(actionToPaintBackground)) {
+                        List<OpAction> closeItems = findCloseActions(x, y);
+                        if (closeItems.size() > 1) {
+                            numLabeledItems.add(actionToPaintBackground);
+                            numLabeledItems.addAll(closeItems);
+                            g2d.drawString(""+closeItems.size(), x+15, y+15);
+                        }
+                    }
+                }
                 while (action != null && action != prevAction) {
+                    if (action.getActionType() == OpActionType.FAKE_DROPOFF) {
+                        action = action.getNext();
+                        continue;
+                    }
                     int x = keyWidth + (int) ((0.9 * (action.getLocation().x - minX) / xdiff) * w + 0.05 * w);
                     int y = ly + (int) ((0.9 * (action.getLocation().y - minY) / ydiff) * h + 0.05 * h);
                     double l = Math.hypot(x - prevx, y - prevy);
-                    double dx = 10 * (x - prevx) / l;
-                    double dy = 10 * (y - prevy) / l;
+                    double dx = 25 * (x - prevx) / l;
+                    double dy = 25 * (y - prevy) / l;
                     int idx = (int) dx;
                     int idy = (int) dy;
                     if (actionNamesVisible) {
                         g2d.drawString(action.getName(), x + 10, y + 10);
                     } else {
-                        paintActionSymbol(g2d, x + idx, y + idy, action.getActionType());
+                        paintActionSymbol(g2d, x, y, action.getActionType());
+                    }
+                    if (action.getNext().getActionType() == OpActionType.FAKE_DROPOFF) {
+                        action = action.getNext();
+                        continue;
                     }
                     if (null != prevAction && prevx > 0 && prevy > 0) {
                         Color origColor = g2d.getColor();
@@ -262,7 +325,7 @@ public class OpDisplayJPanel extends JPanel {
                             }
                         }
 
-                        g2d.drawLine(x, y, prevx + idx, prevy + idy);
+                        g2d.drawLine(x - idx, y - idy, prevx + idx, prevy + idy);
 
                         AffineTransform origTransform = g2d.getTransform();
 
@@ -308,9 +371,21 @@ public class OpDisplayJPanel extends JPanel {
             if (!actionNamesVisible) {
                 keyY += 25;
                 for (OpActionType type : OpActionType.values()) {
+                    Integer typeCount = typeCountMap.get(type);
+                    if (typeCount == null || typeCount == 0) {
+                        if (type == END) {
+                            typeCount = 1;
+                        } else {
+                            continue;
+                        }
+                    }
+                    if (type == FAKE_DROPOFF) {
+                        continue;
+                    }
                     int x = 10;
                     paintActionSymbol(g2d, x, keyY, type);
                     g2d.drawString(type.toString(), 40, keyY);
+                    g2d.drawString(": " + typeCount, 100, keyY);
                     keyY += 25;
                 }
             }
@@ -337,7 +412,7 @@ public class OpDisplayJPanel extends JPanel {
         this.keyVisible = keyVisible;
     }
 
-    private int keyWidth = 80;
+    private int keyWidth = 110;
 
     /**
      * Get the value of keyWidth
@@ -355,6 +430,31 @@ public class OpDisplayJPanel extends JPanel {
      */
     public void setKeyWidth(int keyWidth) {
         this.keyWidth = keyWidth;
+    }
+
+    private void paintBackgroundSymbol(Graphics2D g2d, int x, int y, OpAction action) {
+        if (null == action.getPartType() || action.getPartType().length() < 1) {
+            return;
+        }
+
+        switch (action.getActionType()) {
+            case FAKE_DROPOFF:
+                return;
+            case START:
+                return;
+            case END:
+                return;
+            default:
+                break;
+        }
+
+        AffineTransform origTransform = g2d.getTransform();
+        g2d.translate(x - 7, y - 15);
+        Color origColor = g2d.getColor();
+        g2d.setColor(OpDisplayJPanel.getColor(action.getPartType()));
+        g2d.fill(circleLetterShape);
+        g2d.setColor(origColor);
+        g2d.setTransform(origTransform);
     }
 
     private void paintActionSymbol(Graphics2D g2d, int x, int y, OpActionType type) {
@@ -468,6 +568,43 @@ public class OpDisplayJPanel extends JPanel {
      */
     public void setLabelFont(Font labelFont) {
         this.labelFont = labelFont;
+    }
+
+    private List<OpAction> findCloseActions(int x, int y) {
+        Dimension dim = this.getSize();
+        if (dim.width < 1 || dim.height < 1 || null == opActionPlan || null == opActionPlan.getActions()) {
+            return Collections.emptyList();
+        }
+        int ly = 0;
+        int h = dim.height;
+        int w = keyVisible ? (dim.width - keyWidth) : dim.width;
+        if (labelPos != null) {
+            ly = labelPos.y;
+            h = dim.height - ly;
+        }
+        List<OpAction> closeActions = new ArrayList<>();
+        for (OpAction actionToCheck : opActionPlan.getActions()) {
+            if(actionToCheck.getActionType() == FAKE_DROPOFF) {
+                continue;
+            }
+            int actionX = keyWidth + (int) ((0.9 * (actionToCheck.getLocation().x - minX) / xdiff) * w + 0.05 * w);
+            int actionY = ly + (int) ((0.9 * (actionToCheck.getLocation().y - minY) / ydiff) * h + 0.05 * h);
+            if (Math.abs(actionX - x) < 30 && Math.abs(actionY - y) < 30) {
+                closeActions.add(actionToCheck);
+            }
+        }
+        if (!closeActions.isEmpty()) {
+            System.out.println("closeActions = " + closeActions);
+        }
+        return closeActions;
+    }
+
+    private void mouseDragged(MouseEvent e) {
+        this.setToolTipText(findCloseActions(e.getX(), e.getY()).toString());
+    }
+
+    private void mouseMoved(MouseEvent e) {
+        this.setToolTipText(findCloseActions(e.getX(), e.getY()).toString());
     }
 
 }
