@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -253,9 +254,15 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonPrevMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevMultiActionPerformed
-        prevMulti();
-        this.setVisible(false);
-        this.dispose();
+        try {
+            prevMulti();
+            this.setVisible(false);
+            this.dispose();
+        } catch (Exception e) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, e);
+            JOptionPane.showMessageDialog(this, "Exception caught: "+e);
+        }
+
     }//GEN-LAST:event_jButtonPrevMultiActionPerformed
 
     private static void prevMulti() {

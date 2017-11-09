@@ -213,6 +213,14 @@ public class OpDisplayJPanel extends JPanel {
 
         super.paintComponent(g);
 
+        if (null != label && null != labelPos) {
+            Font origFont = g.getFont();
+            if (null != labelFont) {
+                g.setFont(labelFont);
+            }
+            g.drawString(label, labelPos.x, labelPos.y);
+            g.setFont(origFont);
+        }
         if (null == opActionPlan
                 || null == opActionPlan.getActions()
                 || opActionPlan.getActions().isEmpty()) {
@@ -346,14 +354,7 @@ public class OpDisplayJPanel extends JPanel {
                 }
             }
         }
-        if (null != label && null != labelPos) {
-            Font origFont = g.getFont();
-            if (null != labelFont) {
-                g.setFont(labelFont);
-            }
-            g.drawString(label, labelPos.x, labelPos.y);
-            g.setFont(origFont);
-        }
+        
         if (keyVisible) {
             int keyY = 25;
             g2d.drawLine(10, 10, 30, 10);
@@ -528,6 +529,7 @@ public class OpDisplayJPanel extends JPanel {
      */
     public void setLabel(String label) {
         this.label = label;
+        this.repaint();
     }
 
     private Point labelPos;
@@ -592,9 +594,6 @@ public class OpDisplayJPanel extends JPanel {
             if (Math.abs(actionX - x) < 30 && Math.abs(actionY - y) < 30) {
                 closeActions.add(actionToCheck);
             }
-        }
-        if (!closeActions.isEmpty()) {
-            System.out.println("closeActions = " + closeActions);
         }
         return closeActions;
     }

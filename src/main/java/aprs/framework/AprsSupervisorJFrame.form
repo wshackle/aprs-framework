@@ -209,12 +209,12 @@
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemDbgActionActionPerformed"/>
                   </Events>
                 </MenuItem>
-                <MenuItem class="javax.swing.JMenuItem" name="jCheckBoxMenuItemRandomTestReverseFirst">
+                <MenuItem class="javax.swing.JMenuItem" name="jMenuItemRandomTestReverseFirst">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Randomized Enable Toggle Continous Demo (Reverse First) "/>
                   </Properties>
                   <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemRandomTestReverseFirstActionPerformed"/>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemRandomTestReverseFirstActionPerformed"/>
                   </Events>
                 </MenuItem>
                 <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemIndContinousDemo">
@@ -295,7 +295,7 @@
                 <Property name="text" type="java.lang.String" value="Pause All when One System Pauses"/>
               </Properties>
             </MenuItem>
-            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemContDemoReverseFirst">
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemContDemoReverseFirstOption">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Reverse First for Continous Demo"/>
               </Properties>

@@ -434,7 +434,6 @@ public class QuerySet implements QuerySetInterface {
         DbQueryInfo getAllPartsInKtQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_PARTS_IN_KT);
         setQueryStringParam(getAllPartsInKtStatement, getAllPartsInKtQueryInfo, DbParamTypeEnum.NAME, name, map);
         String simQuery = createExpectedQueryString(getAllPartsInKtQueryInfo, map);
-        //System.out.println("simQuery = " + simQuery);
         if (debug) {
             System.out.println("simQuery = " + simQuery);
         }
@@ -487,7 +486,6 @@ public class QuerySet implements QuerySetInterface {
         DbQueryInfo getCountQueryInfo = queriesMap.get(DbQueryEnum.GET_PARTDESIGN_PART_COUNT);
         setQueryStringParam(getPartDesignPartCountStatement, getCountQueryInfo, DbParamTypeEnum.NAME, name, map);
         String simQuery = createExpectedQueryString(getCountQueryInfo, map);
-        //System.out.println("simQuery = " + simQuery);
         if (debug) {
             System.out.println("simQuery = " + simQuery);
         }
@@ -518,8 +516,7 @@ public class QuerySet implements QuerySetInterface {
         if (debug) {
             System.out.println("simQuery = " + simQuery);
         }
-        //System.out.println("simQuery = " + simQuery);
-
+        
         try (ResultSet rs = getPartsTraysStatement.executeQuery()) {
             while (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
@@ -727,7 +724,7 @@ public class QuerySet implements QuerySetInterface {
         Map<Integer, Object> map = new TreeMap<>();
         DbQueryInfo getPoseQueryInfo = queriesMap.get(DbQueryEnum.GET_SINGLE_POSE);
         setQueryStringParam(getPoseStatement, getPoseQueryInfo, DbParamTypeEnum.NAME, name, map);
-//        getPoseStatement.setString(1, name);
+
         String simQuery = createExpectedQueryString(getPoseQueryInfo, map);
         if (debug) {
             System.out.println("simQuery = " + simQuery);
@@ -1038,131 +1035,6 @@ public class QuerySet implements QuerySetInterface {
         setSingleTrayDesignStatement.execute();
     }
 
-    public void newSingleTraySlotDesign(TraySlotDesign tsd) throws SQLException {
-        if (closed) {
-            throw new IllegalStateException("QuerySet already closed.");
-        }
-        assert (null != newSingleTrayDesignStatement) :
-            ("null == getAllTrayDesignsStatement");
-        
-        List<TraySlotDesign> list = new ArrayList<>();
-        Map<Integer, Object> map = new TreeMap<>();
-        DbQueryInfo newSingleTraySlotDesignQueryInfo = queriesMap.get(DbQueryEnum.NEW_SINGLE_TRAY_SLOT_DESIGN);
-        setQueryStringParam(newSingleTrayDesignStatement, newSingleTraySlotDesignQueryInfo, DbParamTypeEnum.PART_DESIGN_NAME, tsd.getPartDesignName(), map);
-        setQueryStringParam(newSingleTrayDesignStatement, newSingleTraySlotDesignQueryInfo, DbParamTypeEnum.TRAY_DESIGN_NAME, tsd.getTrayDesignName(), map);
-//        setQueryIntParam(newSingleTrayDesignStatement, setSingleTraySlotDesignQueryInfo, DbParamTypeEnum.SLOT_DESIGN_ID, tsd.getID(), map);
-        setQueryDoubleParam(newSingleTrayDesignStatement, newSingleTraySlotDesignQueryInfo, DbParamTypeEnum.X_SLOT_OFFSET, tsd.getX_OFFSET(), map);
-        setQueryDoubleParam(newSingleTrayDesignStatement, newSingleTraySlotDesignQueryInfo, DbParamTypeEnum.Y_SLOT_OFFSET, tsd.getY_OFFSET(), map);
-        String newQuery = createExpectedQueryString(newSingleTraySlotDesignQueryInfo, map);
-        System.out.println("simQuery = " + newQuery);
-        newSingleTrayDesignStatement.execute();
-    }
-
-    public List<TraySlotDesign> getSingleTraySlotDesign(String partDesignName, String trayDesignName) throws SQLException {
-        if (closed) {
-            throw new IllegalStateException("QuerySet already closed.");
-        }
-        assert (null != getSingleTrayDesignStatement) :
-            ("null == getAllTrayDesignsStatement");
-        
-        List<TraySlotDesign> list = new ArrayList<>();
-        Map<Integer, Object> map = new TreeMap<>();
-        DbQueryInfo getSingleTraySlotDesignQueryInfo = queriesMap.get(DbQueryEnum.GET_SINGLE_TRAY_SLOT_DESIGN);
-        setQueryStringParam(getSingleTrayDesignStatement, getSingleTraySlotDesignQueryInfo, DbParamTypeEnum.PART_DESIGN_NAME, partDesignName, map);
-        setQueryStringParam(getSingleTrayDesignStatement, getSingleTraySlotDesignQueryInfo, DbParamTypeEnum.TRAY_DESIGN_NAME, trayDesignName, map);
-//        getPoseStatement.setString(1, name);
-//        String simQuery = createExpectedQueryString(getAllTraySlogDesignsQueryInfo, map);
-//        System.out.println("simQuery = " + simQuery);
-        try (ResultSet rs = getSingleTrayDesignStatement.executeQuery()) {
-            while (rs.next()) {
-//                ResultSetMetaData meta = rs.getMetaData();
-//                for (int j = 1; j <= meta.getColumnCount(); j++) {
-//                    System.out.println("j = " + j);
-//                    String cname = meta.getColumnName(j);
-//                    System.out.println("cname = " + cname);
-//                    String type = meta.getColumnTypeName(j);
-//                    System.out.println("type = " + type);
-//                    Object o = rs.getObject(j);
-//                    System.out.println("o = " + o);
-//                }
-                int id = getQueryResultInt(rs, getSingleTraySlotDesignQueryInfo, DbParamTypeEnum.SLOT_DESIGN_ID);
-                TraySlotDesign traySlotDesign = new TraySlotDesign(id);
-                traySlotDesign.setPartDesignName(partDesignName);
-                traySlotDesign.setTrayDesignName(trayDesignName);
-                double x_offset = getQueryResultDouble(rs, getSingleTraySlotDesignQueryInfo, DbParamTypeEnum.X_SLOT_OFFSET);
-                traySlotDesign.setX_OFFSET(x_offset);
-                double y_offset = getQueryResultDouble(rs, getSingleTraySlotDesignQueryInfo, DbParamTypeEnum.Y_SLOT_OFFSET);
-                traySlotDesign.setY_OFFSET(y_offset);
-                list.add(traySlotDesign);
-            }
-//            if (rs.next()) {
-//                String nameCheckString = rs.getString(1);
-//                System.out.println("nameCheckString = " + nameCheckString);
-//                int count =1;
-//                while(rs.next()) {
-//                    System.out.println("rs.getString(1) = " + rs.getString(1));
-//                    count++;
-//                    System.out.println("count = " + count);
-//                }
-//                throw new IllegalStateException("More than one result for name=" + name);
-//            }
-        }
-        return list;
-    }
-
-    public List<TraySlotDesign> getAllTraySlotDesigns() throws SQLException {
-        if (closed) {
-            throw new IllegalStateException("QuerySet already closed.");
-        }
-        assert (null != getAllTrayDesignsStatement) :
-            ("null == getAllTrayDesignsStatement");
-        
-        List<TraySlotDesign> list = new ArrayList<>();
-//        Map<Integer, Object> map = new TreeMap<>();
-        DbQueryInfo getAllTraySlotDesignsQueryInfo = queriesMap.get(DbQueryEnum.GET_ALL_TRAY_SLOT_DESIGNS);
-//        setQueryStringParam(getSingleTrayDesignStatement, getSIngleTraySlogDesignQueryInfo, DbParamTypeEnum.PART_DESIGN_NAME, partDesignName, map);
-//        setQueryStringParam(getSingleTrayDesignStatement, getSIngleTraySlogDesignQueryInfo, DbParamTypeEnum.TRAY_DESIGN_NAME, trayDesignName, map);
-//        getPoseStatement.setString(1, name);
-//        String simQuery = createExpectedQueryString(getAllTraySlogDesignsQueryInfo, map);
-//        System.out.println("simQuery = " + simQuery);
-        try (ResultSet rs = getAllTrayDesignsStatement.executeQuery()) {
-            while (rs.next()) {
-                ResultSetMetaData meta = rs.getMetaData();
-                for (int j = 1; j <= meta.getColumnCount(); j++) {
-                    System.out.println("j = " + j);
-                    String cname = meta.getColumnName(j);
-                    System.out.println("cname = " + cname);
-                    String type = meta.getColumnTypeName(j);
-                    System.out.println("type = " + type);
-                    Object o = rs.getObject(j);
-                    System.out.println("o = " + o);
-                }
-                int id = getQueryResultInt(rs, getAllTraySlotDesignsQueryInfo, DbParamTypeEnum.SLOT_DESIGN_ID);
-                TraySlotDesign traySlotDesign = new TraySlotDesign(id);
-                String partDesignName = getQueryResultString(rs, getAllTraySlotDesignsQueryInfo, DbParamTypeEnum.PART_DESIGN_NAME);
-                traySlotDesign.setPartDesignName(partDesignName);
-                String trayDesignName = getQueryResultString(rs, getAllTraySlotDesignsQueryInfo, DbParamTypeEnum.TRAY_DESIGN_NAME);
-                traySlotDesign.setTrayDesignName(trayDesignName);
-                double x_offset = getQueryResultDouble(rs, getAllTraySlotDesignsQueryInfo, DbParamTypeEnum.X_SLOT_OFFSET);
-                traySlotDesign.setX_OFFSET(x_offset);
-                double y_offset = getQueryResultDouble(rs, getAllTraySlotDesignsQueryInfo, DbParamTypeEnum.Y_SLOT_OFFSET);
-                traySlotDesign.setY_OFFSET(y_offset);
-                list.add(traySlotDesign);
-            }
-//            if (rs.next()) {
-//                String nameCheckString = rs.getString(1);
-//                System.out.println("nameCheckString = " + nameCheckString);
-//                int count =1;
-//                while(rs.next()) {
-//                    System.out.println("rs.getString(1) = " + rs.getString(1));
-//                    count++;
-//                    System.out.println("count = " + count);
-//                }
-//                throw new IllegalStateException("More than one result for name=" + name);
-//            }
-        }
-        return list;
-    }
 
     @Override
     public void close() throws Exception {
@@ -1256,7 +1128,6 @@ public class QuerySet implements QuerySetInterface {
         return sku;
     }
 
-    //TODO-
     @Override
     public void setPose(String name, PoseType pose) throws SQLException {
         if (closed) {
@@ -1282,54 +1153,14 @@ public class QuerySet implements QuerySetInterface {
         setPoseQueryDoubleParam(DbParamTypeEnum.VZI, zAxis.getI(), map);
         setPoseQueryDoubleParam(DbParamTypeEnum.VZJ, zAxis.getJ(), map);
         setPoseQueryDoubleParam(DbParamTypeEnum.VZK, zAxis.getK(), map);
-//        String simQuery = setPoseQueryString
-//                .replace("{1}", name)
-//                .replace("{2}", pose.getPoint().getX().toString())
-//                .replace("{3}", pose.getPoint().getY().toString())
-//                .replace("{4}", pose.getPoint().getZ().toString())
-//                .replace("{5}", pose.getXAxis().getI().toString())
-//                .replace("{6}", pose.getXAxis().getJ().toString())
-//                .replace("{7}", pose.getXAxis().getK().toString())
-//                .replace("{8}", pose.getZAxis().getI().toString())
-//                .replace("{9}", pose.getZAxis().getJ().toString())
-//                .replace("{10}", pose.getZAxis().getK().toString());
         String simQuery = createExpectedQueryString(setQueryInfo, map);
-        System.out.println("simQuery = " + simQuery);
+        if(debug) {
+            System.out.println("setPose("+name+","+pose+"): simQuery = " + simQuery);
+        }
+        
         int update_count = setPoseStatement.executeUpdate();
-        System.out.println("update_count = " + update_count);
+        if(debug) {
+            System.out.println("update_count = " + update_count);
+        }
     }
-
-//    public static void main(String[] args) throws SQLException {
-//        DbSetup setup = new DbSetupBuilder()
-//                .type(DbType.NEO4J)
-//                .host("localhost")
-//                .port(7480)
-//                .user("neo4j")
-//                .passwd("password".toCharArray())
-//                .build();
-//        Connection con = DbSetupBuilder.connect(setup);
-//        Map<String, String> queriesMap = new HashMap<String, String>();
-//        queriesMap.put("getPose", "MATCH pointpath=(source { name:{1} } ) -[:hasPhysicalLocation_RefObject]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
-//                + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
-//                + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
-//                + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z, xaxis.hasVector_I as vxi,xaxis.hasVector_J as vxj,xaxis.hasVector_K as vxk, zaxis.hasVector_I as vzi,zaxis.hasVector_J as vzj,zaxis.hasVector_K as vzk");
-//        queriesMap.put("setPose",
-//                "MERGE (thing:SolidObject { name:{1} } )\n"
-//                + "merge (thing) - [:hasPhysicalLocation_RefObject] -> (pl:PhysicalLocation)\n"
-//                + "merge (pl) - [:hasPoseLocation_Pose] -> (pose:PoseLocation)\n"
-//                + "merge (pose) - [:hasPose_Point] -> (pt:Point)\n"
-//                + "merge (pose) - [:hasPose_XAxis] -> (xaxis:Vector)\n"
-//                + "merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)\n"
-//                + "set pt.hasPoint_X= {2},pt.hasPoint_Y= {3},pt.hasPoint_Z= {4}\n"
-//                + "set xaxis.hasVector_I={5}, xaxis.hasVector_J={6}, xaxis.hasVector_K={7}\n"
-//                + "set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}"
-//        );
-//        PoseType poseIn = pose(point(1.0, 2.0, 3.0), vector(1.0, 0.0, 0.0), vector(0.0, 0.0, 1.0));
-//        QuerySet qs = new QuerySet(setup.getDbType(), con, queriesMap);
-//
-//        qs.setPose("robot_1", poseIn);
-//
-//        PoseType poseOut = qs.getPose("robot_1");
-//        System.out.println("poseOut = " + CRCLPosemath.toString(poseOut));
-//    }
 }

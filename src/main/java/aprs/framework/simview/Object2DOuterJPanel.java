@@ -2326,7 +2326,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
             if (jCheckBoxSimulated.isSelected() || !jCheckBoxConnected.isSelected()) {
-                reloadDataFile();
+                if(needReloadDataFile()) {
+                    reloadDataFile();
+                }
             }
             String displayAxisString = props.getProperty("displayAxis");
             if (displayAxisString != null && displayAxisString.length() > 0) {
@@ -2366,9 +2368,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private String dataFileString = null;
     private String reverseDataFileString = null;
+    private volatile String loadedDataFileString =null;
+    
+    public String getCurrentDataFileString() {
+        return reverseFlag ? this.reverseDataFileString : this.dataFileString;
+    }
+    
+    public boolean needReloadDataFile() {
+        String currentDataFileString = getCurrentDataFileString();
+        if (null == currentDataFileString) {
+            return false;
+        }
+        if(currentDataFileString.length() <1) {
+            return false;
+        }
+        return !Objects.equals(currentDataFileString, loadedDataFileString);
+    }
+    
 
     public void reloadDataFile() throws IOException {
-        String currentDataFileString = reverseFlag ? this.reverseDataFileString : this.dataFileString;
+        String currentDataFileString = getCurrentDataFileString();
         if (null != currentDataFileString && currentDataFileString.length() > 0) {
             File f = new File(currentDataFileString);
             if (f.exists() && f.canRead() && !f.isDirectory()) {
@@ -2389,6 +2408,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 }
             }
+            loadedDataFileString=currentDataFileString;
         }
     }
 

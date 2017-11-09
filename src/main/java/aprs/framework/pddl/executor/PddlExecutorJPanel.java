@@ -266,7 +266,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 throw new IllegalArgumentException("ppi == null");
             }
             pddlActionToCrclGenerator.takeSnapshots("exec", "safeAbortRequested" + safeAbortRequestCount.get() + ":" + safeAboutCount.get() + ".ppi=" + ppi, null, null);
-            pddlActionToCrclGenerator.setDebug(true);
+//            pddlActionToCrclGenerator.setDebug(true);
             CrclCommandWrapper wrapper = ppi.getWrapper();
             if (null == wrapper) {
                 throw new IllegalArgumentException("ppi.getWrapper() == null");
@@ -639,6 +639,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 {"kitInspectDistThreshold", "20.0"},
                 {"requireNewPoses", "false"},
                 {"visionCycleNewDiffThreshold", "3"},
+                {"pauseInsteadOfRecover", "false"},
                 {"skipMissingParts", "false"}
             },
             new String [] {
@@ -1648,17 +1649,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return readOnlyActionsList;
     }
 
-//    /**
-//     * Set the value of actionsList
-//     *
-//     * @param actionsList new value of actionsList
-//     */
-//    @Override
-//    public void setActionsList(List<PddlAction> actionsList) {
-//        this.actionsList = actionsList;
-//        DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
-//        model.setNumRows(0);
-//    }
     @Override
     public void clearActionsList() {
         synchronized (actionsList) {
@@ -3498,11 +3488,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
             String jointVals
                     = jointList
-                    .stream()
-                    .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                    .map(JointStatusType::getJointPosition)
-                    .map(Objects::toString)
-                    .collect(Collectors.joining(","));
+                            .stream()
+                            .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                            .map(JointStatusType::getJointPosition)
+                            .map(Objects::toString)
+                            .collect(Collectors.joining(","));
             System.out.println("jointVals = " + jointVals);
             DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
             boolean keyFound = false;
@@ -3545,12 +3535,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private String toolChangerPoseMapFileName = null;
 
     private void loadToolChangerPoseMap() {
-        if(null == propertiesFile || !propertiesFile.exists()) {
+        if (null == propertiesFile || !propertiesFile.exists()) {
             return;
         }
         toolChangerPoseMapFileName = propertiesFile.getName() + ".toolChangerPoses.txt";
         File f = new File(propertiesFile.getParent(), toolChangerPoseMapFileName);
-        if(!f.exists()) {
+        if (!f.exists()) {
             return;
         }
         int lineNumber = 0;
@@ -3575,16 +3565,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     PmRpy rpy = new PmRpy(Math.toRadians(Double.parseDouble(poseParts[3])), Math.toRadians(Double.parseDouble(poseParts[4])), Math.toRadians(Double.parseDouble(poseParts[5])));
                     PoseType pose = CRCLPosemath.toPoseType(cart, rpy);
                     toolChangerPoseMap.put(key, pose);
-                    DefaultComboBoxModel cbm = (DefaultComboBoxModel)jComboBoxToolChangerPosName.getModel();
+                    DefaultComboBoxModel cbm = (DefaultComboBoxModel) jComboBoxToolChangerPosName.getModel();
                     boolean keyFound = false;
                     for (int i = 0; i < cbm.getSize(); i++) {
                         String cbmValue = (String) cbm.getElementAt(i);
-                        if(cbmValue.equals(key)) {
+                        if (cbmValue.equals(key)) {
                             keyFound = true;
                             break;
                         }
                     }
-                    if(!keyFound) {
+                    if (!keyFound) {
                         jComboBoxToolChangerPosName.addItem(key);
                     }
                 } catch (Exception ex) {
@@ -3598,10 +3588,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     private void saveToolChangerPoseMap() {
-        if(toolChangerPoseMap.isEmpty()) {
+        if (toolChangerPoseMap.isEmpty()) {
             return;
         }
-        if(null == propertiesFile || !propertiesFile.exists()) {
+        if (null == propertiesFile || !propertiesFile.exists()) {
             return;
         }
         toolChangerPoseMapFileName = propertiesFile.getName() + ".toolChangerPoses.txt";
@@ -3764,9 +3754,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             if (i >= model.getRowCount()) {
                 break;
             }
-            model.setValueAt(indexes[i], i, 1);
+            if (!Objects.equals(model.getValueAt(i, 1), indexes[i])) {
+                model.setValueAt(indexes[i], i, 1);
+            }
         }
-        autoResizeTableColWidths(jTablePddlOutput);
         this.crclIndexes = indexes;
     }
 
@@ -3777,10 +3768,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 break;
             }
             if (null != labels[i]) {
-                model.setValueAt(labels[i], i, 2);
+                if (!Objects.equals(model.getValueAt(i, 2), labels[i])) {
+                    model.setValueAt(labels[i], i, 2);
+                }
             }
         }
-        autoResizeTableColWidths(jTablePddlOutput);
     }
 
     public void setPddlTakenParts(String parts[]) {
@@ -3790,10 +3782,30 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 break;
             }
             if (null != parts[i]) {
-                model.setValueAt(parts[i], i, 6);
+                if (!Objects.equals(model.getValueAt(i, 6), parts[i])) {
+                    model.setValueAt(parts[i], i, 6);
+                }
             }
         }
-        autoResizeTableColWidths(jTablePddlOutput);
+    }
+
+    public void reloadPddlActions(List<PddlAction> l) {
+        DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
+        for (int i = 0; i < l.size(); i++) {
+            if (i >= model.getRowCount()) {
+                break;
+            }
+            PddlAction act = l.get(i);
+            if (null != act) {
+                if (!Objects.equals(model.getValueAt(i, 2), act.getType())) {
+                    model.setValueAt(act.getType(), i, 2);
+                }
+                String argsString = Arrays.toString(act.getArgs());
+                if (!Objects.equals(model.getValueAt(i, 3), argsString)) {
+                    model.setValueAt(argsString, i, 3);
+                }
+            }
+        }
     }
 
     boolean started = false;
@@ -3986,7 +3998,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         checkDbSupplierPublisher();
         int abortReplanFromIndex = replanFromIndex;
-        if (jCheckBoxEnableOptaPlanner.isSelected()) {
+        if (jCheckBoxEnableOptaPlanner.isSelected() && replanFromIndex == 0) {
             this.opDisplayJPanelInput.setOpActionPlan(null);
             this.opDisplayJPanelSolution.setOpActionPlan(null);
             this.opDisplayJPanelInput.setLabel("Input");
@@ -4112,10 +4124,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             resetReadOnlyActionsList();
         }
         int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
-        indexes = Arrays.copyOf(indexes, indexes.length);
-        setCrclIndexes(indexes);
-        setPddlLabelss(pddlActionToCrclGenerator.getActionToCrclLabels());
-        setPddlTakenParts(pddlActionToCrclGenerator.getActionToCrclTakenPartsNames());
+        int indexesCopy[] = Arrays.copyOf(indexes, indexes.length);
+        String labels[] = pddlActionToCrclGenerator.getActionToCrclLabels();
+        final String labelsCopy[] = Arrays.copyOf(labels, labels.length);
+        String takenPartNames[] = pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
+        final String takenPartNamesCopy[] = Arrays.copyOf(takenPartNames, takenPartNames.length);
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            setCrclIndexes(indexesCopy);
+            setPddlLabelss(labelsCopy);
+            setPddlTakenParts(takenPartNamesCopy);
+            reloadPddlActions(readOnlyActionsList);
+            autoResizeTableColWidths(jTablePddlOutput);
+        });
+
         program.setName(getActionsCrclName());
         lastCrclProgName = crclProgName;
         crclProgName = program.getName();
@@ -5021,7 +5042,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             loadToolChangerPoseMap();
         }
     }
-    
+
     private static final String ENABLE_OPTA_PLANNER = "enableOptaPlanner";
 
     private void loadComboModels(Properties props) {

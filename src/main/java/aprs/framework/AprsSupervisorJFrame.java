@@ -916,7 +916,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                             }
                             final XFuture<Void> future = stealRobot(robotName);
                             if (null == future) {
-                                System.err.println(" stealRobot(" + robotName + ") returned null");
+                                logEventErr(" stealRobot(" + robotName + ") returned null");
                                 XFuture<Void> future2 = stealRobot(robotName);
                                 throw new IllegalStateException("stealRobot(" + robotName + ") returned null");
                             }
@@ -1098,7 +1098,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         String errMsg = "Robot " + robotName + " not found in " + names;
         System.out.println("aprsSystems = " + aprsSystems);
-        System.err.println(errMsg);
+        logEventErr(errMsg);
         showErrorSplash(errMsg);
         throw new IllegalStateException(errMsg);
 //        return XFuture.completedFutureWithName("stealRobot(" + robotName + ").completedFuture", null);
@@ -1889,7 +1889,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemPauseResumeTest = new javax.swing.JCheckBoxMenuItem();
         jMenuItemResetAll = new javax.swing.JMenuItem();
         jMenuItemDbgAction = new javax.swing.JMenuItem();
-        jCheckBoxMenuItemRandomTestReverseFirst = new javax.swing.JMenuItem();
+        jMenuItemRandomTestReverseFirst = new javax.swing.JMenuItem();
         jCheckBoxMenuItemIndContinousDemo = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemIndRandomToggleTest = new javax.swing.JCheckBoxMenuItem();
         jMenuItemRunCustom = new javax.swing.JMenuItem();
@@ -1900,7 +1900,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemShowSplashMessages = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemFixedRandomTestSeed = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemPauseAllForOne = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemContDemoReverseFirst = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemContDemoReverseFirstOption = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemUseTeachCamera = new javax.swing.JCheckBoxMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -2600,13 +2600,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         });
         jMenuActionsAdditionalTests.add(jMenuItemDbgAction);
 
-        jCheckBoxMenuItemRandomTestReverseFirst.setText("Randomized Enable Toggle Continous Demo (Reverse First) ");
-        jCheckBoxMenuItemRandomTestReverseFirst.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItemRandomTestReverseFirst.setText("Randomized Enable Toggle Continous Demo (Reverse First) ");
+        jMenuItemRandomTestReverseFirst.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemRandomTestReverseFirstActionPerformed(evt);
+                jMenuItemRandomTestReverseFirstActionPerformed(evt);
             }
         });
-        jMenuActionsAdditionalTests.add(jCheckBoxMenuItemRandomTestReverseFirst);
+        jMenuActionsAdditionalTests.add(jMenuItemRandomTestReverseFirst);
 
         jCheckBoxMenuItemIndContinousDemo.setText("(Independant) Continous Demo");
         jCheckBoxMenuItemIndContinousDemo.addActionListener(new java.awt.event.ActionListener() {
@@ -2679,8 +2679,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemPauseAllForOne.setText("Pause All when One System Pauses");
         jMenuOptions.add(jCheckBoxMenuItemPauseAllForOne);
 
-        jCheckBoxMenuItemContDemoReverseFirst.setText("Reverse First for Continous Demo");
-        jMenuOptions.add(jCheckBoxMenuItemContDemoReverseFirst);
+        jCheckBoxMenuItemContDemoReverseFirstOption.setText("Reverse First for Continous Demo");
+        jMenuOptions.add(jCheckBoxMenuItemContDemoReverseFirstOption);
 
         jCheckBoxMenuItemUseTeachCamera.setText("Use Teach Camera");
         jMenuOptions.add(jCheckBoxMenuItemUseTeachCamera);
@@ -2873,7 +2873,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private void jMenuItemStartAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartAllActionPerformed
 
         prepAndFinishOnDispatch(() -> {
-            immediateAbortAll();
+            immediateAbortAll("jMenuItemStartAllActionPerformed");
             clearEventLog();
             connectAll();
             setAllReverseFlag(false);
@@ -2905,7 +2905,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         clearAllToggleBlockers();
         clearAllErrors();
         jCheckBoxMenuItemPause.setSelected(false);
-        immediateAbortAll(true);
+        immediateAbortAll("prepActions", true);
         resumeForPrepOnly();
         if (!origIgnoreFlag) {
             ignoreTitleErrors.set(false);
@@ -3023,7 +3023,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void showSafeAbortComplete() {
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
-        immediateAbortAll();
+        immediateAbortAll("showSafeAbortComplete");
         fullAbortAll();
         forceShowMessageFullScreen("Safe Abort Complete", 80.0f,
                 SplashScreen.getRobotArmImage(),
@@ -3056,7 +3056,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         clearAllToggleBlockers();
         clearAllErrors();
-        immediateAbortAll();
+        immediateAbortAll("fullAbortAll");
         jCheckBoxMenuItemContinousDemo.setSelected(false);
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         jCheckBoxMenuItemRandomTest.setSelected(false);
@@ -3191,7 +3191,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private void debugAction() {
 
         System.out.println("");
-        System.err.println("");
+        logEventErr("");
         int count = debugActionCount.incrementAndGet();
         System.out.println("Begin AprsSupervisorJFrame.debugAction()" + count);
         System.out.println("waitForTogglesFutures = " + waitForTogglesFutures);
@@ -3259,7 +3259,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
         System.out.println("End AprsSupervisorJFrame.debugAction()" + count);
         System.out.println("");
-        System.err.println("");
+        logEventErr("");
 
     }
 
@@ -3338,7 +3338,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private void jCheckBoxMenuItemContinousDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinousDemoActionPerformed
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         prepAndFinishOnDispatch(() -> {
-            immediateAbortAll();
+            immediateAbortAll("jCheckBoxMenuItemContinousDemoActionPerformed");
             clearEventLog();
             clearAllErrors();
             connectAll();
@@ -3378,7 +3378,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void jCheckBoxMenuItemRandomTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemRandomTestActionPerformed
         prepAndFinishOnDispatch(() -> {
-            immediateAbortAll();
+            immediateAbortAll("jCheckBoxMenuItemRandomTestActionPerformed");
             clearEventLog();
             clearAllErrors();
             connectAll();
@@ -3387,7 +3387,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             continousDemoCycle.set(0);
             randomTestCount.set(0);
             if (jCheckBoxMenuItemRandomTest.isSelected()) {
-                startRandomTest();
+                lastFutureReturned = startRandomTest();
+                mainFuture = lastFutureReturned;
             }
 
         });
@@ -3399,7 +3400,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             lastFutureReturned.cancelAll(true);
         }
         prepAndFinishOnDispatch(() -> {
-            immediateAbortAll();
+            immediateAbortAll("jMenuItemStartAllReverseActionPerformed");
             connectAll();
             setAllReverseFlag(true);
             enableAllRobots();
@@ -3410,22 +3411,29 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemStartAllReverseActionPerformed
 
     private void jMenuItemResetAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemResetAllActionPerformed
-        resetAll();
-        cancelAll(true);
-        cancelAllStealUnsteal(true);
-        jCheckBoxMenuItemPause.setSelected(false);
-        jCheckBoxMenuItemContDemoReverseFirst.setSelected(false);
-        jCheckBoxMenuItemContinousDemo.setSelected(false);
-        jCheckBoxMenuItemIndContinousDemo.setSelected(false);
-        jCheckBoxMenuItemIndRandomToggleTest.setSelected(false);
-        jCheckBoxMenuItemRandomTest.setSelected(false);
-        jCheckBoxMenuItemPauseResumeTest.setSelected(false);
-        clearAllErrors();
-        resume();
-        resetAll();
-        connectAll();
-        setAllReverseFlag(false);
-        enableAllRobots();
+        try {
+            boolean reloadSimFiles = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Reload sim files?"));
+            resetAll(reloadSimFiles);
+            cancelAll(true);
+            cancelAllStealUnsteal(true);
+            jCheckBoxMenuItemPause.setSelected(false);
+            jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(false);
+            jCheckBoxMenuItemContinousDemo.setSelected(false);
+            jCheckBoxMenuItemIndContinousDemo.setSelected(false);
+            jCheckBoxMenuItemIndRandomToggleTest.setSelected(false);
+            jCheckBoxMenuItemRandomTest.setSelected(false);
+            jCheckBoxMenuItemPauseResumeTest.setSelected(false);
+            clearAllErrors();
+            resume();
+            resetAll(reloadSimFiles);
+            connectAll();
+            setAllReverseFlag(false);
+            enableAllRobots();
+        } catch (Exception e) {
+            logEvent("Exception occurred: " + e);
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, e);
+            JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+        }
     }//GEN-LAST:event_jMenuItemResetAllActionPerformed
 
     /**
@@ -3455,7 +3463,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             continousDemoFuture.cancelAll(true);
             continousDemoFuture = null;
         }
-        immediateAbortAll();
+        immediateAbortAll("resetAll");
         jCheckBoxMenuItemContinousDemo.setSelected(false);
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         jCheckBoxMenuItemRandomTest.setSelected(false);
@@ -3485,7 +3493,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 lastFutureReturned.cancelAll(true);
                 lastFutureReturned = null;
             }
-            immediateAbortAll();
+            immediateAbortAll("jCheckBoxMenuItemPauseResumeTestActionPerformed");
             clearAllErrors();
             connectAll();
             setAllReverseFlag(false);
@@ -3535,7 +3543,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 continousDemoFuture.cancelAll(true);
                 continousDemoFuture = null;
             }
-            immediateAbortAll();
+            immediateAbortAll("jMenuItemContinueAllActionPerformed");
             jCheckBoxMenuItemRandomTest.setSelected(false);
             jCheckBoxMenuItemPause.setSelected(false);
             resume();
@@ -3554,7 +3562,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private void jCheckBoxMenuItemContinousDemoRevFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinousDemoRevFirstActionPerformed
         jCheckBoxMenuItemContinousDemo.setSelected(false);
         prepAndFinishOnDispatch(() -> {
-            immediateAbortAll();
+            immediateAbortAll("jCheckBoxMenuItemContinousDemoRevFirstActionPerformed");
             clearEventLog();
             clearAllErrors();
             connectAll();
@@ -3570,10 +3578,22 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBoxMenuItemContinousDemoRevFirstActionPerformed
 
     private void jMenuItemScanAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemScanAllActionPerformed
-        prepAndFinishOnDispatch(() -> {
-            lastFutureReturned = startScanAll();
-            mainFuture = lastFutureReturned;
-        });
+        try {
+            prepAndFinishOnDispatch(() -> {
+                try {
+                    lastFutureReturned = startScanAll();
+                    mainFuture = lastFutureReturned;
+                } catch (Exception e) {
+                    logEvent("Exception occurred: " + e);
+                    Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, e);
+                    JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+                }
+            });
+        } catch (Exception e) {
+            logEvent("Exception occurred: " + e);
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, e);
+            JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+        }
     }//GEN-LAST:event_jMenuItemScanAllActionPerformed
 
     private void jCheckBoxUpdateFutureAutomaticallyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxUpdateFutureAutomaticallyActionPerformed
@@ -3582,27 +3602,36 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxUpdateFutureAutomaticallyActionPerformed
 
-    private void jCheckBoxMenuItemRandomTestReverseFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemRandomTestReverseFirstActionPerformed
-        prepAndFinishOnDispatch(() -> {
-            immediateAbortAll();
-            resetAll();
-            clearAllErrors();
-            connectAll();
-            setAllReverseFlag(false);
-            enableAllRobots();
-            continousDemoCycle.set(0);
-            randomTestCount.set(0);
-            if (jCheckBoxMenuItemRandomTest.isSelected()) {
-                startRandomTest();
-            }
-
-        });
-    }//GEN-LAST:event_jCheckBoxMenuItemRandomTestReverseFirstActionPerformed
+    private void jMenuItemRandomTestReverseFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemRandomTestReverseFirstActionPerformed
+        try {
+            jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(true);
+            jCheckBoxMenuItemRandomTest.setSelected(true);
+            prepAndFinishOnDispatch(() -> {
+                try {
+                    immediateAbortAll("jMenuItemRandomTestReverseFirstActionPerformed");
+                    resetAll(false);
+                    clearAllErrors();
+                    connectAll();
+                    setAllReverseFlag(true);
+                    enableAllRobots();
+                    continousDemoCycle.set(0);
+                    randomTestCount.set(0);
+                    jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(true);
+                    jCheckBoxMenuItemRandomTest.setSelected(true);
+                    lastFutureReturned = startRandomTest();
+                    mainFuture = lastFutureReturned;
+                } catch (Exception e) {
+                    Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, e);
+                    JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+                }
+            });
+        } catch (Exception e) {
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, e);
+            JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+        }
+    }//GEN-LAST:event_jMenuItemRandomTestReverseFirstActionPerformed
 
     int resetMainRandomTestCount = 0;
-    //     private volatile XFuture<?> resetMainAny = null;
-    //     private volatile XFuture<?> resetMainRandom = null;
-    //     private volatile XFuture<?> resetMainContDemo = null;
 
     private void resetMainRandomTestFuture() {
         assert (randomTest != null) : "(randomTest == null)";
@@ -3619,10 +3648,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
             throw new RuntimeException(thrown);
         });
-//        resetMainRandom = randomTest;
-//        resetMainContDemo = continousDemoFuture;
-//        resetMainAny = XFuture.anyOfWithName("resetMainAny",resetMainRandom, resetMainContDemo);
-//        resetMainAny.thenRun(this::resetMainRandomTestFuture);
     }
 
     private void jCheckBoxShowUnnamedFuturesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowUnnamedFuturesActionPerformed
@@ -3652,15 +3677,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
             jCheckBoxMenuItemContinousDemo.setSelected(false);
             prepAndFinishOnDispatch(() -> {
-                immediateAbortAll();
+                immediateAbortAll("jCheckBoxMenuItemIndContinousDemoActionPerformed");
                 clearEventLog();
                 clearAllErrors();
                 connectAll();
-                setAllReverseFlag(jCheckBoxMenuItemContDemoReverseFirst.isSelected());
+                setAllReverseFlag(jCheckBoxMenuItemContDemoReverseFirstOption.isSelected());
                 enableAllRobots();
                 continousDemoCycle.set(0);
                 if (jCheckBoxMenuItemIndContinousDemo.isSelected()) {
                     resetAll();
+                    jCheckBoxMenuItemIndContinousDemo.setSelected(true);
                     continousDemoFuture = startIndependentContinousDemo();
                     mainFuture = continousDemoFuture;
                 }
@@ -3675,7 +3701,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemContinousDemo.setSelected(false);
         jCheckBoxMenuItemIndContinousDemo.setSelected(false);
         prepAndFinishOnDispatch(() -> {
-            immediateAbortAll(true)
+            immediateAbortAll("jCheckBoxMenuItemIndRandomToggleTestActionPerformed", true)
                     .thenRun(() -> {
                         clearEventLog();
                         clearAllErrors();
@@ -3690,6 +3716,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         }
                         if (jCheckBoxMenuItemIndRandomToggleTest.isSelected()) {
                             resetAll();
+                            jCheckBoxMenuItemIndRandomToggleTest.setSelected(true);
                             continousDemoFuture = startRandomEnableToggleIndependentContinousDemo();
                             mainFuture = continousDemoFuture;
                         }
@@ -3989,6 +4016,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 .thenCompose("scanAll2", ok -> checkOkElse(ok, this::scanAllInternal, this::showCheckEnabledErrorSplash));
     }
 
+    private final AtomicInteger srtCount = new AtomicInteger();
+
     /**
      * Perform a test of the continous demo where the motoman robot will be
      * randomly enabled and disabled.
@@ -3998,19 +4027,28 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      *
      */
     public XFuture<?> startRandomTest() {
-        logEvent("Start Random Test");
+        int c = srtCount.incrementAndGet();
+        logEvent("Start Random Test : " + c);
         connectAll();
         return startCheckAndEnableAllRobots()
-                .thenCompose("startRandomTest.checkOk",
+                .thenCompose("startRandomTest.checkOk" + c,
                         ok -> checkOkElse(ok, this::startRandomTestStep2, this::showCheckEnabledErrorSplash));
     }
 
+    private final AtomicInteger srts2Count = new AtomicInteger();
+
     private XFuture<Void> startRandomTestStep2() {
-        continousDemoFuture = startContinousDemo();
+        int c = srts2Count.incrementAndGet();
+        logEvent("Start Random Test Step 2 :" + c);
+        if (!jCheckBoxMenuItemContDemoReverseFirstOption.isSelected()) {
+            continousDemoFuture = startContinousDemo();
+        } else {
+            continousDemoFuture = startContinuousDemoRevFirst();
+        }
         jCheckBoxMenuItemContinousDemo.setSelected(true);
         randomTest = continueRandomTest();
         resetMainRandomTestFuture();
-        return XFuture.allOfWithName("startRandomTestStep2.allOff", randomTest, continousDemoFuture);
+        return XFuture.allOfWithName("startRandomTestStep2.allOff" + c, randomTest, continousDemoFuture);
     }
 
     private XFuture<Void> startIndRandomTestStep2() {
@@ -4241,6 +4279,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 });
     }
 
+    private void logEventErr(String err) {
+        System.err.println(err);
+        logEvent("ERROR: "+err);
+    }
+    
     private boolean allSystemsOk() {
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame sys = aprsSystems.get(i);
@@ -4248,15 +4291,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             if (status != null
                     && status.getCommandStatus() != null
                     && status.getCommandStatus().getCommandState() == CommandStateEnumType.CRCL_ERROR) {
-                System.err.println("allSystemsOk failing: bad status for sys=" + sys);
+                logEventErr("allSystemsOk failing: bad status for sys=" + sys);
                 return false;
             }
             if (sys.getTitleErrorString() != null && sys.getTitleErrorString().length() > 0) {
-                System.err.println("allSystemsOk failing: bad titleErrorString (" + sys.getTitleErrorString() + ") for sys=" + sys);
+                logEventErr("allSystemsOk failing: bad titleErrorString (" + sys.getTitleErrorString() + ") for sys=" + sys);
                 return false;
             }
             if (sys.getCrclClientErrorString() != null && sys.getCrclClientErrorString().length() > 0) {
-                System.err.println("allSystemsOk failing: bad rclClientErrorString (" + sys.getCrclClientErrorString() + ") for sys=" + sys);
+                logEventErr("allSystemsOk failing: bad rclClientErrorString (" + sys.getCrclClientErrorString() + ") for sys=" + sys);
                 return false;
             }
         }
@@ -4267,16 +4310,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private XFuture<Void> continuePauseTest() {
         if (!allSystemsOk()) {
-            System.err.println("allSystemsOk returned false forcing quitRandomTest");
-            return quitRandomTest();
+            logEventErr("allSystemsOk returned false forcing quitRandomTest");
+            return quitRandomTest("allSystemsOk returned false forcing quitRandomTest");
         }
         if (!jCheckBoxMenuItemContinousDemo.isSelected() && !jCheckBoxMenuItemContinousDemoRevFirst.isSelected()) {
-            System.err.println("jCheckBoxMenuItemContinousDemo.isSelected() returned false forcing quitRandomTest");
-            return quitRandomTest();
+            logEventErr("jCheckBoxMenuItemContinousDemo.isSelected() returned false forcing quitRandomTest");
+            return quitRandomTest("jCheckBoxMenuItemContinousDemo.isSelected() returned false forcing quitRandomTest");
         }
         if (!jCheckBoxMenuItemRandomTest.isSelected()) {
-            System.err.println("jCheckBoxMenuItemRandomTest.isSelected().isSelected() returned false forcing quitRandomTest");
-            return quitRandomTest();
+            logEventErr("jCheckBoxMenuItemRandomTest.isSelected().isSelected() returned false forcing quitRandomTest");
+            return quitRandomTest("jCheckBoxMenuItemRandomTest.isSelected().isSelected() returned false forcing quitRandomTest");
         }
         if (null == continousDemoCycle
                 || continousDemoFuture.isCancelled()
@@ -4284,7 +4327,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 || continousDemoFuture.isCompletedExceptionally()) {
             System.out.println("continousDemoCycle = " + continousDemoCycle + " forcing quitRandomTest");
             printStatus(continousDemoFuture, System.out);
-            return quitRandomTest();
+            return quitRandomTest("continousDemoCycle = " + continousDemoCycle + " forcing quitRandomTest");
         }
         pauseTest = startRandomDelay("pauseTest", 30000, 20000)
                 .thenCompose("pauseTest.pause" + pauseCount.get(),
@@ -4301,20 +4344,20 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private XFuture<Void> continueRandomTest() {
         if (!allSystemsOk()) {
-            System.err.println("allSystemsOk returned false forcing quitRandomTest");
-            return quitRandomTest();
+            logEventErr("allSystemsOk returned false forcing quitRandomTest");
+            return quitRandomTest("allSystemsOk returned false forcing quitRandomTest");
         }
         if (!jCheckBoxMenuItemContinousDemo.isSelected()
                 && !jCheckBoxMenuItemContinousDemoRevFirst.isSelected()
                 && !jCheckBoxMenuItemIndContinousDemo.isSelected()
                 && !jCheckBoxMenuItemIndRandomToggleTest.isSelected()) {
-            System.err.println("jCheckBoxMenuItemContinousDemo.isSelected() returned false forcing quitRandomTest");
-            return quitRandomTest();
+            logEventErr("jCheckBoxMenuItemContinousDemo.isSelected() returned false forcing quitRandomTest");
+            return quitRandomTest("jCheckBoxMenuItemContinousDemo.isSelected() returned false forcing quitRandomTest");
         }
         if (!jCheckBoxMenuItemRandomTest.isSelected()
                 && !jCheckBoxMenuItemIndRandomToggleTest.isSelected()) {
-            System.err.println("jCheckBoxMenuItemRandomTest.isSelected().isSelected() returned false forcing quitRandomTest");
-            return quitRandomTest();
+            logEventErr("jCheckBoxMenuItemRandomTest.isSelected().isSelected() returned false forcing quitRandomTest");
+            return quitRandomTest("jCheckBoxMenuItemRandomTest.isSelected().isSelected() returned false forcing quitRandomTest");
         }
         if (null == continousDemoCycle
                 || continousDemoFuture.isCancelled()
@@ -4322,7 +4365,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 || continousDemoFuture.isCompletedExceptionally()) {
             System.out.println("continousDemoCycle = " + continousDemoCycle + " forcing quitRandomTest");
             printStatus(continousDemoFuture, System.out);
-            return quitRandomTest();
+            return quitRandomTest("continousDemoCycle = " + continousDemoCycle + " forcing quitRandomTest");
         }
         randomTest = startRandomDelay("enableTest", 30000, 20000)
                 .thenCompose("checkForWaitResume1", x -> this.waitResume())
@@ -4340,14 +4383,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return randomTest;
     }
 
-    private XFuture<Void> quitRandomTest() {
-        XFuture<Void> xf = new XFuture<>("cancel_me");
+    private XFuture<Void> quitRandomTest(String cause) {
+        logEvent("quitRandomTest : "+cause);
+        XFuture<Void> xf = new XFuture<>("quitRandomTest : "+cause);
         xf.cancel(false);
         System.out.println("continueRandomTest quit");
         jCheckBoxMenuItemContinousDemo.setSelected(false);
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         jCheckBoxMenuItemRandomTest.setSelected(false);
-        immediateAbortAll();
+        immediateAbortAll("quitRandomTest : "+cause);
         return xf;
     }
 
@@ -4389,6 +4433,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
+    private final AtomicInteger scdrfCount = new AtomicInteger();
+
     /**
      * Start a continuous demo where kit trays will first be emptied and then
      * repeatedly filled and emptied indefinitely.
@@ -4396,7 +4442,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @return future that can be used to determine if it fails or is cancelled
      */
     public XFuture<?> startContinuousDemoRevFirst() {
-        logEvent("Start Continous Demo (Reverse First)");
+        int c = scdrfCount.incrementAndGet();
+        logEvent("Start Continous Demo (Reverse First) : " + c);
         connectAll();
         final XFuture<?> lfr = this.lastFutureReturned;
         continousDemoFuture
@@ -4506,8 +4553,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                     .thenComposeAsync("continueContinousDemo.recurse" + continousDemoCycle.get(), ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
                     if (null != randomTest) {
                         if (jCheckBoxMenuItemRandomTest.isSelected()) {
-                            resetMainRandomTestFuture();
-                        } else if (jCheckBoxMenuItemRandomTestReverseFirst.isSelected()) {
                             resetMainRandomTestFuture();
                         } else if (jCheckBoxMenuItemPauseResumeTest.isSelected()) {
                             resetMainPauseTestFuture();
@@ -4766,6 +4811,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
         }
         completeResumeFuture();
+        for (int i = 0; i < aprsSystems.size(); i++) {
+            AprsJFrame aprsSys = aprsSystems.get(i);
+            if (aprsSys.isPaused()) {
+                throw new IllegalStateException(aprsSys + " is still paused after resume");
+            }
+        }
     }
 
     private volatile XFuture lastStartAllActionsArray[] = null;
@@ -4825,7 +4876,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         logEvent("startAllIndContinousDemo");
         XFuture futures[] = new XFuture[aprsSystems.size()];
         StringBuilder tasksNames = new StringBuilder();
-        boolean revFirst = jCheckBoxMenuItemContDemoReverseFirst.isSelected();
+        boolean revFirst = jCheckBoxMenuItemContDemoReverseFirstOption.isSelected();
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame sys = aprsSystems.get(i);
             logEvent("startContinousDemo(reverseFirst=false) for " + sys);
@@ -5043,11 +5094,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      *
      * @return future allowing a check on when the abort is complete.
      */
-    public XFuture<?> immediateAbortAll() {
-        return immediateAbortAll(false);
+    public XFuture<?> immediateAbortAll(String comment) {
+        return immediateAbortAll(comment, false);
     }
 
-    private XFuture<?> immediateAbortAll(boolean skipLog) {
+    private XFuture<?> immediateAbortAll(String comment, boolean skipLog) {
         stealingRobots = false;
         if (null != runTimeTimer) {
             runTimeTimer.stop();
@@ -5063,10 +5114,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         if (this.stealingRobots || null != returnRobotRunnable.get()) {
             disconnectAllNoLog();
-            return returnRobots("immediateAbortAll").thenRun(() -> {
+            return returnRobots("immediateAbortAll." + comment).thenRun(() -> {
                 disconnectAllNoLog();
                 if (!skipLog) {
-                    logEvent("immediateAbort");
+                    logEvent("immediateAbort : " + comment);
                 }
                 setAbortTimeCurrent();
                 if (null != runTimeTimer) {
@@ -5077,7 +5128,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         } else {
             checkRobotsUniquePorts();
             if (!skipLog) {
-                logEvent("immediateAbort");
+                logEvent("immediateAbort: " + comment);
             }
             setAbortTimeCurrent();
             if (null != runTimeTimer) {
@@ -5490,9 +5541,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             int linecount = 0;
             for (CSVRecord csvRecord : parser) {
                 if (csvRecord.size() < 4) {
-                    System.err.println("Bad CSVRecord :" + linecount + " in " + f + "  --> " + csvRecord);
-                    System.err.println("csvRecord.size()=" + csvRecord.size());
-                    System.err.println("csvRecord.size() must equal 4");
+                    logEventErr("Bad CSVRecord :" + linecount + " in " + f + "  --> " + csvRecord);
+                    logEventErr("csvRecord.size()=" + csvRecord.size());
+                    logEventErr("csvRecord.size() must equal 4");
                     System.out.println("");
                     break;
                 }
@@ -5867,7 +5918,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButtonSetInFromCurrent;
     private javax.swing.JButton jButtonSetOutFromCurrent;
     private javax.swing.JCheckBox jCheckBoxFutureLongForm;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContDemoReverseFirst;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContDemoReverseFirstOption;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinousDemoRevFirst;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDebugStartReverse;
@@ -5879,7 +5930,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPauseAllForOne;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPauseResumeTest;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemRandomTest;
-    private javax.swing.JMenuItem jCheckBoxMenuItemRandomTestReverseFirst;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowSplashMessages;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseTeachCamera;
     private javax.swing.JCheckBox jCheckBoxShowDoneFutures;
@@ -5906,6 +5956,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemImmediateAbortAll;
     private javax.swing.JMenuItem jMenuItemLoadPosMaps;
     private javax.swing.JMenuItem jMenuItemLoadSetup;
+    private javax.swing.JMenuItem jMenuItemRandomTestReverseFirst;
     private javax.swing.JMenuItem jMenuItemRemoveSelectedSystem;
     private javax.swing.JMenuItem jMenuItemResetAll;
     private javax.swing.JMenuItem jMenuItemRunCustom;

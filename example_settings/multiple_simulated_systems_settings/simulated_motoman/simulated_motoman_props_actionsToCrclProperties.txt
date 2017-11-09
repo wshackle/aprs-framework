@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1627
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1781
 afterMoveToLookForDwellTime=5.0
 approachZOffset=50.0
 doInspectKit=true
@@ -13,6 +13,7 @@ lookDwellTime=5.0
 lookForXYZ=0.0,0.0,0.0
 manualPartNames=[part_large_gear_in_pt_4, part_small_gear_in_pt_4, part_large_gear_in_pt_3, part_small_gear_in_pt_3, part_large_gear_in_pt_2, part_large_gear_in_pt_1, part_small_gear_in_pt_2, part_small_gear_in_pt_1, null, null]
 manualSlotNames=[empty_slot_1_for_large_gear_in_kit_s2l2_vessel_2, empty_slot_1_for_small_gear_in_kit_s2l2_vessel_2, empty_slot_2_for_large_gear_in_kit_s2l2_vessel_2, empty_slot_2_for_small_gear_in_kit_s2l2_vessel_2, empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1, empty_slot_1_for_large_gear_in_kit_s2l2_vessel_1, empty_slot_2_for_small_gear_in_kit_s2l2_vessel_1, empty_slot_1_for_small_gear_in_kit_s2l2_vessel_1, null, null]
+pauseInsteadOfRecover=true
 pddl.output=../../../example_pddl/motoman_demo_actions.txt
 pddl.reverse_output=../../../example_pddl/reverse_motoman_demo_actions.txt
 placePartSlotArgIndex=0

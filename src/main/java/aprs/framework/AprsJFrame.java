@@ -3455,6 +3455,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pendantClientJInternalFrame.unpauseCrclProgram();
         }
         updateTitle("", "");
+        if(isPaused()) {
+            throw new IllegalStateException("Still paused after resume.");
+        }
     }
 
     /**
