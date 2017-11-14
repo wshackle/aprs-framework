@@ -1586,10 +1586,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             return ret;
         } catch (IOException | IllegalStateException | SQLException | JAXBException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, "Exception in doActions(" + comment + "," + startAbortCount + ")", ex);
             abortProgram();
             showExceptionInProgram(ex);
-            throw new RuntimeException(ex);
+            throw new RuntimeException("Exception in doActions(" + comment + "," + startAbortCount + "):" + ex.getMessage(), ex);
         } finally {
             doingActionsFinished.incrementAndGet();
         }
@@ -1651,11 +1651,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     @Override
     public void clearActionsList() {
+        if (readOnlyActionsList.size() > 0 && !pddlActionToCrclGenerator.atLastIndex()) {
+            System.err.println("clearing actionsList when not at last index");
+        }
         synchronized (actionsList) {
             if (actionsList.size() > 0) {
-                if (!pddlActionToCrclGenerator.atLastIndex()) {
-                    System.err.println("clearing actionsList when not at last index");
-                }
                 actionsList.clear();
                 resetReadOnlyActionsList();
             }
@@ -3488,11 +3488,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
             String jointVals
                     = jointList
-                            .stream()
-                            .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                            .map(JointStatusType::getJointPosition)
-                            .map(Objects::toString)
-                            .collect(Collectors.joining(","));
+                    .stream()
+                    .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                    .map(JointStatusType::getJointPosition)
+                    .map(Objects::toString)
+                    .collect(Collectors.joining(","));
             System.out.println("jointVals = " + jointVals);
             DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
             boolean keyFound = false;

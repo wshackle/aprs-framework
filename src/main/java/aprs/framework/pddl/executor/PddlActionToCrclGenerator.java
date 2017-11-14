@@ -813,6 +813,22 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return generate(actions, startingIndex, options, startSafeAbortRequestCount, true, null, null);
     }
 
+    private boolean diffActions(List<PddlAction> acts1, List<PddlAction> acts2) {
+        if(acts1.size() != acts2.size()) {
+            System.out.println("acts1.size() != acts2.size(): acts1.size()="+acts1.size()+", acts2.size()="+acts2.size());
+            return true;
+        }
+        for (int i = 0; i < acts1.size(); i++) {
+            PddlAction act1 = acts1.get(i);
+            PddlAction act2 =  acts2.get(i);
+            if(!Objects.equals(act1.asPddlLine(),act2.asPddlLine())) {
+                System.out.println("acts1.get(i) != acts2.get(i): i="+i+",acts1.get(i)="+acts1.get(i)+", acts2.get(i)="+acts2.get(i));
+                return true;
+            }
+        }
+        return false;
+    }
+    
     /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
@@ -856,8 +872,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null != acbi) {
             if (startingIndex < acbi.actionIndex) {
                 if (startingIndex != 0 || acbi.actionIndex < acbi.getActionsSize() - 2) {
-                    String errString = "generate called with startingIndex=" + startingIndex + " and acbi.actionIndex=" + acbi.actionIndex + ", lastIndex=" + lastIndex + ", acbi=" + acbi.toString();
+                    boolean actionsChanged = diffActions(actions,acbi.actions);
+                    System.out.println("actionsChanged = " + actionsChanged);
+                    String errString = "generate called with startingIndex=" + startingIndex + ",acbi.getActionsSize()="+acbi.getActionsSize()+" and acbi.actionIndex=" + acbi.actionIndex + ", lastIndex=" + lastIndex + ", acbi.action.=" + acbi.action;
                     System.err.println(errString);
+                    System.err.println("acbi = " + acbi);
                     aprsJFrame.setTitleErrorString(errString);
                     throw new IllegalStateException(errString);
                 }
