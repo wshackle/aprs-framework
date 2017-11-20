@@ -358,18 +358,39 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.pauseInsteadOfRecover = pauseInsteadOfRecover;
     }
 
+    static private class KitToCheckInstanceInfo {
+        final String instanceName;
+        final Map<String, PhysicalItem> closestItemMap;
+        final List<Slot> absSlots;
+        final Map<String, String> itemSkuMap;
+
+        String failedAbsSlotPrpName;
+        String failedItemSkuName;
+        public KitToCheckInstanceInfo(String instanceName, List<Slot> absSlots) {
+            this.instanceName = instanceName;
+            this.absSlots = absSlots;
+            closestItemMap = new HashMap<>();
+            itemSkuMap = new HashMap<>();
+        }
+
+        @Override
+        public String toString() {
+            return "KitToCheckInstanceInfo{" + "instanceName=" + instanceName + ", failedAbsSlotPrpName=" + failedAbsSlotPrpName + ", failedItemSkuName=" + failedItemSkuName + '}';
+        }
+        
+    }
     static private class KitToCheck {
 
         String name;
         Map<String, String> slotMap;
         List<String> kitInstanceNames;
-        Map<String, List<Slot>> instanceAbsSlotMap;
-        Map<String, Map<String, PhysicalItem>> closestItemMap;
+        Map<String, KitToCheckInstanceInfo> instanceInfoMap;
 
         @Override
         public String toString() {
-            return "KitToCheck{" + "name=" + name + ", slotMap=" + slotMap + ", kitInstanceNames=" + kitInstanceNames + ", instanceAbsSlotMap=" + instanceAbsSlotMap + ", closestItemMap=" + closestItemMap + '}' + '\n';
+            return "KitToCheck{" + "name=" + name + ", instanceInfoMap=" + instanceInfoMap + '}';
         }
+
 
     }
     private final ConcurrentLinkedDeque<KitToCheck> kitsToCheck = new ConcurrentLinkedDeque<>();
@@ -664,15 +685,28 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private final AtomicInteger lastIndex = new AtomicInteger();
     private volatile List<PddlAction> lastActionsList = null;
 
+    private volatile int lastAtLastIndexIdx = -1;
+    private volatile List<PddlAction> lastAtLastIndexList = null;
+    private volatile int lastAtLastIndexRepPos = -1;
+    
     public boolean atLastIndex() {
         final int idx = getLastIndex();
         if (idx == 0 && lastActionsList == null) {
+            lastAtLastIndexIdx = idx;
+            lastAtLastIndexList = null;
+            lastAtLastIndexRepPos=1;
             return true;
         }
         if (null == lastActionsList) {
             throw new IllegalStateException("null == lastActionsList");
         }
-        return idx >= lastActionsList.size() - 1;
+        boolean ret = idx >= lastActionsList.size() - 1;
+        if (ret) {
+            lastAtLastIndexList = new ArrayList<>(lastActionsList);
+            lastAtLastIndexIdx = idx;
+            lastAtLastIndexRepPos=2;
+        }
+        return ret;
     }
 
     /**
@@ -684,15 +718,31 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return lastIndex.get();
     }
 
-    private void setLastActionsIndex(List<PddlAction> actionsList, int index) {
+    private volatile Thread setLastActionsIndexThread = null;
+    private volatile StackTraceElement setLastActionsIndexTrace[] = null;
+    private volatile StackTraceElement firstSetLastActionsIndexTrace[] = null;
+    private final ConcurrentLinkedDeque<StackTraceElement[]> setLastActionsIndexTraces
+            = new ConcurrentLinkedDeque<>();
 
-        this.lastActionsList = actionsList;
-        lastIndex.set(index);
+    private void setLastActionsIndex(List<PddlAction> actionsList, int index) {
+        final Thread curThread = Thread.currentThread();
+        if (null == setLastActionsIndexThread) {
+            setLastActionsIndexThread = curThread;
+            setLastActionsIndexTrace = curThread.getStackTrace();
+            firstSetLastActionsIndexTrace = setLastActionsIndexTrace;
+        } else if (setLastActionsIndexThread != curThread) {
+            System.err.println("setLastActionsIndexThread changed");
+        }
+        if (lastActionsList != actionsList || index != lastIndex.get()) {
+            setLastActionsIndexTrace = curThread.getStackTrace();
+            setLastActionsIndexTraces.add(setLastActionsIndexTrace);
+            this.lastActionsList = ((null != actionsList)?new ArrayList<>(actionsList):null);
+            lastIndex.set(index);
+        }
     }
 
-    private int incLastActionsIndex(List<PddlAction> actionsList) {
-
-        this.lastActionsList = actionsList;
+    private int incLastActionsIndex() {
+//        this.lastActionsList = ((null != actionsList)?new ArrayList<>(actionsList):null);
         return lastIndex.incrementAndGet();
     }
 
@@ -814,21 +864,24 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private boolean diffActions(List<PddlAction> acts1, List<PddlAction> acts2) {
-        if(acts1.size() != acts2.size()) {
-            System.out.println("acts1.size() != acts2.size(): acts1.size()="+acts1.size()+", acts2.size()="+acts2.size());
+        if (acts1.size() != acts2.size()) {
+            System.out.println("acts1.size() != acts2.size(): acts1.size()=" + acts1.size() + ", acts2.size()=" + acts2.size());
             return true;
         }
         for (int i = 0; i < acts1.size(); i++) {
             PddlAction act1 = acts1.get(i);
-            PddlAction act2 =  acts2.get(i);
-            if(!Objects.equals(act1.asPddlLine(),act2.asPddlLine())) {
-                System.out.println("acts1.get(i) != acts2.get(i): i="+i+",acts1.get(i)="+acts1.get(i)+", acts2.get(i)="+acts2.get(i));
+            PddlAction act2 = acts2.get(i);
+            if (!Objects.equals(act1.asPddlLine(), act2.asPddlLine())) {
+                System.out.println("acts1.get(i) != acts2.get(i): i=" + i + ",acts1.get(i)=" + acts1.get(i) + ", acts2.get(i)=" + acts2.get(i));
                 return true;
             }
         }
         return false;
     }
-    
+
+    private volatile Thread genThread = null;
+    private volatile StackTraceElement genThreadSetTrace[] = null;
+
     /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
@@ -856,6 +909,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount, boolean replan, List<PddlAction> origActions, List<PhysicalItem> newItems)
             throws IllegalStateException, SQLException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException {
 
+        final Thread curThread = Thread.currentThread();
+        if (null == genThread) {
+            genThread = curThread;
+            genThreadSetTrace = curThread.getStackTrace();
+        } else if (genThread != curThread) {
+            System.out.println("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
+            throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
+        }
         if (null != solver && replan) {
             return runOptaPlanner(actions, startingIndex, options, startSafeAbortRequestCount);
         }
@@ -872,9 +933,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null != acbi) {
             if (startingIndex < acbi.actionIndex) {
                 if (startingIndex != 0 || acbi.actionIndex < acbi.getActionsSize() - 2) {
-                    boolean actionsChanged = diffActions(actions,acbi.actions);
+                    System.out.println("Thread.currentThread() = " + Thread.currentThread());
+                    boolean actionsChanged = diffActions(actions, acbi.actions);
                     System.out.println("actionsChanged = " + actionsChanged);
-                    String errString = "generate called with startingIndex=" + startingIndex + ",acbi.getActionsSize()="+acbi.getActionsSize()+" and acbi.actionIndex=" + acbi.actionIndex + ", lastIndex=" + lastIndex + ", acbi.action.=" + acbi.action;
+                    String errString = "generate called with startingIndex=" + startingIndex + ",acbi.getActionsSize()=" + acbi.getActionsSize() + " and acbi.actionIndex=" + acbi.actionIndex + ", lastIndex=" + lastIndex + ", acbi.action.=" + acbi.action;
                     System.err.println(errString);
                     System.err.println("acbi = " + acbi);
                     aprsJFrame.setTitleErrorString(errString);
@@ -916,13 +978,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             final List<PddlAction> fixedActionsCopy = Collections.unmodifiableList(new ArrayList<>(actions));
             final List<PddlAction> fixedOrigActionsCopy = (origActions == null) ? null : Collections.unmodifiableList(new ArrayList<>(actions));
 
-            for (this.setLastActionsIndex(actions, startingIndex); getLastIndex() < actions.size(); incLastActionsIndex(actions)) {
+            for (this.setLastActionsIndex(actions, startingIndex); getLastIndex() < actions.size(); incLastActionsIndex()) {
 
                 final int idx = getLastIndex();
                 PddlAction action = actions.get(idx);
                 System.out.println("action = " + action);
                 takeSnapshots("plan", "gc_actions.get(" + idx + ")=" + action, null, null);
-//            try {
                 String start_action_string = "start_" + idx + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
                 addTakeSnapshots(cmds, start_action_string, null, null, this.crclNumber.get());
                 switch (action.getType()) {
@@ -1269,6 +1330,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         if (skippedActions > 0) {
             System.out.println("skippedActions = " + skippedActions);
+            System.out.println("skippedPddlActionsList.size() = " + skippedPddlActionsList.size());
             System.out.println("skippedPddlActionsList = " + skippedPddlActionsList);
             System.out.println("skippedOpActionsList = " + skippedOpActionsList);
             System.out.println("items = " + items);
@@ -1326,7 +1388,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 System.out.println("recheckEndl = " + Arrays.toString(recheckEndl));
                 System.out.println("recheckSkippedPddlActionsList = " + recheckSkippedPddlActionsList);
                 System.out.println("recheckSkippedOpActionsList = " + recheckSkippedOpActionsList);
-                throw new IllegalStateException("newPddlActions.size() = " + newPddlActions.size() + ",actions.size() = " + actions.size() + ", skippedActions=" + skippedActions);
+                throw new IllegalStateException("newPddlActions.size() = " + newPddlActions.size() + ",replacedPddlActions.size() = " + replacedPddlActions.size() + ", skippedActions=" + skippedActions);
             }
             fullReplanPddlActions.addAll(newPddlActions);
             fullReplanPddlActions.addAll(skippedPddlActionsList);
@@ -1447,18 +1509,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         try {
             for (KitToCheck kit : kitsToCheck) {
                 kit.kitInstanceNames = getKitInstanceNames(kit.name);
-                kit.instanceAbsSlotMap = new HashMap<>();
-                kit.closestItemMap = new HashMap<>();
+                kit.instanceInfoMap = new HashMap<>();
                 for (String kitInstanceName : kit.kitInstanceNames) {
-
-                    if (matchedKitInstanceNames.contains(kitInstanceName)) {
-                        continue;
-                    }
+                    
                     List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
                             (String n) -> getAbsSlotListForKitInstance(kit.name, n));
-                    kit.instanceAbsSlotMap.put(kitInstanceName, absSlots);
-                    HashMap<String, PhysicalItem> closestItemMap = new HashMap<>();
-                    kit.closestItemMap.put(kitInstanceName, closestItemMap);
+                    KitToCheckInstanceInfo info= new KitToCheckInstanceInfo(kitInstanceName,absSlots);
+                    kit.instanceInfoMap.put(kitInstanceName, info);
+                    if (matchedKitInstanceNames.contains(kitInstanceName)) {
+                        continue;
+                    }                    
                     takeSimViewSnapshot(aprsJFrame.createTempFile("absSlots_" + kitInstanceName, ".PNG"), absSlots);
                     boolean allSlotsCorrect = true;
                     for (Slot absSlot : absSlots) {
@@ -1466,12 +1526,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         PhysicalItem closestItem = parts.stream()
                                 .min(Comparator.comparing(absSlot::distFromXY))
                                 .orElse(null);
-                        closestItemMap.put(absSlotPrpName, closestItem);
+                        info.closestItemMap.put(absSlotPrpName, closestItem);
                         String itemSkuName = "empty";
                         if (null != closestItem && closestItem.distFromXY(absSlot) < absSlot.getDiameter() / 2.0) {
                             itemSkuName = closestItem.origName;
                         }
+                        info.itemSkuMap.put(absSlotPrpName, itemSkuName);
                         if (!kit.slotMap.get(absSlotPrpName).equals(itemSkuName)) {
+                            info.failedAbsSlotPrpName = absSlotPrpName;
+                            info.failedItemSkuName = itemSkuName;
                             allSlotsCorrect = false;
                             break;
                         }

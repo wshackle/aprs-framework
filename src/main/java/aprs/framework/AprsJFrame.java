@@ -85,6 +85,7 @@ import crcl.utils.CRCLSocket;
 import java.awt.Container;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -330,7 +331,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return list of slots
      */
     public List<Slot> getSlots(Tray tray) {
-        if(null != externalSlotOffsetProvider) {
+        if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.getSlotOffsets(tray.getName());
         }
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame");
@@ -340,13 +341,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void setSimViewTrackCurrentPos(boolean v) {
         this.object2DViewJInternalFrame.setTrackCurrentPos(v);
     }
-    
+
     public void simViewSimulateAndDisconnect() {
-        if(null != object2DViewJInternalFrame) {
+        if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setSimulatedAndDisconnect();
         }
     }
-    
+
     /**
      * Get a rotational offset in radians between the vision system and the
      * database coordinate system.
@@ -925,21 +926,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         lastContinueStartAbortCount = startAbortCount;
         lastContinueActionListFuture
-                = XFuture.supplyAsync("AprsJFrame.continueActionList" + comment,
-                        () -> {
-                            setThreadName();
-                            takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                            return null;
-                        }, runProgramService)
-                        .thenCompose("continueActionList.pauseCheck" + comment, x -> waitForPause())
-                        .thenApply("pddlExecutorJInternalFrame1.completeActionList" + comment,
-                                (Void x) -> {
+                = waitForPause()
+                        .thenApplyAsync("AprsJFrame.continueActionList" + comment,
+                                x -> {
+                                    setThreadName();
+                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
                                     if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
                                         return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
                                     }
                                     return false;
-                                });
+                                }, runProgramService);
         return lastContinueActionListFuture;
     }
 
@@ -1137,29 +1134,30 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @throws JAXBException a command within the program violates a constraint
      * in the schema
      */
-    public synchronized XFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException {
+    public XFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException {
         setStartRunTime();
         if (null != pendantClientJInternalFrame) {
-            lastRunProgramFuture = XFuture.supplyAsync(getRunName() + ".startCRCLProgram(" + program.getName() + ")",
-                    () -> {
-                        setThreadName();
-                        takeSnapshots("startCRCLProgram(" + program.getName() + ")");
-                        return null;
-                    }, runProgramService)
-                    .thenCompose("startCRCLProgram(" + program.getName() + ").pauseCheck", x -> waitForPause())
-                    .thenApply("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
-                        try {
-                            pendantClientJInternalFrame.setProgram(program);
-                            return pendantClientJInternalFrame.runCurrentProgram();
-                        } catch (JAXBException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    });
+            lastRunProgramFuture
+                    = waitForPause()
+                            .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
+                                try {
+                                    return runCrclProgram(program);
+                                } catch (JAXBException ex) {
+                                    throw new RuntimeException(ex);
+                                }
+                            }, runProgramService);
             return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
         ret.completeExceptionally(new IllegalStateException("null != pendantClientJInternalFrame"));
         return ret;
+    }
+
+    private boolean runCrclProgram(CRCLProgramType program) throws JAXBException {
+        setThreadName();
+        takeSnapshots("startCRCLProgram(" + program.getName() + ")");
+        pendantClientJInternalFrame.setProgram(program);
+        return pendantClientJInternalFrame.runCurrentProgram();
     }
 
     /**
@@ -2338,33 +2336,44 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     public void startActionsToCrclJInternalFrame() {
         try {
-            boolean alreadySelected = jCheckBoxMenuItemStartupPDDLExecutor.isSelected();
-            if (!alreadySelected) {
-                jCheckBoxMenuItemStartupPDDLExecutor.setSelected(true);
-            }
-            if (null == pddlExecutorJInternalFrame1) {
-                pddlExecutorJInternalFrame1 = new PddlExecutorJInternalFrame();
-                this.pddlExecutorJInternalFrame1.pack();
-            }
-            this.pddlExecutorJInternalFrame1.setAprsJFrame(this);
-            this.pddlExecutorJInternalFrame1.setVisible(true);
-            jDesktopPane1.add(pddlExecutorJInternalFrame1, JLayeredPane.DEFAULT_LAYER);
-            pddlExecutorJInternalFrame1.getDesktopPane().getDesktopManager().maximizeFrame(pddlExecutorJInternalFrame1);
-            updateSubPropertiesFiles();
+            Utils.runAndWaitOnDispatchThread("startActionsToCrclJInternalFrame",
+                    () -> {
+                        try {
+                            boolean alreadySelected = jCheckBoxMenuItemStartupPDDLExecutor.isSelected();
+                            if (!alreadySelected) {
+                                jCheckBoxMenuItemStartupPDDLExecutor.setSelected(true);
+                            }
+                            if (null == pddlExecutorJInternalFrame1) {
+                                pddlExecutorJInternalFrame1 = new PddlExecutorJInternalFrame();
+                                this.pddlExecutorJInternalFrame1.pack();
+                            }
+                            this.pddlExecutorJInternalFrame1.setAprsJFrame(this);
+                            this.pddlExecutorJInternalFrame1.setVisible(true);
+                            jDesktopPane1.add(pddlExecutorJInternalFrame1, JLayeredPane.DEFAULT_LAYER);
+                            pddlExecutorJInternalFrame1.getDesktopPane().getDesktopManager().maximizeFrame(pddlExecutorJInternalFrame1);
+                            updateSubPropertiesFiles();
 //            this.pddlExecutorJInternalFrame1.setPropertiesFile(new File(propertiesDirectory, "actionsToCrclProperties.txt"));
-            this.pddlExecutorJInternalFrame1.loadProperties();
-            pddlExecutorJInternalFrame1.setDbSetupSupplier(dbSetupPublisherSupplier);
-            if (null != pddlPlannerJInternalFrame) {
-                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
-
-            }
-            if (!alreadySelected) {
-                setupWindowsMenu();
-            }
-
-        } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                            XFuture.runAsync("startActionsToCrclJInternalFrame.loadProperties", () -> {
+                                try {
+                                    this.pddlExecutorJInternalFrame1.loadProperties();
+                                } catch (IOException ex) {
+                                    Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }, runProgramService).join();
+                            pddlExecutorJInternalFrame1.setDbSetupSupplier(dbSetupPublisherSupplier);
+                            if (null != pddlPlannerJInternalFrame) {
+                                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
+                            }
+                            if (!alreadySelected) {
+                                setupWindowsMenu();
+                            }
+                        } catch (IOException ex) {
+                            Logger.getLogger(AprsJFrame.class
+                                    .getName()).log(Level.SEVERE, null, ex);
+                        }
+                    });
+        } catch (Exception ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -3093,7 +3102,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private void jCheckBoxMenuItemReverseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemReverseActionPerformed
         boolean reverseFlag = jCheckBoxMenuItemReverse.isSelected();
-        setReverseFlag(reverseFlag);
+        startSetReverseFlag(reverseFlag);
     }//GEN-LAST:event_jCheckBoxMenuItemReverseActionPerformed
 
     private void jCheckBoxMenuItemContinuousDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinuousDemoActionPerformed
@@ -3197,7 +3206,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * complete.
      */
     public XFuture<Boolean> startLookForParts() {
-        return pddlExecutorJInternalFrame1.startLookForParts();
+        return XFuture.supplyAsync("startLookForParts", () -> {
+            return lookForPartsInternal();
+        }, runProgramService);
+    }
+
+    private boolean lookForPartsInternal() throws JAXBException {
+        CRCLProgramType lfpProgram = pddlExecutorJInternalFrame1.createLookForPartsProgram();
+        pendantClientJInternalFrame.setProgram(lfpProgram);
+        return pendantClientJInternalFrame.runCurrentProgram();
     }
 
     private void setImageSizeMenuText() {
@@ -3455,7 +3472,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             pendantClientJInternalFrame.unpauseCrclProgram();
         }
         updateTitle("", "");
-        if(isPaused()) {
+        if (isPaused()) {
             throw new IllegalStateException("Still paused after resume.");
         }
     }
@@ -3577,19 +3594,33 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private XFuture<Boolean> startContinousDemo(String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart, int cdCur) {
+        if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
+            System.err.println("starting continous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + cdCur);
+        }
         if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount()) {
             return XFuture.completedFuture(false);
         }
         setStartRunTime();
-        this.setReverseFlag(reverseFirst);
         String logLabel = "startContinousDemo(task=" + getTaskName() + ")." + comment + "." + startAbortCount + "." + startDisconnectCount + "." + cdStart + "." + cdCur;
         logToSuper(logLabel);
         takeSnapshots(logLabel);
-        continuousDemoFuture = startCheckEnabled()
-                .thenApplyAsync("startContinousDemo(task=" + getTaskName() + ") comment=" + comment,
-                        (Boolean x) -> {
-                            return repeatDoActionWithReverse(x, comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart, cdCur);
-                        }, runProgramService);
+        continuousDemoFuture
+                = XFuture.supplyAsync("startContinousDemo(task=" + getTaskName() + ") comment=" + comment,
+                        () -> {
+                            this.setReverseFlag(reverseFirst, true);
+                            boolean r0 = pddlExecutorJInternalFrame1.readyForNewActionsList();
+                            if (!r0) {
+                                System.err.println("starting continous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + cdCur);
+                            }
+                            boolean enabledOk = doCheckEnabled();
+                            boolean r1 = pddlExecutorJInternalFrame1.readyForNewActionsList();
+
+                            if (!r1) {
+                                System.err.println("starting continous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + cdCur);
+                            }
+                            return repeatDoActionWithReverse(enabledOk, comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart, cdCur);
+                        },
+                        runProgramService);
         return continuousDemoFuture;
     }
 
@@ -3681,7 +3712,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     && !isAborting()
                     && pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount
                     && startDisconnectCount == disconnectRobotCount.get()) {
-                setReverseFlag(!reverseFirst);
+                setReverseFlag(!reverseFirst, true);
                 logToSuper(getTaskName() + ": reverseFlag=" + isReverseFlag() + " step 2 doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
                 long doActions2TimeStart = System.currentTimeMillis();
                 boolean actionsOk2 = pddlExecutorJInternalFrame1.doActions("2" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount);
@@ -3722,13 +3753,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             return continuousDemoFuture;
         }
         setStartRunTime();
-        this.setReverseFlag(reverseFirst);
         if (!enableCheckedAlready) {
             continuousDemoFuture = XFuture.completedFutureWithName("startPreCheckedContinousDemo(" + reverseFirst + "," + startAbortCount + ").!enableCheckedAlready", false);
             return continuousDemoFuture;
         }
+        if(!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
+            System.err.println("Call to startPreCheckedContinousDemo when not ready");
+        }
         continuousDemoFuture = XFuture.supplyAsync("startPreCheckedContinousDemo(task=" + getTaskName() + ")",
                 () -> {
+                    this.setReverseFlag(reverseFirst, true);
                     if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount() || isAborting()) {
                         return false;
                     }
@@ -3758,8 +3792,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @param reverseFlag new value for reverse flag
      */
-    public void setReverseFlag(boolean reverseFlag) {
-        setReverseFlag(reverseFlag, true);
+    public XFuture<Void> startSetReverseFlag(boolean reverseFlag) {
+        return startSetReverseFlag(reverseFlag, true);
     }
 
     /**
@@ -3771,7 +3805,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param reloadSimFiles whether to load simulated object position files
      * first
      */
-    public void setReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
+    public XFuture<Void> startSetReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
+        return XFuture.runAsync("startSetReverseFlag(" + reverseFlag + "," + reloadSimFiles + ")",
+                () -> {
+                    setReverseFlag(reverseFlag, reloadSimFiles);
+                },
+                runProgramService);
+    }
+
+    private void setReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
         if (jCheckBoxMenuItemReverse.isSelected() != reverseFlag) {
             jCheckBoxMenuItemReverse.setSelected(reverseFlag);
         }
@@ -3852,6 +3894,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param reloadSimFiles whether to reload simulation files
      */
     public void reset(boolean reloadSimFiles) {
+        XFuture.runAsync("reset",
+                () -> {
+                    resetInternal(reloadSimFiles);
+                }, runProgramService)
+                .join();
+
+    }
+
+    private void resetInternal(boolean reloadSimFiles) {
         clearErrors();
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(reloadSimFiles);
@@ -3925,6 +3976,34 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (enableCheckedAlready) {
             return XFuture.completedFutureWithName("startCheckEnabled.enableCheckedAlready", true);
         }
+        return XFuture.supplyAsync("startCheckEnabled", this::doCheckEnabled, runProgramService);
+//        try {
+//            System.out.println("startCheckEnabled called.");
+//            if (!isConnected()) {
+//                setConnected(true);
+//            }
+//            CRCLProgramType emptyProgram = createEmptyProgram();
+//            setCommandID(emptyProgram.getInitCanon());
+//            setCommandID(emptyProgram.getEndCanon());
+//            emptyProgram.setName("checkEnabled." + checkEnabledCount.incrementAndGet());
+//            return startCRCLProgram(emptyProgram)
+//                    .thenApply("startCheckEnabled.finish." + robotName + "." + taskName,
+//                            x -> {
+//                                System.out.println("startCheckEnabled finishing with " + x);
+//                                enableCheckedAlready = x;
+//                                return x;
+//                            });
+//        } catch (JAXBException ex) {
+//            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+//            throw new RuntimeException(ex);
+//        }
+    }
+
+    private boolean doCheckEnabled() {
+        setStartRunTime();
+        if (enableCheckedAlready) {
+            return true;
+        }
         try {
             System.out.println("startCheckEnabled called.");
             if (!isConnected()) {
@@ -3934,19 +4013,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setCommandID(emptyProgram.getInitCanon());
             setCommandID(emptyProgram.getEndCanon());
             emptyProgram.setName("checkEnabled." + checkEnabledCount.incrementAndGet());
-            return startCRCLProgram(emptyProgram)
-                    .thenApply("startCheckEnabled.finish." + robotName + "." + taskName,
-                            x -> {
-                                System.out.println("startCheckEnabled finishing with " + x);
-                                enableCheckedAlready = x;
-                                return x;
-                            });
+            pendantClientJInternalFrame.setProgram(emptyProgram);
+            boolean progRunRet = pendantClientJInternalFrame.runCurrentProgram();
+
+            System.out.println("startCheckEnabled finishing with " + progRunRet);
+            enableCheckedAlready = progRunRet;
+            return progRunRet;
         } catch (JAXBException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
         }
     }
-
     private final ConcurrentLinkedDeque<XFuture<Boolean>> dbConnectedWaiters = new ConcurrentLinkedDeque<>();
 
     private XFuture<Boolean> waitDbConnected() {
@@ -4000,6 +4077,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return startActions("");
     }
 
+    public boolean readyForNewActionsList() {
+        return pddlExecutorJInternalFrame1.readyForNewActionsList();
+    }
+
+    public void warnIfNewActionsNotReady() {
+        pddlExecutorJInternalFrame1.warnIfNewActionsNotReady();
+    }
+
     /**
      * Start the PDDL actions currently loaded in the executor from the
      * beginning.
@@ -4009,8 +4094,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * underlying task. The boolean contained in the future will be true only if
      * all actions appear to succeed.
      *
-     * @param comment comment used for tracking/logging tasks starting the actions
-     * 
+     * @param comment comment used for tracking/logging tasks starting the
+     * actions
+     *
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startActions(String comment) {
@@ -4490,168 +4576,189 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     @Override
     public final void loadProperties() throws IOException {
-        Properties props = new Properties();
-        System.out.println("AprsJFrame loading properties from " + propertiesFile.getCanonicalPath());
-        try (FileReader fr = new FileReader(propertiesFile)) {
-            props.load(fr);
+
+        Exception exA[] = new Exception[1];
+        try {
+            Utils.runAndWaitOnDispatchThread("loadProperties",
+                    () -> {
+
+                        try {
+                            Properties props = new Properties();
+                            System.out.println("AprsJFrame loading properties from " + propertiesFile.getCanonicalPath());
+                            try (FileReader fr = new FileReader(propertiesFile)) {
+                                props.load(fr);
+                            }
+                            String startPddlPlannerString = props.getProperty(STARTUPPDDLPLANNER);
+                            if (null != startPddlPlannerString) {
+                                jCheckBoxMenuItemStartupPDDLPlanner.setSelected(Boolean.valueOf(startPddlPlannerString));
+                            }
+                            String startPddlExecutorString = props.getProperty(STARTUPPDDLEXECUTOR);
+                            if (null != startPddlExecutorString) {
+                                jCheckBoxMenuItemStartupPDDLExecutor.setSelected(Boolean.valueOf(startPddlExecutorString));
+                            }
+                            String startObjectSpString = props.getProperty(STARTUPPDDLOBJECTSP);
+                            if (null != startObjectSpString) {
+                                jCheckBoxMenuItemStartupObjectSP.setSelected(Boolean.valueOf(startObjectSpString));
+                            }
+
+                            String startObjectViewString = props.getProperty(STARTUPPDDLOBJECTVIEW);
+                            if (null != startObjectViewString) {
+                                jCheckBoxMenuItemStartupObject2DView.setSelected(Boolean.valueOf(startObjectViewString));
+                            }
+                            String startCRCLClientString = props.getProperty(STARTUPROBOTCRCLCLIENT);
+                            if (null != startCRCLClientString) {
+                                jCheckBoxMenuItemStartupRobotCrclGUI.setSelected(Boolean.valueOf(startCRCLClientString));
+                            }
+                            String startCRCLSimServerString = props.getProperty(STARTUPROBOTCRCLSIMSERVER);
+                            if (null != startCRCLSimServerString) {
+                                jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(Boolean.valueOf(startCRCLSimServerString));
+                            }
+                            String startCRCLFanucServerString = props.getProperty(STARTUPROBOTCRCLFANUCSERVER);
+                            if (null != startCRCLFanucServerString) {
+                                jCheckBoxMenuItemStartupFanucCRCLServer.setSelected(Boolean.valueOf(startCRCLFanucServerString));
+                            }
+                            String fanucCrclLocalPortString = props.getProperty(FANUC_CRCL_LOCAL_PORT);
+                            if (null != fanucCrclLocalPortString) {
+                                this.fanucCrclPort = Integer.parseInt(fanucCrclLocalPortString);
+                            }
+                            String fanucRobotHostString = props.getProperty(FANUC_ROBOT_HOST);
+                            if (null != fanucRobotHostString) {
+                                this.fanucRobotHost = fanucRobotHostString;
+                            }
+
+                            String startCRCLMotomanServerString = props.getProperty(STARTUPROBOTCRCLMOTOMANSERVER);
+                            if (null != startCRCLMotomanServerString) {
+                                jCheckBoxMenuItemStartupMotomanCRCLServer.setSelected(Boolean.valueOf(startCRCLMotomanServerString));
+                            }
+                            String startConnectDBString = props.getProperty(STARTUPCONNECTDATABASE);
+                            if (null != startConnectDBString) {
+                                jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(Boolean.valueOf(startConnectDBString));
+                                if (jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()) {
+                                    jCheckBoxMenuItemShowDatabaseSetup.setSelected(true);
+                                }
+                            }
+                            String startConnectVisionString = props.getProperty(STARTUPCONNECTVISION);
+                            if (null != startConnectVisionString) {
+                                jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(Boolean.valueOf(startConnectVisionString));
+                                if (jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()) {
+                                    jCheckBoxMenuItemStartupObjectSP.setSelected(true);
+                                }
+                            }
+                            String startExploreGraphDbString = props.getProperty(STARTUPEXPLOREGRAPHDB);
+                            if (null != startExploreGraphDbString) {
+                                jCheckBoxMenuItemExploreGraphDbStartup.setSelected(Boolean.valueOf(startExploreGraphDbString));
+                            }
+                            String crclWebAppPortString = props.getProperty(CRCLWEBAPPPORT);
+                            if (null != crclWebAppPortString) {
+                                crclWebServerHttpPort = Integer.parseInt(crclWebAppPortString);
+                            }
+                            String startCrclWebAppString = props.getProperty(STARTUPCRCLWEBAPP);
+                            if (null != startCrclWebAppString) {
+                                jCheckBoxMenuItemStartupCRCLWebApp.setSelected(Boolean.valueOf(startCrclWebAppString));
+                            }
+                            this.updateSubPropertiesFiles();
+                            if (null != this.pddlPlannerJInternalFrame) {
+                                this.pddlPlannerJInternalFrame.loadProperties();
+                            }
+                            if (null != this.pddlExecutorJInternalFrame1) {
+                                XFuture.runAsync("loadProperties", () -> {
+                                    try {
+                                        this.pddlExecutorJInternalFrame1.loadProperties();
+                                    } catch (IOException ex) {
+                                        Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                }, runProgramService).join();
+                            }
+
+                            if (null != this.object2DViewJInternalFrame) {
+                                this.object2DViewJInternalFrame.loadProperties();
+                            }
+                            dbSetup = DbSetupBuilder.loadFromPropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt")).build();
+
+                            if (null != dbSetupJInternalFrame) {
+                                DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+                                if (null != pub) {
+                                    pub.setDbSetup(dbSetup);
+                                }
+                            }
+                            if (null != visionToDbJInternalFrame) {
+                                this.visionToDbJInternalFrame.loadProperties();
+                            }
+                            if (null != object2DViewJInternalFrame) {
+                                this.object2DViewJInternalFrame.loadProperties();
+                            }
+                            if (null != this.pendantClientJInternalFrame) {
+                                pendantClientJInternalFrame.loadProperties();
+                            }
+                            if (null != this.simServerJInternalFrame) {
+                                simServerJInternalFrame.loadProperties();
+                            }
+                            if (null != this.motomanCrclServerJInternalFrame) {
+                                motomanCrclServerJInternalFrame.loadProperties();
+                            }
+                            if (null != this.fanucCRCLServerJInternalFrame) {
+                                fanucCRCLServerJInternalFrame.loadProperties();
+                            }
+                            String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
+                            if (null != motomanCrclLocalPortString) {
+                                this.motomanCrclPort = Integer.parseInt(motomanCrclLocalPortString);
+                                if (null != motomanCrclServerJInternalFrame) {
+                                    motomanCrclServerJInternalFrame.setCrclPort(motomanCrclPort);
+                                }
+                            }
+                            String robotNameString = props.getProperty(APRSROBOT_PROPERTY_NAME);
+                            if (null != robotNameString) {
+                                setRobotName(robotNameString);
+                            } else {
+                                setDefaultRobotName();
+                            }
+                            String maxLimitString = props.getProperty(MAX_LIMIT_PROP);
+                            if (null != maxLimitString && maxLimitString.trim().length() > 0) {
+                                setMaxLimit(PmCartesian.valueOf(maxLimitString));
+                            }
+                            String minLimitString = props.getProperty(MIN_LIMIT_PROP);
+                            if (null != minLimitString && minLimitString.trim().length() > 0) {
+                                setMinLimit(PmCartesian.valueOf(minLimitString));
+                            }
+
+                            String reloadSimFilesOnReverseString = props.getProperty(RELOAD_SIM_FILES_ON_REVERSE_PROP);
+                            if (null != reloadSimFilesOnReverseString && reloadSimFilesOnReverseString.trim().length() > 0) {
+                                jCheckBoxMenuItemSnapshotImageSize.setSelected(Boolean.valueOf(reloadSimFilesOnReverseString));
+                            }
+                            String snapShotEnableString = props.getProperty(SNAP_SHOT_ENABLE_PROP);
+                            if (null != snapShotEnableString && snapShotEnableString.trim().length() > 0) {
+                                jCheckBoxMenuItemSnapshotImageSize.setSelected(Boolean.valueOf(snapShotEnableString));
+                            }
+                            String snapShotWidthString = props.getProperty(SNAP_SHOT_WIDTH_PROP);
+                            if (null != snapShotWidthString && snapShotWidthString.trim().length() > 0) {
+                                snapShotWidth = Integer.parseInt(snapShotWidthString);
+                            }
+                            String snapShotHeightString = props.getProperty(SNAP_SHOT_HEIGHT_PROP);
+                            if (null != snapShotHeightString && snapShotHeightString.trim().length() > 0) {
+                                snapShotHeight = Integer.parseInt(snapShotHeightString);
+                            }
+                            setImageSizeMenuText();
+                            String taskNameString = props.getProperty(APRSTASK_PROPERTY_NAME);
+                            if (null != taskNameString) {
+                                setTaskName(taskNameString);
+                            }
+                            String startupActiveWinString = props.getProperty(STARTUP_ACTIVE_WIN);
+                            if (null != startupActiveWinString) {
+                                activeWin = ActiveWinEnum.valueOf(startupActiveWinString);
+                                showActiveWin();
+                            }
+                        } catch (Exception exception) {
+                            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, exception);
+                            exA[0] = exception;
+                        }
+                    });
+        } catch (InterruptedException | InvocationTargetException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-        String startPddlPlannerString = props.getProperty(STARTUPPDDLPLANNER);
-        if (null != startPddlPlannerString) {
-            jCheckBoxMenuItemStartupPDDLPlanner.setSelected(Boolean.valueOf(startPddlPlannerString));
-        }
-        String startPddlExecutorString = props.getProperty(STARTUPPDDLEXECUTOR);
-        if (null != startPddlExecutorString) {
-            jCheckBoxMenuItemStartupPDDLExecutor.setSelected(Boolean.valueOf(startPddlExecutorString));
-        }
-        String startObjectSpString = props.getProperty(STARTUPPDDLOBJECTSP);
-        if (null != startObjectSpString) {
-            jCheckBoxMenuItemStartupObjectSP.setSelected(Boolean.valueOf(startObjectSpString));
+        if (null != exA[0]) {
+            throw new IOException(exA[0]);
         }
 
-        String startObjectViewString = props.getProperty(STARTUPPDDLOBJECTVIEW);
-        if (null != startObjectViewString) {
-            jCheckBoxMenuItemStartupObject2DView.setSelected(Boolean.valueOf(startObjectViewString));
-        }
-        String startCRCLClientString = props.getProperty(STARTUPROBOTCRCLCLIENT);
-        if (null != startCRCLClientString) {
-            jCheckBoxMenuItemStartupRobotCrclGUI.setSelected(Boolean.valueOf(startCRCLClientString));
-        }
-        String startCRCLSimServerString = props.getProperty(STARTUPROBOTCRCLSIMSERVER);
-        if (null != startCRCLSimServerString) {
-            jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(Boolean.valueOf(startCRCLSimServerString));
-        }
-        String startCRCLFanucServerString = props.getProperty(STARTUPROBOTCRCLFANUCSERVER);
-        if (null != startCRCLFanucServerString) {
-            jCheckBoxMenuItemStartupFanucCRCLServer.setSelected(Boolean.valueOf(startCRCLFanucServerString));
-        }
-        String fanucCrclLocalPortString = props.getProperty(FANUC_CRCL_LOCAL_PORT);
-        if (null != fanucCrclLocalPortString) {
-            this.fanucCrclPort = Integer.parseInt(fanucCrclLocalPortString);
-        }
-        String fanucRobotHostString = props.getProperty(FANUC_ROBOT_HOST);
-        if (null != fanucRobotHostString) {
-            this.fanucRobotHost = fanucRobotHostString;
-        }
-
-        String startCRCLMotomanServerString = props.getProperty(STARTUPROBOTCRCLMOTOMANSERVER);
-        if (null != startCRCLMotomanServerString) {
-            jCheckBoxMenuItemStartupMotomanCRCLServer.setSelected(Boolean.valueOf(startCRCLMotomanServerString));
-        }
-        String startConnectDBString = props.getProperty(STARTUPCONNECTDATABASE);
-        if (null != startConnectDBString) {
-            jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(Boolean.valueOf(startConnectDBString));
-            if (jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()) {
-                jCheckBoxMenuItemShowDatabaseSetup.setSelected(true);
-            }
-        }
-        String startConnectVisionString = props.getProperty(STARTUPCONNECTVISION);
-        if (null != startConnectVisionString) {
-            jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(Boolean.valueOf(startConnectVisionString));
-            if (jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()) {
-                jCheckBoxMenuItemStartupObjectSP.setSelected(true);
-            }
-        }
-        String startExploreGraphDbString = props.getProperty(STARTUPEXPLOREGRAPHDB);
-        if (null != startExploreGraphDbString) {
-            jCheckBoxMenuItemExploreGraphDbStartup.setSelected(Boolean.valueOf(startExploreGraphDbString));
-        }
-        String crclWebAppPortString = props.getProperty(CRCLWEBAPPPORT);
-        if (null != crclWebAppPortString) {
-            crclWebServerHttpPort = Integer.parseInt(crclWebAppPortString);
-        }
-        String startCrclWebAppString = props.getProperty(STARTUPCRCLWEBAPP);
-        if (null != startCrclWebAppString) {
-            jCheckBoxMenuItemStartupCRCLWebApp.setSelected(Boolean.valueOf(startCrclWebAppString));
-        }
-        this.updateSubPropertiesFiles();
-        if (null != this.pddlPlannerJInternalFrame) {
-            this.pddlPlannerJInternalFrame.loadProperties();
-        }
-        if (null != this.pddlExecutorJInternalFrame1) {
-            this.pddlExecutorJInternalFrame1.loadProperties();
-        }
-
-        if (null != this.object2DViewJInternalFrame) {
-            this.object2DViewJInternalFrame.loadProperties();
-        }
-        dbSetup = DbSetupBuilder.loadFromPropertiesFile(new File(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt")).build();
-
-        if (null != dbSetupJInternalFrame) {
-            DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
-            if (null != pub) {
-                pub.setDbSetup(dbSetup);
-            }
-        }
-        if (null != visionToDbJInternalFrame) {
-            this.visionToDbJInternalFrame.loadProperties();
-//            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
-//            if (null != pub) {
-//                pub.setDbSetup(dbSetup);
-//            }
-        }
-        if (null != object2DViewJInternalFrame) {
-            this.object2DViewJInternalFrame.loadProperties();
-        }
-        if (null != this.pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.loadProperties();
-        }
-        if (null != this.simServerJInternalFrame) {
-            simServerJInternalFrame.loadProperties();
-        }
-        if (null != this.motomanCrclServerJInternalFrame) {
-            motomanCrclServerJInternalFrame.loadProperties();
-        }
-        if (null != this.fanucCRCLServerJInternalFrame) {
-            fanucCRCLServerJInternalFrame.loadProperties();
-        }
-        String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
-        if (null != motomanCrclLocalPortString) {
-            this.motomanCrclPort = Integer.parseInt(motomanCrclLocalPortString);
-            if (null != motomanCrclServerJInternalFrame) {
-                motomanCrclServerJInternalFrame.setCrclPort(motomanCrclPort);
-            }
-        }
-        String robotNameString = props.getProperty(APRSROBOT_PROPERTY_NAME);
-        if (null != robotNameString) {
-            setRobotName(robotNameString);
-        } else {
-            setDefaultRobotName();
-        }
-        String maxLimitString = props.getProperty(MAX_LIMIT_PROP);
-        if (null != maxLimitString && maxLimitString.trim().length() > 0) {
-            setMaxLimit(PmCartesian.valueOf(maxLimitString));
-        }
-        String minLimitString = props.getProperty(MIN_LIMIT_PROP);
-        if (null != minLimitString && minLimitString.trim().length() > 0) {
-            setMinLimit(PmCartesian.valueOf(minLimitString));
-        }
-
-        String reloadSimFilesOnReverseString = props.getProperty(RELOAD_SIM_FILES_ON_REVERSE_PROP);
-        if (null != reloadSimFilesOnReverseString && reloadSimFilesOnReverseString.trim().length() > 0) {
-            jCheckBoxMenuItemSnapshotImageSize.setSelected(Boolean.valueOf(reloadSimFilesOnReverseString));
-        }
-        String snapShotEnableString = props.getProperty(SNAP_SHOT_ENABLE_PROP);
-        if (null != snapShotEnableString && snapShotEnableString.trim().length() > 0) {
-            jCheckBoxMenuItemSnapshotImageSize.setSelected(Boolean.valueOf(snapShotEnableString));
-        }
-        String snapShotWidthString = props.getProperty(SNAP_SHOT_WIDTH_PROP);
-        if (null != snapShotWidthString && snapShotWidthString.trim().length() > 0) {
-            snapShotWidth = Integer.parseInt(snapShotWidthString);
-        }
-        String snapShotHeightString = props.getProperty(SNAP_SHOT_HEIGHT_PROP);
-        if (null != snapShotHeightString && snapShotHeightString.trim().length() > 0) {
-            snapShotHeight = Integer.parseInt(snapShotHeightString);
-        }
-        setImageSizeMenuText();
-        String taskNameString = props.getProperty(APRSTASK_PROPERTY_NAME);
-        if (null != taskNameString) {
-            setTaskName(taskNameString);
-        }
-        String startupActiveWinString = props.getProperty(STARTUP_ACTIVE_WIN);
-        if (null != startupActiveWinString) {
-            activeWin = ActiveWinEnum.valueOf(startupActiveWinString);
-            showActiveWin();
-        }
     }
 
     public void showActiveWin() {
@@ -5201,12 +5308,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * standard timestamp string.
      *
      * @param prefix string filename will begin with
-     * @param suffix string filename will end with 
-     *               (typically an extention eg ".csv")
-     * 
+     * @param suffix string filename will end with (typically an extention eg
+     * ".csv")
+     *
      * @return reference to created file
      * @throws IOException directory doesn't exist etc.
-     * 
+     *
      */
     public File createTempFile(String prefix, String suffix) throws IOException {
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, getlogFileDir());
@@ -5217,13 +5324,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * timestamp string.
      *
      * @param prefix string filename will begin with
-     * @param suffix string filename will end with 
-     *             (typically an extention eg  ".csv")
-     * 
-     * 
+     * @param suffix string filename will end with (typically an extention eg
+     * ".csv")
+     *
+     *
      * @param dir directory to create file in
      * @return reference to created file
-     * 
+     *
      * @throws IOException directory doesn't exist etc.
      */
     public File createTempFile(String prefix, String suffix, File dir) throws IOException {

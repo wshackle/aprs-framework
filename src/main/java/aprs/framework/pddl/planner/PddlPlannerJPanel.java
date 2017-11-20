@@ -984,6 +984,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
 
     private void clearActionsList() {
         if(null != actionsToCrclJInternalFrame1) {
+            actionsToCrclJInternalFrame1.warnIfNewActionsNotReady();
             actionsToCrclJInternalFrame1.clearActionsList();
         }
     }

@@ -26,16 +26,22 @@ import aprs.framework.AprsJFrame;
 import aprs.framework.PddlAction;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.pddl.executor.PddlActionToCrclGenerator.PoseProvider;
+import crcl.base.CRCLProgramType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
+import crcl.ui.client.PendantClientInner;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -57,7 +63,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     public boolean getForceFakeTakeFlag() {
         return actionsToCrclJPanel1.getForceFakeTakeFlag();
     }
-    
+
     /**
      * Get the value of externalGetPoseFunction
      *
@@ -82,10 +88,14 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
 //    public XFuture<Boolean> checkSafeAbortAsync(Supplier<XFuture<Boolean>> supplier) {
 //        return actionsToCrclJPanel1.checkSafeAbortAsync(supplier);
 //    }
-    public XFuture<Boolean> startLookForParts() {
-        return actionsToCrclJPanel1.lookForParts();
-    }
+//    public XFuture<Boolean> startLookForParts() {
+//        return actionsToCrclJPanel1.lookForParts();
+//    }
 
+    public CRCLProgramType createLookForPartsProgram()  {
+        return actionsToCrclJPanel1.createLookForPartsProgram();
+    }
+    
     /**
      * Modify the given pose by applying all of the currently added position
      * maps.
@@ -126,11 +136,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     public int getCurrentActionIndex() {
         return this.actionsToCrclJPanel1.getCurrentActionIndex();
     }
-    
+
     public int getSafeAbortRequestCount() {
         return actionsToCrclJPanel1.getSafeAbortRequestCount();
     }
-    
 
     @Override
     public List<PddlAction> getActionsList() {
@@ -141,10 +150,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return this.actionsToCrclJPanel1.continueActionList();
     }
 
-    public boolean completeActionList(String comment,int startAbortCount) {
-        return this.actionsToCrclJPanel1.completeActionList(comment,startAbortCount);
+    public boolean completeActionList(String comment, int startAbortCount) {
+        return this.actionsToCrclJPanel1.completeActionList(comment, startAbortCount);
     }
-    
+
     public int getActionSetsCompleted() {
         return actionsToCrclJPanel1.getActionSetsCompleted();
     }
@@ -249,12 +258,11 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     public void loadActionsList(Iterable<PddlAction> newActions) {
         this.actionsToCrclJPanel1.loadActionsList(newActions);
     }
-    
+
 //    @Override
 //    public void setActionsList(List<PddlAction> actionsList) {
 //        this.actionsToCrclJPanel1.setActionsList(actionsList);
 //    }
-
     @Override
     public void addAction(PddlAction action) {
         this.actionsToCrclJPanel1.addAction(action);
@@ -287,11 +295,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     public boolean isDoingActions() {
         return actionsToCrclJPanel1.isDoingActions();
     }
-    
-    public boolean doActions(String comment, int safeAbortCount) {
-        return actionsToCrclJPanel1.doActions(comment,safeAbortCount);
-    }
 
+    public boolean doActions(String comment, int safeAbortCount) {
+        return actionsToCrclJPanel1.doActions(comment, safeAbortCount);
+    }
 
     public void setGeneateCrclService(ExecutorService geneateCrclService) {
         actionsToCrclJPanel1.setGenerateCrclService(geneateCrclService);
@@ -338,6 +345,14 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     @Override
     public AprsJFrame getAprsJFrame() {
         return actionsToCrclJPanel1.getAprsJFrame();
+    }
+
+    public boolean readyForNewActionsList() {
+        return actionsToCrclJPanel1.readyForNewActionsList();
+    }
+
+    public void warnIfNewActionsNotReady() {
+        actionsToCrclJPanel1.warnIfNewActionsNotReady();
     }
 
     @Override

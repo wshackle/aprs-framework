@@ -121,6 +121,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public boolean isDbConnected() {
         return null != dpu && dpu.isConnected();
     }
+
     /**
      * Creates new form VisionToDBJPanel
      */
@@ -1583,6 +1584,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return ret;
     }
 
+    private volatile List<PhysicalItem> lastVisionClientUpdateList = null;
+    private volatile List<PhysicalItem> lastVisionClientUpdateListCopy = null;
+    private volatile String lastVisionClientUpdateLine = null;
+
     @Override
     public void visionClientUpdateRecieved(List<PhysicalItem> visionList, String line) {
         try {
@@ -1595,11 +1600,18 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     commandReplyPrintStream.println("acquire=" + acquire);
                 }
             }
-            
+            lastVisionClientUpdateLine = line;
+            lastVisionClientUpdateList = visionList;
+            lastVisionClientUpdateListCopy = new ArrayList<>(visionList);
             if (null != dpu && null != dpu.getSqlConnection()) {
                 boolean origEnableDbUpdates = dpu.isEnableDatabaseUpdates();
                 if (origEnableDbUpdates && dpu.isEnableDatabaseUpdates()) {
                     if (!checkRequiredParts(visionList)) {
+//                        System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
+//                        System.err.println("checkRequiredPart(" + visionList + ") false");
+                        boolean chkAgain = checkRequiredParts(visionList);
+                        chkAgain = checkRequiredParts(transformedVisionList);
+                        List<PhysicalItem> l2 = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
                         return;
                     }
                 }
@@ -1635,6 +1647,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         }
                     }
                     if (!singleUpdateListeners.isEmpty()) {
+                        if (!checkRequiredParts(l)) {
+//                            System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
+//                            System.err.println("checkRequiredPart(" + l + ") false but checkRequiredParts(" + visionList + ") true");
+                            boolean chkAgain = checkRequiredParts(l);
+                            chkAgain = checkRequiredParts(transformedVisionList);
+                            List<PhysicalItem> l2 = dpu.updateVisionList(transformedVisionList, addRepeatCountsToDatabaseNames, false);
+                            return;
+                        }
                         setEnableDatabaseUpdates(false);
                         notifySingleUpdateListeners(l);
                     }
@@ -2171,7 +2191,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public XFuture<Void> startNewItemsImageSave(File f) {
-        if(null == dpu) {
+        if (null == dpu) {
             throw new NullPointerException("null == dpu");
         }
         return dpu.queryDatabaseNew()

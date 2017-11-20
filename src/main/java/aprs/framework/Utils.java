@@ -34,6 +34,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
@@ -296,6 +297,31 @@ public class Utils {
         }
     }
 
+    /**
+     * Run something on the dispatch thread and attach a name to it for debugging/logging/visualization.
+     * @param name optional name for better debugging/logging/visualization
+     * @param r object with run method to call
+     */
+    public static void runAndWaitOnDispatchThread(String name, final Runnable r) throws InterruptedException, InvocationTargetException {
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+            try {
+                r.run();
+            } catch (Exception e) {
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, name, e);
+            }
+            return;
+        } else {
+            javax.swing.SwingUtilities.invokeAndWait(() -> {
+                try {
+                    r.run();
+                } catch (Exception e) {
+                    Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, name, e);
+                }
+            });
+            return;
+        }
+    }
+    
     /**
      * Call a method that returns a value on the dispatch thread.
      * @param <R> type of return of the caller

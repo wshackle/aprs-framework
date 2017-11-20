@@ -1658,6 +1658,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         assert (sys.isConnected()) : assertFail() + "!sys.isConnected() : sys=" + sys;
         assert (!sys.isAborting()) : assertFail() + "sys.isAborting() : sys=" + sys;
         checkRobotsUniquePorts();
+        if(!sys.readyForNewActionsList()) {
+            System.err.println("Completing future for "+sys+" when not ready");
+        }
         logEvent("Checking systemContinueMap for " + sys);
         AtomicReference<XFuture<Boolean>> ref = new AtomicReference<>();
         XFuture<Boolean> f = systemContinueMap.replace(sys.getMyThreadId(),
@@ -2883,6 +2886,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         });
     }//GEN-LAST:event_jMenuItemStartAllActionPerformed
 
+    
+    private void setAllReverseFlag(boolean reverseFlag) {
+        startSetAllReverseFlag(reverseFlag).join();
+    }
+    
     private XFuture<?> prepActions() {
         boolean origIgnoreFlag = ignoreTitleErrors.getAndSet(true);
         if (null != lastSafeAbortAllFuture) {
@@ -3438,14 +3446,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     /**
      * Reset all systems, clearing errors, resetting states to defaults and
-     * reloading simulation files.
-     */
-    public void resetAll() {
-        resetAll(true);
-    }
-
-    /**
-     * Reset all systems, clearing errors, resetting states to defaults and
      * optionally reloading simulation files.
      *
      * @param reloadSimFiles whether to reload simulation files
@@ -3685,7 +3685,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 enableAllRobots();
                 continousDemoCycle.set(0);
                 if (jCheckBoxMenuItemIndContinousDemo.isSelected()) {
-                    resetAll();
+                    resetAll(false);
                     jCheckBoxMenuItemIndContinousDemo.setSelected(true);
                     continousDemoFuture = startIndependentContinousDemo();
                     mainFuture = continousDemoFuture;
@@ -3715,7 +3715,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                             random = new Random(System.currentTimeMillis());
                         }
                         if (jCheckBoxMenuItemIndRandomToggleTest.isSelected()) {
-                            resetAll();
+                            resetAll(false);
                             jCheckBoxMenuItemIndRandomToggleTest.setSelected(true);
                             continousDemoFuture = startRandomEnableToggleIndependentContinousDemo();
                             mainFuture = continousDemoFuture;
@@ -3975,17 +3975,23 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame aprsSys = aprsSystems.get(i);
             try {
-                futures[i] = aprsSys.startLookForParts().thenRun(() -> {
-                    if (aprsSys.isReverseFlag()) {
-                        logEvent("Set reverse flag false for " + aprsSys);
-                        aprsSys.setReverseFlag(false, false);
-                    }
-                    if (jCheckBoxMenuItemUseTeachCamera.isSelected()) {
-                        aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, object2DOuterJPanel1.getItems()));
-                    } else {
-                        aprsSys.createActionListFromVision();
-                    }
-                });
+                XFuture<?> f;
+                if (aprsSys.isReverseFlag()) {
+                    logEvent("Set reverse flag false for " + aprsSys);
+                    f = aprsSys.startSetReverseFlag(false, false);
+                } else {
+                    f = XFuture.completedFuture(null);
+                }
+                futures[i] = f
+                        .thenCompose(x -> aprsSys.startLookForParts())
+                        .thenRun(() -> {
+
+                            if (jCheckBoxMenuItemUseTeachCamera.isSelected()) {
+                                aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, object2DOuterJPanel1.getItems()));
+                            } else {
+                                aprsSys.createActionListFromVision();
+                            }
+                        });
             } catch (Exception ex) {
                 log(Level.SEVERE, null, ex);
             }
@@ -4281,9 +4287,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void logEventErr(String err) {
         System.err.println(err);
-        logEvent("ERROR: "+err);
+        logEvent("ERROR: " + err);
     }
-    
+
     private boolean allSystemsOk() {
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame sys = aprsSystems.get(i);
@@ -4384,14 +4390,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private XFuture<Void> quitRandomTest(String cause) {
-        logEvent("quitRandomTest : "+cause);
-        XFuture<Void> xf = new XFuture<>("quitRandomTest : "+cause);
+        logEvent("quitRandomTest : " + cause);
+        XFuture<Void> xf = new XFuture<>("quitRandomTest : " + cause);
         xf.cancel(false);
         System.out.println("continueRandomTest quit");
         jCheckBoxMenuItemContinousDemo.setSelected(false);
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         jCheckBoxMenuItemRandomTest.setSelected(false);
-        immediateAbortAll("quitRandomTest : "+cause);
+        immediateAbortAll("quitRandomTest : " + cause);
         return xf;
     }
 
@@ -4402,15 +4408,19 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @param reverseFlag false to move parts from parts trays to kitTrays or
      * true to move parts from kitTrays to partsTrays
      */
-    public void setAllReverseFlag(boolean reverseFlag) {
+    public XFuture<Void> startSetAllReverseFlag(boolean reverseFlag) {
         logEvent("setAllReverseFlag(" + reverseFlag + ")");
+        XFuture fa[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame sys = aprsSystems.get(i);
             if (sys.isReverseFlag() != reverseFlag) {
                 logEvent("setting reverseFlag for " + sys + " to " + reverseFlag);
-                sys.setReverseFlag(reverseFlag);
+                fa[i] = sys.startSetReverseFlag(reverseFlag);
+            } else {
+                fa[i] = XFuture.completedFuture(null);
             }
         }
+        return XFuture.allOf(fa);
     }
 
     private void disconnectAllNoLog() {
@@ -4824,10 +4834,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private final ConcurrentHashMap<Integer, XFuture<Boolean>> systemContinueMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, XFuture<Void>> debugSystemContinueMap = new ConcurrentHashMap<>();
 
-    private XFuture<Void> continueSingleContinousDemo(AprsJFrame sys) {
+    private XFuture<Void> continueSingleContinousDemo(AprsJFrame sys,int recurseNum) {
         XFuture<Void> ret = debugSystemContinueMap.compute(sys.getMyThreadId(),
                 (k, v) -> {
-                    return continueSingleContinousDemoInner(sys);
+                    return continueSingleContinousDemoInner(sys,recurseNum);
                 });
         StringBuilder tasksNames = new StringBuilder();
         Set<Integer> keySet = debugSystemContinueMap.keySet();
@@ -4844,32 +4854,33 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 tasksNames.append(sysTemp.getTaskName()).append(',');
             }
         }
-        continousDemoFuture = XFuture.allOfWithName("continueSingleContinousDemo.allOf(" + tasksNames.toString() + ")", futures);
+        continousDemoFuture = XFuture.allOfWithName("continueSingleContinousDemo.allOf(" + tasksNames.toString() + ").recurseNum="+recurseNum, futures);
         if (null != randomTest) {
             resetMainRandomTestFuture();
         }
         return ret;
     }
 
-    private XFuture<Void> continueSingleContinousDemoInner(AprsJFrame sys) {
+    private XFuture<Void> continueSingleContinousDemoInner(AprsJFrame sys,int recurseNum) {
+        String toggleLockName = "continueSingleContinousDemoInner"+recurseNum+"_" + sys.getMyThreadId();
         return systemContinueMap.computeIfAbsent(sys.getMyThreadId(), k -> {
             return new XFuture<>("continueSingleContinousDemo.holder " + sys);
         })
-                .thenCompose("continueSingleContinousDemo.continuing:" + sys,
+                .thenCompose("continueSingleContinousDemo.continuing: "+recurseNum+" " + sys,
                         x -> {
-                            logEvent("startCheckEnabled for " + sys);
-                            disallowToggles("continueSingleContinousDemoInner" + sys.getMyThreadId(), sys);
+                            logEvent("startCheckEnabled(recurseNum="+recurseNum+") for " + sys);
+                            disallowToggles(toggleLockName, sys);
                             return sys.startCheckEnabled().thenApply(y -> x);
                         })
-                .thenCompose("continueSingleContinousDemo.continuing:" + sys,
+                .thenComposeAsync("continueSingleContinousDemo.continuing: "+recurseNum+" " + sys,
                         x -> {
                             XFuture<Boolean> ret = sys.startPreCheckedContinousDemo("continueSingleContinousDemoInner" + sys, x);
-                            logEvent("startContinousDemo(reverseFirst=" + !sys.isReverseFlag() + ") for " + sys);
-                            allowToggles("continueSingleContinousDemoInner" + sys.getMyThreadId(), sys);
+                            logEvent("startPreCheckedContinousDemo(recurseNum="+recurseNum+",reverseFirst=" + x + ") for " + sys);
+                            allowToggles(toggleLockName, sys);
                             return ret;
-                        })
-                .thenCompose("continueSingleContinousDemo.recurse" + sys,
-                        x -> continueSingleContinousDemo(sys));
+                        },supervisorExecutorService)
+                .thenCompose("continueSingleContinousDemo.recurse " +recurseNum+" " + sys,
+                        x -> continueSingleContinousDemo(sys,(recurseNum+1)));
     }
 
     private XFuture<Void> startAllIndContinousDemo() {
@@ -4881,7 +4892,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             AprsJFrame sys = aprsSystems.get(i);
             logEvent("startContinousDemo(reverseFirst=false) for " + sys);
             futures[i] = sys.startContinousDemo("startAllIndContinousDemo", revFirst)
-                    .thenCompose(x -> continueSingleContinousDemo(sys));
+                    .thenCompose(x -> continueSingleContinousDemo(sys,1));
             tasksNames.append(aprsSystems.get(i).getTaskName());
             tasksNames.append(",");
         }
