@@ -727,16 +727,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
                 safeAbortAndDisconnectFuture
                         = safeAbortFuture
-                                .thenRun(() -> {
+                        .thenRun(() -> {
 //                                    if (null != continousDemoFuture) {
 //                                        continousDemoFuture.cancelAll(true);
 //                                        continousDemoFuture = null;
 //                                    }
-                                    setStopRunTime();
-                                })
-                                .thenCompose(x -> waitAllLastFutures())
-                                .thenRunAsync(safeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
-                                .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
+                            setStopRunTime();
+                        })
+                        .thenCompose(x -> waitAllLastFutures())
+                        .thenRunAsync(safeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
+                        .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
             } else {
                 safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected", null);
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -927,16 +927,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         lastContinueStartAbortCount = startAbortCount;
         lastContinueActionListFuture
                 = waitForPause()
-                        .thenApplyAsync("AprsJFrame.continueActionList" + comment,
-                                x -> {
-                                    setThreadName();
-                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                .thenApplyAsync("AprsJFrame.continueActionList" + comment,
+                        x -> {
+                            setThreadName();
+                            takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
+                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
-                                    }
-                                    return false;
-                                }, runProgramService);
+                            }
+                            return false;
+                        }, runProgramService);
         return lastContinueActionListFuture;
     }
 
@@ -1139,13 +1139,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != pendantClientJInternalFrame) {
             lastRunProgramFuture
                     = waitForPause()
-                            .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
-                                try {
-                                    return runCrclProgram(program);
-                                } catch (JAXBException ex) {
-                                    throw new RuntimeException(ex);
-                                }
-                            }, runProgramService);
+                    .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
+                        try {
+                            return runCrclProgram(program);
+                        } catch (JAXBException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }, runProgramService);
             return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
@@ -3446,35 +3446,61 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private volatile XFuture<Boolean> lastResumeFuture = null;
 
+    private volatile Thread resumingThread = null;
+    private volatile StackTraceElement resumingTrace[] = null;
+    private volatile boolean resuming = false;
+
     /**
      * Continue operations that were previously paused.
      */
     public void resume() {
-        if (this.titleErrorString != null && this.titleErrorString.length() > 0) {
-            throw new IllegalStateException("Can't resume when titleErrorString set to " + titleErrorString);
+        resumingThread = Thread.currentThread();
+        resumingTrace = resumingThread.getStackTrace();
+        resuming = true;
+        boolean badState = pausing;
+        try {
+            if (this.titleErrorString != null && this.titleErrorString.length() > 0) {
+                throw new IllegalStateException("Can't resume when titleErrorString set to " + titleErrorString);
+            }
+            badState = badState || pausing;
+            String crclClientErrString = getCrclClientErrorString();
+            if (crclClientErrString != null && crclClientErrString.length() > 0) {
+                throw new IllegalStateException("Can't resume when crclClientErrString set to " + crclClientErrString);
+            }
+            if (jCheckBoxMenuItemPause.isSelected()) {
+                jCheckBoxMenuItemPause.setSelected(false);
+            }
+            badState = badState || pausing;
+            clearErrors();
+            badState = badState || pausing;
+            if (null != pendantClientJInternalFrame) {
+                pendantClientJInternalFrame.unpauseCrclProgram();
+            }
+            notifyPauseFutures();
+            badState = badState || pausing;
+            clearErrors();
+            badState = badState || pausing;
+            String methodName = "resume";
+            takeSnapshots(methodName);
+            badState = badState || pausing;
+            if (null != pendantClientJInternalFrame) {
+                pendantClientJInternalFrame.unpauseCrclProgram();
+            }
+            badState = badState || pausing;
+            updateTitle("", "");
+            badState = badState || pausing;
+            if (isPaused()) {
+                throw new IllegalStateException("Still paused after resume.");
+            }
+        } finally {
+            resuming = false;
         }
-        String crclClientErrString = getCrclClientErrorString();
-        if (crclClientErrString != null && crclClientErrString.length() > 0) {
-            throw new IllegalStateException("Can't resume when crclClientErrString set to " + crclClientErrString);
-        }
-        if (jCheckBoxMenuItemPause.isSelected()) {
-            jCheckBoxMenuItemPause.setSelected(false);
-        }
-        clearErrors();
-        if (null != pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.unpauseCrclProgram();
-        }
-        notifyPauseFutures();
-        clearErrors();
-        String methodName = "resume";
-        takeSnapshots(methodName);
-        if (null != pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.unpauseCrclProgram();
-        }
-        updateTitle("", "");
-        if (isPaused()) {
-            throw new IllegalStateException("Still paused after resume.");
-        }
+         badState = badState || pausing;
+         if(badState) {
+             System.err.println("pauseThread = " + pauseThread);
+             System.err.println("pauseTrace = " + Arrays.toString(pauseTrace));
+             throw new IllegalStateException("Attempt to resume while pausing");
+         }
     }
 
     /**
@@ -3757,7 +3783,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             continuousDemoFuture = XFuture.completedFutureWithName("startPreCheckedContinousDemo(" + reverseFirst + "," + startAbortCount + ").!enableCheckedAlready", false);
             return continuousDemoFuture;
         }
-        if(!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
+        if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
             System.err.println("Call to startPreCheckedContinousDemo when not ready");
         }
         continuousDemoFuture = XFuture.supplyAsync("startPreCheckedContinousDemo(task=" + getTaskName() + ")",
@@ -3853,32 +3879,62 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * cause future actions to wait until resume is called.
      */
     public void pause() {
+        boolean badState = resuming;
         pauseInternal();
+        badState = badState || resuming;
         updateTitle("", "");
+        badState = badState || resuming;
+        if (badState) {
+            System.err.println("resumingThread = " + resumingThread);
+            System.err.println("resumingTrace = " + Arrays.toString(resumingTrace));
+            throw new IllegalStateException("Attempt to pause while resuming:");
+        }
     }
 
+    private volatile boolean pausing = false;
+    private volatile Thread pauseThread = null;
+    private volatile StackTraceElement pauseTrace[] = null;
+
     private void pauseInternal() {
-        if (!jCheckBoxMenuItemPause.isSelected()) {
-            jCheckBoxMenuItemPause.setSelected(true);
-        }
-        if (null != pendantClientJInternalFrame && titleErrorString != null && titleErrorString.length() > 0) {
-            String lastMessage = pendantClientJInternalFrame.getLastMessage();
-            System.out.println("lastMessage = " + lastMessage);
-            MiddleCommandType cmd = pendantClientJInternalFrame.getCurrentProgramCommand();
-            if (null != cmd) {
-                String cmdString = CRCLSocket.cmdToString(cmd);
-                System.out.println("cmdString = " + cmdString);
-                if (null == lastMessage) {
-                    lastMessage = "";
-                }
-                takeSnapshots("pause :" + lastMessage + ":" + cmdString);
-            } else if (null == lastMessage) {
-                takeSnapshots("pause");
-            } else {
-                takeSnapshots("pause :" + lastMessage);
+        pauseThread = Thread.currentThread();
+        pauseTrace = pauseThread.getStackTrace();
+        pausing = true;
+        boolean badState = resuming;
+        try {
+            if (!jCheckBoxMenuItemPause.isSelected()) {
+                jCheckBoxMenuItemPause.setSelected(true);
             }
+            badState = badState || resuming;
+            if (null != pendantClientJInternalFrame && titleErrorString != null && titleErrorString.length() > 0) {
+                String lastMessage = pendantClientJInternalFrame.getLastMessage();
+                System.out.println("lastMessage = " + lastMessage);
+                MiddleCommandType cmd = pendantClientJInternalFrame.getCurrentProgramCommand();
+                if (null != cmd) {
+                    String cmdString = CRCLSocket.cmdToString(cmd);
+                    System.out.println("cmdString = " + cmdString);
+                    if (null == lastMessage) {
+                        lastMessage = "";
+                    }
+                    takeSnapshots("pause :" + lastMessage + ":" + cmdString);
+                } else if (null == lastMessage) {
+                    takeSnapshots("pause");
+                } else {
+                    takeSnapshots("pause :" + lastMessage);
+                }
+            }
+            badState = badState || resuming;
+            this.pauseCrclProgram();
+
+        } finally {
+            pausing = false;
         }
-        this.pauseCrclProgram();
+        badState = badState || resuming;
+        if (badState) {
+            System.err.println("resumingThread = " + resumingThread);
+            System.err.println("resumingTrace = " + Arrays.toString(resumingTrace));
+            throw new IllegalStateException("Attempt to pause while resuming");
+        }
+
     }
 
     /**
