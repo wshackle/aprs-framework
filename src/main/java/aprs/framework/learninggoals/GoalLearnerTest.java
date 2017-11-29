@@ -106,7 +106,7 @@ public class GoalLearnerTest {
         addList(tray1, s11, "small_gear", sop, trainingData);
         addList(tray1, s13, "large_gear", sop, trainingData);
         addList(tray2, s22, "small_gear", sop, trainingData);
-        addList(tray3, s13, "large_gear", sop, trainingData);
+        addList(tray3, s31, "large_gear", sop, trainingData);
 
         List<PhysicalItem> newTrainingData
                 = Object2DOuterJPanel.showAndModifyData(trainingData, sop, -100, -100, +500, +500);

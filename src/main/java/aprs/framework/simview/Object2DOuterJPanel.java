@@ -319,9 +319,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     if (null != l) {
                         for (Slot s : l) {
                             Slot absItem = slotOffsetProvider.absSlotFromTrayAndOffset(trayItem, s);
-
-//                    double sx = x + s.x * Math.cos(rot) + s.y * Math.sin(rot);
-//                    double sy = y - s.x * Math.sin(rot) + s.y * Math.cos(rot);
                             double minDist = minDist(absItem.x, absItem.y, items);
                             tm.addRow(new Object[]{s.getSlotForSkuName(), minDist < 20.0, absItem.x, absItem.y, minDist});
                         }
@@ -1528,6 +1525,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             this.setItems(this.getItems());
         }
+        object2DJPanel1MousePressed(evt);
     }//GEN-LAST:event_object2DJPanel1MouseDragged
 
     private PhysicalItem draggedItem = null;

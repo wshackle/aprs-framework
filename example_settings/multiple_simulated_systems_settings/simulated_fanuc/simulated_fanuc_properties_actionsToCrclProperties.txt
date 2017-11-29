@@ -1,15 +1,15 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1770
-afterMoveToLookForDwellTime=5.0
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:1780
+afterMoveToLookForDwellTime=0.5
 approachZOffset=50.0
 doInspectKit=true
 enableOptaPlanner=true
 fastTransSpeed=200.0
-firstLookDwellTime=5.0
+firstLookDwellTime=0.5
 jointAccel=100.0
 jointSpeed=5.0
 kitInspectDistThreshold=20.0
-lastLookDwellTime=1.0
-lookDwellTime=5.0
+lastLookDwellTime=0.5
+lookDwellTime=0.5
 lookForXYZ=200.0,200.0,-50.0
 manualPartNames=[part_large_gear_in_pt_2, part_medium_gear_in_pt_4, part_medium_gear_in_pt_3, part_large_gear_in_pt_1, part_medium_gear_in_pt_2, part_medium_gear_in_pt_1, null, null, null, null]
 manualSlotNames=[empty_slot_1_for_large_gear_in_kit_m2l1_vessel_2, empty_slot_2_for_medium_gear_in_kit_m2l1_vessel_2, empty_slot_1_for_medium_gear_in_kit_m2l1_vessel_2, empty_slot_1_for_large_gear_in_kit_m2l1_vessel_1, empty_slot_2_for_medium_gear_in_kit_m2l1_vessel_1, empty_slot_1_for_medium_gear_in_kit_m2l1_vessel_1, null, null, null, null]
@@ -24,7 +24,7 @@ reverseFlag=true
 rotSpeed=30.0
 rpy=175.0,0.0,0.0
 settleDwellTime=0.1
-skipLookDwellTime=5.0
+skipLookDwellTime=0.5
 skipMissingParts=true
 slowTransSpeed=75
 takePartArgIndex=0
