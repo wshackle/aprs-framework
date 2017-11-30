@@ -23,6 +23,7 @@
 package aprs.framework;
 
 import static aprs.framework.Utils.runTimeToString;
+
 import aprs.framework.colortextdisplay.ColorTextOptionsJPanel;
 import aprs.framework.colortextdisplay.ColorTextOptionsJPanel.ColorTextOptions;
 import aprs.framework.colortextdisplay.ColorTextJFrame;
@@ -39,6 +40,7 @@ import crcl.base.CommandStateEnumType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import crcl.ui.misc.MultiLineStringJPanel;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GraphicsDevice;
@@ -76,7 +78,6 @@ import java.util.Date;
 import java.util.EventObject;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -139,13 +140,13 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
 /**
- *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class AprsSupervisorJFrame extends javax.swing.JFrame {
@@ -767,10 +768,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     for (int i = 0; i < pm.getErrmapList().size(); i++) {
                         PositionMapEntry pme = pm.getErrmapList().get(i);
                         model.addRow(new Object[]{
-                            pme.getRobotX(), pme.getRobotY(), pme.getRobotZ(),
-                            pme.getRobotX() + pme.getOffsetX(), pme.getRobotY() + pme.getOffsetY(), pme.getRobotZ() + pme.getOffsetZ(),
-                            pme.getOffsetX(), pme.getOffsetY(), pme.getOffsetZ(),
-                            pme.getLabel()
+                                pme.getRobotX(), pme.getRobotY(), pme.getRobotZ(),
+                                pme.getRobotX() + pme.getOffsetX(), pme.getRobotY() + pme.getOffsetY(), pme.getRobotZ() + pme.getOffsetZ(),
+                                pme.getOffsetX(), pme.getOffsetY(), pme.getOffsetZ(),
+                                pme.getLabel()
                         });
                     }
                 }
@@ -783,6 +784,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
         }
     }
+
     private List<List<PositionMapJPanel>> positionMapJPanels = new ArrayList<>();
 
     private List<PositionMapJPanel> getPositionMapRow(int row) {
@@ -816,7 +818,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-//    private XFuture<Void> checkStealRobotFuture(XFuture<Void> future) {
+    //    private XFuture<Void> checkStealRobotFuture(XFuture<Void> future) {
 //        XFuture<Void> currentStealRobotFuture = stealRobotFuture.get();
 //        if (null != currentStealRobotFuture && currentStealRobotFuture != future) {
 //            final XFuture<Void> newFuture = currentStealRobotFuture;
@@ -906,8 +908,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         return;
                     }
                     try {
-                        final XFuture<Void> origUnstealFuture = unStealRobotFuture.getAndSet(null);;
-                        final XFuture<Void> origCancelUnstealFuture = cancelUnStealRobotFuture.getAndSet(null);;
+                        final XFuture<Void> origUnstealFuture = unStealRobotFuture.getAndSet(null);
+                        ;
+                        final XFuture<Void> origCancelUnstealFuture = cancelUnStealRobotFuture.getAndSet(null);
+                        ;
                         try {
                             if (null != origUnstealFuture && null != origCancelUnstealFuture) {
                                 logEvent("Cancelling future created at " + getTimeString(origUnstealFuture.getStartTime()) + ", origUnstealFuture = " + origUnstealFuture);
@@ -925,7 +929,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                             final XFuture<Void> cancelFuture = new XFuture<>("cancelStealRobotFuture");
                             if (!this.cancelStealRobotFuture.compareAndSet(null, cancelFuture)) {
                                 throw new IllegalStateException("cancelStealRobotFuture already set.");
-                            };
+                            }
+                            ;
                             lastFutureReturned = XFuture.anyOfWithName("setRobotEnabled(" + robotName + "," + enabled + ").anyOf(steal,cancel)",
                                     future.handle(
                                             "setRobotEnabled(" + robotName + "," + enabled + ").anyOf(steal,cancel).handle",
@@ -945,16 +950,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                                     return null;
                                                 }
                                             })
-                                    .thenCompose("setRobotEnabled(" + robotName + "," + enabled + ").checkForExceptions",
-                                            x -> {
-                                                if (x == null) {
-                                                    return XFuture.completedFutureWithName(
-                                                            "setRobotEnabled(" + robotName + "," + enabled + ").alreadyComplete",
-                                                            null);
-                                                } else {
-                                                    return new XFuture<>(x + ".neverComplete");
-                                                }
-                                            }),
+                                            .thenCompose("setRobotEnabled(" + robotName + "," + enabled + ").checkForExceptions",
+                                                    x -> {
+                                                        if (x == null) {
+                                                            return XFuture.completedFutureWithName(
+                                                                    "setRobotEnabled(" + robotName + "," + enabled + ").alreadyComplete",
+                                                                    null);
+                                                        } else {
+                                                            return new XFuture<>(x + ".neverComplete");
+                                                        }
+                                                    }),
                                     cancelFuture);
 
                         } finally {
@@ -1012,14 +1017,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                                 return t.toString();
                                             }
                                         })
-                                .thenCompose("setRobotEnabled(" + robotName + "," + enabled + ").handle2",
-                                        x -> {
-                                            if (x == null) {
-                                                return XFuture.completedFutureWithName("setRobotEnabled(" + robotName + "," + enabled + ").completedFuture2", null);
-                                            } else {
-                                                return new XFuture<>(x + ".neverComplete");
-                                            }
-                                        }),
+                                        .thenCompose("setRobotEnabled(" + robotName + "," + enabled + ").handle2",
+                                                x -> {
+                                                    if (x == null) {
+                                                        return XFuture.completedFutureWithName("setRobotEnabled(" + robotName + "," + enabled + ").completedFuture2", null);
+                                                    } else {
+                                                        return new XFuture<>(x + ".neverComplete");
+                                                    }
+                                                }),
                                 cancelFuture);
                         //.thenCompose(x -> checkStealRobotFuture(null)));
                     } finally {
@@ -1105,16 +1110,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     final private static String transferrableOptions[] = new String[]{
-        "rpy",
-        "lookForXYZ",
-        "slowTransSpeed",
-        "jointAccel",
-        "jointSpeed",
-        "rotSpeed",
-        "fastTransSpeed",
-        "settleDwellTime",
-        "lookForJoints",
-        "useJointLookFor"
+            "rpy",
+            "lookForXYZ",
+            "slowTransSpeed",
+            "jointAccel",
+            "jointSpeed",
+            "rotSpeed",
+            "fastTransSpeed",
+            "settleDwellTime",
+            "lookForJoints",
+            "useJointLookFor"
     };
 
     private void copyOptions(String options[], Map<String, String> mapIn, Map<String, String> mapOut) {
@@ -1205,6 +1210,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private XFuture<?> returnRobotsDirect(String comment) {
         return returnRobotsDirect(returnRobotRunnable.getAndSet(null), comment);
     }
+
     private AtomicInteger returnRobotsNumber = new AtomicInteger();
 
     private XFuture<?> returnRobots(NamedCallable<XFuture<?>> r, String comment) {
@@ -1306,10 +1312,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * checkbox in the menu that can be used to disable these messages, in which
      * case the message will only be logged to the events tab.
      *
-     * @param message string to display
-     * @param fontSize font size
-     * @param image image to show under text
-     * @param colors colors to flash in order
+     * @param message        string to display
+     * @param fontSize       font size
+     * @param image          image to show under text
+     * @param colors         colors to flash in order
      * @param graphicsDevice device to display on
      * @return future that can be used to take action after the message has been
      * shown
@@ -1371,22 +1377,22 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         logEvent("    and starting safe abort and disconnect for " + " : srn=" + srn + " " + stealFrom);
         stealAbortFuture = XFuture.allOfWithName("stealAbortAllOf",
                 stealFrom.startSafeAbortAndDisconnect("stealAbortAllOf.stealFrom" + " : srn=" + srn)
-                .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " " + stealFromRobotName + " needed for " + stealFor + " : srn=" + srn), supervisorExecutorService),
+                        .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " " + stealFromRobotName + " needed for " + stealFor + " : srn=" + srn), supervisorExecutorService),
                 stealFor.startSafeAbortAndDisconnect("stealAbortAllOf.stealFor" + " : srn=" + srn)
-                .thenComposeAsync("showDisabledMessage." + stealForRobotName,
-                        x -> {
-                            logEvent("Safe abort and disconnect completed for " + stealFor + ", " + stealForRobotName + " being disabled. " + " : srn=" + srn);
-                            if (null != colorTextSocket) {
-                                try {
-                                    colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
-                                } catch (IOException ex) {
-                                    log(Level.SEVERE, null, ex);
-                                }
-                            }
-                            return showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
-                                    SplashScreen.getDisableImageImage(),
-                                    SplashScreen.getRedYellowColorList(), gd);
-                        }, supervisorExecutorService));
+                        .thenComposeAsync("showDisabledMessage." + stealForRobotName,
+                                x -> {
+                                    logEvent("Safe abort and disconnect completed for " + stealFor + ", " + stealForRobotName + " being disabled. " + " : srn=" + srn);
+                                    if (null != colorTextSocket) {
+                                        try {
+                                            colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
+                                        } catch (IOException ex) {
+                                            log(Level.SEVERE, null, ex);
+                                        }
+                                    }
+                                    return showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
+                                            SplashScreen.getDisableImageImage(),
+                                            SplashScreen.getRedYellowColorList(), gd);
+                                }, supervisorExecutorService));
 
         XFuture<Boolean> part1 = stealAbortFuture.thenComposeAsync(
                 "transfer" + " : srn=" + srn, x -> {
@@ -1412,29 +1418,29 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 //                .thenRun(
                 //                        () -> this.allowToggles())
                 .thenComposeAsync("continueAfterSwitch" + " : srn=" + srn, x -> {
-                    int curSrn = stealRobotNumber.get();
-                    if (srn != curSrn) {
-                        logEvent("continueAfterSwitch srn=" + srn + ", curSrn=" + curSrn);
-                        return XFuture.completedFutureWithName("continueAfterSwitch.srn != stealRobotNumber.get()" + " : srn=" + srn, null);
-                    }
-                    if (stealFor.isAborting()) {
-                        logEvent("continueAfterSwitch stealFor.isAborting() : srn=" + srn + ", curSrn=" + curSrn + ", stealFor=" + stealFrom);
-                        return XFuture.completedFutureWithName("continueAfterSwitch.stealFor.isAborting()" + " : srn=" + srn, null);
-                    }
-                    logEvent("Continue actions after switch for " + stealFor.getTaskName() + " with " + stealFor.getRobotName() + " : srn=" + srn);
-                    return stealFor.continueActionList("stealFor.continueAfterSwitch" + " : srn=" + srn)
-                            .thenComposeAsync(x4 -> {
-                                logEvent("continueAfterSwitch " + stealFor.getRunName() + " completed action list after robot switch " + x4 + " : srn=" + srn);
-                                return finishAction(stealFor)
-                                        .thenApply(x5 -> {
-                                            logEvent("finish continueAfterSwitch " + stealFor.getRunName() + " completed action list " + x4 + " : srn=" + srn);
-                                            if (x4) {
-                                                completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag());
-                                            }
-                                            return x4;
-                                        });
-                            }, supervisorExecutorService);
-                }, supervisorExecutorService
+                            int curSrn = stealRobotNumber.get();
+                            if (srn != curSrn) {
+                                logEvent("continueAfterSwitch srn=" + srn + ", curSrn=" + curSrn);
+                                return XFuture.completedFutureWithName("continueAfterSwitch.srn != stealRobotNumber.get()" + " : srn=" + srn, null);
+                            }
+                            if (stealFor.isAborting()) {
+                                logEvent("continueAfterSwitch stealFor.isAborting() : srn=" + srn + ", curSrn=" + curSrn + ", stealFor=" + stealFrom);
+                                return XFuture.completedFutureWithName("continueAfterSwitch.stealFor.isAborting()" + " : srn=" + srn, null);
+                            }
+                            logEvent("Continue actions after switch for " + stealFor.getTaskName() + " with " + stealFor.getRobotName() + " : srn=" + srn);
+                            return stealFor.continueActionList("stealFor.continueAfterSwitch" + " : srn=" + srn)
+                                    .thenComposeAsync(x4 -> {
+                                        logEvent("continueAfterSwitch " + stealFor.getRunName() + " completed action list after robot switch " + x4 + " : srn=" + srn);
+                                        return finishAction(stealFor)
+                                                .thenApply(x5 -> {
+                                                    logEvent("finish continueAfterSwitch " + stealFor.getRunName() + " completed action list " + x4 + " : srn=" + srn);
+                                                    if (x4) {
+                                                        completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag());
+                                                    }
+                                                    return x4;
+                                                });
+                                    }, supervisorExecutorService);
+                        }, supervisorExecutorService
                 );
 
         if (jCheckBoxMenuItemIndContinousDemo.isSelected()
@@ -1452,7 +1458,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return part1.thenCompose(
                 "startSafeAbortAfterSwitch" + " : srn=" + srn, x -> {
                     return stealFor.startSafeAbort("startSafeAbortAfterSwitch" + " : srn=" + srn)
-                    .thenRun(() -> logEvent("Safe abort completed for " + stealFor + " : srn=" + srn));
+                            .thenRun(() -> logEvent("Safe abort completed for " + stealFor + " : srn=" + srn));
                 })
                 .thenComposeAsync(
                         "showReturning" + " : srn=" + srn, x -> {
@@ -1503,7 +1509,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         logEvent(stealForRobotName + " already assigned to " + stealFor + " : srn=" + srn);
                     }
                     if (Objects.equals(stealFrom.getRobotName(), stealFromRobotName)
-                    && Objects.equals(stealFor.getRobotName(), stealForRobotName)) {
+                            && Objects.equals(stealFor.getRobotName(), stealForRobotName)) {
                         return XFuture.completedFutureWithName("returnRobot.alreadyReturned" + " : srn=" + srn, null);
                     }
                     if (stealFor.isRunningCrclProgram()) {
@@ -1528,29 +1534,29 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     }
                     logEvent("Disconnect robot from " + stealFor);
                     return stealFor.disconnectRobot()
-                    .thenComposeAsync(
-                            "returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn,
-                            x -> {
-                                logEvent(stealForRobotName + " disconnnected from " + stealFor + " : srn=" + srn);
-                                logEvent("start returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
-                                return stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
-                            }, supervisorExecutorService)
-                    .thenComposeAsync("returnRobot.transferOption",
-                            x -> {
-                                logEvent(stealFrom.getTaskName() + " connected to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
-                                for (String opt : transferrableOptions) {
-                                    if (stealForOptions.containsKey(opt)) {
-                                        stealFor.setExecutorOption(opt, stealForOptions.get(opt));
-                                    }
-                                }
-                                stealFor.removePositionMap(pm);
-                                logEvent("start returnRobot." + stealFor.getTaskName() + " connect to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
-                                return stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);
-                            }, supervisorExecutorService)
-                    .thenRun(() -> {
-                        logEvent(stealFor.getTaskName() + " connected to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
-                        checkRobotsUniquePorts();
-                    });
+                            .thenComposeAsync(
+                                    "returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn,
+                                    x -> {
+                                        logEvent(stealForRobotName + " disconnnected from " + stealFor + " : srn=" + srn);
+                                        logEvent("start returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
+                                        return stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
+                                    }, supervisorExecutorService)
+                            .thenComposeAsync("returnRobot.transferOption",
+                                    x -> {
+                                        logEvent(stealFrom.getTaskName() + " connected to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
+                                        for (String opt : transferrableOptions) {
+                                            if (stealForOptions.containsKey(opt)) {
+                                                stealFor.setExecutorOption(opt, stealForOptions.get(opt));
+                                            }
+                                        }
+                                        stealFor.removePositionMap(pm);
+                                        logEvent("start returnRobot." + stealFor.getTaskName() + " connect to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
+                                        return stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);
+                                    }, supervisorExecutorService)
+                            .thenRun(() -> {
+                                logEvent(stealFor.getTaskName() + " connected to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
+                                checkRobotsUniquePorts();
+                            });
                 }, stealFor, stealFrom);
         return returnRobot;
     }
@@ -1570,28 +1576,28 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         logEvent("    and starting safe abort and disconnect for" + stealFrom + " : srn=" + srn);
         unstealAbortFuture = XFuture.allOfWithName("unStealAbortAllOf",
                 stealFrom.startSafeAbortAndDisconnect("unStealAbortAllOf.stealFrom" + stealFrom + " : srn=" + srn)
-                .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " : srn=" + srn), supervisorExecutorService),
+                        .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " : srn=" + srn), supervisorExecutorService),
                 stealFor.startSafeAbortAndDisconnect("unStealAbortAllOf.stealFor " + stealFor + " : srn=" + srn)
-                .thenComposeAsync("unstealShowReenable", x -> {
-                    logEvent("Safe abort and disconnect completed for " + stealFor + " : srn=" + srn);
-                    boolean stillAborting = stealFor.isAborting();
-                    if (stillAborting) {
-                        String msg = "still aborting after safe abort and disconnect" + " : srn=" + srn;
-                        logEvent(msg);
-                        boolean doubleCheck = stealFor.isAborting();
-                        throw new IllegalStateException(msg);
-                    }
-                    if (null != colorTextSocket) {
-                        try {
-                            colorTextSocket.getOutputStream().write("0x00FF00, 0x00FF00\r\n".getBytes());
-                        } catch (IOException ex) {
-                            log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    return showMessageFullScreen(stealForRobotName + "\n Enabled", 80.0f,
-                            SplashScreen.getDisableImageImage(),
-                            SplashScreen.getBlueWhiteGreenColorList(), gd);
-                }, supervisorExecutorService));
+                        .thenComposeAsync("unstealShowReenable", x -> {
+                            logEvent("Safe abort and disconnect completed for " + stealFor + " : srn=" + srn);
+                            boolean stillAborting = stealFor.isAborting();
+                            if (stillAborting) {
+                                String msg = "still aborting after safe abort and disconnect" + " : srn=" + srn;
+                                logEvent(msg);
+                                boolean doubleCheck = stealFor.isAborting();
+                                throw new IllegalStateException(msg);
+                            }
+                            if (null != colorTextSocket) {
+                                try {
+                                    colorTextSocket.getOutputStream().write("0x00FF00, 0x00FF00\r\n".getBytes());
+                                } catch (IOException ex) {
+                                    log(Level.SEVERE, null, ex);
+                                }
+                            }
+                            return showMessageFullScreen(stealForRobotName + "\n Enabled", 80.0f,
+                                    SplashScreen.getDisableImageImage(),
+                                    SplashScreen.getBlueWhiteGreenColorList(), gd);
+                        }, supervisorExecutorService));
         return unstealAbortFuture
                 .thenComposeAsync("unsteal.returnRobots1" + " : srn=" + srn, x -> {
                     return returnRobotsDirect("unsteal.returnRobots1" + " : srn=" + srn);
@@ -1617,30 +1623,30 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     logEvent("unsteal.continueAllOf Continue actions for " + stealFrom.getTaskName() + " with " + stealFrom.getRobotName() + " : srn=" + srn);
                     logEvent("unsteal.continueAllOf Continue actions for " + stealFor.getTaskName() + " with " + stealFor.getRobotName() + " : srn=" + srn);
                     return XFuture.allOf(stealFrom.continueActionList("unsteal.stealFrom" + " : srn=" + srn)
-                            .thenComposeAsync(x2 -> {
-                                logEvent("unsteal.stealFrom " + stealFrom.getRunName() + " completed action list after return after robot reenabled. " + x2 + " : srn=" + srn);
+                                    .thenComposeAsync(x2 -> {
+                                        logEvent("unsteal.stealFrom " + stealFrom.getRunName() + " completed action list after return after robot reenabled. " + x2 + " : srn=" + srn);
 
-                                return finishAction(stealFrom)
-                                        .thenApply(x3 -> {
-                                            logEvent("finish unsteal.stealFrom " + stealFrom.getRunName() + " completed action list " + x2 + " : srn=" + srn);
-                                            if (x2 && !stealFrom.isAborting() && srn == stealRobotNumber.get()) {
-                                                completeSystemsContinueIndFuture(stealFrom, !stealFrom.isReverseFlag());
-                                            }
-                                            return x2;
-                                        });
-                            }, supervisorExecutorService),
+                                        return finishAction(stealFrom)
+                                                .thenApply(x3 -> {
+                                                    logEvent("finish unsteal.stealFrom " + stealFrom.getRunName() + " completed action list " + x2 + " : srn=" + srn);
+                                                    if (x2 && !stealFrom.isAborting() && srn == stealRobotNumber.get()) {
+                                                        completeSystemsContinueIndFuture(stealFrom, !stealFrom.isReverseFlag());
+                                                    }
+                                                    return x2;
+                                                });
+                                    }, supervisorExecutorService),
                             stealFor.continueActionList("unsteal.stealFor" + " : srn=" + srn)
-                            .thenComposeAsync(x3 -> {
-                                logEvent("unsteal.stealFor " + stealFor.getRunName() + " completed action list after return after robot reenabled. " + x3 + " : srn=" + srn);
-                                return finishAction(stealFrom)
-                                        .thenApply(x4 -> {
-                                            logEvent("finish unsteal.stealFor " + stealFor.getRunName() + " completed action list " + x3 + " : srn=" + srn);
-                                            if (x3 && !stealFor.isAborting() && srn == stealRobotNumber.get()) {
-                                                completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag());
-                                            }
-                                            return x3;
-                                        });
-                            }, supervisorExecutorService)
+                                    .thenComposeAsync(x3 -> {
+                                        logEvent("unsteal.stealFor " + stealFor.getRunName() + " completed action list after return after robot reenabled. " + x3 + " : srn=" + srn);
+                                        return finishAction(stealFrom)
+                                                .thenApply(x4 -> {
+                                                    logEvent("finish unsteal.stealFor " + stealFor.getRunName() + " completed action list " + x3 + " : srn=" + srn);
+                                                    if (x3 && !stealFor.isAborting() && srn == stealRobotNumber.get()) {
+                                                        completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag());
+                                                    }
+                                                    return x3;
+                                                });
+                                    }, supervisorExecutorService)
                     );
                 });
     }
@@ -1912,6 +1918,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
             }
+
             public void windowClosed(java.awt.event.WindowEvent evt) {
                 formWindowClosed(evt);
             }
@@ -1919,26 +1926,26 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
         jTableTasks.setFont(new java.awt.Font("sansserif", 0, 14)); // NOI18N
         jTableTasks.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+                new Object[][]{
 
-            },
-            new String [] {
-                "Priority", "Task(s)", "Robot(s)", "Details", "PropertiesFile"
-            }
+                },
+                new String[]{
+                        "Priority", "Task(s)", "Robot(s)", "Details", "PropertiesFile"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
-                true, true, true, false, true
+            boolean[] canEdit = new boolean[]{
+                    true, true, true, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         });
         jTableTasks.setRowHeight(30);
@@ -1947,41 +1954,41 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout jPanelTasksLayout = new javax.swing.GroupLayout(jPanelTasks);
         jPanelTasks.setLayout(jPanelTasksLayout);
         jPanelTasksLayout.setHorizontalGroup(
-            jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelTasksLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPaneTasks)
-                .addContainerGap())
+                jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelTasksLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jScrollPaneTasks)
+                                .addContainerGap())
         );
         jPanelTasksLayout.setVerticalGroup(
-            jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE)
+                jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE)
         );
 
         jPanelRobots.setBorder(javax.swing.BorderFactory.createTitledBorder("Robots"));
 
         jTableRobots.setFont(new java.awt.Font("sansserif", 0, 14)); // NOI18N
         jTableRobots.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+                new Object[][]{
 
-            },
-            new String [] {
-                "Robot", "Enabled", "Host", "Port", "Disable Count", "Disable Time"
-            }
+                },
+                new String[]{
+                        "Robot", "Enabled", "Host", "Port", "Disable Count", "Disable Time"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Boolean.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.String.class, java.lang.Boolean.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
-                false, true, false, false, false, false
+            boolean[] canEdit = new boolean[]{
+                    false, true, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         });
         jTableRobots.setRowHeight(30);
@@ -1992,52 +1999,52 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout jPanelRobotsLayout = new javax.swing.GroupLayout(jPanelRobots);
         jPanelRobots.setLayout(jPanelRobotsLayout);
         jPanelRobotsLayout.setHorizontalGroup(
-            jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelRobotsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 591, Short.MAX_VALUE)
-                    .addGroup(jPanelRobotsLayout.createSequentialGroup()
-                        .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldRobotEnableToggleBlockers)))
-                .addContainerGap())
+                jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelRobotsLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 591, Short.MAX_VALUE)
+                                        .addGroup(jPanelRobotsLayout.createSequentialGroup()
+                                                .addComponent(jLabel6)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldRobotEnableToggleBlockers)))
+                                .addContainerGap())
         );
         jPanelRobotsLayout.setVerticalGroup(
-            jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelRobotsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel6)
-                    .addComponent(jTextFieldRobotEnableToggleBlockers, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelRobotsLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel6)
+                                        .addComponent(jTextFieldRobotEnableToggleBlockers, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         javax.swing.GroupLayout jPanelTasksAndRobotsLayout = new javax.swing.GroupLayout(jPanelTasksAndRobots);
         jPanelTasksAndRobots.setLayout(jPanelTasksAndRobotsLayout);
         jPanelTasksAndRobotsLayout.setHorizontalGroup(
-            jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
-                .addGroup(jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanelTasks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jPanelRobots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(colorTextJPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
+                                .addGroup(jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jPanelTasks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
+                                                .addContainerGap()
+                                                .addComponent(jPanelRobots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(colorTextJPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addContainerGap())
         );
         jPanelTasksAndRobotsLayout.setVerticalGroup(
-            jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanelTasks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(colorTextJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanelRobots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jPanelTasks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(colorTextJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jPanelRobots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addContainerGap())
         );
 
         jTabbedPane2.addTab("Tasks and Robots", jPanelTasksAndRobots);
@@ -2049,9 +2056,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             public void mousePressed(java.awt.event.MouseEvent evt) {
                 jTablePositionMappingsMousePressed(evt);
             }
+
             public void mouseReleased(java.awt.event.MouseEvent evt) {
                 jTablePositionMappingsMouseReleased(evt);
             }
+
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jTablePositionMappingsMouseClicked(evt);
             }
@@ -2061,16 +2070,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout jPanelPosMapFilesLayout = new javax.swing.GroupLayout(jPanelPosMapFiles);
         jPanelPosMapFiles.setLayout(jPanelPosMapFilesLayout);
         jPanelPosMapFilesLayout.setHorizontalGroup(
-            jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1)
-                .addGap(6, 6, 6))
+                jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
+                                .addComponent(jScrollPane1)
+                                .addGap(6, 6, 6))
         );
         jPanelPosMapFilesLayout.setVerticalGroup(
-            jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
-                .addContainerGap())
+                jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
+                                .addContainerGap())
         );
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Selected File"));
@@ -2106,26 +2115,26 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         });
 
         jTableSelectedPosMapFile.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                { new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0), null}
-            },
-            new String [] {
-                "Xin", "Yin", "Zin", "Xout", "Yout", "Zout", "Offset_X", "Offset_Y", "Offset_Z", "Label"
-            }
+                new Object[][]{
+                        {new Double(0.0), new Double(0.0), new Double(0.0), new Double(0.0), new Double(0.0), new Double(0.0), new Double(0.0), new Double(0.0), new Double(0.0), null}
+                },
+                new String[]{
+                        "Xin", "Yin", "Zin", "Xout", "Yout", "Zout", "Offset_X", "Offset_Y", "Offset_Z", "Label"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
-                true, true, true, true, true, true, false, false, false, true
+            boolean[] canEdit = new boolean[]{
+                    true, true, true, true, true, true, false, false, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         });
         jScrollPane2.setViewportView(jTableSelectedPosMapFile);
@@ -2140,58 +2149,58 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jButtonSetInFromCurrent)
-                        .addGap(50, 50, 50)
-                        .addComponent(jButtonAddLine)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonDeleteLine)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonSaveSelectedPosMap)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 206, Short.MAX_VALUE)
-                        .addComponent(jButtonSetOutFromCurrent))
-                    .addComponent(jTextFieldSelectedPosMapFilename))
-                .addContainerGap())
+                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jScrollPane2)
+                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                .addComponent(jButtonSetInFromCurrent)
+                                                .addGap(50, 50, 50)
+                                                .addComponent(jButtonAddLine)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonDeleteLine)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonSaveSelectedPosMap)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 206, Short.MAX_VALUE)
+                                                .addComponent(jButtonSetOutFromCurrent))
+                                        .addComponent(jTextFieldSelectedPosMapFilename))
+                                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonSetInFromCurrent)
-                    .addComponent(jButtonAddLine)
-                    .addComponent(jButtonDeleteLine)
-                    .addComponent(jButtonSetOutFromCurrent)
-                    .addComponent(jButtonSaveSelectedPosMap))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextFieldSelectedPosMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonSetInFromCurrent)
+                                        .addComponent(jButtonAddLine)
+                                        .addComponent(jButtonDeleteLine)
+                                        .addComponent(jButtonSetOutFromCurrent)
+                                        .addComponent(jButtonSaveSelectedPosMap))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldSelectedPosMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         javax.swing.GroupLayout jPanelPositionMappingsLayout = new javax.swing.GroupLayout(jPanelPositionMappings);
         jPanelPositionMappings.setLayout(jPanelPositionMappingsLayout);
         jPanelPositionMappingsLayout.setHorizontalGroup(
-            jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelPositionMappingsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanelPosMapFiles, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelPositionMappingsLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jPanelPosMapFiles, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addContainerGap())
         );
         jPanelPositionMappingsLayout.setVerticalGroup(
-            jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelPositionMappingsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanelPosMapFiles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelPositionMappingsLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jPanelPosMapFiles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Position Mapping", jPanelPositionMappings);
@@ -2199,9 +2208,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jLabel1.setText("Futures");
 
         jListFutures.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Main" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
+            String[] strings = {"Main"};
+
+            public int getSize() {
+                return strings.length;
+            }
+
+            public String getElementAt(int i) {
+                return strings[i];
+            }
         });
         jScrollPane3.setViewportView(jListFutures);
 
@@ -2221,9 +2236,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jLabel3.setText("Key:");
 
         jListFuturesKey.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "CANCELLED", "DONE", "EXCEPTION", "WORKING" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
+            String[] strings = {"CANCELLED", "DONE", "EXCEPTION", "WORKING"};
+
+            public int getSize() {
+                return strings.length;
+            }
+
+            public String getElementAt(int i) {
+                return strings[i];
+            }
         });
         jScrollPane5.setViewportView(jListFuturesKey);
 
@@ -2258,79 +2279,79 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout jPanelFutureLayout = new javax.swing.GroupLayout(jPanelFuture);
         jPanelFuture.setLayout(jPanelFutureLayout);
         jPanelFutureLayout.setHorizontalGroup(
-            jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelFutureLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)
-                    .addComponent(jLabel3)
-                    .addComponent(jScrollPane5))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane4)
-                    .addGroup(jPanelFutureLayout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 61, Short.MAX_VALUE)
-                        .addComponent(jCheckBoxShowUnnamedFutures)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxShowDoneFutures)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxUpdateFutureAutomatically)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxFutureLongForm)
-                        .addGap(91, 91, 91)
-                        .addComponent(jButtonFuturesCancelAll)))
-                .addContainerGap())
+                jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelFutureLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)
+                                        .addComponent(jLabel3)
+                                        .addComponent(jScrollPane5))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jScrollPane4)
+                                        .addGroup(jPanelFutureLayout.createSequentialGroup()
+                                                .addComponent(jLabel2)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 61, Short.MAX_VALUE)
+                                                .addComponent(jCheckBoxShowUnnamedFutures)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jCheckBoxShowDoneFutures)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jCheckBoxUpdateFutureAutomatically)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jCheckBoxFutureLongForm)
+                                                .addGap(91, 91, 91)
+                                                .addComponent(jButtonFuturesCancelAll)))
+                                .addContainerGap())
         );
         jPanelFutureLayout.setVerticalGroup(
-            jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelFutureLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2)
-                    .addComponent(jCheckBoxUpdateFutureAutomatically)
-                    .addComponent(jCheckBoxShowDoneFutures)
-                    .addComponent(jCheckBoxShowUnnamedFutures)
-                    .addComponent(jButtonFuturesCancelAll)
-                    .addComponent(jCheckBoxFutureLongForm))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 592, Short.MAX_VALUE)
-                    .addGroup(jPanelFutureLayout.createSequentialGroup()
-                        .addComponent(jScrollPane3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 152, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelFutureLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel1)
+                                        .addComponent(jLabel2)
+                                        .addComponent(jCheckBoxUpdateFutureAutomatically)
+                                        .addComponent(jCheckBoxShowDoneFutures)
+                                        .addComponent(jCheckBoxShowUnnamedFutures)
+                                        .addComponent(jButtonFuturesCancelAll)
+                                        .addComponent(jCheckBoxFutureLongForm))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 592, Short.MAX_VALUE)
+                                        .addGroup(jPanelFutureLayout.createSequentialGroup()
+                                                .addComponent(jScrollPane3)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel3)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 152, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addContainerGap())
         );
 
         jTabbedPane2.addTab("Futures", jPanelFuture);
 
         jTableEvents.setAutoCreateRowSorter(true);
         jTableEvents.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+                new Object[][]{
 
-            },
-            new String [] {
-                "Time", "Locks", "Event", "Thread"
-            }
+                },
+                new String[]{
+                        "Time", "Locks", "Event", "Thread"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.String.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false
+            boolean[] canEdit = new boolean[]{
+                    false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         });
         jScrollPane6.setViewportView(jTableEvents);
@@ -2349,38 +2370,38 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 1049, Short.MAX_VALUE)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel4)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldEventsMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldRunningTime)))
-                .addContainerGap())
+                jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 1049, Short.MAX_VALUE)
+                                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addComponent(jLabel4)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldEventsMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel5)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldRunningTime)))
+                                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4)
-                    .addComponent(jTextFieldEventsMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5)
-                    .addComponent(jTextFieldRunningTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 592, Short.MAX_VALUE)
-                .addContainerGap())
+                jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel4)
+                                        .addComponent(jTextFieldEventsMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel5)
+                                        .addComponent(jTextFieldRunningTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 592, Short.MAX_VALUE)
+                                .addContainerGap())
         );
 
         jTabbedPane2.addTab("Events", jPanel2);
 
-        jComboBoxTeachSystemView.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        jComboBoxTeachSystemView.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
         jComboBoxTeachSystemView.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBoxTeachSystemViewActionPerformed(evt);
@@ -2390,21 +2411,21 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout jPanelTeachTableLayout = new javax.swing.GroupLayout(jPanelTeachTable);
         jPanelTeachTable.setLayout(jPanelTeachTableLayout);
         jPanelTeachTableLayout.setHorizontalGroup(
-            jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelTeachTableLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1049, Short.MAX_VALUE)
-                    .addComponent(jComboBoxTeachSystemView, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelTeachTableLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1049, Short.MAX_VALUE)
+                                        .addComponent(jComboBoxTeachSystemView, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addContainerGap())
         );
         jPanelTeachTableLayout.setVerticalGroup(
-            jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTeachTableLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jComboBoxTeachSystemView, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 600, Short.MAX_VALUE))
+                jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTeachTableLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jComboBoxTeachSystemView, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 600, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Teach", jPanelTeachTable);
@@ -2695,17 +2716,17 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jTabbedPane2))
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jTabbedPane2))
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jTabbedPane2)
-                .addContainerGap())
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jTabbedPane2)
+                                .addContainerGap())
         );
 
         pack();
@@ -2740,9 +2761,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private TableModel defaultPositionMappingsModel() {
         return new PositionMappingTableModel(
                 new Object[][]{
-                    {"System", "Robot1", "Robot2"},
-                    {"Robot1", null, new File("R1R2.csv")},
-                    {"Robot2", new File("R1R2.csv"), null},}, new Object[]{"", "", ""});
+                        {"System", "Robot1", "Robot2"},
+                        {"Robot1", null, new File("R1R2.csv")},
+                        {"Robot2", new File("R1R2.csv"), null},}, new Object[]{"", "", ""});
 
     }
 
@@ -3421,21 +3442,32 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         try {
             boolean reloadSimFiles = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Reload sim files?"));
             resetAll(reloadSimFiles);
-            cancelAll(true);
-            cancelAllStealUnsteal(true);
-            jCheckBoxMenuItemPause.setSelected(false);
-            jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(false);
-            jCheckBoxMenuItemContinousDemo.setSelected(false);
-            jCheckBoxMenuItemIndContinousDemo.setSelected(false);
-            jCheckBoxMenuItemIndRandomToggleTest.setSelected(false);
-            jCheckBoxMenuItemRandomTest.setSelected(false);
-            jCheckBoxMenuItemPauseResumeTest.setSelected(false);
-            clearAllErrors();
-            resume();
-            resetAll(reloadSimFiles);
-            connectAll();
-            setAllReverseFlag(false);
-            enableAllRobots();
+            resetAll(false)
+                    .thenCompose(x -> {
+                        return Utils.runOnDispatchThread(() -> {
+                            try {
+                                cancelAll(true);
+                                cancelAllStealUnsteal(true);
+                                jCheckBoxMenuItemPause.setSelected(false);
+                                jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(false);
+                                jCheckBoxMenuItemContinousDemo.setSelected(false);
+                                jCheckBoxMenuItemIndContinousDemo.setSelected(false);
+                                jCheckBoxMenuItemIndRandomToggleTest.setSelected(false);
+                                jCheckBoxMenuItemRandomTest.setSelected(false);
+                                jCheckBoxMenuItemPauseResumeTest.setSelected(false);
+                                clearAllErrors();
+                                resume();
+                                resetAll(reloadSimFiles);
+                                connectAll();
+                                setAllReverseFlag(false);
+                                enableAllRobots();
+                            } catch (Exception e) {
+                                logEvent("Exception occurred: " + e);
+                                Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, e);
+                                JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+                            }
+                        });
+                    });
         } catch (Exception e) {
             logEvent("Exception occurred: " + e);
             Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, e);
@@ -3449,7 +3481,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      *
      * @param reloadSimFiles whether to reload simulation files
      */
-    public void resetAll(boolean reloadSimFiles) {
+    public XFuture<Void> resetAll(boolean reloadSimFiles) {
         if (null != lastFutureReturned) {
             lastFutureReturned.cancelAll(true);
             lastFutureReturned = null;
@@ -3467,11 +3499,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         jCheckBoxMenuItemRandomTest.setSelected(false);
         jCheckBoxMenuItemPause.setSelected(false);
+        XFuture allResetFutures[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            aprsSystems.get(i).reset(reloadSimFiles);
+            allResetFutures[i] = aprsSystems.get(i).reset(reloadSimFiles);
         }
         abortEventTime = -1;
         firstEventTime = -1;
+        return XFuture.allOf(allResetFutures);
     }
 
     private void jCheckBoxMenuItemPauseResumeTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseResumeTestActionPerformed
@@ -3608,17 +3642,26 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             prepAndFinishOnDispatch(() -> {
                 try {
                     immediateAbortAll("jMenuItemRandomTestReverseFirstActionPerformed");
-                    resetAll(false);
-                    clearAllErrors();
-                    connectAll();
-                    setAllReverseFlag(true);
-                    enableAllRobots();
-                    continousDemoCycle.set(0);
-                    randomTestCount.set(0);
-                    jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(true);
-                    jCheckBoxMenuItemRandomTest.setSelected(true);
-                    lastFutureReturned = startRandomTest();
-                    mainFuture = lastFutureReturned;
+                    resetAll(false)
+                            .thenCompose(x -> {
+                                return Utils.runOnDispatchThread(() -> {
+                                    try {
+                                        clearAllErrors();
+                                        connectAll();
+                                        setAllReverseFlag(true);
+                                        enableAllRobots();
+                                        continousDemoCycle.set(0);
+                                        randomTestCount.set(0);
+                                        jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(true);
+                                        jCheckBoxMenuItemRandomTest.setSelected(true);
+                                        lastFutureReturned = startRandomTest();
+                                        mainFuture = lastFutureReturned;
+                                    } catch (Exception e) {
+                                        Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, e);
+                                        JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+                                    }
+                                });
+                            });
                 } catch (Exception e) {
                     Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, e);
                     JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
@@ -3684,10 +3727,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 enableAllRobots();
                 continousDemoCycle.set(0);
                 if (jCheckBoxMenuItemIndContinousDemo.isSelected()) {
-                    resetAll(false);
-                    jCheckBoxMenuItemIndContinousDemo.setSelected(true);
-                    continousDemoFuture = startIndependentContinousDemo();
-                    mainFuture = continousDemoFuture;
+                    resetAll(false)
+                            .thenCompose(x -> {
+                                return Utils.runOnDispatchThread(() -> {
+                                    jCheckBoxMenuItemIndContinousDemo.setSelected(true);
+                                    continousDemoFuture = startIndependentContinousDemo();
+                                    mainFuture = continousDemoFuture;
+                                });
+
+                            });
                 }
             });
         } finally {
@@ -3714,16 +3762,22 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                             random = new Random(System.currentTimeMillis());
                         }
                         if (jCheckBoxMenuItemIndRandomToggleTest.isSelected()) {
-                            resetAll(false);
-                            jCheckBoxMenuItemIndRandomToggleTest.setSelected(true);
-                            continousDemoFuture = startRandomEnableToggleIndependentContinousDemo();
-                            mainFuture = continousDemoFuture;
+                            resetAll(false)
+                                    .thenCompose(x -> {
+                                        return Utils.runOnDispatchThread(() -> {
+                                            jCheckBoxMenuItemIndRandomToggleTest.setSelected(true);
+                                            continousDemoFuture = startRandomEnableToggleIndependentContinousDemo();
+                                            mainFuture = continousDemoFuture;
+                                        });
+
+                                    });
                         }
                     });
         });
     }//GEN-LAST:event_jCheckBoxMenuItemIndRandomToggleTestActionPerformed
 
     private int randomTestSeed = 959;
+
     private void jCheckBoxMenuItemFixedRandomTestSeedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemFixedRandomTestSeedActionPerformed
         if (jCheckBoxMenuItemFixedRandomTestSeed.isSelected()) {
             randomTestSeed = Integer.parseInt(JOptionPane.showInputDialog("Fixed Seed", randomTestSeed));
@@ -4015,10 +4069,20 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * complete.
      */
     public XFuture<?> startScanAll() {
-        resetAll(false);
-        logEvent("Scan all started.");
-        return startCheckAndEnableAllRobots()
-                .thenCompose("scanAll2", ok -> checkOkElse(ok, this::scanAllInternal, this::showCheckEnabledErrorSplash));
+
+        return resetAll(false)
+                .thenCompose(x -> {
+                    return Utils.supplyOnDispatchThread(() -> {
+                        logEvent("Scan all started.");
+                        return startCheckAndEnableAllRobots()
+                                .thenCompose("scanAll2",
+                                        ok -> {
+                                            return checkOkElse(ok, this::scanAllInternal, this::showCheckEnabledErrorSplash);
+                                        });
+
+                    });
+
+                });
     }
 
     private final AtomicInteger srtCount = new AtomicInteger();
@@ -4029,7 +4093,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      *
      * @return a future that can be used to determine if the test failed or was
      * cancelled.
-     *
      */
     public XFuture<?> startRandomTest() {
         int c = srtCount.incrementAndGet();
@@ -4218,6 +4281,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
 
     }
+
     private final ConcurrentHashMap<String, LockInfo> toggleBlockerMap = new ConcurrentHashMap<>();
 
     private LockInfo disallowToggles(String blockerName, AprsJFrame... systems) {
@@ -4405,7 +4469,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * empty kit trays and put parts back in parts trays.
      *
      * @param reverseFlag false to move parts from parts trays to kitTrays or
-     * true to move parts from kitTrays to partsTrays
+     *                    true to move parts from kitTrays to partsTrays
      */
     public XFuture<Void> startSetAllReverseFlag(boolean reverseFlag) {
         logEvent("setAllReverseFlag(" + reverseFlag + ")");
@@ -4536,13 +4600,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private final ExecutorService defaultSupervisorExecutorService
             = Executors.newSingleThreadExecutor(new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable r) {
-                    Thread thread = new Thread(r, "AprsSupervisor" + myThreadId);
-                    thread.setDaemon(true);
-                    return thread;
-                }
-            });
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r, "AprsSupervisor" + myThreadId);
+            thread.setDaemon(true);
+            return thread;
+        }
+    });
 
     private ExecutorService supervisorExecutorService = defaultSupervisorExecutorService;
 
@@ -4764,6 +4828,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
         });
     }
+
     AtomicInteger pauseCount = new AtomicInteger();
 
     private void pause() {
@@ -4921,14 +4986,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             logEvent("startActions for " + sys);
             futures[i] = sys.startActions("startAllActions" + saaNumber)
                     .thenComposeAsync(x -> {
-                        String runName = sys.getRunName();
-                        logEvent("startActions " + sys + ",saaNumber= " + saaNumber + " completed action list run " + runName + " : " + x);
-                        return finishAction(sysThreadId)
-                                .thenApply(x2 -> {
-                                    logEvent("finish startActions " + sys + ",saaNumber= " + saaNumber + " completed action list run " + runName + " : " + x);
-                                    return x;
-                                });
-                    },
+                                String runName = sys.getRunName();
+                                logEvent("startActions " + sys + ",saaNumber= " + saaNumber + " completed action list run " + runName + " : " + x);
+                                return finishAction(sysThreadId)
+                                        .thenApply(x2 -> {
+                                            logEvent("finish startActions " + sys + ",saaNumber= " + saaNumber + " completed action list run " + runName + " : " + x);
+                                            return x;
+                                        });
+                            },
                             supervisorExecutorService);
             tasksNames.append(sys.getTaskName());
             tasksNames.append(",");
@@ -4946,8 +5011,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     try {
                         if (null != v) {
                             List<XFuture<Void>> l = Arrays.stream(v)
-                            .filter(f2 -> !f2.isDone())
-                            .collect(Collectors.toList());
+                                    .filter(f2 -> !f2.isDone())
+                                    .collect(Collectors.toList());
                             l.add(f);
                             if (l.size() < 1) {
                                 return new XFuture[]{f};
@@ -4978,8 +5043,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     /**
      * Log an exception to the events table.
      *
-     * @param level log severity indicator
-     * @param msg message to show
+     * @param level  log severity indicator
+     * @param msg    message to show
      * @param thrown exception causing this event
      */
     public void log(Level level, String msg, Throwable thrown) {
@@ -4994,8 +5059,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     try {
                         if (null != v) {
                             List<XFuture<Void>> l = Arrays.stream(v)
-                            .filter(f2 -> !f2.isDone())
-                            .collect(Collectors.toList());
+                                    .filter(f2 -> !f2.isDone())
+                                    .collect(Collectors.toList());
                             if (l.size() < 1) {
                                 return null;
                             }
@@ -5034,13 +5099,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             logEvent("Continue actions for " + sys.getTaskName() + " with " + sys.getRobotName());
             futures[i] = aprsSystems.get(i).continueActionList("continueAllActions")
                     .thenComposeAsync(x -> {
-                        logEvent("continueAllActions " + sys.getRunName() + " completed action list " + x);
-                        return finishAction(sysThreadId)
-                                .thenApply(x2 -> {
-                                    logEvent("continueAllActions finish " + sys.getRunName() + " completed action list " + x);
-                                    return x;
-                                });
-                    },
+                                logEvent("continueAllActions " + sys.getRunName() + " completed action list " + x);
+                                return finishAction(sysThreadId)
+                                        .thenApply(x2 -> {
+                                            logEvent("continueAllActions finish " + sys.getRunName() + " completed action list " + x);
+                                            return x;
+                                        });
+                            },
                             supervisorExecutorService);
             tasksNames.append(aprsSystems.get(i).getTaskName());
             tasksNames.append(",");
@@ -5082,7 +5147,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      *
      * @return future allowing caller to determine when all systems have
      * completed
-     *
      */
     public XFuture<?> startAll() {
         logEvent("Start All ");
@@ -5396,7 +5460,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      *
      * @param sys1 system to convert positions from
      * @param sys2 system to convert positions to
-     * @param f new file location
+     * @param f    new file location
      */
     public void setPosMapFile(String sys1, String sys2, File f) {
         Map<String, File> subMap = posMaps.get(sys1);
@@ -5490,6 +5554,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             pw.println(f.getCanonicalPath());
         }
     }
+
     private File lastPosMapFile = null;
 
     private void saveLastPosMapFile(File f) throws IOException {
@@ -5664,6 +5729,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         jListFutures.setModel(listModel);
     }
+
     private volatile Supplier<XFuture> futureToDisplaySupplier = () -> mainFuture;
 
     private void updateCurrentFutureDisplay() {
@@ -5843,12 +5909,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         robotMap.forEach((robotName, aprs) -> {
             tm.addRow(new Object[]{
-                robotName,
-                true,
-                aprs.getRobotCrclHost(),
-                aprs.getRobotCrclPort(),
-                robotDisableCountMap.getOrDefault(robotName, 0),
-                runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L))
+                    robotName,
+                    true,
+                    aprs.getRobotCrclHost(),
+                    aprs.getRobotCrclPort(),
+                    robotDisableCountMap.getOrDefault(robotName, 0),
+                    runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L))
             });
         });
         Utils.autoResizeTableColWidths(jTableRobots);

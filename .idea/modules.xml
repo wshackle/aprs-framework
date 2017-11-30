@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/aprs-framework.iml" filepath="$PROJECT_DIR$/aprs-framework.iml" />
+      <module fileurl="file://$USER_HOME$/crcl4java/crcl4java.iml" filepath="$USER_HOME$/crcl4java/crcl4java.iml" />
+      <module fileurl="file://$USER_HOME$/crcl4java/crcl4java-base/crcl4java-base.iml" filepath="$USER_HOME$/crcl4java/crcl4java-base/crcl4java-base.iml" />
+      <module fileurl="file://$USER_HOME$/crcl4java/crcl4java-commons-math/crcl4java-commons-math.iml" filepath="$USER_HOME$/crcl4java/crcl4java-commons-math/crcl4java-commons-math.iml" />
+      <module fileurl="file://$USER_HOME$/crcl4java/crcl4java-exi/crcl4java-exi.iml" filepath="$USER_HOME$/crcl4java/crcl4java-exi/crcl4java-exi.iml" />
+      <module fileurl="file://$USER_HOME$/crcl4java/crcl4java-motoman/crcl4java-motoman.iml" filepath="$USER_HOME$/crcl4java/crcl4java-motoman/crcl4java-motoman.iml" />
+      <module fileurl="file://$USER_HOME$/crcl4java/crcl4java-ui/crcl4java-ui.iml" filepath="$USER_HOME$/crcl4java/crcl4java-ui/crcl4java-ui.iml" />
+      <module fileurl="file://$USER_HOME$/crcl4java/crcl4java-utils/crcl4java-utils.iml" filepath="$USER_HOME$/crcl4java/crcl4java-utils/crcl4java-utils.iml" />
+    </modules>
+  </component>
+</project>

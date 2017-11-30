@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.wshackle:crcl4java-vaadin-webapp:classes:1.5-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-vaadin-webapp/1.5-SNAPSHOT/crcl4java-vaadin-webapp-1.5-20171129.214522-10-classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-vaadin-webapp/1.5-SNAPSHOT/crcl4java-vaadin-webapp-1.5-20171129.214522-10-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-vaadin-webapp/1.5-SNAPSHOT/crcl4java-vaadin-webapp-1.5-20171129.214522-10-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

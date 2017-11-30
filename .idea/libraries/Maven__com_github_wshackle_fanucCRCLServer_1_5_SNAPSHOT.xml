@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.wshackle:fanucCRCLServer:1.5-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/fanucCRCLServer/1.5-SNAPSHOT/fanucCRCLServer-1.5-20170727.190842-1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/fanucCRCLServer/1.5-SNAPSHOT/fanucCRCLServer-1.5-20170727.190842-1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/fanucCRCLServer/1.5-SNAPSHOT/fanucCRCLServer-1.5-20170727.190842-1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

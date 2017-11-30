@@ -1112,7 +1112,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public synchronized void setCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (null != pendantClientJInternalFrame) {
             synchronized (pendantClientJInternalFrame) {
-                pendantClientJInternalFrame.setProgram(program);
+                setProgram(program);
             }
         }
     }
@@ -1156,7 +1156,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private boolean runCrclProgram(CRCLProgramType program) throws JAXBException {
         setThreadName();
         takeSnapshots("startCRCLProgram(" + program.getName() + ")");
-        pendantClientJInternalFrame.setProgram(program);
+        setProgram(program);
         return pendantClientJInternalFrame.runCurrentProgram();
     }
 
@@ -1168,7 +1168,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @throws JAXBException the program did not meet schema requirements
      */
     public boolean runCRCLProgram(CRCLProgramType program) throws JAXBException {
-        pendantClientJInternalFrame.setProgram(program);
+        setProgram(program);
         return pendantClientJInternalFrame.runCurrentProgram();
     }
 
@@ -3213,7 +3213,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private boolean lookForPartsInternal() throws JAXBException {
         CRCLProgramType lfpProgram = pddlExecutorJInternalFrame1.createLookForPartsProgram();
-        pendantClientJInternalFrame.setProgram(lfpProgram);
+        setProgram(lfpProgram);
         return pendantClientJInternalFrame.runCurrentProgram();
     }
 
@@ -3940,8 +3940,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     /**
      * Reset errors and reload simulation files
      */
-    public void reset() {
-        reset(true);
+    public XFuture<Void> reset() {
+        return reset(true);
     }
 
     /**
@@ -3949,12 +3949,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @param reloadSimFiles whether to reload simulation files
      */
-    public void reset(boolean reloadSimFiles) {
-        XFuture.runAsync("reset",
+    public XFuture<Void> reset(boolean reloadSimFiles) {
+        return XFuture.runAsync("reset",
                 () -> {
                     resetInternal(reloadSimFiles);
-                }, runProgramService)
-                .join();
+                }, runProgramService);
 
     }
 
@@ -4069,7 +4068,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setCommandID(emptyProgram.getInitCanon());
             setCommandID(emptyProgram.getEndCanon());
             emptyProgram.setName("checkEnabled." + checkEnabledCount.incrementAndGet());
-            pendantClientJInternalFrame.setProgram(emptyProgram);
+            setProgram(emptyProgram);
             boolean progRunRet = pendantClientJInternalFrame.runCurrentProgram();
 
             System.out.println("startCheckEnabled finishing with " + progRunRet);
@@ -4080,6 +4079,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             throw new RuntimeException(ex);
         }
     }
+
+    private volatile  int emptyProgramCount = 0;
+    private volatile  int consecutiveEmptyProgramCount = 0;
+
+    private void setProgram(CRCLProgramType program) throws JAXBException {
+        if(program.getMiddleCommand().isEmpty()) {
+            emptyProgramCount++;
+            consecutiveEmptyProgramCount++;
+            if(consecutiveEmptyProgramCount > 1) {
+                System.out.println("emptyProgramCount=" + emptyProgramCount);
+                System.out.println("consecutiveEmptyProgramCount=" + consecutiveEmptyProgramCount);
+            }
+        } else {
+            consecutiveEmptyProgramCount = 0;
+        }
+
+        pendantClientJInternalFrame.setProgram(program);
+    }
+
     private final ConcurrentLinkedDeque<XFuture<Boolean>> dbConnectedWaiters = new ConcurrentLinkedDeque<>();
 
     private XFuture<Boolean> waitDbConnected() {
