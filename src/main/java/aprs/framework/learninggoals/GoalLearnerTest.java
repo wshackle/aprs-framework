@@ -73,28 +73,32 @@ public class GoalLearnerTest {
         Map<String, List<Slot>> map = new HashMap<>();
 
         // Kit Tray has 4 slots two for small gears and two for large gears
-        KitTray tray1 = KitTray.newKitTrayFromSkuIdRotXY("kitTray", 1, 0, 50, 50);
-        Slot s11 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "small_gear", 1, 0.0, +50, +50);
+        KitTray tray1 = KitTray.newKitTrayFromSkuIdRotXY("kit_s2l2_vessel", 1, 0, 50, 50);
+        Slot s11 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "small_gear", 1, 0.0, +32, +55);
         addMap(s11, map);
-        Slot s12 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "small_gear", 2, 0.0, -50, +50);
+        Slot s12 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "small_gear", 2, 0.0, -32, +55);
         addMap(s12, map);
-        Slot s13 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "large_gear", 1, 0.0, +50, -50);
+        Slot s13 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "large_gear", 1, 0.0, +54, -28);
         addMap(s13, map);
-        Slot s14 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "large_gear", 2, 0.0, -50, -50);
+        Slot s14 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "large_gear", 2, 0.0, -54, -28);
         addMap(s14, map);
 
         // Small gear parts tray has two slots for small gears
-        PartsTray tray2 = PartsTray.newPartsTrayFromSkuIdRotXY("smallPartsTray", 1, 0, 200, 200);
-        Slot s21 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 1, 0.0, +50, +50);
+        PartsTray tray2 = PartsTray.newPartsTrayFromSkuIdRotXY("small_gear_vessel", 1, 0, 200, 200);
+        Slot s21 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 1, 0.0, +26.5, +26.5);
         addMap(s21, map);
-        Slot s22 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 2, 0.0, -50, +50);
+        Slot s22 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 2, 0.0, -26.5, +26.5);
         addMap(s22, map);
+        Slot s23 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 1, 0.0, +26.5, -26.5);
+        addMap(s23, map);
+        Slot s24 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 2, 0.0, -26.5, -26.5);
+        addMap(s24, map);
 
         // Large gear parts tray has two slots for large gears
-        PartsTray tray3 = PartsTray.newPartsTrayFromSkuIdRotXY("largePartsTray", 1, 0, 400, 400);
-        Slot s31 = Slot.slotFromTrayPartNameIndexRotationXY(tray3, "large_gear", 1, 0.0, +50, +50);
+        PartsTray tray3 = PartsTray.newPartsTrayFromSkuIdRotXY("large_gear_vessel", 1, 0, 400, 400);
+        Slot s31 = Slot.slotFromTrayPartNameIndexRotationXY(tray3, "large_gear", 1, 0.0, +59, +0);
         addMap(s31, map);
-        Slot s32 = Slot.slotFromTrayPartNameIndexRotationXY(tray3, "large_gear", 2, 0.0, -50, +50);
+        Slot s32 = Slot.slotFromTrayPartNameIndexRotationXY(tray3, "large_gear", 2, 0.0, -59, +0);
         addMap(s32, map);
 
         // The slot offset provider is a simple replacement for the part of 

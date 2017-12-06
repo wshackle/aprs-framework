@@ -30,10 +30,8 @@ import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.utils.CRCLPosemath;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Line2D;
@@ -43,10 +41,8 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
+import java.net.URL;
+import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,8 +50,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import rcs.posemath.PmCartesian;
 import static aprs.framework.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
-import java.awt.Dimension;
-import java.util.Collection;
+
 import java.util.stream.StreamSupport;
 
 /**
@@ -65,6 +60,60 @@ import java.util.stream.StreamSupport;
 public class Object2DJPanel extends JPanel {
 
     private DisplayAxis displayAxis = POS_X_POS_Y;
+
+    public Object2DJPanel() {
+        partImageMap = new HashMap<>();
+        addPartImage("sku_part_medium_gear", "aprs/framework/partImages/medium_orange_gear.png", 75.0);
+        addPartImage("sku_part_large_gear", "aprs/framework/partImages/large_green_gear.png", 100.0);
+        addPartImage("sku_part_small_gear", "aprs/framework/partImages/small_yellow_gear.png", 45.0);
+        addPartImage("sku_kit_s2l2_vessel", "aprs/framework/partImages/red_s2l2_kit_tray_up.png", 220.0);
+        addPartImage("sku_large_gear_vessel", "aprs/framework/partImages/purple_large_gear_tray_horz.png", 220.0);
+        addPartImage("sku_medium_gear_vessel", "aprs/framework/partImages/blue_medium_gear_parts_tray.png", 160.0);
+        addPartImage("sku_small_gear_vessel", "aprs/framework/partImages/orange_small_gear_parts_tray.png", 110.0);
+        addPartImage("sku_kit_m2l1_vessel", "aprs/framework/partImages/m2l1_kit_tray_right.png", 190.0);
+    }
+
+    private boolean viewDetails;
+
+    /**
+     * Get the value of viewDetails
+     *
+     * @return the value of viewDetails
+     */
+    public boolean isViewDetails() {
+        return viewDetails;
+    }
+
+    /**
+     * Set the value of viewDetails
+     *
+     * @param viewDetails new value of viewDetails
+     */
+    public void setViewDetails(boolean viewDetails) {
+        this.viewDetails = viewDetails;
+        this.repaint();
+    }
+
+    private void addPartImage(String partName, String resName, double realWidth) {
+        try {
+            BufferedImage img = getImageFromSystemResourceName(resName);
+            if (null != img) {
+                double ratio = realWidth / img.getWidth();
+                partImageMap.put(partName, new PartImageInfo(img, ratio));
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private BufferedImage getImageFromSystemResourceName(String resName) throws IOException {
+        URL url = ClassLoader.getSystemResource(resName);
+        if (null == resName) {
+            throw new IllegalArgumentException("ClassLoader.getSystemResource(" + resName + ") returned null");
+        }
+        BufferedImage image = ImageIO.read(url);
+        return image;
+    }
 
     /**
      * Get the value of displayAxis
@@ -405,18 +454,20 @@ public class Object2DJPanel extends JPanel {
         double minY = Double.POSITIVE_INFINITY;
         double maxY = Double.NEGATIVE_INFINITY;
         for (PhysicalItem item : itemsToPaint) {
-            if (minX > item.x) {
-                minX = item.x;
+            double itemSize = item.getMaxSlotDist();
+            if (minX > item.x - itemSize) {
+                minX = item.x - itemSize;
             }
-            if (minY > item.y) {
-                minY = item.y;
+            if (minY > item.y - itemSize) {
+                minY = item.y - itemSize;
             }
-            if (maxX < item.x) {
-                maxX = item.x;
+            if (maxX < item.x + itemSize) {
+                maxX = item.x + itemSize;
             }
-            if (maxY < item.y) {
-                maxY = item.y;
+            if (maxY < item.y + itemSize) {
+                maxY = item.y + itemSize;
             }
+
         }
         this.paintItems(g2d, itemsToPaint, selectedItem, minX, minY, maxX, maxY, w, h);
     }
@@ -560,24 +611,25 @@ public class Object2DJPanel extends JPanel {
         return selectedItemIndex;
     }
 
-    private boolean viewRotations;
+    private boolean viewRotationsAndImages = true;
 
     /**
-     * Get the value of viewRotations
+     * Get the value of viewRotationsAndImages
      *
-     * @return the value of viewRotations
+     * @return the value of viewRotationsAndImages
      */
-    public boolean isViewRotations() {
-        return viewRotations;
+    public boolean isViewRotationsAndImages() {
+        return viewRotationsAndImages;
     }
 
     /**
-     * Set the value of viewRotations
+     * Set the value of viewRotationsAndImages
      *
-     * @param viewRotations new value of viewRotations
+     * @param viewRotationsAndImages new value of viewRotationsAndImages
      */
-    public void setViewRotations(boolean viewRotations) {
-        this.viewRotations = viewRotations;
+    public void setViewRotationsAndImages(boolean viewRotationsAndImages) {
+        this.viewRotationsAndImages = viewRotationsAndImages;
+        this.repaint();
     }
 
     /**
@@ -773,6 +825,7 @@ public class Object2DJPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+
         List<PhysicalItem> itemsToPaint = getItemsToPaint();
         PhysicalItem selectedItem = null;
         if (selectedItemIndex >= 0 && selectedItemIndex < itemsToPaint.size()) {
@@ -884,7 +937,7 @@ public class Object2DJPanel extends JPanel {
         }
         return absSlotList;
     }
-    
+
     private SlotOffsetProvider slotOffsetProvider = null;
 
     public SlotOffsetProvider getSlotOffsetProvider() {
@@ -901,11 +954,11 @@ public class Object2DJPanel extends JPanel {
         if (null != offsets) {
             for (PhysicalItem offset : offsets) {
                 String prpName = offset.getPrpName();
-                String slotDisplayName = "slot_" +prpName;
-                if(slotDisplayName.startsWith("slot_slot_")) {
+                String slotDisplayName = "slot_" + prpName;
+                if (slotDisplayName.startsWith("slot_slot_")) {
                     slotDisplayName = slotDisplayName.substring(5);
                 }
-                slotList.add(newPhysicalItemNameRotXYScoreType( slotDisplayName, 0.0,
+                slotList.add(newPhysicalItemNameRotXYScoreType(slotDisplayName, 0.0,
                         item.x + (offset.x * Math.cos(item.getRotation()) + offset.y * Math.sin(item.getRotation())),
                         item.y + (-offset.x * Math.sin(item.getRotation()) + offset.y * Math.cos(item.getRotation())),
                         item.getScore(), "S"));
@@ -913,6 +966,37 @@ public class Object2DJPanel extends JPanel {
         }
         return slotList;
     }
+
+    private static class PartImageInfo {
+
+        final BufferedImage image;
+        final double ratio;
+        double scale;
+        Image scaledImage;
+
+        public PartImageInfo(BufferedImage image, double ratio) {
+            this.image = image;
+            this.ratio = ratio;
+            scale = 1.0;
+            scaledImage = image.getScaledInstance(image.getWidth(), image.getHeight(), Image.SCALE_DEFAULT);
+        }
+
+        public Image getScaledImage(double scale) {
+            int old_w = (int) (ratio * this.scale * image.getWidth());
+            int old_h = (int) (ratio * this.scale * image.getHeight());
+            int new_w = (int) (ratio * scale * image.getWidth());
+            int new_h = (int) (ratio * scale * image.getHeight());
+            if (new_w == old_w && new_h == old_h) {
+                return scaledImage;
+            }
+            this.scale = scale;
+            scaledImage = image.getScaledInstance(new_w, new_h, Image.SCALE_DEFAULT);
+            return scaledImage;
+        }
+
+    }
+
+    private final Map<String, PartImageInfo> partImageMap;
 
     public void paintItems(Graphics2D g2d,
             Collection<? extends PhysicalItem> itemsToPaint,
@@ -938,13 +1022,13 @@ public class Object2DJPanel extends JPanel {
         switch (displayAxis) {
             case POS_X_POS_Y:
             case NEG_X_NEG_Y:
-                scale_x = (width / 2 - 10) / (maxX - minX);
+                scale_x = (width / 2 - 30) / (maxX - minX);
                 scale_y = (height - 60) / (maxY - minY);
                 break;
 
             case POS_Y_NEG_X:
             case NEG_Y_POS_X:
-                scale_x = (width / 2 - 10) / (maxY - minY);
+                scale_x = (width / 2 - 30) / (maxY - minY);
                 scale_y = (height - 60) / (maxX - minX);
                 break;
         }
@@ -1042,6 +1126,29 @@ public class Object2DJPanel extends JPanel {
         }
         float newFontSize = g2d.getFont().getSize2D();
         int i = 0;
+
+        if (viewRotationsAndImages) {
+            for (PhysicalItem item : displayItems) {
+                if (null == item) {
+                    continue;
+                }
+                if ("P".equals(item.getType())) {
+                    continue;
+                }
+                paintPartImage(g2d, minX, minY, maxX, maxY, item);
+                g2d.setTransform(origTransform);
+            }
+            for (PhysicalItem item : displayItems) {
+                if (null == item) {
+                    continue;
+                }
+                if (!("P".equals(item.getType()))) {
+                    continue;
+                }
+                paintPartImage(g2d, minX, minY, maxX, maxY, item);
+                g2d.setTransform(origTransform);
+            }
+        }
         for (PhysicalItem item : displayItems) {
             if (null == item) {
                 continue;
@@ -1062,7 +1169,7 @@ public class Object2DJPanel extends JPanel {
             if (useSeparateNames) {
                 item.setLabelColor(labelColors[i % labelColors.length]);
                 g2d.setColor(item.getLabelColor());
-                double namex = maxX + (maxX - minX) / 10.0;
+                double namex = maxX + (maxX - minX) / 5.0;
                 double namey = displayMinY + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxY - displayMinY);
                 switch (displayAxis) {
                     case POS_X_POS_Y:
@@ -1070,16 +1177,16 @@ public class Object2DJPanel extends JPanel {
 
                     case POS_Y_NEG_X:
                         namex = displayMinX + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxX - displayMinX);
-                        namey = maxY + (maxY - minY) / 10.0;
+                        namey = maxY + (maxY - minY) / 5.0;
                         break;
 
                     case NEG_X_NEG_Y:
-                        namex = minX - (maxX - minX) / 10.0;
+                        namex = minX - (maxX - minX) / 5.0;
                         break;
 
                     case NEG_Y_POS_X:
                         namex = displayMinX + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxX - displayMinX);
-                        namey = minY - (maxY - minY) / 10.0;
+                        namey = minY - (maxY - minY) / 5.0;
                         break;
                 }
                 this.translate(g2d, namex, namey, minX, minY, maxX, maxY);
@@ -1100,10 +1207,10 @@ public class Object2DJPanel extends JPanel {
             if (null == item) {
                 continue;
             }
-            this.translate(g2d, item.x, item.y, minX, minY, maxX, maxY);
-            if (viewRotations) {
-                g2d.rotate(item.getRotation());
+            if (viewRotationsAndImages && null != getPartImageInfo(item)) {
+                continue;
             }
+            translateThenRotateItem(g2d, minX, minY, maxX, maxY, item);
             item.setDisplayTransform(g2d.getTransform());
             item.setOrigTransform(origTransform);
             try {
@@ -1124,27 +1231,27 @@ public class Object2DJPanel extends JPanel {
             if (null == item) {
                 continue;
             }
-            this.translate(g2d, item.x, item.y, minX, minY, maxX, maxY);
-            if (viewRotations) {
-                g2d.rotate(item.getRotation());
-            }
+            boolean imageShown = viewRotationsAndImages && null != getPartImageInfo(item);
+            translateThenRotateItem(g2d, minX, minY, maxX, maxY, item);
             g2d.setColor(Color.BLACK);
-            if (!useSeparateNames) {
-                if (item.getName() != null) {
-                    g2d.drawString(item.getName(), 0, 0);
+            if (!imageShown) {
+                if (!useSeparateNames) {
+                    if (item.getName() != null) {
+                        g2d.drawString(item.getName(), 0, 0);
+                    }
+                } else if (item.getType() != null) {
+                    g2d.drawString(item.getType(), 0, 0);
+                } else if (item.getName().startsWith("part_")) {
+                    g2d.drawString("P", 0, 0);
+                } else if (item.getName().startsWith("kit_")) {
+                    g2d.drawString("KT", 0, 0);
+                } else if (item.getName().startsWith("empty_slot_")) {
+                    g2d.drawString("S", 0, 0);
+                } else if (item.getName().contains("vessel")) {
+                    g2d.drawString("PT", 0, 0);
+                } else {
+                    g2d.drawString(item.getName().substring(0, 1), 0, 0);
                 }
-            } else if (item.getType() != null) {
-                g2d.drawString(item.getType(), 0, 0);
-            } else if (item.getName().startsWith("part_")) {
-                g2d.drawString("P", 0, 0);
-            } else if (item.getName().startsWith("kit_")) {
-                g2d.drawString("KT", 0, 0);
-            } else if (item.getName().startsWith("empty_slot_")) {
-                g2d.drawString("S", 0, 0);
-            } else if (item.getName().contains("vessel")) {
-                g2d.drawString("PT", 0, 0);
-            } else {
-                g2d.drawString(item.getName().substring(0, 1), 0, 0);
             }
             item.setDisplayTransform(g2d.getTransform());
             item.setOrigTransform(origTransform);
@@ -1156,24 +1263,16 @@ public class Object2DJPanel extends JPanel {
             }
 
             item.setDisplayRect(new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : item.getName().length()), 20));
-            g2d.setColor(item.getLabelColor());
-            g2d.draw(item.getDisplayRect());
+            if (!imageShown) {
+                g2d.setColor(item.getLabelColor());
+                g2d.draw(item.getDisplayRect());
+            }
+
             try {
                 if (null != slotOffsetProvider && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
                     List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName());
                     if (null != offsets) {
                         for (PhysicalItem offset : offsets) {
-//                            if (viewRotations) {
-//                                g2d.draw(new Arc2D.Double(
-//                                        offset.x * scale - 2.5,
-//                                        offset.y * scale - 2.5,
-//                                        5.0, 5.0, 0.0, 360.0, Arc2D.OPEN));
-//                            } else {
-//                                g2d.draw(new Arc2D.Double(
-//                                        (offset.x * Math.cos(item.getRotation()) + offset.y * Math.sin(item.getRotation())) * scale - 2.5,
-//                                        (-offset.x * Math.sin(item.getRotation()) + offset.y * Math.cos(item.getRotation())) * scale - 2.5,
-//                                        5.0, 5.0, 0.0, 360.0, Arc2D.OPEN));
-//                            }
                             double mag = offset.mag();
                             if (item.getMaxSlotDist() < mag) {
                                 item.setMaxSlotDist(mag);
@@ -1181,13 +1280,10 @@ public class Object2DJPanel extends JPanel {
                         }
                     }
                 }
-//                g2d.draw(new Arc2D.Double(
-//                        -2.5,
-//                        -2.5,
-//                        5.0, 5.0, 0.0, 360.0, Arc2D.OPEN));
-                if (item.getMaxSlotDist() > 0) {
-//                    g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() * scale, -item.getMaxSlotDist() * scale, item.getMaxSlotDist() * 2.0 * scale, item.getMaxSlotDist() * 2.0 * scale, 0.0, 360.0, Arc2D.OPEN));
-                    g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() * scale*slotMaxDistExpansion, -item.getMaxSlotDist() * scale*slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * scale*slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * scale*slotMaxDistExpansion, 0.0, 360.0, Arc2D.OPEN));
+                if (viewDetails) {
+                    if (item.getMaxSlotDist() > 0) {
+                        g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() * scale * slotMaxDistExpansion, -item.getMaxSlotDist() * scale * slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * scale * slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * scale * slotMaxDistExpansion, 0.0, 360.0, Arc2D.OPEN));
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -1196,6 +1292,8 @@ public class Object2DJPanel extends JPanel {
         }
         g2d.setColor(Color.BLACK);
         if (null != selectedItem) {
+            boolean imageShown = viewRotationsAndImages && null != getPartImageInfo(selectedItem);
+
             if (selectedItem.getName() == null || selectedItem.getName().length() < 1) {
                 return;
             }
@@ -1208,20 +1306,19 @@ public class Object2DJPanel extends JPanel {
             if (Double.isInfinite(selectedItem.getRotation()) || Double.isNaN(selectedItem.getRotation())) {
                 return;
             }
-            this.translate(g2d, selectedItem.x, selectedItem.y, minX, minY, maxX, maxY);
-            if (viewRotations) {
-                g2d.rotate(selectedItem.getRotation());
-            }
-            g2d.setColor(Color.WHITE);
-            String typeString = getItemType(selectedItem);
-            Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? typeString.length() : selectedItem.getName().length()), 20);
-            g2d.fill(rect);
-            g2d.setColor(Color.BLACK);
-            g2d.draw(rect);
-            if (!useSeparateNames) {
-                g2d.drawString(selectedItem.getName(), 0, 0);
-            } else {
-                g2d.drawString(selectedItem.getType(), 0, 0);
+            if (!imageShown || viewDetails) {
+                translateThenRotateItem(g2d, minX, minY, maxX, maxY, selectedItem);
+                g2d.setColor(Color.WHITE);
+                String typeString = getItemType(selectedItem);
+                Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? typeString.length() : selectedItem.getName().length()), 20);
+                g2d.fill(rect);
+                g2d.setColor(Color.BLACK);
+                g2d.draw(rect);
+                if (!useSeparateNames) {
+                    g2d.drawString(selectedItem.getName(), 0, 0);
+                } else {
+                    g2d.drawString(selectedItem.getType(), 0, 0);
+                }
             }
             g2d.setTransform(origTransform);
         }
@@ -1237,7 +1334,99 @@ public class Object2DJPanel extends JPanel {
         }
 
     }
-    public double slotMaxDistExpansion = 1.25;
+
+    private void paintPartImage(Graphics2D g2d, double minX, double minY, double maxX, double maxY, PhysicalItem item) {
+        if (!viewRotationsAndImages) {
+            return;
+        }
+        PartImageInfo info = getPartImageInfo(item);
+        if (null != info) {
+
+            Image img = info.getScaledImage(scale);
+            translateThenRotateItem(g2d, minX, minY, maxX, maxY, item);
+            g2d.translate(-(img.getWidth(this) / 2.0), -(img.getHeight(this) / 2.0));
+            g2d.drawImage(img, null, null);
+            if (viewDetails) {
+                g2d.translate(-1, -1);
+                g2d.setColor(item.getLabelColor());
+                g2d.draw(new Rectangle2D.Double(0, 0, img.getWidth(this) + 2, img.getHeight(this) + 2));
+            }
+            g2d.setColor(Color.BLACK);
+
+        } else {
+            System.out.println("no image for " + item.getName());
+        }
+    }
+
+    private PartImageInfo getPartImageInfo(PhysicalItem item) {
+        PartImageInfo info = partImageMap.get(item.getName());
+        if (null == info) {
+            if (item.getName().startsWith("sku_part_")) {
+                info = partImageMap.get(item.getName().substring("sku_part_".length()));
+            } else {
+                info = partImageMap.get("sku_part_" + item.getName());
+            }
+        }
+        if (null == info) {
+            if (item.getName().startsWith("sku_")) {
+                info = partImageMap.get(item.getName().substring("sku_".length()));
+            } else {
+                info = partImageMap.get("sku_" + item.getName());
+            }
+        }
+        if (null == info) {
+            if (item.getName().startsWith("part_")) {
+                info = partImageMap.get(item.getName().substring("part_".length()));
+            } else {
+                info = partImageMap.get("part_" + item.getName());
+            }
+        }
+        return info;
+    }
+
+    private void translateThenRotateItem(Graphics2D g2d, double minX, double minY, double maxX, double maxY, PhysicalItem item) {
+        double itemx = item.x;
+        double itemy = item.y;
+        switch (displayAxis) {
+            case POS_X_POS_Y:
+                g2d.translate((itemx - minX) * scale + 15, (maxY - itemy) * scale + 20);
+                break;
+
+            case POS_Y_NEG_X:
+                g2d.translate((itemy - minY) * scale + 15, (itemx - minX) * scale + 20);
+                break;
+
+            case NEG_X_NEG_Y:
+                g2d.translate((maxX - itemx) * scale + 15, (itemy - minY) * scale + 20);
+                break;
+
+            case NEG_Y_POS_X:
+                g2d.translate((maxY - itemy) * scale + 15, (maxX - itemx) * scale + 20);
+                break;
+        }
+        if (viewRotationsAndImages) {
+            switch (displayAxis) {
+                case POS_X_POS_Y:
+//                    g2d.rotate(Math.PI/2.0);
+                    break;
+
+                case POS_Y_NEG_X:
+                    g2d.rotate(Math.PI / 2.0);
+                    break;
+
+                case NEG_X_NEG_Y:
+                    g2d.rotate(Math.PI);
+                    break;
+
+                case NEG_Y_POS_X:
+                    g2d.rotate(3 * Math.PI / 2.0);
+                    break;
+            }
+            g2d.rotate(-item.getRotation());
+        }
+    }
+
+    public double slotMaxDistExpansion = 1.5;
 
     public double getSlotMaxDistExpansion() {
         return slotMaxDistExpansion;

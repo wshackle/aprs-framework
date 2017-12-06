@@ -1,0 +1,1335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="c95f25e1-5f15-467d-99ba-12a3a03da819" name="Default" comment="eliminate join from reset use async instead">
+      <change beforePath="" afterPath="$USER_HOME$/crcl4java/.idea/modules.xml" />
+      <change beforePath="" afterPath="$USER_HOME$/crcl4java/crcl4java-base/crcl4java-base.iml" />
+      <change beforePath="" afterPath="$USER_HOME$/crcl4java/crcl4java-commons-math/crcl4java-commons-math.iml" />
+      <change beforePath="" afterPath="$USER_HOME$/crcl4java/crcl4java-exi/crcl4java-exi.iml" />
+      <change beforePath="" afterPath="$USER_HOME$/crcl4java/crcl4java-motoman/crcl4java-motoman.iml" />
+      <change beforePath="" afterPath="$USER_HOME$/crcl4java/crcl4java-ui/crcl4java-ui.iml" />
+      <change beforePath="" afterPath="$USER_HOME$/crcl4java/crcl4java-utils/crcl4java-utils.iml" />
+      <change beforePath="" afterPath="$USER_HOME$/crcl4java/crcl4java-vaadin-webapp/crcl4java-vaadin-webapp.iml" />
+      <change beforePath="" afterPath="$USER_HOME$/crcl4java/crcl4java.iml" />
+      <change beforePath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_fanuc/fanuc_cart_objects.csv" afterPath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_fanuc/fanuc_cart_objects.csv" />
+      <change beforePath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties.txt" afterPath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties.txt" />
+      <change beforePath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties_crclPendantClientProperties.txt" afterPath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties_crclPendantClientProperties.txt" />
+      <change beforePath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties_crclSimServerProperties.txt" afterPath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties_crclSimServerProperties.txt" />
+      <change beforePath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties_object2DViewProperties.txt" afterPath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties_object2DViewProperties.txt" />
+      <change beforePath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_motoman/simulated_motoman_props.txt" afterPath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_motoman/simulated_motoman_props.txt" />
+      <change beforePath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_motoman/simulated_motoman_props_crclPendantClientProperties.txt" afterPath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_motoman/simulated_motoman_props_crclPendantClientProperties.txt" />
+      <change beforePath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_motoman/simulated_motoman_props_crclSimServerProperties.txt" afterPath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_motoman/simulated_motoman_props_crclSimServerProperties.txt" />
+      <change beforePath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_motoman/simulated_motoman_props_object2DViewProperties.txt" afterPath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_motoman/simulated_motoman_props_object2DViewProperties.txt" />
+      <change beforePath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_motoman/start_run_motoman_shared_table_objects.csv" afterPath="$PROJECT_DIR$/example_settings/multiple_simulated_systems_settings/simulated_motoman/start_run_motoman_shared_table_objects.csv" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/aprs/framework/learninggoals/GoalLearnerTest.java" afterPath="$PROJECT_DIR$/src/main/java/aprs/framework/learninggoals/GoalLearnerTest.java" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DJPanel.java" afterPath="$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DJPanel.java" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DOuterJPanel.java" afterPath="$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DOuterJPanel.java" />
+    </list>
+    <ignored path="$PROJECT_DIR$/target/" />
+    <ignored path="$USER_HOME$/crcl4java/target/" />
+    <ignored path="$USER_HOME$/crcl4java/crcl4java-utils/target/" />
+    <ignored path="$USER_HOME$/crcl4java/crcl4java-commons-math/target/" />
+    <ignored path="$USER_HOME$/crcl4java/crcl4java-base/target/" />
+    <ignored path="$USER_HOME$/crcl4java/crcl4java-motoman/target/" />
+    <ignored path="$USER_HOME$/crcl4java/crcl4java-ui/target/" />
+    <ignored path="$USER_HOME$/crcl4java/crcl4java-exi/target/" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>emptyProgram</find>
+      <find>trayIm</find>
+      <find>ClosestItemInfo</find>
+      <find>+ 15</find>
+      <find>translateThenRotate</find>
+      <find>selectedItem</find>
+    </findStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="Will Shackleford" />
+      </list>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GradleLocalSettings">
+    <option name="externalProjectsViewState">
+      <projects_view />
+    </option>
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="/usr/local/jdk1.8.0_121/jre/lib/rt.jar!/sun/misc/Unsafe.class" />
+        <option value="$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientJPanel.java" />
+        <option value="$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientJInternalFrame.java" />
+        <option value="$PROJECT_DIR$/src/main/java/aprs/framework/AprsJFrame.java" />
+        <option value="$PROJECT_DIR$/src/main/java/aprs/framework/AprsSupervisorJFrame.java" />
+        <option value="$PROJECT_DIR$/src/main/java/aprs/framework/learninggoals/GoalLearnerTest.java" />
+        <option value="$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DOuterJPanel.java" />
+        <option value="$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DJPanel.java" />
+      </list>
+    </option>
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="printErrorStackTraces" value="true" />
+      </MavenGeneralSettings>
+    </option>
+    <option name="importingSettings">
+      <MavenImportingSettings>
+        <option name="importAutomatically" value="true" />
+      </MavenImportingSettings>
+    </option>
+    <option name="enabledProfiles">
+      <list>
+        <option value="skip_tests" />
+      </list>
+    </option>
+  </component>
+  <component name="MavenProjectNavigator">
+    <treeState>
+      <expand>
+        <path>
+          <item name="" type="16c1761:MavenProjectsStructure$RootNode" />
+          <item name="aprs-framework" type="9519ce18:MavenProjectsStructure$ProjectNode" />
+        </path>
+        <path>
+          <item name="" type="16c1761:MavenProjectsStructure$RootNode" />
+          <item name="aprs-framework" type="9519ce18:MavenProjectsStructure$ProjectNode" />
+          <item name="Lifecycle" type="58874e2:MavenProjectsStructure$LifecycleNode" />
+        </path>
+      </expand>
+      <select />
+    </treeState>
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="x" value="27" />
+    <option name="y" value="53" />
+    <option name="width" value="1559" />
+    <option name="height" value="835" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource />
+      <sortByType />
+      <manualOrder />
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scope">
+        <subPane subId="Project Files">
+          <expand>
+            <path>
+              <item name="Root" type="cbb8eebc:String" user="Root" />
+              <item name="aprs-framework" type="cbb8eebc:String" user="aprs-framework" />
+            </path>
+            <path>
+              <item name="Root" type="cbb8eebc:String" user="Root" />
+              <item name="aprs-framework" type="cbb8eebc:String" user="aprs-framework" />
+              <item name="aprs-framework" type="cbb8eebc:String" user="aprs-framework" />
+            </path>
+            <path>
+              <item name="Root" type="cbb8eebc:String" user="Root" />
+              <item name="aprs-framework" type="cbb8eebc:String" user="aprs-framework" />
+              <item name="aprs-framework" type="cbb8eebc:String" user="aprs-framework" />
+              <item name="src" type="cbb8eebc:String" user="src" />
+            </path>
+            <path>
+              <item name="Root" type="cbb8eebc:String" user="Root" />
+              <item name="aprs-framework" type="cbb8eebc:String" user="aprs-framework" />
+              <item name="aprs-framework" type="cbb8eebc:String" user="aprs-framework" />
+              <item name="src" type="cbb8eebc:String" user="src" />
+              <item name="main" type="cbb8eebc:String" user="main" />
+            </path>
+            <path>
+              <item name="Root" type="cbb8eebc:String" user="Root" />
+              <item name="aprs-framework" type="cbb8eebc:String" user="aprs-framework" />
+              <item name="aprs-framework" type="cbb8eebc:String" user="aprs-framework" />
+              <item name="src" type="cbb8eebc:String" user="src" />
+              <item name="main" type="cbb8eebc:String" user="main" />
+              <item name="resources" type="cbb8eebc:String" user="resources" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="aprs-framework" type="b2602c69:ProjectViewProjectNode" />
+              <item name="aprs-framework" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="aprs-framework" type="b2602c69:ProjectViewProjectNode" />
+              <item name="aprs-framework" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="aprs-framework" type="b2602c69:ProjectViewProjectNode" />
+              <item name="aprs-framework" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="aprs-framework" type="b2602c69:ProjectViewProjectNode" />
+              <item name="aprs-framework" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="aprs-framework" type="b2602c69:ProjectViewProjectNode" />
+              <item name="aprs-framework" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="framework" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="aprs-framework" type="b2602c69:ProjectViewProjectNode" />
+              <item name="aprs-framework" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="framework" type="462c0819:PsiDirectoryNode" />
+              <item name="learninggoals" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="aprs-framework" type="b2602c69:ProjectViewProjectNode" />
+              <item name="aprs-framework" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="framework" type="462c0819:PsiDirectoryNode" />
+              <item name="simview" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="aprs-framework" type="b2602c69:ProjectViewProjectNode" />
+              <item name="aprs-framework" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="resources" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="aprs-framework" type="b2602c69:ProjectViewProjectNode" />
+              <item name="aprs-framework" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="resources" type="462c0819:PsiDirectoryNode" />
+              <item name="framework" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="aprs-framework" type="b2602c69:ProjectViewProjectNode" />
+              <item name="aprs-framework" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="resources" type="462c0819:PsiDirectoryNode" />
+              <item name="framework" type="462c0819:PsiDirectoryNode" />
+              <item name="partImages" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="PackagesPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="aprs-framework" type="58d84e3e:PackageViewProjectNode" />
+              <item name="aprs-framework" type="616d4139:PackageViewModuleNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scratches" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$USER_HOME$/crcl4java" />
+    <property name="settings.editor.selected.configurable" value="preferences.customizations" />
+    <property name="settings.editor.splitter.proportion" value="0.24485798" />
+    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="extract.method.default.visibility" value="private" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Application.LauncherAprsJFrame">
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <module />
+    </configuration>
+    <configuration name="GoalLearnerTest" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="aprs.framework.learninggoals.GoalLearnerTest" />
+      <option name="VM_PARAMETERS" value="" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="aprs-framework" />
+      <envs />
+    </configuration>
+    <configuration name="LauncherAprsJFrame" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="aprs.framework.LauncherAprsJFrame" />
+      <option name="VM_PARAMETERS" value="" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="aprs-framework" />
+      <envs />
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="aprs.framework.LauncherAprsJFrame" />
+      <option name="VM_PARAMETERS" value="" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="" />
+      <envs />
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <module name="" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="METHOD_NAME" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="singleModule" />
+      </option>
+      <envs />
+      <patterns />
+    </configuration>
+    <configuration default="true" type="JarApplication" factoryName="JAR Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="JAR_PATH" value="$PROJECT_DIR$/target/aprs-framework-1.0-SNAPSHOT-jar-with-dependencies.jar" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <envs />
+    </configuration>
+    <configuration name="aprs-framework-1.0-SNAPSHOT-jar-with-dependencies.jar" type="JarApplication" factoryName="JAR Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="JAR_PATH" value="$PROJECT_DIR$/target/aprs-framework-1.0-SNAPSHOT-jar-with-dependencies.jar" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <envs />
+    </configuration>
+    <configuration name="aprs-framework [install]" type="MavenRunConfiguration" factoryName="Maven" temporary="true">
+      <MavenSettings>
+        <option name="myGeneralSettings" />
+        <option name="myRunnerSettings" />
+        <option name="myRunnerParameters">
+          <MavenRunnerParameters>
+            <option name="profiles">
+              <set />
+            </option>
+            <option name="goals">
+              <list>
+                <option value="install" />
+              </list>
+            </option>
+            <option name="profilesMap">
+              <map />
+            </option>
+            <option name="resolveToWorkspace" value="false" />
+            <option name="workingDirPath" value="$PROJECT_DIR$" />
+          </MavenRunnerParameters>
+        </option>
+      </MavenSettings>
+    </configuration>
+    <configuration default="true" type="Remote" factoryName="Remote">
+      <option name="USE_SOCKET_TRANSPORT" value="true" />
+      <option name="SERVER_MODE" value="false" />
+      <option name="SHMEM_ADDRESS" value="javadebug" />
+      <option name="HOST" value="localhost" />
+      <option name="PORT" value="5005" />
+    </configuration>
+    <configuration default="true" type="TestNG" factoryName="TestNG">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <module name="" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="SUITE_NAME" />
+      <option name="PACKAGE_NAME" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="METHOD_NAME" />
+      <option name="GROUP_NAME" />
+      <option name="TEST_OBJECT" value="CLASS" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <option name="OUTPUT_DIRECTORY" />
+      <option name="ANNOTATION_TYPE" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="singleModule" />
+      </option>
+      <option name="USE_DEFAULT_REPORTERS" value="false" />
+      <option name="PROPERTIES_FILE" />
+      <envs />
+      <properties />
+      <listeners />
+    </configuration>
+    <configuration name="&lt;template&gt;" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" default="true" selected="false">
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
+    </configuration>
+    <list size="4">
+      <item index="0" class="java.lang.String" itemvalue="Application.LauncherAprsJFrame" />
+      <item index="1" class="java.lang.String" itemvalue="Application.GoalLearnerTest" />
+      <item index="2" class="java.lang.String" itemvalue="JAR Application.aprs-framework-1.0-SNAPSHOT-jar-with-dependencies.jar" />
+      <item index="3" class="java.lang.String" itemvalue="Maven.aprs-framework [install]" />
+    </list>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false">
+    <option name="remove_strategy" value="false" />
+  </component>
+  <component name="StructureViewFactory">
+    <option name="ACTIVE_ACTIONS" value=",ALPHA_COMPARATOR" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="c95f25e1-5f15-467d-99ba-12a3a03da819" name="Default" comment="" />
+      <created>1511972251186</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1511972251186</updated>
+    </task>
+    <task id="LOCAL-00001" summary="eliminate join from reset use async instead">
+      <created>1512071750509</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1512071750509</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="27" y="53" width="1559" height="835" extended-state="0" />
+    <layout>
+      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39859155" sideWeight="0.1628061" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31965587" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3265306" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24090007" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2528127" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39859155" sideWeight="0.8371939" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32944608" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24950364" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32944608" sideWeight="0.49709302" order="1" side_tool="false" content_ui="tabs" />
+    </layout>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="eliminate join from reset use async instead" />
+    <option name="LAST_COMMIT_MESSAGE" value="eliminate join from reset use async instead" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/aprs/framework/AprsJFrame.java</url>
+          <line>4091</line>
+          <properties />
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="8" />
+    </breakpoint-manager>
+    <watches-manager />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="jar:///usr/local/jdk1.8.0_121/src.zip!/java/net/SocketInputStream.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="945">
+          <caret line="93" column="23" lean-forward="false" selection-start-line="93" selection-start-column="23" selection-end-line="93" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientJInternalFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8565">
+          <caret line="1090" column="5" lean-forward="false" selection-start-line="1090" selection-start-column="5" selection-end-line="1090" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DJPanel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="16020">
+          <caret line="1166" column="37" lean-forward="false" selection-start-line="1166" selection-start-column="37" selection-end-line="1166" selection-end-column="37" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/learninggoals/GoalLearnerTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="540">
+          <caret line="80" column="71" lean-forward="false" selection-start-line="80" selection-start-column="71" selection-end-line="80" selection-end-column="71" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-utils/1.5-SNAPSHOT/crcl4java-utils-1.5-SNAPSHOT-sources.jar!/crcl/utils/CRCLSocket.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18615">
+          <caret line="1384" column="0" lean-forward="false" selection-start-line="1384" selection-start-column="0" selection-end-line="1384" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientInner.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="26310">
+          <caret line="1754" column="54" lean-forward="false" selection-start-line="1754" selection-start-column="54" selection-end-line="1754" selection-end-column="54" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DOuterJPanel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="23520">
+          <caret line="1568" column="48" lean-forward="false" selection-start-line="1568" selection-start-column="48" selection-end-line="1568" selection-end-column="48" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/AprsJFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="52830">
+          <caret line="4099" column="0" lean-forward="false" selection-start-line="4099" selection-start-column="0" selection-end-line="4099" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/AprsSupervisorJFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="26415">
+          <caret line="1761" column="0" lean-forward="false" selection-start-line="1761" selection-start-column="0" selection-end-line="1761" selection-end-column="0" />
+          <folding>
+            <element signature="e#112823#112824#0" expanded="true" />
+            <element signature="e#112876#112877#0" expanded="true" />
+            <element signature="e#112925#112926#0" expanded="true" />
+            <element signature="e#112974#112975#0" expanded="true" />
+            <element signature="e#113912#113913#0" expanded="true" />
+            <element signature="e#113965#113966#0" expanded="true" />
+            <element signature="e#114014#114015#0" expanded="true" />
+            <element signature="e#114063#114064#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/local/jdk1.8.0_121/jre/lib/rt.jar!/sun/misc/Unsafe.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4620">
+          <caret line="353" column="23" lean-forward="false" selection-start-line="353" selection-start-column="23" selection-end-line="353" selection-end-column="23" />
+          <folding>
+            <marker date="1481589985000" expanded="false" signature="0:104" ph="/.../" />
+            <marker date="1481589985000" expanded="false" signature="132:297" ph="..." />
+            <marker date="1481589985000" expanded="true" signature="1492:1499" ph="{}" />
+            <marker date="1481589985000" expanded="true" signature="1559:1787" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="2950:2968" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3029:3040" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3077:3083" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3089:3107" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3179:3190" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3226:3232" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3238:3256" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3323:3334" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3374:3380" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3386:3404" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3482:3493" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3532:3538" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3544:3562" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3631:3642" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3683:3689" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3695:3713" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3793:3804" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3844:3850" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3856:3874" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3937:3948" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3986:3992" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3998:4016" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4090:4101" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4138:4144" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4150:4168" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4233:4244" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4283:4289" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4295:4313" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4389:4400" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4438:4444" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4450:4468" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4531:4542" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4580:4586" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4592:4610" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4684:4695" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4732:4738" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4744:4762" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4825:4836" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4874:4880" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4886:4904" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4978:4989" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5026:5032" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5038:5056" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5121:5132" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5171:5177" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5183:5201" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5277:5288" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5326:5332" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5338:5356" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5423:5434" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5474:5480" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5486:5504" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5582:5593" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5632:5638" ph=" }" />
+            <marker date="1481589985000" expanded="false" signature="6704:6715" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="6762:6768" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="6925:7003" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="7056:7074" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="7130:7264" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="7270:7288" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="7354:7634" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="8424:8442" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="8514:8532" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="8603:8621" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="10811:10996" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11069:11257" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11327:11505" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11578:11759" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11838:12025" ph="{...}" />
+            <marker date="1481589985000" expanded="false" signature="12188:12199" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="12230:12236" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="12249:13814" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/local/jdk1.8.0_121/src.zip!/java/net/SocketInputStream.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1395">
+          <caret line="93" column="23" lean-forward="false" selection-start-line="93" selection-start-column="23" selection-end-line="93" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientJInternalFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8565">
+          <caret line="1090" column="5" lean-forward="false" selection-start-line="1090" selection-start-column="5" selection-end-line="1090" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DJPanel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="14925">
+          <caret line="1098" column="37" lean-forward="true" selection-start-line="1098" selection-start-column="37" selection-end-line="1098" selection-end-column="37" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/learninggoals/GoalLearnerTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="540">
+          <caret line="80" column="71" lean-forward="false" selection-start-line="80" selection-start-column="71" selection-end-line="80" selection-end-column="71" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-utils/1.5-SNAPSHOT/crcl4java-utils-1.5-SNAPSHOT-sources.jar!/crcl/utils/CRCLSocket.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18615">
+          <caret line="1384" column="0" lean-forward="false" selection-start-line="1384" selection-start-column="0" selection-end-line="1384" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientInner.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="22935">
+          <caret line="1754" column="54" lean-forward="false" selection-start-line="1754" selection-start-column="54" selection-end-line="1754" selection-end-column="54" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DOuterJPanel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="12150">
+          <caret line="1576" column="48" lean-forward="true" selection-start-line="1576" selection-start-column="48" selection-end-line="1576" selection-end-column="48" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/AprsJFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="52830">
+          <caret line="4099" column="0" lean-forward="false" selection-start-line="4099" selection-start-column="0" selection-end-line="4099" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/AprsSupervisorJFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="61245">
+          <caret line="4083" column="0" lean-forward="false" selection-start-line="4083" selection-start-column="0" selection-end-line="4083" selection-end-column="0" />
+          <folding>
+            <element signature="e#112823#112824#0" expanded="true" />
+            <element signature="e#112876#112877#0" expanded="true" />
+            <element signature="e#112925#112926#0" expanded="true" />
+            <element signature="e#112974#112975#0" expanded="true" />
+            <element signature="e#113912#113913#0" expanded="true" />
+            <element signature="e#113965#113966#0" expanded="true" />
+            <element signature="e#114014#114015#0" expanded="true" />
+            <element signature="e#114063#114064#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/local/jdk1.8.0_121/src.zip!/java/net/SocketInputStream.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="945">
+          <caret line="93" column="23" lean-forward="false" selection-start-line="93" selection-start-column="23" selection-end-line="93" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/local/jdk1.8.0_121/jre/lib/rt.jar!/sun/misc/Unsafe.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4620">
+          <caret line="353" column="23" lean-forward="false" selection-start-line="353" selection-start-column="23" selection-end-line="353" selection-end-column="23" />
+          <folding>
+            <marker date="1481589985000" expanded="false" signature="0:104" ph="/.../" />
+            <marker date="1481589985000" expanded="false" signature="132:297" ph="..." />
+            <marker date="1481589985000" expanded="true" signature="1492:1499" ph="{}" />
+            <marker date="1481589985000" expanded="true" signature="1559:1787" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="2950:2968" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3029:3040" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3077:3083" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3089:3107" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3179:3190" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3226:3232" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3238:3256" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3323:3334" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3374:3380" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3386:3404" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3482:3493" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3532:3538" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3544:3562" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3631:3642" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3683:3689" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3695:3713" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3793:3804" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3844:3850" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3856:3874" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3937:3948" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3986:3992" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3998:4016" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4090:4101" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4138:4144" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4150:4168" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4233:4244" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4283:4289" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4295:4313" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4389:4400" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4438:4444" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4450:4468" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4531:4542" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4580:4586" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4592:4610" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4684:4695" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4732:4738" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4744:4762" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4825:4836" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4874:4880" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4886:4904" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4978:4989" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5026:5032" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5038:5056" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5121:5132" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5171:5177" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5183:5201" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5277:5288" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5326:5332" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5338:5356" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5423:5434" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5474:5480" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5486:5504" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5582:5593" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5632:5638" ph=" }" />
+            <marker date="1481589985000" expanded="false" signature="6704:6715" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="6762:6768" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="6925:7003" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="7056:7074" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="7130:7264" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="7270:7288" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="7354:7634" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="8424:8442" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="8514:8532" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="8603:8621" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="10811:10996" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11069:11257" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11327:11505" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11578:11759" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11838:12025" ph="{...}" />
+            <marker date="1481589985000" expanded="false" signature="12188:12199" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="12230:12236" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="12249:13814" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientJPanel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18915">
+          <caret line="1261" column="0" lean-forward="false" selection-start-line="1261" selection-start-column="0" selection-end-line="1261" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-utils/1.5-SNAPSHOT/crcl4java-utils-1.5-SNAPSHOT-sources.jar!/crcl/utils/CRCLSocket.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18615">
+          <caret line="1384" column="0" lean-forward="false" selection-start-line="1384" selection-start-column="0" selection-end-line="1384" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/server/SimServerInner.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15645">
+          <caret line="1255" column="0" lean-forward="false" selection-start-line="1255" selection-start-column="0" selection-end-line="1255" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientInner.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="22935">
+          <caret line="1754" column="54" lean-forward="false" selection-start-line="1754" selection-start-column="54" selection-end-line="1754" selection-end-column="54" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientJInternalFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8565">
+          <caret line="1090" column="5" lean-forward="false" selection-start-line="1090" selection-start-column="5" selection-end-line="1090" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/AprsJFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="52830">
+          <caret line="4099" column="0" lean-forward="true" selection-start-line="4099" selection-start-column="0" selection-end-line="4099" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/AprsSupervisorJFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="61245">
+          <caret line="4083" column="0" lean-forward="true" selection-start-line="4083" selection-start-column="0" selection-end-line="4083" selection-end-column="0" />
+          <folding>
+            <element signature="e#112823#112824#0" expanded="true" />
+            <element signature="e#112876#112877#0" expanded="true" />
+            <element signature="e#112925#112926#0" expanded="true" />
+            <element signature="e#112974#112975#0" expanded="true" />
+            <element signature="e#113912#113913#0" expanded="true" />
+            <element signature="e#113965#113966#0" expanded="true" />
+            <element signature="e#114014#114015#0" expanded="true" />
+            <element signature="e#114063#114064#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/local/jdk1.8.0_121/jre/lib/rt.jar!/sun/misc/Unsafe.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4620">
+          <caret line="353" column="23" lean-forward="false" selection-start-line="353" selection-start-column="23" selection-end-line="353" selection-end-column="23" />
+          <folding>
+            <marker date="1481589985000" expanded="false" signature="0:104" ph="/.../" />
+            <marker date="1481589985000" expanded="false" signature="132:297" ph="..." />
+            <marker date="1481589985000" expanded="true" signature="1492:1499" ph="{}" />
+            <marker date="1481589985000" expanded="true" signature="1559:1787" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="2950:2968" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3029:3040" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3077:3083" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3089:3107" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3179:3190" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3226:3232" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3238:3256" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3323:3334" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3374:3380" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3386:3404" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3482:3493" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3532:3538" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3544:3562" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3631:3642" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3683:3689" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3695:3713" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3793:3804" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3844:3850" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3856:3874" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3937:3948" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3986:3992" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3998:4016" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4090:4101" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4138:4144" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4150:4168" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4233:4244" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4283:4289" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4295:4313" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4389:4400" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4438:4444" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4450:4468" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4531:4542" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4580:4586" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4592:4610" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4684:4695" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4732:4738" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4744:4762" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4825:4836" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4874:4880" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4886:4904" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4978:4989" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5026:5032" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5038:5056" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5121:5132" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5171:5177" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5183:5201" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5277:5288" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5326:5332" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5338:5356" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5423:5434" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5474:5480" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5486:5504" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5582:5593" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5632:5638" ph=" }" />
+            <marker date="1481589985000" expanded="false" signature="6704:6715" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="6762:6768" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="6925:7003" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="7056:7074" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="7130:7264" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="7270:7288" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="7354:7634" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="8424:8442" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="8514:8532" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="8603:8621" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="10811:10996" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11069:11257" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11327:11505" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11578:11759" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11838:12025" ph="{...}" />
+            <marker date="1481589985000" expanded="false" signature="12188:12199" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="12230:12236" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="12249:13814" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/local/jdk1.8.0_121/src.zip!/java/net/SocketInputStream.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="945">
+          <caret line="93" column="23" lean-forward="false" selection-start-line="93" selection-start-column="23" selection-end-line="93" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientJPanel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="16095">
+          <caret line="1261" column="0" lean-forward="true" selection-start-line="1261" selection-start-column="0" selection-end-line="1261" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-utils/1.5-SNAPSHOT/crcl4java-utils-1.5-SNAPSHOT-sources.jar!/crcl/utils/CRCLSocket.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18330">
+          <caret line="1384" column="0" lean-forward="false" selection-start-line="1384" selection-start-column="0" selection-end-line="1384" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/server/SimServerInner.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15645">
+          <caret line="1255" column="0" lean-forward="false" selection-start-line="1255" selection-start-column="0" selection-end-line="1255" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientInner.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="22935">
+          <caret line="1754" column="54" lean-forward="true" selection-start-line="1754" selection-start-column="54" selection-end-line="1754" selection-end-column="54" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientJInternalFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8235">
+          <caret line="1094" column="0" lean-forward="false" selection-start-line="1094" selection-start-column="0" selection-end-line="1094" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/AprsJFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="14880">
+          <caret line="1133" column="45" lean-forward="false" selection-start-line="1133" selection-start-column="45" selection-end-line="1133" selection-end-column="45" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" column="70" lean-forward="true" selection-start-line="1" selection-start-column="70" selection-end-line="1" selection-end-column="70" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/AprsJFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="265">
+          <caret line="268" column="46" lean-forward="true" selection-start-line="268" selection-start-column="46" selection-end-line="268" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientJPanel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="16185">
+          <caret line="1261" column="0" lean-forward="false" selection-start-line="1261" selection-start-column="0" selection-end-line="1261" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/server/SimServerInner.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15645">
+          <caret line="1255" column="0" lean-forward="false" selection-start-line="1255" selection-start-column="0" selection-end-line="1255" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-utils/1.5-SNAPSHOT/crcl4java-utils-1.5-SNAPSHOT-sources.jar!/crcl/utils/CRCLSocket.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18615">
+          <caret line="1384" column="0" lean-forward="false" selection-start-line="1384" selection-start-column="0" selection-end-line="1384" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientInner.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="22935">
+          <caret line="1754" column="54" lean-forward="false" selection-start-line="1754" selection-start-column="54" selection-end-line="1754" selection-end-column="54" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/local/jdk1.8.0_121/src.zip!/java/net/SocketInputStream.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="945">
+          <caret line="93" column="23" lean-forward="false" selection-start-line="93" selection-start-column="23" selection-end-line="93" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/local/jdk1.8.0_121/jre/lib/rt.jar!/sun/misc/Unsafe.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4620">
+          <caret line="353" column="23" lean-forward="false" selection-start-line="353" selection-start-column="23" selection-end-line="353" selection-end-column="23" />
+          <folding>
+            <marker date="1481589985000" expanded="false" signature="0:104" ph="/.../" />
+            <marker date="1481589985000" expanded="false" signature="132:297" ph="..." />
+            <marker date="1481589985000" expanded="true" signature="1492:1499" ph="{}" />
+            <marker date="1481589985000" expanded="true" signature="1559:1787" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="2950:2968" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3029:3040" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3077:3083" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3089:3107" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3179:3190" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3226:3232" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3238:3256" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3323:3334" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3374:3380" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3386:3404" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3482:3493" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3532:3538" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3544:3562" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3631:3642" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3683:3689" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3695:3713" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3793:3804" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3844:3850" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3856:3874" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="3937:3948" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="3986:3992" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="3998:4016" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4090:4101" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4138:4144" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4150:4168" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4233:4244" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4283:4289" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4295:4313" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4389:4400" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4438:4444" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4450:4468" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4531:4542" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4580:4586" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4592:4610" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4684:4695" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4732:4738" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4744:4762" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4825:4836" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="4874:4880" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="4886:4904" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="4978:4989" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5026:5032" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5038:5056" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5121:5132" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5171:5177" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5183:5201" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5277:5288" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5326:5332" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5338:5356" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5423:5434" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5474:5480" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="5486:5504" ph="/**...*/" />
+            <marker date="1481589985000" expanded="false" signature="5582:5593" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="5632:5638" ph=" }" />
+            <marker date="1481589985000" expanded="false" signature="6704:6715" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="6762:6768" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="6925:7003" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="7056:7074" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="7130:7264" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="7270:7288" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="7354:7634" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="8424:8442" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="8514:8532" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="8603:8621" ph="/**...*/" />
+            <marker date="1481589985000" expanded="true" signature="10811:10996" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11069:11257" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11327:11505" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11578:11759" ph="{...}" />
+            <marker date="1481589985000" expanded="true" signature="11838:12025" ph="{...}" />
+            <marker date="1481589985000" expanded="false" signature="12188:12199" ph=" { " />
+            <marker date="1481589985000" expanded="false" signature="12230:12236" ph=" }" />
+            <marker date="1481589985000" expanded="true" signature="12249:13814" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/AprsJFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="52830">
+          <caret line="4099" column="0" lean-forward="false" selection-start-line="4099" selection-start-column="0" selection-end-line="4099" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/AprsSupervisorJFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="23850">
+          <caret line="1761" column="0" lean-forward="false" selection-start-line="1761" selection-start-column="0" selection-end-line="1761" selection-end-column="0" />
+          <folding>
+            <element signature="e#112823#112824#0" expanded="true" />
+            <element signature="e#112876#112877#0" expanded="true" />
+            <element signature="e#112925#112926#0" expanded="true" />
+            <element signature="e#112974#112975#0" expanded="true" />
+            <element signature="e#113912#113913#0" expanded="true" />
+            <element signature="e#113965#113966#0" expanded="true" />
+            <element signature="e#114014#114015#0" expanded="true" />
+            <element signature="e#114063#114064#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/learninggoals/GoalLearnerTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="540">
+          <caret line="80" column="71" lean-forward="false" selection-start-line="80" selection-start-column="71" selection-end-line="80" selection-end-column="71" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-ui/1.5-SNAPSHOT/crcl4java-ui-1.5-SNAPSHOT-sources.jar!/crcl/ui/client/PendantClientJInternalFrame.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8565">
+          <caret line="1090" column="5" lean-forward="false" selection-start-line="1090" selection-start-column="5" selection-end-line="1090" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DOuterJPanel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="12225">
+          <caret line="1580" column="57" lean-forward="false" selection-start-line="1580" selection-start-column="57" selection-end-line="1580" selection-end-column="57" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/aprs/framework/simview/Object2DJPanel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="97">
+          <caret line="1409" column="33" lean-forward="true" selection-start-line="1409" selection-start-column="33" selection-end-line="1409" selection-end-column="33" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ArtifactsStructureConfigurable.UI">
+        <settings>
+          <artifact-editor />
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="FacetStructureConfigurable.UI">
+        <settings>
+          <last-edited>No facets are configured</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="GlobalLibrariesConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="JdkListConfigurable.UI">
+        <settings>
+          <last-edited>1.8</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ModuleStructureConfigurable.UI">
+        <settings>
+          <last-edited>crcl4java-exi</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectLibrariesConfigurable.UI">
+        <settings>
+          <last-edited>Maven: org.apache.james:apache-mime4j-core:0.7.2</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>

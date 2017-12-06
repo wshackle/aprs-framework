@@ -30,7 +30,6 @@ import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.Slot;
 import aprs.framework.database.Tray;
-import static aprs.framework.simview.DisplayAxis.POS_X_POS_Y;
 import aprs.framework.spvision.VisionSocketClient;
 import aprs.framework.spvision.VisionSocketServer;
 import crcl.base.CRCLCommandType;
@@ -545,6 +544,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldMinXMinY = new javax.swing.JTextField();
         jButtonDelete = new javax.swing.JButton();
         jCheckBoxAddSlots = new javax.swing.JCheckBox();
+        jCheckBoxDetails = new javax.swing.JCheckBox();
         jPanelConnectionsTab = new javax.swing.JPanel();
         jCheckBoxSimulated = new javax.swing.JCheckBox();
         jTextFieldHost = new javax.swing.JTextField();
@@ -671,7 +671,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
-        jCheckBoxShowRotations.setText("Show Rotations");
+        jCheckBoxShowRotations.setSelected(true);
+        jCheckBoxShowRotations.setText("Show Rotations/Images");
         jCheckBoxShowRotations.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jCheckBoxShowRotationsActionPerformed(evt);
@@ -754,6 +755,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jCheckBoxDetails.setText("Details");
+        jCheckBoxDetails.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxDetailsActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelOptionsTabLayout = new javax.swing.GroupLayout(jPanelOptionsTab);
         jPanelOptionsTab.setLayout(jPanelOptionsTabLayout);
         jPanelOptionsTabLayout.setHorizontalGroup(
@@ -764,8 +772,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
                             .addComponent(jCheckBoxShowRotations)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jComboBoxDisplayAxis, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
                             .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                 .addComponent(jLabel2)
@@ -779,6 +787,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.Alignment.TRAILING)
                                 .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOptionsTabLayout.createSequentialGroup()
+                        .addComponent(jCheckBoxDetails)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxAddSlots)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxSeparateNames)
@@ -803,7 +813,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxAutoscale)
                     .addComponent(jCheckBoxSeparateNames)
-                    .addComponent(jCheckBoxAddSlots))
+                    .addComponent(jCheckBoxAddSlots)
+                    .addComponent(jCheckBoxDetails))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxShowRotations)
@@ -1519,13 +1530,44 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     if (item.dist(orig_x, orig_y) > draggedItem.getMaxSlotDist() * object2DJPanel1.getSlotMaxDistExpansion()) {
                         continue;
                     }
+                    boolean foundCloser = false;
+                    for (int j = 0; j < origItems.size(); j++) {
+                        if(j == i) {
+                            continue;
+                        }
+                        PhysicalItem otherItem = origItems.get(j);
+                        if(otherItem == draggedItem) {
+                            continue;
+                        }
+                        if(otherItem == item) {
+                            continue;
+                        }
+                        if(otherItem.getMaxSlotDist() > 1e-6 
+                                && item.dist(otherItem) < item.dist(orig_x,orig_y)) {
+                            foundCloser = true;
+                            break;
+                        }
+                    }
+                    if(foundCloser) {
+                        continue;
+                    }
                     item.x += xdiff;
                     item.y += ydiff;
                 }
             }
             this.setItems(this.getItems());
         }
-        object2DJPanel1MousePressed(evt);
+        PhysicalItem closestItem = null;
+        int minIndex = -1;
+        int x = evt.getX();
+        int y = evt.getY();
+        ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, closestItem, minIndex).invoke();
+        closestItem = closestItemInfo.getClosestItem();
+        minIndex = closestItemInfo.getMinIndex();
+        if (minIndex >= 0 && closestItem == draggedItem) {
+            jTableItems.getSelectionModel().setSelectionInterval(minIndex, minIndex);
+            object2DJPanel1.setSelectedItemIndex(minIndex);
+        }
     }//GEN-LAST:event_object2DJPanel1MouseDragged
 
     private PhysicalItem draggedItem = null;
@@ -1546,41 +1588,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private void object2DJPanel1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MousePressed
-        List<PhysicalItem> items = this.getItems();
-        double scale = object2DJPanel1.getScale();
-        double min_x = object2DJPanel1.getMinX();
-        double max_y = object2DJPanel1.getMaxY();
+
+        int x = evt.getX();
+        int y = evt.getY();
         draggedItem = null;
         PhysicalItem closestItem = null;
-        double minDist = Double.POSITIVE_INFINITY;
         int minIndex = -1;
-        for (int i = 0; i < items.size(); i++) {
-            PhysicalItem item = items.get(i);
-            double rel_x = (item.x - min_x) * scale + 15;
-            double rel_y = (max_y - item.y) * scale + 20;
-            int x = evt.getX();
-            int y = evt.getY();
-
-            double diff_x = rel_x - x;
-            double diff_y = rel_y - y;
-            double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
-            if (dist < minDist) {
-                if (insideItem(item, x, y)) {
-                    minDist = dist;
-                    closestItem = item;
-                    minIndex = i;
-                }
-            }
-        }
+        ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, closestItem, minIndex).invoke();
+        closestItem = closestItemInfo.getClosestItem();
+        minIndex = closestItemInfo.getMinIndex();
         if (minIndex >= 0) {
             jTableItems.getSelectionModel().setSelectionInterval(minIndex, minIndex);
             object2DJPanel1.setSelectedItemIndex(minIndex);
         }
         draggedItem = closestItem;
+//        object2DJPanel1.setViewRotationsAndImages(false);
     }//GEN-LAST:event_object2DJPanel1MousePressed
 
     private void object2DJPanel1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseReleased
         draggedItem = null;
+//        object2DJPanel1.setViewRotationsAndImages(jCheckBoxShowRotations.isSelected());
     }//GEN-LAST:event_object2DJPanel1MouseReleased
 
     private void jTextFieldMaxXMaxYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldMaxXMaxYActionPerformed
@@ -1631,7 +1658,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jButtonResetActionPerformed
 
     private void jCheckBoxShowRotationsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowRotationsActionPerformed
-        object2DJPanel1.setViewRotations(this.jCheckBoxShowRotations.isSelected());
+        object2DJPanel1.setViewRotationsAndImages(this.jCheckBoxShowRotations.isSelected());
     }//GEN-LAST:event_jCheckBoxShowRotationsActionPerformed
 
     private void jCheckBoxPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxPauseActionPerformed
@@ -1911,6 +1938,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         refresh(false);
     }//GEN-LAST:event_jCheckBoxAddSlotsActionPerformed
 
+    private void jCheckBoxDetailsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxDetailsActionPerformed
+        object2DJPanel1.setViewDetails(jCheckBoxDetails.isSelected());
+    }//GEN-LAST:event_jCheckBoxDetailsActionPerformed
+
     javax.swing.Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
@@ -2030,6 +2061,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxAutoscale;
     private javax.swing.JCheckBox jCheckBoxConnected;
     private javax.swing.JCheckBox jCheckBoxDebug;
+    private javax.swing.JCheckBox jCheckBoxDetails;
     private javax.swing.JCheckBox jCheckBoxPause;
     private javax.swing.JCheckBox jCheckBoxSeparateNames;
     private javax.swing.JCheckBox jCheckBoxShowCurrent;
@@ -2139,6 +2171,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("autoscale", Boolean.toString(jCheckBoxAutoscale.isSelected()));
             props.put("trackcurrentpos", Boolean.toString(jCheckBoxShowCurrent.isSelected()));
             props.put("showrotations", Boolean.toString(jCheckBoxShowRotations.isSelected()));
+            props.put("viewDetails", Boolean.toString(jCheckBoxDetails.isSelected()));
             props.put("separatenames", Boolean.toString(jCheckBoxSeparateNames.isSelected()));
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText().trim());
             props.put("xminymin", jTextFieldMinXMinY.getText().trim());
@@ -2345,7 +2378,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (showRotationsString != null && showRotationsString.length() > 0) {
                 boolean showRotations = Boolean.valueOf(showRotationsString);
                 jCheckBoxShowRotations.setSelected(showRotations);
-                object2DJPanel1.setViewRotations(showRotations);
+                object2DJPanel1.setViewRotationsAndImages(showRotations);
+            }
+            String viewDetailsString = props.getProperty("viewDetails");
+            if (viewDetailsString != null && viewDetailsString.length() > 0) {
+                boolean viewDetails = Boolean.valueOf(viewDetailsString);
+                jCheckBoxDetails.setSelected(viewDetails);
+                object2DJPanel1.setViewDetails(viewDetails);
             }
             String useSeparateNamesString = props.getProperty("separatenames");
             if (useSeparateNamesString != null && useSeparateNamesString.length() > 0) {
@@ -2637,4 +2676,51 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         lastIsHoldingObjectExpected = isHoldingObjectExpected;
     }
 
+    private class ClosestItemInfo {
+        private int x;
+        private int y;
+        private PhysicalItem closestItem;
+        private int minIndex;
+
+        public ClosestItemInfo(int x, int y, PhysicalItem closestItem, int minIndex) {
+            this.x = x;
+            this.y = y;
+            this.closestItem = closestItem;
+            this.minIndex = minIndex;
+        }
+
+        public PhysicalItem getClosestItem() {
+            return closestItem;
+        }
+
+        public int getMinIndex() {
+            return minIndex;
+        }
+
+        public ClosestItemInfo invoke() {
+            List<PhysicalItem> items = Object2DOuterJPanel.this.getItems();
+            double scale = object2DJPanel1.getScale();
+            double min_x = object2DJPanel1.getMinX();
+            double max_y = object2DJPanel1.getMaxY();
+            double minDist = Double.POSITIVE_INFINITY;
+            for (int i = 0; i < items.size(); i++) {
+                PhysicalItem item = items.get(i);
+                double rel_x = (item.x - min_x) * scale + 15;
+                double rel_y = (max_y - item.y) * scale + 20;
+
+
+                double diff_x = rel_x - x;
+                double diff_y = rel_y - y;
+                double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
+                if (dist < minDist) {
+                    if (insideItem(item, x, y)) {
+                        minDist = dist;
+                        closestItem = item;
+                        minIndex = i;
+                    }
+                }
+            }
+            return this;
+        }
+    }
 }
