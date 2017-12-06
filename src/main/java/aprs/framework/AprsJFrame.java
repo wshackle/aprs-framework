@@ -3503,6 +3503,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
          }
     }
 
+    public boolean isVisionToDbConnected() {
+        return null != visionToDbJInternalFrame && visionToDbJInternalFrame.isDbConnected();
+    }
+    
     /**
      * Used for logging/debugging. Save a file(s) in the temporary directory
      * with the comment and a timestamp with the current view of the parts and

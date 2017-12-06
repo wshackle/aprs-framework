@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:2168
+#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:2204
 --visionhost=agility.el.nist.gov
 --visionport=5001
 addPosNoise=false
@@ -6,20 +6,21 @@ autoscale=false
 connected=true
 displayAxis=POS_Y_NEG_X
 dropOffThreshold=25.00
-items=sku_part_large_gear,0.0,553.7,33.14,0.94,P,sku_part_large_gear,0.0,356.22,53.45,0.92,P,sku_part_medium_gear,0.0,620.09,-156.52,0.95,P,sku_part_medium_gear,0.0,446.07,103.02,0.93,P,sku_part_medium_gear,0.0,421.75,-181.73,0.91,P,sku_part_medium_gear,0.0,345.7,-204.54,0.9,P,sku_large_gear_vessel,-0.7615926535897932,589.0,69.69,0.99,PT,sku_medium_gear_vessel,0.1,576.8,-121.77,0.94,PT,sku_kit_m2l1_vessel,0.29,370.41,-138.58,0.55,KT,sku_kit_m2l1_vessel,2.44,383.29,85.71,0.59,KT,
+items=sku_part_large_gear,0.0,546.76,10.54,0.97,P,sku_part_large_gear,0.0,347.42,-116.02,0.96,P,sku_part_medium_gear,0.0,413.01,117.73,0.95,P,sku_part_medium_gear,0.0,554.05,-195.88,0.95,P,sku_part_medium_gear,0.0,547.51,-120.79,0.94,P,sku_part_medium_gear,0.0,370.68,-214.65,0.94,P,sku_large_gear_vessel,-0.8,586.63,50.29,0.9,PT,sku_medium_gear_vessel,0.09,586.87,-152.67,0.85,PT,sku_kit_m2l1_vessel,-3.0,384.48,54.77,0.62,KT,sku_kit_m2l1_vessel,0.61,372.82,-146.71,0.64,KT,
 
 pickupDist=5.00
 posNoise=1.00
 reverseFlag=false
 rotNoise=1.00
 separatenames=true
-showrotations=false
+showrotations=true
 shuffleSimulatedUpdates=false
 simRefreshMillis=50
 simulated=false
 simulatedDropRate=0.000
 simulationUpdateAsNeeded=true
 trackcurrentpos=true
+viewDetails=false
 viewOutput=false
-xmaxymax=700.0, 500.0
-xminymin=200.0, -200.0
+xmaxymax=600.0, 150.0
+xminymin=200.0, -250.0

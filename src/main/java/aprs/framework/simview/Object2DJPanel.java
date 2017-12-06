@@ -73,6 +73,27 @@ public class Object2DJPanel extends JPanel {
         addPartImage("sku_kit_m2l1_vessel", "aprs/framework/partImages/m2l1_kit_tray_right.png", 190.0);
     }
 
+    
+        private double rotationOffset;
+
+    /**
+     * Get the value of rotationOffset
+     *
+     * @return the value of rotationOffset
+     */
+    public double getRotationOffset() {
+        return rotationOffset;
+    }
+
+    /**
+     * Set the value of rotationOffset
+     *
+     * @param rotationOffset new value of rotationOffset
+     */
+    public void setRotationOffset(double rotationOffset) {
+        this.rotationOffset = rotationOffset;
+    }
+
     private boolean viewDetails;
 
     /**
@@ -1422,7 +1443,7 @@ public class Object2DJPanel extends JPanel {
                     g2d.rotate(3 * Math.PI / 2.0);
                     break;
             }
-            g2d.rotate(-item.getRotation());
+            g2d.rotate(-rotationOffset-item.getRotation());
         }
     }
 

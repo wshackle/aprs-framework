@@ -270,6 +270,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private void setItemsInternal(List<PhysicalItem> items) {
+        if (null != aprsJFrame && aprsJFrame.isVisionToDbConnected()) {
+            object2DJPanel1.setRotationOffset(aprsJFrame.getVisionToDBRotationOffset());
+        }
         object2DJPanel1.setItems(items);
         if (!object2DJPanel1.isShowOutputItems()) {
             if (object2DJPanel1.isShowAddedSlotPositions()) {
@@ -303,7 +306,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (object2DJPanel1.isShowOutputItems()) {
             return;
         }
-        
+
         String type = (String) jTableItems.getValueAt(row, 5);
         switch (type) {
             case "PT":
@@ -348,7 +351,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int origSelectedRow = jtable.getSelectedRow();
         int origSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jtable.getRowCount())
-                ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
+                        ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
 
         RowSorter rowSorter = jtable.getRowSorter();
         if (null != rowSorter) {
@@ -368,7 +371,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         int newSelectedRowIndex
                 = (origSelectedRow >= 0 && origSelectedRow < jtable.getRowCount())
-                ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
+                        ? (int) jtable.getValueAt(origSelectedRow, 0) : -1;
         if (newSelectedRowIndex > 0 && newSelectedRowIndex == origSelectedRowIndex) {
             DefaultListSelectionModel dlsm;
             ListSelectionModel lsm = jtable.getSelectionModel();
@@ -1532,23 +1535,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                     boolean foundCloser = false;
                     for (int j = 0; j < origItems.size(); j++) {
-                        if(j == i) {
+                        if (j == i) {
                             continue;
                         }
                         PhysicalItem otherItem = origItems.get(j);
-                        if(otherItem == draggedItem) {
+                        if (otherItem == draggedItem) {
                             continue;
                         }
-                        if(otherItem == item) {
+                        if (otherItem == item) {
                             continue;
                         }
-                        if(otherItem.getMaxSlotDist() > 1e-6 
-                                && item.dist(otherItem) < item.dist(orig_x,orig_y)) {
+                        if (otherItem.getMaxSlotDist() > 1e-6
+                                && item.dist(otherItem) < item.dist(orig_x, orig_y)) {
                             foundCloser = true;
                             break;
                         }
                     }
-                    if(foundCloser) {
+                    if (foundCloser) {
                         continue;
                     }
                     item.x += xdiff;
@@ -2023,7 +2026,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public void setTrackCurrentPos(boolean v) {
-        if(jCheckBoxShowCurrent.isSelected() != v) {
+        if (jCheckBoxShowCurrent.isSelected() != v) {
             jCheckBoxShowCurrent.setSelected(v);
         }
         object2DJPanel1.setShowCurrentXY(v);
@@ -2357,7 +2360,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
             if (jCheckBoxSimulated.isSelected() || !jCheckBoxConnected.isSelected()) {
-                if(needReloadDataFile()) {
+                if (needReloadDataFile()) {
                     reloadDataFile();
                 }
             }
@@ -2405,23 +2408,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private String dataFileString = null;
     private String reverseDataFileString = null;
-    private volatile String loadedDataFileString =null;
-    
+    private volatile String loadedDataFileString = null;
+
     public String getCurrentDataFileString() {
         return reverseFlag ? this.reverseDataFileString : this.dataFileString;
     }
-    
+
     public boolean needReloadDataFile() {
         String currentDataFileString = getCurrentDataFileString();
         if (null == currentDataFileString) {
             return false;
         }
-        if(currentDataFileString.length() <1) {
+        if (currentDataFileString.length() < 1) {
             return false;
         }
         return !Objects.equals(currentDataFileString, loadedDataFileString);
     }
-    
 
     public void reloadDataFile() throws IOException {
         String currentDataFileString = getCurrentDataFileString();
@@ -2445,7 +2447,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 }
             }
-            loadedDataFileString=currentDataFileString;
+            loadedDataFileString = currentDataFileString;
         }
     }
 
@@ -2677,6 +2679,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private class ClosestItemInfo {
+
         private int x;
         private int y;
         private PhysicalItem closestItem;
@@ -2707,7 +2710,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 PhysicalItem item = items.get(i);
                 double rel_x = (item.x - min_x) * scale + 15;
                 double rel_y = (max_y - item.y) * scale + 20;
-
 
                 double diff_x = rel_x - x;
                 double diff_y = rel_y - y;
