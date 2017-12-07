@@ -74,6 +74,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import rcs.posemath.PmCartesian;
 import static aprs.framework.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import java.awt.image.BufferedImage;
 import java.util.Collection;
 import javax.swing.JDialog;
 
@@ -95,6 +96,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         diag.pack();
         diag.setVisible(true);
         return panel.getItems();
+    }
+    
+    public BufferedImage createSnapshotImage() {
+       return object2DJPanel1.createSnapshotImage();
+    }
+    
+    public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts) {
+        return object2DJPanel1.createSnapshotImage(opts);
+    }
+    
+    public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+        return object2DJPanel1.createSnapshotImage(opts,itemsToPaint);
     }
 
     public List<PhysicalItem> getItems() {

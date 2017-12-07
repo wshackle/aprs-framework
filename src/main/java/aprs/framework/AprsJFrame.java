@@ -41,6 +41,7 @@ import aprs.framework.pddl.executor.PddlActionToCrclGenerator.PoseProvider;
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.pddl.executor.PositionMap;
 import aprs.framework.pddl.planner.PddlPlannerJInternalFrame;
+import aprs.framework.simview.Object2DJPanel;
 import aprs.framework.simview.Object2DViewJInternalFrame;
 import aprs.framework.spvision.UpdateResults;
 import aprs.framework.spvision.VisionToDbJInternalFrame;
@@ -83,6 +84,7 @@ import crcl.utils.CRCLException;
 import crcl.utils.CRCLPosemath;
 import crcl.utils.CRCLSocket;
 import java.awt.Container;
+import java.awt.Image;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
@@ -162,6 +164,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 effectiveStartRunTime.addAndGet(lastStopDuration);
             }
         }
+    }
+    
+    private Image scanImage;
+    public Image getScanImage() {
+        return scanImage;
     }
 
     /**
@@ -3328,6 +3335,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         try {
             List<PhysicalItem> requiredItems = getObjectViewItems();
             List<PhysicalItem> teachItems = requiredItems;
+            updateScanImage(requiredItems);
+            takeSimViewSnapshot("createActionListFromVision", requiredItems);
             createActionListFromVision(requiredItems, teachItems);
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -3335,6 +3344,23 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private void updateScanImage(List<PhysicalItem> requiredItems) {
+        Utils.runOnDispatchThread(() -> {
+            updateScanImageInternal(requiredItems);
+        });
+    }
+
+    private void updateScanImageInternal(List<PhysicalItem> requiredItems) {
+        Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
+        opts.h = 300;
+        opts.w = 300;
+        opts.disableLabels = true;
+        opts.enableAutoscale = true;
+        opts.disableLimitsLine = true;
+        opts.disableShowCurrent = true;
+        scanImage = object2DViewJInternalFrame.createSnapshotImage(opts,requiredItems);
+    }
+    
     private GoalLearner goalLearner;
 
     /**

@@ -27,6 +27,7 @@ import aprs.framework.SlotOffsetProvider;
 import aprs.framework.database.PhysicalItem;
 import crcl.base.PointType;
 import crcl.base.PoseType;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -103,6 +104,18 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     private aprs.framework.simview.Object2DOuterJPanel object2DOuterJPanel1;
     // End of variables declaration//GEN-END:variables
 
+    public BufferedImage createSnapshotImage() {
+       return object2DOuterJPanel1.createSnapshotImage();
+    }
+    
+    public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts) {
+        return object2DOuterJPanel1.createSnapshotImage(opts);
+    }
+    
+    public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+        return object2DOuterJPanel1.createSnapshotImage(opts,itemsToPaint);
+    }
+    
     @Override
     public List<PhysicalItem> getItems() {
         return object2DOuterJPanel1.getItems();
