@@ -165,8 +165,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         }
     }
-    
+
     private Image scanImage;
+
     public Image getScanImage() {
         return scanImage;
     }
@@ -3358,9 +3359,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         opts.enableAutoscale = true;
         opts.disableLimitsLine = true;
         opts.disableShowCurrent = true;
-        scanImage = object2DViewJInternalFrame.createSnapshotImage(opts,requiredItems);
+        scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
     }
-    
+
     private GoalLearner goalLearner;
 
     /**
@@ -3521,18 +3522,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         } finally {
             resuming = false;
         }
-         badState = badState || pausing;
-         if(badState) {
-             System.err.println("pauseThread = " + pauseThread);
-             System.err.println("pauseTrace = " + Arrays.toString(pauseTrace));
-             throw new IllegalStateException("Attempt to resume while pausing");
-         }
+        badState = badState || pausing;
+        if (badState) {
+            System.err.println("pauseThread = " + pauseThread);
+            System.err.println("pauseTrace = " + Arrays.toString(pauseTrace));
+            throw new IllegalStateException("Attempt to resume while pausing");
+        }
     }
 
     public boolean isVisionToDbConnected() {
         return null != visionToDbJInternalFrame && visionToDbJInternalFrame.isDbConnected();
     }
-    
+
     /**
      * Used for logging/debugging. Save a file(s) in the temporary directory
      * with the comment and a timestamp with the current view of the parts and
@@ -4034,6 +4035,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.setErrorString(null);
         }
+        String crclClientErrString = getCrclClientErrorString();
+        if (crclClientErrString != null && crclClientErrString.length() > 0) {
+            throw new IllegalStateException("Clear errors failed to clear crclErrorString =  " + crclClientErrString);
+        }
     }
 
     private void clearCrclClientErrorMessage() {
@@ -4110,14 +4115,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    private volatile  int emptyProgramCount = 0;
-    private volatile  int consecutiveEmptyProgramCount = 0;
+    private volatile int emptyProgramCount = 0;
+    private volatile int consecutiveEmptyProgramCount = 0;
 
     private void setProgram(CRCLProgramType program) throws JAXBException {
-        if(program.getMiddleCommand().isEmpty()) {
+        if (program.getMiddleCommand().isEmpty()) {
             emptyProgramCount++;
             consecutiveEmptyProgramCount++;
-            if(consecutiveEmptyProgramCount > 1) {
+            if (consecutiveEmptyProgramCount > 1) {
                 System.out.println("emptyProgramCount=" + emptyProgramCount);
                 System.out.println("consecutiveEmptyProgramCount=" + consecutiveEmptyProgramCount);
             }

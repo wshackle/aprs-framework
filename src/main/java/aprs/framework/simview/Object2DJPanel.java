@@ -1476,7 +1476,7 @@ public class Object2DJPanel extends JPanel {
             g2d.setColor(Color.BLACK);
 
         } else {
-            System.out.println("no image for " + item.getName());
+//            System.out.println("no image for " + item.getName());
         }
     }
 

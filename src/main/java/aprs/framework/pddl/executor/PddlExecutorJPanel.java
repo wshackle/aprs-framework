@@ -279,8 +279,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             while (l.size() > programIndex + 1) {
                 l.remove(programIndex + 1);
             }
-            pddlActionToCrclGenerator.addMoveToLookForPosition(l);
-            setReplanFromIndex(ppi.getPddlActionIndex() + 1,true);
+            pddlActionToCrclGenerator.addMoveToLookForPosition(l, false);
+            setReplanFromIndex(ppi.getPddlActionIndex() + 1, true);
         }
 //        else if(aprsJFrame.isAborting()) {
 //            XFuture<Void> saf = aprsJFrame.getSafeAbortFuture();
@@ -2416,7 +2416,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     public boolean runCrclProgram(CRCLProgramType crclProgram) throws JAXBException {
         prepCrclProgram(crclProgram);
-        return aprsJFrame.runCRCLProgram(crclProgram);
+        boolean ret = aprsJFrame.runCRCLProgram(crclProgram);
+        System.out.println("runCrclProgram returned = " + ret);
+        return ret;
     }
 
     private void jButtonGenerateCRCLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGenerateCRCLActionPerformed
@@ -3547,11 +3549,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
             String jointVals
                     = jointList
-                            .stream()
-                            .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                            .map(JointStatusType::getJointPosition)
-                            .map(Objects::toString)
-                            .collect(Collectors.joining(","));
+                    .stream()
+                    .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                    .map(JointStatusType::getJointPosition)
+                    .map(Objects::toString)
+                    .collect(Collectors.joining(","));
             System.out.println("jointVals = " + jointVals);
             DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
             boolean keyFound = false;
@@ -4049,7 +4051,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         this.generateCrclService = generateCrclService;
     }
 
-    private boolean generateCrcl(String comment, int startSafeAbortRequestCount) 
+    private boolean generateCrcl(String comment, int startSafeAbortRequestCount)
             throws IOException, IllegalStateException, SQLException, JAXBException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException {
         boolean doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
         if (doSafeAbort) {
@@ -4103,6 +4105,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 checkSafeAbort(startSafeAbortRequestCount);
                 return false;
             }
+            
+//            if (sectionNumber > 1) {
+//                aprsJFrame.pause();
+//                return false;
+//            }
             doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
             if (doSafeAbort) {
                 return atLastAction();

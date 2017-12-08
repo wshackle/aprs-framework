@@ -359,6 +359,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     static private class KitToCheckInstanceInfo {
+
         final String instanceName;
         final Map<String, PhysicalItem> closestItemMap;
         final List<Slot> absSlots;
@@ -366,6 +367,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         String failedAbsSlotPrpName;
         String failedItemSkuName;
+
         public KitToCheckInstanceInfo(String instanceName, List<Slot> absSlots) {
             this.instanceName = instanceName;
             this.absSlots = absSlots;
@@ -377,8 +379,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         public String toString() {
             return "KitToCheckInstanceInfo{" + "instanceName=" + instanceName + ", failedAbsSlotPrpName=" + failedAbsSlotPrpName + ", failedItemSkuName=" + failedItemSkuName + '}';
         }
-        
+
     }
+
     static private class KitToCheck {
 
         String name;
@@ -390,7 +393,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         public String toString() {
             return "KitToCheck{" + "name=" + name + ", instanceInfoMap=" + instanceInfoMap + '}';
         }
-
 
     }
     private final ConcurrentLinkedDeque<KitToCheck> kitsToCheck = new ConcurrentLinkedDeque<>();
@@ -688,13 +690,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private volatile int lastAtLastIndexIdx = -1;
     private volatile List<PddlAction> lastAtLastIndexList = null;
     private volatile int lastAtLastIndexRepPos = -1;
-    
+
     public boolean atLastIndex() {
         final int idx = getLastIndex();
         if (idx == 0 && lastActionsList == null) {
             lastAtLastIndexIdx = idx;
             lastAtLastIndexList = null;
-            lastAtLastIndexRepPos=1;
+            lastAtLastIndexRepPos = 1;
             return true;
         }
         if (null == lastActionsList) {
@@ -704,7 +706,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (ret) {
             lastAtLastIndexList = new ArrayList<>(lastActionsList);
             lastAtLastIndexIdx = idx;
-            lastAtLastIndexRepPos=2;
+            lastAtLastIndexRepPos = 2;
         }
         return ret;
     }
@@ -736,7 +738,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (lastActionsList != actionsList || index != lastIndex.get()) {
             setLastActionsIndexTrace = curThread.getStackTrace();
             setLastActionsIndexTraces.add(setLastActionsIndexTrace);
-            this.lastActionsList = ((null != actionsList)?new ArrayList<>(actionsList):null);
+            this.lastActionsList = ((null != actionsList) ? new ArrayList<>(actionsList) : null);
             lastIndex.set(index);
         }
     }
@@ -1108,7 +1110,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 case "look-for-parts":
                     if (null == newItems) {
                         if (null == externalPoseProvider) {
-                            newItems = waitForCompleteVisionUpdates(waitForCompleteVisionUpdatesCommentString, lastRequiredPartsMap);
+                            newItems = waitForCompleteVisionUpdates(waitForCompleteVisionUpdatesCommentString, lastRequiredPartsMap,5000);
                         } else {
                             newItems = externalPoseProvider.getNewPhysicalItems();
                         }
@@ -1302,13 +1304,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (!aprsJFrame.isReverseFlag()) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, PddlAction> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals("take-part"))
-                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                    .select(action -> action.getType().equals("take-part"))
+                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -1482,7 +1484,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException {
         List<PhysicalItem> newItems;
         if (null == externalPoseProvider) {
-            newItems = waitForCompleteVisionUpdates("checkKits", lastRequiredPartsMap);
+            newItems = waitForCompleteVisionUpdates("checkKits", lastRequiredPartsMap,5000);
         } else {
             newItems = externalPoseProvider.getNewPhysicalItems();
         }
@@ -1511,14 +1513,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 kit.kitInstanceNames = getKitInstanceNames(kit.name);
                 kit.instanceInfoMap = new HashMap<>();
                 for (String kitInstanceName : kit.kitInstanceNames) {
-                    
+
                     List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
                             (String n) -> getAbsSlotListForKitInstance(kit.name, n));
-                    KitToCheckInstanceInfo info= new KitToCheckInstanceInfo(kitInstanceName,absSlots);
+                    KitToCheckInstanceInfo info = new KitToCheckInstanceInfo(kitInstanceName, absSlots);
                     kit.instanceInfoMap.put(kitInstanceName, info);
                     if (matchedKitInstanceNames.contains(kitInstanceName)) {
                         continue;
-                    }                    
+                    }
                     takeSimViewSnapshot(aprsJFrame.createTempFile("absSlots_" + kitInstanceName, ".PNG"), absSlots);
                     boolean allSlotsCorrect = true;
                     for (Slot absSlot : absSlots) {
@@ -2151,7 +2153,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             return;
         }
         if (null == externalPoseProvider) {
-            waitForCompleteVisionUpdates("inspectKit", lastRequiredPartsMap);
+            waitForCompleteVisionUpdates("inspectKit", lastRequiredPartsMap,5000);
         }
         takeSnapshots("plan", "inspect-kit-", null, "");
 
@@ -3024,8 +3026,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addMoveTo(cmds, approachPose, false);
 
-        addSettleDwell(cmds);
-
+//        addSettleDwell(cmds);
         addSetSlowSpeed(cmds);
 
         addMoveTo(cmds, takePose, true);
@@ -3057,7 +3058,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addMoveTo(cmds, approachPose, true);
 
-        addSettleDwell(cmds);
+//        addSettleDwell(cmds);
     }
 
     /**
@@ -3340,19 +3341,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         origMessageCmd.setMessage("moveUpFromCurrent" + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
         addOptionalCommand(origMessageCmd, cmds, (CrclCommandWrapper wrapper) -> {
             MiddleCommandType cmd = wrapper.getWrappedCommand();
-            if (cmd instanceof MoveToType) {
-                MoveToType mtCmd = (MoveToType) cmd;
-                PoseType pose = aprsJFrame.getCurrentPose();
-                if (pose == null || pose.getPoint() == null || pose.getPoint().getZ() >= (limit - 1e-6)) {
-                    MessageType messageCommand = new MessageType();
-                    messageCommand.setMessage("moveUpFromCurrent NOT needed." + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
-                    wrapper.setWrappedCommand(messageCommand);
-                } else {
-                    MoveToType moveToCmd = new MoveToType();
-                    moveToCmd.setEndPosition(copyAndAddZ(pose, offset, limit));
-                    moveToCmd.setMoveStraight(true);
-                    wrapper.setWrappedCommand(moveToCmd);
-                }
+            PoseType pose = aprsJFrame.getCurrentPose();
+            if (pose == null || pose.getPoint() == null || pose.getPoint().getZ() >= (limit - 1e-6)) {
+                MessageType messageCommand = new MessageType();
+                messageCommand.setMessage("moveUpFromCurrent NOT needed." + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
+                wrapper.setWrappedCommand(messageCommand);
+            } else {
+                MoveToType moveToCmd = new MoveToType();
+                moveToCmd.setEndPosition(copyAndAddZ(pose, offset, limit));
+                moveToCmd.setMoveStraight(true);
+                wrapper.setWrappedCommand(moveToCmd);
             }
         });
     }
@@ -3498,7 +3496,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private volatile boolean atLookForPosition = false;
 
-    public void addMoveToLookForPosition(List<MiddleCommandType> out) {
+    public void addMoveToLookForPosition(List<MiddleCommandType> out,boolean firstAction) {
 
         String useLookForJointString = options.get("useJointLookFor");
         boolean useLookForJoint = (null != useLookForJointString && useLookForJointString.length() > 0 && Boolean.valueOf(useLookForJointString));
@@ -3508,7 +3506,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
 
         addOpenGripper(out);
-        addSlowLimitedMoveUpFromCurrent(out);
+        if(firstAction) {
+            addSlowLimitedMoveUpFromCurrent(out);
+        }
         addSetFastSpeed(out);
         if (!useLookForJoint) {
             PoseType pose = new PoseType();
@@ -3675,7 +3675,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             atLookForPosition = checkAtLookForPosition();
         }
         if (!atLookForPosition) {
-            addMoveToLookForPosition(out);
+            addMoveToLookForPosition(out,false);
         }
         TakenPartList.clear();
     }
@@ -3715,19 +3715,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             atLookForPosition = checkAtLookForPosition();
         }
         if (!atLookForPosition) {
-            addMoveToLookForPosition(out);
-            addAfterMoveToLookForDwell(out);
+            addMoveToLookForPosition(out,firstAction);
+            addAfterMoveToLookForDwell(out, firstAction, lastAction);
             if (null == externalPoseProvider) {
                 addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
                     aprsJFrame.setEnableVisionToDatabaseUpdates(true, immutableRequiredPartsMap);
                 });
-            }
-            if (firstAction) {
-                addFirstLookDwell(out);
-            } else if (lastAction) {
-                addLastLookDwell(out);
-            } else {
-                addLookDwell(out);
             }
         } else {
             if (null == externalPoseProvider) {
@@ -3735,12 +3728,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     aprsJFrame.setEnableVisionToDatabaseUpdates(true, immutableRequiredPartsMap);
                 });
             }
-            addSkipLookDwell(out);
+            addSkipLookDwell(out, firstAction, lastAction);
         }
         if (null == externalPoseProvider) {
             addMarkerCommand(out, "lookForParts.waitForCompleteVisionUpdates", x -> {
                 try {
-                    waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap);
+                    waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap,5000);
                 } catch (InterruptedException | ExecutionException ex) {
                     logger.log(Level.SEVERE, null, ex);
                     throw new RuntimeException(ex);
@@ -3853,11 +3846,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    private List<PhysicalItem> waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap)
+    private List<PhysicalItem> waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap, long timeoutMillis)
             throws InterruptedException, ExecutionException {
+        long t0 = System.currentTimeMillis();
         XFuture<List<PhysicalItem>> xfl = aprsJFrame.getSingleVisionToDbUpdate();
         aprsJFrame.refreshSimView();
         while (!xfl.isDone()) {
+            long t1 = System.currentTimeMillis();
+            if(timeoutMillis > 0 && t1-t0 > timeoutMillis) {
+                System.err.println("waitForCompleteVisionUpdates: timedout");
+                throw new RuntimeException("waitForCompleteVisionUpdates("+ prefix+",..."+ timeoutMillis+") timedout");
+            }
             if (!aprsJFrame.isEnableVisionToDatabaseUpdates()) {
                 System.err.println("VisionToDatabaseUpdates not enabled as expected.");
                 aprsJFrame.setEnableVisionToDatabaseUpdates(true, requiredPartsMap);
@@ -3891,12 +3890,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //        openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
 //        openGripperCmd.setSetting(double.ONE);
 //    }
-    private void addLookDwell(List<MiddleCommandType> out) {
-        DwellType dwellCmd = new DwellType();
-        setCommandId(dwellCmd);
-        dwellCmd.setDwellTime(lookDwellTime);
-        out.add(dwellCmd);
-    }
+//    private void addLookDwell(List<MiddleCommandType> out) {
+//        DwellType dwellCmd = new DwellType();
+//        setCommandId(dwellCmd);
+//        dwellCmd.setDwellTime(lookDwellTime);
+//        out.add(dwellCmd);
+//    }
 
     /**
      * Holds information associated with a place part action
@@ -4139,8 +4138,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addMoveTo(cmds, approachPose, false);
 
-        addSettleDwell(cmds);
-
+//        addSettleDwell(cmds);
         addSetSlowSpeed(cmds);
 
         addMoveTo(cmds, placePose, true);
@@ -4153,8 +4151,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         addMoveTo(cmds, approachPose, true);
 
-        addSettleDwell(cmds);
-
+//        addSettleDwell(cmds);
         this.lastTakenPart = null;
     }
 
@@ -4166,31 +4163,30 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 // addAfterMoveToLookForDwell
 
-    private void addAfterMoveToLookForDwell(List<MiddleCommandType> cmds) {
+    private void addAfterMoveToLookForDwell(List<MiddleCommandType> cmds, boolean firstLook, boolean lastLook) {
         DwellType dwellCmd = new DwellType();
         setCommandId(dwellCmd);
-        dwellCmd.setDwellTime(afterMoveToLookForDwellTime);
+        if (firstLook) {
+            dwellCmd.setDwellTime(afterMoveToLookForDwellTime + firstLookDwellTime);
+        } else if (lastLook) {
+            dwellCmd.setDwellTime(afterMoveToLookForDwellTime + lastLookDwellTime);
+        } else {
+            dwellCmd.setDwellTime(afterMoveToLookForDwellTime);
+        }
         cmds.add(dwellCmd);
     }
 
-    private void addSkipLookDwell(List<MiddleCommandType> cmds) {
+    private void addSkipLookDwell(List<MiddleCommandType> cmds, boolean firstLook, boolean lastLook) {
         DwellType dwellCmd = new DwellType();
         setCommandId(dwellCmd);
+//        if (firstLook) {
+//            dwellCmd.setDwellTime(skipLookDwellTime + firstLookDwellTime);
+//        } else if (lastLook) {
+//            dwellCmd.setDwellTime(skipLookDwellTime + lastLookDwellTime);
+//        } else {
+//            dwellCmd.setDwellTime(skipLookDwellTime);
+//        }
         dwellCmd.setDwellTime(skipLookDwellTime);
-        cmds.add(dwellCmd);
-    }
-
-    private void addFirstLookDwell(List<MiddleCommandType> cmds) {
-        DwellType dwellCmd = new DwellType();
-        setCommandId(dwellCmd);
-        dwellCmd.setDwellTime(firstLookDwellTime);
-        cmds.add(dwellCmd);
-    }
-
-    private void addLastLookDwell(List<MiddleCommandType> cmds) {
-        DwellType dwellCmd = new DwellType();
-        setCommandId(dwellCmd);
-        dwellCmd.setDwellTime(lastLookDwellTime);
         cmds.add(dwellCmd);
     }
 
