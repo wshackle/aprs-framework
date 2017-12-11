@@ -83,6 +83,7 @@ import crcl.ui.server.SimServerJInternalFrame;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLPosemath;
 import crcl.utils.CRCLSocket;
+import crcl.utils.outer.interfaces.ProgramRunData;
 import java.awt.Container;
 import java.awt.Image;
 import java.io.FileOutputStream;
@@ -5451,4 +5452,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return getTitle();
     }
 
+    
+    public List<ProgramRunData> getLastProgRunDataList() {
+        if(null == pendantClientJInternalFrame) {
+            return null;
+        }
+        return pendantClientJInternalFrame.getLastProgRunDataList();
+    }
+
+    public void saveProgramRunDataListToCsv(File f,List<ProgramRunData> list) throws IOException {
+        if(null == pendantClientJInternalFrame) {
+            return;
+        }
+        pendantClientJInternalFrame.saveProgramRunDataListToCsv(f, list);
+    }
+    
+    public void saveLastProgramRunDataListToCsv(File f) throws IOException {
+        if(null == pendantClientJInternalFrame) {
+            return;
+        }
+        pendantClientJInternalFrame.saveLastProgramRunDataListToCsv(f);
+    }
 }

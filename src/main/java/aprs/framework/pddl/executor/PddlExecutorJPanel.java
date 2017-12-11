@@ -2417,6 +2417,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public boolean runCrclProgram(CRCLProgramType crclProgram) throws JAXBException {
         prepCrclProgram(crclProgram);
         boolean ret = aprsJFrame.runCRCLProgram(crclProgram);
+        try {
+            aprsJFrame.saveLastProgramRunDataListToCsv(aprsJFrame.createTempFile("programRunData", ".csv"));
+        } catch (IOException ex) {
+            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
         System.out.println("runCrclProgram returned = " + ret);
         return ret;
     }
