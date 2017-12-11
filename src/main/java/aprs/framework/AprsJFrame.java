@@ -3223,7 +3223,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private boolean lookForPartsInternal() throws JAXBException {
         CRCLProgramType lfpProgram = pddlExecutorJInternalFrame1.createLookForPartsProgram();
         setProgram(lfpProgram);
-        return pendantClientJInternalFrame.runCurrentProgram();
+        boolean ret =  pendantClientJInternalFrame.runCurrentProgram();
+        if(ret) {
+            enableCheckedAlready = true;
+        }
+        return ret;
     }
 
     private void setImageSizeMenuText() {
