@@ -87,6 +87,7 @@ import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -1440,8 +1441,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 long found = list.stream().filter(item -> item.getName().startsWith(matchName) || item.getName().startsWith("sku_" + matchName)).count();
                 if (required > found) {
                     int failures = checkRequiredPartFailures.incrementAndGet();
+                    List<String> namesList = list.stream().map(PhysicalItem::getName).collect(Collectors.toList());
                     String msg = "Found only " + found + " of " + name + " when " + required + " needed."
-                            + " : failures = " + failures + " out of " + maxRequiredPartFailures + "_";
+                            + " : failures = " + failures + " out of " + maxRequiredPartFailures + "_ : list.siz()="+list.size()+", namesList="+namesList;
                     try {
                         aprsJFrame.takeSimViewSnapshot(aprsJFrame.createTempFile("checkRequiredParts_" + msg, ".PNG"), list);
                     } catch (IOException ex) {
@@ -1670,6 +1672,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 }
             }
         } catch (Throwable throwable) {
+            System.out.println("line = " + line);
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, throwable);
             aprsJFrame.setTitleErrorString(throwable.getMessage());
         }
