@@ -64,6 +64,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         return actionsToCrclJPanel1.getForceFakeTakeFlag();
     }
 
+    public void showPaused(boolean state) {
+        actionsToCrclJPanel1.showPaused(state);
+    }
+
     /**
      * Get the value of externalGetPoseFunction
      *
@@ -91,11 +95,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
 //    public XFuture<Boolean> startLookForParts() {
 //        return actionsToCrclJPanel1.lookForParts();
 //    }
-
-    public CRCLProgramType createLookForPartsProgram()  {
+    public CRCLProgramType createLookForPartsProgram() {
         return actionsToCrclJPanel1.createLookForPartsProgram();
     }
-    
+
     /**
      * Modify the given pose by applying all of the currently added position
      * maps.
@@ -162,9 +165,9 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         this.actionsToCrclJPanel1.debugAction();
     }
 
-    public void pause() {
-        this.actionsToCrclJPanel1.pause();
-    }
+//    public void pause() {
+//        this.actionsToCrclJPanel1.pause();
+//    }
 
     public String getErrorString() {
         return this.actionsToCrclJPanel1.getErrorString();

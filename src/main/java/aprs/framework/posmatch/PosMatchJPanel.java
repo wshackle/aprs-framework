@@ -22,6 +22,7 @@
  */
 package aprs.framework.posmatch;
 
+import aprs.framework.Utils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -41,7 +42,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
@@ -236,7 +236,7 @@ public class PosMatchJPanel extends javax.swing.JPanel {
         try {
             System.out.println("Loading setup file :" + f.getCanonicalPath());
 
-            try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader())) {
+            try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), Utils.preferredCsvFormat())) {
                 for (CSVRecord csvRecord : parser) {
                     String name = csvRecord.get("name");
                     String xString = csvRecord.get("x");
@@ -303,7 +303,7 @@ public class PosMatchJPanel extends javax.swing.JPanel {
     }
 
     private void saveJTable(File f, JTable jtable) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT)) {
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), Utils.preferredCsvFormat())) {
             TableModel tm = jtable.getModel();
             List<Object> l = new ArrayList<>();
             for (int j = 0; j < tm.getColumnCount(); j++) {

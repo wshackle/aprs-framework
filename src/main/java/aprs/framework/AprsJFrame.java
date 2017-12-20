@@ -167,6 +167,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private String origRobotName;
+
+    /**
+     * Get the value of origRobotName
+     *
+     * @return the value of origRobotName
+     */
+    public String getOrigRobotName() {
+        maybeSetOrigRobotName(getRobotName());
+        return origRobotName;
+    }
+
     private Image scanImage;
 
     public Image getScanImage() {
@@ -827,6 +839,30 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         System.out.println("disconnectRobot completed");
     }
 
+    private volatile String origCrclRobotHost;
+
+    /**
+     * Get the value of origCrclRobotHost
+     *
+     * @return the value of origCrclRobotHost
+     */
+    public String getOrigCrclRobotHost() {
+        maybeSetOrigCrclRobotHost(getRobotCrclHost());
+        return origCrclRobotHost;
+    }
+
+    private volatile int origCrclRobotPort = -1;
+
+    /**
+     * Get the value of origCrclRobotPort
+     *
+     * @return the value of origCrclRobotPort
+     */
+    public int getOrigCrclRobotPort() {
+        maybeSetOrigCrclRobotPort(getRobotCrclPort());
+        return origCrclRobotPort;
+    }
+
     /**
      * Connect to a given robot with a CRCL server running on the given host and
      * TCP port.
@@ -837,6 +873,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return future providing info on when complete
      */
     public XFuture<Void> connectRobot(String robotName, String host, int port) {
+        maybeSetOrigRobotName(robotName);
+        maybeSetOrigCrclRobotHost(host);
+        maybeSetOrigCrclRobotPort(port);
         if (isConnected()
                 && !isPaused()
                 && null != this.robotName
@@ -850,6 +889,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 thenRunAsync(() -> connectRobotPrivate(robotName, host, port), connectService);
     }
 
+    private void maybeSetOrigCrclRobotPort(int port) {
+        if (-1 == this.origCrclRobotPort) {
+            if (port > 0) {
+                this.origCrclRobotPort = port;
+            }
+        }
+    }
+
+    private void maybeSetOrigCrclRobotHost(String host) {
+        if (null == this.origCrclRobotHost || this.origCrclRobotHost.length() < 1) {
+            if (null != host && host.length() > 0) {
+                this.origCrclRobotHost = host;
+            }
+        }
+    }
+
     private void connectRobotPrivate(String robotName, String host, int port) {
         setThreadName();
         enableCheckedAlready = false;
@@ -857,6 +912,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setRobotName(robotName);
             pendantClientJInternalFrame.connect(host, port);
         }
+        maybeSetOrigCrclRobotHost(getRobotCrclHost());
+        maybeSetOrigCrclRobotPort(getRobotCrclPort());
     }
 
     /**
@@ -1001,6 +1058,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param robotName new value of robotName
      */
     public void setRobotName(String robotName) {
+        maybeSetOrigRobotName(robotName);
         if (null == robotName) {
             disconnectRobotCount.incrementAndGet();
             enableCheckedAlready = false;
@@ -1018,6 +1076,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         this.robotName = robotName;
         Utils.runOnDispatchThread(() -> updateTitle("", ""));
+    }
+
+    private void maybeSetOrigRobotName(String robotName1) {
+        if (null == this.origRobotName || this.origRobotName.length() < 1) {
+            if (null != robotName1 && robotName1.length() > 0) {
+                this.origRobotName = robotName1;
+            }
+        }
     }
 
     private void checkReadyToDisconnect() throws IllegalStateException {
@@ -3223,8 +3289,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private boolean lookForPartsInternal() throws JAXBException {
         CRCLProgramType lfpProgram = pddlExecutorJInternalFrame1.createLookForPartsProgram();
         setProgram(lfpProgram);
-        boolean ret =  pendantClientJInternalFrame.runCurrentProgram();
-        if(ret) {
+        boolean ret = pendantClientJInternalFrame.runCurrentProgram();
+        if (ret) {
             enableCheckedAlready = true;
         }
         return ret;
@@ -3521,6 +3587,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             badState = badState || pausing;
             updateTitle("", "");
             badState = badState || pausing;
+            pddlExecutorJInternalFrame1.showPaused(false);
             if (isPaused()) {
                 throw new IllegalStateException("Still paused after resume.");
             }
@@ -3959,6 +4026,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 }
             }
             badState = badState || resuming;
+            pddlExecutorJInternalFrame1.showPaused(true);
             this.pauseCrclProgram();
 
         } finally {
@@ -5456,23 +5524,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return getTitle();
     }
 
-    
     public List<ProgramRunData> getLastProgRunDataList() {
-        if(null == pendantClientJInternalFrame) {
+        if (null == pendantClientJInternalFrame) {
             return null;
         }
         return pendantClientJInternalFrame.getLastProgRunDataList();
     }
 
-    public void saveProgramRunDataListToCsv(File f,List<ProgramRunData> list) throws IOException {
-        if(null == pendantClientJInternalFrame) {
+    public void saveProgramRunDataListToCsv(File f, List<ProgramRunData> list) throws IOException {
+        if (null == pendantClientJInternalFrame) {
             return;
         }
         pendantClientJInternalFrame.saveProgramRunDataListToCsv(f, list);
     }
-    
+
     public void saveLastProgramRunDataListToCsv(File f) throws IOException {
-        if(null == pendantClientJInternalFrame) {
+        if (null == pendantClientJInternalFrame) {
             return;
         }
         pendantClientJInternalFrame.saveLastProgramRunDataListToCsv(f);

@@ -2066,7 +2066,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }//GEN-LAST:event_jButtonForceAllActionPerformed
 
     public void saveTableToFile(File f, JTable table) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new BufferedWriter(new FileWriter(f)), CSVFormat.DEFAULT)) {
+        try (CSVPrinter printer = new CSVPrinter(new BufferedWriter(new FileWriter(f)), Utils.preferredCsvFormat())) {
             List<String> colHeaderList = new ArrayList<>();
             for (int i = 0; i < table.getColumnCount(); i++) {
                 String colHeader = table.getColumnName(i);

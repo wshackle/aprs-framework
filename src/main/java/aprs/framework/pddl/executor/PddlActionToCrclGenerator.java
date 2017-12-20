@@ -72,6 +72,7 @@ import crcl.base.VectorType;
 import crcl.ui.XFuture;
 import crcl.ui.client.PendantClientInner;
 import crcl.ui.misc.MultiLineStringJPanel;
+import crcl.utils.CRCLException;
 import crcl.utils.CrclCommandWrapper;
 import crcl.utils.CRCLPosemath;
 import java.sql.Connection;
@@ -121,6 +122,9 @@ import org.eclipse.collections.impl.factory.Lists;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.xml.sax.SAXException;
+import rcs.posemath.PmException;
+import rcs.posemath.PmPose;
+import rcs.posemath.Posemath;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -861,7 +865,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * another thread servicing the waitForCompleteVisionUpdates
      */
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
-            throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException {
+            throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
         return generate(actions, startingIndex, options, startSafeAbortRequestCount, true, null, null);
     }
 
@@ -883,33 +887,33 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private volatile Thread genThread = null;
     private volatile StackTraceElement genThreadSetTrace[] = null;
-    
+
     private static boolean cmdsContainNonWrapper(List<MiddleCommandType> cmds) {
         for (int i = 0; i < cmds.size(); i++) {
             MiddleCommandType cmd = cmds.get(i);
-             if(cmd instanceof SetLengthUnitsType) {
+            if (cmd instanceof SetLengthUnitsType) {
                 continue;
             }
-            if(cmd instanceof SetAngleUnitsType) {
+            if (cmd instanceof SetAngleUnitsType) {
                 continue;
             }
-            if(!(cmd instanceof CrclCommandWrapper)) {
+            if (!(cmd instanceof CrclCommandWrapper)) {
                 return true;
             }
         }
         return false;
     }
 
-    private  void processCommands(List<MiddleCommandType> cmds) {
+    private void processCommands(List<MiddleCommandType> cmds) {
         for (int i = 0; i < cmds.size(); i++) {
             MiddleCommandType cmd = cmds.get(i);
-            if(cmd instanceof SetLengthUnitsType) {
+            if (cmd instanceof SetLengthUnitsType) {
                 continue;
             }
-            if(cmd instanceof SetAngleUnitsType) {
+            if (cmd instanceof SetAngleUnitsType) {
                 continue;
             }
-            if(!(cmd instanceof CrclCommandWrapper)) {
+            if (!(cmd instanceof CrclCommandWrapper)) {
                 throw new IllegalArgumentException("list contains non wrapper commands");
             }
             CrclCommandWrapper wrapper = (CrclCommandWrapper) cmd;
@@ -919,7 +923,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         cmds.clear();
         addSetUnits(cmds);
     }
-    
+
     /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
@@ -945,7 +949,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * another thread servicing the waitForCompleteVisionUpdates
      */
     private List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount, boolean replan, List<PddlAction> origActions, List<PhysicalItem> newItems)
-            throws IllegalStateException, SQLException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException {
+            throws IllegalStateException, SQLException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException, CRCLException, PmException {
 
         final Thread curThread = Thread.currentThread();
         if (null == genThread) {
@@ -1102,12 +1106,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                         notifyActionCompletedListeners(idx, action, wrapper, fixedActionsCopy, fixedOrigActionsCopy);
                                     });
                         }
-                        if(idx != 0 || cmdsContainNonWrapper(cmds)) { 
+                        if (idx != 0 || cmdsContainNonWrapper(cmds)) {
                             return cmds;
                         } else {
                             try {
                                 processCommands(cmds);
-                            } catch(Throwable thrown) {
+                            } catch (Throwable thrown) {
                                 thrown.printStackTrace();
                                 throw thrown;
                             }
@@ -1276,7 +1280,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private List<MiddleCommandType> runOptaPlanner(List<PddlAction> actions, int startingIndex, Map<String, String> options1, int startSafeAbortRequestCount1)
-            throws IllegalStateException, InterruptedException, SQLException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException {
+            throws IllegalStateException, InterruptedException, SQLException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException, CRCLException, PmException {
         int lfpIndex = firstLookForPartsIndex(actions, startingIndex);
         int mIndex = firstMoveIndex(actions, startingIndex);
         if (mIndex < 0
@@ -1579,7 +1583,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private void checkKits(PddlAction action, List<MiddleCommandType> cmds)
-            throws IllegalStateException, SQLException, InterruptedException, ExecutionException {
+            throws IllegalStateException, SQLException, InterruptedException, ExecutionException, CRCLException, PmException {
         List<PhysicalItem> newItems;
         if (null == externalPoseProvider) {
             newItems = waitForCompleteVisionUpdates("checkKits", lastRequiredPartsMap, 5000);
@@ -1752,6 +1756,26 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private String getLastTakenPart() {
         return lastTakenPart;
+    }
+
+    private double verySlowTransSpeed = 25.0;
+
+    /**
+     * Get the value of verySlowTransSpeed
+     *
+     * @return the value of verySlowTransSpeed
+     */
+    public double getVerySlowTransSpeed() {
+        return verySlowTransSpeed;
+    }
+
+    /**
+     * Set the value of verySlowTransSpeed
+     *
+     * @param verySlowTransSpeed new value of verySlowTransSpeed
+     */
+    public void setVerySlowTransSpeed(double verySlowTransSpeed) {
+        this.verySlowTransSpeed = verySlowTransSpeed;
     }
 
     private double slowTransSpeed = 75.0;
@@ -2166,7 +2190,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if database query fails
      */
-    public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+    public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
         checkDbReady();
         checkSettings();
         String partName = action.getArgs()[0];
@@ -2238,7 +2262,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * another thread servicing waitForCompleteVisionUpdates
      *
      */
-    private void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException, InterruptedException, ExecutionException {
+    private void inspectKit(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException, InterruptedException, ExecutionException, CRCLException, PmException {
         checkDbReady();
         checkSettings();
         if (action.getArgs().length < 2) {
@@ -2754,7 +2778,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if database query fails
      */
-    public void takePart(PddlAction action, List<MiddleCommandType> out, PddlAction nextPlacePartAction) throws IllegalStateException, SQLException {
+    public void takePart(PddlAction action, List<MiddleCommandType> out, PddlAction nextPlacePartAction) throws IllegalStateException, SQLException, CRCLException, PmException {
         checkDbReady();
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
@@ -2768,7 +2792,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         takePartByName(partName, nextPlacePartAction, out);
     }
 
-    public void takePartByName(String partName, PddlAction nextPlacePartAction, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+    public void takePartByName(String partName, PddlAction nextPlacePartAction, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
             takeSnapshots("plan", "take-part-" + partName + "", pose, partName);
@@ -2825,7 +2849,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws IllegalStateException if database is not connected
      * @throws SQLException if database query fails
      */
-    public void fakeTakePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+    public void fakeTakePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
         checkDbReady();
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
@@ -2851,7 +2875,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    public void takePartRecovery(String partName, List<MiddleCommandType> out) throws SQLException, BadLocationException {
+    public void takePartRecovery(String partName, List<MiddleCommandType> out) throws SQLException, BadLocationException, CRCLException, PmException {
         checkDbReady();
 
         if (partName.indexOf('_') < 0) {
@@ -3001,6 +3025,25 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     volatile PoseType lastTestApproachPose = null;
 
+    private final ConcurrentMap<String, String> toolChangerJointValsMap
+            = new ConcurrentHashMap<>();
+
+    public void putToolChangerJointVals(String key, String value) {
+        toolChangerJointValsMap.put(key, value);
+    }
+
+    public String getToolChangerJointVals(String key) {
+        return toolChangerJointValsMap.get(key);
+    }
+
+    public void removeToolChangerJointVals(String key) {
+        toolChangerJointValsMap.remove(key);
+    }
+
+    public void clearToolChangerJointVals() {
+        toolChangerJointValsMap.clear();
+    }
+
     /**
      * Add commands to the list that will test a given part position by opening
      * the gripper and moving to that position but not actually taking the part.
@@ -3008,7 +3051,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param cmds list of commands to append to
      * @param pose pose to test
      */
-    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) {
+    private void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
 
         addOpenGripper(cmds);
 
@@ -3021,8 +3064,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         } else {
             addSlowLimitedMoveUpFromCurrent(cmds);
         }
-        PoseType approachPose = CRCLPosemath.copy(pose);
-        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
+        PoseType approachPose = addZToPose(pose, approachZOffset);
+
+//        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
         lastTestApproachPose = approachPose;
 
         PoseType takePose = CRCLPosemath.copy(pose);
@@ -3047,6 +3091,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 //        addMoveTo(cmds, poseAbove, true);
 //
 //        addSettleDwell(cmds);
+    }
+
+    private static PoseType addZToPose(PoseType pose, double zOffset) throws CRCLException, PmException {
+        PmCartesian cart = new PmCartesian(0, 0, -zOffset);
+        PmPose pmPose = CRCLPosemath.toPmPose(pose);
+        PmCartesian newTranPos = new PmCartesian();
+        Posemath.pmPoseCartMult(pmPose, cart, newTranPos);
+//        System.out.println("newTranPos = " + newTranPos);
+//        PmCartesian newTran = pmPose.tran.add(newTranPos);
+        PmPose approachPmPose = new PmPose(newTranPos, pmPose.rot);
+        PoseType approachPose = CRCLPosemath.toPose(approachPmPose);
+        return approachPose;
     }
 
     private void addCheckedOpenGripper(List<MiddleCommandType> cmds) {
@@ -3112,13 +3168,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param cmds list of commands to append to
      * @param pose pose where part is expected
      */
-    public void takePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
+    public void takePartByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
 
         addOpenGripper(cmds);
 
         checkSettings();
-        PoseType approachPose = CRCLPosemath.copy(pose);
-        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
+        PoseType approachPose = addZToPose(pose, approachZOffset);
+
+//        PoseType approachPose = CRCLPosemath.copy(pose);
+//        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
         lastTestApproachPose = null;
 
         PoseType takePose = CRCLPosemath.copy(pose);
@@ -3170,13 +3228,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param cmds list of commands to append to
      * @param pose pose where part is expected
      */
-    public void fakeTakePartByPose(List<MiddleCommandType> cmds, PoseType pose) {
+    public void fakeTakePartByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
 
         addOpenGripper(cmds);
 
         checkSettings();
-        PoseType approachPose = CRCLPosemath.copy(pose);
-        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
+        PoseType approachPose = addZToPose(pose, approachZOffset);
+//        PoseType approachPose = CRCLPosemath.copy(pose);
+//        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
 
         PoseType takePose = CRCLPosemath.copy(pose);
         takePose.getPoint().setZ(pose.getPoint().getZ() + takeZOffset);
@@ -3382,6 +3441,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 numberFormatException.printStackTrace();
             }
         }
+        String verySlowTransSpeedString = options.get("verySlowTransSpeed");
+        if (null != verySlowTransSpeedString && verySlowTransSpeedString.length() > 0) {
+            try {
+                verySlowTransSpeed = Double.parseDouble(verySlowTransSpeedString);
+            } catch (NumberFormatException numberFormatException) {
+                numberFormatException.printStackTrace();
+            }
+        }
         String takePartArgIndexString = options.get("takePartArgIndex");
         if (null != takePartArgIndexString && takePartArgIndexString.length() > 0) {
             this.takePartArgIndex = Integer.parseInt(takePartArgIndexString);
@@ -3496,6 +3563,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         setCommandId(stst);
         TransSpeedAbsoluteType tas = new TransSpeedAbsoluteType();
         tas.setSetting(slowTransSpeed);
+        stst.setTransSpeed(tas);
+        cmds.add(stst);
+    }
+
+    private void addSetVerySlowSpeed(List<MiddleCommandType> cmds) {
+        SetTransSpeedType stst = new SetTransSpeedType();
+        setCommandId(stst);
+        TransSpeedAbsoluteType tas = new TransSpeedAbsoluteType();
+        tas.setSetting(verySlowTransSpeed);
         stst.setTransSpeed(tas);
         cmds.add(stst);
     }
@@ -3623,7 +3699,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             pose.setZAxis(zAxis);
             addMoveTo(out, pose, false);
         } else {
-            addJointMove(out, lookForJointsString);
+            addJointMove(out, lookForJointsString, 1.0);
         }
         addMarkerCommand(out, "set atLookForPosition true", x -> {
             atLookForPosition = true;
@@ -3670,7 +3746,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.jointAccel = jointAccel;
     }
 
-    private void addJointMove(List<MiddleCommandType> out, String jointVals) {
+    private void addJointMove(List<MiddleCommandType> out, String jointVals, double speedScale) {
         ActuateJointsType ajCmd = new ActuateJointsType();
         setCommandId(ajCmd);
         ajCmd.getActuateJoint().clear();
@@ -3678,8 +3754,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         for (int i = 0; i < jointPosStrings.length; i++) {
             ActuateJointType aj = new ActuateJointType();
             JointSpeedAccelType jsa = new JointSpeedAccelType();
-            jsa.setJointAccel(jointAccel);
-            jsa.setJointSpeed(jointSpeed);
+            jsa.setJointAccel(jointAccel * speedScale);
+            jsa.setJointSpeed(jointSpeed * speedScale);
             aj.setJointDetails(jsa);
             aj.setJointNumber(i + 1);
             aj.setJointPosition(Double.parseDouble(jointPosStrings[i]));
@@ -3824,14 +3900,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     aprsJFrame.setEnableVisionToDatabaseUpdates(true, immutableRequiredPartsMap);
                 });
             }
-        } else {
-            if (null == externalPoseProvider) {
-                addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
-                    aprsJFrame.setEnableVisionToDatabaseUpdates(true, immutableRequiredPartsMap);
-                });
-            }
-//            addSkipLookDwell(out, firstAction, lastAction);
-        }
+        } else if (null == externalPoseProvider) {
+            addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
+                aprsJFrame.setEnableVisionToDatabaseUpdates(true, immutableRequiredPartsMap);
+            });
+        } //            addSkipLookDwell(out, firstAction, lastAction);
         if (null == externalPoseProvider) {
             addMarkerCommand(out, "lookForParts.waitForCompleteVisionUpdates", x -> {
                 try {
@@ -3866,7 +3939,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    private double approachToolChangerZOffset = 100.0;
+    private double approachToolChangerZOffset = 150.0;
 
     /**
      * Get the value of approachToolChangerZOffset
@@ -3886,44 +3959,68 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.approachToolChangerZOffset = approachToolChangerZOffset;
     }
 
-    private void gotoToolChangerApproach(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+    private void gotoToolChangerApproach(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
 
         lastTestApproachPose = null;
         String toolChangerPosName = action.getArgs()[toolChangePosArgIndex];
         checkSettings();
         checkDbReady();
-        PoseType pose = getPose(toolChangerPosName);
-        gotoToolChangerApproachByPose(pose, out);
+        addSlowLimitedMoveUpFromCurrent(out);
+        String jointVals = getToolChangerJointVals(toolChangerPosName);
+        if (null != jointVals && jointVals.length() > 0) {
+            addJointMove(out, jointVals, 0.2);
+        } else {
+            PoseType pose = getPose(toolChangerPosName);
+            gotoToolChangerApproachByPose(pose, out);
+        }
     }
 
-    private void gotoToolChangerApproachByPose(PoseType pose, List<MiddleCommandType> out) {
-        PoseType approachPose = CRCLPosemath.copy(pose);
-        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachToolChangerZOffset);
+    private void gotoToolChangerApproachByPose(PoseType pose, List<MiddleCommandType> out) throws CRCLException, PmException {
+        PoseType approachPose = approachPoseFromToolChangerPose(pose);
         addSetSlowSpeed(out);
         addMoveTo(out, approachPose, false);
     }
 
-    private void dropTool(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+    public PoseType approachPoseFromToolChangerPose(PoseType pose) throws PmException, CRCLException {
+        PoseType approachPose = addZToPose(pose, approachToolChangerZOffset);
+        return approachPose;
+    }
+
+    private void dropTool(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
         lastTestApproachPose = null;
         String toolChangerPosName = action.getArgs()[toolChangePosArgIndex];
         checkSettings();
         checkDbReady();
         PoseType pose = getPose(toolChangerPosName);
-        gotoToolChangerApproachByPose(pose, out);
+        String jointVals = getToolChangerJointVals(toolChangerPosName);
+        addSlowLimitedMoveUpFromCurrent(out);
+        if (null != jointVals && jointVals.length() > 0) {
+            addJointMove(out, jointVals, 0.2);
+        } else {
+            gotoToolChangerApproachByPose(pose, out);
+        }
+        addDwell(out,2.0);
         addSetSlowSpeed(out);
         addMoveTo(out, pose, false);
         addOpenToolChanger(out);
         gotoToolChangerApproachByPose(pose, out);
     }
 
-    private void pickupTool(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+    private void pickupTool(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
         lastTestApproachPose = null;
         String toolChangerPosName = action.getArgs()[toolChangePosArgIndex];
         checkSettings();
         checkDbReady();
         PoseType pose = getPose(toolChangerPosName);
-        gotoToolChangerApproachByPose(pose, out);
-        addSetSlowSpeed(out);
+        String jointVals = getToolChangerJointVals(toolChangerPosName);
+        addSlowLimitedMoveUpFromCurrent(out);
+        if (null != jointVals && jointVals.length() > 0) {
+            addJointMove(out, jointVals, 0.2);
+        } else {
+            gotoToolChangerApproachByPose(pose, out);
+        }
+        addDwell(out,2.0);
+        addSetVerySlowSpeed(out);
         addMoveTo(out, pose, false);
         addCloseToolChanger(out);
         gotoToolChangerApproachByPose(pose, out);
@@ -4260,6 +4357,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.lastTakenPart = null;
     }
 
+    private void addDwell(List<MiddleCommandType> cmds, double time) {
+        DwellType dwellCmd = new DwellType();
+        setCommandId(dwellCmd);
+        dwellCmd.setDwellTime(time);
+        cmds.add(dwellCmd);
+    }
+    
     private void addSettleDwell(List<MiddleCommandType> cmds) {
         DwellType dwellCmd = new DwellType();
         setCommandId(dwellCmd);

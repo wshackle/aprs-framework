@@ -71,12 +71,13 @@ public class Utils {
     }
 
     /**
-     * A Runnable that may throw  a checked exception.
+     * A Runnable that may throw a checked exception.
      */
     public static interface RunnableWithThrow {
 
         /**
          * Run method to implement.
+         *
          * @throws Exception exception occurred
          */
         public void run() throws Exception;
@@ -85,13 +86,15 @@ public class Utils {
     /**
      * Extension of XFuture which extends CompleteableFuture specifically for
      * operations that are happening on the Swing event dispatch thread.
-     * 
+     *
      * @param <T> type of object that may eventually be returned with get etc.
      */
     public static class SwingFuture<T> extends XFuture<T> {
 
         /**
-         * Complete a new SwingFuture with name attached for later logging/debugging/visualization 
+         * Complete a new SwingFuture with name attached for later
+         * logging/debugging/visualization
+         *
          * @param name optional name for tracking futures
          */
         public SwingFuture(String name) {
@@ -117,20 +120,21 @@ public class Utils {
     }
 
     private static String createAssertErrorString(CRCLCommandType cmd, long id) {
-        return "command id being reduced id="+id+", cmd="+CRCLSocket.cmdToString(cmd);
+        return "command id being reduced id=" + id + ", cmd=" + CRCLSocket.cmdToString(cmd);
     }
-    
+
     /**
      * Set the command ID and check that it is at-least as high as current id.
+     *
      * @param cmd command to set id of.
      * @param id new id for command.
      */
     public static void setCommandID(CRCLCommandType cmd, long id) {
-        assert cmd.getCommandID() <= id:
-                createAssertErrorString(cmd,id);
+        assert cmd.getCommandID() <= id :
+                createAssertErrorString(cmd, id);
         cmd.setCommandID(id);
     }
-    
+
     private static class LogFileDirGetter {
 
         private static File logFileDir = createLogFileDir();
@@ -155,30 +159,31 @@ public class Utils {
 
     /**
      * Get the current directory used for creating new log files.
+     *
      * @return log file directory
      */
     public static File getlogFileDir() {
         return new LogFileDirGetter().getLogFileDir();
     }
 
-    
     private static String cleanAndLimitFilePrefix(String prefix_in) {
-        if(prefix_in.length() > 80) {
+        if (prefix_in.length() > 80) {
             prefix_in = prefix_in.substring(0, 79);
         }
         String prefixOut = prefix_in.replaceAll("[ \t:;-]+", "_").replace('\\', '_').replace('/', '_');
-        if(prefixOut.length() > 80) {
+        if (prefixOut.length() > 80) {
             prefixOut = prefixOut.substring(0, 79);
         }
-        if(!prefixOut.endsWith("_")) {
+        if (!prefixOut.endsWith("_")) {
             prefixOut = prefixOut + "_";
         }
         return prefixOut;
     }
-    
+
     /**
-     * Create a new temporary file in the current log file directory adding a timestamp
-     * and limiting the name length.
+     * Create a new temporary file in the current log file directory adding a
+     * timestamp and limiting the name length.
+     *
      * @param prefix prefix for the new file name
      * @param suffix suffix for the new file name
      * @return new temporary file
@@ -189,8 +194,9 @@ public class Utils {
     }
 
     /**
-     * Create a new temporary file in the given directory adding a timestamp
-     * and limiting the name length.
+     * Create a new temporary file in the given directory adding a timestamp and
+     * limiting the name length.
+     *
      * @param prefix prefix for the new file name
      * @param suffix suffix for the new file name
      * @param dir directory to store new log file
@@ -200,11 +206,12 @@ public class Utils {
     public static File createTempFile(String prefix, String suffix, File dir) throws IOException {
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, dir);
     }
-    
+
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmmss.SSS");
-    
+
     /**
      * Get the current date and time in the default format.
+     *
      * @return date and time in formatted string
      */
     public static String getDateTimeString() {
@@ -213,10 +220,11 @@ public class Utils {
     }
 
     private static final DateFormat timeFormat = new SimpleDateFormat("HHmmss.SSS");
-    
+
     /**
      * Get the current time in the default format.
-     * @return  time in formatted string
+     *
+     * @return time in formatted string
      */
     public static String getTimeString() {
         Date date = new Date();
@@ -225,6 +233,7 @@ public class Utils {
 
     /**
      * Run something on the dispatch thread that may throw a checked exception.
+     *
      * @param r object with run method to call
      * @return future that provides info on when the method completes.
      */
@@ -258,6 +267,7 @@ public class Utils {
 
     /**
      * Run something on the dispatch thread.
+     *
      * @param r object with run method to call
      * @return future that provides info on when the method completes.
      */
@@ -266,7 +276,9 @@ public class Utils {
     }
 
     /**
-     * Run something on the dispatch thread and attach a name to it for debugging/logging/visualization.
+     * Run something on the dispatch thread and attach a name to it for
+     * debugging/logging/visualization.
+     *
      * @param name optional name for better debugging/logging/visualization
      * @param r object with run method to call
      * @return future that provides info on when the method completes.
@@ -298,7 +310,9 @@ public class Utils {
     }
 
     /**
-     * Run something on the dispatch thread and attach a name to it for debugging/logging/visualization.
+     * Run something on the dispatch thread and attach a name to it for
+     * debugging/logging/visualization.
+     *
      * @param name optional name for better debugging/logging/visualization
      * @param r object with run method to call
      */
@@ -321,12 +335,14 @@ public class Utils {
             return;
         }
     }
-    
+
     /**
      * Call a method that returns a value on the dispatch thread.
+     *
      * @param <R> type of return of the caller
      * @param s supplier object with get method to be called.
-     * @return future that will make the return value accessible when the call is complete.
+     * @return future that will make the return value accessible when the call
+     * is complete.
      */
     public static <R> SwingFuture<R> supplyOnDispatchThread(final Supplier<R> s) {
         SwingFuture<R> ret = new SwingFuture<>("supplyOnDispatchThread");
@@ -350,9 +366,11 @@ public class Utils {
 
     /**
      * Call a method that returns a future of a value on the dispatch thread.
+     *
      * @param <R> type of return of the caller
      * @param s supplier object with get method to be called.
-     * @return future that will make the return value accessible when the call is complete.
+     * @return future that will make the return value accessible when the call
+     * is complete.
      */
     public static <R> XFuture<R> composeOnDispatchThread(final Supplier<XFuture<R>> s) {
         XFuture<XFuture<R>> ret = new SwingFuture<>("composeOnDispatchThread");
@@ -365,8 +383,9 @@ public class Utils {
     }
 
     /**
-     * Adjust the widths of each column of a table to match the max width of each 
-     * value in the table.
+     * Adjust the widths of each column of a table to match the max width of
+     * each value in the table.
+     *
      * @param table table to be resized
      */
     public static void autoResizeTableColWidths(JTable table) {
@@ -408,8 +427,9 @@ public class Utils {
     }
 
     /**
-     * Adjust the heights of each row of a table to match the max height of each 
+     * Adjust the heights of each row of a table to match the max height of each
      * value in the table.
+     *
      * @param table table to be resized
      */
     static public void autoResizeTableRowHeights(JTable table) {
@@ -435,7 +455,9 @@ public class Utils {
     }
 
     /**
-     * Save a set of properties to a file, with a replacement for the backslashes in windows filenames. 
+     * Save a set of properties to a file, with a replacement for the
+     * backslashes in windows filenames.
+     *
      * @param file file to save
      * @param props properties to save
      */
@@ -461,14 +483,28 @@ public class Utils {
         }
     }
 
+    public static CSVFormat preferredCsvFormat() {
+        return CSVFormat.DEFAULT.withHeader();
+    }
+
+    public static String[] tableHeaders(JTable jtable) {
+        TableModel tm = jtable.getModel();
+        List<String> colNameList = new ArrayList<>();
+        for (int i = 0; i < tm.getColumnCount(); i++) {
+            colNameList.add(tm.getColumnName(i));
+        }
+        return colNameList.toArray(new String[colNameList.size()]);
+    }
+
     /**
      * Save a JTable to a file.
+     *
      * @param f file the save table data to
      * @param jtable table to get data from
      * @throws IOException file could not be written
      */
     public static void saveJTable(File f, JTable jtable) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT)) {
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT.withHeader(tableHeaders(jtable)))) {
             TableModel tm = jtable.getModel();
             List<String> colNameList = new ArrayList<>();
             for (int i = 0; i < tm.getColumnCount(); i++) {
@@ -494,9 +530,10 @@ public class Utils {
             }
         }
     }
-    
+
     /**
      * Convert a run time in milliseconds to a formatted string.
+     *
      * @param runningTimeMillis time in milliseconds
      * @return formatted string
      */
