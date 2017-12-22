@@ -6,7 +6,7 @@ autoscale=false
 connected=true
 displayAxis=POS_Y_NEG_X
 dropOffThreshold=25.00
-items=sku_part_large_gear,0.0,532.46,18.33,0.94,P,sku_part_large_gear,0.0,389.94,15.48,0.92,P,sku_part_medium_gear,0.0,553.74,-195.53,0.94,P,sku_part_medium_gear,0.0,628.4,-186.91,0.93,P,sku_part_medium_gear,0.0,334.67,105.06,0.91,P,sku_part_medium_gear,0.0,413.53,117.24,0.9,P,sku_large_gear_vessel,-0.23,545.19,74.23,0.93,PT,sku_medium_gear_vessel,0.11,584.96,-152.48,0.88,PT,sku_kit_m2l1_vessel,-3.01,384.6,53.97,0.52,KT,sku_kit_m2l1_vessel,0.62,372.68,-146.72,0.7,KT,
+items=sku_part_large_gear,0.0,557.79,125.27,0.93,P,sku_part_large_gear,0.0,533.5,13.55,0.91,P,sku_part_medium_gear,0.0,545.41,-121.5,0.93,P,sku_part_medium_gear,0.0,553.89,-194.88,0.93,P,sku_part_medium_gear,0.0,628.46,-186.76,0.92,P,sku_part_medium_gear,0.0,620.72,-112.23,0.92,P,sku_large_gear_vessel,-0.23,544.72,74.7,0.84,PT,sku_medium_gear_vessel,0.12,584.69,-152.49,0.84,PT,sku_kit_m2l1_vessel,-3.0,384.53,55.48,0.64,KT,sku_kit_m2l1_vessel,0.62,372.71,-146.7,0.7,KT,
 
 pickupDist=5.00
 posNoise=1.00

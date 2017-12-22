@@ -796,6 +796,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.lastTakenPart = null;
         this.unitsSet = false;
         this.rotSpeedSet = false;
+        this.genThread = null;
         setLastActionsIndex(null, 0);
         clearPoseCache();
         clearLastRequiredPartsMap();
