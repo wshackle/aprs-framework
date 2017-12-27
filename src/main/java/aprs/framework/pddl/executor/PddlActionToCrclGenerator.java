@@ -3963,13 +3963,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void gotoToolChangerApproach(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
 
         lastTestApproachPose = null;
-        String toolChangerPosName = action.getArgs()[toolChangePosArgIndex];
         checkSettings();
         checkDbReady();
+        String toolChangerPosName = action.getArgs()[toolChangePosArgIndex];
+        addGotoToolChangerApproachByName(out, toolChangerPosName);
+    }
+
+    private void addGotoToolChangerApproachByName(List<MiddleCommandType> out, String toolChangerPosName) throws PmException, CRCLException, SQLException, IllegalStateException {
         addSlowLimitedMoveUpFromCurrent(out);
         String jointVals = getToolChangerJointVals(toolChangerPosName);
         if (null != jointVals && jointVals.length() > 0) {
+            addDwell(out,1.0);
             addJointMove(out, jointVals, 0.2);
+            addDwell(out,1.0);
         } else {
             PoseType pose = getPose(toolChangerPosName);
             gotoToolChangerApproachByPose(pose, out);
@@ -3993,14 +3999,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         checkSettings();
         checkDbReady();
         PoseType pose = getPose(toolChangerPosName);
-        String jointVals = getToolChangerJointVals(toolChangerPosName);
-        addSlowLimitedMoveUpFromCurrent(out);
-        if (null != jointVals && jointVals.length() > 0) {
-            addJointMove(out, jointVals, 0.2);
-        } else {
-            gotoToolChangerApproachByPose(pose, out);
-        }
-        addDwell(out,2.0);
+        addGotoToolChangerApproachByName(out, toolChangerPosName);
         addSetSlowSpeed(out);
         addMoveTo(out, pose, false);
         addOpenToolChanger(out);
@@ -4013,14 +4012,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         checkSettings();
         checkDbReady();
         PoseType pose = getPose(toolChangerPosName);
-        String jointVals = getToolChangerJointVals(toolChangerPosName);
-        addSlowLimitedMoveUpFromCurrent(out);
-        if (null != jointVals && jointVals.length() > 0) {
-            addJointMove(out, jointVals, 0.2);
-        } else {
-            gotoToolChangerApproachByPose(pose, out);
-        }
-        addDwell(out,2.0);
+        addGotoToolChangerApproachByName(out, toolChangerPosName);
         addSetVerySlowSpeed(out);
         addMoveTo(out, pose, false);
         addCloseToolChanger(out);

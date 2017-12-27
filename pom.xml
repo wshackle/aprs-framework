@@ -10,7 +10,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <main.class>aprs.framework.LauncherAprsJFrame</main.class>
-        <optiplanner.version>7.3.0.Final</optiplanner.version>
+        <optiplanner.version>7.5.0.Final</optiplanner.version>
     </properties>
     <name>aprs-framework</name>
     
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.39</version>
+            <version>6.0.6</version>
         </dependency>
         <!-- <dependency>
             <groupId>org.neo4j</groupId>
@@ -84,7 +84,7 @@
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
-            <version>0.1.53</version>
+            <version>0.1.54</version>
         </dependency>
         <dependency>
             <groupId>com.bsb.common.vaadin</groupId>
@@ -118,7 +118,7 @@
             <artifactId>optaplanner-core</artifactId>
             <version>${optiplanner.version}</version>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>org.drools</groupId>
             <artifactId>drools-core</artifactId>
             <version>${optiplanner.version}</version>
@@ -137,7 +137,7 @@
             <groupId>org.kie</groupId>
             <artifactId>kie-api</artifactId>
             <version>${optiplanner.version}</version>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -416,6 +416,25 @@
                                 </manifestEntries>
                             </archive>
                         </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>owasp_dep_check</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>3.0.2</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

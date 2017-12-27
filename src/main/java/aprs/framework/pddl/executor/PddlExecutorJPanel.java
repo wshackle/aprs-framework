@@ -3625,7 +3625,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonGotoToolChangerApproach.setEnabled(!paused);
         jButtonGotoToolChangerPose.setEnabled(!paused);
     }
-    
+
     private void updateLookForJoints(CRCLStatusType stat) {
         if (null != stat && null != stat.getJointStatuses()) {
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
@@ -3694,39 +3694,59 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         int lineNumber = 0;
         DefaultTableModel dtm = (DefaultTableModel) jTableToolChangePositions.getModel();
+        dtm.setRowCount(0);
         pddlActionToCrclGenerator.clearToolChangerJointVals();
         try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             System.out.println("headerMap = " + headerMap);
             List<CSVRecord> records = parser.getRecords();
-            dtm.setRowCount(records.size());
-            ROW_LOOP:
+            int skipRows = 0;
             for (int i = 0; i < records.size(); i++) {
+                CSVRecord rec = records.get(i);
+                String colName = dtm.getColumnName(0);
+                int colIndex = headerMap.get(colName);
+                String val0 = rec.get(colIndex);
+                if (!val0.equals(colName) && val0.length() > 0) {
+                    break;
+                }
+                skipRows++;
+            }
+            dtm.setRowCount(records.size()-skipRows);
+            ROW_LOOP:
+            for (int i = skipRows; i < records.size(); i++) {
                 CSVRecord rec = records.get(i);
                 for (int j = 0; j < dtm.getColumnCount(); j++) {
                     String colName = dtm.getColumnName(j);
-                    String val = rec.get(headerMap.get(colName));
-                    if (null != val) {
-                        if (val.equals(colName)) {
-                            continue ROW_LOOP;
+                    int colIndex = headerMap.get(colName);
+                    String val = rec.get(colIndex);
+                    try {
+                        if (null != val) {
+                            if (val.equals(colName) || (j == 0 && val.length() < 1)) {
+                                continue ROW_LOOP;
+                            }
+                            Class colClass = dtm.getColumnClass(j);
+                            if (colClass == Double.class) {
+                                dtm.setValueAt(Double.valueOf(val), i-skipRows, j);
+                            } else if (colClass == Boolean.class) {
+                                dtm.setValueAt(Boolean.valueOf(val), i-skipRows, j);
+                            } else {
+                                dtm.setValueAt(val, i-skipRows, j);
+                            }
                         }
-                        Class colClass = dtm.getColumnClass(j);
-                        if (colClass == Double.class) {
-                            dtm.setValueAt(Double.valueOf(val), i, j);
-                        } else if (colClass == Boolean.class) {
-                            dtm.setValueAt(Boolean.valueOf(val), i, j);
-                        } else {
-                            dtm.setValueAt(val, i, j);
-                        }
+                    } catch (Exception exception) {
+                        String msg = "colName=" + colName + ", colIndex=" + colIndex + ", val=" + val + ", rec=" + rec;
+                        Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, msg, exception);
+                        throw new RuntimeException(msg, exception);
                     }
                 }
                 try {
                     String name = rec.get("Name");
-                    PoseType pose = CRCLPosemath.toPoseType(new PmCartesian(
-                            Double.parseDouble(rec.get(X_COLUMN_HEADER)),
-                            Double.parseDouble(rec.get(Y_COLUMN_HEADER)),
-                            Double.parseDouble(rec.get(Z_COLUMN_HEADER))
-                    ),
+                    PoseType pose = CRCLPosemath.toPoseType(
+                            new PmCartesian(
+                                    Double.parseDouble(rec.get(X_COLUMN_HEADER)),
+                                    Double.parseDouble(rec.get(Y_COLUMN_HEADER)),
+                                    Double.parseDouble(rec.get(Z_COLUMN_HEADER))
+                            ),
                             new PmRpy(
                                     Math.toRadians(Double.parseDouble(rec.get(RX_COLUMN_HEADER))),
                                     Math.toRadians(Double.parseDouble(rec.get(RY_COLUMN_HEADER))),
@@ -3737,11 +3757,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     if (null != jointVals && jointVals.length() > 0 && approach) {
                         pddlActionToCrclGenerator.putToolChangerJointVals(name, jointVals);
                     }
-                    if(!approach) {
+                    if (!approach) {
                         toolChangerPoseMap.put(name, pose);
                     }
                 } catch (Exception exception) {
-                    Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, exception);
+                    Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, "rec=" + rec, exception);
                     throw new RuntimeException(exception);
                 }
             }
@@ -3784,6 +3804,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         } catch (Exception ex) {
             Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
+        clearEmptyToolChangerPoseRows();
     }
     private static final String JOINTS_COLUMN_HEADER = "Joints";
     private static final String RZ_COLUMN_HEADER = "Rz (deg)";
@@ -3795,6 +3816,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void saveToolChangerPoseMap() {
         try {
+            clearEmptyToolChangerPoseRows();
             if (toolChangerPoseMap.isEmpty()) {
                 return;
             }
@@ -3860,7 +3882,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return (String) JOptionPane.showInputDialog(
                 this, // parentComponent
                 "Tool Change Pose Name?", // Object message
-                aprsJFrame.getTaskName() + " " + aprsJFrame.getRobotName() + " "+qname+" choice", //  String title
+                aprsJFrame.getTaskName() + " " + aprsJFrame.getRobotName() + " " + qname + " choice", //  String title
                 JOptionPane.QUESTION_MESSAGE, // messageType
                 null,// icon 
                 getToolChangerNames(), // selectionValues
@@ -3934,7 +3956,28 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }//GEN-LAST:event_jButtonRecordToolChangerPoseActionPerformed
 
+    private void clearEmptyToolChangerPoseRows() {
+        DefaultTableModel dtm = (DefaultTableModel) jTableToolChangePositions.getModel();
+        for (int i = 0; i < dtm.getRowCount(); i++) {
+            Object val = dtm.getValueAt(i, 0);
+            if (val == null) {
+                dtm.removeRow(i);
+                i--;
+                continue;
+            }
+            String valString = val.toString();
+            if (valString.length() < 1) {
+                dtm.removeRow(i);
+                i--;
+            }
+        }
+    }
+
     private void updateToolChangePose(String name, boolean approach, PoseType pose, PmRpy rpy, String jointString) {
+        clearEmptyToolChangerPoseRows();
+        if (name == null || name.length() < 1) {
+            return;
+        }
         int tableRowIndex = getToolChangerRow(name, approach);
         DefaultTableModel dtm = (DefaultTableModel) jTableToolChangePositions.getModel();
         if (tableRowIndex < 0) {
@@ -3958,6 +4001,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             dtm.setValueAt(Math.toDegrees(rpy.y), tableRowIndex, 6);
             dtm.setValueAt(jointString, tableRowIndex, 8);
         }
+        clearEmptyToolChangerPoseRows();
     }
 
     private void jButtonGotoToolChangerApproachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGotoToolChangerApproachActionPerformed
@@ -4012,12 +4056,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             autoStart = true;
             cancelRunProgramFuture();
             toolChangerPoseName = (String) queryUserForToolChangePosName("Drop Tool");
-            if(null == toolChangerPoseName || toolChangerPoseName.equals("Default") || toolChangerPoseName.length() <1) {
+            if (null == toolChangerPoseName || toolChangerPoseName.equals("Default") || toolChangerPoseName.length() < 1) {
                 return;
             }
             toolChangerPose = toolChangerPoseMap.get(toolChangerPoseName);
-            if(null == toolChangerPose) {
-                JOptionPane.showMessageDialog(this,"No pose known for "+toolChangerPoseName);
+            if (null == toolChangerPose) {
+                JOptionPane.showMessageDialog(this, "No pose known for " + toolChangerPoseName);
                 return;
             }
             runningProgramFuture = this.dropTool(toolChangerPoseName, toolChangerPose);
@@ -4052,6 +4096,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }//GEN-LAST:event_jTextFieldToolChangerApproachZOffsetActionPerformed
 
     private void jButtonDeleteToolChangerPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteToolChangerPoseActionPerformed
+        clearEmptyToolChangerPoseRows();
         String nameToDelete = queryUserForToolChangePosName("Delete Pose");
         DefaultTableModel model = (DefaultTableModel) jTableToolChangePositions.getModel();
         for (int i = 0; i < jTableToolChangePositions.getRowCount(); i++) {
@@ -4062,11 +4107,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         }
         toolChangerPoseMap.remove(nameToDelete);
+        clearEmptyToolChangerPoseRows();
         Utils.autoResizeTableColWidths(jTableToolChangePositions);
     }//GEN-LAST:event_jButtonDeleteToolChangerPoseActionPerformed
 
     private void jButtonAddToolChangerPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddToolChangerPoseActionPerformed
         try {
+            clearEmptyToolChangerPoseRows();
             String nameToAdd = JOptionPane.showInputDialog("New tool changer position name");
             if (nameToAdd != null && nameToAdd.length() > 0) {
                 if (toolChangerPoseMap.containsKey(nameToAdd) || Arrays.stream(getToolChangerNames()).anyMatch(x -> nameToAdd.equals(x))) {
@@ -4082,6 +4129,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 toolChangerPoseMap.put(nameToAdd, toolChangerPose);
                 PoseType approachPose = pddlActionToCrclGenerator.approachPoseFromToolChangerPose(pose);
                 updateToolChangePose(nameToAdd, true, approachPose, rpy, null);
+                clearEmptyToolChangerPoseRows();
                 Utils.autoResizeTableColWidths(jTableToolChangePositions);
                 saveToolChangerPoseMap();
             }
