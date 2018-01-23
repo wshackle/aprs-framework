@@ -801,8 +801,15 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         closed = true;
     }
 
+    @Override
+    @SuppressWarnings("deprecation")
     protected void finalize() {
         close();
+        try {
+            super.finalize();
+        } catch (Throwable ex) {
+            Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public static volatile int poses_updated = 0;

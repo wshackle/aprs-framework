@@ -997,6 +997,7 @@ public class QuerySet implements QuerySetInterface {
     }
 
     @Override
+    @SuppressWarnings({"FinalizeDeclaration","deprecation"})
     protected void finalize() throws Throwable {
         try {
             this.close();

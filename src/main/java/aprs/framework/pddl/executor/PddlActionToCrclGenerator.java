@@ -4820,6 +4820,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected void finalize() throws Throwable {
         try {
             this.close();

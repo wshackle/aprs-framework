@@ -4150,6 +4150,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 System.out.println("urls = " + Arrays.toString(urls));
                 ClassLoader loader = new URLClassLoader(urls);
                 Class<?> clss = loader.loadClass("custom.Custom");
+                @SuppressWarnings("deprecation")
                 Object obj = clss.newInstance();
                 Method acceptMethod = clss.getMethod("accept", AprsSupervisorJFrame.class);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();

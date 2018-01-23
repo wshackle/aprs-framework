@@ -89,6 +89,8 @@ public class SocketLineReader {
             thread = null;
         }
 
+        @SuppressWarnings("deprecation")
+        @Override
         protected void finalize() {
             close();
         }
@@ -121,7 +123,7 @@ public class SocketLineReader {
     @Nullable private String host = null;
 
     private int port = -1;
-    
+
     private SocketLineReader privateStart(boolean isClient,
             @Nullable String host, int port, final String threadname,
             SocketLineReader.CallBack _cb) throws IOException {
@@ -275,6 +277,8 @@ public class SocketLineReader {
         als = null;
     }
 
+    @SuppressWarnings("deprecation")
+    @Override
     protected void finalize() {
         close();
     }
@@ -284,7 +288,4 @@ public class SocketLineReader {
         return "SocketLineReader{" + "serverSocket=" + serverSocket + ", socket=" + socket + ", thread=" + thread + ", host=" + host + ", port=" + port + ", closing=" + closing + '}';
     }
 
-    
-
-    
 }
