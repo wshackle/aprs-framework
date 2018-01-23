@@ -1,0 +1,59 @@
+package javax.swing;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class JDialog extends Dialog implements WindowConstants, Accessible, RootPaneContainer, HasGetTransferHandler {
+    protected JRootPane rootPane;
+    protected boolean rootPaneCheckingEnabled;
+    protected AccessibleContext accessibleContext;
+    JDialog();
+    JDialog(@Nullable Frame arg0);
+    JDialog(@Nullable Frame arg0, boolean arg1);
+    JDialog(@Nullable Frame arg0, String arg1);
+    JDialog(@Nullable Frame arg0, String arg1, boolean arg2);
+    JDialog(@Nullable Frame arg0, String arg1, boolean arg2, GraphicsConfiguration arg3);
+    JDialog(@Nullable Dialog arg0);
+    JDialog(@Nullable Dialog arg0, boolean arg1);
+    JDialog(@Nullable Dialog arg0, String arg1);
+    JDialog(@Nullable Dialog arg0, String arg1, boolean arg2);
+    JDialog(@Nullable Dialog arg0, String arg1, boolean arg2, GraphicsConfiguration arg3);
+    JDialog(@Nullable Window arg0);
+    JDialog(@Nullable Window arg0, ModalityType arg1);
+    JDialog(@Nullable Window arg0, String arg1);
+    JDialog(@Nullable Window arg0, String arg1, ModalityType arg2);
+    JDialog(@Nullable Window arg0, String arg1, ModalityType arg2, GraphicsConfiguration arg3);
+    protected void dialogInit();
+    protected JRootPane createRootPane();
+    protected void processWindowEvent(WindowEvent arg0);
+    void setDefaultCloseOperation(int arg0);
+    int getDefaultCloseOperation();
+    void setTransferHandler(TransferHandler arg0);
+    TransferHandler getTransferHandler();
+    void update(Graphics arg0);
+    void setJMenuBar(JMenuBar arg0);
+    JMenuBar getJMenuBar();
+    protected boolean isRootPaneCheckingEnabled();
+    protected void setRootPaneCheckingEnabled(boolean arg0);
+    protected void addImpl(Component arg0, Object arg1, int arg2);
+    void remove(Component arg0);
+    void setLayout(LayoutManager arg0);
+    JRootPane getRootPane();
+    protected void setRootPane(JRootPane arg0);
+    Container getContentPane();
+    void setContentPane(Container arg0);
+    JLayeredPane getLayeredPane();
+    void setLayeredPane(JLayeredPane arg0);
+    Component getGlassPane();
+    void setGlassPane(Component arg0);
+    Graphics getGraphics();
+    void repaint(long arg0, int arg1, int arg2, int arg3, int arg4);
+    static void setDefaultLookAndFeelDecorated(boolean arg0);
+    static boolean isDefaultLookAndFeelDecorated();
+    protected String paramString();
+    AccessibleContext getAccessibleContext();
+}
+class JDialog$AccessibleJDialog extends AccessibleAWTDialog {
+    protected AccessibleJDialog();
+    String getAccessibleName();
+    AccessibleStateSet getAccessibleStateSet();
+}

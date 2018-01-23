@@ -39,6 +39,7 @@ import java.util.concurrent.Callable;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JTextField;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -51,6 +52,7 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
     /**
      * Creates new form MainJFrame
      */
+    @SuppressWarnings("initialization")
     public VisionToDbMainJFrame() {
         initComponents();
     }
@@ -193,7 +195,8 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
         this.visionToDBJPanel.loadProperties();
     }//GEN-LAST:event_jMenuItemReloadPropertiesActionPerformed
 
-    private Object2DJFrame object2DJFrame = null;
+    @Nullable private Object2DJFrame object2DJFrame = null;
+    
     private void jMenuItemStartObject2DActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartObject2DActionPerformed
         if (object2DJFrame == null) {
             object2DJFrame = new Object2DJFrame();
@@ -282,7 +285,7 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
     }
 
     @Override
-    public Connection getSqlConnection() {
+    @Nullable public Connection getSqlConnection() {
         return visionToDBJPanel.getSqlConnection();
     }
 

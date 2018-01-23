@@ -24,6 +24,7 @@ package aprs.framework;
 
 import java.util.Arrays;
 import java.util.Objects;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Instances of PDDL (Planning Domain Definition Language) Actions
@@ -42,10 +43,24 @@ public class PddlAction {
      * @param args arguments for the action
      * @param cost cost as reported by planner
      */
-    public PddlAction(String label, String type, String[] args, String cost) {
+    public PddlAction(String label, String type, @Nullable String[] args, String cost) {
         this.label = label;
         this.type = type;
-        this.args = args;
+        int nonnullArgsCount=0;
+        for (int i = 0; i < args.length; i++) {
+            if(args[i]!= null) {
+                nonnullArgsCount++;
+            }
+        }
+        this.args = new String[nonnullArgsCount];
+        int j=0;
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            if(arg != null) {
+                this.args[j] = arg;
+                j++;
+            }
+        }
         this.cost = cost;
     }
 
@@ -60,7 +75,7 @@ public class PddlAction {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         }
@@ -152,7 +167,7 @@ public class PddlAction {
         if (p1indx >= 0) {
             s = s.substring(p1indx + 1).trim();
         } else {
-            return null;
+            throw new IllegalArgumentException(" \""+s+"\".indexOf('(') returned  "+p1indx);
         }
         int p2indx = s.indexOf(')');
         String cost = "";
@@ -160,12 +175,12 @@ public class PddlAction {
             cost = s.substring(p2indx + 1).trim();
             s = s.substring(0, p2indx);
         } else {
-            return null;
+           throw new IllegalArgumentException(" \""+s+"\".indexOf(')') returned  "+p2indx);
         }
         String args[] = s.split("[ \t]+");
         String type = args[0];
-        args = Arrays.copyOfRange(args, 1, args.length);
-        return new PddlAction(label, type, args, cost);
+//        String argsAfter0[] = ;
+        return new PddlAction(label, type, Arrays.copyOfRange(args, 1, args.length), cost);
     }
 
     @Override

@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -45,17 +46,17 @@ import java.util.logging.Logger;
  */
 public class VisionSocketClient implements AutoCloseable {
 
-    private List<PhysicalItem> visionList = null;
-    private SocketLineReader visionSlr = null;
-    private ExecutorService visionExecServ = Executors.newFixedThreadPool(1);
-    private volatile String parsing_line = null;
+    @Nullable private List<PhysicalItem> visionList = null;
+    @Nullable private SocketLineReader visionSlr = null;
+    @Nullable private ExecutorService visionExecServ = Executors.newFixedThreadPool(1);
+    @Nullable private volatile String parsing_line = null;
     private static final AtomicInteger visioncycle = new AtomicInteger();
 
-    private PrintStream replyPs;
+    @Nullable private PrintStream replyPs;
 
-    private PoseType transform = null;
+    @Nullable private PoseType transform = null;
 
-    public PoseType getTransform() {
+    @Nullable public PoseType getTransform() {
         return transform;
     }
 
@@ -64,7 +65,7 @@ public class VisionSocketClient implements AutoCloseable {
         this.updateListeners();
     }
 
-    public PrintStream getReplyPs() {
+    @Nullable public PrintStream getReplyPs() {
         return replyPs;
     }
 
@@ -79,6 +80,9 @@ public class VisionSocketClient implements AutoCloseable {
     }
 
     public List<PhysicalItem> getVisionList() {
+        if (null == visionList) {
+            return Collections.emptyList();
+        }
         return Collections.unmodifiableList(visionList);
     }
 
@@ -106,28 +110,31 @@ public class VisionSocketClient implements AutoCloseable {
             List<PhysicalItem> listToSend = new ArrayList<>();
             listToSend.addAll(visionList);
             synchronized (listListeners) {
-                for (int i = 0; i < listListeners.size(); i++) {
-                    try {
-                        VisionSocketClientListener listener = listListeners.get(i);
-                        if (null != listener) {
-                            listener.visionClientUpdateRecieved(listToSend, this.getLine());
+                String lineRecieved = this.getLine();
+                if (null != lineRecieved) {
+                    for (int i = 0; i < listListeners.size(); i++) {
+                        try {
+                            VisionSocketClientListener listener = listListeners.get(i);
+                            if (null != listener) {
+                                listener.visionClientUpdateRecieved(listToSend, lineRecieved);
+                            }
+                        } catch (Exception e) {
+                            Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, null, e);
                         }
-                    } catch (Exception e) {
-                        Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, null, e);
                     }
                 }
             }
         }
     }
 
-    private VisionToDBJFrameInterface displayInterface;
+    @Nullable private VisionToDBJFrameInterface displayInterface;
 
     /**
      * Get the value of displayInterface
      *
      * @return the value of displayInterface
      */
-    public VisionToDBJFrameInterface getDisplayInterface() {
+    @Nullable public VisionToDBJFrameInterface getDisplayInterface() {
         return displayInterface;
     }
 
@@ -147,7 +154,7 @@ public class VisionSocketClient implements AutoCloseable {
         return visionSlr.getPort();
     }
 
-    public String getHost() {
+    @Nullable public String getHost() {
         if (null == visionSlr) {
             return null;
         }
@@ -158,23 +165,38 @@ public class VisionSocketClient implements AutoCloseable {
         String host = "HOSTNOTSET";
         short port = -99;
         try {
-            host = argsMap.get("--visionhost");
-            port = Short.valueOf(argsMap.get("--visionport"));
+            String argsMapHost = argsMap.get("--visionhost");
+            if (argsMapHost == null) {
+                throw new IllegalArgumentException("argsMap does not contain a value for --visionhost");
+            }
+            host = argsMapHost;
+            String argsMapPort = argsMap.get("--visionport");
+            if (argsMapPort == null) {
+                throw new IllegalArgumentException("argsMap does not contain a value for --visionport");
+            }
+            port = Short.valueOf(argsMapPort);
             final short portf = port;
             final String hostf = host;
+            ExecutorService execSrv = this.visionExecServ;
+            if (execSrv == null) {
+                throw new IllegalArgumentException("visionExecServ is null, already closed");
+            }
             visionSlr = SocketLineReader.startClient(
-                    host,
+                    hostf,
                     port,
                     "visionReader_for_" + hostf + ":" + portf,
                     new SocketLineReader.CallBack() {
-                private String lastSkippedLine = null;
+                @Nullable private String lastSkippedLine = null;
 
                 @Override
                 public void call(final String line, PrintStream os) {
 //                    System.out.println("line = " + line+", parsing_line="+parsing_line);
                     if (null == parsing_line) {
                         parsing_line = line;
-                        visionExecServ.execute(new Runnable() {
+                        if (execSrv == null) {
+                            throw new IllegalArgumentException("visionExecServ is null, already closed");
+                        }
+                        execSrv.execute(new Runnable() {
 
                             @Override
                             public void run() {
@@ -209,9 +231,9 @@ public class VisionSocketClient implements AutoCloseable {
         }
     }
 
-    private String line;
+    @Nullable private String line;
 
-    public String getLine() {
+    @Nullable public String getLine() {
         return line;
     }
 
@@ -219,7 +241,7 @@ public class VisionSocketClient implements AutoCloseable {
         return lineToList(line, null);
     }
 
-    public static List<PhysicalItem> lineToList(String line, final VisionToDBJFrameInterface displayInterface) {
+    public static List<PhysicalItem> lineToList(String line, @Nullable VisionToDBJFrameInterface displayInterface) {
         List<PhysicalItem> listOut = new ArrayList<>();
         String fa[] = null;
         int i = 0;
@@ -310,13 +332,10 @@ public class VisionSocketClient implements AutoCloseable {
         return listOut;
     }
 
-    private static void logErr(final VisionToDBJFrameInterface displayInterface1, String errMsg) {
+    private static void logErr(@Nullable VisionToDBJFrameInterface displayInterface1, String errMsg) {
         if (null != displayInterface1 && displayInterface1.isDebug()) {
             displayInterface1.addLogMessage(errMsg);
         }
-//        else {
-//            System.err.println(errMsg);
-//        }
     }
 
     private int prevVisionListSize = -1;
@@ -421,18 +440,15 @@ public class VisionSocketClient implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-
+    public void close() {
         if (null != visionSlr) {
             visionSlr.close();
             visionSlr = null;
         }
         if (null != visionExecServ) {
             visionExecServ.shutdownNow();
-            visionExecServ.awaitTermination(100, TimeUnit.MILLISECONDS);
             visionExecServ = null;
         }
-
     }
 
     @Override
@@ -440,5 +456,12 @@ public class VisionSocketClient implements AutoCloseable {
         close();
         super.finalize();
     }
+
+    @Override
+    public String toString() {
+        return "" + visionSlr;
+    }
+    
+    
 
 }

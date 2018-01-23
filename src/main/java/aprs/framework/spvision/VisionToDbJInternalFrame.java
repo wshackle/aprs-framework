@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -48,6 +49,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     /**
      * Creates new form VisionToDbJInternalFrame
      */
+    @SuppressWarnings("initialization")
     public VisionToDbJInternalFrame() {
         initComponents();
 //        DbMain.setDisplayInterface(this);
@@ -85,11 +87,19 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     }
 
     public List<Slot> getSlotOffsets(String name) {
-        return this.visionToDBJPanel.getSlotOffsets(name);
+        List<Slot> l =  this.visionToDBJPanel.getSlotOffsets(name);
+        if(null != l) {
+            return l;
+        }
+        return Collections.emptyList();
     }
 
     public List<Slot> getSlots(Tray item) {
-        return this.visionToDBJPanel.getSlots(item);
+        List<Slot> l = this.visionToDBJPanel.getSlots(item);
+        if(null != l) {
+            return l;
+        }
+        return Collections.emptyList();
     }
 
     public void setAprsJFrame(AprsJFrame aprsJFrame) {
@@ -109,9 +119,6 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return visionToDBJPanel.getSingleUpdate();
     }
 
-    public XFuture<Void> getUpdatesFinished() {
-        return visionToDBJPanel.getUpdatesFinished();
-    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -250,7 +257,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     }
 
     @Override
-    public Connection getSqlConnection() {
+    @Nullable public Connection getSqlConnection() {
         return visionToDBJPanel.getSqlConnection();
     }
 
@@ -265,7 +272,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     }
 
     @Override
-    public Callable<DbSetupPublisher> getDbSetupSupplier() {
+    @Nullable public Callable<DbSetupPublisher> getDbSetupSupplier() {
         return visionToDBJPanel.getDbSetupSupplier();
     }
 

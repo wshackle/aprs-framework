@@ -26,6 +26,7 @@ import com.bsb.common.vaadin.embed.EmbedVaadinServer;
 import com.bsb.common.vaadin.embed.support.EmbedVaadin;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * This was an experimental effort to embed launch the vaadin webapp from within
@@ -92,9 +93,9 @@ public class CRCLWebAppRunner implements Runnable {
         this.httpPort = httpPort;
     }
 
-    private EmbedVaadinServer svr = null;
+    private @Nullable EmbedVaadinServer svr = null;
     
-    private Thread crclWebServerThread=null;
+    private @Nullable Thread crclWebServerThread=null;
     
     public void start() {
         stop();

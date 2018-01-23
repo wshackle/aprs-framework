@@ -38,6 +38,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -46,8 +48,8 @@ import java.util.logging.Logger;
 public class VisionSocketServer implements AutoCloseable {
 
     private volatile ServerSocket serverSocket;
-    private ExecutorService executorService;
-    private ExecutorService publishService;
+    private @Nullable ExecutorService executorService;
+    private @Nullable ExecutorService publishService;
     private final boolean shutdownServiceOnClose;
 
     public int getPort() {
@@ -57,12 +59,12 @@ public class VisionSocketServer implements AutoCloseable {
     private static class DaemonThreadFactory implements ThreadFactory {
 
         private static AtomicInteger tnum = new AtomicInteger();
-        
+
         @Override
         public Thread newThread(Runnable r) {
             Thread thread = new Thread(r);
             thread.setDaemon(true);
-            thread.setName("VisionSocketServer_"+tnum.incrementAndGet());
+            thread.setName("VisionSocketServer_" + tnum.incrementAndGet());
             return thread;
         }
 
@@ -73,6 +75,7 @@ public class VisionSocketServer implements AutoCloseable {
         this.serverSocket = serverSocket;
         this.executorService = executorService;
         this.shutdownServiceOnClose = shutdownServiceOnClose;
+        this.publishService = Executors.newSingleThreadExecutor(daemonThreadFactory);
         start();
     }
 
@@ -103,26 +106,47 @@ public class VisionSocketServer implements AutoCloseable {
 
     private final List<Socket> clients = Collections.synchronizedList(new ArrayList<Socket>());
 
-    private void start() {
+    private void start( 
+         
+         
+         
+         
+        @UnknownInitialization(Object.class) VisionSocketServer this) {
+        if (null == executorService) {
+            throw new IllegalStateException("exectorService is null, VisionSocketServer not fully initialized.");
+        }
+        if (null == serverSocket) {
+            throw new IllegalStateException("serverSocket is null, VisionSocketServer not fully initialized.");
+        }
+        if (null == clients) {
+            throw new IllegalStateException("clients is null, VisionSocketServer not fully initialized.");
+        }
         this.executorService.submit(new Runnable() {
             @Override
             public void run() {
+                if (null == serverSocket) {
+                    throw new IllegalStateException("serverSocket is null, VisionSocketServer not fully initialized.");
+                }
+                List<Socket> localClients = clients;
+                if (null == localClients) {
+                    throw new IllegalStateException("clients is null, VisionSocketServer not fully initialized.");
+                }
                 String origThreadName = Thread.currentThread().getName();
                 try {
-                    
-                    Thread.currentThread().setName("VisionSocketServer_accepting_for_port_"+serverSocket.getLocalPort());
+                    Thread.currentThread().setName("VisionSocketServer_accepting_for_port_" + serverSocket.getLocalPort());
                     while (!closing && !Thread.currentThread().isInterrupted()) {
                         Socket clientSocket = serverSocket.accept();
                         if (debug) {
                             System.out.println("clientSocket = " + clientSocket);
                         }
-                        if (null != bytesToSend) {
-                            clientSocket.getOutputStream().write(bytesToSend);
+                        byte bytes[] = bytesToSend;
+                        if (null != bytes) {
+                            clientSocket.getOutputStream().write(bytes);
                         }
-                        clients.add(clientSocket);
+                        localClients.add(clientSocket);
                     }
                 } catch (IOException ex) {
-                    if(!closing) {
+                    if (!closing) {
                         Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 } finally {
@@ -133,7 +157,7 @@ public class VisionSocketServer implements AutoCloseable {
     }
 
     private volatile boolean closing = false;
-    private byte bytesToSend[] = null;
+    private byte bytesToSend @Nullable []  = null;
 
     public static String listToLine(List<PhysicalItem> list) {
         StringBuilder sb = new StringBuilder();
@@ -179,52 +203,56 @@ public class VisionSocketServer implements AutoCloseable {
     }
 
     public void publishList(List<PhysicalItem> list) {
-        bytesToSend = listToLine(list).getBytes();
-        publishService.submit(new Runnable() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName("VisionSocketServer.publishList.serverSocket="+serverSocket+".clients.size="+clients.size());
-                for (int i = 0; i < clients.size() && !closing; i++) {
-                    Socket client = clients.get(i);
-                    if(Thread.currentThread().isInterrupted()) {
-                        return;
-                    }
-                    if (null != client) {
-                        try {
-                            if (debug) {
-                                System.out.println(String.format("Sending %d bytes to %s:%d : %s",
-                                        bytesToSend.length,
-                                        ((InetSocketAddress) client.getRemoteSocketAddress()).getHostString(),
-                                        ((InetSocketAddress) client.getRemoteSocketAddress()).getPort(),
-                                        new String(bytesToSend)));
-                            }
-                            client.getOutputStream().write(bytesToSend);
-                        } catch (IOException ex) {
+        String line = listToLine(list);
+        byte ba[] = line.getBytes();
+        this.bytesToSend = ba;
+        if (null != publishService) {
+            publishService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    Thread.currentThread().setName("VisionSocketServer.publishList.serverSocket=" + serverSocket + ".clients.size=" + clients.size());
+                    for (int i = 0; i < clients.size() && !closing; i++) {
+                        Socket client = clients.get(i);
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                        if (null != client) {
                             try {
-                                client.close();
-                            } catch (IOException ex1) {
-                                Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex1);
+                                if (debug) {
+                                    InetSocketAddress remoteAddress = (InetSocketAddress) client.getRemoteSocketAddress();
+                                    if (null != remoteAddress) {
+                                        System.out.println(String.format("Sending %d bytes to %s:%d : %s",
+                                                ba.length,
+                                                remoteAddress.getHostString(),
+                                                remoteAddress.getPort(),
+                                                line));
+                                    }
+                                }
+                                client.getOutputStream().write(ba);
+                            } catch (IOException ex) {
+                                try {
+                                    client.close();
+                                } catch (IOException ex1) {
+                                    Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex1);
+                                }
+                                clients.remove(i);
+                                Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                            clients.remove(i);
-                            Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     @Override
     public void close() {
         closing = true;
         bytesToSend = null;
-        if (serverSocket != null) {
-            try {
-                serverSocket.close();
-            } catch (IOException ex) {
-                Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            serverSocket = null;
+        try {
+            serverSocket.close();
+        } catch (IOException ex) {
+            Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (null != executorService) {
             if (shutdownServiceOnClose) {

@@ -31,13 +31,7 @@ import java.io.IOException;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public interface DisplayInterface {
-    
-    /**
-     * Get the properties file.
-     * @return properties file
-     */
-    public File getPropertiesFile();
-
+   
     /**
      * Set the properties file   
      * @param propertiesFile new value of propertiesFile

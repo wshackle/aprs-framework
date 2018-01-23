@@ -42,6 +42,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
 /**
  *
@@ -56,44 +60,15 @@ public class DbSetupBuilder {
     private String user = "neo4j";
     private String dbname = "";
     private boolean connected = false;
-    private Map<DbQueryEnum, DbQueryInfo> queriesMap;
+    @Nullable private Map<DbQueryEnum, DbQueryInfo> queriesMap;
     private boolean internalQueriesResourceDir = true;
-    private String queriesDir = null;
+    @MonotonicNonNull private String queriesDir = null;
     private boolean debug = false;
     private int loginTimeout = DEFAULT_LOGIN_TIMEOUT;
-    private String startScript = null;
+    @Nullable private String startScript = null;
 
-//    public static Map<DbQueryEnum, DbQueryInfo> getDefaultQueriesMap(DbType type) {
-//        switch (type) {
-//            case NEO4J:
-//                return NEO4J_DEFAULT_QUERIES_MAP;
-//
-//            case MYSQL:
-//                return MYSQL_DEFAULT_QUERIES_MAP;
-//        }
-//        throw new IllegalArgumentException("No default queries map for " + type);
-//    }
-//
-//    private static Map<DbQueryEnum, DbQueryInfo> NEO4J_DEFAULT_QUERIES_MAP;
-//    private static Map<DbQueryEnum, DbQueryInfo> MYSQL_DEFAULT_QUERIES_MAP;
     private static final String BASE_RESOURCE_DIR = "aprs/framework/database/";
 
-//    static {
-//        try {
-//            String resDir = "neo4j/v1/";
-//            Map<DbQueryEnum, DbQueryInfo> map = readRelResourceQueriesDirectory(resDir);
-//            NEO4J_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
-//        } catch (Exception ex) {
-//            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        try {
-//            String resDir = "mysql/";
-//            Map<DbQueryEnum, DbQueryInfo> map = readRelResourceQueriesDirectory(resDir);
-//            MYSQL_DEFAULT_QUERIES_MAP = Collections.unmodifiableMap(map);
-//        } catch (Exception ex) {
-//            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//    }
     public static Map<DbQueryEnum, DbQueryInfo> readRelResourceQueriesDirectory(String resDir) throws IOException {
         if (BASE_RESOURCE_DIR.endsWith("/") && resDir.startsWith("/")) {
             resDir = resDir.substring(1);
@@ -129,36 +104,20 @@ public class DbSetupBuilder {
         return map;
     }
 
-//    {
-////        queriesMap = new EnumMap<DbQueryEnum, String>(DbQueryEnum.class);
-//        queriesMap.put(DbQueryEnum.GET_SINGLE_POSE, "MATCH pointpath=(source { name:{1} } ) -[:hasPhysicalLocation_RefObject]-> (n) -[r2:hasPoseLocation_Pose] ->(pose) -  [r1:hasPose_Point] -> (p:Point),\n"
-//                + "xaxispath= pose - [r3:hasPose_XAxis] -> (xaxis:Vector),\n"
-//                + "zaxispath= pose - [r4:hasPose_ZAxis] -> (zaxis:Vector)\n"
-//                + "return source.name as name,p.hasPoint_X as x,p.hasPoint_Y as y,p.hasPoint_Z as z, xaxis.hasVector_I as vxi,xaxis.hasVector_J as vxj,xaxis.hasVector_K as vxk, zaxis.hasVector_I as vzi,zaxis.hasVector_J as vzj,zaxis.hasVector_K as vzk");
-//        queriesMap.put(DbQueryEnum.SET_SINGLE_POSE,
-//                "MERGE (thing:SolidObject { name:{1} } )\n"
-//                + "merge (thing) - [:hasPhysicalLocation_RefObject] -> (pl:PhysicalLocation)\n"
-//                + "merge (pl) - [:hasPoseLocation_Pose] -> (pose:PoseLocation)\n"
-//                + "merge (pose) - [:hasPose_Point] -> (pt:Point)\n"
-//                + "merge (pose) - [:hasPose_XAxis] -> (xaxis:Vector)\n"
-//                + "merge (pose) - [:hasPose_ZAxis] -> (zaxis:Vector)\n"
-//                + "set pt.hasPoint_X= {2},pt.hasPoint_Y= {3},pt.hasPoint_Z= {4}\n"
-//                + "set xaxis.hasVector_I={5}, xaxis.hasVector_J={6}, xaxis.hasVector_K={7}\n"
-//                + "set zaxis.hasVector_I={8}, zaxis.hasVector_J={9}, zaxis.hasVector_K={10}"
-//        );
-//    }
     private static String getStringResource(String name) throws IOException {
-        ClassLoader cl = ClassLoader.getSystemClassLoader();
         StringBuilder sb = new StringBuilder();
-        try (InputStream stream = cl.getResourceAsStream(name)) {
-            if (null == stream) {
-                throw new IllegalArgumentException("No resource found for name=" + name);
-            }
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"))) {
-                String line = null;
-                while (null != (line = br.readLine())) {
-                    sb.append(line);
-                    sb.append(System.lineSeparator());
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+        if (null != cl) {
+            try (InputStream stream = cl.getResourceAsStream(name)) {
+                if (null == stream) {
+                    throw new IllegalArgumentException("No resource found for name=" + name);
+                }
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"))) {
+                    String line = null;
+                    while (null != (line = br.readLine())) {
+                        sb.append(line);
+                        sb.append(System.lineSeparator());
+                    }
                 }
             }
         }
@@ -187,12 +146,12 @@ public class DbSetupBuilder {
         private final String user;
         private final String dbname;
         private final boolean connected;
-        private final Map<DbQueryEnum, DbQueryInfo> queriesMap;
+        private final @Nullable Map<DbQueryEnum, DbQueryInfo> queriesMap;
         private final boolean internalQueriesResourceDir;
         private final String queriesDir;
         private final boolean debug;
         private final int loginTimeout;
-        private final String startScript;
+        @Nullable private final String startScript;
 
         private DbSetupInternal(
                 DbType type,
@@ -202,12 +161,12 @@ public class DbSetupBuilder {
                 String user,
                 String dbname,
                 boolean connected,
-                Map<DbQueryEnum, DbQueryInfo> queriesMap,
+                @Nullable Map<DbQueryEnum, DbQueryInfo> queriesMap,
                 boolean internalQueriesResourceDir,
                 String queriesDir,
                 boolean debug,
                 int loginTimeout,
-                String startScript) {
+                @Nullable String startScript) {
             this.type = type;
             this.host = host;
             this.port = port;
@@ -260,6 +219,9 @@ public class DbSetupBuilder {
 
         @Override
         public Map<DbQueryEnum, DbQueryInfo> getQueriesMap() {
+            if(null == queriesMap) {
+                return Collections.emptyMap();
+            }
             return queriesMap;
         }
 
@@ -284,13 +246,13 @@ public class DbSetupBuilder {
         }
 
         @Override
-        public String getStartScript() {
+        @Nullable public String getStartScript() {
             return startScript;
         }
 
     }
 
-    public DbSetupBuilder setup(DbSetup setup) {
+    @EnsuresNonNull("this.queriesDir") public DbSetupBuilder setup(DbSetup setup) {
         type = setup.getDbType();
         host = setup.getHost();
         dbname = setup.getDbName();
@@ -299,30 +261,35 @@ public class DbSetupBuilder {
         port = setup.getPort();
         passwd = setup.getDbPassword();
         internalQueriesResourceDir = setup.isInternalQueriesResourceDir();
-        queriesDir = setup.getQueriesDir();
+        String setupQueriesDir = setup.getQueriesDir();
+        
         queriesMap = setup.getQueriesMap();
         debug = setup.isDebug();
         if (null == queriesMap) {
             if (internalQueriesResourceDir) {
                 try {
-                    queriesMap = readRelResourceQueriesDirectory(queriesDir);
+                    queriesMap = readRelResourceQueriesDirectory(setupQueriesDir);
                 } catch (IOException ex) {
-                    Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, null, ex);
                 }
             } else {
                 try {
-                    queriesMap = readQueriesDirectory(queriesDir);
+                    queriesMap = readQueriesDirectory(setupQueriesDir);
                 } catch (IOException ex) {
-                    Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, null, ex);
                 }
             }
         }
+        queriesDir = setupQueriesDir;
         return this;
     }
 
     public DbSetup build() {
         if (connected && (type == null || type == DbType.NONE)) {
             throw new IllegalArgumentException("type = " + type);
+        }
+        if(null == queriesDir) {
+            throw new IllegalStateException("queriesDir not set");
         }
         return new DbSetupInternal(
                 type,
@@ -373,10 +340,8 @@ public class DbSetupBuilder {
         return this;
     }
 
-    public DbSetupBuilder queriesDir(String queriesDir) {
-        if (null != queriesDir) {
-            this.queriesDir = queriesDir;
-        }
+    @EnsuresNonNull("this.queriesDir") public DbSetupBuilder queriesDir(String _queriesDir) {
+        this.queriesDir = _queriesDir;
         return this;
     }
 
@@ -434,9 +399,10 @@ public class DbSetupBuilder {
             builder = builder.host(dbSpecificHost);
             host = dbSpecificHost;
         } else {
-            host = _argsMap.get("--dbhost");
-            if (null != host && host.length() > 0) {
-                builder = builder.host(host);
+            String h = _argsMap.get("--dbhost");
+            if (null != h && h.length() > 0) {
+                host = h;
+                builder = builder.host(h);
             }
         }
         String dbSpecificPort = _argsMap.get(dbtype + "." + host + ".port");
@@ -484,7 +450,7 @@ public class DbSetupBuilder {
             }
         }
         String dbSpecificPasswd = _argsMap.get(dbHostPort + ".passwd");
-        if (null != dbSpecificUser) {
+        if (null != dbSpecificPasswd) {
             builder = builder.passwd(dbSpecificPasswd.toCharArray());
         } else {
             String dbPasswd = _argsMap.get("--dbpasswd");
@@ -512,7 +478,10 @@ public class DbSetupBuilder {
                 builder = builder.internalQueriesResourceDir(Boolean.valueOf(internalQueriesResourceDiriesDirString));
             }
         }
-        builder = builder.startScript(_argsMap.get("startScript"));
+        String startScript = _argsMap.get("startScript");
+        if (null != startScript) {
+            builder = builder.startScript(startScript);
+        }
         return builder;
     }
 
@@ -550,7 +519,10 @@ public class DbSetupBuilder {
             }
             Map<String, String> argsMap = getDefaultArgsMap();
             for (String propName : props.stringPropertyNames()) {
-                argsMap.put(propName, props.getProperty(propName));
+                String propValue = props.getProperty(propName);
+                if (null != propValue) {
+                    argsMap.put(propName, propValue);
+                }
             }
             return builder.updateFromArgs(argsMap);
         }
@@ -578,7 +550,10 @@ public class DbSetupBuilder {
             }
             Map<String, String> argsMap = getDefaultArgsMap();
             for (String propName : props.stringPropertyNames()) {
-                argsMap.put(propName, props.getProperty(propName));
+                String propValue = props.getProperty(propName);
+                if (propValue != null) {
+                    argsMap.put(propName, propValue);
+                }
             }
             if (dbtype == null) {
                 String argsMapDbTypeString = argsMap.get("--dbtype");
@@ -594,9 +569,10 @@ public class DbSetupBuilder {
                     builder = builder.host(dbSpecificHost);
                     host = dbSpecificHost;
                 } else {
-                    host = argsMap.get("--dbhost");
-                    if (null != host && host.length() > 0) {
-                        builder = builder.host(host);
+                    String hostFromArgsMap = argsMap.get("--dbhost");
+                    if (null != hostFromArgsMap && hostFromArgsMap.length() > 0) {
+                        builder = builder.host(hostFromArgsMap);
+                        host = hostFromArgsMap;
                     }
                 }
             } else {
@@ -660,19 +636,16 @@ public class DbSetupBuilder {
         try {
             System.out.println("Saving " + propertiesFile.getCanonicalPath());
         } catch (IOException ex) {
-            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
-        propertiesFile.getParentFile().mkdirs();
+        File parentFile = propertiesFile.getParentFile();
+        if(null != parentFile){
+            parentFile.mkdirs();
+        }
         Properties props = new Properties();
-//        if (propertiesFile.exists()) {
-//            try (FileReader fr = new FileReader(propertiesFile)) {
-//                props.load(fr);
-//            } catch (IOException ex) {
-//                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
-        if (null != setup.getStartScript()) {
-            props.put("startScript", setup.getStartScript());
+        String startScript = setup.getStartScript();
+        if (null != startScript) {
+            props.put("startScript", startScript);
         }
         props.put("--dbtype", dbtype.toString());
         if (host == null) {
@@ -710,7 +683,7 @@ public class DbSetupBuilder {
      *
      * @return future for new connection
      */
-    public XFuture<Connection> connect() {
+    @RequiresNonNull("this.queriesDir") public XFuture<Connection> connect() {
         return connect(this.build());
     }
 
@@ -758,7 +731,7 @@ public class DbSetupBuilder {
                 ret.complete(setupConnectionPriv(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT));
             } catch (Exception ex) {
                 ret.completeExceptionally(ex);
-                Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }, "connectionSetupThread").start();
         return ret;
@@ -778,34 +751,26 @@ public class DbSetupBuilder {
         switch (dbtype) {
             case MYSQL:
 //                useBatch = true;
-                Class mysqlDriverClass = com.mysql.jdbc.Driver.class;
+                Class<?> mysqlDriverClass = com.mysql.jdbc.Driver.class;
                 System.out.println("driverClass = " + mysqlDriverClass);
                 String mysql_url = "jdbc:mysql://" + host + ":" + port + "/" + db;
                 if (debug) {
                     System.out.println("Connection url = " + mysql_url);
                 }
-//                try {
-//                    Class mySqlDriverClass = Class.forName("com.mysql.jdbc.Driver");
-//                    System.out.println("neo4JDriverClass = " + mySqlDriverClass);
-//                    ProtectionDomain mySqlDriverClassProtectionDomain = mySqlDriverClass.getProtectionDomain();
-//                    System.out.println("mySqlDriverClassProdectionDomain = " + mySqlDriverClassProtectionDomain);
-//                } catch (ClassNotFoundException classNotFoundException) {
-//                    classNotFoundException.printStackTrace();
-//                }
                 if (loginTimeout > 0) {
                     DriverManager.setLoginTimeout(loginTimeout);
                 }
                 return DriverManager.getConnection(mysql_url, username, password);
 
             case NEO4J:
-                Class neo4jDriverClass = org.neo4j.jdbc.Driver.class;
+                Class<?> neo4jDriverClass = org.neo4j.jdbc.Driver.class;
 
                 //System.out.println(" static neo4jDriverClass = " + neo4jDriverClass);
                 try {
                     neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
                     //System.out.println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
                 } catch (ClassNotFoundException ex) {
-                    Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, null, ex);
                 }
 
 //                useBatch = false;
@@ -814,13 +779,13 @@ public class DbSetupBuilder {
                 properties.put("password", password);
                 String neo4j_url = "jdbc:neo4j://" + host + ":" + port;
                 if (debug) {
-                    System.out.println("neo4j_url = " + neo4j_url);
-                    System.out.println("Connection url = " + neo4j_url);
+                    LOGGER.log(Level.INFO, "neo4j_url = {0}", neo4j_url);
+                    LOGGER.log(Level.INFO, "Connection url = {0}", neo4j_url);
                     try {
-                        Class neo4JDriverClass = Class.forName("org.neo4j.jdbc.Driver");
-                        System.out.println("neo4JDriverClass = " + neo4JDriverClass);
+                        Class<?> neo4JDriverClass = Class.forName("org.neo4j.jdbc.Driver");
+                        LOGGER.log(Level.INFO, "neo4JDriverClass = {0}", neo4JDriverClass);
                         ProtectionDomain neo4jDriverClassProtectionDomain = neo4JDriverClass.getProtectionDomain();
-                        System.out.println("neo4jDriverClassProdectionDomain = " + neo4jDriverClassProtectionDomain);
+                        LOGGER.log(Level.INFO, "neo4jDriverClassProdectionDomain = {0}", neo4jDriverClassProtectionDomain);
                     } catch (ClassNotFoundException classNotFoundException) {
                         classNotFoundException.printStackTrace();
                     }
@@ -838,38 +803,8 @@ public class DbSetupBuilder {
 
             case NEO4J_BOLT:
                 throw new RuntimeException("Neo4J BOLT driver not supported.");
-//                useBatch = false;
-//                Properties neo4j_bolt_properties = new Properties();
-//                neo4j_bolt_properties.put("user", username);
-//                neo4j_bolt_properties.put("password", password);
-//                String neo4j_bolt_url = "jdbc:neo4j:bolt://" + host + ":" + port;
-//                System.out.println("neo4j_url = " + neo4j_bolt_url);
-//                System.out.println("Connection url = " + neo4j_bolt_url);
-//                try {
-//                    Class neo4JDriverClass = Class.forName("org.neo4j.jdbc.BaseDriver");
-//                    System.out.println("neo4JDriverClass = " + neo4JDriverClass);
-//                    ProtectionDomain neo4jDriverClassProtectionDomain = neo4JDriverClass.getProtectionDomain();
-//                    System.out.println("neo4jDriverClassProdectionDomain = " + neo4jDriverClassProtectionDomain);
-//                } catch (ClassNotFoundException classNotFoundException) {
-//                    classNotFoundException.printStackTrace();
-//                }
-//                return DriverManager.getConnection(neo4j_bolt_url, neo4j_bolt_properties);
-
-//            case NEO4J_BOLT:
-//                neo4jJavaDriver = GraphDatabase.driver("bolt://" + host,
-//                        AuthTokens.basic(username, password),
-//                        Config.build().withEncryptionLevel(Config.EncryptionLevel.NONE).toConfig());
-//                
-//                neo4jSession = neo4jJavaDriver.session();
-//                break;
-//            case NEO4J_BOLT:
-//                neo4jJavaDriver = GraphDatabase.driver("bolt://" + host,
-//                        AuthTokens.basic(username, password),
-//                        Config.build().withEncryptionLevel(Config.EncryptionLevel.NONE).toConfig());
-//                
-//                neo4jSession = neo4jJavaDriver.session();
-//                break;
         }
         throw new IllegalArgumentException("Unsuppored dbtype =" + dbtype);
     }
+    private static final Logger LOGGER = Logger.getLogger(DbSetupBuilder.class.getName());
 }

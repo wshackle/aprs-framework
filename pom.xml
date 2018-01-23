@@ -118,6 +118,16 @@
             <artifactId>optaplanner-core</artifactId>
             <version>${optiplanner.version}</version>
         </dependency>
+        
+        <!-- Annotations from the Checker Framework: nullness, interning, locking, ... -->
+        <dependency>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker-qual</artifactId>
+            <!-- Use checker-qual7 if targeting Java 7 -->
+            <!-- <artifactId>checker-qual7</artifactId> -->
+            <version>2.3.0</version>
+        </dependency>
+                
         <!-- <dependency>
             <groupId>org.drools</groupId>
             <artifactId>drools-core</artifactId>
@@ -229,9 +239,14 @@
                     </execution>
                 </executions>
             </plugin>
-            
-            
-            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <showDeprecation>true</showDeprecation>
+                </configuration>
+            </plugin>
         </plugins>
         
     </build>
@@ -484,6 +499,98 @@
                             </execution>
                         </executions>
                     </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>with_checkers</id>
+            <properties>
+                <!-- These properties will be set by the Maven Dependency plugin -->
+                <annotatedJdk>${org.checkerframework:jdk8:jar}</annotatedJdk>
+                <!-- Uncomment to use the Type Annotations compiler. -->
+                <!-- <typeAnnotationsJavac>${org.checkerframework:compiler:jar}</typeAnnotationsJavac> -->
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.checkerframework</groupId>
+                    <artifactId>checker</artifactId>
+                    <version>2.3.0</version>
+                </dependency>
+                
+                
+                <!-- The Type Annotations compiler. Uncomment if using annotations in comments. -->
+                <!-- <dependency>
+                  <groupId>org.checkerframework</groupId>
+                  <artifactId>compiler</artifactId>
+                  <version>2.3.0</version>
+                </dependency> -->
+                <dependency>
+                    <groupId>org.checkerframework</groupId>
+                    <artifactId>jdk8</artifactId>
+                    <version>2.3.0</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <!-- For checker framework , http://types.cs.washington.edu/checker-framework/current/checker-framework-manual.html#maven -->
+                        <!-- This plugin will set properties values using dependency information -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>2.3</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>properties</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+            
+            
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.6.1</version>
+                        <configuration>
+                            <!-- Change source and target to 1.7 to create .class files that can be run on a Java 7 JVM -->
+                            <source>1.8</source>
+                            <target>1.8</target>
+                            <!-- Uncomment the following line to use the type annotations compiler. -->
+                            <!-- <fork>true</fork> -->
+                            <compilerArguments>
+                                <Xmaxerrs>10000</Xmaxerrs>
+                                <Xmaxwarns>10000</Xmaxwarns>
+                            </compilerArguments>
+                            <annotationProcessors>
+                                <!-- Add all the checkers you want to enable here -->
+                                <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
+                            </annotationProcessors>
+                            <compilerArgs>
+                                <arg>-Xlint:all,-serial</arg>
+                                <arg>-AprintErrorStack</arg>
+                                <!-- location of the annotated JDK, which comes from a Maven dependency -->
+                                <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
+                                <!-- Uncomment the following line to use the type annotations compiler. -->
+                                <!-- <arg>-J-Xbootclasspath/p:${typeAnnotationsJavac}</arg> -->
+                                <!-- Uncomment the following line to turn type-checking warnings into errors. -->
+                                 <!--<arg>-Awarns</arg>
+                                <arg>-AstubDebug</arg>
+                                <arg>-AstubWarnIfNotFound</arg> -->
+                                <arg>-Astubs=${basedir}/checkerframework_stubs/</arg>
+                                <arg>-AassumeAssertionsAreEnabled</arg>
+                                <!-- <arg>-AprintAllQualifiers</arg>
+                                <arg>-AprintVerboseGenerics</arg>
+                                <arg>-Adetailedmsgtext</arg> -->
+                            </compilerArgs>
+                            <!-- 
+                                Compiles are much slower when using the checkers.
+                                Counter intuitively setting useIncrementalCompilation to false makes compiles a little faster.
+                                If https://issues.apache.org/jira/browse/MCOMPILER-209 is ever fixed the useIncrementalCompilation may need to be reversed. 
+                            -->
+                            <useIncrementalCompilation>false</useIncrementalCompilation>
+                        </configuration>
+                    </plugin>
+                    
                 </plugins>
             </build>
         </profile>

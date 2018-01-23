@@ -24,6 +24,7 @@ package aprs.framework.database;
 
 import crcl.base.PoseType;
 import java.sql.SQLException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -31,8 +32,10 @@ import java.sql.SQLException;
  */
 public interface QuerySetInterface extends AutoCloseable{
     
-    PoseType getPose(String name) throws SQLException;
+    @Nullable PoseType getPose(String name) throws SQLException;
     
     public void setPose(String name, PoseType pose) throws SQLException;
     
+    @Override
+    public void close() throws SQLException;
 }

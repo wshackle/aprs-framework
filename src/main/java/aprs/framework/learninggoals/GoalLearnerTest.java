@@ -46,24 +46,26 @@ import javax.swing.JFrame;
 
 import aprs.framework.pddl.executor.PddlActionToCrclGenerator.PoseProvider;
 import java.util.Map.Entry;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Test/Demo of the GoalLearner
- * 
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class GoalLearnerTest {
 
     /**
      * Demonstrate the GoalLearner by first presenting a set of data to learn
-     * from that can be modified by the user, passing it to the GoalLearner
-     * and then running the created plan on a simulated robot.
-     * 
+     * from that can be modified by the user, passing it to the GoalLearner and
+     * then running the created plan on a simulated robot.
+     *
      * The passed SlotOffsetProvider replaces the need for a database, and the
-     * PoseProvider replaces the need for a live camera and computer vision system.
-     * 
+     * PoseProvider replaces the need for a live camera and computer vision
+     * system.
+     *
      * This is the only externally callable method in this class.
-     * 
+     *
      * @param args not used
      */
     public static void main(String[] args) {
@@ -148,13 +150,13 @@ public class GoalLearnerTest {
             aFrame.startActionsList(actions);
         });
     }
-    
+
     // There is no need to ever create an instance of this class.
     // just use the static main method.
     private GoalLearnerTest() {
-        
+
     }
-    
+
     private static class HashMapSlotOffsetProvider implements SlotOffsetProvider {
 
         final Map<String, List<Slot>> map;
@@ -165,13 +167,20 @@ public class GoalLearnerTest {
 
         @Override
         public List<Slot> getSlotOffsets(String name) {
-            return map.get(name);
+            List<Slot> slots =  map.get(name);
+            if(null == slots) {
+                return Collections.emptyList();
+            }
+            return slots;
         }
 
         @Override
         public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
 
             String name = offsetItem.getFullName();
+            if(null == name || name.length() < 1) {
+                throw new IllegalStateException("offset item has bad fullName "+offsetItem);
+            }
             double x = offsetItem.x;
             double y = offsetItem.y;
             double angle = tray.getRotation();
@@ -182,9 +191,15 @@ public class GoalLearnerTest {
             item.setDiameter(offsetItem.getDiameter());
             item.setType("S");
             item.setTray(tray);
-            item.setSlotForSkuName(offsetItem.getSlotForSkuName());
+            String offsetItemSlotForSkuName = offsetItem.getSlotForSkuName();
+            if (null != offsetItemSlotForSkuName) {
+                item.setSlotForSkuName(offsetItemSlotForSkuName);
+            }
             item.setVisioncycle(tray.getVisioncycle());
-            item.setPrpName(offsetItem.getPrpName());
+            String offsetItemPrpName = offsetItem.getPrpName();
+            if (null != offsetItemPrpName) {
+                item.setPrpName(offsetItemPrpName);
+            }
             item.setZ(tray.z);
             item.setVxi(tray.getVxi());
             item.setVxj(tray.getVxj());
@@ -197,14 +212,18 @@ public class GoalLearnerTest {
     }
 
     private static void addMap(Slot s, Map<String, List<Slot>> map) {
-        map.compute(s.getTray().getName(), (k, v) -> {
-            if (v == null) {
-                return new ArrayList<>(Collections.singletonList(s));
-            } else {
-                v.add(s);
-                return v;
-            }
-        });
+        PhysicalItem tray = s.getTray();
+        if (null != tray) {
+            String trayName = tray.getName();
+            map.compute(trayName, (k, v) -> {
+                if (v == null) {
+                    return new ArrayList<>(Collections.singletonList(s));
+                } else {
+                    v.add(s);
+                    return v;
+                }
+            });
+        }
     }
 
     private static void addList(Tray tray, Slot slot, String itemName, SlotOffsetProvider sop, List<PhysicalItem> l) {
@@ -212,13 +231,13 @@ public class GoalLearnerTest {
             l.add(tray);
         }
         Slot absSlot = sop.absSlotFromTrayAndOffset(tray, slot);
-        Part item = new Part(itemName);
-        item.setPose(absSlot.getPose());
-        item.setName(itemName);
-        l.add(item);
+        if (null != absSlot) {
+            Part item = new Part(itemName);
+            item.setPose(absSlot.getPose());
+            item.setName(itemName);
+            l.add(item);
+        }
     }
-
-    
 
     private static void printActionsList(List<PddlAction> actions) {
         for (PddlAction act : actions) {
@@ -235,40 +254,46 @@ public class GoalLearnerTest {
         aFrame.startObject2DJinternalFrame();
         PoseProvider poseProvider = new PoseProvider() {
 
-            List<PhysicalItem> rawList;
-            List<PhysicalItem> fullDbList;
-            Map<String, PoseType> poseMap;
-            Map<String, List<PhysicalItem>> instanceMap;
-            Map<String, List<String>> instanceNameMap;
+            private @Nullable List<PhysicalItem> rawList;
+            private @Nullable Map<String, PoseType> poseMap;
+            private @Nullable Map<String, List<PhysicalItem>> instanceMap;
+            private @Nullable Map<String, List<String>> instanceNameMap;
 
             @Override
+            @SuppressWarnings("nullness") //getSku is checked for null 
             public List<PhysicalItem> getNewPhysicalItems() {
                 rawList
                         = aFrame.getSimItemsData();
                 if (null == rawList) {
                     rawList = testData;
                 }
-                fullDbList = DatabasePoseUpdater.processItemList(testData, sop);
-                System.out.println("fullDbList = " + fullDbList);
+                List<PhysicalItem> fullDbList = DatabasePoseUpdater.processItemList(testData, sop);
+                if (null == fullDbList) {
+                    return Collections.emptyList();
+                }
                 poseMap
                         = fullDbList.stream()
-                        .collect(Collectors.toMap(PhysicalItem::getFullName, PhysicalItem::getPose));
+                                .collect(Collectors.toMap(PhysicalItem::getFullName, PhysicalItem::getPose));
+
                 instanceMap = fullDbList.stream()
                         .filter(item -> item.getSku() != null)
                         .collect(Collectors.groupingBy(PhysicalItem::getSku));
-                instanceNameMap = new HashMap<>();
+                Map<String, List<String>> localInstanceNameMap = new HashMap<>();
                 for (Entry<String, List<PhysicalItem>> entry : instanceMap.entrySet()) {
                     List<String> names = entry.getValue().stream().map(PhysicalItem::getFullName).collect(Collectors.toList());
-                    instanceNameMap.put(entry.getKey(), names);
+                    localInstanceNameMap.put(entry.getKey(), names);
                 }
-
+                this.instanceNameMap = localInstanceNameMap;
                 return fullDbList;
             }
 
             @Override
-            public PoseType getPose(String name) {
+            @Nullable public PoseType getPose(String name) {
                 if (null == poseMap) {
                     getNewPhysicalItems();
+                }
+                if (null == poseMap) {
+                    return null;
                 }
                 return poseMap.get(name);
             }
@@ -278,7 +303,14 @@ public class GoalLearnerTest {
                 if (null == instanceNameMap) {
                     getNewPhysicalItems();
                 }
-                return instanceNameMap.get(skuName);
+                if (null == instanceNameMap) {
+                    return Collections.emptyList();
+                }
+                List<String> names =  instanceNameMap.get(skuName);
+                if(names == null) {
+                    return Collections.emptyList();
+                }
+                return names;
             }
         };
 
@@ -286,8 +318,10 @@ public class GoalLearnerTest {
         aFrame.startSimServerJInternalFrame();
         aFrame.startPendantClientJInternalFrame();
         aFrame.setRobotName("SimulatedRobot");
+        aFrame.setTaskName("GoalLearnerTest");
         aFrame.setSimItemsData(testData);
         aFrame.setSimViewLimits(-100, -100, +500, +500);
+        aFrame.setLookForXYZ(-80, -80, 0);
         aFrame.simViewSimulateAndDisconnect();
         aFrame.setSimViewTrackCurrentPos(true);
         aFrame.setActiveWin(ActiveWinEnum.SIMVIEW_WINDOW);

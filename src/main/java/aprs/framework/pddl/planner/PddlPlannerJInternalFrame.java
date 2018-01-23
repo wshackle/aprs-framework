@@ -26,6 +26,7 @@ import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
 import aprs.framework.DisplayInterface;
 import java.io.File;
 import java.io.IOException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -36,6 +37,7 @@ public class PddlPlannerJInternalFrame extends javax.swing.JInternalFrame implem
     /**
      * Creates new form PddlPlannerJInternalFrame
      */
+    @SuppressWarnings("initialization")
     public PddlPlannerJInternalFrame() {
         initComponents();
     }
@@ -81,10 +83,6 @@ public class PddlPlannerJInternalFrame extends javax.swing.JInternalFrame implem
     private aprs.framework.pddl.planner.PddlPlannerJPanel pddlPlannerJPanel1;
     // End of variables declaration//GEN-END:variables
 
-    @Override
-    public File getPropertiesFile() {
-        return pddlPlannerJPanel1.getPropertiesFile();
-    }
 
     @Override
     public void setPropertiesFile(File propertiesFile) {
@@ -101,11 +99,11 @@ public class PddlPlannerJInternalFrame extends javax.swing.JInternalFrame implem
         pddlPlannerJPanel1.loadProperties();
     }
 
-   public PddlExecutorJInternalFrame getActionsToCrclJInternalFrame1() {
+   @Nullable public PddlExecutorJInternalFrame getActionsToCrclJInternalFrame1() {
         return pddlPlannerJPanel1.getActionsToCrclJInternalFrame1();
     }
 
-    public void setActionsToCrclJInternalFrame1(PddlExecutorJInternalFrame actionsToCrclJInternalFrame1) {
+    public void setActionsToCrclJInternalFrame1(@Nullable PddlExecutorJInternalFrame actionsToCrclJInternalFrame1) {
         this.pddlPlannerJPanel1.setActionsToCrclJInternalFrame1(actionsToCrclJInternalFrame1);
     }
     

@@ -34,12 +34,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -60,6 +62,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -137,23 +140,31 @@ public class Utils {
 
     private static class LogFileDirGetter {
 
-        private static File logFileDir = createLogFileDir();
+        private static @Nullable File logFileDir = createLogFileDir();
+        private static @Nullable IOException createLogFileException = null;
 
-        private static File createLogFileDir() {
+        @Nullable private static File createLogFileDir() {
             try {
                 File tmpTest = File.createTempFile("temp_test", "txt");
                 File logFileDir = new File(tmpTest.getParentFile(), "aprs_logs_" + getDateTimeString());
                 logFileDir.mkdirs();
                 tmpTest.delete();
                 return logFileDir;
-            } catch (Exception exception) {
+            } catch (IOException exception) {
+                createLogFileException = exception;
                 exception.printStackTrace();
             }
             return null;
         }
 
-        public File getLogFileDir() {
-            return logFileDir;
+        public File getLogFileDir() throws IOException {
+            if (null != logFileDir) {
+                return logFileDir;
+            }
+            if (null != createLogFileException) {
+                throw new IOException("Log File Directory was not created.", createLogFileException);
+            }
+            throw new IOException("Log File Directory was not created.");
         }
     }
 
@@ -162,7 +173,7 @@ public class Utils {
      *
      * @return log file directory
      */
-    public static File getlogFileDir() {
+    public static File getlogFileDir() throws IOException {
         return new LogFileDirGetter().getLogFileDir();
     }
 
@@ -355,7 +366,7 @@ public class Utils {
         }
     }
 
-    private static <R> R unwrap(XFuture<R> f) {
+    @Nullable private static <R> R unwrap(XFuture<R> f) {
         try {
             return f.get();
         } catch (InterruptedException | ExecutionException ex) {
@@ -372,6 +383,7 @@ public class Utils {
      * @return future that will make the return value accessible when the call
      * is complete.
      */
+    @SuppressWarnings("nullness")
     public static <R> XFuture<R> composeOnDispatchThread(final Supplier<XFuture<R>> s) {
         XFuture<XFuture<R>> ret = new SwingFuture<>("composeOnDispatchThread");
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
@@ -412,9 +424,13 @@ public class Utils {
             width = Math.max(width, headerComp.getPreferredSize().width);
             for (int r = 0; r < table.getRowCount(); r++) {
                 renderer = table.getCellRenderer(r, i);
-                Component comp = renderer.getTableCellRendererComponent(table, table.getValueAt(r, i),
-                        false, false, r, i);
-                width = Math.max(width, comp.getPreferredSize().width);
+                Object tableValue = table.getValueAt(r, i);
+                if (null != tableValue) {
+                    Component comp = renderer.getTableCellRendererComponent(table,
+                            tableValue,
+                            false, false, r, i);
+                    width = Math.max(width, comp.getPreferredSize().width);
+                }
             }
             if (i == table.getColumnCount() - 1) {
                 if (width < fullsize - sumWidths) {
@@ -442,11 +458,13 @@ public class Utils {
                 TableColumn col = colModel.getColumn(colIndex);
                 TableCellRenderer renderer = table.getCellRenderer(rowIndex, colIndex);
                 Object value = table.getValueAt(rowIndex, colIndex);
-                Component comp = renderer.getTableCellRendererComponent(table, value,
-                        false, false, rowIndex, colIndex);
-                Dimension compSize = comp.getPreferredSize();
-                int thisCompHeight = compSize.height;
-                height = Math.max(height, thisCompHeight);
+                if (null != value) {
+                    Component comp = renderer.getTableCellRendererComponent(table, value,
+                            false, false, rowIndex, colIndex);
+                    Dimension compSize = comp.getPreferredSize();
+                    int thisCompHeight = compSize.height;
+                    height = Math.max(height, thisCompHeight);
+                }
             }
             if (height > 0) {
                 table.setRowHeight(rowIndex, height);
@@ -475,8 +493,10 @@ public class Utils {
             for (int i = 0; i < names.size(); i++) {
                 String name = names.get(i);
                 String value = props.getProperty(name);
-                value = value.replaceAll("\\\\", Matcher.quoteReplacement("\\\\"));
-                pw.println(name + "=" + value);
+                if (null != value) {
+                    value = value.replaceAll("\\\\", Matcher.quoteReplacement("\\\\"));
+                    pw.println(name + "=" + value);
+                }
             }
         } catch (IOException ex) {
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
@@ -516,9 +536,14 @@ public class Utils {
                 for (int j = 0; j < tm.getColumnCount(); j++) {
                     Object o = tm.getValueAt(i, j);
                     if (o instanceof File) {
-                        Path rel = f.getParentFile().toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
-                        if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
-                            l.add(rel);
+                        File parentFile = f.getParentFile();
+                        if (null != parentFile) {
+                            Path rel = parentFile.toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
+                            if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
+                                l.add(rel);
+                            } else {
+                                l.add(o);
+                            }
                         } else {
                             l.add(o);
                         }
@@ -545,5 +570,37 @@ public class Utils {
         String s = String.format("%02d:%02d:%02d", runningTimeHours, runningTimeMinutes, runningTimeSeconds) + " (" + runningTimeSecondsTotal + " Total Seconds)";
         return s;
     }
+    
+    public static <T> T[] copyOfNonNullsOnly(Class<T> clzz, T []in) {
+        return copyOfRangeNonNullsOnly(clzz, in, 0, in.length);
+    }
 
+    public static <T> T[] copyOfRangeNonNullsOnly(Class<T> clzz, T []in,int start, int end) {
+        if(start > end) {
+            throw new IllegalArgumentException("start must be less than or equal to end : start = "+start+", end = "+end +" for array ="+Arrays.toString(in));
+        }
+        if(start < 0) {
+            throw new IllegalArgumentException("start must not be less 0:  start = "+start+", end = "+end +" for array ="+Arrays.toString(in));
+        }
+        if(end > in.length) {
+            throw new IllegalArgumentException("end must be less than size start = "+start+", end = "+end +", in.length="+in.length+" for array ="+Arrays.toString(in));
+        }
+        int nonNulls = 0;
+        for (int i = start; i < end; i++) {
+            if(in[i] != null) {
+                nonNulls++;
+            }
+        }
+        @SuppressWarnings("unchecked")
+        T out[] = (T []) Array.newInstance(clzz, nonNulls);
+        int j = 0;
+        for (int i = start; i < end; i++) {
+            T o = in[i];
+            if(o != null) {
+                out[j] = o;
+                j++;
+            }
+        }
+        return out;
+    }
 }

@@ -22,8 +22,11 @@
  */
 package aprs.framework.database;
 
+import com.vaadin.ui.Tree;
 import crcl.base.PoseType;
+import java.util.Collections;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -32,17 +35,17 @@ import java.util.List;
 public class PartsTray extends Tray {
 
     private int NodeID;
-    private String PartsTraySku;
-    private String PartsTrayName;
-    private String ExternalShapeModelFileName;
-    private String ExternalShapeModelFormatName;
-    private String PartsTrayDesign;
-    private Boolean PartsTrayComplete;
+    private @Nullable String PartsTraySku;
+    private @Nullable String PartsTrayName;
+    private @Nullable String ExternalShapeModelFileName;
+    private @Nullable String ExternalShapeModelFormatName;
+    private @Nullable String PartsTrayDesign;
+    private @Nullable Boolean PartsTrayComplete;
 //    private double Rotation;  now in super class PhysicalItem
-    private List<Slot> SlotList;
+    private @Nullable List<Slot> SlotList;
 //    private double x; now in super class PhysicalItem
 //    private double y; now in super class PhysicalItem
-    private PoseType PartsTrayPose;
+    private @Nullable PoseType PartsTrayPose;
 
     public static PartsTray newPartsTrayFromSkuIdRotXY(String sku,int id,double rotation, double x, double y) {
         PartsTray pt = new PartsTray(sku,rotation,x,y);
@@ -95,7 +98,7 @@ public class PartsTray extends Tray {
 //    public void setRotation(double Rotation) {
 //        this.Rotation = Rotation;
 //    }
-    public String getPartsTrayName() {
+    @Nullable public String getPartsTrayName() {
         return PartsTrayName;
     }
 
@@ -107,7 +110,7 @@ public class PartsTray extends Tray {
         this.NodeID = NodeID;
     }
 
-    public String getPartsTrayDesign() {
+    @Nullable public String getPartsTrayDesign() {
         return PartsTrayDesign;
     }
 
@@ -115,7 +118,7 @@ public class PartsTray extends Tray {
         this.PartsTrayDesign = PartsTrayDesign;
     }
 
-    public String getPartsTraySku() {
+    @Nullable public String getPartsTraySku() {
         return PartsTraySku;
     }
 
@@ -140,7 +143,7 @@ public class PartsTray extends Tray {
 //        this.ExternalShapeModelFormatName = ExternalShapeModelFormatName;
 //    }
 
-    public Boolean getPartsTrayComplete() {
+    @Nullable public Boolean getPartsTrayComplete() {
         return PartsTrayComplete;
     }
 
@@ -149,14 +152,17 @@ public class PartsTray extends Tray {
     }
 
     public List<Slot> getSlotList() {
-        return SlotList;
+        if(null != SlotList) {
+            return SlotList;
+        }
+        return Collections.emptyList();
     }
 
     public void setSlotList(List<Slot> SlotList) {
         this.SlotList = SlotList;
     }
 
-    public PoseType getPartsTrayPose() {
+    @Nullable public PoseType getPartsTrayPose() {
         return this.PartsTrayPose;
     }
 

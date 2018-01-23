@@ -31,6 +31,7 @@ public class PosMatchJFrame extends javax.swing.JFrame {
     /**
      * Creates new form PosMatchJFrame
      */
+    @SuppressWarnings("initialization")
     public PosMatchJFrame() {
         initComponents();
     }

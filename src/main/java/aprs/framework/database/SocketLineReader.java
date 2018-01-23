@@ -31,8 +31,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -47,28 +47,28 @@ public class SocketLineReader {
 
         public void call(String line, PrintStream ps);
     }
-    private ServerSocket ss = null;
+    @Nullable private volatile ServerSocket serverSocket = null;
 
     public boolean isConnected() {
-        if (null != s) {
-            return s.isConnected();
+        if (null != socket) {
+            return socket.isConnected();
         } else {
-            return null != ss && ss.isBound() && !ss.isClosed();
+            return null != serverSocket && serverSocket.isBound() && !serverSocket.isClosed();
         }
     }
 
     private class Clnt {
 
-        Socket s;
-        Thread t;
-        BufferedReader br;
-        PrintStream ps;
+        @Nullable volatile Socket socket;
+        @Nullable volatile Thread thread;
+        @Nullable volatile BufferedReader br;
+        @Nullable volatile PrintStream ps;
 
         public void close() {
             try {
-                if (null != t) {
-                    t.interrupt();
-                    t.join(200);
+                if (null != thread) {
+                    thread.interrupt();
+                    thread.join(200);
                 }
             } catch (Exception exception) {
             }
@@ -79,14 +79,14 @@ public class SocketLineReader {
             } catch (Exception exception) {
             }
             try {
-                if (null != s) {
-                    s.close();
+                if (null != socket) {
+                    socket.close();
                 }
             } catch (Exception exception) {
             }
             br = null;
-            s = null;
-            t = null;
+            socket = null;
+            thread = null;
         }
 
         protected void finalize() {
@@ -95,47 +95,61 @@ public class SocketLineReader {
 
         @Override
         public String toString() {
-            return "Clnt{" + "s=" + s + ", t=" + t + ", br=" + br + ", ps=" + ps + '}';
+            return "Clnt{" + "socket=" + socket + ", thread=" + thread + '}';
         }
     }
-    private ArrayList<Clnt> als = null;
-    private Socket s = null;
-    private Thread t = null;
-    private BufferedReader br = null;
-    private PrintStream ps;
-    private SocketLineReader.CallBack cb;
+    @Nullable private volatile List<Clnt> als = null;
+    @Nullable private volatile Socket socket = null;
+    @Nullable private volatile Thread thread = null;
+    @Nullable private volatile BufferedReader br = null;
+    @Nullable private volatile PrintStream ps;
+    private SocketLineReader.@Nullable CallBack cb;
 
     public int getPort() {
-        if (s == null) {
-            return -1;
+        if (socket == null) {
+            return port;
         }
-        return s.getPort();
+        int socketPort = socket.getPort();
+        this.port = socketPort;
+        return socketPort;
     }
 
-    public String getHost() {
+    @Nullable public String getHost() {
         return host;
     }
-    private String host = null;
 
+    @Nullable private String host = null;
+
+    private int port = -1;
+    
     private SocketLineReader privateStart(boolean isClient,
-            String host, int port, final String threadname,
+            @Nullable String host, int port, final String threadname,
             SocketLineReader.CallBack _cb) throws IOException {
         cb = _cb;
+        this.port = port;
         if (isClient) {
-            s = new Socket();
+            if (null == host) {
+                throw new IllegalArgumentException("host is null and isClient is true");
+            }
+            if (null == _cb) {
+                throw new IllegalArgumentException("callback is null and isClient is true");
+            }
+            socket = new Socket();
             this.host = host;
-            s.connect(new InetSocketAddress(host, port), 500);
-            s.setReuseAddress(true);
-            br = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            ps = new PrintStream(s.getOutputStream());
-            t = new Thread(new Runnable() {
+            socket.connect(new InetSocketAddress(host, port), 500);
+            socket.setReuseAddress(true);
+            BufferedReader brl = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            br = brl;
+            PrintStream psl = new PrintStream(socket.getOutputStream());
+            ps = psl;
+            thread = new Thread(new Runnable() {
 
                 @Override
                 public void run() {
                     try {
                         String line = null;
-                        while (null != (line = br.readLine()) && !Thread.currentThread().isInterrupted()) {
-                            cb.call(line, ps);
+                        while (null != (line = brl.readLine()) && !Thread.currentThread().isInterrupted()) {
+                            _cb.call(line, psl);
                         }
                     } catch (Exception exception) {
                         if (!closing) {
@@ -144,35 +158,40 @@ public class SocketLineReader {
                     }
                 }
             }, threadname);
-            t.start();
+            thread.start();
         } else {
-            ss = new ServerSocket(port);
-            ss.setReuseAddress(true);
-            als = new ArrayList<Clnt>();
-            t = new Thread(new Runnable() {
+            ServerSocket lss = new ServerSocket(port);
+            serverSocket = lss;
+            lss.setReuseAddress(true);
+            ArrayList<Clnt> lcals = new ArrayList<Clnt>();
+            als = lcals;
+            thread = new Thread(new Runnable() {
 
                 @Override
                 public void run() {
                     try {
                         while (!Thread.currentThread().isInterrupted()) {
                             final Clnt c = new Clnt();
-                            c.s = ss.accept();
-                            c.br = new BufferedReader(new InputStreamReader(c.s.getInputStream()));
-                            c.ps = new PrintStream(c.s.getOutputStream());
-                            c.t = new Thread(new Runnable() {
+                            Socket lcs = lss.accept();
+                            c.socket = lcs;
+                            BufferedReader lcbr = new BufferedReader(new InputStreamReader(lcs.getInputStream()));
+                            c.br = lcbr;
+                            PrintStream lcps = new PrintStream(lcs.getOutputStream());
+                            c.ps = lcps;
+                            Thread lct = new Thread(new Runnable() {
 
                                 @Override
                                 public void run() {
                                     try {
                                         String line = null;
-                                        while (null != (line = c.br.readLine()) && !Thread.currentThread().isInterrupted()) {
-                                            cb.call(line, c.ps);
+                                        while (null != (line = lcbr.readLine()) && !Thread.currentThread().isInterrupted()) {
+                                            _cb.call(line, lcps);
                                         }
                                     } catch (SocketException exception) {
-                                        System.out.println("Closing client socket "+c);
+                                        System.out.println("Closing client socket " + c);
                                         try {
-                                            if(null != s) {
-                                                s.close();
+                                            if (null != socket) {
+                                                socket.close();
                                             }
                                         } catch (Exception ex) {
                                             // ignore
@@ -182,15 +201,16 @@ public class SocketLineReader {
                                     }
                                 }
                             }, threadname);
-                            als.add(c);
-                            c.t.start();
+                            c.thread = lct;
+                            lcals.add(c);
+                            lct.start();
                         }
                     } catch (Exception exception) {
                         exception.printStackTrace();
                     }
                 }
             }, threadname + "Listener");
-            t.start();
+            thread.start();
         }
         return this;
     }
@@ -213,9 +233,9 @@ public class SocketLineReader {
     public void close() {
         closing = true;
         try {
-            if (null != t) {
-                t.interrupt();
-                t.join(200);
+            if (null != thread) {
+                thread.interrupt();
+                thread.join(200);
             }
         } catch (Exception e) {
         }
@@ -232,23 +252,24 @@ public class SocketLineReader {
         } catch (Exception e) {
         }
         try {
-            if (null != s) {
-                s.close();
+            if (null != socket) {
+                socket.close();
             }
         } catch (Exception e) {
         }
 
         try {
-            if (null != als) {
-                for (int i = 0; i < als.size(); i++) {
-                    Clnt c = als.get(i);
+            List<Clnt> lals = als;
+            if (null != lals) {
+                for (int i = 0; i < lals.size(); i++) {
+                    Clnt c = lals.get(i);
                     c.close();
                 }
             }
         } catch (Exception e) {
         }
-        s = null;
-        t = null;
+        socket = null;
+        thread = null;
         br = null;
         ps = null;
         als = null;
@@ -258,4 +279,12 @@ public class SocketLineReader {
         close();
     }
 
+    @Override
+    public String toString() {
+        return "SocketLineReader{" + "serverSocket=" + serverSocket + ", socket=" + socket + ", thread=" + thread + ", host=" + host + ", port=" + port + ", closing=" + closing + '}';
+    }
+
+    
+
+    
 }

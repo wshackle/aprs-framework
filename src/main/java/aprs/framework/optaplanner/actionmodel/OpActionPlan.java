@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.impl.factory.Lists;
@@ -57,21 +58,23 @@ public class OpActionPlan {
     }
 
     @PlanningEntityCollectionProperty
-    private List<OpAction> actions;
+    private @Nullable List<OpAction> actions;
 
-    public List<OpAction> getActions() {
+    @Nullable public List<OpAction> getActions() {
         return actions;
     }
 
     public List<OpAction> orderedActions() {
         List<OpAction> orderedActions = new ArrayList<>();
         OpAction start = findStartAction();
-        orderedActions.add(start);
-        OpActionInterface nxt = start.getNext();
-        while (nxt instanceof OpAction) {
-            OpAction nxtAction = (OpAction) nxt;
-            orderedActions.add(nxtAction);
-            nxt = nxtAction.getNext();
+        if (null != start) {
+            orderedActions.add(start);
+            OpActionInterface nxt = start.getNext();
+            while (nxt instanceof OpAction) {
+                OpAction nxtAction = (OpAction) nxt;
+                orderedActions.add(nxtAction);
+                nxt = nxtAction.getNext();
+            }
         }
         return orderedActions;
     }
@@ -82,8 +85,12 @@ public class OpActionPlan {
 
     public void initNextActions() {
 
+        List<OpAction> origActions = actions;
+        if (null == origActions) {
+            throw new IllegalStateException("actions not initialized");
+        }
         MutableMultimap<String, OpAction> multimapWithList
-                = Lists.mutable.ofAll(actions)
+                = Lists.mutable.ofAll(origActions)
                         .select(a -> a.getActionType() == PICKUP || a.getActionType() == DROPOFF)
                         .groupBy(a -> a.getPartType());
         for (String partType : multimapWithList.keySet()) {
@@ -91,14 +98,14 @@ public class OpActionPlan {
             long pickupCount = theseActions.count(a -> a.getActionType() == PICKUP);
             long dropoffCount = theseActions.count(a -> a.getActionType() == DROPOFF);
             for (long j = dropoffCount; j < pickupCount; j++) {
-                actions.add(new OpAction("fake_dropoff_" + partType + "_" + j, 0, 0, FAKE_DROPOFF, partType));
+                origActions.add(new OpAction("fake_dropoff_" + partType + "_" + j, 0, 0, FAKE_DROPOFF, partType));
             }
         }
-        List<OpActionInterface> unusedActions = new ArrayList<>(actions);
+        List<OpActionInterface> unusedActions = new ArrayList<>(origActions);
         unusedActions.addAll(endActions);
         List<OpActionInterface> allActions = new ArrayList<>(unusedActions);
         OpAction startAction = findStartAction();
-        for (OpAction act : actions) {
+        for (OpAction act : origActions) {
             act.addPossibleNextActions(allActions);
         }
         List<OpAction> newActions = new ArrayList<>();
@@ -124,13 +131,15 @@ public class OpActionPlan {
             }
         }
         actions = newActions;
-        System.out.println("unusedActions = " + unusedActions);
-        System.out.println("actions = " + actions);
+        if (unusedActions.size() > 0) {
+            System.out.println("unusedActions = " + unusedActions);
+            System.out.println("actions = " + actions);
+        }
     }
 
-    private HardSoftLongScore score;
+    private @Nullable HardSoftLongScore score;
 
-    @PlanningScore
+    @Nullable @PlanningScore
     public HardSoftLongScore getScore() {
         return score;
     }
@@ -147,86 +156,93 @@ public class OpActionPlan {
         OpActionInterface tmp = startAction;
         Set<String> visited = new HashSet<>();
         List<OpActionInterface> notInList = new ArrayList<>();
-        int maxCount = actions.size();
-        int count = 0;
-        while (tmp != null && tmp.getActionType() != END) {
-            count++;
-            if (count >= maxCount) {
-                break;
-            }
-            if (tmp != startAction) {
-                sb.append(" -> ");
-            }
-            if (tmp instanceof OpAction) {
-                boolean inList = false;
-                for (OpAction action : actions) {
-                    if (action == tmp) {
-                        inList = true;
-                        break;
-                    }
-                }
-                if (!inList) {
-                    notInList.add(tmp);
-                }
-                OpAction actionTmp = (OpAction) tmp;
-                visited.add(actionTmp.getName());
-                if (actionTmp.getNext() == null) {
-                    sb.append(" -> ");
-                    tmp = null;
+        List<OpAction> localActionsList = getActions();
+        if (null != localActionsList) {
+            int maxCount = localActionsList.size();
+            int count = 0;
+            while (tmp != null && tmp.getActionType() != END) {
+                count++;
+                if (count >= maxCount) {
                     break;
                 }
-                totalCost += actionTmp.cost();
-                sb.append(actionTmp.getName());
-                OpActionInterface effNext = actionTmp.effectiveNext();
-                if (null != effNext && effNext != actionTmp.getNext()) {
-                    sb.append("(effectiveNext=");
-                    sb.append(effNext.getName());
-                    sb.append(")");
+                if (tmp != startAction) {
+                    sb.append(" -> ");
                 }
-                sb.append(String.format("(%.2f)", actionTmp.cost()));
-            } else {
-                sb.append(tmp.getActionType());
+                if (tmp instanceof OpAction) {
+                    boolean inList = false;
+                    for (OpAction action : localActionsList) {
+                        if (action == tmp) {
+                            inList = true;
+                            break;
+                        }
+                    }
+                    if (!inList) {
+                        notInList.add(tmp);
+                    }
+                    OpAction actionTmp = (OpAction) tmp;
+                    visited.add(actionTmp.getName());
+                    if (actionTmp.getNext() == null) {
+                        sb.append(" -> ");
+                        tmp = null;
+                        break;
+                    }
+                    totalCost += actionTmp.cost();
+                    sb.append(actionTmp.getName());
+                    OpActionInterface effNext = actionTmp.effectiveNext();
+                    if (null != effNext && effNext != actionTmp.getNext()) {
+                        sb.append("(effectiveNext=");
+                        sb.append(effNext.getName());
+                        sb.append(")");
+                    }
+                    sb.append(String.format("(%.2f)", actionTmp.cost()));
+                } else {
+                    sb.append(tmp.getActionType());
+                }
+                tmp = tmp.getNext();
             }
-            tmp = tmp.getNext();
-        }
-        sb.append(": ");
-        sb.append(totalCost);
-        if (notInList.size() > 0) {
-            sb.append(" notInList(").append(notInList).append(")");
-        }
-        double recheckCost = 0;
-        count = 0;
-        for (OpAction action : this.getActions()) {
-            count++;
-            if (count >= maxCount) {
-                break;
+
+            sb.append(": ");
+            sb.append(totalCost);
+            if (notInList.size() > 0) {
+                sb.append(" notInList(").append(notInList).append(")");
             }
-            if (action.getNext() == null) {
-                sb.append(" NULL_NEXT");
+            double recheckCost = 0;
+            count = 0;
+            for (OpAction action : localActionsList) {
+                count++;
+                if (count >= maxCount) {
+                    break;
+                }
+                if (action.getNext() == null) {
+                    sb.append(" NULL_NEXT");
+                    if (!visited.contains(action.getName())) {
+                        sb.append(" NOT_VISITED(").append(action.getName()).append(") ");
+                    }
+                    continue;
+                }
+                recheckCost += action.cost();
                 if (!visited.contains(action.getName())) {
                     sb.append(" NOT_VISITED(").append(action.getName()).append(") ");
                 }
-                continue;
             }
-            recheckCost += action.cost();
-            if (!visited.contains(action.getName())) {
-                sb.append(" NOT_VISITED(").append(action.getName()).append(") ");
+            if (visited.size() != localActionsList.size()) {
+                sb.append(" visitedSize(").append(visited.size()).append(") ");
             }
-        }
-        if (visited.size() != actions.size()) {
-            sb.append(" visitedSize(").append(visited.size()).append(") ");
-        }
-        if (Math.abs(recheckCost - totalCost) > 1e-6) {
-            sb.append(" recheckCost(").append(recheckCost).append(") ");
+            if (Math.abs(recheckCost - totalCost) > 1e-6) {
+                sb.append(" recheckCost(").append(recheckCost).append(") ");
+            }
         }
         return sb.toString();
     }
 
-    public OpAction findStartAction() {
+    @Nullable public OpAction findStartAction() {
         OpAction startAction = null;
-        for (OpAction action : actions) {
-            if (action.getActionType() == START) {
-                startAction = action;
+        List<OpAction> l = actions;
+        if (null != l) {
+            for (OpAction action : l) {
+                if (action.getActionType() == START) {
+                    startAction = action;
+                }
             }
         }
         return startAction;

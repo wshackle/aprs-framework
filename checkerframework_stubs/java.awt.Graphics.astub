@@ -1,0 +1,58 @@
+
+package java.awt;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class Graphics {
+    protected Graphics();
+    Graphics create();
+    Graphics create(int arg0, int arg1, int arg2, int arg3);
+    void translate(int arg0, int arg1);
+    Color getColor();
+    void setColor(Color arg0);
+    void setPaintMode();
+    void setXORMode(Color arg0);
+    Font getFont();
+    void setFont(Font arg0);
+    FontMetrics getFontMetrics();
+    FontMetrics getFontMetrics(Font arg0);
+    Rectangle getClipBounds();
+    void clipRect(int arg0, int arg1, int arg2, int arg3);
+    void setClip(int arg0, int arg1, int arg2, int arg3);
+    Shape getClip();
+    void setClip(Shape arg0);
+    void copyArea(int arg0, int arg1, int arg2, int arg3, int arg4, int arg5);
+    void drawLine(int arg0, int arg1, int arg2, int arg3);
+    void fillRect(int arg0, int arg1, int arg2, int arg3);
+    void drawRect(int arg0, int arg1, int arg2, int arg3);
+    void clearRect(int arg0, int arg1, int arg2, int arg3);
+    void drawRoundRect(int arg0, int arg1, int arg2, int arg3, int arg4, int arg5);
+    void fillRoundRect(int arg0, int arg1, int arg2, int arg3, int arg4, int arg5);
+    void draw3DRect(int arg0, int arg1, int arg2, int arg3, boolean arg4);
+    void fill3DRect(int arg0, int arg1, int arg2, int arg3, boolean arg4);
+    void drawOval(int arg0, int arg1, int arg2, int arg3);
+    void fillOval(int arg0, int arg1, int arg2, int arg3);
+    void drawArc(int arg0, int arg1, int arg2, int arg3, int arg4, int arg5);
+    void fillArc(int arg0, int arg1, int arg2, int arg3, int arg4, int arg5);
+    void drawPolyline(int[] arg0, int[] arg1, int arg2);
+    void drawPolygon(int[] arg0, int[] arg1, int arg2);
+    void drawPolygon(Polygon arg0);
+    void fillPolygon(int[] arg0, int[] arg1, int arg2);
+    void fillPolygon(Polygon arg0);
+    void drawString(String arg0, int arg1, int arg2);
+    void drawString(AttributedCharacterIterator arg0, int arg1, int arg2);
+    void drawChars(char[] arg0, int arg1, int arg2, int arg3, int arg4);
+    void drawBytes(byte[] arg0, int arg1, int arg2, int arg3, int arg4);
+    boolean drawImage(Image arg0, int arg1, int arg2, @Nullable ImageObserver arg3);
+    boolean drawImage(Image arg0, int arg1, int arg2, int arg3, int arg4, @Nullable ImageObserver arg5);
+    boolean drawImage(Image arg0, int arg1, int arg2, Color arg3, @Nullable ImageObserver arg4);
+    boolean drawImage(Image arg0, int arg1, int arg2, int arg3, int arg4, Color arg5, @Nullable ImageObserver arg6);
+    boolean drawImage(Image arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, @Nullable ImageObserver arg9);
+    boolean drawImage(Image arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, Color arg9, @Nullable ImageObserver arg10);
+    void dispose();
+    void finalize();
+    String toString();
+    Rectangle getClipRect();
+    boolean hitClip(int arg0, int arg1, int arg2, int arg3);
+    Rectangle getClipBounds(Rectangle arg0);
+}

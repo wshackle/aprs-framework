@@ -42,11 +42,13 @@ import javax.swing.TransferHandler;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("initialization")
 public class LogDisplayJPanel extends javax.swing.JPanel {
 
     /**
      * Creates new form LogDisplayJPanel
      */
+    @SuppressWarnings("initialization")
     public LogDisplayJPanel() {
         initComponents();
         jSpinnerMaxLines.setValue(250);

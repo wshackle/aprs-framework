@@ -23,6 +23,7 @@
 package aprs.framework.database;
 
 import java.util.Map;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -54,5 +55,5 @@ public interface DbSetup {
 
     public int getLoginTimeout();
     
-    public String getStartScript();
+    @Nullable public String getStartScript();
 }

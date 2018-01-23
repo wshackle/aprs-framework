@@ -24,6 +24,7 @@ package aprs.framework.colortextdisplay;
 
 import java.awt.Frame;
 import javax.swing.JDialog;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -31,8 +32,8 @@ import javax.swing.JDialog;
  */
 public class ColorTextOptionsJPanel extends javax.swing.JPanel {
 
-    
     public static class ColorTextOptions {
+
         private final int port;
         private final String host;
         private boolean startDisplay;
@@ -55,19 +56,19 @@ public class ColorTextOptionsJPanel extends javax.swing.JPanel {
             return startDisplay;
         }
     }
-    
-    public ColorTextOptions getOptions() {
-        if(cancelled) {
+
+    @Nullable public ColorTextOptions getOptions() {
+        if (cancelled) {
             return null;
         }
         return new ColorTextOptions(
-                Integer.parseInt(jTextFieldPort.getText()), 
-                jTextFieldHost.getText(), 
+                Integer.parseInt(jTextFieldPort.getText()),
+                jTextFieldHost.getText(),
                 jCheckBoxStartDisplay.isSelected());
     }
-    
-    public static ColorTextOptions query(Frame owner, boolean modal) {
-        JDialog dialog = new JDialog(owner,modal);
+
+    @Nullable public static ColorTextOptions query(Frame owner, boolean modal) {
+        JDialog dialog = new JDialog(owner, modal);
         ColorTextOptionsJPanel panel = new ColorTextOptionsJPanel();
         panel.dialog = dialog;
         dialog.add(panel);
@@ -75,12 +76,13 @@ public class ColorTextOptionsJPanel extends javax.swing.JPanel {
         dialog.setVisible(true);
         return panel.getOptions();
     }
-    
+
     private JDialog dialog;
-    
+
     /**
      * Creates new form ColorTexOptionsJPanel
      */
+    @SuppressWarnings("initialization")
     public ColorTextOptionsJPanel() {
         initComponents();
     }
@@ -175,14 +177,14 @@ public class ColorTextOptionsJPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private boolean cancelled = false;
-    
+
     private void jButtonCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCancelActionPerformed
         cancelled = true;
         dialog.setVisible(false);
     }//GEN-LAST:event_jButtonCancelActionPerformed
 
     private void jButtonOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOkActionPerformed
-       dialog.setVisible(false);
+        dialog.setVisible(false);
     }//GEN-LAST:event_jButtonOkActionPerformed
 
 

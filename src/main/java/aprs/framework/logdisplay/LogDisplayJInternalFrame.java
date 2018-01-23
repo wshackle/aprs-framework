@@ -31,6 +31,7 @@ public class LogDisplayJInternalFrame extends javax.swing.JInternalFrame {
     /**
      * Creates new form LodDisplayJInternalFrame
      */
+    @SuppressWarnings("initialization")
     public LogDisplayJInternalFrame() {
         initComponents();
     }

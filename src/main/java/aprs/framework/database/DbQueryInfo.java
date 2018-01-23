@@ -22,8 +22,10 @@
  */
 package aprs.framework.database;
 
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -34,7 +36,7 @@ public class DbQueryInfo {
     private final String query;
     private final DbParamTypeEnum params[];
     private final Map<DbParamTypeEnum, String> results;
-    private Map<DbParamTypeEnum, Integer> paramPosMap = null;
+    private @Nullable Map<DbParamTypeEnum, Integer> paramPosMap = null;
     private final String origText;
 
     public String getOrigText() {
@@ -45,20 +47,20 @@ public class DbQueryInfo {
         return results;
     }
 
-    public Map<DbParamTypeEnum, Integer> getParamPosMap() {
+    @Nullable public Map<DbParamTypeEnum, Integer> getParamPosMap() {
         if (null == paramPosMap && null != params) {
             paramPosMap = new EnumMap<>(DbParamTypeEnum.class);
             for (int i = 0; i < params.length; i++) {
-                paramPosMap.put(params[i], i+1);
+                paramPosMap.put(params[i], i + 1);
             }
         }
         return paramPosMap;
     }
 
     public DbQueryInfo(String query,
-                       DbParamTypeEnum[] params,
-                       Map<DbParamTypeEnum, String> results,
-                       String origText) {
+            DbParamTypeEnum[] params,
+            Map<DbParamTypeEnum, String> results,
+            String origText) {
         this.query = query;
         this.params = params;
         this.results = results;
@@ -83,17 +85,6 @@ public class DbQueryInfo {
             String line = lines[i];
             if (line.trim().startsWith(PARAMS_PREFIX) && i == 0) {
                 ta = parseParamLine(line);
-//                System.out.println("ta = " + Arrays.toString(ta));
-//
-//                DbParamTypeEnum[] tachk = parseParamLine("params=" + Arrays.toString(ta));
-//                if (tachk.length != ta.length) {
-//                    throw new RuntimeException("parse check failed");
-//                }
-//                for (int j = 0; j < tachk.length; j++) {
-//                    if (tachk[j] != ta[j]) {
-//                        throw new RuntimeException("parse check failed");
-//                    }
-//                }
             } else if (line.trim().startsWith(RESULTS_PREFIX) && i < 2) {
                 results = parseResultsLine(line);
             } else {
@@ -101,7 +92,13 @@ public class DbQueryInfo {
                 sb.append('\n');
             }
         }
-        return new DbQueryInfo(sb.toString(), ta, results,s);
+        if (null == ta) {
+            ta = new DbParamTypeEnum[0];
+        }
+        if(null == results) {
+            results = Collections.emptyMap();
+        }
+        return new DbQueryInfo(sb.toString(), ta, results, s);
     }
     private static final String PARAMS_PREFIX = "#params=";
     private static final String RESULTS_PREFIX = "#results=";
@@ -120,7 +117,7 @@ public class DbQueryInfo {
         }
         String parmString = paramLine.substring(startindex, endindex).trim();
         if (parmString.length() < 1) {
-            return null;
+            return new DbParamTypeEnum[0];
         }
         parmString = parmString.replaceAll("[(][0-9]*[)]", "");
         parmString = parmString.replaceAll("[{][0-9]*[}]", "");
@@ -129,7 +126,6 @@ public class DbQueryInfo {
         for (int i = 0; i < pa.length; i++) {
             ta[i] = DbParamTypeEnum.valueOf(pa[i]);
         }
-
         return ta;
     }
 

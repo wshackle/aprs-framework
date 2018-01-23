@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.function.Predicate;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import rcs.posemath.Posemath;
 
@@ -50,16 +51,16 @@ public class PositionMap {
 
     private final List<PositionMapEntry> errmapList;
     private final List<String[]> errmapStringsList;
-    private final String fileName;
+    @Nullable private final String fileName;
     private final String[] columnHeaders;
-    private PointType lastPointIn;
-    private PointType lastPointOut;
-    private PointType lastOffset;
+    @Nullable private PointType lastPointIn;
+    @Nullable private PointType lastPointOut;
+    @Nullable private PointType lastOffset;
 
     public Iterable<Object[]> getTableIterable() {
         return new Iterable<Object[]>() {
 
-            private final List<PositionMapEntry> l = new ArrayList(errmapList);
+            private final List<PositionMapEntry> l = new ArrayList<>(errmapList);
 
             @Override
             public Iterator<Object[]> iterator() {
@@ -167,7 +168,7 @@ public class PositionMap {
                 case "Offset_Z":
                     offsetZIndex = i;
                     break;
-                    
+
                 case "Label":
                     labelIndex = i;
                     break;
@@ -195,8 +196,8 @@ public class PositionMap {
             double offsetX = (offsetXIndex >= 0 ? Double.parseDouble(a[offsetXIndex]) : 0);
             double offsetY = (offsetYIndex >= 0 ? Double.parseDouble(a[offsetYIndex]) : 0);
             double offsetZ = (offsetZIndex >= 0 ? Double.parseDouble(a[offsetZIndex]) : 0);
-            String label = (labelIndex >= 0 && labelIndex < a.length ? a[labelIndex]:"");
-            errmapList.add(PositionMapEntry.pointOffsetLabelEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ,label));
+            String label = (labelIndex >= 0 && labelIndex < a.length ? a[labelIndex] : "");
+            errmapList.add(PositionMapEntry.pointOffsetLabelEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ, label));
         }
 //        errmapList = errmapStringsList.stream().map(a -> {
 //            return new PositionMapEntry(Double.parseDouble(a[robotXIndex]), Double.parseDouble(a[robotYIndex]),
@@ -299,7 +300,7 @@ public class PositionMap {
         );
     }
 
-    static public PositionMapEntry combineX(PositionMapEntry e1, PositionMapEntry e2, double x) {
+    @Nullable static public PositionMapEntry combineX(@Nullable PositionMapEntry e1, @Nullable PositionMapEntry e2, double x) {
         if (null == e1) {
             if (null != e2 && Math.abs(e2.getRobotX() - x) < 1e-6) {
                 return e2;
@@ -350,7 +351,7 @@ public class PositionMap {
         );
     }
 
-    static public PositionMapEntry combineY(PositionMapEntry e1, PositionMapEntry e2, double y) {
+    @Nullable static public PositionMapEntry combineY(PositionMapEntry e1, PositionMapEntry e2, double y) {
         if (null == e1) {
             if (null != e2 && Math.abs(e2.getRobotY() - y) < 1e-6) {
                 return e2;
@@ -407,7 +408,7 @@ public class PositionMap {
 
     private PointType getOffsetInternal(double x, double y, double z, int recurseLevel) {
         if (errmapList.size() < 1) {
-            return null;
+            return point(0, 0, 0);
         }
         if (errmapList.size() == 1) {
             return point(errmapList.get(0).getOffsetX(), errmapList.get(0).getOffsetY(), errmapList.get(0).getOffsetZ());
@@ -482,18 +483,21 @@ public class PositionMap {
         }
 
         PositionMapEntry eme = combineY(e12, e34, y);
+        if (null == eme) {
+            throw new IllegalStateException("combineY returned null");
+        }
         lastOffset = point(eme.getOffsetX(), eme.getOffsetY(), eme.getOffsetZ());
         return lastOffset;
     }
 
-    private PositionMapEntry findXCombo(Predicate<Double> predy, double x, double y, double z) {
+    @Nullable private PositionMapEntry findXCombo(Predicate<Double> predy, double x, double y, double z) {
         List<PositionMapEntry> yFilteredList = errmapList.stream()
                 .filter(e -> predy.test(e.getRobotY()))
                 .collect(Collectors.toList());
         return findXCombo(yFilteredList, x, y, z);
     }
 
-    private PositionMapEntry findXCombo(List<PositionMapEntry> yFilteredList, double x, double y, double z) {
+    @Nullable private PositionMapEntry findXCombo(List<PositionMapEntry> yFilteredList, double x, double y, double z) {
         if (yFilteredList.size() < 2) {
             if (yFilteredList.size() == 1 && Math.abs(yFilteredList.get(0).getRobotX() - x) < 1e-6) {
                 return yFilteredList.get(0);
@@ -521,11 +525,10 @@ public class PositionMap {
                     yFilteredList,
                     x, y);
         }
-        PositionMapEntry e12 = combineX(e1, e2, x);
-        return e12;
+        return combineX(e1, e2, x);
     }
 
-    private PositionMapEntry findEntry(Predicate<Double> predx, List<PositionMapEntry> yfilteredList, double x, double y) {
+    @Nullable private PositionMapEntry findEntry(Predicate<Double> predx, List<PositionMapEntry> yfilteredList, double x, double y) {
         PositionMapEntry e1 = yfilteredList.stream()
                 .filter(e -> predx.test(e.getRobotX()))
                 .min((em1, em2) -> Double.compare(dist(em1, x, y), dist(em2, x, y)))
@@ -541,7 +544,7 @@ public class PositionMap {
         return errmapStringsList;
     }
 
-    public String getFileName() {
+    @Nullable public String getFileName() {
         return fileName;
     }
 
@@ -549,15 +552,15 @@ public class PositionMap {
         return columnHeaders;
     }
 
-    public PointType getLastPointIn() {
+    @Nullable public PointType getLastPointIn() {
         return lastPointIn;
     }
 
-    public PointType getLastPointOut() {
+    @Nullable public PointType getLastPointOut() {
         return lastPointOut;
     }
 
-    public PointType getLastOffset() {
+    @Nullable public PointType getLastOffset() {
         return lastOffset;
     }
 

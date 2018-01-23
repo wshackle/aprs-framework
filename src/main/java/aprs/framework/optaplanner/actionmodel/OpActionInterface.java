@@ -6,6 +6,7 @@
 package aprs.framework.optaplanner.actionmodel;
 
 import java.awt.geom.Point2D;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -21,7 +22,7 @@ public interface OpActionInterface {
 
     public String getPartType();
 
-    public OpActionInterface getNext();
+    public @Nullable OpActionInterface getNext();
     
     public Point2D.Double getLocation();
 }

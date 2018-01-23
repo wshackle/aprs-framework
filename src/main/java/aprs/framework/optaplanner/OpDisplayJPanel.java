@@ -58,6 +58,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.ToolTipManager;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.factory.Lists;
 
@@ -119,10 +122,12 @@ public class OpDisplayJPanel extends JPanel {
         privateInit();
     }
 
-    private void privateInit() {
-        this.setBackground(Color.white);
+    @SuppressWarnings({"nullness", "initialization"})
+    private void privateInit( 
+        @UnknownInitialization OpDisplayJPanel this) {
+        super.setBackground(Color.white);
+        super.addMouseMotionListener(mml);
         ToolTipManager.sharedInstance().registerComponent(this);
-        this.addMouseMotionListener(mml);
     }
 
     /**
@@ -182,14 +187,14 @@ public class OpDisplayJPanel extends JPanel {
         return partsColorsMap.computeIfAbsent(partName, (k) -> colors[partsColorsMap.size() % colors.length]);
     }
 
-    private OpActionPlan opActionPlan;
+    @Nullable private OpActionPlan opActionPlan;
 
     /**
      * Get the value of opActionPlan
      *
      * @return the value of opActionPlan
      */
-    public OpActionPlan getOpActionPlan() {
+    @Nullable public OpActionPlan getOpActionPlan() {
         return opActionPlan;
     }
 
@@ -198,7 +203,7 @@ public class OpDisplayJPanel extends JPanel {
      *
      * @param opActionPlan new value of opActionPlan
      */
-    public void setOpActionPlan(OpActionPlan opActionPlan) {
+    public void setOpActionPlan(@Nullable OpActionPlan opActionPlan) {
         this.opActionPlan = opActionPlan;
         if (null != opActionPlan) {
             this.repaint();
@@ -212,22 +217,25 @@ public class OpDisplayJPanel extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
 
         super.paintComponent(g);
-
-        if (null != label && null != labelPos) {
+        String thisLabel = this.label;
+        if (null != thisLabel && null != labelPos) {
             Font origFont = g.getFont();
             if (null != labelFont) {
                 g.setFont(labelFont);
             }
-            g.drawString(label, labelPos.x, labelPos.y);
+            g.drawString(thisLabel, labelPos.x, labelPos.y);
             g.setFont(origFont);
         }
-        if (null == opActionPlan
-                || null == opActionPlan.getActions()
-                || opActionPlan.getActions().isEmpty()) {
+        if (null == opActionPlan) {
+            return;
+        }
+        List<OpAction> actionsList = opActionPlan.getActions();
+        if (null == actionsList
+                || actionsList.isEmpty()) {
             return;
         }
         MutableMap<OpActionType, Integer> typeCountMap
-                = Lists.adapt(opActionPlan.getActions())
+                = Lists.adapt(actionsList)
                         .countBy(OpAction::getActionType)
                         .toMapOfItemToCount();
 
@@ -236,159 +244,170 @@ public class OpDisplayJPanel extends JPanel {
             System.err.println("bad dim =" + dim.width + " x " + dim.height);
             return;
         }
-        if (null != opActionPlan) {
-            OpEndAction endAction = opActionPlan.getEndAction();
-            List<OpAction> actions = opActionPlan.getActions();
-            if (null != endAction && null != actions) {
-                minX = Double.POSITIVE_INFINITY;
-                minY = Double.POSITIVE_INFINITY;
-                maxX = Double.NEGATIVE_INFINITY;
-                maxY = Double.NEGATIVE_INFINITY;
-                if (null != endAction.getLocation()) {
-                    Point2D.Double endloc = endAction.getLocation();
-                    if (minX > endloc.x) {
-                        minX = endloc.x;
-                    }
-                    if (minY > endloc.y) {
-                        minY = endloc.y;
-                    }
-                    if (maxX < endloc.x) {
-                        maxX = endloc.x;
-                    }
-                    if (maxY < endloc.y) {
-                        maxY = endloc.y;
-                    }
-                }
-                for (OpAction action : actions) {
-                    Point2D.Double loc = action.getLocation();
-                    if (minX > loc.x) {
-                        minX = loc.x;
-                    }
-                    if (minY > loc.y) {
-                        minY = loc.y;
-                    }
-                    if (maxX < loc.x) {
-                        maxX = loc.x;
-                    }
-                    if (maxY < loc.y) {
-                        maxY = loc.y;
-                    }
-                }
-                xdiff = (maxX - minX);
-                ydiff = (maxY - minY);
+        OpActionPlan plan = this.opActionPlan;
+        if (null != plan) {
+            paintOpActionPlan(plan, dim, actionsList, g2d);
+        }
 
-                OpActionInterface prevAction = null;
-                OpActionInterface action = opActionPlan.findStartAction();
-                int prevx = -1;
-                int prevy = -1;
-                int ly = 0;
-                int h = dim.height;
-                int w = keyVisible ? (dim.width - keyWidth) : dim.width;
-                if (labelPos != null) {
-                    ly = labelPos.y;
-                    h = dim.height - ly;
-                }
-                Set<OpAction> numLabeledItems = new HashSet<>();
-                for (OpAction actionToPaintBackground : opActionPlan.getActions()) {
-                    int x = keyWidth + (int) ((0.9 * (actionToPaintBackground.getLocation().x - minX) / xdiff) * w + 0.05 * w);
-                    int y = ly + (int) ((0.9 * (actionToPaintBackground.getLocation().y - minY) / ydiff) * h + 0.05 * h);
-                    paintBackgroundSymbol(g2d, x, y, actionToPaintBackground);
-                    if (!numLabeledItems.contains(actionToPaintBackground)) {
-                        List<OpAction> closeItems = findCloseActions(x, y);
-                        if (closeItems.size() > 1) {
-                            numLabeledItems.add(actionToPaintBackground);
-                            numLabeledItems.addAll(closeItems);
-                            g2d.drawString(""+closeItems.size(), x+15, y+15);
-                        }
-                    }
-                }
-                while (action != null && action != prevAction) {
-                    if (action.getActionType() == OpActionType.FAKE_DROPOFF) {
-                        action = action.getNext();
-                        continue;
-                    }
-                    int x = keyWidth + (int) ((0.9 * (action.getLocation().x - minX) / xdiff) * w + 0.05 * w);
-                    int y = ly + (int) ((0.9 * (action.getLocation().y - minY) / ydiff) * h + 0.05 * h);
-                    double l = Math.hypot(x - prevx, y - prevy);
-                    double dx = 25 * (x - prevx) / l;
-                    double dy = 25 * (y - prevy) / l;
-                    int idx = (int) dx;
-                    int idy = (int) dy;
-                    if (actionNamesVisible) {
-                        g2d.drawString(action.getName(), x + 10, y + 10);
+        if (keyVisible) {
+            paintKey(g2d, typeCountMap);
+        }
+    }
+
+    private void paintKey(Graphics2D g2d, MutableMap<OpActionType, Integer> typeCountMap) {
+        int keyY = 25;
+        g2d.drawLine(10, 10, 30, 10);
+        g2d.drawString("(empty)", 40, 10);
+        for (Map.Entry<String, Color> entry : partsColorsMap.entrySet()) {
+            Color origColor = g2d.getColor();
+            Stroke origStroke = g2d.getStroke();
+            g2d.setColor(entry.getValue());
+            g2d.drawLine(10, keyY, 30, keyY);
+            g2d.setColor(origColor);
+            g2d.setStroke(origStroke);
+            g2d.drawString(entry.getKey(), 40, keyY);
+            keyY += 15;
+        }
+        if (!actionNamesVisible) {
+            keyY += 25;
+            for (OpActionType type : OpActionType.values()) {
+                Integer typeCount = typeCountMap.get(type);
+                if (typeCount == null || typeCount == 0) {
+                    if (type == END) {
+                        typeCount = 1;
                     } else {
-                        paintActionSymbol(g2d, x, y, action.getActionType());
-                    }
-                    if (action.getNext().getActionType() == OpActionType.FAKE_DROPOFF) {
-                        action = action.getNext();
                         continue;
                     }
-                    if (null != prevAction && prevx > 0 && prevy > 0) {
-                        Color origColor = g2d.getColor();
-                        Stroke origStroke = g2d.getStroke();
-                        if (action.getActionType() == DROPOFF) {
-                            g2d.setColor(getColor(action.getPartType()));
-                            if (null != carryStroke) {
-                                g2d.setStroke(carryStroke);
-                            }
-                        }
-
-                        g2d.drawLine(x - idx, y - idy, prevx + idx, prevy + idy);
-
-                        AffineTransform origTransform = g2d.getTransform();
-
-                        g2d.translate(x - idx, y - idy);
-                        g2d.rotate(Math.atan2(prevx - x, y - prevy));
-
-                        g2d.fill(arrowHead);
-
-//                        g2d.draw(actionTypeShapeMap.get(action.getActionType()));
-                        g2d.setTransform(origTransform);
-                        g2d.setColor(origColor);
-                        g2d.setStroke(origStroke);
-                    }
-                    prevAction = action;
-                    prevx = x;
-                    prevy = y;
-                    action = action.getNext();
                 }
+                if (type == FAKE_DROPOFF) {
+                    continue;
+                }
+                int x = 10;
+                paintActionSymbol(g2d, x, keyY, type);
+                g2d.drawString(type.toString(), 40, keyY);
+                g2d.drawString(": " + typeCount, 100, keyY);
+                keyY += 25;
             }
         }
-        
-        if (keyVisible) {
-            int keyY = 25;
-            g2d.drawLine(10, 10, 30, 10);
-            g2d.drawString("(empty)", 40, 10);
-            for (Map.Entry<String, Color> entry : partsColorsMap.entrySet()) {
-                Color origColor = g2d.getColor();
-                Stroke origStroke = g2d.getStroke();
-                g2d.setColor(entry.getValue());
-                g2d.drawLine(10, keyY, 30, keyY);
-                g2d.setColor(origColor);
-                g2d.setStroke(origStroke);
-                g2d.drawString(entry.getKey(), 40, keyY);
-                keyY += 15;
+    }
+
+    private void paintOpActionPlan(OpActionPlan plan, Dimension dim, List<OpAction> actionsList, Graphics2D g2d) {
+        OpEndAction endAction = plan.getEndAction();
+        List<OpAction> actions = plan.getActions();
+        if (null != endAction && null != actions) {
+            minX = Double.POSITIVE_INFINITY;
+            minY = Double.POSITIVE_INFINITY;
+            maxX = Double.NEGATIVE_INFINITY;
+            maxY = Double.NEGATIVE_INFINITY;
+            if (null != endAction.getLocation()) {
+                Point2D.Double endloc = endAction.getLocation();
+                if (minX > endloc.x) {
+                    minX = endloc.x;
+                }
+                if (minY > endloc.y) {
+                    minY = endloc.y;
+                }
+                if (maxX < endloc.x) {
+                    maxX = endloc.x;
+                }
+                if (maxY < endloc.y) {
+                    maxY = endloc.y;
+                }
             }
-            if (!actionNamesVisible) {
-                keyY += 25;
-                for (OpActionType type : OpActionType.values()) {
-                    Integer typeCount = typeCountMap.get(type);
-                    if (typeCount == null || typeCount == 0) {
-                        if (type == END) {
-                            typeCount = 1;
-                        } else {
-                            continue;
+            for (OpAction action : actions) {
+                Point2D.Double loc = action.getLocation();
+                if (minX > loc.x) {
+                    minX = loc.x;
+                }
+                if (minY > loc.y) {
+                    minY = loc.y;
+                }
+                if (maxX < loc.x) {
+                    maxX = loc.x;
+                }
+                if (maxY < loc.y) {
+                    maxY = loc.y;
+                }
+            }
+            xdiff = (maxX - minX);
+            ydiff = (maxY - minY);
+
+            OpActionInterface prevAction = null;
+            OpActionInterface action = plan.findStartAction();
+            int prevx = -1;
+            int prevy = -1;
+            int ly = 0;
+            int h = dim.height;
+            int w = keyVisible ? (dim.width - keyWidth) : dim.width;
+            if (labelPos != null) {
+                ly = labelPos.y;
+                h = dim.height - ly;
+            }
+            Set<OpAction> numLabeledItems = new HashSet<>();
+            for (OpAction actionToPaintBackground : actionsList) {
+                int x = keyWidth + (int) ((0.9 * (actionToPaintBackground.getLocation().x - minX) / xdiff) * w + 0.05 * w);
+                int y = ly + (int) ((0.9 * (actionToPaintBackground.getLocation().y - minY) / ydiff) * h + 0.05 * h);
+                paintBackgroundSymbol(g2d, x, y, actionToPaintBackground);
+                if (!numLabeledItems.contains(actionToPaintBackground)) {
+                    List<OpAction> closeItems = findCloseActions(x, y);
+                    if (closeItems.size() > 1) {
+                        numLabeledItems.add(actionToPaintBackground);
+                        numLabeledItems.addAll(closeItems);
+                        g2d.drawString("" + closeItems.size(), x + 15, y + 15);
+                    }
+                }
+            }
+            while (action != null && action != prevAction) {
+                if (action.getActionType() == OpActionType.FAKE_DROPOFF) {
+                    action = action.getNext();
+                    continue;
+                }
+                int x = keyWidth + (int) ((0.9 * (action.getLocation().x - minX) / xdiff) * w + 0.05 * w);
+                int y = ly + (int) ((0.9 * (action.getLocation().y - minY) / ydiff) * h + 0.05 * h);
+                double l = Math.hypot(x - prevx, y - prevy);
+                double dx = 25 * (x - prevx) / l;
+                double dy = 25 * (y - prevy) / l;
+                int idx = (int) dx;
+                int idy = (int) dy;
+                if (actionNamesVisible) {
+                    g2d.drawString(action.getName(), x + 10, y + 10);
+                } else {
+                    paintActionSymbol(g2d, x, y, action.getActionType());
+                }
+                OpActionInterface nextActon = action.getNext();
+                if (null == nextActon) {
+                    continue;
+                }
+                if (nextActon.getActionType() == OpActionType.FAKE_DROPOFF) {
+                    action = action.getNext();
+                    continue;
+                }
+                if (null != prevAction && prevx > 0 && prevy > 0) {
+                    Color origColor = g2d.getColor();
+                    Stroke origStroke = g2d.getStroke();
+                    if (action.getActionType() == DROPOFF) {
+                        g2d.setColor(getColor(action.getPartType()));
+                        if (null != carryStroke) {
+                            g2d.setStroke(carryStroke);
                         }
                     }
-                    if (type == FAKE_DROPOFF) {
-                        continue;
-                    }
-                    int x = 10;
-                    paintActionSymbol(g2d, x, keyY, type);
-                    g2d.drawString(type.toString(), 40, keyY);
-                    g2d.drawString(": " + typeCount, 100, keyY);
-                    keyY += 25;
+
+                    g2d.drawLine(x - idx, y - idy, prevx + idx, prevy + idy);
+
+                    AffineTransform origTransform = g2d.getTransform();
+
+                    g2d.translate(x - idx, y - idy);
+                    g2d.rotate(Math.atan2(prevx - x, y - prevy));
+
+                    g2d.fill(arrowHead);
+                    g2d.setTransform(origTransform);
+                    g2d.setColor(origColor);
+                    g2d.setStroke(origStroke);
                 }
+                prevAction = action;
+                prevx = x;
+                prevy = y;
+                action = action.getNext();
             }
         }
     }
@@ -511,14 +530,14 @@ public class OpDisplayJPanel extends JPanel {
         this.carryStroke = carryStroke;
     }
 
-    private String label;
+    @Nullable private String label;
 
     /**
      * Get the value of label
      *
      * @return the value of label
      */
-    public String getLabel() {
+    @Nullable public String getLabel() {
         return label;
     }
 
@@ -532,14 +551,14 @@ public class OpDisplayJPanel extends JPanel {
         this.repaint();
     }
 
-    private Point labelPos;
+    @MonotonicNonNull private Point labelPos;
 
     /**
      * Get the value of labelPos
      *
      * @return the value of labelPos
      */
-    public Point getLabelPos() {
+    @Nullable public Point getLabelPos() {
         return labelPos;
     }
 
@@ -552,14 +571,14 @@ public class OpDisplayJPanel extends JPanel {
         this.labelPos = labelPos;
     }
 
-    private Font labelFont;
+    @Nullable private Font labelFont;
 
     /**
      * Get the value of labelFont
      *
      * @return the value of labelFont
      */
-    public Font getLabelFont() {
+    @Nullable public Font getLabelFont() {
         return labelFont;
     }
 
@@ -584,9 +603,13 @@ public class OpDisplayJPanel extends JPanel {
             ly = labelPos.y;
             h = dim.height - ly;
         }
+        List<OpAction> actonsList = opActionPlan.getActions();
+        if (null == actonsList) {
+            return Collections.emptyList();
+        }
         List<OpAction> closeActions = new ArrayList<>();
-        for (OpAction actionToCheck : opActionPlan.getActions()) {
-            if(actionToCheck.getActionType() == FAKE_DROPOFF) {
+        for (OpAction actionToCheck : actonsList) {
+            if (actionToCheck.getActionType() == FAKE_DROPOFF) {
                 continue;
             }
             int actionX = keyWidth + (int) ((0.9 * (actionToCheck.getLocation().x - minX) / xdiff) * w + 0.05 * w);

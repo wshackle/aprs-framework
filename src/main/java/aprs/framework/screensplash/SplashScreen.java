@@ -38,6 +38,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -45,6 +46,7 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -58,12 +60,11 @@ public class SplashScreen extends JFrame {
 
         private final Font font;
 
-        public SplashPanel(String message, float fontSize, Image image) {
+        public SplashPanel(String message, float fontSize, @Nullable Image image) {
             this.messageLines = message.split("[\r\n]+");
             this.fontSize = fontSize;
-            font = this.getFont().deriveFont(fontSize);
+            font = super.getFont().deriveFont(fontSize);
             this.image = image;
-
         }
 
         @Override
@@ -85,16 +86,16 @@ public class SplashScreen extends JFrame {
 
         final String messageLines[];
         final float fontSize;
-        final Image image;
+        @Nullable final Image image;
     }
 
-    public SplashScreen(String message, float fontSize, Image image) {
-        this.setUndecorated(true);
+    public SplashScreen(String message, float fontSize, @Nullable Image image) {
+        super.setUndecorated(true);
         this.panel = new SplashPanel(message, fontSize, image);
-        this.add(panel);
+        super.add(panel);
     }
 
-    private javax.swing.Timer timer = null;
+    private javax.swing.@Nullable Timer timer = null;
 
     private void close(GraphicsDevice gd, XFuture<Void> returnFuture) {
         gd.setFullScreenWindow(null);
@@ -108,30 +109,35 @@ public class SplashScreen extends JFrame {
 
     private static class RobotArmImageHider {
 
-        public static BufferedImage ROBOT_ARM_IMAGE = readImageOrNull("robot-arm.jpeg");
+        @Nullable public static final BufferedImage ROBOT_ARM_IMAGE = readImageOrNull("robot-arm.jpeg");
 
     }
 
-    private static BufferedImage readImageOrNull(String name) {
+    @Nullable private static BufferedImage readImageOrNull(String name) {
         try {
-            return ImageIO.read(SplashScreen.class.getResourceAsStream(name));
+            InputStream stream = SplashScreen.class.getResourceAsStream(name);
+            if (null == stream) {
+                Logger.getLogger(SplashScreen.class.getName()).log(Level.WARNING, "getResourceAsStream({0}) returned null", name);
+                return null;
+            }
+            return ImageIO.read(stream);
         } catch (IOException ex) {
             Logger.getLogger(SplashScreen.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
 
-    public static Image getRobotArmImage() {
+    @Nullable public static Image getRobotArmImage() {
         return RobotArmImageHider.ROBOT_ARM_IMAGE;
     }
 
     private static class DisableImageHider {
 
-        public static BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobotHalf.jpg");
+        @Nullable public static final BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobotHalf.jpg");
 
     }
 
-    public static Image getDisableImageImage() {
+    @Nullable public static Image getDisableImageImage() {
         return DisableImageHider.DISABLED_IMAGE;
     }
 
@@ -153,8 +159,8 @@ public class SplashScreen extends JFrame {
         return ListHider.BLUE_WHITE_GREEN_COLOR_LIST;
     }
 
-    public static XFuture<Void> showMessageFullScreen(String message, float fontSize, Image image, List<Color> colors, GraphicsDevice graphicsDevice) {
-        XFuture<Void> returnFuture = new XFuture<>("showMessageFullScreen("+message+")");
+    public static XFuture<Void> showMessageFullScreen(String message, float fontSize, @Nullable Image image, List<Color> colors, @Nullable GraphicsDevice graphicsDevice) {
+        XFuture<Void> returnFuture = new XFuture<>("showMessageFullScreen(" + message + ")");
         Utils.runOnDispatchThread(() -> {
             SplashScreen ss = new SplashScreen(message, fontSize, image);
             ss.setVisible(true);
@@ -162,10 +168,11 @@ public class SplashScreen extends JFrame {
             if (null == gd0) {
                 gd0 = ss.getGraphicsConfiguration().getDevice();
             }
-            graphicsDevice.setFullScreenWindow(ss);
+            gd0.setFullScreenWindow(ss);
 
             final GraphicsDevice gd = gd0;
-            ss.timer = new javax.swing.Timer(500, new ActionListener() {
+            javax.swing.Timer ssTimer = 
+                 new javax.swing.Timer(500, new ActionListener() {
                 int colorIndex = 0;
 
                 @Override
@@ -207,8 +214,9 @@ public class SplashScreen extends JFrame {
                 }
 
             };
+            ss.timer = ssTimer;
             ss.addMouseListener(ml);
-            ss.timer.start();
+            ssTimer.start();
         });
 
         return returnFuture;

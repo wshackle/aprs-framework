@@ -23,6 +23,10 @@
 package aprs.framework.database;
 
 import crcl.base.PoseType;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
 /**
  *
@@ -32,23 +36,23 @@ public class Slot extends PhysicalItem {
 
     private int ID;
     private String SlotName;
-    private String PartSKU;
-    private String ExternalShapeModelFileName;
-    private String ExternalShapeModelFormatName;
+    private @MonotonicNonNull String PartSKU;
+    private @Nullable String ExternalShapeModelFileName;
+    private @Nullable String ExternalShapeModelFormatName;
     private double X_OFFSET;
     private double Y_OFFSET;
-    private Boolean SlotOccupied;
-    private PoseType SlotPose;
+    private @Nullable Boolean SlotOccupied;
+    private @Nullable PoseType SlotPose;
     private double diameter;
 
-    private String slotIndexString;
+    private @Nullable String slotIndexString;
 
     /**
      * Get the value of slotIndexString
      *
      * @return the value of slotIndexString
      */
-    public String getSlotIndexString() {
+    public @Nullable String getSlotIndexString() {
         return slotIndexString;
     }
 
@@ -82,22 +86,28 @@ public class Slot extends PhysicalItem {
         super(name, rotation, x, y);
         X_OFFSET = x;
         Y_OFFSET = y;
+        this.SlotName = name;
     }
 
     public Slot(String name, double rotation, double x, double y, double score, String type) {
         super(name, rotation, x, y, score, type);
         X_OFFSET = x;
         Y_OFFSET = y;
+        this.SlotName = name;
     }
 
     public Slot(String name, PoseType pose, int visioncycle) {
         super(name, pose, visioncycle);
         X_OFFSET = x;
         Y_OFFSET = y;
+        this.SlotName = name;
     }
 
     public PoseType getSlotPose() {
-        return this.SlotPose;
+        if(null != SlotPose) {
+            return SlotPose;
+        }
+        throw new NullPointerException("SlotPose is null in Slot with name="+getName());
     }
 
     public void setSlotPose(PoseType SlotPose) {
@@ -120,28 +130,15 @@ public class Slot extends PhysicalItem {
         this.SlotName = SlotName;
     }
 
-    public String getPartSKU() {
-        return PartSKU;
+    @Nullable public String getPartSKU() {
+            return PartSKU;
     }
-
+    
+    @EnsuresNonNull("this.PartSKU")
     public void setPartSKU(String PartSKU) {
         this.PartSKU = PartSKU;
     }
 
-//    public String getExternalShapeModelFileName() {
-//        return ExternalShapeModelFileName;
-//    }
-//
-//    public void setExternalShapeModelFileName(String ExternalShapeModelFileName) {
-//        this.ExternalShapeModelFileName = ExternalShapeModelFileName;
-//    }
-//    public String getExternalShapeModelFormatName() {
-//        return ExternalShapeModelFormatName;
-//    }
-//
-//    public void setExternalShapeModelFormatName(String ExternalShapeModelFormatName) {
-//        this.ExternalShapeModelFormatName = ExternalShapeModelFormatName;
-//    }
     public double getX_OFFSET() {
         return X_OFFSET;
     }
@@ -159,8 +156,12 @@ public class Slot extends PhysicalItem {
     }
 
     public Boolean getSlotOccupied() {
-        return SlotOccupied;
+        if(null != SlotOccupied) {
+            return SlotOccupied;
+        }
+        throw new NullPointerException("SlotOccupied is null in Slot with name="+getName());
     }
+    
 
     public void setSlotOccupied(Boolean SlotOccupied) {
         this.SlotOccupied = SlotOccupied;

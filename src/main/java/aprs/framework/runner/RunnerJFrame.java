@@ -31,6 +31,7 @@ public class RunnerJFrame extends javax.swing.JFrame {
     /**
      * Creates new form RunnerJFrame
      */
+    @SuppressWarnings("initialization")
     public RunnerJFrame() {
         initComponents();
     }

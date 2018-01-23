@@ -31,6 +31,8 @@ import aprs.framework.database.PoseQueryElem;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import javax.validation.constraints.Null;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -66,13 +68,13 @@ public interface VisionToDBJFrameInterface extends CommonJFrameInterface,SlotOff
 
     public Map<String, String> updateArgsMap();
     
-    public java.sql.Connection getSqlConnection();
+    public java.sql.@Nullable Connection getSqlConnection();
     
     public DbType getDbType();
     
     public void setSqlConnection(java.sql.Connection connection, DbType dbtype) throws java.sql.SQLException;
     
-    public Callable<DbSetupPublisher> getDbSetupSupplier();
+    @Nullable public Callable<DbSetupPublisher> getDbSetupSupplier();
 
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier);
     

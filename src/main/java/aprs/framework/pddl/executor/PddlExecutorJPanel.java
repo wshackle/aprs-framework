@@ -51,6 +51,7 @@ import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.utils.CrclCommandWrapper;
 import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 import crcl.ui.client.PendantClientInner;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.utils.CRCLException;
@@ -114,9 +115,8 @@ import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.awt.geom.Point2D;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
+import java.net.URL;
+import java.sql.Connection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
@@ -126,10 +126,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumn;
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
@@ -157,6 +160,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     /**
      * Creates new form ActionsToCrclJPanel
      */
+    @SuppressWarnings("initialization")
     public PddlExecutorJPanel() {
         initComponents();
         jCheckBoxDebug.setSelected(debug);
@@ -232,7 +236,69 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //            }
 //        });
         this.pddlActionToCrclGenerator.setParentPddlExecutorJPanel(this);
+        setToolOffsetTableModelListener();
     }
+
+    public void setObtionsTableEntry(String key, String value) {
+        DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
+        for (int i = 0; i < model.getRowCount(); i++) {
+            Object keyFromTable = model.getValueAt(i, 0);
+            if (Objects.equals(keyFromTable, key)) {
+                model.setValueAt(value, i, 1);
+                return;
+            }
+        }
+        model.addRow(new Object[]{key, value});
+        pddlActionToCrclGenerator.setOptions(getTableOptions());
+    }
+
+    public void setLookForXYZ(double x, double y, double z) {
+        try {
+            String valueString = String.format("%.3f,%.3f,%.3f", x, y, z);
+            Utils.runAndWaitOnDispatchThread("setLookForXYZ",
+                    () -> setObtionsTableEntry("lookForXYZ", valueString));
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void setToolOffsetTableModelListener() {
+        jTableToolOffsets.getModel().addTableModelListener(toolOffsetsModelListener);
+    }
+
+    private void clearToolOffsetTableModelListener() {
+        jTableToolOffsets.getModel().removeTableModelListener(toolOffsetsModelListener);
+    }
+
+    private class ToolOffsetModelListenerClass implements TableModelListener {
+
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            Utils.autoResizeTableColWidths(jTableToolOffsets);
+            saveToolOffsetPoseMap();
+        }
+    }
+
+    private final TableModelListener toolOffsetsModelListener = new ToolOffsetModelListenerClass();
+
+    private void setToolHolderContentsTableModelListener() {
+        jTableHolderContents.getModel().addTableModelListener(toolHolderContentsModelListener);
+    }
+
+    private void clearToolHolderContentsTableModelListener() {
+        jTableHolderContents.getModel().removeTableModelListener(toolHolderContentsModelListener);
+    }
+
+    private class ToolHolderContentsModelListenerClass implements TableModelListener {
+
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            Utils.autoResizeTableColWidths(jTableHolderContents);
+            saveToolHolderContentsMap();
+        }
+    }
+
+    private final TableModelListener toolHolderContentsModelListener = new ToolHolderContentsModelListenerClass();
 
     private void runSingleRow() {
         this.aprsJFrame.abortCrclProgram();
@@ -366,7 +432,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
-    private static Object[] getTableRow(JTable table, int row) {
+    private static Object @Nullable [] getTableRow(JTable table, int row) {
         final int colCount = table.getModel().getColumnCount();
         if (colCount < 1) {
             return null;
@@ -383,7 +449,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      *
      * @return the value of externalGetPoseFunction
      */
-    public PddlActionToCrclGenerator.PoseProvider getExternalPoseProvider() {
+    public PddlActionToCrclGenerator.@Nullable PoseProvider getExternalPoseProvider() {
         return pddlActionToCrclGenerator.getExternalPoseProvider();
     }
 
@@ -396,37 +462,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         this.pddlActionToCrclGenerator.setExternalPoseProvider(externalGetPoseFunction);
     }
 
-//    private final TableModelListener traySlotModelListener = new TableModelListener() {
-//        @Override
-//        public void tableChanged(TableModelEvent e) {
-//            System.out.println("tableChanged : e = " + e);
-//            for (int i = e.getFirstRow(); i <= e.getLastRow(); i++) {
-//                if (updatingTraySlotTable) {
-//                    return;
-//                }
-//                commitTraySlotDesign(getTableRow(jTableTraySlotDesign, i));
-//            }
-//        }
-//    };
-//
-//    private void commitTraySlotDesign(Object[] data) {
-//        try {
-//            TraySlotDesign tsd = new TraySlotDesign((int) data[0]);
-//            tsd.setTrayDesignName((String) data[1]);
-//            tsd.setPartDesignName((String) data[2]);
-//            tsd.setX_OFFSET((double) data[3]);
-//            tsd.setY_OFFSET((double) data[4]);
-//            pddlActionToCrclGenerator.setSingleTraySlotDesign(tsd);
-//        } catch (SQLException ex) {
-//            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes", "nullness"})
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -493,18 +534,27 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jButtonRecord = new javax.swing.JButton();
         jButtonRecordLookForJoints = new javax.swing.JButton();
         jPanelToolChange = new javax.swing.JPanel();
-        jButtonRecordToolChangerPose = new javax.swing.JButton();
         jButtonGotoToolChangerApproach = new javax.swing.JButton();
         jLabel13 = new javax.swing.JLabel();
         jTextFieldToolChangerApproachZOffset = new javax.swing.JTextField();
         jButtonGotoToolChangerPose = new javax.swing.JButton();
         jButtonDropTool = new javax.swing.JButton();
         jButtonPickupTool = new javax.swing.JButton();
-        jScrollPaneToolTable = new javax.swing.JScrollPane();
-        jTableToolChangePositions = new javax.swing.JTable();
-        jButtonRecordToolChangerApproach = new javax.swing.JButton();
-        jButtonDeleteToolChangerPose = new javax.swing.JButton();
-        jButtonAddToolChangerPose = new javax.swing.JButton();
+        jTabbedPaneToolChangeInner = new javax.swing.JTabbedPane();
+        jScrollPaneHolderContents = new javax.swing.JScrollPane();
+        jTableHolderContents = new javax.swing.JTable();
+        jPanelToolHolderPositions = new javax.swing.JPanel();
+        jScrollPaneToolHolderPositions = new javax.swing.JScrollPane();
+        jTableToolHolderPositions = new javax.swing.JTable();
+        jButtonRecordToolHolderPose = new javax.swing.JButton();
+        jButtonRecordToolHolderApproach = new javax.swing.JButton();
+        jButtonDeleteToolHolderPose = new javax.swing.JButton();
+        jButtonAddToolHolderPose = new javax.swing.JButton();
+        jPanelToolOffsets = new javax.swing.JPanel();
+        jButtonAddToolOffset = new javax.swing.JButton();
+        jButtonDeleteToolOffset = new javax.swing.JButton();
+        jScrollPaneToolOffsets = new javax.swing.JScrollPane();
+        jTableToolOffsets = new javax.swing.JTable();
         jPanelContainerPositionMap = new javax.swing.JPanel();
         positionMapJPanel1 = new aprs.framework.pddl.executor.PositionMapJPanel();
         jScrollPaneExternalControl = new javax.swing.JScrollPane();
@@ -941,7 +991,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonGridTest)))
-                .addContainerGap(194, Short.MAX_VALUE))
+                .addContainerGap(239, Short.MAX_VALUE))
         );
 
         jPanelInnerManualControlLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
@@ -1007,7 +1057,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jLabel12)
                     .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButtonGridTest))
-                .addContainerGap(72, Short.MAX_VALUE))
+                .addContainerGap(87, Short.MAX_VALUE))
         );
 
         jScrollPane2.setViewportView(jPanelInnerManualControl);
@@ -1025,18 +1075,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 235, Short.MAX_VALUE)
+                .addComponent(jScrollPane2)
                 .addContainerGap())
         );
 
         jTabbedPane1.addTab("Manual Pickup Return", jPanelOuterManualControl);
-
-        jButtonRecordToolChangerPose.setText("Record Tool Changer Pose");
-        jButtonRecordToolChangerPose.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonRecordToolChangerPoseActionPerformed(evt);
-            }
-        });
 
         jButtonGotoToolChangerApproach.setText("Goto Tool Changer Approach");
         jButtonGotoToolChangerApproach.addActionListener(new java.awt.event.ActionListener() {
@@ -1075,7 +1118,30 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         });
 
-        jTableToolChangePositions.setModel(new javax.swing.table.DefaultTableModel(
+        jTableHolderContents.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null}
+            },
+            new String [] {
+                "Holder Position Name", "Occupied", "Contents"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Boolean.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPaneHolderContents.setViewportView(jTableHolderContents);
+
+        jTabbedPaneToolChangeInner.addTab("Holder Contents", jScrollPaneHolderContents);
+
+        jTableToolHolderPositions.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
@@ -1091,28 +1157,142 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 return types [columnIndex];
             }
         });
-        jScrollPaneToolTable.setViewportView(jTableToolChangePositions);
+        jScrollPaneToolHolderPositions.setViewportView(jTableToolHolderPositions);
 
-        jButtonRecordToolChangerApproach.setText("Record Tool Changer Approach");
-        jButtonRecordToolChangerApproach.addActionListener(new java.awt.event.ActionListener() {
+        jButtonRecordToolHolderPose.setText("Record Tool Holder Pose");
+        jButtonRecordToolHolderPose.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonRecordToolChangerApproachActionPerformed(evt);
+                jButtonRecordToolHolderPoseActionPerformed(evt);
             }
         });
 
-        jButtonDeleteToolChangerPose.setText("Delete Tool Changer Pose");
-        jButtonDeleteToolChangerPose.addActionListener(new java.awt.event.ActionListener() {
+        jButtonRecordToolHolderApproach.setText("Record Tool Holder Approach");
+        jButtonRecordToolHolderApproach.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonDeleteToolChangerPoseActionPerformed(evt);
+                jButtonRecordToolHolderApproachActionPerformed(evt);
             }
         });
 
-        jButtonAddToolChangerPose.setText("Add Tool Changer Pose");
-        jButtonAddToolChangerPose.addActionListener(new java.awt.event.ActionListener() {
+        jButtonDeleteToolHolderPose.setText("Delete Tool Holder Pose");
+        jButtonDeleteToolHolderPose.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonAddToolChangerPoseActionPerformed(evt);
+                jButtonDeleteToolHolderPoseActionPerformed(evt);
             }
         });
+
+        jButtonAddToolHolderPose.setText("Add Tool Holder Pose");
+        jButtonAddToolHolderPose.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonAddToolHolderPoseActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanelToolHolderPositionsLayout = new javax.swing.GroupLayout(jPanelToolHolderPositions);
+        jPanelToolHolderPositions.setLayout(jPanelToolHolderPositionsLayout);
+        jPanelToolHolderPositionsLayout.setHorizontalGroup(
+            jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButtonRecordToolHolderPose)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonRecordToolHolderApproach)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonAddToolHolderPose)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonDeleteToolHolderPose)
+                .addContainerGap(129, Short.MAX_VALUE))
+            .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 875, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
+        jPanelToolHolderPositionsLayout.setVerticalGroup(
+            jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonRecordToolHolderPose)
+                    .addComponent(jButtonRecordToolHolderApproach)
+                    .addComponent(jButtonDeleteToolHolderPose)
+                    .addComponent(jButtonAddToolHolderPose))
+                .addContainerGap())
+            .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolHolderPositionsLayout.createSequentialGroup()
+                    .addGap(40, 40, 40)
+                    .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 152, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
+
+        jTabbedPaneToolChangeInner.addTab("Holder Positions", jPanelToolHolderPositions);
+
+        jButtonAddToolOffset.setText("Add Tool");
+        jButtonAddToolOffset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonAddToolOffsetActionPerformed(evt);
+            }
+        });
+
+        jButtonDeleteToolOffset.setText("Delete Tool");
+        jButtonDeleteToolOffset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDeleteToolOffsetActionPerformed(evt);
+            }
+        });
+
+        jTableToolOffsets.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
+            },
+            new String [] {
+                "ToolName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPaneToolOffsets.setViewportView(jTableToolOffsets);
+
+        javax.swing.GroupLayout jPanelToolOffsetsLayout = new javax.swing.GroupLayout(jPanelToolOffsets);
+        jPanelToolOffsets.setLayout(jPanelToolOffsetsLayout);
+        jPanelToolOffsetsLayout.setHorizontalGroup(
+            jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButtonAddToolOffset)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonDeleteToolOffset)
+                .addContainerGap(694, Short.MAX_VALUE))
+            .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 875, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
+        jPanelToolOffsetsLayout.setVerticalGroup(
+            jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonAddToolOffset)
+                    .addComponent(jButtonDeleteToolOffset))
+                .addContainerGap())
+            .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolOffsetsLayout.createSequentialGroup()
+                    .addGap(42, 42, 42)
+                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
+
+        jTabbedPaneToolChangeInner.addTab("Tool Offsets", jPanelToolOffsets);
 
         javax.swing.GroupLayout jPanelToolChangeLayout = new javax.swing.GroupLayout(jPanelToolChange);
         jPanelToolChange.setLayout(jPanelToolChangeLayout);
@@ -1120,40 +1300,26 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelToolChangeLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelToolChangeLayout.createSequentialGroup()
-                        .addComponent(jButtonRecordToolChangerPose)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonRecordToolChangerApproach)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonDeleteToolChangerPose)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonAddToolChangerPose))
-                    .addGroup(jPanelToolChangeLayout.createSequentialGroup()
-                        .addComponent(jButtonGotoToolChangerApproach)
+                        .addComponent(jButtonGotoToolChangerPose)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel13)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldToolChangerApproachZOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonGotoToolChangerPose)
+                        .addComponent(jButtonGotoToolChangerApproach)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonDropTool)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonPickupTool))
-                    .addComponent(jScrollPaneToolTable))
-                .addContainerGap(444, Short.MAX_VALUE))
+                    .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.PREFERRED_SIZE, 887, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(357, Short.MAX_VALUE))
         );
         jPanelToolChangeLayout.setVerticalGroup(
             jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelToolChangeLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonRecordToolChangerPose)
-                    .addComponent(jButtonRecordToolChangerApproach)
-                    .addComponent(jButtonDeleteToolChangerPose)
-                    .addComponent(jButtonAddToolChangerPose))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonGotoToolChangerApproach)
                     .addComponent(jLabel13)
@@ -1162,7 +1328,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jButtonDropTool)
                     .addComponent(jButtonPickupTool))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneToolTable, javax.swing.GroupLayout.DEFAULT_SIZE, 167, Short.MAX_VALUE)
+                .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1181,7 +1347,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPositionMapLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 235, Short.MAX_VALUE)
+                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1308,7 +1474,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelCrclLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 235, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1367,13 +1533,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jPanelContainerPoseCacheLayout.setVerticalGroup(
             jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
-                .addContainerGap(213, Short.MAX_VALUE)
+                .addContainerGap(239, Short.MAX_VALUE)
                 .addComponent(jButtonClearPoseCache)
                 .addContainerGap())
             .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 203, Short.MAX_VALUE)
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 228, Short.MAX_VALUE)
                     .addGap(38, 38, 38)))
         );
 
@@ -1406,7 +1572,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         );
         opDisplayJPanelSolutionLayout.setVerticalGroup(
             opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 235, Short.MAX_VALUE)
+            .addGap(0, 260, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanelOpOuterLayout = new javax.swing.GroupLayout(jPanelOpOuter);
@@ -1567,9 +1733,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     .addComponent(jButtonPddlOutputViewEdit)
                     .addComponent(jButtonClear))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 183, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 301, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxNeedLookFor)
@@ -1595,9 +1761,27 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     @Override
     public void browseActionsFile() throws IOException {
-        JFileChooser chooser = new JFileChooser(new File(jTextFieldPddlOutputActions.getText()).getParent());
+        String text = jTextFieldPddlOutputActions.getText();
+        File actionsFile = null;
+        File actionsFileParent = null;
+        if (null != text) {
+            actionsFile = new File(text);
+            if (null != actionsFile) {
+                actionsFileParent = actionsFile.getParentFile();
+            }
+        }
+
+        JFileChooser chooser = null;
+        if (null != actionsFileParent) {
+            chooser = new JFileChooser(actionsFileParent);
+        } else {
+            chooser = new JFileChooser();
+        }
         if (null != propertiesFile) {
-            chooser.setCurrentDirectory(propertiesFile.getParentFile());
+            File propertiesFileParent = propertiesFile.getParentFile();
+            if (null != propertiesFileParent) {
+                chooser.setCurrentDirectory(propertiesFileParent);
+            }
         }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
@@ -1652,7 +1836,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             return ret;
         } catch (CRCLException | PmException | IOException | IllegalStateException | SQLException | JAXBException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, "Exception in doActions(" + comment + "," + startAbortCount + ")", ex);
+            LOGGER.log(Level.SEVERE, "Exception in doActions(" + comment + "," + startAbortCount + ")", ex);
             abortProgram();
             showExceptionInProgram(ex);
             throw new RuntimeException("Exception in doActions(" + comment + "," + startAbortCount + "):" + ex.getMessage(), ex);
@@ -1675,18 +1859,21 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             if (null != runningProgramFuture) {
                 runningProgramFuture.cancel(true);
             }
-            runningProgramFuture = generateCrclAsync()
+            runningProgramFuture = null;
+            XFuture<Boolean> ret = generateCrclAsync()
                     .thenApply(x -> {
                         if (x && atLastAction()) {
                             actionSetsCompleted.set(actionSetsStarted.get());
                         }
                         return x;
                     });
+            runningProgramFuture = ret;
+            return ret;
         } catch (IOException | IllegalStateException | SQLException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
+            throw new RuntimeException(ex);
         }
-        return runningProgramFuture;
     }
 
     private final PddlActionToCrclGenerator pddlActionToCrclGenerator = new PddlActionToCrclGenerator();
@@ -1701,8 +1888,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private final List<PddlAction> actionsList = Collections.synchronizedList(new ArrayList<>());
     private volatile List<PddlAction> readOnlyActionsList = Collections.unmodifiableList(new ArrayList<>(actionsList));
 
-    private volatile Thread resetReadOnlyActionsListThread = null;
-    private volatile StackTraceElement resetReadOnlyActionsListTrace[] = null;
+    @Nullable private volatile Thread resetReadOnlyActionsListThread = null;
+    private volatile StackTraceElement resetReadOnlyActionsListTrace @Nullable []  = null;
 
     private void resetReadOnlyActionsList() {
         final Thread curThread = Thread.currentThread();
@@ -1710,10 +1897,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             resetReadOnlyActionsListThread = curThread;
             resetReadOnlyActionsListTrace = curThread.getStackTrace();
         } else if (curThread != resetReadOnlyActionsListThread) {
-            System.err.println("resetReadOnlyActionsList from new thread");
+            LOGGER.log(Level.FINE, "resetReadOnlyActionsList from new thread {0}", curThread.getName());
         }
         readOnlyActionsList = Collections.unmodifiableList(new ArrayList<>(actionsList));
     }
+    private static final Logger LOGGER = Logger.getLogger(PddlExecutorJPanel.class.getName());
 
     /**
      * Get the value of actionsList
@@ -1746,7 +1934,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      *
      * @return the value of propertiesFile
      */
-    @Override
     public File getPropertiesFile() {
         return propertiesFile;
     }
@@ -1760,9 +1947,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
         if (null != propertiesFile) {
-            this.positionMapJPanel1.setStartingDirectory(propertiesFile.getParentFile());
-        } else {
-            this.positionMapJPanel1.setStartingDirectory(null);
+            File propertiesFileParent = propertiesFile.getParentFile();
+            if (null != propertiesFileParent) {
+                this.positionMapJPanel1.setStartingDirectory(propertiesFileParent);
+            }
         }
     }
 
@@ -1800,7 +1988,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 return str;
             }
             String canString = strFile.getCanonicalPath();
-            String relString = Paths.get(f.getParentFile().getCanonicalPath()).relativize(Paths.get(canString)).toString();
+            File parentFile = f.getParentFile();
+            if (null == parentFile) {
+                return str;
+            }
+            String relString = Paths.get(parentFile.getCanonicalPath()).relativize(Paths.get(canString)).toString();
             if (relString.length() <= canString.length()) {
                 return relString;
             }
@@ -1810,8 +2002,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return str;
     }
 
-    private String actionsFileString = null;
-    private String reverseActionsFileString = null;
+    @Nullable private String actionsFileString = null;
+    @Nullable private String reverseActionsFileString = null;
 
     public void saveProperties() throws IOException {
         Map<String, String> propsMap = new HashMap<>();
@@ -1843,7 +2035,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         Utils.saveProperties(propertiesFile, props);
     }
 
-    private String[] getRelPathPositionMapFileNames() {
+    @Nullable private String[] getRelPathPositionMapFileNames() {
         String[] origNames = positionMapJPanel1.getPositionMapFileNames();
         String[] newNames = new String[origNames.length];
         for (int i = 0; i < newNames.length; i++) {
@@ -1895,7 +2087,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             runningProgramFuture = generateCrclAsync();
         } catch (IOException | IllegalStateException | SQLException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
         }
     }
@@ -1903,16 +2095,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private static final SolverFactory<OpActionPlan> solverFactory = createSolverFactory();
 
     static private SolverFactory<OpActionPlan> createSolverFactory() {
-        try {
-            return SolverFactory.createFromXmlResource(
-                    "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+        return SolverFactory.createFromXmlResource(
+                "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
     }
 
-    private Solver<OpActionPlan> solver = null;
+    @MonotonicNonNull private Solver<OpActionPlan> solver = null;
 
     private static volatile boolean firstLoad = true;
 
@@ -1938,7 +2125,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     public void warnIfNewActionsNotReady() {
         if (!readyForNewActionsList()) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.WARNING,
+            LOGGER.log(Level.WARNING,
                     "loading new actions when not ready");
         }
     }
@@ -1959,11 +2146,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         warnIfNewActionsNotReady();
         if (null != f && f.exists()) {
             if (f.isDirectory()) {
-                System.err.println("Can not loadActionsFile \"" + f + "\" : it is a directory instead of a text file.");
+                LOGGER.log(Level.SEVERE, "Can not loadActionsFile \"" + f + "\" : it is a directory instead of a text file.");
                 return;
             }
             if (!f.canRead()) {
-                System.err.println("Can not loadActionsFile \"" + f + "\" : it is not readable.");
+                LOGGER.log(Level.SEVERE, "Can not loadActionsFile \"" + f + "\" : it is not readable.");
                 return;
             }
 
@@ -1976,7 +2163,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             synchronized (actionsList) {
                 clearActionsList();
-                for (String line : lines) {
+                for (int i = 0; i < lines.size(); i++) {
+                    String line = lines.get(i);
+                    if(line.length() < 1) {
+                        continue;
+                    }
                     addAction(PddlAction.parse(line));
                 }
                 resetReadOnlyActionsList();
@@ -1986,7 +2177,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     showLoadedPlanOptaPlanner();
                 }
             } catch (Exception ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
             String canonName = f.getCanonicalPath();
             finishLoadActionsList(canonName);
@@ -2029,7 +2220,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 opActions = pddlActionToCrclGenerator.pddlActionsToOpActions(actionsList, 0);
                 resetReadOnlyActionsList();
             }
-            if (opActions.size() < 2) {
+            if (null == opActions || opActions.size() < 2) {
                 return;
             }
             OpActionPlan worstPlan = null;
@@ -2064,7 +2255,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     worstScore = inScore;
                 }
                 OpActionPlan solvedPlan = solver.solve(inputPlan);
-                double solveScore = (solvedPlan.getScore().getSoftScore() / 1000.0);
+                HardSoftLongScore hardSoftLongScore = solvedPlan.getScore();
+                assert (null != hardSoftLongScore) : "solvedPlan.getScore() returned null";
+                double solveScore = (hardSoftLongScore.getSoftScore() / 1000.0);
                 if (solveScore > bestScore) {
                     bestPlan = solvedPlan;
                     bestScore = solveScore;
@@ -2074,8 +2267,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     worstScore = solveScore;
                 }
             }
-            this.opDisplayJPanelInput.setOpActionPlan(worstPlan);
-            this.opDisplayJPanelSolution.setOpActionPlan(bestPlan);
+            if (null != worstPlan) {
+                this.opDisplayJPanelInput.setOpActionPlan(worstPlan);
+            }
+            if (null != bestPlan) {
+                this.opDisplayJPanelSolution.setOpActionPlan(bestPlan);
+            }
             this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.1f mm ", -worstScore));
             this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.1f mm ", -bestScore));
 //                        OpDisplayJPanel.showPlan(solvedPlan, "Output : " + solvedPlan.getScore());
@@ -2099,7 +2296,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     setErrorString(null);
                 }
             } catch (IOException ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -2137,9 +2334,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private DbSetupPublisher dbSetupPublisher;
 
-    private Callable<DbSetupPublisher> dbSetupSupplier = null;
+    @MonotonicNonNull private Callable<DbSetupPublisher> dbSetupSupplier = null;
 
-    public Callable<DbSetupPublisher> getDbSetupSupplier() {
+    @Nullable public Callable<DbSetupPublisher> getDbSetupSupplier() {
         return dbSetupSupplier;
     }
 
@@ -2306,8 +2503,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 model.addRow(new Object[]{initCanon.getCommandID(),
                     ex.getMessage()
                 });
-                Logger.getLogger(PddlExecutorJPanel.class
-                        .getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         for (MiddleCommandType midCmd : crclProgram.getMiddleCommand()) {
@@ -2326,8 +2522,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     model.addRow(new Object[]{midCmd.getCommandID(),
                         ex.getMessage()
                     });
-                    Logger.getLogger(PddlExecutorJPanel.class
-                            .getName()).log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -2343,8 +2538,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 model.addRow(new Object[]{endCanon.getCommandID(),
                     ex.getMessage()
                 });
-                Logger.getLogger(PddlExecutorJPanel.class
-                        .getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         autoResizeTableRowHeights(jTableCrclProgram);
@@ -2353,7 +2547,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private boolean autoStart = true;
 
-    private volatile CRCLProgramType unstartedProgram = null;
+    @Nullable private volatile CRCLProgramType unstartedProgram = null;
 
     private AprsJFrame aprsJFrame;
 
@@ -2422,8 +2616,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 aprsJFrame.setCRCLProgram(crclProgram);
             }
         } catch (Exception ex) {
-            Logger.getLogger(PddlExecutorJPanel.class
-                    .getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -2454,8 +2647,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         } catch (Exception ex) {
             XFuture<Boolean> future = new XFuture<>("startCrclProgramException");
-            Logger.getLogger(PddlExecutorJPanel.class
-                    .getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             future.completeExceptionally(ex);
             return future;
         }
@@ -2483,7 +2675,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             aprsJFrame.saveLastProgramRunDataListToCsv(aprsJFrame.createTempFile("programRunData", ".csv"));
         } catch (IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
         System.out.println("runCrclProgram returned = " + ret);
         return ret;
@@ -2497,7 +2689,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             cancelRunProgramFuture();
             runningProgramFuture = generateCrclAsync();
         } catch (IOException | IllegalStateException | SQLException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
         }
     }//GEN-LAST:event_jButtonGenerateCRCLActionPerformed
@@ -2513,8 +2705,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             Desktop.getDesktop().open(new File(jTextFieldPddlOutputActions.getText()));
 
         } catch (IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class
-                    .getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonPddlOutputViewEditActionPerformed
 
@@ -2522,12 +2713,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return replanFromIndex.get();
     }
 
-    private String currentPart = null;
-    private volatile StackTraceElement setReplanFromIndexLastTrace[] = null;
-    private volatile StackTraceElement prevSetReplanFromIndexLastTrace[] = null;
+    @Nullable private String currentPart = null;
+    private volatile StackTraceElement setReplanFromIndexLastTrace @Nullable []  = null;
+    private volatile StackTraceElement prevSetReplanFromIndexLastTrace @Nullable []  = null;
 
-    private volatile Thread setReplanFromIndexLastThread = null;
-    private volatile Thread prevSetReplanFromIndexLastThread = null;
+    @Nullable private volatile Thread setReplanFromIndexLastThread = null;
+    @Nullable private volatile Thread prevSetReplanFromIndexLastThread = null;
 
     private void setReplanFromIndex(int replanFromIndex) {
         setReplanFromIndex(replanFromIndex, false);
@@ -2545,7 +2736,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     System.err.println("Reducing replanFromIndex when generater not readyForNewActionsList: oldRpi=" + oldRpi + ", new replanFromIndex=" + replanFromIndex + ",  pddlActionToCrclGenerator.getLastIndex()=" + pddlActionToCrclGenerator.getLastIndex());
                 }
             }
-            String[] names = this.pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
+            @Nullable String[] names = this.pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
             if (replanFromIndex == 0) {
                 currentPart = null;
             } else if (names != null && names.length >= replanFromIndex && replanFromIndex > 0) {
@@ -2688,7 +2879,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         boolean rps = replanStarted.getAndSet(true);
         if (null != customRunnables) {
             customRunnables.clear();
-            customRunnables = null;
         }
         customRunnablesIndex = -1;
         if (null != replanActionTimer) {
@@ -2725,18 +2915,26 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             takePartCount++;
             clearAll();
             autoStart = true;
-//            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
             cancelRunProgramFuture();
+            if (null == part) {
+                warnDialog("part to take is null");
+                return;
+            }
             runningProgramFuture = this.takePart(part);
         } catch (CRCLException | PmException | IOException | IllegalStateException | SQLException | InterruptedException | PendantClientInner.ConcurrentBlockProgramsException | ExecutionException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonTakeActionPerformed
 
-    public String getComboPart() {
+    private void warnDialog(String msg) throws HeadlessException {
+        LOGGER.log(Level.WARNING, msg);
+        JOptionPane.showMessageDialog(this, msg);
+    }
+
+    @Nullable public String getComboPart() {
         Object object = jComboBoxManualObjectName.getSelectedItem();
         if (null == object) {
             return null;
@@ -2869,9 +3067,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //            this.jTextFieldReturnCount.setText(Integer.toString(returnCount));
             String part = getComboPart();
             cancelRunProgramFuture();
+            if (null == part) {
+                warnDialog("part to return is null");
+                return;
+            }
             runningProgramFuture = this.returnPart(part);
         } catch (IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonReturnActionPerformed
@@ -2942,7 +3144,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             return XFuture.completedFuture(false);
         } catch (CRCLException | PmException | IOException | SQLException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             XFuture<Boolean> future = new XFuture<>("recordAndCompletTestPickupException");
             future.completeExceptionally(ex);
             return future;
@@ -2969,7 +3171,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         testDropOffPose.getPoint().getZ());
         System.out.println("randomPoseString = " + randomPoseString);
         System.out.println("randomDropOffCount = " + randomDropOffCount);
-        customRunnables = new ArrayList<>();
+        customRunnables.clear();
         customRunnables.add(() -> {
             System.out.println("Continuing with lookFor");
             this.lookForParts();
@@ -3043,7 +3245,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                             testDropOffPose.getPoint().getZ());
             System.out.println("randomPoseString = " + randomPoseString);
             System.out.println("randomDropOffCount = " + randomDropOffCount);
-            customRunnables = new ArrayList<>();
+            customRunnables.clear();
             customRunnables.add(() -> {
                 System.out.println("Continuing with lookFor");
                 this.lookForParts();
@@ -3101,6 +3303,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             addFailLogCsvHeader(f);
             String partName = (String) jComboBoxManualObjectName.getSelectedItem();
             PoseType poseFromDb = pddlActionToCrclGenerator.getPose(partName);
+            if (null == poseFromDb) {
+                String msg = "Unable to get pose for " + partName + " from the database.";
+                Logger.getLogger(VisionToDBJPanel.class
+                        .getName()).log(Level.WARNING, msg);
+                JOptionPane.showMessageDialog(this, msg);
+                return;
+            }
             String poseFromDbString = poseFromDb.getPoint().getX()
                     + "," + poseFromDb.getPoint().getY();
             try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
@@ -3121,6 +3330,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             addFailLogCsvHeader(f);
             String partName = (String) jComboBoxManualObjectName.getSelectedItem();
             PoseType poseFromDb = pddlActionToCrclGenerator.getPose(partName);
+            if (null == poseFromDb) {
+                String msg = "Unable to get pose for " + partName + " from the database.";
+                Logger.getLogger(VisionToDBJPanel.class
+                        .getName()).log(Level.WARNING, msg);
+                JOptionPane.showMessageDialog(this, msg);
+                return;
+            }
             String poseFromDbString = poseFromDb.getPoint().getX()
                     + "," + poseFromDb.getPoint().getY();
             try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
@@ -3155,21 +3371,21 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             cancelRunProgramFuture();
             runningProgramFuture = generateCrclAsync();
         } catch (IOException | IllegalStateException | SQLException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
         }
     }//GEN-LAST:event_jButtonGenerateAndRunActionPerformed
 
-    private ServerSocket externalControlSocket = null;
-    private Thread externalControlAcceptThread = null;
-    private List<Socket> externalControlClientSockets = null;
-    private List<Thread> externalControlClientThreads = null;
+    @Nullable private ServerSocket externalControlSocket = null;
+    @Nullable private Thread externalControlAcceptThread = null;
+    final private List<Socket> externalControlClientSockets = new ArrayList<>();
+    final private List<Thread> externalControlClientThreads = new ArrayList<>();
 
     private static void sendSocket(Socket s, String msg) {
         try {
             s.getOutputStream().write(msg.getBytes());
         } catch (IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -3198,19 +3414,21 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 }
             }
         } catch (IOException | InterruptedException | InvocationTargetException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
         try {
             s.close();
         } catch (IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }
 
     private void runExternalControlMainServerThread() {
         try {
             while (!Thread.currentThread().isInterrupted()) {
-
+                if (null == externalControlSocket) {
+                    break;
+                }
                 final Socket s = externalControlSocket.accept();
                 externalControlClientSockets.add(s);
                 Thread t = new Thread(() -> runMainExternalControlClientHandler(s),
@@ -3219,15 +3437,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 externalControlClientThreads.add(t);
             }
         } catch (IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }
 
     public void setExternalControlPortEnabled(boolean on) throws IOException {
         closeExternalControlService();
         externalControlSocket = new ServerSocket(Integer.parseInt(jTextFieldExternalControlPort.getText()));
-        externalControlClientSockets = new ArrayList<>();
-        externalControlClientThreads = new ArrayList<>();
+        externalControlClientSockets.clear();
+        externalControlClientThreads.clear();
         externalControlAcceptThread = new Thread(this::runExternalControlMainServerThread, "externalControlMainServerThread");
         externalControlAcceptThread.start();
         if (jCheckBoxEnableExternalControlPort.isSelected() != on) {
@@ -3239,7 +3457,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             s.close();
         } catch (IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -3248,7 +3466,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             t.interrupt();
             t.join(100);
         } catch (InterruptedException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -3257,7 +3475,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try {
                 externalControlSocket.close();
             } catch (IOException ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         if (null != externalControlAcceptThread) {
@@ -3265,18 +3483,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try {
                 externalControlAcceptThread.join(100);
             } catch (InterruptedException ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         if (externalControlClientSockets != null) {
             externalControlClientSockets.forEach(s -> closeSocket(s));
             externalControlClientSockets.clear();
-            externalControlClientSockets = null;
         }
         if (externalControlClientThreads != null) {
             externalControlClientThreads.forEach(t -> closeThread(t));
             externalControlClientThreads.clear();
-            externalControlClientThreads = null;
         }
     }
 
@@ -3284,11 +3500,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             setExternalControlPortEnabled(jCheckBoxEnableExternalControlPort.isSelected());
         } catch (IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jCheckBoxEnableExternalControlPortActionPerformed
 
-    private volatile XFuture<Boolean> runningProgramFuture = null;
+    @Nullable private volatile XFuture<Boolean> runningProgramFuture = null;
 
     private void jButtonStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStepActionPerformed
 
@@ -3390,12 +3606,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private volatile boolean startSafeAbortRunningProgram = false;
     private volatile long startSafeAbortTime = 0;
 
-    private volatile XFuture<Void> lastSafeAbortFuture = null;
-    private volatile XFuture<Boolean> startSafeAbortRunningProgramFuture = null;
+    @Nullable private volatile XFuture<Void> lastSafeAbortFuture = null;
+    @Nullable private volatile XFuture<Boolean> startSafeAbortRunningProgramFuture = null;
     private volatile boolean startSafeAbortRunningProgramFutureDone = false;
 
-    private volatile CRCLProgramType startSafeAbortProgram = null;
-    private volatile String startSafeAbortProgramName = null;
+    @Nullable private volatile CRCLProgramType startSafeAbortProgram = null;
+    @Nullable private volatile String startSafeAbortProgramName = null;
     private volatile boolean startSafeAbortIsRunningCrclProgram = false;
 
     private void completeSafeAbortFuture(XFuture<Void> f) {
@@ -3461,7 +3677,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         continueActionListPrivate();
     }//GEN-LAST:event_jButtonContinueActionPerformed
 
-    private volatile XFuture<Void> lastContinueActionFuture = null;
+    @Nullable private volatile XFuture<Void> lastContinueActionFuture = null;
 
     public int getSafeAbortRequestCount() {
         return safeAbortRequestCount.get();
@@ -3477,7 +3693,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             return ret;
         } catch (CRCLException | PmException | IOException | IllegalStateException | SQLException | JAXBException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
             showExceptionInProgram(ex);
             throw new RuntimeException(ex);
@@ -3519,7 +3735,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try {
                 runningProgramFuture = generateCrclAsync();
             } catch (IOException | IllegalStateException | SQLException ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -3537,11 +3753,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             autoStart = true;
 //            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
+            if (null == part) {
+                warnDialog("part to take is null");
+                return;
+            }
             String slot = getComboSlot();
+            if (null == slot) {
+                warnDialog("slot to place in is null");
+                return;
+            }
             cancelRunProgramFuture();
             runningProgramFuture = this.placePartSlot(part, slot);
         } catch (CRCLException | PmException | IOException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
@@ -3559,9 +3783,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
             cancelRunProgramFuture();
+            if (null == part) {
+                warnDialog("part to take is null");
+                return;
+            }
             runningProgramFuture = this.testPartPosition(part);
         } catch (CRCLException | PmException | IOException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
@@ -3584,7 +3812,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     System.out.println("poseFromDbString = " + poseFromDbString);
                     PoseType curPose = aprsJFrame.getCurrentPose();
                     assert (null != curPose) :
-                            "aprsJFrame.getCurrentPose() returned null";
+                            "aprsJFrame.getCurrentPose() returned null : @AssumeAssertion(nullness)";
                     String curPoseString
                             = String.format("%.1f, %.1f, %.1f",
                                     curPose.getPoint().getX(),
@@ -3599,7 +3827,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                             System.currentTimeMillis() + ", " + partName + ", " + curPoseString + ", " + poseFromDbString + ", " + offsetString);
                 }
             } catch (SQLException | IOException ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_jButtonRecordActionPerformed
@@ -3650,11 +3878,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                .stream()
-                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                .map(JointStatusType::getJointPosition)
-                .map(Objects::toString)
-                .collect(Collectors.joining(","));
+                        .stream()
+                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                        .map(JointStatusType::getJointPosition)
+                        .map(Objects::toString)
+                        .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -3677,11 +3905,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setForceFakeTakeFlag(jCheckBoxForceFakeTake.isSelected());
     }//GEN-LAST:event_jCheckBoxForceFakeTakeActionPerformed
 
-    private volatile PoseType toolChangerPose = null;
-    private volatile String toolChangerPoseName = null;
+    @Nullable private volatile PoseType toolChangerPose = null;
+    @Nullable private volatile String toolChangerPoseName = null;
     private final Map<String, PoseType> toolChangerPoseMap = new ConcurrentHashMap<>();
+    private final Map<String, PoseType> toolOffsetPoseMap = new ConcurrentHashMap<>();
 
-    private String toolChangerPoseMapFileName = null;
+    @Nullable private String toolChangerPoseMapFileName = null;
 
     private void loadToolChangerPoseMap() {
         if (null == propertiesFile || !propertiesFile.exists()) {
@@ -3693,54 +3922,63 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             return;
         }
         int lineNumber = 0;
-        DefaultTableModel dtm = (DefaultTableModel) jTableToolChangePositions.getModel();
+        DefaultTableModel dtm = (DefaultTableModel) jTableToolHolderPositions.getModel();
         dtm.setRowCount(0);
         pddlActionToCrclGenerator.clearToolChangerJointVals();
         try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
-            System.out.println("headerMap = " + headerMap);
+            if (null == headerMap) {
+                throw new IllegalArgumentException(f.getCanonicalPath() + " does not have header");
+            }
             List<CSVRecord> records = parser.getRecords();
             int skipRows = 0;
             for (int i = 0; i < records.size(); i++) {
                 CSVRecord rec = records.get(i);
                 String colName = dtm.getColumnName(0);
-                int colIndex = headerMap.get(colName);
+                Integer colIndex = headerMap.get(colName);
+                if (null == colIndex) {
+                    throw new IllegalArgumentException(f.getCanonicalPath() + " does not have field :" + colName);
+                }
                 String val0 = rec.get(colIndex);
                 if (!val0.equals(colName) && val0.length() > 0) {
                     break;
                 }
                 skipRows++;
             }
-            dtm.setRowCount(records.size()-skipRows);
+            dtm.setRowCount(records.size() - skipRows);
             ROW_LOOP:
             for (int i = skipRows; i < records.size(); i++) {
                 CSVRecord rec = records.get(i);
                 for (int j = 0; j < dtm.getColumnCount(); j++) {
                     String colName = dtm.getColumnName(j);
-                    int colIndex = headerMap.get(colName);
+                    Integer colIndex = headerMap.get(colName);
+                    if (null == colIndex) {
+                        continue;
+                    }
                     String val = rec.get(colIndex);
                     try {
                         if (null != val) {
                             if (val.equals(colName) || (j == 0 && val.length() < 1)) {
                                 continue ROW_LOOP;
                             }
-                            Class colClass = dtm.getColumnClass(j);
+                            Class<?> colClass = dtm.getColumnClass(j);
                             if (colClass == Double.class) {
-                                dtm.setValueAt(Double.valueOf(val), i-skipRows, j);
+                                dtm.setValueAt(Double.valueOf(val), i - skipRows, j);
                             } else if (colClass == Boolean.class) {
-                                dtm.setValueAt(Boolean.valueOf(val), i-skipRows, j);
+                                dtm.setValueAt(Boolean.valueOf(val), i - skipRows, j);
                             } else {
-                                dtm.setValueAt(val, i-skipRows, j);
+                                dtm.setValueAt(val, i - skipRows, j);
                             }
                         }
                     } catch (Exception exception) {
                         String msg = "colName=" + colName + ", colIndex=" + colIndex + ", val=" + val + ", rec=" + rec;
-                        Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, msg, exception);
+                        LOGGER.log(Level.SEVERE, msg, exception);
                         throw new RuntimeException(msg, exception);
                     }
                 }
                 try {
                     String name = rec.get("Name");
+                    addHolderContentsRowIfNameNotFound(name);
                     PoseType pose = CRCLPosemath.toPoseType(
                             new PmCartesian(
                                     Double.parseDouble(rec.get(X_COLUMN_HEADER)),
@@ -3761,7 +3999,163 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         toolChangerPoseMap.put(name, pose);
                     }
                 } catch (Exception exception) {
-                    Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, "rec=" + rec, exception);
+                    LOGGER.log(Level.SEVERE, "rec=" + rec, exception);
+                    throw new RuntimeException(exception);
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+        clearEmptyToolChangerPoseRows();
+    }
+
+    private void loadHolderContentsMap() {
+        if (null == propertiesFile || !propertiesFile.exists()) {
+            return;
+        }
+        String filename = propertiesFile.getName() + ".holderContents.csv";
+        File f = new File(propertiesFile.getParent(), filename);
+        if (!f.exists()) {
+            return;
+        }
+        clearToolHolderContentsTableModelListener();
+        int lineNumber = 0;
+        DefaultTableModel dtm = (DefaultTableModel) jTableHolderContents.getModel();
+        dtm.setRowCount(0);
+        try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
+            Map<String, Integer> headerMap = parser.getHeaderMap();
+            List<CSVRecord> records = parser.getRecords();
+            int skipRows = 0;
+            for (int i = 0; i < records.size(); i++) {
+                CSVRecord rec = records.get(i);
+                String colName = dtm.getColumnName(0);
+                Integer colIndex = headerMap.get(colName);
+                if (colIndex == null) {
+                    throw new IllegalArgumentException(f + " does not have field " + colName);
+                }
+                String val0 = rec.get(colIndex);
+                if (!val0.equals(colName) && val0.length() > 0) {
+                    break;
+                }
+                skipRows++;
+            }
+            dtm.setRowCount(records.size() - skipRows);
+            ROW_LOOP:
+            for (int i = skipRows; i < records.size(); i++) {
+                CSVRecord rec = records.get(i);
+                for (int j = 0; j < dtm.getColumnCount(); j++) {
+                    String colName = dtm.getColumnName(j);
+                    Integer colIndex = headerMap.get(colName);
+                    if (null == colIndex) {
+                        continue;
+                    }
+                    String val = rec.get(colIndex);
+                    try {
+                        if (null != val) {
+                            if (val.equals(colName) || (j == 0 && val.length() < 1)) {
+                                continue ROW_LOOP;
+                            }
+                            Class<?> colClass = dtm.getColumnClass(j);
+                            if (colClass == Double.class) {
+                                dtm.setValueAt(Double.valueOf(val), i - skipRows, j);
+                            } else if (colClass == Boolean.class) {
+                                dtm.setValueAt(Boolean.valueOf(val), i - skipRows, j);
+                            } else {
+                                dtm.setValueAt(val, i - skipRows, j);
+                            }
+                        }
+                    } catch (Exception exception) {
+                        String msg = "colName=" + colName + ", colIndex=" + colIndex + ", val=" + val + ", rec=" + rec;
+                        LOGGER.log(Level.SEVERE, msg, exception);
+                        throw new RuntimeException(msg, exception);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+        setToolHolderContentsTableModelListener();
+    }
+
+    private void loadToolOffsetMap() {
+        if (null == propertiesFile || !propertiesFile.exists()) {
+            return;
+        }
+        String filename = propertiesFile.getName() + ".toolOffsets.csv";
+        File f = new File(propertiesFile.getParent(), filename);
+        if (!f.exists()) {
+            return;
+        }
+        clearToolOffsetTableModelListener();
+        int lineNumber = 0;
+        DefaultTableModel dtm = (DefaultTableModel) jTableToolOffsets.getModel();
+        dtm.setRowCount(0);
+        try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
+            Map<String, Integer> headerMap = parser.getHeaderMap();
+            List<CSVRecord> records = parser.getRecords();
+            int skipRows = 0;
+            for (int i = 0; i < records.size(); i++) {
+                CSVRecord rec = records.get(i);
+                String colName = dtm.getColumnName(0);
+                Integer colIndex = headerMap.get(colName);
+                if (colIndex == null) {
+                    throw new IllegalArgumentException(f + " does not have field " + colName);
+                }
+                String val0 = rec.get(colIndex);
+                if (!val0.equals(colName) && val0.length() > 0) {
+                    break;
+                }
+                skipRows++;
+            }
+            dtm.setRowCount(records.size() - skipRows);
+            ROW_LOOP:
+            for (int i = skipRows; i < records.size(); i++) {
+                CSVRecord rec = records.get(i);
+                for (int j = 0; j < dtm.getColumnCount(); j++) {
+                    String colName = dtm.getColumnName(j);
+                    Integer colIndex = headerMap.get(colName);
+                    if (colIndex == null) {
+                        throw new IllegalArgumentException(f + " does not have field " + colName);
+                    }
+                    String val = rec.get(colIndex);
+                    try {
+                        if (null != val) {
+                            if (val.equals(colName) || (j == 0 && val.length() < 1)) {
+                                continue ROW_LOOP;
+                            }
+                            Class<?> colClass = dtm.getColumnClass(j);
+                            if (colClass == Double.class) {
+                                dtm.setValueAt(Double.valueOf(val), i - skipRows, j);
+                            } else if (colClass == Boolean.class) {
+                                dtm.setValueAt(Boolean.valueOf(val), i - skipRows, j);
+                            } else {
+                                dtm.setValueAt(val, i - skipRows, j);
+                            }
+                        }
+                    } catch (Exception exception) {
+                        String msg = "colName=" + colName + ", colIndex=" + colIndex + ", val=" + val + ", rec=" + rec;
+                        LOGGER.log(Level.SEVERE, msg, exception);
+                        throw new RuntimeException(msg, exception);
+                    }
+                }
+                try {
+                    String name = rec.get("ToolName");
+                    PoseType pose = CRCLPosemath.toPoseType(
+                            new PmCartesian(
+                                    Double.parseDouble(rec.get(X_COLUMN_HEADER)),
+                                    Double.parseDouble(rec.get(Y_COLUMN_HEADER)),
+                                    Double.parseDouble(rec.get(Z_COLUMN_HEADER))
+                            ),
+                            new PmRpy(
+                                    Math.toRadians(Double.parseDouble(rec.get(RX_COLUMN_HEADER))),
+                                    Math.toRadians(Double.parseDouble(rec.get(RY_COLUMN_HEADER))),
+                                    Math.toRadians(Double.parseDouble(rec.get(RZ_COLUMN_HEADER)))
+                            ));
+
+                    toolOffsetPoseMap.put(name, pose);
+
+                } catch (Exception exception) {
+                    LOGGER.log(Level.SEVERE, "rec=" + rec, exception);
                     throw new RuntimeException(exception);
                 }
             }
@@ -3802,9 +4196,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 //                }
 //            }
         } catch (Exception ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
-        clearEmptyToolChangerPoseRows();
+        clearEmptyToolOffsetPoseRows();
+        setToolOffsetTableModelListener();
     }
     private static final String JOINTS_COLUMN_HEADER = "Joints";
     private static final String RZ_COLUMN_HEADER = "Rz (deg)";
@@ -3824,50 +4219,67 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 return;
             }
             toolChangerPoseMapFileName = propertiesFile.getName() + ".toolChangerPoses.csv";
-            Utils.saveJTable(new File(propertiesFile.getParentFile(), toolChangerPoseMapFileName), jTableToolChangePositions);
-//        File f = new File(propertiesFile.getParent(), toolChangerPoseMapFileName);
-//        try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
-//            Set<String> keySet = toolChangerPoseMap.keySet();
-//            List<String> sortedKeys = new ArrayList<>(keySet);
-//            Collections.sort(sortedKeys);
-//            for (String key : sortedKeys) {
-//                try {
-//                    PoseType pose = toolChangerPoseMap.get(key);
-//                    if (null != pose) {
-//                        PmCartesian tran = CRCLPosemath.toPmCartesian(pose.getPoint());
-//                        PmRpy rpy = CRCLPosemath.toPmRpy(pose);
-//                        ps.printf("%s=%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
-//                                key, tran.x, tran.y, tran.z, Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y));
-//                    }
-//                } catch (Exception ex) {
-//                    System.err.println("key=" + key);
-//                    Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//            }
-//        } catch (FileNotFoundException ex) {
-//            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+            Utils.saveJTable(new File(propertiesFile.getParentFile(), toolChangerPoseMapFileName), jTableToolHolderPositions);
         } catch (IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }
 
-    public String getSelectedToolChangerPoseName() {
-        int r = jTableToolChangePositions.getSelectedRow();
+    private void saveToolHolderContentsMap() {
+        try {
+            if (null == propertiesFile || !propertiesFile.exists()) {
+                return;
+            }
+            String fileName = propertiesFile.getName() + ".toolHolderContents.csv";
+            Utils.saveJTable(new File(propertiesFile.getParentFile(), fileName), jTableHolderContents);
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void saveToolOffsetPoseMap() {
+        try {
+            if (null == propertiesFile || !propertiesFile.exists()) {
+                return;
+            }
+            String fileName = propertiesFile.getName() + ".toolOffsets.csv";
+            Utils.saveJTable(new File(propertiesFile.getParentFile(), fileName), jTableToolOffsets);
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Nullable public String getSelectedToolChangerPoseName() {
+        int r = jTableToolHolderPositions.getSelectedRow();
         if (r < 0) {
             return null;
         }
-        if (r >= jTableToolChangePositions.getRowCount()) {
+        if (r >= jTableToolHolderPositions.getRowCount()) {
             return null;
         }
-        return (String) jTableToolChangePositions.getValueAt(r, 0);
+        return (String) jTableToolHolderPositions.getValueAt(r, 0);
     }
 
     public String[] getToolChangerNames() {
         Set<String> names = new TreeSet<>();
         names.add("");
-        for (int i = 0; i < jTableToolChangePositions.getRowCount(); i++) {
-            Object o = jTableToolChangePositions.getValueAt(i, 0);
+        for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
+            Object o = jTableToolHolderPositions.getValueAt(i, 0);
+            if (o instanceof String) {
+                String s = (String) o;
+                if (s.length() > 0) {
+                    names.add(s);
+                }
+            }
+        }
+        return names.toArray(new String[names.size()]);
+    }
+
+    public String[] getToolNames() {
+        Set<String> names = new TreeSet<>();
+        names.add("");
+        for (int i = 0; i < jTableToolOffsets.getRowCount(); i++) {
+            Object o = jTableToolOffsets.getValueAt(i, 0);
             if (o instanceof String) {
                 String s = (String) o;
                 if (s.length() > 0) {
@@ -3890,26 +4302,46 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         );
     }
 
+    public String queryUserForToolName(String qname) {
+        return (String) JOptionPane.showInputDialog(
+                this, // parentComponent
+                "Tool Change Pose Name?", // Object message
+                aprsJFrame.getTaskName() + " " + aprsJFrame.getRobotName() + " " + qname + " choice", //  String title
+                JOptionPane.QUESTION_MESSAGE, // messageType
+                null,// icon 
+                getToolNames(), // selectionValues
+                "" // initialSelectionValue
+        );
+    }
+
     public int getToolChangerRow(String name, boolean approach) {
-        for (int j = 0; j < jTableToolChangePositions.getColumnCount(); j++) {
+        for (int j = 0; j < jTableToolHolderPositions.getColumnCount(); j++) {
             System.out.println("j = " + j);
-            String colName = jTableToolChangePositions.getColumnName(j);
+            String colName = jTableToolHolderPositions.getColumnName(j);
             System.out.println("colName = " + colName);
-            TableColumn col = jTableToolChangePositions.getColumn(colName);
+            TableColumn col = jTableToolHolderPositions.getColumn(colName);
             System.out.println("col = " + col);
         }
-        for (int i = 0; i < jTableToolChangePositions.getRowCount(); i++) {
-            String entryName = (String) jTableToolChangePositions.getValueAt(i, 0);
-            System.out.println("entryName = " + entryName);
-            Object entryApproachObject = jTableToolChangePositions.getValueAt(i, APPROACH_COLUMN_INDEX);
-            System.out.println("entryApproachObject = " + entryApproachObject);
+        for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
+            String entryName = (String) jTableToolHolderPositions.getValueAt(i, 0);
+            Object entryApproachObject = jTableToolHolderPositions.getValueAt(i, APPROACH_COLUMN_INDEX);
             if (null != entryName && null != entryApproachObject) {
                 boolean entryApproach = (boolean) entryApproachObject;
                 if (entryApproach == approach && entryName.equals(name)) {
                     return i;
                 }
             } else {
-                System.err.println("Bad table entry: " + i);
+                System.err.println("Bad table entry: " + i + ", entryName=" + entryName + ", entryApproachObject=" + entryApproachObject);
+            }
+        }
+        return -1;
+    }
+
+    public int getHolderContentsRow(String name) {
+        for (int i = 0; i < jTableHolderContents.getRowCount(); i++) {
+            String entryName = (String) jTableHolderContents.getValueAt(i, 0);
+            if (null != entryName && entryName.equals(name)) {
+                return i;
             }
         }
         return -1;
@@ -3917,7 +4349,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private static final int APPROACH_COLUMN_INDEX = 7;
     private static final String APPROACH_COLUMN_HEADER = "Approach";
 
-    private String getJointValsString() {
+    @Nullable private String getJointValsString() {
         CRCLStatusType stat = aprsJFrame.getCurrentStatus();
         if (null != stat && null != stat.getJointStatuses()) {
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
@@ -3929,35 +4361,35 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
 
-    private void jButtonRecordToolChangerPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolChangerPoseActionPerformed
+    private void jButtonRecordToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolHolderPoseActionPerformed
         try {
-            toolChangerPoseName = queryUserForToolChangePosName("Record Pose");
-            if (null == toolChangerPoseName
-                    || toolChangerPoseName.length() < 1) {
-                toolChangerPoseName = "toolChangerPose" + (jTableToolChangePositions.getRowCount() + 1);
-            }
-            toolChangerPose = aprsJFrame.getCurrentPose();
-            if (null == toolChangerPose) {
+            PoseType pose = aprsJFrame.getCurrentPose();
+            if (null == pose) {
                 JOptionPane.showMessageDialog(this, "Can not read current pose.");
                 return;
             }
+            toolChangerPoseName = queryUserForToolChangePosName("Record Pose");
+            if (null == toolChangerPoseName
+                    || toolChangerPoseName.length() < 1) {
+                toolChangerPoseName = "toolChangerPose" + (jTableToolHolderPositions.getRowCount() + 1);
+            }
+            toolChangerPose = pose;
             String name = toolChangerPoseName;
-            PoseType pose = toolChangerPose;
-            PmRpy rpy = CRCLPosemath.toPmRpy(toolChangerPose);
+            PmRpy rpy = CRCLPosemath.toPmRpy(pose);
             String jointString = getJointValsString();
             updateToolChangePose(name, false, pose, rpy, jointString);
-            toolChangerPoseMap.put(toolChangerPoseName, toolChangerPose);
+            toolChangerPoseMap.put(name, pose);
             PoseType approachPose = pddlActionToCrclGenerator.approachPoseFromToolChangerPose(pose);
             updateToolChangePose(name, true, approachPose, rpy, null);
             pddlActionToCrclGenerator.removeToolChangerJointVals(name);
             saveToolChangerPoseMap();
         } catch (Exception ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_jButtonRecordToolChangerPoseActionPerformed
+    }//GEN-LAST:event_jButtonRecordToolHolderPoseActionPerformed
 
-    private void clearEmptyToolChangerPoseRows() {
-        DefaultTableModel dtm = (DefaultTableModel) jTableToolChangePositions.getModel();
+    private void clearEmptyToolOffsetPoseRows() {
+        DefaultTableModel dtm = (DefaultTableModel) jTableToolOffsets.getModel();
         for (int i = 0; i < dtm.getRowCount(); i++) {
             Object val = dtm.getValueAt(i, 0);
             if (val == null) {
@@ -3973,13 +4405,30 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
-    private void updateToolChangePose(String name, boolean approach, PoseType pose, PmRpy rpy, String jointString) {
+    private void clearEmptyToolChangerPoseRows() {
+        DefaultTableModel dtm = (DefaultTableModel) jTableToolHolderPositions.getModel();
+        for (int i = 0; i < dtm.getRowCount(); i++) {
+            Object val = dtm.getValueAt(i, 0);
+            if (val == null) {
+                dtm.removeRow(i);
+                i--;
+                continue;
+            }
+            String valString = val.toString();
+            if (valString.length() < 1) {
+                dtm.removeRow(i);
+                i--;
+            }
+        }
+    }
+
+    private void updateToolChangePose(String name, boolean approach, PoseType pose, PmRpy rpy, @Nullable String jointString) {
         clearEmptyToolChangerPoseRows();
         if (name == null || name.length() < 1) {
             return;
         }
         int tableRowIndex = getToolChangerRow(name, approach);
-        DefaultTableModel dtm = (DefaultTableModel) jTableToolChangePositions.getModel();
+        DefaultTableModel dtm = (DefaultTableModel) jTableToolHolderPositions.getModel();
         if (tableRowIndex < 0) {
             dtm.addRow(new Object[]{
                 name,
@@ -4001,7 +4450,20 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             dtm.setValueAt(Math.toDegrees(rpy.y), tableRowIndex, 6);
             dtm.setValueAt(jointString, tableRowIndex, 8);
         }
+        addHolderContentsRowIfNameNotFound(name);
         clearEmptyToolChangerPoseRows();
+    }
+
+    private void addHolderContentsRowIfNameNotFound(String name) {
+        int holderContentsTableRowIndex = getHolderContentsRow(name);
+        DefaultTableModel hcdtm = (DefaultTableModel) jTableHolderContents.getModel();
+        if (holderContentsTableRowIndex < 0) {
+            hcdtm.addRow(new Object[]{
+                name,
+                false,
+                ""
+            });
+        }
     }
 
     private void jButtonGotoToolChangerApproachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGotoToolChangerApproachActionPerformed
@@ -4015,11 +4477,20 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             clearAll();
             autoStart = true;
             cancelRunProgramFuture();
-            toolChangerPoseName = (String) queryUserForToolChangePosName("Goto Approach");
-            toolChangerPose = toolChangerPoseMap.get(toolChangerPoseName);
-            runningProgramFuture = this.gotoToolChangerApproach(toolChangerPoseName, toolChangerPose);
+            String name = queryUserForToolChangePosName("Goto Approach");
+            if (null == name) {
+                return;
+            }
+            toolChangerPoseName = name;
+            PoseType pose = toolChangerPoseMap.get(name);
+            if (null == pose) {
+                JOptionPane.showMessageDialog(this, "no pose for " + name + " in " + toolChangerPoseMap);
+                return;
+            }
+            toolChangerPose = pose;
+            runningProgramFuture = this.gotoToolChangerApproach(name, pose);
         } catch (Exception e) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, null, e);
             showExceptionInProgram(e);
         }
     }//GEN-LAST:event_jButtonGotoToolChangerApproachActionPerformed
@@ -4035,11 +4506,20 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             clearAll();
             autoStart = true;
             cancelRunProgramFuture();
-            toolChangerPoseName = (String) queryUserForToolChangePosName("Goto Changer");
-            toolChangerPose = toolChangerPoseMap.get(toolChangerPoseName);
-            runningProgramFuture = this.gotoToolChangerPose(toolChangerPoseName, toolChangerPose);
+            String name = queryUserForToolChangePosName("Goto Changer");
+            if (null == name) {
+                return;
+            }
+            toolChangerPoseName = name;
+            PoseType pose = toolChangerPoseMap.get(name);
+            if (null == pose) {
+                JOptionPane.showMessageDialog(this, "no pose for " + name + " in " + toolChangerPoseMap);
+                return;
+            }
+            toolChangerPose = pose;
+            runningProgramFuture = this.gotoToolChangerPose(name, pose);
         } catch (Exception e) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, null, e);
             showExceptionInProgram(e);
         }
     }//GEN-LAST:event_jButtonGotoToolChangerPoseActionPerformed
@@ -4055,7 +4535,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             clearAll();
             autoStart = true;
             cancelRunProgramFuture();
-            toolChangerPoseName = (String) queryUserForToolChangePosName("Drop Tool");
+            toolChangerPoseName = queryUserForToolChangePosName("Drop Tool");
             if (null == toolChangerPoseName || toolChangerPoseName.equals("Default") || toolChangerPoseName.length() < 1) {
                 return;
             }
@@ -4066,7 +4546,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
             runningProgramFuture = this.dropTool(toolChangerPoseName, toolChangerPose);
         } catch (Exception e) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, null, e);
             showExceptionInProgram(e);
         }
     }//GEN-LAST:event_jButtonDropToolActionPerformed
@@ -4082,11 +4562,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             clearAll();
             autoStart = true;
             cancelRunProgramFuture();
-            toolChangerPoseName = (String) queryUserForToolChangePosName("Pickup Tool ");
-            toolChangerPose = toolChangerPoseMap.get(toolChangerPoseName);
-            runningProgramFuture = this.pickupTool(toolChangerPoseName, toolChangerPose);
+            String name = queryUserForToolChangePosName("Pickup Tool ");
+            if (null == name) {
+                return;
+            }
+            toolChangerPoseName = name;
+            PoseType pose = toolChangerPoseMap.get(name);
+            if (null == pose) {
+                JOptionPane.showMessageDialog(this, "no pose for " + name + " in " + toolChangerPoseMap);
+                return;
+            }
+            runningProgramFuture = this.pickupTool(name, pose);
         } catch (Exception e) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, null, e);
             showExceptionInProgram(e);
         }
     }//GEN-LAST:event_jButtonPickupToolActionPerformed
@@ -4095,12 +4583,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         pddlActionToCrclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
     }//GEN-LAST:event_jTextFieldToolChangerApproachZOffsetActionPerformed
 
-    private void jButtonDeleteToolChangerPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteToolChangerPoseActionPerformed
+    private void jButtonDeleteToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteToolHolderPoseActionPerformed
         clearEmptyToolChangerPoseRows();
         String nameToDelete = queryUserForToolChangePosName("Delete Pose");
-        DefaultTableModel model = (DefaultTableModel) jTableToolChangePositions.getModel();
-        for (int i = 0; i < jTableToolChangePositions.getRowCount(); i++) {
-            String nameFromTable = (String) jTableToolChangePositions.getValueAt(i, 0);
+        DefaultTableModel model = (DefaultTableModel) jTableToolHolderPositions.getModel();
+        for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
+            String nameFromTable = (String) jTableToolHolderPositions.getValueAt(i, 0);
             if (null == nameFromTable || nameFromTable.equals(nameToDelete)) {
                 model.removeRow(i);
                 i--;
@@ -4108,57 +4596,90 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         toolChangerPoseMap.remove(nameToDelete);
         clearEmptyToolChangerPoseRows();
-        Utils.autoResizeTableColWidths(jTableToolChangePositions);
-    }//GEN-LAST:event_jButtonDeleteToolChangerPoseActionPerformed
+        Utils.autoResizeTableColWidths(jTableToolHolderPositions);
+    }//GEN-LAST:event_jButtonDeleteToolHolderPoseActionPerformed
 
-    private void jButtonAddToolChangerPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddToolChangerPoseActionPerformed
+    private void jButtonAddToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddToolHolderPoseActionPerformed
         try {
             clearEmptyToolChangerPoseRows();
+            PoseType pose = aprsJFrame.getCurrentPose();
+            if (null == pose || null == pose.getPoint()) {
+                JOptionPane.showMessageDialog(this, "Can not read current pose.");
+                return;
+            }
             String nameToAdd = JOptionPane.showInputDialog("New tool changer position name");
             if (nameToAdd != null && nameToAdd.length() > 0) {
                 if (toolChangerPoseMap.containsKey(nameToAdd) || Arrays.stream(getToolChangerNames()).anyMatch(x -> nameToAdd.equals(x))) {
                     JOptionPane.showMessageDialog(this, nameToAdd + " already added.");
                     return;
                 }
-                toolChangerPose = aprsJFrame.getCurrentPose();
+
+                toolChangerPose = pose;
                 toolChangerPoseName = nameToAdd;
-                PoseType pose = toolChangerPose;
-                PmRpy rpy = CRCLPosemath.toPmRpy(toolChangerPose);
+                PmRpy rpy = CRCLPosemath.toPmRpy(pose);
                 String jointString = getJointValsString();
                 updateToolChangePose(nameToAdd, false, pose, rpy, jointString);
-                toolChangerPoseMap.put(nameToAdd, toolChangerPose);
+                toolChangerPoseMap.put(nameToAdd, pose);
                 PoseType approachPose = pddlActionToCrclGenerator.approachPoseFromToolChangerPose(pose);
                 updateToolChangePose(nameToAdd, true, approachPose, rpy, null);
                 clearEmptyToolChangerPoseRows();
-                Utils.autoResizeTableColWidths(jTableToolChangePositions);
+                Utils.autoResizeTableColWidths(jTableToolHolderPositions);
                 saveToolChangerPoseMap();
             }
         } catch (Exception ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_jButtonAddToolChangerPoseActionPerformed
+    }//GEN-LAST:event_jButtonAddToolHolderPoseActionPerformed
 
-    private void jButtonRecordToolChangerApproachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolChangerApproachActionPerformed
+    private void jButtonRecordToolHolderApproachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolHolderApproachActionPerformed
         try {
-            String name = queryUserForToolChangePosName("Record Approach");
-            if (null == toolChangerPoseName
-                    || toolChangerPoseName.length() < 1) {
-                toolChangerPoseName = "toolChangerPose" + (jTableToolChangePositions.getRowCount() + 1);
-            }
             PoseType pose = aprsJFrame.getCurrentPose();
             if (null == pose) {
                 JOptionPane.showMessageDialog(this, "Can not read current pose.");
                 return;
             }
+            String name = queryUserForToolChangePosName("Record Approach");
+            if (null == toolChangerPoseName
+                    || toolChangerPoseName.length() < 1) {
+                toolChangerPoseName = "toolChangerPose" + (jTableToolHolderPositions.getRowCount() + 1);
+            }
+
             PmRpy rpy = CRCLPosemath.toPmRpy(pose);
             String jointString = getJointValsString();
             updateToolChangePose(name, true, pose, rpy, jointString);
-            pddlActionToCrclGenerator.putToolChangerJointVals(name, jointString);
+            if (null != jointString) {
+                pddlActionToCrclGenerator.putToolChangerJointVals(name, jointString);
+            }
             saveToolChangerPoseMap();
         } catch (Exception ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_jButtonRecordToolChangerApproachActionPerformed
+    }//GEN-LAST:event_jButtonRecordToolHolderApproachActionPerformed
+
+    private void jButtonAddToolOffsetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddToolOffsetActionPerformed
+        DefaultTableModel dtm = (DefaultTableModel) jTableToolOffsets.getModel();
+        dtm.addRow(new Object[]{"tool" + (dtm.getRowCount() + 1), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+        clearToolOffsetTableModelListener();
+        Utils.autoResizeTableColWidths(jTableToolOffsets);
+        saveToolOffsetPoseMap();
+        setToolOffsetTableModelListener();
+    }//GEN-LAST:event_jButtonAddToolOffsetActionPerformed
+
+    private void jButtonDeleteToolOffsetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteToolOffsetActionPerformed
+        String nameToDelete = queryUserForToolName("Delete Pose");
+        DefaultTableModel model = (DefaultTableModel) jTableToolOffsets.getModel();
+        for (int i = 0; i < jTableToolOffsets.getRowCount(); i++) {
+            String nameFromTable = (String) jTableToolOffsets.getValueAt(i, 0);
+            if (null == nameFromTable || nameFromTable.equals(nameToDelete)) {
+                model.removeRow(i);
+                i--;
+            }
+        }
+        clearToolOffsetTableModelListener();
+        Utils.autoResizeTableColWidths(jTableToolOffsets);
+        saveToolOffsetPoseMap();
+        setToolOffsetTableModelListener();
+    }//GEN-LAST:event_jButtonDeleteToolOffsetActionPerformed
 
     private void clearPoseCache() {
         pddlActionToCrclGenerator.clearPoseCache();
@@ -4175,7 +4696,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         recordCsvName = jTextFieldLogFilename.getText();
         JFileChooser chooser = new JFileChooser();
         if (null != propertiesFile) {
-            chooser.setCurrentDirectory(propertiesFile.getParentFile());
+            File parentFile = propertiesFile.getParentFile();
+            if (null != parentFile) {
+                chooser.setCurrentDirectory(parentFile);
+            }
         }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
@@ -4186,12 +4710,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 }
                 jTextFieldLogFilename.setText(recordCsvName);
             } catch (IOException ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
     }
 
-    private int[] crclIndexes = null;
+    private int @Nullable [] crclIndexes = null;
 
     public void setCrclIndexes(int indexes[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
@@ -4220,7 +4744,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
-    public void setPddlTakenParts(String parts[]) {
+    public void setPddlTakenParts(@Nullable String parts[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < parts.length; i++) {
             if (i >= model.getRowCount()) {
@@ -4268,11 +4792,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             abortProgram();
             showExceptionInProgram(ex);
 //            actionToCrclLabels[lastIndex] = "Error";
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }
 
-    private String errorString;
+    @Nullable private String errorString;
 
     /**
      * Get the value of errorString
@@ -4288,7 +4812,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      *
      * @param errorString new value of errorString
      */
-    public void setErrorString(String errorString) {
+    public void setErrorString(@Nullable String errorString) {
         if (null == errorString) {
             pddlActionToCrclGenerator.reset();
         }
@@ -4312,8 +4836,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
-    private String crclProgName = null;
-    private String lastCrclProgName = null;
+    @Nullable private String crclProgName = null;
+    @Nullable private String lastCrclProgName = null;
 
     private final List<Runnable> programCompleteRunnablesList = new ArrayList<>();
 
@@ -4335,7 +4859,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             try {
                 return Utils.composeOnDispatchThread(supplier);
             } catch (Exception ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
                 XFuture<Boolean> ret = new XFuture<Boolean>("recursiveSupplyBoolean");
                 ret.completeExceptionally(ex);
                 return ret;
@@ -4352,9 +4876,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private XFuture<Boolean> recursiveApplyGenerateCrcl(boolean prevSuccess) {
         if (prevSuccess) {
             try {
-                return (XFuture<Boolean>) generateCrclAsync();
+                return generateCrclAsync();
             } catch (IOException | IllegalStateException | SQLException ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
                 XFuture<Boolean> ret = new XFuture<Boolean>("recursiveApplyGenerateCrclException");
                 ret.completeExceptionally(ex);
                 return ret;
@@ -4366,7 +4890,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private int crclStartActionIndex = -1;
     private int crclEndActionIndex = -1;
 
-    private void takeSimViewSnapshot(File f, PoseType pose, String label) throws IOException {
+    private void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) throws IOException {
         if (null != aprsJFrame) {
             aprsJFrame.takeSimViewSnapshot(f, pose, label);
         }
@@ -4374,7 +4898,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private volatile long doSafeAbortTime = 0;
     private final AtomicInteger doSafeAbortCount = new AtomicInteger(0);
-    private volatile String lastCheckAbortCurrentPart = null;
+    @Nullable private volatile String lastCheckAbortCurrentPart = null;
     private volatile boolean lastCheckAbortSafeAbortRequested = false;
     private volatile long lastCheckSafeAbortTime = 0;
 
@@ -4428,9 +4952,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return doSafeAbort;
     }
 
-    private ExecutorService generateCrclService = null;
+    @Nullable private ExecutorService generateCrclService = null;
 
-    public ExecutorService getGenerateCrclService() {
+    @Nullable public ExecutorService getGenerateCrclService() {
         return generateCrclService;
     }
 
@@ -4552,18 +5076,22 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
         int startSafeAbortRequestCount = safeAbortRequestCount.get();
 
-        if (null == generateCrclService) {
-            generateCrclService = aprsJFrame.getRunProgramService();
+        ExecutorService service = this.generateCrclService;
+        if (null == service) {
+            service = aprsJFrame.getRunProgramService();
+            this.generateCrclService = service;
         }
+        ExecutorService genCrclService = service;
+        String taskName = "generateCrcl(" + aprsJFrame.getTaskName() + ").doPddlActionsSection(" + pddlActionToCrclGenerator.getLastIndex() + " out of " + actionsList.size() + ")";
 
         return checkSafeAbortAsync(() -> {
             try {
                 return checkDbSupplierPublisherAsync()
-                        .thenComposeAsync("generateCrcl(" + aprsJFrame.getTaskName() + ").doPddlActionsSection(" + pddlActionToCrclGenerator.getLastIndex() + " out of " + actionsList.size() + ")",
+                        .thenComposeAsync(taskName,
                                 x -> doPddlActionsSectionAsync(startSafeAbortRequestCount, 0),
-                                generateCrclService);
+                                genCrclService);
             } catch (IOException ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
                 XFuture<Boolean> xf = new XFuture<>("generateCrclException");
                 xf.completeExceptionally(ex);
                 return xf;
@@ -4606,9 +5134,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         int indexes[] = pddlActionToCrclGenerator.getActionToCrclIndexes();
         int indexesCopy[] = Arrays.copyOf(indexes, indexes.length);
         String labels[] = pddlActionToCrclGenerator.getActionToCrclLabels();
-        final String labelsCopy[] = Arrays.copyOf(labels, labels.length);
-        String takenPartNames[] = pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
-        final String takenPartNamesCopy[] = Arrays.copyOf(takenPartNames, takenPartNames.length);
+        final String labelsCopy[] = Utils.copyOfNonNullsOnly(String.class, labels);
+        @Nullable String takenPartNames[] = pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
+        final @Nullable String takenPartNamesCopy[] = Arrays.copyOf(takenPartNames, takenPartNames.length);
         javax.swing.SwingUtilities.invokeLater(() -> {
             setCrclIndexes(indexesCopy);
             setPddlLabelss(labelsCopy);
@@ -4721,7 +5249,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 setCrclProgram(program);
             }
         } catch (Exception ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             showExceptionInProgram(ex);
             XFuture<Boolean> ret = new XFuture<>("doPddlActionsSectionException");
             ret.completeExceptionally(ex);
@@ -4736,7 +5264,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private volatile long runProgramCompleteRunnablesTime = 0;
 
     public void runProgramCompleteRunnables(int startSafeAbortRequestCount) {
-        checkSafeAbortAsync(() -> null, startSafeAbortRequestCount);
+        checkSafeAbortAsync(() -> XFuture.completedFuture(false), startSafeAbortRequestCount);
         List<Runnable> runnables = new ArrayList<>();
         synchronized (this) {
             runProgramCompleteRunnablesTime = System.currentTimeMillis();
@@ -4786,27 +5314,29 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setCommandId(program.getEndCanon());
 
         for (PositionMap positionMap : getPositionMaps()) {
-            PointType offset = positionMap.getLastOffset();
-            if (null != offset) {
-                jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
-            }
-            PointType testPoint = positionMap.getLastPointOut();
-            if (null != testPoint) {
-                String testPoseString
-                        = String.format("%.1f, %.1f, %.1f",
-                                testPoint.getX(),
-                                testPoint.getY(),
-                                testPoint.getZ());
-                jTextFieldAdjPose.setText(testPoseString);
-            }
-            PointType origPoint = positionMap.getLastPointIn();
-            if (null != origPoint) {
-                String origPoseString
-                        = String.format("%.1f, %.1f, %.1f",
-                                origPoint.getX(),
-                                origPoint.getY(),
-                                origPoint.getZ());
-                this.jTextFieldTestPose.setText(origPoseString);
+            if (null != positionMap) {
+                PointType offset = positionMap.getLastOffset();
+                if (null != offset) {
+                    jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
+                }
+                PointType testPoint = positionMap.getLastPointOut();
+                if (null != testPoint) {
+                    String testPoseString
+                            = String.format("%.1f, %.1f, %.1f",
+                                    testPoint.getX(),
+                                    testPoint.getY(),
+                                    testPoint.getZ());
+                    jTextFieldAdjPose.setText(testPoseString);
+                }
+                PointType origPoint = positionMap.getLastPointIn();
+                if (null != origPoint) {
+                    String origPoseString
+                            = String.format("%.1f, %.1f, %.1f",
+                                    origPoint.getX(),
+                                    origPoint.getY(),
+                                    origPoint.getZ());
+                    this.jTextFieldTestPose.setText(origPoseString);
+                }
             }
         }
 
@@ -4831,27 +5361,29 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setCommandId(program.getEndCanon());
 
         for (PositionMap positionMap : getPositionMaps()) {
-            PointType offset = positionMap.getLastOffset();
-            if (null != offset) {
-                jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
-            }
-            PointType testPoint = positionMap.getLastPointOut();
-            if (null != testPoint) {
-                String testPoseString
-                        = String.format("%.1f, %.1f, %.1f",
-                                testPoint.getX(),
-                                testPoint.getY(),
-                                testPoint.getZ());
-                jTextFieldAdjPose.setText(testPoseString);
-            }
-            PointType origPoint = positionMap.getLastPointIn();
-            if (null != origPoint) {
-                String origPoseString
-                        = String.format("%.1f, %.1f, %.1f",
-                                origPoint.getX(),
-                                origPoint.getY(),
-                                origPoint.getZ());
-                this.jTextFieldTestPose.setText(origPoseString);
+            if (null != positionMap) {
+                PointType offset = positionMap.getLastOffset();
+                if (null != offset) {
+                    jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
+                }
+                PointType testPoint = positionMap.getLastPointOut();
+                if (null != testPoint) {
+                    String testPoseString
+                            = String.format("%.1f, %.1f, %.1f",
+                                    testPoint.getX(),
+                                    testPoint.getY(),
+                                    testPoint.getZ());
+                    jTextFieldAdjPose.setText(testPoseString);
+                }
+                PointType origPoint = positionMap.getLastPointIn();
+                if (null != origPoint) {
+                    String origPoseString
+                            = String.format("%.1f, %.1f, %.1f",
+                                    origPoint.getX(),
+                                    origPoint.getY(),
+                                    origPoint.getZ());
+                    this.jTextFieldTestPose.setText(origPoseString);
+                }
             }
         }
 
@@ -4919,7 +5451,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public PoseType correctPose(PoseType poseIn) {
         PoseType pout = poseIn;
         for (PositionMap pm : getPositionMaps()) {
-            pout = pm.correctPose(pout);
+            if (null != pm) {
+                pout = pm.correctPose(pout);
+            }
         }
         return pout;
     }
@@ -4934,7 +5468,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     public PointType correctPoint(PointType ptIn) {
         PointType pout = ptIn;
         for (PositionMap pm : getPositionMaps()) {
-            pout = pm.correctPoint(ptIn);
+            if (null != pm) {
+                pout = pm.correctPoint(ptIn);
+            }
         }
         return pout;
     }
@@ -4949,7 +5485,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         PointType pout = ptIn;
         List<PositionMap> l = getReversePositionMaps();
         for (PositionMap pm : l) {
-            pout = pm.correctPoint(ptIn);
+            if (null != pm) {
+                pout = pm.correctPoint(ptIn);
+            }
         }
         return pout;
     }
@@ -5004,7 +5542,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private PointType getOffset(double x, double y, double z) {
         PointType out = point(x, y, z);
         for (PositionMap pm : getPositionMaps()) {
-            out = pm.getOffset(out.getX(), out.getY(), out.getZ());
+            if (null != pm) {
+                out = pm.getOffset(out.getX(), out.getY(), out.getZ());
+            }
         }
         return out;
     }
@@ -5079,7 +5619,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             CRCLProgramType program = createLookForPartsProgram();
             return startCrclProgram(program);
         } catch (Exception ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             XFuture<Boolean> future = new XFuture<>("lookForPartsException");
             future.completeExceptionally(ex);
             return future;
@@ -5090,7 +5630,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             return createLookForPartsProgramInternal();
         } catch (CRCLException | PmException | ExecutionException | IOException | InterruptedException | PendantClientInner.ConcurrentBlockProgramsException | SQLException | IllegalStateException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
         }
     }
@@ -5137,7 +5677,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             replanStarted.set(false);
             return startCrclProgram(program);
         } catch (CRCLException | PmException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);
             return future;
@@ -5166,7 +5706,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             replanStarted.set(false);
             return startCrclProgram(program);
         } catch (CRCLException | PmException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);
             return future;
@@ -5196,7 +5736,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             replanStarted.set(false);
             return startCrclProgram(program);
         } catch (CRCLException | PmException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);
             return future;
@@ -5226,14 +5766,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             replanStarted.set(false);
             return startCrclProgram(program);
         } catch (CRCLException | PmException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
-            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);
             return future;
         }
     }
 
-    private volatile List<Future<?>> checkDbSupplierPublisherFuturesList = null;
+    private volatile List<Future<?>> checkDbSupplierPublisherFuturesList = Collections.emptyList();
 
     private void checkDbSupplierPublisher() throws IOException {
         assert (null != pddlActionToCrclGenerator) : "null == pddlActionToCrclGenerator";
@@ -5258,6 +5798,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
+    @Nullable private String getConnnectionURL() throws SQLException {
+        Connection con = pddlActionToCrclGenerator.getDbConnection();
+        if (null == con) {
+            throw new IllegalStateException("connection is null");
+        }
+        return con.getMetaData().getURL();
+    }
+
     private XFuture<Void> checkDbSupplierPublisherAsync() throws IOException {
         if (null == this.pddlActionToCrclGenerator) {
             XFuture<Void> ret = new XFuture<Void>("checkDbSupplierPublisher(null==pddlActionToCrclGenerator)");
@@ -5266,9 +5814,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
         if (pddlActionToCrclGenerator.isConnected()) {
             try {
-                return XFuture.completedFutureWithName("checkDbSupplierPublisher.alreadyConnected." + pddlActionToCrclGenerator.getDbConnection().getMetaData().getURL(), null);
-            } catch (SQLException ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                return XFutureVoid.completedFutureWithName("checkDbSupplierPublisher.alreadyConnected." + getConnnectionURL());
+            } catch (Exception ex) {
+                LOGGER.log(Level.SEVERE, null, ex);
                 XFuture<Void> ret = new XFuture<Void>("checkDbSupplierPublisher.alreadyConnected.withException");
                 ret.completeExceptionally(ex);
                 return ret;
@@ -5286,33 +5834,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-//        XFuture<Void> f2;
         if (null != dbSetupPublisher) {
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             checkDbSupplierPublisherFuturesList = dbSetupPublisher.notifyAllDbSetupListeners();
-//            final List<Future<?>> futures = new ArrayList<>();
-//            futures.addAll(origFuturesList);
-//            f2=  XFuture.runAsync("checkDbSupplierPublisherRunAsync", () -> {
-//                try {
-//                    for (Future<?> f : futures) {
-//                        if (!f.isDone() && !f.isCancelled()) {
-//                            try {
-//                                f.get();
-//                                
-//                            } catch (Exception ex) {
-//                                Logger.getLogger(PddlExecutorJPanel.class
-//                                        .getName()).log(Level.SEVERE, null, ex);
-//                            }
-//                        }
-//                    }
-//                } catch (Exception e) {
-//                    Logger.getLogger(PddlExecutorJPanel.class
-//                                        .getName()).log(Level.SEVERE, null, e);
-//                }
-//            });
         } else {
             System.err.println("dbSetupPublisher == null");
-//            f2 = new XFuture<>("checkDbSupplierPublisher.f2.dbSetupPublisher==null");
             f1.completeExceptionally(new IllegalStateException("dbSetupPublisher == null"));
         }
         return f1; //XFuture.allOfWithName("checkDbSupplierPublisher.all", f1,f2);
@@ -5346,12 +5872,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonAbort;
-    private javax.swing.JButton jButtonAddToolChangerPose;
+    private javax.swing.JButton jButtonAddToolHolderPose;
+    private javax.swing.JButton jButtonAddToolOffset;
     private javax.swing.JButton jButtonClear;
     private javax.swing.JButton jButtonClearPoseCache;
     private javax.swing.JButton jButtonContRandomTest;
     private javax.swing.JButton jButtonContinue;
-    private javax.swing.JButton jButtonDeleteToolChangerPose;
+    private javax.swing.JButton jButtonDeleteToolHolderPose;
+    private javax.swing.JButton jButtonDeleteToolOffset;
     private javax.swing.JButton jButtonDropTool;
     private javax.swing.JButton jButtonGenerateAndRun;
     private javax.swing.JButton jButtonGenerateCRCL;
@@ -5371,8 +5899,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonRecordFail;
     private javax.swing.JButton jButtonRecordLookForJoints;
     private javax.swing.JButton jButtonRecordSuccess;
-    private javax.swing.JButton jButtonRecordToolChangerApproach;
-    private javax.swing.JButton jButtonRecordToolChangerPose;
+    private javax.swing.JButton jButtonRecordToolHolderApproach;
+    private javax.swing.JButton jButtonRecordToolHolderPose;
     private javax.swing.JButton jButtonReset;
     private javax.swing.JButton jButtonReturn;
     private javax.swing.JButton jButtonSafeAbort;
@@ -5416,20 +5944,27 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JPanel jPanelOpOuter;
     private javax.swing.JPanel jPanelOuterManualControl;
     private javax.swing.JPanel jPanelToolChange;
+    private javax.swing.JPanel jPanelToolHolderPositions;
+    private javax.swing.JPanel jPanelToolOffsets;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPaneExternalControl;
+    private javax.swing.JScrollPane jScrollPaneHolderContents;
     private javax.swing.JScrollPane jScrollPaneOptions;
     private javax.swing.JScrollPane jScrollPanePositionTable;
-    private javax.swing.JScrollPane jScrollPaneToolTable;
+    private javax.swing.JScrollPane jScrollPaneToolHolderPositions;
+    private javax.swing.JScrollPane jScrollPaneToolOffsets;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTabbedPane jTabbedPaneToolChangeInner;
     private javax.swing.JTable jTableCrclProgram;
+    private javax.swing.JTable jTableHolderContents;
     private javax.swing.JTable jTableOptions;
     private javax.swing.JTable jTablePddlOutput;
     private javax.swing.JTable jTablePositionCache;
-    private javax.swing.JTable jTableToolChangePositions;
+    private javax.swing.JTable jTableToolHolderPositions;
+    private javax.swing.JTable jTableToolOffsets;
     private javax.swing.JTextArea jTextAreaExternalCommads;
     private javax.swing.JTextField jTextFieldAdjPose;
     private javax.swing.JTextField jTextFieldCurrentPart;
@@ -5493,7 +6028,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
                     boolean foundit = false;
                     for (int i = 0; i < model.getRowCount(); i++) {
-                        String nameFromTable = model.getValueAt(i, 0).toString();
+                        Object tableValue = model.getValueAt(i, 0);
+                        if (tableValue == null) {
+                            continue;
+                        }
+                        String nameFromTable = tableValue.toString();
                         if (nameFromTable.equals(name)) {
                             model.setValueAt(props.getProperty(name), i, 1);
                             foundit = true;
@@ -5508,43 +6047,54 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
             String errorMapFiles = props.getProperty(POS_ERROR_MAP_FILES, "");
             if (null != errorMapFiles && errorMapFiles.length() > 0) {
-                positionMapJPanel1.clearCurrentMap();
-                String errorMapFilesArray[] = errorMapFiles.split("[\t,\\[\\]\\{\\}" + File.pathSeparator + "]+");
-                for (String emf : errorMapFilesArray) {
-                    if (null == emf) {
-                        continue;
+                loadErrorMapFiles(errorMapFiles);
+            }
+            loadHolderContentsMap();
+            loadToolChangerPoseMap();
+            loadToolOffsetMap();
+        }
+    }
+
+    private void loadErrorMapFiles(String errorMapFiles) throws IOException {
+        positionMapJPanel1.clearCurrentMap();
+        String errorMapFilesArray[] = errorMapFiles.split("[\t,\\[\\]\\{\\}" + File.pathSeparator + "]+");
+        for (String emf : errorMapFilesArray) {
+            if (null == emf) {
+                continue;
+            }
+            String fname = emf.trim();
+            if (fname.length() < 1 || "null".equals(fname)) {
+                continue;
+            }
+            File f = new File(fname);
+            if (f.exists()) {
+                try {
+                    positionMapJPanel1.addPositionMapFile(f);
+                } catch (PositionMap.BadErrorMapFormatException ex) {
+                    LOGGER.log(Level.SEVERE, null, ex);
+                }
+            } else {
+                File parentFile = propertiesFile.getParentFile();
+                if (null == parentFile) {
+                    String errString = "Can't load errorMapFile : " + fname + ", parentFile is null";
+                    setErrorString(errString);
+                    System.err.println(errString);
+                    return;
+                }
+                String fullPath = parentFile.toPath().resolve(fname).normalize().toString();
+                f = new File(fullPath);
+                if (f.exists()) {
+                    try {
+                        positionMapJPanel1.addPositionMapFile(f);
+                    } catch (PositionMap.BadErrorMapFormatException ex) {
+                        LOGGER.log(Level.SEVERE, null, ex);
                     }
-                    String fname = emf.trim();
-                    if (fname.length() < 1 || "null".equals(fname)) {
-                        continue;
-                    }
-                    File f = new File(fname);
-                    if (f.exists()) {
-                        try {
-                            positionMapJPanel1.addPositionMapFile(f);
-                        } catch (PositionMap.BadErrorMapFormatException ex) {
-                            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    } else {
-                        String fullPath = propertiesFile.getParentFile().toPath().resolve(fname).normalize().toString();
-//                    System.out.println("fullPath = " + fullPath);
-                        f = new File(fullPath);
-                        if (f.exists()) {
-                            try {
-                                positionMapJPanel1.addPositionMapFile(f);
-                            } catch (PositionMap.BadErrorMapFormatException ex) {
-                                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        } else {
-                            String errString = "Can't load errorMapFile : " + fname + "   or " + fullPath;
-                            setErrorString(errString);
-                            System.err.println(errString);
-//                            aprsJFrame.setTitleErrorString(errorString);
-                        }
-                    }
+                } else {
+                    String errString = "Can't load errorMapFile : " + fname + "   or " + fullPath;
+                    setErrorString(errString);
+                    System.err.println(errString);
                 }
             }
-            loadToolChangerPoseMap();
         }
     }
 
@@ -5585,15 +6135,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 loadActionsFile(f, true);
                 jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
             } else {
-                String fullPath = propertiesFile.getParentFile().toPath().resolve(output).normalize().toString();
-//                    System.out.println("fullPath = " + fullPath);
+                File parentFile = propertiesFile.getParentFile();
+                if (null == parentFile) {
+                    return;
+                }
+                String fullPath = parentFile.toPath().resolve(output).normalize().toString();
                 f = new File(fullPath);
                 if (f.exists() && f.canRead() && !f.isDirectory()) {
                     loadActionsFile(f, true);
                     jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
                 } else {
-                    String fullPath2 = propertiesFile.getParentFile().toPath().resolveSibling(output).normalize().toString();
-//                        System.out.println("fullPath = " + fullPath2);
+                    String fullPath2 = parentFile.toPath().resolveSibling(output).normalize().toString();
                     f = new File(fullPath2);
                     if (f.exists() && f.canRead() && !f.isDirectory()) {
                         jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
@@ -5627,7 +6179,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private final AtomicInteger replanFromIndex = new AtomicInteger(-1);
     private final AtomicBoolean replanStarted = new AtomicBoolean();
 
-    javax.swing.Timer replanActionTimer = null;
+    javax.swing.@Nullable Timer replanActionTimer = null;
     private final Runnable defaultReplanRunnable = new Runnable() {
         @Override
         public void run() {
@@ -5644,7 +6196,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     };
 
-    private List<RunnableWithThrow> customRunnables = null;
+    final private List<RunnableWithThrow> customRunnables = new ArrayList<>();
     private int customRunnablesIndex = -1;
 
     private void runAllCustomRunnables() {
@@ -5661,7 +6213,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     Utils.runOnDispatchThreadWithCatch(runnable);
                 }
             } catch (Exception ex) {
-                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
                 clearAll();
             }
         }
@@ -5720,6 +6272,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return crclEndActionIndex;
     }
 
+    @Nullable
     PddlAction actionFromIndex(int index) {
         if (null != actionsList && actionsList.size() >= index && index >= 0) {
             return actionsList.get(index);

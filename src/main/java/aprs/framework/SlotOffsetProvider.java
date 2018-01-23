@@ -25,29 +25,34 @@ package aprs.framework;
 import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.Slot;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Interface for classes that can provide slot offset information.
- * Each AprsJFrame provides this and the supervisor combines output from multiple
+ * Interface for classes that can provide slot offset information. Each
+ * AprsJFrame provides this and the supervisor combines output from multiple
  * systems to create its own SlotOffsetProvider.
- * 
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public interface SlotOffsetProvider {
-    
+
     /**
-     * Get a list of slots with names and relative position offsets for a given kit or parts tray name.
-     * 
+     * Get a list of slots with names and relative position offsets for a given
+     * kit or parts tray name.
+     *
      * @param name name of the type of kit or slot tray
      * @return list of slots with relative position offsets.
      */
     public List<Slot> getSlotOffsets(String name);
-    
+
     /**
-     * Compute the absolute position of a slot from a slot offset and a tray instance.
+     * Compute the absolute position of a slot from a slot offset and a tray
+     * instance.
+     *
      * @param tray tray with absolute position
-     * @param offsetItem slot with relative position offset for that kind of tray
+     * @param offsetItem slot with relative position offset for that kind of
+     * tray
      * @return slot with absolute position
      */
-    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem);
+    @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem);
 }

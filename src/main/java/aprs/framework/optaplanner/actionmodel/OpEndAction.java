@@ -36,7 +36,7 @@ public class OpEndAction  implements OpActionInterface{
 
     @Override
     public String getPartType() {
-        return null;
+        return "INVALID_END_PART_TYPE";
     }
 
     @Override

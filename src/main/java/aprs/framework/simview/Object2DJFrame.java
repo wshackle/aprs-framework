@@ -34,8 +34,10 @@ public class Object2DJFrame extends javax.swing.JFrame {
     /**
      * Creates new form Object2DJFrame
      */
+    @SuppressWarnings("initialization")
     public Object2DJFrame() {
         initComponents();
+        assert object2DOuterJPanel1 != null : "@AssumeAssertion(nullness)";
         object2DOuterJPanel1.setItems(Object2DJPanel.EXAMPLES_ITEMS_LIST);
     }
 

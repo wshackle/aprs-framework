@@ -39,6 +39,7 @@ import crcl.base.CRCLStatusType;
 import crcl.base.CommandStateEnumType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 
 import java.awt.Color;
@@ -58,6 +59,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -78,6 +80,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Deque;
 import java.util.EventObject;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -101,10 +104,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
@@ -148,6 +153,8 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -156,13 +163,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private static class ImagePanel extends JPanel {
 
-        BufferedImage image = null;
+        @Nullable BufferedImage image = null;
 
         public ImagePanel(BufferedImage image) {
             this.image = image;
             if (image != null) {
-                this.setSize(image.getWidth(), image.getHeight());
-                this.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+                super.setSize(image.getWidth(), image.getHeight());
+                super.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
             }
         }
 
@@ -188,6 +195,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     /**
      * Creates new form AprsMulitSupervisorJFrame
      */
+    @SuppressWarnings("initialization")
     public AprsSupervisorJFrame() {
 
         try {
@@ -407,7 +415,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 if (value instanceof DefaultMutableTreeNode) {
                     Object userObject = ((DefaultMutableTreeNode) value).getUserObject();
                     if (userObject instanceof XFuture) {
-                        XFuture xf = (XFuture) userObject;
+                        @SuppressWarnings("unchecked")
+                        XFuture<?> xf = (XFuture<?>) userObject;
                         if (!jCheckBoxFutureLongForm.isSelected()) {
                             long runTime = xf.getRunTime();
                             setText(xf.getName() + " (" + (runTime / 1000) + " s) ");
@@ -415,7 +424,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                             setText(xf.toString());
                         }
                         setIcon(null);
-                        XFuture cancelledDependant = xf.getCanceledDependant();
+                        XFuture<?> cancelledDependant = xf.getCanceledDependant();
                         if (xf.isCancelled() || cancelledDependant != null) {
                             setBackground(Color.YELLOW);
                             if (null != cancelledDependant) {
@@ -423,7 +432,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                             }
                         } else if (xf.isCompletedExceptionally()) {
                             setBackground(Color.RED);
-                            Throwable t = ((XFuture<Object>) xf).getThrowable();
+                            Throwable t = ((XFuture<?>) xf).getThrowable();
                             setText(xf.getName() + " : " + t.toString());
                         } else if (xf.isDone()) {
                             setBackground(Color.CYAN);
@@ -432,14 +441,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         }
                         setOpaque(true);
                     } else if (userObject instanceof CompletableFuture) {
-                        CompletableFuture cf = (CompletableFuture) userObject;
+                        CompletableFuture<?> cf = (CompletableFuture<?>) userObject;
                         setText(cf.toString());
                         setIcon(null);
                         if (cf.isCancelled()) {
                             setBackground(Color.YELLOW);
                         } else if (cf.isCompletedExceptionally()) {
                             setBackground(Color.RED);
-                            ((CompletableFuture<Object>) cf).exceptionally((Throwable t) -> {
+                            cf.exceptionally((Throwable t) -> {
                                 setText(cf.toString() + " : " + t.toString());
                                 if (t instanceof RuntimeException) {
                                     throw ((RuntimeException) t);
@@ -506,17 +515,17 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jTableRobots.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-//                Component c =  super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-//                if(column == 1) {
-//                    robotsEnableCelRendererComponent=  c;
-//                }
-//                return c;
                 robotsEnableCelRendererComponent.setSelected((boolean) value);
                 return robotsEnableCelRendererComponent;
             }
 
         });
         object2DOuterJPanel1.setSlotOffsetProvider(slotOffsetProvider);
+        AtomicInteger newWaitForTogglesFutureCount = new AtomicInteger();
+        waitForTogglesFutureCount = newWaitForTogglesFutureCount;
+        ConcurrentLinkedDeque<XFuture<Void>> newWaitForTogglesFutures = new ConcurrentLinkedDeque<>();
+        waitForTogglesFutures = newWaitForTogglesFutures;
+        togglesAllowedXfuture = new AtomicReference<>(createFirstWaitForTogglesFuture(newWaitForTogglesFutures, newWaitForTogglesFutureCount));
     }
 
     private final ConcurrentHashMap<String, AprsJFrame> slotProvidersMap
@@ -536,11 +545,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     //ignoring trays that can't be found, must be for another system.
                 }
             }
-            return null;
+            return Collections.emptyList();
         }
 
         @Override
-        public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
+        @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
             AprsJFrame sys = slotProvidersMap.get(tray.origName);
             if (null != sys) {
                 return sys.absSlotFromTrayAndOffset(tray, offsetItem);
@@ -549,13 +558,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     };
 
-    private volatile JCheckBox robotsEnableCelEditorCheckbox = null;
-    private volatile JCheckBox robotsEnableCelRendererComponent = null;
+    @Nullable private volatile JCheckBox robotsEnableCelEditorCheckbox = null;
+    @Nullable private volatile JCheckBox robotsEnableCelRendererComponent = null;
 
     private final ListSelectionListener jListFuturesSelectionListener
             = this::handleListFuturesSelectionEvent;
 
-    private void handleListFuturesSelectionEvent(ListSelectionEvent e) {
+    private void handleListFuturesSelectionEvent(@UnknownInitialization AprsSupervisorJFrame this,ListSelectionEvent e) {
+        if (null == jListFutures) {
+            return;
+        }
         String selectedFutureString = jListFutures.getSelectedValue();
         if (null == selectedFutureString) {
             return;
@@ -616,7 +628,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 }
             }
         }
-        updateCurrentFutureDisplay();
+        boolean showDoneFutures = false;
+        if(jCheckBoxShowDoneFutures != null) {
+            showDoneFutures = jCheckBoxShowDoneFutures.isSelected();
+        }
+        boolean showUnnamedFutures = false;
+        if(null != jCheckBoxShowUnnamedFutures) {
+            showUnnamedFutures = jCheckBoxShowUnnamedFutures.isSelected();
+        }
+        updateCurrentFutureDisplay(showDoneFutures, showUnnamedFutures);
     }
 
     /**
@@ -634,9 +654,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @return setup file location
      * @throws IOException setup files location can not be read
      */
-    public static File getLastSetupFile() throws IOException {
+    @Nullable public static File getLastSetupFile() throws IOException {
         if (lastSetupFileFile.exists()) {
-            return new File(readFirstLine(lastSetupFileFile));
+            String firstLine = readFirstLine(lastSetupFileFile);
+            if(null != firstLine && firstLine.length() > 0) {
+                return new File(firstLine);
+            }
         }
         return null;
     }
@@ -649,9 +672,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @return last simulate file location
      * @throws IOException file location can not be read
      */
-    public static File getLastSimTeachFile() throws IOException {
+    @Nullable public static File getLastSimTeachFile() throws IOException {
         if (lastSimTeachFileFile.exists()) {
-            return new File(readFirstLine(lastSimTeachFileFile));
+            String firstLine = readFirstLine(lastSimTeachFileFile);
+            if(null != firstLine && firstLine.length() > 0) {
+                return new File(firstLine);
+            }
         }
         return null;
     }
@@ -663,9 +689,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @return last teach properties file
      * @throws IOException file location can not be read
      */
-    public static File getLastTeachPropertiesFile() throws IOException {
+    @Nullable public static File getLastTeachPropertiesFile() throws IOException {
         if (lastTeachPropertiesFileFile.exists()) {
-            return new File(readFirstLine(lastTeachPropertiesFileFile));
+            String firstLine = readFirstLine(lastTeachPropertiesFileFile);
+            if(null != firstLine && firstLine.length() > 0) {
+                return new File(firstLine);
+            }
         }
         return null;
     }
@@ -678,9 +707,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @return last posmap file location
      * @throws IOException file location can not be read
      */
-    public static File getLastPosMapFile() throws IOException {
+    @Nullable public static File getLastPosMapFile() throws IOException {
         if (lastPosMapFileFile.exists()) {
-            return new File(readFirstLine(lastPosMapFileFile));
+            String firstLine = readFirstLine(lastPosMapFileFile);
+            if(null != firstLine && firstLine.length() > 0) {
+                return new File(firstLine);
+            }
         }
         return null;
     }
@@ -782,13 +814,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     JPanel blankPanel = new JPanel();
 
-    private AprsJFrame posMapInSys = null;
-    private AprsJFrame posMapOutSys = null;
+    @Nullable private AprsJFrame posMapInSys = null;
+    @Nullable private AprsJFrame posMapOutSys = null;
 
-    private AprsJFrame findSystemWithRobot(String robot) {
+    @Nullable private AprsJFrame findSystemWithRobot(String robot) {
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame aj = aprsSystems.get(i);
-            if (aj.getRobotName() != null && aj.getRobotName().equals(robot)) {
+            String robotName = aj.getRobotName();
+            if (robotName != null && robotName.equals(robot)) {
                 return aj;
             }
         }
@@ -803,7 +836,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         if (row >= 0 && row < jTablePositionMappings.getRowCount() && col > 0 && col < jTablePositionMappings.getColumnCount()) {
             try {
                 String inSys = (String) jTablePositionMappings.getValueAt(row, 0);
-                String outSys = (String) jTablePositionMappings.getColumnName(col);
+                if (null == inSys || inSys.length() < 1) {
+                    logEventErr("No inSys entry in jTablePositionMappings for row=" + row);
+                    return;
+                }
+                String outSys = jTablePositionMappings.getColumnName(col);
+                if (null == outSys || outSys.length() < 1) {
+                    logEventErr("No outSys entry in jTablePositionMappings for row=" + row);
+                    return;
+                }
                 posMapInSys = findSystemWithRobot(inSys);
 
                 if (null != posMapInSys) {
@@ -858,10 +899,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return lrow.get(col);
     }
 
-    private final AtomicReference<XFuture<Void>> stealRobotFuture = new AtomicReference<>(null);
-    private final AtomicReference<XFuture<Void>> unStealRobotFuture = new AtomicReference<>(null);
-    private final AtomicReference<XFuture<Void>> cancelStealRobotFuture = new AtomicReference<>(null);
-    private final AtomicReference<XFuture<Void>> cancelUnStealRobotFuture = new AtomicReference<>(null);
+    private final AtomicReference<@Nullable XFuture<Void>> stealRobotFuture = new AtomicReference<>(null);
+    private final AtomicReference<@Nullable XFuture<Void>> unStealRobotFuture = new AtomicReference<>(null);
+    private final AtomicReference<@Nullable XFuture<Void>> cancelStealRobotFuture = new AtomicReference<>(null);
+    private final AtomicReference<@Nullable XFuture<Void>> cancelUnStealRobotFuture = new AtomicReference<>(null);
 
     private XFuture<Void> checkUnstealRobotFuture(XFuture<Void> future) {
         XFuture<Void> currentUnstealRobotFuture = unStealRobotFuture.get();
@@ -874,18 +915,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    //    private XFuture<Void> checkStealRobotFuture(XFuture<Void> future) {
-//        XFuture<Void> currentStealRobotFuture = stealRobotFuture.get();
-//        if (null != currentStealRobotFuture && currentStealRobotFuture != future) {
-//            final XFuture<Void> newFuture = currentStealRobotFuture;
-//            return newFuture
-//                    .thenCompose("checkStealRobotFuture1",
-//                            x -> checkUnstealRobotFuture(newFuture));
-//        } else {
-//            return XFuture.completedFutureWithName("checkStealRobotFuture2", null);
-//        }
-//    }
-    private XFuture<?> checkLastReturnedFuture(XFuture<?> inFuture) {
+    private XFuture<?> checkLastReturnedFuture(@Nullable XFuture<?> inFuture) {
         final XFuture<?> lfr = this.lastFutureReturned;
         if (null != lfr && lfr != inFuture) {
             return lfr
@@ -896,7 +926,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private List<XFuture> oldLfrs = new ArrayList<>();
+    private List<XFuture<?>> oldLfrs = new ArrayList<>();
 
     private final ConcurrentHashMap<String, Integer> robotEnableCountMap
             = new ConcurrentHashMap<>();
@@ -965,9 +995,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     }
                     try {
                         final XFuture<Void> origUnstealFuture = unStealRobotFuture.getAndSet(null);
-                        ;
                         final XFuture<Void> origCancelUnstealFuture = cancelUnStealRobotFuture.getAndSet(null);
-                        ;
                         try {
                             if (null != origUnstealFuture && null != origCancelUnstealFuture) {
                                 logEvent("Cancelling future created at " + getTimeString(origUnstealFuture.getStartTime()) + ", origUnstealFuture = " + origUnstealFuture);
@@ -986,7 +1014,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                             if (!this.cancelStealRobotFuture.compareAndSet(null, cancelFuture)) {
                                 throw new IllegalStateException("cancelStealRobotFuture already set.");
                             }
-                            ;
                             lastFutureReturned = XFuture.anyOfWithName("setRobotEnabled(" + robotName + "," + enabled + ").anyOf(steal,cancel)",
                                     future.handle(
                                             "setRobotEnabled(" + robotName + "," + enabled + ").anyOf(steal,cancel).handle",
@@ -1003,19 +1030,19 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                                     }
                                                     return t.toString();
                                                 } else {
-                                                    return null;
+                                                    return "";
                                                 }
                                             })
-                                    .thenCompose("setRobotEnabled(" + robotName + "," + enabled + ").checkForExceptions",
-                                            x -> {
-                                                if (x == null) {
-                                                    return XFuture.completedFutureWithName(
-                                                            "setRobotEnabled(" + robotName + "," + enabled + ").alreadyComplete",
-                                                            null);
-                                                } else {
-                                                    return new XFuture<>(x + ".neverComplete");
-                                                }
-                                            }),
+                                            .thenCompose("setRobotEnabled(" + robotName + "," + enabled + ").checkForExceptions",
+                                                    (String x) -> {
+                                                        if (x == null || x.length() < 1) {
+                                                            return XFuture.completedFutureWithName(
+                                                                    "setRobotEnabled(" + robotName + "," + enabled + ").alreadyComplete",
+                                                                    x);
+                                                        } else {
+                                                            return new XFuture<>(x + ".neverComplete");
+                                                        }
+                                                    }),
                                     cancelFuture);
 
                         } finally {
@@ -1033,7 +1060,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         return;
                     }
                     stealingRobots = false;
-                    XFuture prevLFR = lastFutureReturned;
+                    XFuture<?> prevLFR = lastFutureReturned;
                     final XFuture<Void> origStealFuture = stealRobotFuture.getAndSet(null);
                     final XFuture<Void> origCancelStealFuture = cancelStealRobotFuture.getAndSet(null);
                     try {
@@ -1059,7 +1086,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                 future.handle("setRobotEnabled(" + robotName + "," + enabled + ").handle1",
                                         (Void x, Throwable t) -> {
                                             if (t == null) {
-                                                return (String) null;
+                                                return "";
                                             } else {
                                                 if (!(t instanceof CancellationException)) {
                                                     logEvent(t.toString());
@@ -1073,14 +1100,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                                 return t.toString();
                                             }
                                         })
-                                .thenCompose("setRobotEnabled(" + robotName + "," + enabled + ").handle2",
-                                        x -> {
-                                            if (x == null) {
-                                                return XFuture.completedFutureWithName("setRobotEnabled(" + robotName + "," + enabled + ").completedFuture2", null);
-                                            } else {
-                                                return new XFuture<>(x + ".neverComplete");
-                                            }
-                                        }),
+                                        .thenCompose("setRobotEnabled(" + robotName + "," + enabled + ").handle2",
+                                                x -> {
+                                                    if (x == null) {
+                                                        return XFutureVoid.completedFutureWithName("setRobotEnabled(" + robotName + "," + enabled + ").completedFuture2");
+                                                    } else {
+                                                        return new XFuture<>(x + ".neverComplete");
+                                                    }
+                                                }),
                                 cancelFuture);
                         //.thenCompose(x -> checkStealRobotFuture(null)));
                     } finally {
@@ -1110,7 +1137,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 //                 lastFutureReturned = XFuture.anyOfWithName(this.stealRobotFuture, 
 //                            this.cancelStealRobotFuture.thenCompose(x -> (null != unStealRobotFuture)?unStealRobotFuture:XFuture.completedFuture(null)));
                 }
-                oldLfrs.add(lastFutureReturned);
+                if (null != lastFutureReturned) {
+                    oldLfrs.add(lastFutureReturned);
+                }
             }
         } catch (Exception e) {
             log(Level.SEVERE, "", e);
@@ -1126,9 +1155,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
             String robotName = (String) jTableRobots.getValueAt(i, 0);
-            model.setValueAt(robotEnableMap.get(robotName), i, 1);
-            model.setValueAt(robotDisableCountMap.getOrDefault(robotName, 0), i, 4);
-            model.setValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
+            if (null != robotName) {
+                model.setValueAt(robotEnableMap.get(robotName), i, 1);
+                model.setValueAt(robotDisableCountMap.getOrDefault(robotName, 0), i, 4);
+                model.setValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
+            }
         }
         Utils.autoResizeTableColWidths(jTableRobots);
     }
@@ -1149,11 +1180,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         for (int i = 0; i < aprsSystems.size() - 1; i++) {
             AprsJFrame sys = aprsSystems.get(i);
             if (null != sys) {
-                names.add(sys.getRobotName());
-                if (Objects.equals(sys.getRobotName(), robotName)) {
-                    XFuture<Void> f = stealRobot(aprsSystems.get(i + 1), aprsSystems.get(i));
-                    addStealUnstealList(f);
-                    return f;
+                String sysRobotName = sys.getRobotName();
+                if (null != sysRobotName) {
+                    names.add(sysRobotName);
+                    if (Objects.equals(sysRobotName, robotName)) {
+                        XFuture<Void> f = stealRobot(aprsSystems.get(i + 1), aprsSystems.get(i));
+                        addStealUnstealList(f);
+                        return f;
+                    }
                 }
             }
         }
@@ -1222,11 +1256,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private final AtomicReference<NamedCallable<XFuture<?>>> returnRobotRunnable = new AtomicReference<>();
+    private final AtomicReference<@Nullable NamedCallable<XFuture<Void>>> returnRobotRunnable = new AtomicReference<>();
 
+    @SuppressWarnings("unchecked")
     private <T> NamedCallable<T> setReturnRobotRunnable(String name, Callable<T> r, AprsJFrame... systems) {
-        NamedCallable namedR = new NamedCallable(r, name, systems);
-        returnRobotRunnable.set(namedR);
+        NamedCallable<T> namedR = new NamedCallable<>(r, name, systems);
+        returnRobotRunnable.set((NamedCallable<XFuture<Void>>) namedR);
         return namedR;
     }
 
@@ -1249,8 +1284,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private volatile StackTraceElement returnRobotsStackTrace[] = null;
-    private volatile Thread returnRobotsThread = null;
+    private volatile StackTraceElement returnRobotsStackTrace @Nullable []  = null;
+    @Nullable private volatile Thread returnRobotsThread = null;
     private volatile long returnRobotsTime = -1;
 
     private void printReturnRobotTraceInfo() {
@@ -1259,23 +1294,24 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         System.out.println("returnRobotsTime = " + (returnRobotsTime - System.currentTimeMillis()));
     }
 
-    private XFuture<?> returnRobots(String comment) {
+    private XFuture<@Nullable Void> returnRobots(String comment) {
         return returnRobots(returnRobotRunnable.getAndSet(null), comment);
     }
 
-    private XFuture<?> returnRobotsDirect(String comment) {
+    private XFuture<@Nullable Void> returnRobotsDirect(String comment) {
         return returnRobotsDirect(returnRobotRunnable.getAndSet(null), comment);
     }
 
     private AtomicInteger returnRobotsNumber = new AtomicInteger();
 
-    private XFuture<?> returnRobots(NamedCallable<XFuture<?>> r, String comment) {
+    private XFuture<Void> returnRobots(@Nullable NamedCallable<XFuture<Void>> r, String comment) {
         checkRobotsUniquePorts();
         this.stealingRobots = false;
         if (r != null) {
-            returnRobotsThread = Thread.currentThread();
+            Thread curThread = Thread.currentThread();
+            returnRobotsThread = curThread;
             returnRobotsTime = System.currentTimeMillis();
-            returnRobotsStackTrace = returnRobotsThread.getStackTrace();
+            returnRobotsStackTrace = curThread.getStackTrace();
             String blockerName = "returnRobots" + returnRobotsNumber.incrementAndGet();
             disallowToggles(blockerName, r.getSystems());
             logEvent(r.name + ", comment=" + comment);
@@ -1300,14 +1336,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private XFuture<?> returnRobotsDirect(NamedCallable<XFuture<?>> r, String comment) {
+    private XFuture<@Nullable Void> returnRobotsDirect(@Nullable NamedCallable<XFuture<Void>> r, String comment) {
         checkRobotsUniquePorts();
         this.stealingRobots = false;
         if (r != null) {
             try {
-                returnRobotsThread = Thread.currentThread();
+                Thread curThread = Thread.currentThread();
+                returnRobotsThread = curThread;
                 returnRobotsTime = System.currentTimeMillis();
-                returnRobotsStackTrace = returnRobotsThread.getStackTrace();
+                returnRobotsStackTrace = curThread.getStackTrace();
                 String blockerName = "returnRobotsDirect" + returnRobotsNumber.incrementAndGet();
                 disallowToggles(blockerName, r.getSystems());
                 logEvent(r.name + ", comment=" + comment);
@@ -1315,7 +1352,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         .alwaysAsync(() -> allowToggles(blockerName), supervisorExecutorService);
             } catch (Exception ex) {
                 Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                XFuture<?> ret = new XFuture<>("returnRobotsDirect." + comment);
+                XFuture<Void> ret = new XFuture<>("returnRobotsDirect." + comment);
                 ret.completeExceptionally(ex);
                 return ret;
             }
@@ -1325,7 +1362,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private final AtomicReference<Supplier<XFuture<Void>>> unStealRobotsSupplier = new AtomicReference<>(null);
+    private final AtomicReference< @Nullable Supplier<XFuture<Void>>> unStealRobotsSupplier = new AtomicReference<>(null);
 
     private XFuture<Void> unStealRobots() {
         Supplier<XFuture<Void>> supplier = unStealRobotsSupplier.getAndSet(null);
@@ -1357,8 +1394,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 SplashScreen.getRedYellowColorList(), gd);
     }
 
-    private XFuture<Void> stealAbortFuture = null;
-    private XFuture<Void> unstealAbortFuture = null;
+    @Nullable private XFuture<Void> stealAbortFuture = null;
+    @Nullable private XFuture<Void> unstealAbortFuture = null;
 
     private volatile boolean stealingRobots = false;
 
@@ -1376,7 +1413,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @return future that can be used to take action after the message has been
      * shown
      */
-    public XFuture<Void> showMessageFullScreen(String message, float fontSize, Image image, List<Color> colors, GraphicsDevice graphicsDevice) {
+    public XFuture<Void> showMessageFullScreen(String message, float fontSize, @Nullable Image image, List<Color> colors, GraphicsDevice graphicsDevice) {
 
         if (jCheckBoxMenuItemShowSplashMessages.isSelected()) {
             return forceShowMessageFullScreen(message, fontSize, image, colors, graphicsDevice);
@@ -1386,7 +1423,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private XFuture<Void> forceShowMessageFullScreen(String message, float fontSize, Image image, List<Color> colors, GraphicsDevice graphicsDevice) {
+    private XFuture<Void> forceShowMessageFullScreen(String message, float fontSize, @Nullable Image image, List<Color> colors, GraphicsDevice graphicsDevice) {
         logEvent("showMessageFullScreen " + message.replace('\n', ' '));
         return SplashScreen.showMessageFullScreen(message, fontSize, image, colors, graphicsDevice);
     }
@@ -1396,6 +1433,22 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private XFuture<Void> stealRobot(AprsJFrame stealFrom, AprsJFrame stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
 
+        String stealForRobotName = stealFor.getRobotName();
+        if (null == stealForRobotName) {
+            throw new IllegalArgumentException("stealFor has null robotName");
+        }
+        String stealFromRobotName = stealFrom.getRobotName();
+        if (null == stealFromRobotName) {
+            throw new IllegalArgumentException("stealFrom has null robotName");
+        }
+        String stealFromOrigCrclHost = stealFrom.getRobotCrclHost();
+        if (null == stealFromOrigCrclHost) {
+            throw new IllegalArgumentException("stealFrom has null robotCrclHost");
+        }
+        return stealRobotsInternal(stealFrom, stealFor, stealForRobotName, stealFromRobotName, stealFromOrigCrclHost);
+    }
+
+    private XFuture<Void> stealRobotsInternal(AprsJFrame stealFrom, AprsJFrame stealFor, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost) throws IOException, PositionMap.BadErrorMapFormatException {
         final int srn = stealRobotNumber.incrementAndGet();
         logEvent("Transferring " + stealFrom.getRobotName() + " to " + stealFor.getTaskName() + " : srn=" + srn);
         String blocker = "stealRobot" + srn;
@@ -1405,25 +1458,26 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             System.out.println("calling stealrRobot when already stealingRobots");
             return origStealRobotFuture;
         }
-
-        File f = getPosMapFile(stealFor.getRobotName(), stealFrom.getRobotName());
+        
+        File f = getPosMapFile(stealForRobotName, stealFromRobotName);
         PositionMap pm = (f != null && !f.getName().equals("null")) ? new PositionMap(f) : PositionMap.emptyPositionMap();
 
         initColorTextSocket();
-        String stealFromOrigCrclHost = stealFrom.getRobotCrclHost();
+        
         int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
-        String stealFromRobotName = stealFrom.getRobotName();
 
-        String stealForOrigCrclHost = stealFor.getRobotCrclHost();
-        int stealForOrigCrclPort = stealFor.getRobotCrclPort();
-        String stealForRobotName = stealFor.getRobotName();
+        Map<String, String> stealFromOptionsCopy = new HashMap<>();
+        Map<String, String> stealFromOptionsOrig = stealFrom.getExecutorOptions();
+        if (null != stealFromOptionsOrig) {
+            copyOptions(transferrableOptions, stealFromOptionsOrig, stealFromOptionsCopy);
+        }
 
-        Map<String, String> stealFromOptions = new HashMap<>();
-        copyOptions(transferrableOptions, stealFrom.getExecutorOptions(), stealFromOptions);
-
-        Map<String, String> stealForOptions = new HashMap<>();
-        copyOptions(transferrableOptions, stealFor.getExecutorOptions(), stealForOptions);
-        NamedCallable returnRobot = setupReturnRobots(srn, stealFor, stealFrom, stealForOptions, pm);
+        Map<String, String> stealForOptionsCopy = new HashMap<>();
+        Map<String, String> stealForOptionsOrig = stealFor.getExecutorOptions();
+        if (null != stealForOptionsOrig) {
+            copyOptions(transferrableOptions, stealForOptionsOrig, stealForOptionsCopy);
+        }
+        NamedCallable<XFuture<?>> returnRobot = setupReturnRobots(srn, stealFor, stealFrom, stealForOptionsCopy, pm);
 
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
 
@@ -1433,30 +1487,30 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         logEvent("    and starting safe abort and disconnect for " + " : srn=" + srn + " " + stealFrom);
         stealAbortFuture = XFuture.allOfWithName("stealAbortAllOf",
                 stealFrom.startSafeAbortAndDisconnect("stealAbortAllOf.stealFrom" + " : srn=" + srn)
-                .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " " + stealFromRobotName + " needed for " + stealFor + " : srn=" + srn), supervisorExecutorService),
+                        .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " " + stealFromRobotName + " needed for " + stealFor + " : srn=" + srn), supervisorExecutorService),
                 stealFor.startSafeAbortAndDisconnect("stealAbortAllOf.stealFor" + " : srn=" + srn)
-                .thenComposeAsync("showDisabledMessage." + stealForRobotName,
-                        x -> {
-                            logEvent("Safe abort and disconnect completed for " + stealFor + ", " + stealForRobotName + " being disabled. " + " : srn=" + srn);
-                            if (null != colorTextSocket) {
-                                try {
-                                    colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
-                                } catch (IOException ex) {
-                                    log(Level.SEVERE, null, ex);
-                                }
-                            }
-                            return showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
-                                    SplashScreen.getDisableImageImage(),
-                                    SplashScreen.getRedYellowColorList(), gd);
-                        }, supervisorExecutorService));
+                        .thenComposeAsync("showDisabledMessage." + stealForRobotName,
+                                x -> {
+                                    logEvent("Safe abort and disconnect completed for " + stealFor + ", " + stealForRobotName + " being disabled. " + " : srn=" + srn);
+                                    if (null != colorTextSocket) {
+                                        try {
+                                            colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
+                                        } catch (IOException ex) {
+                                            log(Level.SEVERE, null, ex);
+                                        }
+                                    }
+                                    return showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
+                                            SplashScreen.getDisableImageImage(),
+                                            SplashScreen.getRedYellowColorList(), gd);
+                                }, supervisorExecutorService));
 
         XFuture<Boolean> part1 = stealAbortFuture.thenComposeAsync(
                 "transfer" + " : srn=" + srn, x -> {
                     logEvent("transfer : " + stealFor + " connectRobot(" + stealFromRobotName + "," + stealFromOrigCrclHost + "," + stealFromOrigCrclPort + ")" + " : srn=" + srn);
                     stealFor.addPositionMap(pm);
                     for (String opt : transferrableOptions) {
-                        if (stealFromOptions.containsKey(opt)) {
-                            stealFor.setExecutorOption(opt, stealFromOptions.get(opt));
+                        if (stealFromOptionsCopy.containsKey(opt)) {
+                            stealFor.setExecutorOption(opt, stealFromOptionsCopy.get(opt));
                         }
                     }
                     return stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
@@ -1477,12 +1531,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     int curSrn = stealRobotNumber.get();
                     if (srn != curSrn) {
                         logEvent("continueAfterSwitch srn=" + srn + ", curSrn=" + curSrn);
-                        return XFuture.completedFutureWithName("continueAfterSwitch.srn != stealRobotNumber.get()" + " : srn=" + srn, null);
+                        return XFuture.completedFutureWithName("continueAfterSwitch.srn != stealRobotNumber.get()" + " : srn=" + srn, false);
                     }
                     if (stealFor.isAborting()) {
                         logEvent("continueAfterSwitch stealFor.isAborting() : srn=" + srn + ", curSrn=" + curSrn + ", stealFor=" + stealFrom);
-                        return XFuture.completedFutureWithName("continueAfterSwitch.stealFor.isAborting()" + " : srn=" + srn, null);
+                        return XFuture.completedFutureWithName("continueAfterSwitch.stealFor.isAborting()" + " : srn=" + srn, false);
                     }
+
                     logEvent("Continue actions after switch for " + stealFor.getTaskName() + " with " + stealFor.getRobotName() + " : srn=" + srn);
                     return stealFor.continueActionList("stealFor.continueAfterSwitch" + " : srn=" + srn)
                             .thenComposeAsync(x4 -> {
@@ -1505,8 +1560,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     .thenRunAsync("stealRobot :  Checking systemContinueMap " + " : srn=" + srn,
                             () -> {
                                 logEvent("completing stealRobot: stealingRobots=" + stealingRobots + ", stealFor=" + stealFor + ",srn=" + srn + ", stealRobotNumber=" + stealRobotNumber.get() + "robotEnableMap.get(" + stealForRobotName + ")=" + robotEnableMap.get(stealForRobotName));
-                                if (stealingRobots && srn == stealRobotNumber.get() && !robotEnableMap.get(stealForRobotName)) {
-                                    completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag());
+                                if (stealingRobots && srn == stealRobotNumber.get()) {
+                                    Boolean enabled = robotEnableMap.get(stealForRobotName);
+                                    if (null == enabled) {
+                                        throw new IllegalStateException("robotEnableMap has null for " + stealForRobotName);
+                                    }
+                                    if (!enabled) {
+                                        completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag());
+                                    }
                                 }
                             }, supervisorExecutorService);
         }
@@ -1514,7 +1575,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return part1.thenCompose(
                 "startSafeAbortAfterSwitch" + " : srn=" + srn, x -> {
                     return stealFor.startSafeAbort("startSafeAbortAfterSwitch" + " : srn=" + srn)
-                    .thenRun(() -> logEvent("Safe abort completed for " + stealFor + " : srn=" + srn));
+                            .thenRun(() -> logEvent("Safe abort completed for " + stealFor + " : srn=" + srn));
                 })
                 .thenComposeAsync(
                         "showReturning" + " : srn=" + srn, x -> {
@@ -1542,79 +1603,93 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 });
     }
 
-    private NamedCallable setupReturnRobots(final int srn, AprsJFrame stealFor, AprsJFrame stealFrom, Map<String, String> stealForOptions, PositionMap pm) {
+    private NamedCallable<XFuture<?>> setupReturnRobots(final int srn, AprsJFrame stealFor, AprsJFrame stealFrom, Map<String, String> stealForOptions, PositionMap pm) {
         String stealFromOrigCrclHost = stealFrom.getRobotCrclHost();
-        int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
+        if (null == stealFromOrigCrclHost) {
+            throw new IllegalStateException("null robotCrclHost in stealFrom =" + stealFrom);
+        }
         String stealFromRobotName = stealFrom.getRobotName();
+        if (null == stealFromRobotName) {
+            throw new IllegalStateException("null robotName in stealFrom =" + stealFrom);
+        }
 
         String stealForOrigCrclHost = stealFor.getRobotCrclHost();
-        int stealForOrigCrclPort = stealFor.getRobotCrclPort();
+        if (null == stealForOrigCrclHost) {
+            throw new IllegalStateException("null robotCrclHost in stealFor =" + stealFor);
+        }
         String stealForRobotName = stealFor.getRobotName();
-        NamedCallable returnRobot = setReturnRobotRunnable("Return  : srn=" + srn + " " + stealForRobotName + "-> " + stealFor.getTaskName() + " , " + stealFromRobotName + "->" + stealFrom.getTaskName(),
-                () -> {
-                    if (stealFor.isPaused()) {
-                        logEvent(stealFor.getTaskName() + " is paused when trying to return robot" + " : srn=" + srn);
-                    }
-                    if (stealFrom.isPaused()) {
-                        logEvent(stealFrom.getTaskName() + " is paused when trying to return robot" + " : srn=" + srn);
-                    }
-                    if (Objects.equals(stealFrom.getRobotName(), stealFromRobotName)) {
-                        logEvent(stealFromRobotName + " already assigned to " + stealFrom + " : srn=" + srn);
-                    }
-                    if (Objects.equals(stealFor.getRobotName(), stealForRobotName)) {
-                        logEvent(stealForRobotName + " already assigned to " + stealFor + " : srn=" + srn);
-                    }
-                    if (Objects.equals(stealFrom.getRobotName(), stealFromRobotName)
-                    && Objects.equals(stealFor.getRobotName(), stealForRobotName)) {
-                        return XFuture.completedFutureWithName("returnRobot.alreadyReturned" + " : srn=" + srn, null);
-                    }
-                    if (stealFor.isRunningCrclProgram()) {
-                        String msg = stealFor.getTaskName() + " is running crcl program when trying to return robot" + " : srn=" + srn;
-                        logEvent(msg);
-                        throw new IllegalStateException(msg);
-                    }
-                    if (stealFrom.isRunningCrclProgram()) {
-                        String msg = stealFrom.getTaskName() + " is running crcl program when trying to return robot" + " : srn=" + srn;
-                        logEvent(msg);
-                        throw new IllegalStateException(msg);
-                    }
-                    if (stealFor.isDoingActions()) {
-                        String msg = stealFor.getTaskName() + " is doing actions when trying to return robot" + " : srn=" + srn;
-                        logEvent(msg);
-                        throw new IllegalStateException(msg);
-                    }
-                    if (stealFrom.isDoingActions()) {
-                        String msg = stealFrom.getTaskName() + " is doing actions  program when trying to return robot" + " : srn=" + srn;
-                        logEvent(msg);
-                        throw new IllegalStateException(msg);
-                    }
-                    logEvent("Disconnect robot from " + stealFor);
-                    return stealFor.disconnectRobot()
-                    .thenComposeAsync(
-                            "returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn,
-                            x -> {
-                                logEvent(stealForRobotName + " disconnnected from " + stealFor + " : srn=" + srn);
-                                logEvent("start returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
-                                return stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
-                            }, supervisorExecutorService)
-                    .thenComposeAsync("returnRobot.transferOption",
-                            x -> {
-                                logEvent(stealFrom.getTaskName() + " connected to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
-                                for (String opt : transferrableOptions) {
-                                    if (stealForOptions.containsKey(opt)) {
-                                        stealFor.setExecutorOption(opt, stealForOptions.get(opt));
-                                    }
-                                }
-                                stealFor.removePositionMap(pm);
-                                logEvent("start returnRobot." + stealFor.getTaskName() + " connect to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
-                                return stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);
-                            }, supervisorExecutorService)
-                    .thenRun(() -> {
-                        logEvent(stealFor.getTaskName() + " connected to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
-                        checkRobotsUniquePorts();
-                    });
-                }, stealFor, stealFrom);
+        if (null == stealForRobotName) {
+            throw new IllegalStateException("null robot name in stealFor =" + stealFor);
+        }
+        NamedCallable<XFuture<?>> returnRobot = setupRobotReturnInternal(stealFrom, stealFor, srn, stealForRobotName, stealFromRobotName, stealFromOrigCrclHost, stealForOptions, pm, stealForOrigCrclHost);
         return returnRobot;
+    }
+
+    private NamedCallable<XFuture<?>> setupRobotReturnInternal(AprsJFrame stealFrom, AprsJFrame stealFor, final int srn, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost, Map<String, String> stealForOptions, PositionMap pm, String stealForOrigCrclHost) {
+        int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
+        int stealForOrigCrclPort = stealFor.getRobotCrclPort();
+        String returnName = "Return  : srn=" + srn + " " + stealForRobotName + "-> " + stealFor.getTaskName() + " , " + stealFromRobotName + "->" + stealFrom.getTaskName();
+        NamedCallable<XFuture<?>> returnRobot
+                = setReturnRobotRunnable(returnName,
+                        () -> {
+                            if (stealFor.isPaused()) {
+                                logEvent(stealFor.getTaskName() + " is paused when trying to return robot" + " : srn=" + srn);
+                            }
+                            if (stealFrom.isPaused()) {
+                                logEvent(stealFrom.getTaskName() + " is paused when trying to return robot" + " : srn=" + srn);
+                            }
+                            if (Objects.equals(stealFrom.getRobotName(), stealFromRobotName)) {
+                                logEvent(stealFromRobotName + " already assigned to " + stealFrom + " : srn=" + srn);
+                            }
+                            if (Objects.equals(stealFor.getRobotName(), stealForRobotName)) {
+                                logEvent(stealForRobotName + " already assigned to " + stealFor + " : srn=" + srn);
+                            }
+                            if (Objects.equals(stealFrom.getRobotName(), stealFromRobotName)
+                            && Objects.equals(stealFor.getRobotName(), stealForRobotName)) {
+                                return XFuture.completedFutureWithName("returnRobot.alreadyReturned" + " : srn=" + srn, null);
+                            }
+                            checkRunningOrDoingActions(stealFor,srn);
+                            checkRunningOrDoingActions(stealFrom,srn);
+                            logEvent("Disconnect robot from " + stealFor);
+                            return stealFor.disconnectRobot()
+                                    .thenComposeAsync(
+                                            "returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn,
+                                            x -> {
+                                                logEvent(stealForRobotName + " disconnnected from " + stealFor + " : srn=" + srn);
+                                                logEvent("start returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
+                                                return stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
+                                            }, supervisorExecutorService)
+                                    .thenComposeAsync("returnRobot.transferOption",
+                                            x -> {
+                                                logEvent(stealFrom.getTaskName() + " connected to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
+                                                for (String opt : transferrableOptions) {
+                                                    if (stealForOptions.containsKey(opt)) {
+                                                        stealFor.setExecutorOption(opt, stealForOptions.get(opt));
+                                                    }
+                                                }
+                                                stealFor.removePositionMap(pm);
+                                                logEvent("start returnRobot." + stealFor.getTaskName() + " connect to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
+                                                return stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);
+                                            }, supervisorExecutorService)
+                                    .thenRun(() -> {
+                                        logEvent(stealFor.getTaskName() + " connected to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
+                                        checkRobotsUniquePorts();
+                                    });
+                        }, stealFor, stealFrom);
+        return returnRobot;
+    }
+
+    private void checkRunningOrDoingActions(AprsJFrame sys, int srn) throws IllegalStateException {
+        if (sys.isRunningCrclProgram()) {
+            String msg = sys.getTaskName() + " is running crcl program when trying to return robot" + " : srn=" + srn;
+            logEvent(msg);
+            throw new IllegalStateException(msg);
+        }
+        if (sys.isDoingActions()) {
+            String msg = sys.getTaskName() + " is doing actions when trying to return robot" + " : srn=" + srn;
+            logEvent(msg);
+            throw new IllegalStateException(msg);
+        }
     }
 
     private void setupUnstealRobots(final int srn, AprsJFrame stealFor, AprsJFrame stealFrom, String stealForRobotName, final GraphicsDevice gd) {
@@ -1632,28 +1707,28 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         logEvent("    and starting safe abort and disconnect for" + stealFrom + " : srn=" + srn);
         unstealAbortFuture = XFuture.allOfWithName("unStealAbortAllOf",
                 stealFrom.startSafeAbortAndDisconnect("unStealAbortAllOf.stealFrom" + stealFrom + " : srn=" + srn)
-                .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " : srn=" + srn), supervisorExecutorService),
+                        .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " : srn=" + srn), supervisorExecutorService),
                 stealFor.startSafeAbortAndDisconnect("unStealAbortAllOf.stealFor " + stealFor + " : srn=" + srn)
-                .thenComposeAsync("unstealShowReenable", x -> {
-                    logEvent("Safe abort and disconnect completed for " + stealFor + " : srn=" + srn);
-                    boolean stillAborting = stealFor.isAborting();
-                    if (stillAborting) {
-                        String msg = "still aborting after safe abort and disconnect" + " : srn=" + srn;
-                        logEvent(msg);
-                        boolean doubleCheck = stealFor.isAborting();
-                        throw new IllegalStateException(msg);
-                    }
-                    if (null != colorTextSocket) {
-                        try {
-                            colorTextSocket.getOutputStream().write("0x00FF00, 0x00FF00\r\n".getBytes());
-                        } catch (IOException ex) {
-                            log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    return showMessageFullScreen(stealForRobotName + "\n Enabled", 80.0f,
-                            SplashScreen.getDisableImageImage(),
-                            SplashScreen.getBlueWhiteGreenColorList(), gd);
-                }, supervisorExecutorService));
+                        .thenComposeAsync("unstealShowReenable", x -> {
+                            logEvent("Safe abort and disconnect completed for " + stealFor + " : srn=" + srn);
+                            boolean stillAborting = stealFor.isAborting();
+                            if (stillAborting) {
+                                String msg = "still aborting after safe abort and disconnect" + " : srn=" + srn;
+                                logEvent(msg);
+                                boolean doubleCheck = stealFor.isAborting();
+                                throw new IllegalStateException(msg);
+                            }
+                            if (null != colorTextSocket) {
+                                try {
+                                    colorTextSocket.getOutputStream().write("0x00FF00, 0x00FF00\r\n".getBytes());
+                                } catch (IOException ex) {
+                                    log(Level.SEVERE, null, ex);
+                                }
+                            }
+                            return showMessageFullScreen(stealForRobotName + "\n Enabled", 80.0f,
+                                    SplashScreen.getDisableImageImage(),
+                                    SplashScreen.getBlueWhiteGreenColorList(), gd);
+                        }, supervisorExecutorService));
         return unstealAbortFuture
                 .thenComposeAsync("unsteal.returnRobots1" + " : srn=" + srn, x -> {
                     return returnRobotsDirect("unsteal.returnRobots1" + " : srn=" + srn);
@@ -1692,17 +1767,17 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                         });
                             }, supervisorExecutorService),
                             stealFor.continueActionList("unsteal.stealFor" + " : srn=" + srn)
-                            .thenComposeAsync(x3 -> {
-                                logEvent("unsteal.stealFor " + stealFor.getRunName() + " completed action list after return after robot reenabled. " + x3 + " : srn=" + srn);
-                                return finishAction(stealFrom)
-                                        .thenApply(x4 -> {
-                                            logEvent("finish unsteal.stealFor " + stealFor.getRunName() + " completed action list " + x3 + " : srn=" + srn);
-                                            if (x3 && !stealFor.isAborting() && srn == stealRobotNumber.get()) {
-                                                completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag());
-                                            }
-                                            return x3;
-                                        });
-                            }, supervisorExecutorService)
+                                    .thenComposeAsync(x3 -> {
+                                        logEvent("unsteal.stealFor " + stealFor.getRunName() + " completed action list after return after robot reenabled. " + x3 + " : srn=" + srn);
+                                        return finishAction(stealFrom)
+                                                .thenApply(x4 -> {
+                                                    logEvent("finish unsteal.stealFor " + stealFor.getRunName() + " completed action list " + x3 + " : srn=" + srn);
+                                                    if (x3 && !stealFor.isAborting() && srn == stealRobotNumber.get()) {
+                                                        completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag());
+                                                    }
+                                                    return x3;
+                                                });
+                                    }, supervisorExecutorService)
                     );
                 });
     }
@@ -1715,8 +1790,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void completeSystemsContinueIndFuture(AprsJFrame sys, boolean value) {
         assert (null != sys) : assertFail() + "sys == null : sys=" + sys;
-        assert (sys.getRobotName() != null) : assertFail() + "sys.getRobotName() == null: sys=" + sys;
-        assert (sys.getRobotName().length() > 0) : assertFail() + "sys.getRobotName().length() <= 0 : sys=" + sys;
+        String sysRobotName = sys.getRobotName();
+        assert (sysRobotName != null) : assertFail() + "sys.getRobotName() == null: sys=" + sys + " @AssumeAssertion(nullness)";
+        assert (sysRobotName.length() > 0) : assertFail() + "sys.getRobotName().length() <= 0 : sys=" + sys;
         assert (sys.isConnected()) : assertFail() + "!sys.isConnected() : sys=" + sys;
         assert (!sys.isAborting()) : assertFail() + "sys.isAborting() : sys=" + sys;
         checkRobotsUniquePorts();
@@ -1726,7 +1802,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         logEvent("Checking systemContinueMap for " + sys);
         AtomicReference<XFuture<Boolean>> ref = new AtomicReference<>();
         XFuture<Boolean> f = systemContinueMap.replace(sys.getMyThreadId(),
-                new XFuture("systemContinueMap." + sys));
+                new XFuture<>("systemContinueMap." + sys));
         if (null != f) {
             logEvent("Completing " + f + " with " + value + " for " + sys);
             f.complete(value);
@@ -1747,7 +1823,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return timeFormat.format(date);
     }
 
-    private volatile PrintStream logPrintStream = null;
+    @Nullable private volatile PrintStream logPrintStream = null;
 
     private int eventsDisplayMax = 500;
 
@@ -1769,7 +1845,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         this.eventsDisplayMax = eventsDisplayMax;
     }
 
-    volatile javax.swing.Timer runTimeTimer = null;
+    volatile javax.swing.@Nullable Timer runTimeTimer = null;
 
     volatile int maxEventStringLen = 0;
 
@@ -1796,7 +1872,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
         }
         String fullLogString = timeString + " \t" + blockerSize + " \t" + s + " \t:thread= " + threadname;
-        logPrintStream.println(fullLogString);
+        if (null != logPrintStream) {
+            logPrintStream.println(fullLogString);
+        }
         System.out.println(fullLogString);
         tm.addRow(new Object[]{getTimeString(time), blockerSize, s, threadname});
         if (tm.getRowCount() % 50 < 2 || s.length() > maxEventStringLen) {
@@ -1858,7 +1936,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private final Map<String, Boolean> robotEnableMap = new HashMap<>();
 
-    private static String readFirstLine(File f) throws IOException {
+    @Nullable private static String readFirstLine(File f) throws IOException {
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             return br.readLine();
         }
@@ -1874,7 +1952,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -2169,7 +2247,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
         jTableSelectedPosMapFile.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                { new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0), null}
+
             },
             new String [] {
                 "Xin", "Yin", "Zin", "Xout", "Yout", "Zout", "Offset_X", "Offset_Y", "Offset_Z", "Label"
@@ -2782,6 +2860,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             super(rowCount, columnCount);
         }
 
+        @SuppressWarnings("rawtypes")
         public PositionMappingTableModel(Vector columnNames, int rowCount) {
             super(columnNames, rowCount);
         }
@@ -2790,22 +2869,24 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             super(columnNames, rowCount);
         }
 
+        @SuppressWarnings("rawtypes")
         public PositionMappingTableModel(Vector data, Vector columnNames) {
             super(data, columnNames);
         }
 
-        public PositionMappingTableModel(Object[][] data, Object[] columnNames) {
+        @SuppressWarnings({"rawtypes", "nullness"})
+        public PositionMappingTableModel(@Nullable Object[][] data, Object[] columnNames) {
             super(data, columnNames);
         }
     }
 
+    @SuppressWarnings({"rawtypes", "nullness"})
     private TableModel defaultPositionMappingsModel() {
         return new PositionMappingTableModel(
                 new Object[][]{
                     {"System", "Robot1", "Robot2"},
                     {"Robot1", null, new File("R1R2.csv")},
                     {"Robot2", new File("R1R2.csv"), null},}, new Object[]{"", "", ""});
-
     }
 
     private void jMenuItemSaveSetupAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveSetupAsActionPerformed
@@ -2821,10 +2902,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
         chooser.addChoosableFileFilter(filter);
         chooser.setFileFilter(filter);
-        if (lastSetupFile != null) {
-            chooser.setCurrentDirectory(lastSetupFile.getParentFile());
-            chooser.setSelectedFile(lastSetupFile);
-        }
+        setChooserFile(lastSetupFile, chooser);
         if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
             try {
                 saveSetupFile(chooser.getSelectedFile());
@@ -2848,10 +2926,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
         chooser.addChoosableFileFilter(filter);
         chooser.setFileFilter(filter);
-        if (lastSetupFile != null) {
-            chooser.setCurrentDirectory(lastSetupFile.getParentFile());
-            chooser.setSelectedFile(lastSetupFile);
-        }
+        setChooserFile(lastSetupFile, chooser);
         if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
             try {
                 loadSetupFile(chooser.getSelectedFile());
@@ -2918,7 +2993,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemRemoveSelectedSystemActionPerformed
 
-    private volatile XFuture<?> lastFutureReturned = null;
+    @Nullable private volatile XFuture<?> lastFutureReturned = null;
 
     private void prepAndFinishOnDispatch(Runnable r) {
 
@@ -2967,7 +3042,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             lastFutureReturned = null;
         }
         firstEventTime = -1;
-        XFuture xf = togglesAllowedXfuture.getAndSet(null);
+        XFuture<Void> xf = togglesAllowedXfuture.getAndSet(null);
         if (null != xf) {
             xf.cancelAll(true);
         }
@@ -2993,10 +3068,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         chooser.addChoosableFileFilter(filter);
         chooser.setFileFilter(filter);
         chooser.setDialogTitle("Choose APRS position mappings csv file to create (save as)");
-        if (null != lastPosMapFile) {
-            chooser.setCurrentDirectory(lastPosMapFile.getParentFile());
-            chooser.setSelectedFile(lastPosMapFile);
-        }
+        setChooserFile(lastPosMapFile, chooser);
         if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
             try {
                 savePositionMaps(chooser.getSelectedFile());
@@ -3038,10 +3110,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         chooser.setDialogTitle("Choose APRS Position Maps CSV to Open.");
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
         chooser.addChoosableFileFilter(filter);
-        if (lastPosMapFile != null) {
-            chooser.setCurrentDirectory(lastPosMapFile.getParentFile());
-            chooser.setSelectedFile(lastPosMapFile);
-        }
+        File file = lastPosMapFile;
+        setChooserFile(file, chooser);
         if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
             try {
                 loadPositionMaps(chooser.getSelectedFile());
@@ -3052,9 +3122,19 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private volatile XFuture<Void> lastSafeAbortAllFuture = null;
-    private volatile XFuture<Void> lastSafeAbortAllFuture2 = null;
-    private volatile NamedCallable<XFuture<?>> safeAbortReturnRobot = null;
+    private static void setChooserFile(@Nullable File file, JFileChooser chooser) {
+        if (file != null) {
+            File parentFile = file.getParentFile();
+            if (null != parentFile) {
+                chooser.setCurrentDirectory(parentFile);
+                chooser.setSelectedFile(file);
+            }
+        }
+    }
+
+    @Nullable private volatile XFuture<Void> lastSafeAbortAllFuture = null;
+    @Nullable private volatile XFuture<Void> lastSafeAbortAllFuture2 = null;
+    @Nullable private volatile NamedCallable<XFuture<Void>> safeAbortReturnRobot = null;
 
     private void jMenuItemSafeAbortAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSafeAbortAllActionPerformed
 
@@ -3066,7 +3146,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         XFuture<Void> f
                 = waitTogglesAllowed()
-                .thenCompose(x -> safeAbortAll());
+                        .thenCompose(x -> safeAbortAll());
         lastSafeAbortAllFuture = f;
         lastSafeAbortAllFuture2 = f.always(() -> {
             if (null != safeAbortReturnRobot) {
@@ -3119,7 +3199,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             lastSafeAbortAllFuture2.cancelAll(true);
             lastSafeAbortAllFuture2 = null;
         }
-        XFuture xf = togglesAllowedXfuture.getAndSet(null);
+        XFuture<Void> xf = togglesAllowedXfuture.getAndSet(null);
         if (null != xf) {
             xf.cancelAll(true);
         }
@@ -3135,11 +3215,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemIndRandomToggleTest.setSelected(false);
         mainFuture = lastFutureReturned;
         ignoreTitleErrors.set(false);
-        for (XFuture f : systemContinueMap.values()) {
+        for (XFuture<Boolean> f : systemContinueMap.values()) {
             f.cancelAll(stealingRobots);
         }
         systemContinueMap.clear();
-        for (XFuture f : debugSystemContinueMap.values()) {
+        for (XFuture<Void> f : debugSystemContinueMap.values()) {
             f.cancelAll(stealingRobots);
         }
         debugSystemContinueMap.clear();
@@ -3154,12 +3234,19 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX(), row, 0);
                     jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY(), row, 1);
                     jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ(), row, 2);
-                    double otherx = (double) jTableSelectedPosMapFile.getValueAt(row, 3);
-                    double othery = (double) jTableSelectedPosMapFile.getValueAt(row, 4);
-                    double otherz = (double) jTableSelectedPosMapFile.getValueAt(row, 5);
-                    jTableSelectedPosMapFile.setValueAt(otherx - pose.getPoint().getX(), row, 6);
-                    jTableSelectedPosMapFile.setValueAt(othery - pose.getPoint().getY(), row, 7);
-                    jTableSelectedPosMapFile.setValueAt(otherz - pose.getPoint().getZ(), row, 8);
+                    Object otherXObject = jTableSelectedPosMapFile.getValueAt(row, 3);
+                    Object otherYObject = jTableSelectedPosMapFile.getValueAt(row, 4);
+                    Object otherZObject = jTableSelectedPosMapFile.getValueAt(row, 5);
+                    if (otherXObject instanceof Double
+                            && otherYObject instanceof Double
+                            && otherZObject instanceof Double) {
+                        double otherx = (double) otherXObject;
+                        double othery = (double) otherYObject;
+                        double otherz = (double) otherZObject;
+                        jTableSelectedPosMapFile.setValueAt(otherx - pose.getPoint().getX(), row, 6);
+                        jTableSelectedPosMapFile.setValueAt(othery - pose.getPoint().getY(), row, 7);
+                        jTableSelectedPosMapFile.setValueAt(otherz - pose.getPoint().getZ(), row, 8);
+                    }
                 }
             }
         }
@@ -3175,16 +3262,22 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             if (null != posMapOutSys) {
                 PoseType pose = posMapOutSys.getCurrentPose();
                 if (null != pose) {
-
-                    double otherx = (double) jTableSelectedPosMapFile.getValueAt(row, 0);
-                    double othery = (double) jTableSelectedPosMapFile.getValueAt(row, 1);
-                    double otherz = (double) jTableSelectedPosMapFile.getValueAt(row, 2);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX(), row, 3);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY(), row, 4);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ(), row, 5);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX() - otherx, row, 6);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY() - othery, row, 7);
-                    jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ() - otherz, row, 8);
+                    Object otherXObject = jTableSelectedPosMapFile.getValueAt(row, 0);
+                    Object otherYObject = jTableSelectedPosMapFile.getValueAt(row, 1);
+                    Object otherZObject = jTableSelectedPosMapFile.getValueAt(row, 2);
+                    if (otherXObject instanceof Double
+                            && otherYObject instanceof Double
+                            && otherZObject instanceof Double) {
+                        double otherx = (double) otherXObject;
+                        double othery = (double) otherYObject;
+                        double otherz = (double) otherZObject;
+                        jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX(), row, 3);
+                        jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY(), row, 4);
+                        jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ(), row, 5);
+                        jTableSelectedPosMapFile.setValueAt(pose.getPoint().getX() - otherx, row, 6);
+                        jTableSelectedPosMapFile.setValueAt(pose.getPoint().getY() - othery, row, 7);
+                        jTableSelectedPosMapFile.setValueAt(pose.getPoint().getZ() - otherz, row, 8);
+                    }
                 }
             }
         }
@@ -3205,15 +3298,27 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void jButtonSaveSelectedPosMapActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveSelectedPosMapActionPerformed
         try {
-            File f = resolveFile(jTextFieldSelectedPosMapFilename.getText(), lastPosMapFile.getParentFile());
+            if (null == lastPosMapFile) {
+                logEventErr("lastPosMapFile is null");
+                return;
+            }
+            File parentFile = lastPosMapFile.getParentFile();
+            if (null == parentFile) {
+                logEventErr("PosMapFile " + lastPosMapFile + " does not have parent");
+                return;
+            }
+            File f = resolveFile(jTextFieldSelectedPosMapFilename.getText(), parentFile);
             JFileChooser chooser = new JFileChooser();
             FileFilter filter = new FileNameExtensionFilter("Comma-separated values", "csv");
             chooser.addChoosableFileFilter(filter);
             chooser.setFileFilter(filter);
             chooser.setDialogTitle("Choose APRS position mapping csv file to create (save as)");
             if (null != f) {
-                chooser.setCurrentDirectory(f.getParentFile());
-                chooser.setSelectedFile(f);
+                File resolvedParentFile = f.getParentFile();
+                if (null != resolvedParentFile) {
+                    chooser.setCurrentDirectory(resolvedParentFile);
+                    chooser.setSelectedFile(f);
+                }
             }
 
             if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
@@ -3223,7 +3328,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             int col = jTablePositionMappings.getSelectedColumn();
             if (row >= 0 && row < jTablePositionMappings.getRowCount() && col > 0 && col < jTablePositionMappings.getColumnCount()) {
                 DefaultTableModel model = (DefaultTableModel) jTablePositionMappings.getModel();
-                model.setValueAt(relativeFile(lastPosMapFile.getParentFile(), chooser.getSelectedFile()), row, col);
+
+                model.setValueAt(relativeFile(parentFile, chooser.getSelectedFile()), row, col);
+
             }
             jTextFieldSelectedPosMapFilename.setText(chooser.getSelectedFile().getCanonicalPath());
             if (JOptionPane.showConfirmDialog(this, "Also Save files list?") == JOptionPane.YES_OPTION) {
@@ -3242,14 +3349,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         debugAction();
     }//GEN-LAST:event_jMenuItemDbgActionActionPerformed
 
-    private static void printStatus(AtomicReference<XFuture<Void>> ref, PrintStream ps) {
+    private static void printStatus(AtomicReference<@Nullable XFuture<Void>> ref, PrintStream ps) {
         if (null != ref) {
             XFuture<?> xf = ref.get();
             printStatus(xf, ps);
         }
     }
 
-    private static void printStatus(XFuture<?> xf, PrintStream ps) {
+    private static void printStatus(@Nullable XFuture<?> xf, PrintStream ps) {
         if (null != xf) {
             xf.printStatus(ps);
         }
@@ -3302,17 +3409,18 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
         System.out.println("oldLfrs = " + oldLfrs);
         for (int i = 0; i < oldLfrs.size(); i++) {
-            XFuture xf = oldLfrs.get(i);
+            XFuture<?> xf = oldLfrs.get(i);
             if (!xf.isDone() || xf.isCancelled() || xf.isCompletedExceptionally()) {
                 System.out.println("oldLfrs.get(" + i + ") = " + xf);
                 printStatus(xf, System.out);
             }
         }
 
-        System.out.println("lastStartAllActionsArray = " + lastStartAllActionsArray);
-        if (null != lastStartAllActionsArray) {
-            for (int i = 0; i < lastStartAllActionsArray.length; i++) {
-                XFuture xf = lastStartAllActionsArray[i];
+        XFuture<?> xfa[] = lastStartAllActionsArray;
+        if (null != xfa) {
+            System.out.println("lastStartAllActionsArray = " + Arrays.toString(xfa));
+            for (int i = 0; i < xfa.length; i++) {
+                XFuture<?> xf = xfa[i];
                 if (!xf.isDone() || xf.isCancelled() || xf.isCompletedExceptionally()) {
                     System.out.println("oldLfrs.get(" + i + ") = " + xf);
                     printStatus(xf, System.out);
@@ -3332,8 +3440,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     }
 
-    private Socket colorTextSocket = null;
-    private ColorTextJFrame colorTextJFrame = null;
+    @Nullable private Socket colorTextSocket = null;
+    @Nullable private ColorTextJFrame colorTextJFrame = null;
 
     private void jMenuItemStartColorTextDisplayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartColorTextDisplayActionPerformed
 
@@ -3401,8 +3509,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemAddNewSystemActionPerformed
 
-    private volatile XFuture<?> continousDemoFuture = null;
-    private volatile XFuture<?> mainFuture = null;
+    @Nullable private volatile XFuture<?> continousDemoFuture = null;
+    @Nullable private volatile XFuture<?> mainFuture = null;
 
     private void jCheckBoxMenuItemContinousDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinousDemoActionPerformed
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
@@ -3425,7 +3533,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jMenuActionsActionPerformed
 
-    private final AtomicReference<XFuture<Void>> resumeFuture = new AtomicReference<>(null);
+    private final AtomicReference<@Nullable XFuture<Void>> resumeFuture = new AtomicReference<>(null);
 
     private void jCheckBoxMenuItemPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseActionPerformed
         if (jCheckBoxMenuItemPause.isSelected()) {
@@ -3436,7 +3544,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemPauseActionPerformed
 
-    private volatile XFuture<Void> randomTest = null;
+    @Nullable private volatile XFuture<Void> randomTest = null;
 
     private void clearEventLog() {
         abortEventTime = -1;
@@ -3540,7 +3648,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         jCheckBoxMenuItemRandomTest.setSelected(false);
         jCheckBoxMenuItemPause.setSelected(false);
-        XFuture allResetFutures[] = new XFuture[aprsSystems.size()];
+        @SuppressWarnings("unchecked")
+        XFuture<Void> allResetFutures[] = (XFuture<Void>[]) new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             allResetFutures[i] = aprsSystems.get(i).reset(reloadSimFiles);
         }
@@ -3594,6 +3703,34 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void resetMainPauseTestFuture() {
         resetMainPauseCount++;
+        if (null == continousDemoFuture) {
+            if (null == randomTest) {
+                if (null == pauseTest) {
+                    mainFuture = (XFuture<?>) XFuture.completedFutureWithName("resetMainPauseTestFuture" + resetMainPauseCount, null);
+                    return;
+                }
+                mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, pauseTest);
+                return;
+            }
+            if (null == pauseTest) {
+                mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, randomTest);
+                return;
+            }
+            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, randomTest, pauseTest);
+            return;
+        }
+        if (null == randomTest) {
+            if (null == pauseTest) {
+                mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture);
+                return;
+            }
+            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, pauseTest);
+            return;
+        }
+        if (null == pauseTest) {
+            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, randomTest);
+            return;
+        }
         mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, randomTest, pauseTest);
     }
 
@@ -3622,12 +3759,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             jCheckBoxMenuItemRandomTest.setSelected(false);
             jCheckBoxMenuItemPause.setSelected(false);
             resume();
-            lastFutureReturned = continueAll();
+            XFuture<?> continueAllXF = continueAll();
+            lastFutureReturned = continueAllXF;
             if (jCheckBoxMenuItemContinousDemo.isSelected()) {
                 continousDemoFuture
-                        = lastFutureReturned
-                        .thenCompose("jMenuItemContinueAllActionPerformed.continueAllActions",
-                                x -> continueAllActions());
+                        = continueAllXF
+                                .thenCompose("jMenuItemContinueAllActionPerformed.continueAllActions",
+                                        x -> continueAllActions());
                 mainFuture = continousDemoFuture;
             }
 
@@ -3673,7 +3811,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void jCheckBoxUpdateFutureAutomaticallyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxUpdateFutureAutomaticallyActionPerformed
         if (jCheckBoxUpdateFutureAutomatically.isSelected()) {
-            updateCurrentFutureDisplay();
+            updateCurrentFutureDisplay(jCheckBoxShowDoneFutures.isSelected(), jCheckBoxShowUnnamedFutures.isSelected());
         }
     }//GEN-LAST:event_jCheckBoxUpdateFutureAutomaticallyActionPerformed
 
@@ -3718,8 +3856,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     int resetMainRandomTestCount = 0;
 
     private void resetMainRandomTestFuture() {
-        assert (randomTest != null) : "(randomTest == null)";
-        assert (continousDemoFuture != null) : "(continousDemoFuture == null)";
+        assert (randomTest != null) : "(randomTest == null) :  @AssumeAssertion(nullness)";
+        assert (continousDemoFuture != null) : "(continousDemoFuture == null)  :  @AssumeAssertion(nullness)";
 
         resetMainRandomTestCount++;
         mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainRandomTestFuture" + resetMainRandomTestCount, randomTest, continousDemoFuture);
@@ -3736,19 +3874,21 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void jCheckBoxShowUnnamedFuturesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowUnnamedFuturesActionPerformed
         if (jCheckBoxUpdateFutureAutomatically.isSelected()) {
-            updateCurrentFutureDisplay();
+            updateCurrentFutureDisplay(jCheckBoxShowDoneFutures.isSelected(), jCheckBoxShowUnnamedFutures.isSelected());
         }
     }//GEN-LAST:event_jCheckBoxShowUnnamedFuturesActionPerformed
 
     private void jCheckBoxShowDoneFuturesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowDoneFuturesActionPerformed
         if (jCheckBoxUpdateFutureAutomatically.isSelected()) {
-            updateCurrentFutureDisplay();
+            updateCurrentFutureDisplay(jCheckBoxShowDoneFutures.isSelected(), jCheckBoxShowUnnamedFutures.isSelected());
         }
     }//GEN-LAST:event_jCheckBoxShowDoneFuturesActionPerformed
 
     private void jButtonFuturesCancelAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonFuturesCancelAllActionPerformed
-        XFuture future = futureToDisplaySupplier.get();
-        future.cancelAll(true);
+        XFuture<?> future = futureToDisplaySupplier.get();
+        if (null != future) {
+            future.cancelAll(true);
+        }
     }//GEN-LAST:event_jButtonFuturesCancelAllActionPerformed
 
     private void jTextFieldEventsMaxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldEventsMaxActionPerformed
@@ -3828,21 +3968,47 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBoxMenuItemFixedRandomTestSeedActionPerformed
 
     private void jCheckBoxFutureLongFormActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxFutureLongFormActionPerformed
-        updateCurrentFutureDisplay();
+        updateCurrentFutureDisplay(jCheckBoxShowDoneFutures.isSelected(), jCheckBoxShowUnnamedFutures.isSelected());
     }//GEN-LAST:event_jCheckBoxFutureLongFormActionPerformed
+
+    private static String getDirNameOrHome(@Nullable File f) throws IOException {
+        if (f != null) {
+            File parentFile = f.getParentFile();
+            if (null != parentFile) {
+                return parentFile.getCanonicalPath();
+            }
+        }
+        return System.getProperty("user.home");
+    }
+
+    private static String canonicalPathOrBuildPath(@Nullable File f, String dirName, String filename) throws IOException {
+        if (null != f) {
+            return f.getCanonicalPath();
+        }
+        return dirName + File.separator + filename;
+    }
 
     private void jMenuItemSaveAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveAllActionPerformed
         try {
             Map<String, String> filesMapIn = new HashMap<>();
             File f = getLastSetupFile();
-            String dirName = (null != f) ? f.getParentFile().getCanonicalPath() : System.getProperty("user.home");
-            filesMapIn.put("Setup", (null != f) ? f.getCanonicalPath() : dirName + File.separator + "setup.txt");
+            if (null == f) {
+                logEventErr("Last setup file is null");
+                return;
+            }
+            File parentFile = f.getParentFile();
+            if (null == parentFile) {
+                logEventErr("Last setup file " + f + " does not have parent.");
+                return;
+            }
+            String dirName = getDirNameOrHome(f);
+            filesMapIn.put("Setup", canonicalPathOrBuildPath(f, dirName, "setup.txt"));
             f = getLastPosMapFile();
-            filesMapIn.put("PosMap", (null != f) ? f.getCanonicalPath() : dirName + File.separator + "posmap.csv");
+            filesMapIn.put("PosMap", canonicalPathOrBuildPath(f, dirName, "posmap.csv"));
             f = getLastSimTeachFile();
-            filesMapIn.put("SimTeach", (null != f) ? f.getCanonicalPath() : dirName + File.separator + "simTeach.csv");
+            filesMapIn.put("SimTeach", canonicalPathOrBuildPath(f, dirName, "simTeach.csv"));
             f = getLastTeachPropertiesFile();
-            filesMapIn.put("TeachProps", (null != f) ? f.getCanonicalPath() : dirName + File.separator + "teachProps.txt");
+            filesMapIn.put("TeachProps", canonicalPathOrBuildPath(f, dirName, "teachProps.txt"));
             Map<String, String> filesMapOut = MultiFileDialogJPanel.showMultiFileDialog(this, "Save All ...", true, filesMapIn);
             if (null != filesMapOut) {
                 String setup = filesMapOut.get("Setup");
@@ -3894,7 +4060,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @param s name/prefix of task to look for
      * @return system with given task
      */
-    public AprsJFrame getSysByTask(String s) {
+    @Nullable public AprsJFrame getSysByTask(String s) {
         for (AprsJFrame sys : aprsSystems) {
             if (sys.getTaskName().startsWith(s)) {
                 return sys;
@@ -3919,6 +4085,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         runCustomCode();
     }//GEN-LAST:event_jMenuItemRunCustomActionPerformed
 
+    @SuppressWarnings("nullness")
     private void runCustomCode() {
         try {
 
@@ -3931,7 +4098,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             File[] files1 = {tmpFile};
 
             Files.write(customCode.getBytes(), tmpFile);
-            java.util.function.Consumer c = null;
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             if (null != compiler) {
                 ClassLoader cl = ClassLoader.getSystemClassLoader();
@@ -3969,11 +4135,21 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 }
                 URL[] urls = new URL[origUrls.length + 1];
                 System.arraycopy(origUrls, 0, urls, 0, origUrls.length);
-                urls[urls.length - 1] = tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL();
+                File parentFile = tmpFile.getAbsoluteFile().getParentFile();
+                if (null == parentFile) {
+                    logEventErr("Temporary file " + tmpFile + " does not have parent.");
+                    return;
+                }
+                File grandParentFile = parentFile.getParentFile();
+                if (null == grandParentFile) {
+                    logEventErr("Temporary file " + tmpFile + " does not have grandparent.");
+                    return;
+                }
+                urls[urls.length - 1] = grandParentFile.toURI().toURL();
                 //tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL()};
                 System.out.println("urls = " + Arrays.toString(urls));
                 ClassLoader loader = new URLClassLoader(urls);
-                Class clss = loader.loadClass("custom.Custom");
+                Class<?> clss = loader.loadClass("custom.Custom");
                 Object obj = clss.newInstance();
                 Method acceptMethod = clss.getMethod("accept", AprsSupervisorJFrame.class);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -4009,7 +4185,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void setTeachSystemFilter(AprsJFrame sys) {
+    private void setTeachSystemFilter(@Nullable AprsJFrame sys) {
         if (null == sys) {
             object2DOuterJPanel1.setForceOutputFlag(false);
             object2DOuterJPanel1.setShowOutputItems(false);
@@ -4022,17 +4198,25 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
+    @Nullable private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()
                 .filter(x -> x.getType().equals("P"))
                 .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
                 .orElse(null);
     }
 
+    private Stream<Slot> absSlotStreamFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
+        Slot slot = slotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem);
+        if (null != slot) {
+            return Stream.of(slot);
+        }
+        return Stream.empty();
+    }
+
     double getClosestSlotDist(Collection<PhysicalItem> kitTrays, PhysicalItem item) {
         return kitTrays.stream()
                 .flatMap(kit -> slotOffsetProvider.getSlotOffsets(kit.getName()).stream()
-                        .map(slotOffset -> slotOffsetProvider.absSlotFromTrayAndOffset(kit, slotOffset)))
+                .flatMap(slotOffset -> absSlotStreamFromTrayAndOffset(kit, slotOffset)))
                 .mapToDouble(slot -> item.dist(slot))
                 .min().orElse(Double.POSITIVE_INFINITY);
     }
@@ -4150,23 +4334,28 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private XFuture<Void> startRandomTestStep2() {
         int c = srts2Count.incrementAndGet();
         logEvent("Start Random Test Step 2 :" + c);
+        XFuture<?> f1;
         if (!jCheckBoxMenuItemContDemoReverseFirstOption.isSelected()) {
-            continousDemoFuture = startContinousDemo();
+            f1 = startContinousDemo();
         } else {
-            continousDemoFuture = startContinuousDemoRevFirst();
+            f1 = startContinuousDemoRevFirst();
         }
+        continousDemoFuture = f1;
         jCheckBoxMenuItemContinousDemo.setSelected(true);
-        randomTest = continueRandomTest();
+        XFuture<Void> f2 = continueRandomTest();
+        randomTest = f2;
         resetMainRandomTestFuture();
-        return XFuture.allOfWithName("startRandomTestStep2.allOff" + c, randomTest, continousDemoFuture);
+        return XFuture.allOfWithName("startRandomTestStep2.allOff" + c, f2, f1);
     }
 
     private XFuture<Void> startIndRandomTestStep2() {
-        continousDemoFuture = startAllIndContinousDemo();
+        XFuture<?> f1 = startAllIndContinousDemo();
+        continousDemoFuture = f1;
         jCheckBoxMenuItemContinousDemo.setSelected(true);
-        randomTest = continueRandomTest();
+        XFuture<Void> f2 = continueRandomTest();
+        randomTest = f2;
         resetMainRandomTestFuture();
-        return XFuture.allOfWithName("startRandomTestStep2.allOff", randomTest, continousDemoFuture);
+        return XFuture.allOfWithName("startRandomTestStep2.allOff", f1, f2);
     }
 
     private Random random = new Random(System.currentTimeMillis());
@@ -4191,11 +4380,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private volatile boolean togglesAllowed = false;
-    private final AtomicInteger waitForTogglesFutureCount = new AtomicInteger();
+    private final AtomicInteger waitForTogglesFutureCount;
 
-    private final ConcurrentLinkedDeque<XFuture<Void>> waitForTogglesFutures = new ConcurrentLinkedDeque<>();
+    private final ConcurrentLinkedDeque<XFuture<Void>> waitForTogglesFutures;
 
-    private XFuture<Void> createWaitForTogglesFuture(XFuture<Void> old) {
+    private XFuture<Void> createWaitForTogglesFuture(@Nullable XFuture<Void> old) {
         if (null != old) {
             return old;
         }
@@ -4204,14 +4393,20 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return xf;
     }
 
-    private final AtomicReference<XFuture<Void>> togglesAllowedXfuture = new AtomicReference<>(createWaitForTogglesFuture(null));
+    private static XFuture<Void> createFirstWaitForTogglesFuture(Deque<XFuture<Void>> waitForTogglesFutures, AtomicInteger waitForTogglesFutureCount) {
+        XFuture<Void> xf = new XFuture<>("waitForTogglesAllowed" + waitForTogglesFutureCount.incrementAndGet());
+        waitForTogglesFutures.add(xf);
+        return xf;
+    }
+
+    private final AtomicReference<@Nullable XFuture<Void>> togglesAllowedXfuture;
 
     private XFuture<Void> waitTogglesAllowed() {
-        XFuture xf = togglesAllowedXfuture.getAndSet(null);
+        XFuture<Void> xf = togglesAllowedXfuture.getAndSet(null);
         if (null != xf) {
             return xf;
         }
-        return XFuture.completedFutureWithName("completedWaitTogglesAllowed", null);
+        return XFuture.completedFutureWithName("completedWaitTogglesAllowed", (Void) null);
     }
 
     private void clearAllToggleBlockers() {
@@ -4227,12 +4422,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             jTextFieldRobotEnableToggleBlockers.setText(blockerList);
         });
         if (togglesAllowed) {
-            XFuture xf = togglesAllowedXfuture.get();
+            XFuture<Void> xf = togglesAllowedXfuture.get();
             if (null != xf) {
-                xf.complete(null);
+                xf.complete((Void) null);
             }
             while ((xf = waitForTogglesFutures.poll()) != null) {
-                xf.complete(null);
+                xf.complete((Void) null);
             }
         }
     }
@@ -4241,7 +4436,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private XFuture<Void> connectAllOrig() {
         returnRobotRunnable.set(null);
-        XFuture connectRet[] = new XFuture[aprsSystems.size()];
+        XFuture<?> connectRet[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame sys = aprsSystems.get(i);
             connectRet[i] = sys.connectRobot(sys.getOrigRobotName(), sys.getOrigCrclRobotHost(), sys.getOrigCrclRobotPort());
@@ -4277,33 +4472,32 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 }
                 logEvent("allowToggles(" + blockerName + ") after " + blockTime + "ms : blockers=" + blockerList + ", totalBlockTime=" + (totalBlockTime.get() / 1000) + "s");
 
+                final boolean showTogglesEnabledArg = togglesAllowed;
+                Utils.runOnDispatchThread(() -> {
+                    showTogglesEnabled(showTogglesEnabledArg);
+                    jTextFieldRobotEnableToggleBlockers.setText(blockerList);
+                    XFuture.runAsync("finishAllowToggle." + blockerName, () -> finishAllowToggles(lockInfo), supervisorExecutorService);
+                });
             }
-//        if(blockTime > 20000) {
-//            System.out.println("blockTime = " + blockTime);
-//        }
 
-            final boolean showTogglesEnabledArg = togglesAllowed;
-            Utils.runOnDispatchThread(() -> {
-                showTogglesEnabled(showTogglesEnabledArg);
-                jTextFieldRobotEnableToggleBlockers.setText(blockerList);
-                XFuture.runAsync("finishAllowToggle." + blockerName, () -> finishAllowToggles(lockInfo), supervisorExecutorService);
-            });
         } catch (Exception ex) {
             log(Level.SEVERE, "", ex);
         }
     }
 
-    private void finishAllowToggles(LockInfo lockInfo) {
+    private void finishAllowToggles(@Nullable LockInfo lockInfo) {
         if (togglesAllowed) {
-            XFuture xf = togglesAllowedXfuture.get();
+            XFuture<Void> xf = togglesAllowedXfuture.get();
             if (null != xf) {
-                xf.complete(null);
+                xf.complete((Void) null);
             }
             while ((xf = waitForTogglesFutures.poll()) != null) {
-                xf.complete(null);
+                xf.complete((Void) null);
             }
         }
-        lockInfo.getFuture().complete(null);
+        if (null != lockInfo) {
+            lockInfo.getFuture().complete(null);
+        }
     }
 
     private final AtomicInteger allowTogglesCount = new AtomicInteger();
@@ -4316,7 +4510,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
         public LockInfo(String name) {
             startTime = System.currentTimeMillis();
-            future = new XFuture(name);
+            future = new XFuture<>(name);
         }
 
         public long getStartTime() {
@@ -4358,8 +4552,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private void showTogglesEnabled(boolean enabled) {
-        robotsEnableCelEditorCheckbox.setEnabled(enabled);
-        robotsEnableCelRendererComponent.setEnabled(enabled);
+        if (null != robotsEnableCelEditorCheckbox) {
+            robotsEnableCelEditorCheckbox.setEnabled(enabled);
+        }
+        if (null != robotsEnableCelRendererComponent) {
+            robotsEnableCelRendererComponent.setEnabled(enabled);
+        }
         jTableRobots.repaint();
     }
 
@@ -4373,12 +4571,17 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         if (togglesAllowed) {
                             for (int i = 0; i < jTableRobots.getRowCount(); i++) {
                                 String robotName = (String) jTableRobots.getValueAt(i, 0);
-                                if (robotName.toLowerCase().contains("motoman")) { // stupid hard-coded hack to match demo
-                                    Boolean enabled = (Boolean) jTableRobots.getValueAt(i, 1);
-                                    Boolean wasEnabled = robotEnableMap.get(robotName);
-                                    jTableRobots.setValueAt(!wasEnabled, i, 1);
-//                    setRobotEnabled(robotName, !wasEnabled);
-                                    return true;
+                                if (null != robotName) {
+                                    if (robotName.toLowerCase().contains("motoman")) { // stupid hard-coded hack to match demo
+                                        Boolean enabled = (Boolean) jTableRobots.getValueAt(i, 1);
+                                        Boolean wasEnabled = robotEnableMap.get(robotName);
+                                        if (null != wasEnabled) {
+                                            jTableRobots.setValueAt(!wasEnabled, i, 1);
+                                        } else {
+                                            jTableRobots.setValueAt(true, i, 1);
+                                        }
+                                        return true;
+                                    }
                                 }
                             }
                         } else {
@@ -4415,19 +4618,21 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 logEventErr("allSystemsOk failing: bad status for sys=" + sys);
                 return false;
             }
-            if (sys.getTitleErrorString() != null && sys.getTitleErrorString().length() > 0) {
-                logEventErr("allSystemsOk failing: bad titleErrorString (" + sys.getTitleErrorString() + ") for sys=" + sys);
+            String titleErrorString = sys.getTitleErrorString();
+            if (titleErrorString != null && titleErrorString.length() > 0) {
+                logEventErr("allSystemsOk failing: bad titleErrorString (" + titleErrorString + ") for sys=" + sys);
                 return false;
             }
-            if (sys.getCrclClientErrorString() != null && sys.getCrclClientErrorString().length() > 0) {
-                logEventErr("allSystemsOk failing: bad rclClientErrorString (" + sys.getCrclClientErrorString() + ") for sys=" + sys);
+            String clientErrorString = sys.getCrclClientErrorString();
+            if (clientErrorString != null && clientErrorString.length() > 0) {
+                logEventErr("allSystemsOk failing: bad rclClientErrorString (" + clientErrorString + ") for sys=" + sys);
                 return false;
             }
         }
         return true;
     }
 
-    private volatile XFuture<Void> pauseTest = null;
+    @Nullable private volatile XFuture<Void> pauseTest = null;
 
     private XFuture<Void> continuePauseTest() {
         if (!allSystemsOk()) {
@@ -4442,7 +4647,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             logEventErr("jCheckBoxMenuItemRandomTest.isSelected().isSelected() returned false forcing quitRandomTest");
             return quitRandomTest("jCheckBoxMenuItemRandomTest.isSelected().isSelected() returned false forcing quitRandomTest");
         }
-        if (null == continousDemoCycle
+        if (null == continousDemoFuture
                 || continousDemoFuture.isCancelled()
                 || continousDemoFuture.isDone()
                 || continousDemoFuture.isCompletedExceptionally()) {
@@ -4450,17 +4655,19 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             printStatus(continousDemoFuture, System.out);
             return quitRandomTest("continousDemoCycle = " + continousDemoCycle + " forcing quitRandomTest");
         }
-        pauseTest = startRandomDelay("pauseTest", 30000, 20000)
+        XFuture<Void> ret = startRandomDelay("pauseTest", 30000, 20000)
                 .thenCompose("pauseTest.pause" + pauseCount.get(),
                         x -> Utils.runOnDispatchThread(this::pause))
                 .thenCompose(x -> startRandomDelay("pauseTest", 1000, 1000))
                 .thenCompose("pauseTest.resume" + pauseCount.get(),
                         x -> Utils.runOnDispatchThread(this::resume));
+        pauseTest = ret;
         resetMainPauseTestFuture();
-        pauseTest
+        ret
                 .thenCompose("pauseTest.recurse" + pauseCount.get(),
                         x -> continuePauseTest());
-        return pauseTest;
+        pauseTest = ret;
+        return ret;
     }
 
     private XFuture<Void> continueRandomTest() {
@@ -4480,15 +4687,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             logEventErr("jCheckBoxMenuItemRandomTest.isSelected().isSelected() returned false forcing quitRandomTest");
             return quitRandomTest("jCheckBoxMenuItemRandomTest.isSelected().isSelected() returned false forcing quitRandomTest");
         }
-        if (null == continousDemoCycle
-                || continousDemoFuture.isCancelled()
-                || continousDemoFuture.isDone()
-                || continousDemoFuture.isCompletedExceptionally()) {
+        XFuture<?> currentContinousDemoFuture = this.continousDemoFuture;
+        if (null == currentContinousDemoFuture
+                || currentContinousDemoFuture.isCancelled()
+                || currentContinousDemoFuture.isDone()
+                || currentContinousDemoFuture.isCompletedExceptionally()) {
             System.out.println("continousDemoCycle = " + continousDemoCycle + " forcing quitRandomTest");
-            printStatus(continousDemoFuture, System.out);
+            printStatus(currentContinousDemoFuture, System.out);
             return quitRandomTest("continousDemoCycle = " + continousDemoCycle + " forcing quitRandomTest");
         }
-        randomTest = startRandomDelay("enableTest", 30000, 20000)
+        XFuture<Void> ret = startRandomDelay("enableTest", 30000, 20000)
                 .thenCompose("checkForWaitResume1", x -> this.waitResume())
                 .thenCompose("waitTogglesAllowed", x -> this.waitTogglesAllowed())
                 .thenCompose("toggleRobotEnabled", x -> this.toggleRobotEnabled())
@@ -4500,8 +4708,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     }
                 })
                 .thenCompose("continueRandomTest.recurse" + randomTestCount.get(), x -> continueRandomTest());
+        randomTest = ret;
         resetMainRandomTestFuture();
-        return randomTest;
+        return ret;
     }
 
     private XFuture<Void> quitRandomTest(String cause) {
@@ -4525,6 +4734,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      */
     public XFuture<Void> startSetAllReverseFlag(boolean reverseFlag) {
         logEvent("setAllReverseFlag(" + reverseFlag + ")");
+        @SuppressWarnings("rawtypes")
         XFuture fa[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame sys = aprsSystems.get(i);
@@ -4573,11 +4783,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         final XFuture<?> lfr = this.lastFutureReturned;
         continousDemoFuture
                 = startCheckAndEnableAllRobots()
-                .thenComposeAsync("startContinousDemoRevFirst.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                .thenComposeAsync("startContinousDemoRevFirst.startReverseActions", x -> startReverseActions(), supervisorExecutorService)
-                .thenComposeAsync("startContinousDemoRevFirst.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                .thenComposeAsync("startContinousDemoRevFirst.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
-                .thenComposeAsync("startContinousDemoRevFirst", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
+                        .thenComposeAsync("startContinousDemoRevFirst.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                        .thenComposeAsync("startContinousDemoRevFirst.startReverseActions", x -> startReverseActions(), supervisorExecutorService)
+                        .thenComposeAsync("startContinousDemoRevFirst.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                        .thenComposeAsync("startContinousDemoRevFirst.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
+                        .thenComposeAsync("startContinousDemoRevFirst", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
         return continousDemoFuture;
     }
 
@@ -4593,7 +4803,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         connectAll();
         continousDemoFuture
                 = startCheckAndEnableAllRobots()
-                .thenCompose("startContinousDemo", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
+                        .thenCompose("startContinousDemo", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
         return continousDemoFuture;
     }
 
@@ -4608,13 +4818,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     public XFuture<?> startIndependentContinousDemo() {
         logEvent("Start continous demo");
         connectAll();
-        continousDemoFuture
+        XFuture<?> ret
                 = startCheckAndEnableAllRobots()
-                .thenCompose("startIndContinousDemo", ok -> checkOkElse(ok, this::startAllIndContinousDemo, this::showCheckEnabledErrorSplash));
+                        .thenCompose("startIndContinousDemo", ok -> checkOkElse(ok, this::startAllIndContinousDemo, this::showCheckEnabledErrorSplash));
+        continousDemoFuture = ret;
         if (null != randomTest && jCheckBoxMenuItemIndRandomToggleTest.isSelected()) {
             resetMainRandomTestFuture();
         }
-        return continousDemoFuture;
+        return ret;
     }
 
     /**
@@ -4667,15 +4878,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return continousDemoSetup()
                 .thenCompose("continouseDemo.part2", x2 -> {
                     final XFuture<?> lfr = this.lastFutureReturned;
-                    continousDemoFuture
+                    XFuture<?> ret
                             = startCheckAndEnableAllRobots()
-                            .thenComposeAsync("continueContinousDemo.startAllActions1", x -> startAllActions(), supervisorExecutorService)
-                            .thenComposeAsync("continueContinousDemo.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                            .thenComposeAsync("continueContinousDemo.startReverseActions", x -> startReverseActions(), supervisorExecutorService)
-                            .thenComposeAsync("continueContinousDemo.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                            .thenCompose("continueContinousDemo.incrementContinousDemoCycle", x -> incrementContinousDemoCycle())
-                            .thenComposeAsync("continueContinousDemo.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
-                            .thenComposeAsync("continueContinousDemo.recurse" + continousDemoCycle.get(), ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
+                                    .thenComposeAsync("continueContinousDemo.startAllActions1", x -> startAllActions(), supervisorExecutorService)
+                                    .thenComposeAsync("continueContinousDemo.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                                    .thenComposeAsync("continueContinousDemo.startReverseActions", x -> startReverseActions(), supervisorExecutorService)
+                                    .thenComposeAsync("continueContinousDemo.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                                    .thenCompose("continueContinousDemo.incrementContinousDemoCycle", x -> incrementContinousDemoCycle())
+                                    .thenComposeAsync("continueContinousDemo.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
+                                    .thenComposeAsync("continueContinousDemo.recurse" + continousDemoCycle.get(), ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
+                    continousDemoFuture = ret;
                     if (null != randomTest) {
                         if (jCheckBoxMenuItemRandomTest.isSelected()) {
                             resetMainRandomTestFuture();
@@ -4683,16 +4895,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                             resetMainPauseTestFuture();
                         }
                     }
-                    return continousDemoFuture;
+                    return ret;
                 });
     }
 
-    private XFuture<Void> continousDemoSetup() {
-        return XFuture.supplyAsync("contiousDemoSetup", () -> {
-            System.out.println("stealingRobots = " + stealingRobots);
-            System.out.println("returnRobotRunnable = " + returnRobotRunnable);
-            return null;
-        }, supervisorExecutorService)
+    private XFuture<@Nullable Void> continousDemoSetup() {
+        return XFuture
+                .runAsync("contiousDemoSetup", () -> {
+                    System.out.println("stealingRobots = " + stealingRobots);
+                    System.out.println("returnRobotRunnable = " + returnRobotRunnable);
+                }, supervisorExecutorService)
                 .thenComposeAsync("contiousDemoSetup.part2", x -> {
                     if (this.stealingRobots || null != returnRobotRunnable.get()) {
                         disconnectAll();
@@ -4768,17 +4980,19 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private JPopupMenu posTablePopupMenu = null;
+    @Nullable private JPopupMenu posTablePopupMenu = null;
 
     private void showPosTablePopup(Point pt) {
-        if (posTablePopupMenu == null) {
-            posTablePopupMenu = new JPopupMenu();
+        JPopupMenu menu = posTablePopupMenu;
+        if (menu == null) {
+            menu = new JPopupMenu();
             JMenuItem mi = new JMenuItem("Clear");
             mi.addActionListener(l -> clearPosTable());
-            posTablePopupMenu.add(mi);
+            menu.add(mi);
+            posTablePopupMenu = menu;
         }
-        posTablePopupMenu.setLocation(pt.x, pt.y);
-        posTablePopupMenu.setVisible(true);
+        menu.setLocation(pt.x, pt.y);
+        menu.setVisible(true);
     }
 
     /**
@@ -4796,10 +5010,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
             String robotName = (String) jTableRobots.getValueAt(i, 0);
-            robotEnableMap.put(robotName, true);
-            model.setValueAt(true, i, 1);
-            model.setValueAt(robotDisableCountMap.getOrDefault(robotName, 0), i, 4);
-            model.setValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
+            if (null != robotName) {
+                robotEnableMap.put(robotName, true);
+                model.setValueAt(true, i, 1);
+                model.setValueAt(robotDisableCountMap.getOrDefault(robotName, 0), i, 4);
+                model.setValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
+            }
         }
         Utils.autoResizeTableColWidths(jTableRobots);
     }
@@ -4822,18 +5038,22 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
             for (int i = 0; i < model.getRowCount(); i++) {
                 String robotName = (String) jTableRobots.getValueAt(i, 0);
-                robotEnableMap.put(robotName, true);
-                model.setValueAt(true, i, 1);
-                model.setValueAt(robotDisableCountMap.computeIfAbsent(robotName, (k) -> 0), i, 4);
-                model.setValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
+                if (null != robotName) {
+                    robotEnableMap.put(robotName, true);
+                    model.setValueAt(true, i, 1);
+                    model.setValueAt(robotDisableCountMap.computeIfAbsent(robotName, (k) -> 0), i, 4);
+                    model.setValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
+                }
             }
             Utils.autoResizeTableColWidths(jTableRobots);
         }).thenRunAsync("sendEnableToColorTextSocket", () -> {
             try {
                 initColorTextSocket();
-                if (null != colorTextSocket) {
-                    colorTextSocket.getOutputStream().write("0x00FF00, 0x00FF000\r\n".getBytes());
-                    colorTextSocket.getOutputStream().flush();
+                Socket socket = colorTextSocket;
+                if (null != socket) {
+                    OutputStream outputStream = socket.getOutputStream();
+                    outputStream.write("0x00FF00, 0x00FF000\r\n".getBytes());
+                    outputStream.flush();
                 }
             } catch (IOException ex) {
                 log(Level.SEVERE, null, ex);
@@ -4853,7 +5073,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private XFuture<Boolean> checkEnabledAll() {
         logEvent("checkEnabledAll");
         boolean origIgnoreTitleErrs = ignoreTitleErrors.getAndSet(true);
-        XFuture<Boolean> futures[] = new XFuture[aprsSystems.size()];
+        @SuppressWarnings("unchecked")
+        XFuture<Boolean> futures[] = (XFuture<Boolean>[]) new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame sys = aprsSystems.get(i);
             futures[i] = sys.startCheckEnabled()
@@ -4870,7 +5091,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 XFuture<Boolean> newret = new XFuture<>("checkEnabledAll.alreadyFailed." + aprsSystems.get(i).getTaskName());
                 newret.completeExceptionally(new IllegalStateException("isCompletedExceptionally() for " + aprsSystems.get(i).getTaskName()));
             }
-            ret = (XFuture<Boolean>) ret
+            ret = ret
                     .thenCombine("checkEnabledAll(" + (i + 1) + "/" + futures.length + ")",
                             fi, andBiFunction);
         }
@@ -4952,7 +5173,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private volatile XFuture lastStartAllActionsArray[] = null;
+    private volatile XFuture<?> lastStartAllActionsArray @Nullable []  = null;
 
     private final ConcurrentHashMap<Integer, XFuture<Boolean>> systemContinueMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, XFuture<Void>> debugSystemContinueMap = new ConcurrentHashMap<>();
@@ -4964,11 +5185,15 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 });
         StringBuilder tasksNames = new StringBuilder();
         Set<Integer> keySet = debugSystemContinueMap.keySet();
-        XFuture futures[] = new XFuture[keySet.size()];
+        @SuppressWarnings("unchecked")
+        XFuture<Void> futures[] = (XFuture<Void>[]) new XFuture<?>[keySet.size()];
         int i = 0;
         for (int id : keySet) {
             assert (i < futures.length) : "futures=" + futures + ",keySet=" + keySet + ",i=" + i;
-            futures[i++] = debugSystemContinueMap.get(id);
+            XFuture<Void> debugFuture = debugSystemContinueMap.get(id);
+            if (null != debugFuture) {
+                futures[i++] = debugFuture;
+            }
         }
         assert (i == futures.length) : "futures=" + futures + ",keySet=" + keySet + ",i=" + i;
         for (int j = 0; j < aprsSystems.size(); j++) {
@@ -5008,7 +5233,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private XFuture<Void> startAllIndContinousDemo() {
         logEvent("startAllIndContinousDemo");
-        XFuture futures[] = new XFuture[aprsSystems.size()];
+        @SuppressWarnings("unchecked")
+        XFuture<Void> futures[] = (XFuture<Void>[]) new XFuture<?>[aprsSystems.size()];
         StringBuilder tasksNames = new StringBuilder();
         boolean revFirst = jCheckBoxMenuItemContDemoReverseFirstOption.isSelected();
         for (int i = 0; i < aprsSystems.size(); i++) {
@@ -5030,7 +5256,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private XFuture<Void> startAllActions() {
         int saaNumber = startAllActionsCount.incrementAndGet();
         logEvent("startAllActions" + saaNumber);
-        XFuture futures[] = new XFuture[aprsSystems.size()];
+        XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         StringBuilder tasksNames = new StringBuilder();
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame sys = aprsSystems.get(i);
@@ -5057,25 +5283,26 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private final ConcurrentHashMap<Integer, XFuture<Void>[]> continueCompletionBlockersMap = new ConcurrentHashMap<>();
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private void addFinishBlocker(int threadId, XFuture<Void> f) {
         continueCompletionBlockersMap.compute(threadId,
-                (Integer k, XFuture<Void>[] v) -> {
+                (Integer k, XFuture<Void> @Nullable [] v) -> {
                     try {
                         if (null != v) {
                             List<XFuture<Void>> l = Arrays.stream(v)
-                            .filter(f2 -> !f2.isDone())
-                            .collect(Collectors.toList());
+                                    .filter(f2 -> !f2.isDone())
+                                    .collect(Collectors.toList());
                             l.add(f);
                             if (l.size() < 1) {
-                                return new XFuture[]{f};
+                                return (XFuture<Void>[]) new XFuture<?>[]{f};
                             }
                             XFuture<Void>[] newV = l.toArray(new XFuture[l.size()]);
                             if (newV.length < 1) {
-                                return new XFuture[]{f};
+                                return (XFuture<Void>[]) new XFuture<?>[]{f};
                             }
                             return newV;
                         } else {
-                            return new XFuture[]{f};
+                            return (XFuture<Void>[]) new XFuture<?>[]{f};
                         }
                     } catch (Throwable e) {
                         log(Level.SEVERE, null, e);
@@ -5084,7 +5311,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 });
     }
 
-    private static String shortTrace(StackTraceElement[] trace) {
+    private static String shortTrace(StackTraceElement @Nullable [] trace) {
+        if (null == trace) {
+            return "";
+        }
         String shortTrace = Arrays.toString(trace);
         if (shortTrace.length() > 80) {
             shortTrace = shortTrace.substring(0, 75) + " ... ";
@@ -5099,38 +5329,39 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @param msg message to show
      * @param thrown exception causing this event
      */
-    public void log(Level level, String msg, Throwable thrown) {
+    public void log(Level level, @Nullable String msg, Throwable thrown) {
         getLogger().log(level, msg, thrown);
-
         logEvent("Exception thrown : msg=" + msg + ",thrown=" + thrown + ", trace=" + shortTrace(thrown.getStackTrace()));
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private XFuture<Void> finishAction(int threadId) {
         XFuture<Void>[] futures = continueCompletionBlockersMap.compute(threadId,
-                (Integer k, XFuture<Void>[] v) -> {
+                (Integer k, XFuture<Void> @Nullable [] v) -> {
                     try {
                         if (null != v) {
                             List<XFuture<Void>> l = Arrays.stream(v)
-                            .filter(f2 -> !f2.isDone())
-                            .collect(Collectors.toList());
+                                    .filter(f2 -> !f2.isDone())
+                                    .collect(Collectors.toList());
                             if (l.size() < 1) {
-                                return null;
+                                return (XFuture<Void>[]) new XFuture<?>[0];
                             }
+
                             XFuture<Void>[] newV = l.toArray(new XFuture[l.size()]);
                             if (newV.length < 1) {
-                                return null;
+                                return (XFuture<Void>[]) new XFuture<?>[0];
                             }
                             return newV;
                         } else {
-                            return null;
+                            return (XFuture<Void>[]) new XFuture<?>[0];
                         }
                     } catch (Throwable e) {
                         log(Level.SEVERE, null, e);
                         throw new RuntimeException(e);
                     }
                 });
-        if (null == futures) {
-            return (XFuture<Void>) XFuture.completedFuture((Void) null);
+        if (null == futures || futures.length < 1) {
+            return XFuture.completedFuture((Void) null);
         } else {
             logEvent("finishAction waiting for " + Arrays.toString(futures));
             return XFuture.allOf(futures);
@@ -5143,7 +5374,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private XFuture<Void> continueAllActions() {
         logEvent("continueAllActions");
-        XFuture futures[] = new XFuture[aprsSystems.size()];
+        XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         StringBuilder tasksNames = new StringBuilder();
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame sys = aprsSystems.get(i);
@@ -5299,22 +5530,22 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void cancelAllStealUnsteal(boolean mayInterrupt) {
         stealingRobots = false;
-        XFuture stealFuture = this.stealRobotFuture.getAndSet(null);
+        XFuture<Void> stealFuture = this.stealRobotFuture.getAndSet(null);
         if (null != stealFuture) {
             stealFuture.cancelAll(mayInterrupt);
         }
 
-        XFuture unstealFuture = this.unStealRobotFuture.getAndSet(null);
+        XFuture<Void> unstealFuture = this.unStealRobotFuture.getAndSet(null);
         if (null != unstealFuture) {
             unstealFuture.cancelAll(mayInterrupt);
         }
 
-        XFuture cancelStealFuture = this.cancelStealRobotFuture.getAndSet(null);
+        XFuture<Void> cancelStealFuture = this.cancelStealRobotFuture.getAndSet(null);
         if (null != cancelStealFuture) {
             cancelStealFuture.cancelAll(mayInterrupt);
         }
 
-        XFuture cancelUnstealFuture = this.cancelUnStealRobotFuture.getAndSet(null);
+        XFuture<Void> cancelUnstealFuture = this.cancelUnStealRobotFuture.getAndSet(null);
         if (null != cancelUnstealFuture) {
             cancelUnstealFuture.cancelAll(mayInterrupt);
         }
@@ -5351,17 +5582,17 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      *
      * @return future allowing caller to determine when the abort is complete
      */
-    public XFuture<Void> safeAbortAll() {
+    public XFuture<@Nullable Void> safeAbortAll() {
         logEvent("safeAbortAll");
         XFuture<?> prevLastFuture = lastFutureReturned;
-        XFuture futures[] = new XFuture[aprsSystems.size()];
+        XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame sys = aprsSystems.get(i);
             futures[i] = sys.startSafeAbort("safeAbortAll")
                     .thenRun(() -> logEvent("safeAbort completed for " + sys + " (part of safeAbortAll)"));
         }
         return XFuture.allOfWithName("safeAbortAll", futures)
-                .thenComposeAsync(x -> {
+                .thenComposeAsync((Function<Void, XFuture<@Nullable Void>>) x -> {
                     logEvent("safeAbortAll: all systems aborted. calling return robots: futures =" + Arrays.toString(futures));
                     return returnRobotsDirect("safeAbortAll");
                 }, supervisorExecutorService)
@@ -5373,14 +5604,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 });
     }
 
-    private File setupFile;
+    @Nullable private File setupFile;
 
     /**
      * Get the value of setupFile
      *
      * @return the value of setupFile
      */
-    public File getSetupFile() {
+    @Nullable public File getSetupFile() {
         return setupFile;
     }
 
@@ -5418,11 +5649,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      */
     public void saveCurrentSetup() {
         try {
-            if (null != setupFile) {
+            File fileToSave = this.setupFile;
+            if (null != fileToSave) {
                 int response
-                        = JOptionPane.showConfirmDialog(this, "Save Current APRS Supervisor file : " + setupFile);
+                        = JOptionPane.showConfirmDialog(this, "Save Current APRS Supervisor file : " + fileToSave);
                 if (response == JOptionPane.YES_OPTION) {
-                    saveSetupFile(setupFile);
+                    saveSetupFile(fileToSave);
                 }
             }
         } catch (IOException ex) {
@@ -5452,9 +5684,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     }
                     Object o = tm.getValueAt(i, j);
                     if (o instanceof File) {
-                        Path rel = f.getParentFile().toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
-                        if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
-                            l.add(rel);
+                        File parentFile = f.getParentFile();
+                        if (null != parentFile) {
+                            Path rel = parentFile.toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
+                            if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
+                                l.add(rel);
+                            } else {
+                                l.add(o);
+                            }
                         } else {
                             l.add(o);
                         }
@@ -5490,18 +5727,26 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @param sys2 system to convert positions to
      * @return file for converting positions
      */
-    public File getPosMapFile(String sys1, String sys2) {
+    @Nullable public File getPosMapFile(String sys1, String sys2) {
         Map<String, File> subMap = posMaps.get(sys1);
         if (null == subMap) {
             return null;
         }
         File f = subMap.get(sys2);
+        if (null == f) {
+            return null;
+        }
         if (f.exists()) {
             return f;
         }
-        File altFile = lastPosMapFile.getParentFile().toPath().resolve(f.toPath()).toFile();
-        if (altFile.exists()) {
-            return altFile;
+        if (null != lastPosMapFile) {
+            File parentFile = lastPosMapFile.getParentFile();
+            if (null != parentFile) {
+                File altFile = parentFile.toPath().resolve(f.toPath()).toFile();
+                if (altFile.exists()) {
+                    return altFile;
+                }
+            }
         }
         return f;
     }
@@ -5568,7 +5813,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         saveLastPosMapFile(f);
     }
 
-    private static File resolveFile(String fname, File dir) throws IOException {
+    private static File resolveFile(String fname, @Nullable File dir) throws IOException {
         File fi = new File(fname);
         if (!fi.exists() && dir != null && dir.exists() && dir.isDirectory()) {
             File altFile = dir.toPath().toRealPath().resolve(fname).toFile();
@@ -5583,7 +5828,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return dir.toPath().relativize(f.toPath()).toString();
     }
 
-    private File lastSetupFile = null;
+    @Nullable private File lastSetupFile = null;
 
     private void saveLastSetupFile(File f) throws IOException {
         lastSetupFile = f;
@@ -5593,7 +5838,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     }
 
-    private File lastSimTeachFile = null;
+    @Nullable private File lastSimTeachFile = null;
 
     private void saveSimTeach(File f) throws IOException {
         object2DOuterJPanel1.saveFile(f);
@@ -5607,7 +5852,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private File lastPosMapFile = null;
+    @Nullable private File lastPosMapFile = null;
 
     private void saveLastPosMapFile(File f) throws IOException {
         lastPosMapFile = f;
@@ -5616,7 +5861,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private File lastTeachPropsFile = null;
+    @Nullable private File lastTeachPropsFile = null;
 
     private void saveLastTeachPropsFile(File f) throws IOException {
         lastTeachPropsFile = f;
@@ -5684,9 +5929,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 int priority = Integer.parseInt(csvRecord.get(0));
                 String fileString = csvRecord.get(3);
                 File propertiesFile = new File(csvRecord.get(3));
-                File altPropFile = f.getParentFile().toPath().toRealPath().resolve(fileString).toFile();
-                if (altPropFile.exists()) {
-                    propertiesFile = altPropFile;
+                File parentFile = f.getParentFile();
+                if (null != parentFile) {
+                    File altPropFile = parentFile.toPath().toRealPath().resolve(fileString).toFile();
+                    if (altPropFile.exists()) {
+                        propertiesFile = altPropFile;
+                    }
                 }
                 AprsJFrame aj = new AprsJFrame(propertiesFile);
                 aj.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -5715,7 +5963,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         setSetupFile(f);
     }
 
-    private String lastUpdateTaskTableTaskNames[] = null;
+    private String lastUpdateTaskTableTaskNames @Nullable []  = null;
 
     private final ConcurrentHashMap<Integer, String> titleErrorMap = new ConcurrentHashMap<>();
 
@@ -5731,9 +5979,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsJFrame aprsJframe = aprsSystems.get(i);
             String taskName = aprsJframe.getTaskName();
-            if (!Objects.equals(taskName, lastUpdateTaskTableTaskNames[i])) {
-                lastUpdateTaskTableTaskNames[i] = taskName;
-                needSetJListFuturesModel = true;
+            if (null != lastUpdateTaskTableTaskNames) {
+                if (!Objects.equals(taskName, lastUpdateTaskTableTaskNames[i])) {
+                    lastUpdateTaskTableTaskNames[i] = taskName;
+                    needSetJListFuturesModel = true;
+                }
             }
             if (!jCheckBoxMenuItemPause.isSelected() && !ignoreTitleErrors.get()) {
                 String titleErr = aprsJframe.getTitleErrorString();
@@ -5757,10 +6007,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         Utils.autoResizeTableColWidths(jTableTasks);
         Utils.autoResizeTableRowHeights(jTableTasks);
         DefaultTreeModel model = (DefaultTreeModel) jTreeSelectedFuture.getModel();
-        DefaultMutableTreeNode rootTreeNode = new DefaultMutableTreeNode(null);
+        DefaultMutableTreeNode rootTreeNode = new DefaultMutableTreeNode();
         model.setRoot(rootTreeNode);
         if (jCheckBoxUpdateFutureAutomatically.isSelected()) {
-            updateCurrentFutureDisplay();
+            updateCurrentFutureDisplay(jCheckBoxShowDoneFutures.isSelected(), jCheckBoxShowUnnamedFutures.isSelected());
         }
     }
 
@@ -5782,19 +6032,28 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jListFutures.setModel(listModel);
     }
 
-    private volatile Supplier<XFuture> futureToDisplaySupplier = () -> mainFuture;
+    private volatile Supplier<@Nullable XFuture<?>> futureToDisplaySupplier = () -> mainFuture;
 
-    private void updateCurrentFutureDisplay() {
+    private void updateCurrentFutureDisplay(
+            @UnknownInitialization AprsSupervisorJFrame this,
+            boolean showDoneFutures,
+            boolean showUnnamedFutures) {
+        if (null == futureToDisplaySupplier) {
+            return;
+        }
+        if (null == jTreeSelectedFuture) {
+            return;
+        }
         XFuture<?> xf = futureToDisplaySupplier.get();
         if (null != xf) {
             DefaultTreeModel model = (DefaultTreeModel) jTreeSelectedFuture.getModel();
-            DefaultMutableTreeNode rootTreeNode = xfutureToNode(xf);
+            DefaultMutableTreeNode rootTreeNode = xfutureToNode(xf, showDoneFutures, showUnnamedFutures);
             model.setRoot(rootTreeNode);
             expandAllNodes(jTreeSelectedFuture, 0, jTreeSelectedFuture.getRowCount());
         }
     }
 
-    private void expandAllNodes(JTree tree, int startingIndex, int rowCount) {
+    private static void expandAllNodes(JTree tree, int startingIndex, int rowCount) {
         for (int i = startingIndex; i < rowCount; ++i) {
             tree.expandRow(i);
         }
@@ -5804,22 +6063,18 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private Field getField(Class clss, String name) {
+    @Nullable private static Field getField(Class<?> clss, String name) {
         Field f = null;
         try {
             f = clss.getField(name);
         } catch (NoSuchFieldException | SecurityException ex) {
-//            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (null != f) {
             return f;
         }
-//        System.out.println("clss = " + clss);
         Field fields[] = clss.getFields();
 
-//        System.out.println("fields = " + Arrays.toString(fields));
         Field declaredFields[] = clss.getDeclaredFields();
-//        System.out.println("declaredFields = " + Arrays.toString(declaredFields));
         for (Field fi : fields) {
             if (fi.getName().equals(name)) {
                 return fi;
@@ -5835,12 +6090,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         } catch (NoSuchFieldException ex) {
             try {
                 f = clss.getField(name);
-
             } catch (NoSuchFieldException | SecurityException ex1) {
-//                Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex1);
+                Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.WARNING, null, ex1);
             }
         } catch (SecurityException ex) {
-//            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.WARNING, null, ex);
         }
         if (f == null && clss.getSuperclass() != null && !Objects.equals(clss.getSuperclass(), Object.class
         )) {
@@ -5849,27 +6103,34 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return f;
     }
 
-    private DefaultMutableTreeNode cfutureToNode(CompletableFuture future) {
+    static private DefaultMutableTreeNode cfutureToNode(
+            CompletableFuture<?> future,
+            boolean showDoneFutures,
+            boolean showUnnamedFutures) {
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(future);
-        Class clss = future.getClass();
+        Class<?> clss = future.getClass();
         Field stackField = getField(clss, "stack");
         if (null != stackField) {
             try {
                 stackField.setAccessible(true);
                 Object stackFieldObject = stackField.get(future);
-                addNodesForStackObject(stackFieldObject, future, node);
-            } catch (IllegalArgumentException ex) {
-                log(Level.SEVERE, null, ex);
-            } catch (IllegalAccessException ex) {
-                log(Level.SEVERE, null, ex);
+                addNodesForStackObject(stackFieldObject, future, node, showDoneFutures, showUnnamedFutures);
+            } catch (IllegalArgumentException | IllegalAccessException ex) {
+                getLogger().log(Level.SEVERE, null, ex);
             }
         }
         return node;
     }
 
-    private void addNodesForStackObject(Object stackFieldObject, CompletableFuture future, DefaultMutableTreeNode node) throws SecurityException {
+    private static void addNodesForStackObject(
+            @Nullable Object stackFieldObject,
+            CompletableFuture<?> future,
+            DefaultMutableTreeNode node,
+            boolean showDoneFutures,
+            boolean showUnnamedFutures)
+            throws SecurityException {
         if (null != stackFieldObject) {
-            Class stackFieldClass = stackFieldObject.getClass();
+            Class<?> stackFieldClass = stackFieldObject.getClass();
             Field depField = getField(stackFieldClass, "dep");
             if (null != depField) {
                 try {
@@ -5877,18 +6138,18 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     Object depFieldObject = depField.get(stackFieldObject);
                     if (depFieldObject != future) {
                         if (depFieldObject instanceof XFuture) {
-                            XFuture xf = (XFuture) depFieldObject;
-                            if (jCheckBoxShowDoneFutures.isSelected()
+                            XFuture<?> xf = (XFuture<?>) depFieldObject;
+                            if (showDoneFutures
                                     || (!xf.isDone() || xf.isCompletedExceptionally() || xf.isCancelled())) {
-                                node.add(xfutureToNode(xf));
+                                node.add(xfutureToNode(xf, showDoneFutures, showUnnamedFutures));
                             }
                         } else if (depFieldObject instanceof CompletableFuture) {
-                            CompletableFuture cf = (CompletableFuture) depFieldObject;
+                            CompletableFuture<?> cf = (CompletableFuture<?>) depFieldObject;
                             boolean notOk = cf.isCompletedExceptionally() || cf.isCancelled();
-                            if (jCheckBoxShowUnnamedFutures.isSelected() || notOk) {
-                                if (jCheckBoxShowDoneFutures.isSelected()
+                            if (showUnnamedFutures || notOk) {
+                                if (showDoneFutures
                                         || (!cf.isDone() || notOk)) {
-                                    node.add(cfutureToNode(cf));
+                                    node.add(cfutureToNode(cf, showDoneFutures, showUnnamedFutures));
                                 }
                             }
                         }
@@ -5903,11 +6164,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     nextField.setAccessible(true);
                     Object nextFieldObject = nextField.get(stackFieldObject);
                     if (null != nextFieldObject) {
-                        Class nextFieldClass = nextFieldObject.getClass();
+                        Class<?> nextFieldClass = nextFieldObject.getClass();
                         Field nextFieldStackField = getField(nextFieldClass, "stack");
                         if (null != nextFieldStackField) {
                             Object nextFielStackObject = nextFieldStackField.get(nextFieldObject);
-                            addNodesForStackObject(nextFielStackObject, future, node);
+                            addNodesForStackObject(nextFielStackObject, future, node, showDoneFutures, showUnnamedFutures);
                         }
                     }
                 } catch (IllegalArgumentException | IllegalAccessException ex) {
@@ -5917,25 +6178,29 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private DefaultMutableTreeNode xfutureToNode(XFuture future) {
+    private DefaultMutableTreeNode xfutureToNode(XFuture<?> future) {
+        return xfutureToNode(future, jCheckBoxShowDoneFutures.isSelected(), jCheckBoxShowUnnamedFutures.isShowing());
+    }
+
+    static private DefaultMutableTreeNode xfutureToNode(XFuture<?> future, boolean showDoneFutures, boolean showUnnamedFutures) {
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(future);
         if (null != future) {
-            ConcurrentLinkedDeque deque = future.getAlsoCancel();
+            ConcurrentLinkedDeque<?> deque = future.getAlsoCancel();
             if (null != deque) {
                 for (Object o : deque) {
                     if (o instanceof XFuture) {
-                        XFuture xf = (XFuture) o;
-                        if (jCheckBoxShowDoneFutures.isSelected()
+                        XFuture<?> xf = (XFuture<?>) o;
+                        if (showDoneFutures
                                 || (!xf.isDone() || xf.isCompletedExceptionally() || xf.isCancelled())) {
-                            node.add(xfutureToNode(xf));
+                            node.add(xfutureToNode(xf, showDoneFutures, showUnnamedFutures));
                         }
                     } else if (o instanceof CompletableFuture) {
-                        CompletableFuture cf = (CompletableFuture) o;
+                        CompletableFuture<?> cf = (CompletableFuture<?>) o;
                         boolean notOk = cf.isCompletedExceptionally() || cf.isCancelled();
-                        if (jCheckBoxShowUnnamedFutures.isSelected() || notOk) {
-                            if (jCheckBoxShowDoneFutures.isSelected()
+                        if (showUnnamedFutures || notOk) {
+                            if (showDoneFutures
                                     || (!cf.isDone() || notOk)) {
-                                node.add(cfutureToNode(cf));
+                                node.add(cfutureToNode(cf, showDoneFutures, showUnnamedFutures));
                             }
                         }
                     }
@@ -5955,8 +6220,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         cbmModel.setSelectedItem("All");
         tm.setRowCount(0);
         for (AprsJFrame aprsJframe : aprsSystems) {
-            robotMap.put(aprsJframe.getRobotName(), aprsJframe);
-            robotEnableMap.put(aprsJframe.getRobotName(), true);
+            String robotname = aprsJframe.getRobotName();
+            if (null != robotname) {
+                robotMap.put(robotname, aprsJframe);
+                robotEnableMap.put(robotname, true);
+            }
             cbmModel.addElement(aprsJframe.getMyThreadId() + " : " + aprsJframe.toString());
         }
         robotMap.forEach((robotName, aprs) -> {
@@ -5971,17 +6239,24 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         });
         Utils.autoResizeTableColWidths(jTableRobots);
         if (aprsSystems.size() >= 2) {
-            colorTextJPanel1.setLabelsAndIcons(
-                    aprsSystems.get(0).getRobotName(),
-                    ColorTextJPanel.getRobotIcon(aprsSystems.get(0).getRobotName()),
-                    aprsSystems.get(1).getRobotName(),
-                    ColorTextJPanel.getRobotIcon(aprsSystems.get(1).getRobotName()));
+            String robot0Name = aprsSystems.get(0).getRobotName();
+            String robot1Name = aprsSystems.get(1).getRobotName();
+            if (null != robot0Name && null != robot1Name) {
+                colorTextJPanel1.setLabelsAndIcons(
+                        robot0Name,
+                        ColorTextJPanel.getRobotIcon(robot0Name),
+                        robot1Name,
+                        ColorTextJPanel.getRobotIcon(robot1Name));
+            }
         } else if (aprsSystems.size() == 1) {
-            colorTextJPanel1.setLabelsAndIcons(
-                    aprsSystems.get(0).getRobotName(),
-                    ColorTextJPanel.getRobotIcon(aprsSystems.get(0).getRobotName()),
-                    "",
-                    null);
+            String robot0Name = aprsSystems.get(0).getRobotName();
+            if (null != robot0Name) {
+                colorTextJPanel1.setLabelsAndIcons(
+                        robot0Name,
+                        ColorTextJPanel.getRobotIcon(robot0Name),
+                        "",
+                        null);
+            }
         } else {
             colorTextJPanel1.setLabelsAndIcons(
                     "",

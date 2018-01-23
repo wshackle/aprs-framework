@@ -1,0 +1,27 @@
+
+package java.awt;
+
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+
+class GraphicsDevice {
+    static final int TYPE_RASTER_SCREEN;
+    static final int TYPE_PRINTER;
+    static final int TYPE_IMAGE_BUFFER;
+    protected GraphicsDevice();
+    int getType();
+    String getIDstring();
+    GraphicsConfiguration[] getConfigurations();
+    GraphicsConfiguration getDefaultConfiguration();
+    GraphicsConfiguration getBestConfiguration(GraphicsConfigTemplate arg0);
+    boolean isFullScreenSupported();
+    void setFullScreenWindow(@Nullable Window arg0);
+    @Nullable Window getFullScreenWindow();
+    boolean isDisplayChangeSupported();
+    void setDisplayMode(DisplayMode arg0);
+    DisplayMode getDisplayMode();
+    DisplayMode[] getDisplayModes();
+    int getAvailableAcceleratedMemory();
+    boolean isWindowTranslucencySupported(WindowTranslucency arg0);
+}

@@ -9,11 +9,11 @@ import aprs.framework.optaplanner.actionmodel.OpAction;
 import aprs.framework.optaplanner.actionmodel.OpActionPlan;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
-import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 import org.optaplanner.core.impl.score.director.easy.EasyScoreCalculator;
 import aprs.framework.optaplanner.actionmodel.OpActionInterface;
+import java.util.List;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 
 /**
@@ -30,38 +30,41 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
         int starts = 0;
         int startlength = 0;
         int badNexts = 0;
-        for(OpAction action: solution.getActions()) {
-            if(action.getNext() == null) {
-                nulls++;
-            } else if(action.getNext().getActionType() == END) {
-                ends++;
-            } 
-            else if(!action.checkNextAction(action.getNext())) {
-                badNexts++;
-            }
-            costTotal += action.cost();
-            Set<String> visited = new HashSet<>();
-            if(action.getActionType() == START) {
-                OpActionInterface tmp = action;
-                if(!solution.getActions().contains(tmp)) {
-                    throw new IllegalStateException(tmp +" not in "+solution.getActions());
+        List<OpAction> actionsList = solution.getActions();
+        if (null != actionsList) {
+            for (OpAction action : actionsList) {
+                OpActionInterface nextAction = action.getNext();
+                if (nextAction == null) {
+                    nulls++;
+                } else if (nextAction.getActionType() == END) {
+                    ends++;
+                } else if (!action.checkNextAction(nextAction)) {
+                    badNexts++;
                 }
-                while(tmp != null
-                        && tmp.getActionType() != END
-                        && tmp instanceof OpAction
-                        && !visited.contains(((OpAction)tmp).getName())) {
-                    visited.add(((OpAction)tmp).getName());
-                    startlength++;
-                    tmp = tmp.getNext();
+                costTotal += action.cost();
+                Set<String> visited = new HashSet<>();
+                if (action.getActionType() == START) {
+                    OpActionInterface tmp = action;
+                    if (!actionsList.contains(tmp)) {
+                        throw new IllegalStateException(tmp + " not in " + actionsList);
+                    }
+                    while (tmp != null
+                            && tmp.getActionType() != END
+                            && tmp instanceof OpAction
+                            && !visited.contains(((OpAction) tmp).getName())) {
+                        visited.add(((OpAction) tmp).getName());
+                        startlength++;
+                        tmp = tmp.getNext();
+                    }
                 }
             }
+            long hardScoreLong = -Math.abs(startlength - actionsList.size()) - Math.abs(1 - ends) - 2 * nulls - badNexts;
+            long softScoreLong = (long) (-1000.0 * costTotal);
+            HardSoftLongScore score = HardSoftLongScore.valueOf(hardScoreLong, softScoreLong);
+            return score;
+        } else {
+            return HardSoftLongScore.valueOf(Long.MIN_VALUE, Long.MIN_VALUE);
         }
-        long hardScoreLong = -Math.abs(startlength-solution.getActions().size())-Math.abs(1-ends) - 2*nulls - badNexts;
-        long softScoreLong = (long) (-1000.0*costTotal);
-        HardSoftLongScore score = HardSoftLongScore.valueOf(hardScoreLong,softScoreLong);
-//        System.out.println("solution = " + solution);
-//        System.out.println("score = " + score);
-        return score;
     }
-    
+
 }

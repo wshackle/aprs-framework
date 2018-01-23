@@ -40,7 +40,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -60,6 +59,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -70,6 +71,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     /**
      * Creates new form PddlPlannerJPanel
      */
+    @SuppressWarnings("initialization")
     public PddlPlannerJPanel() {
         initComponents();
         jSpinnerMaxLines.setValue(250);
@@ -335,7 +337,19 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     }// </editor-fold>//GEN-END:initComponents
 
     public void browseProgramExecutable() throws IOException {
-        JFileChooser chooser = new JFileChooser(new File(jTextFieldPlannerProgramExecutable.getText()).getParent());
+
+        JFileChooser chooser = null;
+        String curText = jTextFieldPlannerProgramExecutable.getText();
+        if (null != curText) {
+            File f = new File(curText);
+            File parenFile = f.getParentFile();
+            if (null != parenFile) {
+                chooser = new JFileChooser(parenFile);
+            }
+        }
+        if (null == chooser) {
+            chooser = new JFileChooser();
+        }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
             jTextFieldPlannerProgramExecutable.setText(f.getCanonicalPath());
@@ -344,7 +358,12 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     }
 
     public void browsePddlDomain() throws IOException {
-        JFileChooser chooser = new JFileChooser(new File(jTextFieldPddlDomainFile.getText()).getParent());
+        String domainFileName = jTextFieldPddlDomainFile.getText();
+        JFileChooser chooser = new JFileChooser();
+        File dir = new File(domainFileName).getParentFile();
+        if (null != dir && dir.exists()) {
+            chooser.setCurrentDirectory(dir);
+        }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
             jTextFieldPddlDomainFile.setText(f.getCanonicalPath());
@@ -353,7 +372,12 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     }
 
     public void browsePddlProblem() throws IOException {
-        JFileChooser chooser = new JFileChooser(new File(jTextFieldPddlProblem.getText()).getParent());
+        String problemFileName = jTextFieldPddlProblem.getText();
+        JFileChooser chooser = new JFileChooser();
+        File dir = new File(problemFileName).getParentFile();
+        if (null != dir && dir.exists()) {
+            chooser.setCurrentDirectory(dir);
+        }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
             jTextFieldPddlProblem.setText(f.getCanonicalPath());
@@ -361,16 +385,8 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         }
     }
 
-    private File propertiesFile = null;
+    @MonotonicNonNull private File propertiesFile = null;
 
-    /**
-     * Get the value of propertiesFile
-     *
-     * @return the value of propertiesFile
-     */
-    public File getPropertiesFile() {
-        return propertiesFile;
-    }
 
     /**
      * Set the value of propertiesFile
@@ -526,13 +542,13 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         this.executor = executor;
     }
 
-    private PddlExecutorJInternalFrame actionsToCrclJInternalFrame1 = null;
+    @Nullable private PddlExecutorJInternalFrame actionsToCrclJInternalFrame1 = null;
 
-    public PddlExecutorJInternalFrame getActionsToCrclJInternalFrame1() {
+    @Nullable public PddlExecutorJInternalFrame getActionsToCrclJInternalFrame1() {
         return actionsToCrclJInternalFrame1;
     }
 
-    public void setActionsToCrclJInternalFrame1(PddlExecutorJInternalFrame actionsToCrclJInternalFrame1) {
+    public void setActionsToCrclJInternalFrame1(@Nullable PddlExecutorJInternalFrame actionsToCrclJInternalFrame1) {
         this.actionsToCrclJInternalFrame1 = actionsToCrclJInternalFrame1;
     }
 
@@ -547,7 +563,6 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
 //            actionsToCrclJInternalFrame1.setActionsList(actionsList);
 //        }
 //    }
-
     private void addAction(PddlAction action) {
         if (null != actionsToCrclJInternalFrame1) {
             this.actionsToCrclJInternalFrame1.addAction(action);
@@ -559,41 +574,16 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
             this.actionsToCrclJInternalFrame1.processActions();
         }
     }
-    private Process pddlProcess = null;
-    private InputStream pddlInputStream = null;
-    private InputStream pddlErrorStream = null;
-    private Future<?> ppdlInputStreamFuture = null;
-    private Future<?> ppdlErrorStreamFuture = null;
 
-//    public static void main(String[] arg) {
-//        if (arg.length != 2) {
-//            System.err.println("usage: java ScpTo file1 user@remotehost:file2");
-//            System.exit(-1);
-//        }
-//
-//        try {
-//
-//            String lfile = arg[0];
-//            String user = arg[1].substring(0, arg[1].indexOf('@'));
-//            arg[1] = arg[1].substring(arg[1].indexOf('@') + 1);
-//            String host = arg[1].substring(0, arg[1].indexOf(':'));
-//            String rfile = arg[1].substring(arg[1].indexOf(':') + 1);
-//
-//            JSch jsch = new JSch();
-//            scp(jsch, user, host, rfile, lfile);
-//
-//            System.exit(0);
-//        } catch (Exception e) {
-//            System.out.println(e);
-//            try {
-//                if (fis != null) {
-//                    fis.close();
-//                }
-//            } catch (Exception ee) {
-//            }
-//        }
-//    }
+    @Nullable private Process pddlProcess = null;
+    @Nullable private InputStream pddlInputStream = null;
+    @Nullable private InputStream pddlErrorStream = null;
+    @Nullable private Future<?> ppdlInputStreamFuture = null;
+    @Nullable private Future<?> ppdlErrorStreamFuture = null;
+
+    @SuppressWarnings("nullness")
     private UserInfo sshUserInfo = new UserInfo() {
+        
         @Override
         public String getPassphrase() {
             return null;
@@ -608,15 +598,11 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         @Override
         public boolean promptPassword(String string) {
             return true;
-//                System.out.println(string);
-//                return JOptionPane.showConfirmDialog(PddlPlannerJPanel.this, string) == JOptionPane.YES_OPTION;
         }
 
         @Override
         public boolean promptPassphrase(String string) {
             return false;
-//                System.out.println(string);
-//                return JOptionPane.showConfirmDialog(PddlPlannerJPanel.this, string) == JOptionPane.YES_OPTION;
         }
 
         @Override
@@ -628,24 +614,16 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         @Override
         public void showMessage(String string) {
             System.out.println(string);
-//                JOptionPane.showMessageDialog(PddlPlannerJPanel.this, string);
             MultiLineStringJPanel.showText(string);
         }
     };
 
+    @SuppressWarnings("nullness")
     private void sshExec(Session session, String command) throws JSchException, IOException, InterruptedException, ExecutionException {
         printMessage("Excuting remote command \"" + command + "\" ...");
         Channel channel = session.openChannel("exec");
         ((ChannelExec) channel).setCommand(command);
-
-        // X Forwarding
-        // channel.setXForwarding(true);
-        //channel.setInputStream(System.in);
         channel.setInputStream(null);
-
-        //channel.setOutputStream(System.out);
-        //FileOutputStream fos=new FileOutputStream("/tmp/stderr");
-        //((ChannelExec)channel).setErrStream(fos);
         ((ChannelExec) channel).setErrStream(System.err);
 
         InputStream in = channel.getInputStream();
@@ -655,29 +633,10 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         pddlInputStream = in;
         pddlErrorStream = null;
         setupOutputHandlers();
-        ppdlInputStreamFuture.get();
+        if(null != ppdlInputStreamFuture) {
+            ppdlInputStreamFuture.get();
+        }
         channel.disconnect();
-//        byte[] tmp = new byte[1024];
-//        while (true) {
-//            while (in.available() > 0) {
-//                int i = in.read(tmp, 0, 1024);
-//                if (i < 0) {
-//                    break;
-//                }
-//                System.out.print(new String(tmp, 0, i));
-//            }
-//            if (channel.isClosed()) {
-//                if (in.available() > 0) {
-//                    continue;
-//                }
-//                System.out.println("exit-status: " + channel.getExitStatus());
-//                break;
-//            }
-//            try {
-//                Thread.sleep(1000);
-//            } catch (Exception ee) {
-//            }
-//        }
         printMessage("Finished remote command \"" + command + "\".");
     }
 
@@ -854,128 +813,31 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         return b;
     }
 
-//    public static class MyUserInfo implements UserInfo, UIKeyboardInteractive {
-//
-//        public String getPassword() {
-//            return passwd;
-//        }
-//
-//        public boolean promptYesNo(String str) {
-//            Object[] options = {"yes", "no"};
-//            int foo = JOptionPane.showOptionDialog(null,
-//                    str,
-//                    "Warning",
-//                    JOptionPane.DEFAULT_OPTION,
-//                    JOptionPane.WARNING_MESSAGE,
-//                    null, options, options[0]);
-//            return foo == 0;
-//        }
-//
-//        String passwd;
-//        JTextField passwordField = (JTextField) new JPasswordField(20);
-//
-//        public String getPassphrase() {
-//            return null;
-//        }
-//
-//        public boolean promptPassphrase(String message) {
-//            return true;
-//        }
-//
-//        public boolean promptPassword(String message) {
-//            Object[] ob = {passwordField};
-//            int result
-//                    = JOptionPane.showConfirmDialog(null, ob, message,
-//                            JOptionPane.OK_CANCEL_OPTION);
-//            if (result == JOptionPane.OK_OPTION) {
-//                passwd = passwordField.getText();
-//                return true;
-//            } else {
-//                return false;
-//            }
-//        }
-//
-//        public void showMessage(String message) {
-//            JOptionPane.showMessageDialog(null, message);
-//        }
-//        final GridBagConstraints gbc
-//                = new GridBagConstraints(0, 0, 1, 1, 1, 1,
-//                        GridBagConstraints.NORTHWEST,
-//                        GridBagConstraints.NONE,
-//                        new Insets(0, 0, 0, 0), 0, 0);
-//        private Container panel;
-//
-//        public String[] promptKeyboardInteractive(String destination,
-//                String name,
-//                String instruction,
-//                String[] prompt,
-//                boolean[] echo) {
-//            panel = new JPanel();
-//            panel.setLayout(new GridBagLayout());
-//
-//            gbc.weightx = 1.0;
-//            gbc.gridwidth = GridBagConstraints.REMAINDER;
-//            gbc.gridx = 0;
-//            panel.add(new JLabel(instruction), gbc);
-//            gbc.gridy++;
-//
-//            gbc.gridwidth = GridBagConstraints.RELATIVE;
-//
-//            JTextField[] texts = new JTextField[prompt.length];
-//            for (int i = 0; i < prompt.length; i++) {
-//                gbc.fill = GridBagConstraints.NONE;
-//                gbc.gridx = 0;
-//                gbc.weightx = 1;
-//                panel.add(new JLabel(prompt[i]), gbc);
-//
-//                gbc.gridx = 1;
-//                gbc.fill = GridBagConstraints.HORIZONTAL;
-//                gbc.weighty = 1;
-//                if (echo[i]) {
-//                    texts[i] = new JTextField(20);
-//                } else {
-//                    texts[i] = new JPasswordField(20);
-//                }
-//                panel.add(texts[i], gbc);
-//                gbc.gridy++;
-//            }
-//
-//            if (JOptionPane.showConfirmDialog(null, panel,
-//                    destination + ": " + name,
-//                    JOptionPane.OK_CANCEL_OPTION,
-//                    JOptionPane.QUESTION_MESSAGE)
-//                    == JOptionPane.OK_OPTION) {
-//                String[] response = new String[prompt.length];
-//                for (int i = 0; i < prompt.length; i++) {
-//                    response[i] = texts[i].getText();
-//                }
-//                return response;
-//            } else {
-//                return null;  // cancel
-//            }
-//        }
-//    }
-    private JSch jsch = null;
-    private Session session = null;
+    @Nullable private JSch jsch = null;
+    @Nullable private Session session = null;
 
     private void runPddlPlannerOnceSsh() {
         try {
+            JSch jsch = this.jsch;
             if (null == jsch) {
                 jsch = new JSch();
+                this.jsch = jsch;
             }
-            if (null == session) {
-                session = jsch.getSession(jTextFieldSshUser.getText(), jTextFieldHost.getText(), 22);
-                // username and password will be given via UserInfo interface.
-//        UserInfo ui = new MyUserInfo();
-                session.setUserInfo(sshUserInfo);
-                session.connect();
+            String host = jTextFieldHost.getText();
+            Session currentSession = this.session;
+            if (null == currentSession) {
+                currentSession = jsch.getSession(jTextFieldSshUser.getText(), jTextFieldHost.getText(), 22);
+                currentSession.setUserInfo(sshUserInfo);
+                currentSession.connect();
+                this.session = currentSession;
             }
+            Session pddlPlannerSession = currentSession;
             long t = System.currentTimeMillis();
             String remoteDomainFile = "/tmp/domain_" + t + ".pddl";
             String remoteProblemFile = "/tmp/problem_" + t + ".pddl";
-            scp(session, jTextFieldHost.getText(), remoteDomainFile, jTextFieldPddlDomainFile.getText());
-            scp(session, jTextFieldHost.getText(), remoteProblemFile, jTextFieldPddlProblem.getText());
-            sshExec(session, jTextFieldPlannerProgramExecutable.getText() + " " + jTextFieldAdditionalArgs.getText() + " " + remoteDomainFile + " " + remoteProblemFile);
+            scp(pddlPlannerSession, host, remoteDomainFile, jTextFieldPddlDomainFile.getText());
+            scp(pddlPlannerSession, host, remoteProblemFile, jTextFieldPddlProblem.getText());
+            sshExec(pddlPlannerSession, jTextFieldPlannerProgramExecutable.getText() + " " + jTextFieldAdditionalArgs.getText() + " " + remoteDomainFile + " " + remoteProblemFile);
         } catch (Exception ex) {
             printMessage("runPddlPlannerOnceSsh failed with " + ex);
             Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -983,14 +845,14 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     }
 
     private void clearActionsList() {
-        if(null != actionsToCrclJInternalFrame1) {
+        if (null != actionsToCrclJInternalFrame1) {
             actionsToCrclJInternalFrame1.warnIfNewActionsNotReady();
             actionsToCrclJInternalFrame1.clearActionsList();
         }
     }
+
     public void runPddlPlannerOnce() throws IOException {
-       
-        
+
         clearActionsList();
         if (this.jCheckBoxSsh.isSelected()) {
             runPddlPlannerOnceSsh();
@@ -1022,30 +884,36 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
             ppdlErrorStreamFuture = executor.submit(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        BufferedReader br = new BufferedReader(new InputStreamReader(pddlErrorStream));
-                        String line = null;
-                        while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
-                            final String lineToAppend = line;
-                            System.out.println("Line from remote error source:" + line);
-                            javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    printMessage(lineToAppend + System.lineSeparator());
-                                }
-                            });
+                    if (null != pddlErrorStream) {
+                        try (BufferedReader br = new BufferedReader(new InputStreamReader(pddlErrorStream))) {
+                            String line = null;
+                            while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
+                                final String lineToAppend = line;
+                                System.out.println("Line from remote error source:" + line);
+                                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        printMessage(lineToAppend + System.lineSeparator());
+                                    }
+                                });
+                            }
+                        } catch (IOException ex) {
+                            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    } catch (IOException ex) {
-                        Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             });
         }
+        if (null == pddlInputStream) {
+            throw new IllegalStateException("pddlInputStream is null");
+        }
         ppdlInputStreamFuture = executor.submit(new Runnable() {
             @Override
             public void run() {
-                try {
-                    BufferedReader br = new BufferedReader(new InputStreamReader(pddlInputStream));
+                if (null == pddlInputStream) {
+                    throw new IllegalStateException("pddlInputStream is null");
+                }
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(pddlInputStream))) {
                     String line = null;
                     boolean planFoundFound = false;
                     while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
@@ -1065,7 +933,9 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                             planFoundFound = true;
                         }
                     }
-                    actionsToCrclJInternalFrame1.autoResizeTableColWidthsPddlOutput();
+                    if (null != actionsToCrclJInternalFrame1) {
+                        actionsToCrclJInternalFrame1.autoResizeTableColWidthsPddlOutput();
+                    }
                     processActions();
                 } catch (IOException ex) {
                     Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -1110,7 +980,11 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         if (null == propertiesFile) {
             throw new IllegalStateException("propertiesFile not set");
         }
-        propertiesFile.getParentFile().mkdirs();
+        File parentFile = propertiesFile.getParentFile();
+        if (null == parentFile) {
+            throw new IllegalStateException("propertiesFile=" + propertiesFile + " has no parent");
+        }
+        parentFile.mkdirs();
         Map<String, String> propsMap = new HashMap<>();
         propsMap.put(PROGRAM_EXECUTABLE, jTextFieldPlannerProgramExecutable.getText());
         propsMap.put(PDDL_DOMAIN, jTextFieldPddlDomainFile.getText());
@@ -1176,14 +1050,14 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     }
 
     @Override
-    public void close() throws Exception {
+    public void close()  {
         closing = true;
         this.closePddlProcess();
         closing = true;
-        if (null != this.executor) {
-            this.executor.shutdownNow();
-            this.executor.awaitTermination(100, TimeUnit.MILLISECONDS);
-            this.executor = null;
+        ExecutorService executorToShutdown = this.executor;
+        if (null != executorToShutdown) {
+            executorToShutdown.shutdownNow();
+//            this.executor.awaitTermination(100, TimeUnit.MILLISECONDS);
         }
         if (null != session) {
             session.disconnect();

@@ -1,0 +1,46 @@
+package java.awt;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class Graphics2D extends Graphics {
+    protected Graphics2D();
+    void draw3DRect(int arg0, int arg1, int arg2, int arg3, boolean arg4);
+    void fill3DRect(int arg0, int arg1, int arg2, int arg3, boolean arg4);
+    void draw(Shape arg0);
+    boolean drawImage(Image arg0,  @Nullable AffineTransform arg1, @Nullable ImageObserver arg2);
+    void drawImage(BufferedImage arg0, BufferedImageOp arg1, int arg2, int arg3);
+    void drawRenderedImage(RenderedImage arg0, AffineTransform arg1);
+    void drawRenderableImage(RenderableImage arg0, AffineTransform arg1);
+    void drawString(String arg0, int arg1, int arg2);
+    void drawString(String arg0, float arg1, float arg2);
+    void drawString(AttributedCharacterIterator arg0, int arg1, int arg2);
+    void drawString(AttributedCharacterIterator arg0, float arg1, float arg2);
+    void drawGlyphVector(GlyphVector arg0, float arg1, float arg2);
+    void fill(Shape arg0);
+    boolean hit(Rectangle arg0, Shape arg1, boolean arg2);
+    GraphicsConfiguration getDeviceConfiguration();
+    void setComposite(Composite arg0);
+    void setPaint(Paint arg0);
+    void setStroke(Stroke arg0);
+    void setRenderingHint(Key arg0, Object arg1);
+    Object getRenderingHint(Key arg0);
+    void setRenderingHints(Map<?,?> arg0);
+    void addRenderingHints(Map<?,?> arg0);
+    RenderingHints getRenderingHints();
+    void translate(int arg0, int arg1);
+    void translate(double arg0, double arg1);
+    void rotate(double arg0);
+    void rotate(double arg0, double arg1, double arg2);
+    void scale(double arg0, double arg1);
+    void shear(double arg0, double arg1);
+    void transform(AffineTransform arg0);
+    void setTransform(AffineTransform arg0);
+    AffineTransform getTransform();
+    Paint getPaint();
+    Composite getComposite();
+    void setBackground(Color arg0);
+    Color getBackground();
+    Stroke getStroke();
+    void clip(Shape arg0);
+    FontRenderContext getFontRenderContext();
+}

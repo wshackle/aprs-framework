@@ -52,6 +52,10 @@ import rcs.posemath.PmCartesian;
 import static aprs.framework.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 
 import java.util.stream.StreamSupport;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.drools.core.rule.Collect;
 
 /**
  *
@@ -114,21 +118,24 @@ public class Object2DJPanel extends JPanel {
         this.repaint();
     }
 
-    private void addPartImage(String partName, String resName, double realWidth) {
+    private void addPartImage(@UnknownInitialization Object2DJPanel this,
+            String partName, String resName, double realWidth) {
         try {
             BufferedImage img = getImageFromSystemResourceName(resName);
             if (null != img) {
                 double ratio = realWidth / img.getWidth();
-                partImageMap.put(partName, new PartImageInfo(img, ratio, realWidth));
+                if(null != partImageMap) {
+                    partImageMap.put(partName, new PartImageInfo(img, ratio, realWidth));
+                }
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    private BufferedImage getImageFromSystemResourceName(String resName) throws IOException {
+    static private BufferedImage getImageFromSystemResourceName(String resName) throws IOException {
         URL url = ClassLoader.getSystemResource(resName);
-        if (null == resName) {
+        if (null == url) {
             throw new IllegalArgumentException("ClassLoader.getSystemResource(" + resName + ") returned null");
         }
         BufferedImage image = ImageIO.read(url);
@@ -202,7 +209,7 @@ public class Object2DJPanel extends JPanel {
         this.repaint();
     }
 
-    private List<PhysicalItem> outputItems;
+    private List<PhysicalItem> outputItems = Collections.emptyList();
 
     /**
      * Get the value of outputItems
@@ -210,7 +217,10 @@ public class Object2DJPanel extends JPanel {
      * @return the value of outputItems
      */
     public List<PhysicalItem> getOutputItems() {
-        return ((null != outputItems) ? Collections.unmodifiableList(outputItems) : null);
+        if(null != outputItems) {
+            return Collections.unmodifiableList(outputItems);
+        }
+        return Collections.emptyList();
     }
 
     /**
@@ -229,7 +239,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    private List<PhysicalItem> addedOutputSlots;
+    private List<PhysicalItem> addedOutputSlots = Collections.emptyList();
 
     /**
      * Get the value of addedOutputSlots
@@ -249,7 +259,7 @@ public class Object2DJPanel extends JPanel {
         this.addedOutputSlots = addedOutputSlots;
     }
 
-    private List<PhysicalItem> addedSlots;
+    private List<PhysicalItem> addedSlots = Collections.emptyList();
 
     /**
      * Get the value of addedSlots
@@ -260,7 +270,7 @@ public class Object2DJPanel extends JPanel {
         return addedSlots;
     }
 
-    private List<PhysicalItem> itemsWithAddedSlots;
+    private List<PhysicalItem> itemsWithAddedSlots = Collections.emptyList();
 
     /**
      * Get the value of itemsWithAddedSlots
@@ -280,7 +290,7 @@ public class Object2DJPanel extends JPanel {
         this.itemsWithAddedSlots = itemsWithAddedSlots;
     }
 
-    private List<PhysicalItem> outputItemsWithAddedSlots;
+    private List<PhysicalItem> outputItemsWithAddedSlots = Collections.emptyList();
 
     /**
      * Get the value of outputItemsWithAddedSlots
@@ -329,7 +339,7 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, point, label, w, h);
     }
 
-    public void takeSnapshot(File f, PmCartesian point, String label) {
+    public void takeSnapshot(File f, @Nullable PmCartesian point,  @Nullable String label) {
         final int w = this.getWidth();
         final int h = this.getHeight();
         if (w < 1 || h < 1) {
@@ -356,7 +366,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    public void takeSnapshot(File f, PmCartesian point, String label, final int w, final int h) {
+    public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, final int w, final int h) {
         try {
             BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
             int pindex = f.getName().lastIndexOf('.');
@@ -408,10 +418,14 @@ public class Object2DJPanel extends JPanel {
                 opts.w = w;
                 opts.h = h;
                 this.paintItems(g2d, itemsToPaint, null, minX, minY, maxX, maxY, opts);
-                paintHighlightedPose(point, g2d, label, minX, minY, maxX, maxY, w, h);
+                if(null != point) {
+                    paintHighlightedPose(point, g2d, label, minX, minY, maxX, maxY, w, h);
+                }
             } else {
                 this.paintComponent(g2d);
-                paintHighlightedPose(point, g2d, label, this.minX, this.minY, this.maxX, this.maxY, w, h);
+                if(null != point) {
+                    paintHighlightedPose(point, g2d, label, this.minX, this.minY, this.maxX, this.maxY, w, h);
+                }
             }
             ImageIO.write(img, type, f);
             System.out.println("Saved snapshot to " + f.getCanonicalPath());
@@ -476,11 +490,11 @@ public class Object2DJPanel extends JPanel {
         return createSnapshotImage(null);
     }
 
-    public BufferedImage createSnapshotImage(ViewOptions opts) {
+    public BufferedImage createSnapshotImage(@Nullable ViewOptions opts) {
         return createSnapshotImage(opts, items);
     }
 
-    public BufferedImage createSnapshotImage(ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+    public BufferedImage createSnapshotImage(@Nullable ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
         Dimension dim = this.getSize();
         int w = (opts != null) ? opts.w : dim.width;
         int h = (opts != null) ? opts.h : dim.height;
@@ -506,7 +520,7 @@ public class Object2DJPanel extends JPanel {
         return img;
     }
 
-    public void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, PhysicalItem selectedItem, Graphics2D g2d, ViewOptions opts) {
+    public void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, @Nullable PhysicalItem selectedItem, Graphics2D g2d, @Nullable ViewOptions opts) {
         Dimension dim = getSize();
         int w = (null != opts)?opts.w:dim.width;
         int h = (null != opts)?opts.h:dim.height;
@@ -548,7 +562,7 @@ public class Object2DJPanel extends JPanel {
         paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY, w, h);
     }
 
-    public void paintHighlightedPose(PmCartesian point, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY,
+    public void paintHighlightedPose(@Nullable PmCartesian point, Graphics2D g2d, @Nullable String label, double minX, double minY, double maxX, double maxY,
             int width,
             int height) {
         if (null != point) {
@@ -629,7 +643,9 @@ public class Object2DJPanel extends JPanel {
                 g2d.fill(rect);
                 g2d.setColor(Color.BLACK);
                 g2d.drawString(label, 0, 0);
-                g2d.setTransform(origTransform);
+                if(null != origTransform) {
+                    g2d.setTransform(origTransform);
+                }
                 g2d.draw(new Line2D.Double(toScreenPoint(namex, namey, minX, minY, maxX, maxY), toScreenPoint(x, y, minX, minY, maxX, maxY)));
             }
             this.translate(g2d, x, y, minX, minY, maxX, maxY, width, height);
@@ -727,7 +743,7 @@ public class Object2DJPanel extends JPanel {
         return scale;
     }
 
-    private Point2D.Double minCorner;
+    private Point2D.Double minCorner = new Point2D.Double();;
 
     /**
      * Get the value of minCorner
@@ -905,7 +921,7 @@ public class Object2DJPanel extends JPanel {
         this.namesXPos = namesXPos;
     }
 
-    private AffineTransform origTransform = null;
+    @MonotonicNonNull private AffineTransform origTransform = null;
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -956,14 +972,14 @@ public class Object2DJPanel extends JPanel {
         Color.GREEN.darker()
     };
 
-    private AprsJFrame aprsJFrame;
+    @MonotonicNonNull private AprsJFrame aprsJFrame;
 
     /**
      * Get the value of aprsJFrame
      *
      * @return the value of aprsJFrame
      */
-    public AprsJFrame getAprsJFrame() {
+    @Nullable public AprsJFrame getAprsJFrame() {
         return aprsJFrame;
     }
 
@@ -1009,10 +1025,10 @@ public class Object2DJPanel extends JPanel {
                 this.outputItemsWithAddedSlots.addAll(this.addedOutputSlots);
             }
         } else {
-            this.addedSlots = null;
-            this.addedOutputSlots = null;
-            this.outputItemsWithAddedSlots = null;
-            this.itemsWithAddedSlots = null;
+            this.addedSlots = Collections.emptyList();
+            this.addedOutputSlots = Collections.emptyList();
+            this.outputItemsWithAddedSlots = Collections.emptyList();
+            this.itemsWithAddedSlots = Collections.emptyList();
         }
         repaint();
     }
@@ -1027,9 +1043,9 @@ public class Object2DJPanel extends JPanel {
         return absSlotList;
     }
 
-    private SlotOffsetProvider slotOffsetProvider = null;
+    @MonotonicNonNull private SlotOffsetProvider slotOffsetProvider = null;
 
-    public SlotOffsetProvider getSlotOffsetProvider() {
+    @Nullable public SlotOffsetProvider getSlotOffsetProvider() {
         return slotOffsetProvider;
     }
 
@@ -1038,6 +1054,9 @@ public class Object2DJPanel extends JPanel {
     }
 
     public List<PhysicalItem> computeSlotPositions(PhysicalItem item) {
+        if(null == slotOffsetProvider) {
+            throw new IllegalStateException("slotOffsetProvider is null");
+        }
         List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName());
         List<PhysicalItem> slotList = new ArrayList<>();
         if (null != offsets) {
@@ -1111,12 +1130,12 @@ public class Object2DJPanel extends JPanel {
 
     public void paintItems(Graphics2D g2d,
             Collection<? extends PhysicalItem> itemsToPaint,
-            PhysicalItem selectedItem,
+            @Nullable PhysicalItem selectedItem,
             double minX,
             double minY,
             double maxX,
             double maxY,
-            ViewOptions opts) {
+            @Nullable ViewOptions opts) {
         origTransform = g2d.getTransform();
 
         int maxNameLength
@@ -1215,20 +1234,21 @@ public class Object2DJPanel extends JPanel {
         }
         Collection<? extends PhysicalItem> displayItems = itemsToPaint;
         if (useSeperateNamesThisTime) {
-            displayItems = new ArrayList<>(itemsToPaint);
+            List<? extends PhysicalItem> displayItemsList = new ArrayList<>(itemsToPaint);
+            displayItems = displayItemsList;
             switch (displayAxis) {
                 case POS_X_POS_Y:
-                    Collections.sort((List) displayItems, Comparator.comparing((PhysicalItem item) -> item.y));
+                    Collections.sort(displayItemsList, Comparator.comparing((PhysicalItem item) -> item.y));
                     break;
                 case NEG_X_NEG_Y:
-                    Collections.sort((List) displayItems, Comparator.comparing((PhysicalItem item) -> -item.y));
+                    Collections.sort(displayItemsList, Comparator.comparing((PhysicalItem item) -> -item.y));
                     break;
 
                 case POS_Y_NEG_X:
-                    Collections.sort((List) displayItems, Comparator.comparing((PhysicalItem item) -> item.x));
+                    Collections.sort(displayItemsList, Comparator.comparing((PhysicalItem item) -> item.x));
                     break;
                 case NEG_Y_POS_X:
-                    Collections.sort((List) displayItems, Comparator.comparing((PhysicalItem item) -> -item.x));
+                    Collections.sort(displayItemsList, Comparator.comparing((PhysicalItem item) -> -item.x));
                     break;
             }
         }
@@ -1336,15 +1356,24 @@ public class Object2DJPanel extends JPanel {
             item.setDisplayTransform(g2d.getTransform());
             item.setOrigTransform(origTransform);
             try {
-                item.setRelTransform(origTransform.createInverse());
-                item.getRelTransform().concatenate(item.getDisplayTransform());
+                AffineTransform itemRelTransform = origTransform.createInverse();
+                item.setRelTransform(itemRelTransform);
+                AffineTransform itemDisplayTransform = item.getDisplayTransform();
+                if(null != itemDisplayTransform) {
+                    itemRelTransform.concatenate(itemDisplayTransform);
+                }
             } catch (NoninvertibleTransformException ex) {
                 Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            item.setDisplayRect(new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeperateNamesThisTime ? 1 : item.getName().length()), 20));
+            int namelen =useSeperateNamesThisTime ? 1 : item.getName().length();
+            Rectangle2D.Double itemDisplayRect =
+                    new Rectangle2D.Double(
+                            -5, -12, // x,y
+                            10 + 10 *namelen,20 // w,h
+                    );
+            item.setDisplayRect(itemDisplayRect);
             g2d.setColor(this.getBackground());
-            g2d.fill(item.getDisplayRect());
+            g2d.fill(itemDisplayRect);
             g2d.setTransform(origTransform);
         }
         i = 0;
@@ -1375,19 +1404,26 @@ public class Object2DJPanel extends JPanel {
                     g2d.drawString(item.getName().substring(0, 1), 0, 0);
                 }
             }
-            item.setDisplayTransform(g2d.getTransform());
+            AffineTransform itemDisplayTransform = g2d.getTransform();
+            item.setDisplayTransform(itemDisplayTransform);
             item.setOrigTransform(origTransform);
             try {
-                item.setRelTransform(origTransform.createInverse());
-                item.getRelTransform().concatenate(item.getDisplayTransform());
+                AffineTransform itemRelTransform = origTransform.createInverse();
+                item.setRelTransform(itemRelTransform);
+                itemRelTransform.concatenate(itemDisplayTransform);
             } catch (NoninvertibleTransformException ex) {
                 Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            item.setDisplayRect(new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeperateNamesThisTime ? 1 : item.getName().length()), 20));
+            int namelen = useSeperateNamesThisTime ? 1 : item.getName().length();
+            Rectangle2D.Double itemDisplayRect =
+                    new Rectangle2D.Double(
+                            -5, -12, // x,y
+                            10 + 10 * namelen, 20 // w,h
+                    );
+            item.setDisplayRect(itemDisplayRect);
             if (!imageShown) {
                 g2d.setColor(item.getLabelColor());
-                g2d.draw(item.getDisplayRect());
+                g2d.draw(itemDisplayRect);
             }
 
             try {
@@ -1502,6 +1538,9 @@ public class Object2DJPanel extends JPanel {
             } else {
                 info = partImageMap.get("part_" + item.getName());
             }
+        }
+        if(null == info) {
+            throw new IllegalStateException("Failed to find info for "+item.getName()+" in "+partImageMap.keySet());
         }
         return info;
     }

@@ -64,5 +64,15 @@
             <activatedProfile>release</activatedProfile>
         </activatedProfiles>
     </action>
+    <action>
+            <actionName>CUSTOM-debug_with_checkers2</actionName>
+            <displayName>debug_with_checkers2</displayName>
+            <goals>
+                <goal>package</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>with_checkers</activatedProfile>
+            </activatedProfiles>
+        </action>
     
 </actions>

@@ -40,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -47,14 +48,14 @@ import java.util.stream.Collectors;
  */
 public class GoalLearner {
 
-    private Predicate<PhysicalItem> itemPredicate = null;
+    private @Nullable Predicate<PhysicalItem> itemPredicate = null;
 
     /**
      * Get the value of itemPredicate
      *
      * @return the value of itemPredicate
      */
-    public Predicate<PhysicalItem> getItemPredicate() {
+    @Nullable public Predicate<PhysicalItem> getItemPredicate() {
         return itemPredicate;
     }
 
@@ -74,14 +75,14 @@ public class GoalLearner {
         return itemPredicate.test(item);
     }
 
-    private Predicate<List<PhysicalItem>> kitTrayListPredicate;
+    private @Nullable Predicate<List<PhysicalItem>> kitTrayListPredicate;
 
     /**
      * Get the value of kitTrayListPredicate
      *
      * @return the value of kitTrayListPredicate
      */
-    public Predicate<List<PhysicalItem>> getKitTrayListPredicate() {
+    @Nullable public Predicate<List<PhysicalItem>> getKitTrayListPredicate() {
         return kitTrayListPredicate;
     }
 
@@ -101,14 +102,14 @@ public class GoalLearner {
         return kitTrayListPredicate.test(kitTrays);
     }
 
-    private SlotOffsetProvider slotOffsetProvider;
+    private @Nullable SlotOffsetProvider slotOffsetProvider;
 
     /**
      * Get the value of slotOffsetProvider
      *
      * @return the value of slotOffsetProvider
      */
-    public SlotOffsetProvider getSlotOffsetProvider() {
+    @Nullable public SlotOffsetProvider getSlotOffsetProvider() {
         return slotOffsetProvider;
     }
 
@@ -121,7 +122,7 @@ public class GoalLearner {
         this.slotOffsetProvider = slotOffsetProvider;
     }
 
-    private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
+    @Nullable private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()
                 .filter(x -> x.getType() != null && x.getType().equals("P"))
                 .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
@@ -129,17 +130,19 @@ public class GoalLearner {
     }
 
     /**
-     * Create an action list to recreate the configuration in the provided commonItems list.
-     * 
+     * Create an action list to recreate the configuration in the provided
+     * commonItems list.
+     *
      * @param commonItems list of kits and parts with positions to learn from
-     * @param allEmptyA optional boolean array to receive flag if all trays were empty
-     * @return list of PddlAction's that can be used to recreate the configuration of the example data.
+     * @param allEmptyA optional boolean array to receive flag if all trays were
+     * empty
+     * @return list of PddlAction's that can be used to recreate the
+     * configuration of the example data.
      */
     public List<PddlAction> createActionListFromVision(List<PhysicalItem> commonItems, boolean allEmptyA[]) {
         return createActionListFromVision(commonItems, commonItems, allEmptyA);
     }
-    
-    
+
     /**
      * Use the provided list of items create a set of actions that will fill
      * empty trays to match.Load this list into the PDDL executor.
@@ -148,8 +151,9 @@ public class GoalLearner {
      * can begin
      * @param teachItems list of trays and items in the trays as they should be
      * when complete.
-     * @param allEmptyA optional array to pass where value of whether all trays were empty will be stored.
-     * 
+     * @param allEmptyA optional array to pass where value of whether all trays
+     * were empty will be stored.
+     *
      * @return a list of actions than can be run to move parts from trays to
      * recreate the same configuration
      */
@@ -159,7 +163,8 @@ public class GoalLearner {
                         .filter(this::isWithinLimits)
                         .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
 
-        if (null == slotOffsetProvider) {
+        SlotOffsetProvider localSlotOffsetProvider = this.slotOffsetProvider;
+        if (null == localSlotOffsetProvider) {
             throw new IllegalStateException("null == slotOffsetProvider");
         }
 
@@ -169,7 +174,6 @@ public class GoalLearner {
                         .stream()
                         .map(entry -> entry.getKey() + "=" + entry.getValue())
                         .collect(Collectors.joining(" "));
-        System.out.println("requiredItemsString = " + requiredItemsString);
         List<PhysicalItem> kitTrays = teachItems.stream()
                 .filter(x -> "KT".equals(x.getType()))
                 .collect(Collectors.toList());
@@ -188,7 +192,8 @@ public class GoalLearner {
         List<String> kitToCheckStrings = new ArrayList<>();
         for (PhysicalItem kit : kitTrays) {
             Map<String, String> slotPrpToPartSkuMap = new HashMap<>();
-            List<Slot> slotOffsetList = slotOffsetProvider.getSlotOffsets(kit.getName());
+            assert (null != localSlotOffsetProvider) :"@AssumeAssertion(nullness)";
+            List<Slot> slotOffsetList = localSlotOffsetProvider.getSlotOffsets(kit.getName());
             if (null == slotOffsetList) {
                 throw new IllegalStateException("getSlotOffsetList(" + kit.getName() + ") returned null");
             }
@@ -202,12 +207,16 @@ public class GoalLearner {
             int kitNumber = -1;
             for (int slotOffsetIndex = 0; slotOffsetIndex < slotOffsetList.size(); slotOffsetIndex++) {
                 Slot slotOffset = slotOffsetList.get(slotOffsetIndex);
-                PhysicalItem absSlot = slotOffsetProvider.absSlotFromTrayAndOffset(kit, slotOffset);
-                PhysicalItem closestPart = closestPart(absSlot.x, absSlot.y, teachItems);
-                double minDist = Double.POSITIVE_INFINITY;
-                if (null != closestPart) {
-                    minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
+                PhysicalItem absSlot = localSlotOffsetProvider.absSlotFromTrayAndOffset(kit, slotOffset);
+                if(null == absSlot) {
+                    throw new IllegalStateException("No absSlot obtainable for slotOffset name "+slotOffset.getName()+" in kit "+kit.getName());
                 }
+                PhysicalItem closestPart = closestPart(absSlot.x, absSlot.y, teachItems);
+                if(null == closestPart) {
+                    slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
+                    continue;
+                }
+                double minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
                 if (minDist < 20) {
                     int pt_used_num = ptUsedMap.compute(closestPart.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
                     String shortPartName = closestPart.getName();
@@ -217,6 +226,9 @@ public class GoalLearner {
                     String partName = shortPartName + "_in_pt_" + pt_used_num;
                     l.add(PddlAction.parse("(take-part " + partName + ")"));
                     String shortSkuName = slotOffset.getSlotForSkuName();
+                    if (null == shortSkuName) {
+                        throw new IllegalStateException("slotOffset has no slotForSkuName :" + slotOffset.getName());
+                    }
                     if (shortSkuName.startsWith("sku_")) {
                         shortSkuName = shortSkuName.substring(4);
                     }
@@ -231,8 +243,10 @@ public class GoalLearner {
                         String prpName = slotOffset.getPrpName();
                         if (null != prpName) {
                             indexString = prpName.substring(prpName.lastIndexOf("_") + 1);
+                            slotOffset.setSlotIndexString(indexString);
+                        } else {
+                            throw new IllegalStateException("slotOffset has neither slotIndexString nor prpName :" + slotOffset.getName());
                         }
-                        slotOffset.setSlotIndexString(indexString);
                     }
                     String slotName = "empty_slot_" + indexString + "_for_" + shortSkuName + "_in_" + shortKitName + "_" + kitNumber;
                     l.add(PddlAction.parse("(place-part " + slotName + ")"));

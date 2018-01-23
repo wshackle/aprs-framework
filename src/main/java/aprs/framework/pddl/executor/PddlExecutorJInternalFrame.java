@@ -30,18 +30,13 @@ import crcl.base.CRCLProgramType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
-import crcl.ui.client.PendantClientInner;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -52,6 +47,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     /**
      * Creates new form ActionsToCrclJInternalFrame
      */
+    @SuppressWarnings("initialization")
     public PddlExecutorJInternalFrame() {
         initComponents();
     }
@@ -73,7 +69,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
      *
      * @return the value of externalGetPoseFunction
      */
-    public PoseProvider getExternalPoseProvider() {
+    @Nullable public PoseProvider getExternalPoseProvider() {
         return actionsToCrclJPanel1.getExternalPoseProvider();
     }
 
@@ -86,15 +82,10 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         this.actionsToCrclJPanel1.setExternalPoseProvider(externalGetPoseProvider);
     }
 
-//    public void runProgramCompleteRunnables() {
-//        this.actionsToCrclJPanel1.runProgramCompleteRunnables();
-//    }
-//    public XFuture<Boolean> checkSafeAbortAsync(Supplier<XFuture<Boolean>> supplier) {
-//        return actionsToCrclJPanel1.checkSafeAbortAsync(supplier);
-//    }
-//    public XFuture<Boolean> startLookForParts() {
-//        return actionsToCrclJPanel1.lookForParts();
-//    }
+    public void setLookForXYZ(double x, double y, double z) {
+        actionsToCrclJPanel1.setLookForXYZ(x,y,z);
+    }
+
     public CRCLProgramType createLookForPartsProgram() {
         return actionsToCrclJPanel1.createLookForPartsProgram();
     }
@@ -168,12 +159,11 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
 //    public void pause() {
 //        this.actionsToCrclJPanel1.pause();
 //    }
-
     public String getErrorString() {
         return this.actionsToCrclJPanel1.getErrorString();
     }
 
-    public void setErrorString(String errorString) {
+    public void setErrorString(@Nullable String errorString) {
         this.actionsToCrclJPanel1.setErrorString(errorString);
     }
 
@@ -276,7 +266,6 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         this.actionsToCrclJPanel1.processActions();
     }
 
-    @Override
     public File getPropertiesFile() {
         return this.actionsToCrclJPanel1.getPropertiesFile();
     }
@@ -332,7 +321,7 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
         this.setVisible(false);
     }
 
-    public Callable<DbSetupPublisher> getDbSetupSupplier() {
+    @Nullable public Callable<DbSetupPublisher> getDbSetupSupplier() {
         return actionsToCrclJPanel1.getDbSetupSupplier();
     }
 

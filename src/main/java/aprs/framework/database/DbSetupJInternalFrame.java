@@ -34,6 +34,7 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
     /**
      * Creates new form DbSetupJInternalFrame
      */
+    @SuppressWarnings("initialization")
     public DbSetupJInternalFrame() {
         initComponents();
     }

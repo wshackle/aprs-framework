@@ -29,6 +29,7 @@ import aprs.framework.database.DbType;
 import java.sql.Connection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -39,6 +40,7 @@ public class ExploreGraphDbJFrame extends javax.swing.JFrame {
     /**
      * Creates new form ExplortGraphDbJFrame
      */
+    @SuppressWarnings("initialization")
     public ExploreGraphDbJFrame() {
         initComponents();
     }
@@ -47,7 +49,7 @@ public class ExploreGraphDbJFrame extends javax.swing.JFrame {
         explorteGraphDbJPanel1.setConnection(connection);
     }
     
-    public Connection getConnection() {
+    @Nullable public Connection getConnection() {
         return explorteGraphDbJPanel1.getConnection();
     }
 

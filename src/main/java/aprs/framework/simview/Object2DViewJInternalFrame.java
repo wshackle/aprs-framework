@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 
 /**
@@ -43,6 +44,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     /**
      * Creates new form Object2DViewJInternalFrame
      */
+    @SuppressWarnings("initialization")
     public Object2DViewJInternalFrame() {
         initComponents();
     }
@@ -183,7 +185,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
     
     @Override
-    public void takeSnapshot(File f, PoseType pose, String label, int w, int h)  {
+    public void takeSnapshot(File f, @Nullable PoseType pose, @Nullable String label, int w, int h)  {
         object2DOuterJPanel1.takeSnapshot(f, pose, label,w,h);
     }
     
@@ -193,7 +195,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
     
     @Override
-    public void takeSnapshot(File f, PmCartesian point, String label, int w, int h)  {
+    public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, int w, int h)  {
         object2DOuterJPanel1.takeSnapshot(f, point, label,w,h);
     }
     

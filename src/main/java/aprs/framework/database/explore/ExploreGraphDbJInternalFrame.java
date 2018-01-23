@@ -38,6 +38,7 @@ public class ExploreGraphDbJInternalFrame extends javax.swing.JInternalFrame imp
     /**
      * Creates new form ExploreGraphDbJInternalFrame
      */
+    @SuppressWarnings("initialization")
     public ExploreGraphDbJInternalFrame() {
         initComponents();
     }

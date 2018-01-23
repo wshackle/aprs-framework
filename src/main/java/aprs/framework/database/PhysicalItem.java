@@ -34,6 +34,8 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PM_CARTESIAN;
 
 /**
@@ -47,11 +49,11 @@ import rcs.posemath.PM_CARTESIAN;
 public class PhysicalItem extends PM_CARTESIAN {
 
     final public String origName;
-    private String sku;
+    private @Nullable String sku;
     private String name;
-    private String fullName;
+    private @Nullable String fullName;
 
-    public String getSku() {
+    @Nullable public String getSku() {
         return sku;
     }
 
@@ -69,62 +71,67 @@ public class PhysicalItem extends PM_CARTESIAN {
     private double vzk = 1;
     private double score = 100.0;
     private int visioncycle;
-    private String type ="P";
-    private AffineTransform displayTransform;
-    private AffineTransform origTransform;
-    private AffineTransform relTransform;
-    private Rectangle2D.Double displayRect;
+    private String type = "P";
+    private @Nullable AffineTransform displayTransform;
+    private @Nullable AffineTransform origTransform;
+    private @Nullable AffineTransform relTransform;
+    private @Nullable Rectangle2D displayRect;
     private boolean insideKitTray;
     private boolean insidePartsTray;
-    private String setQuery;
+    private @Nullable String setQuery;
     private long timestamp;
-    private PhysicalItem tray;
+    private @Nullable PhysicalItem tray;
     private long emptySlotsCount;
     private long totalSlotsCount;
     private double maxSlotDist;
+
     private List<PhysicalItem> emptySlotsList = new ArrayList<>();
     private int kitTrayNum;
-    private String slotForSkuName;
+    private @Nullable String slotForSkuName;
     private Color labelColor = Color.BLACK;
-    private String newSlotQuery = null;
+    private @Nullable String newSlotQuery = null;
 
-    private String prpName;
+    private @Nullable String prpName;
 
     public PoseType getPose() {
         return pose(point(x, y, z), vector(vxi, vxj, vxk), vector(vzi, vzj, vzk));
     }
 
     public void setPose(PoseType pose) {
-        if(null == pose) {
+        if (null == pose) {
             throw new IllegalArgumentException("null == pose");
         }
         PointType pt = pose.getPoint();
-        if(null != pt) {
+        if (null != pt) {
             x = pt.getX();
             y = pt.getY();
             z = pt.getZ();
         }
         VectorType xvec = pose.getXAxis();
-        if(null != xvec) {
+        if (null != xvec) {
             vxi = xvec.getI();
             vxj = xvec.getJ();
             vxk = xvec.getK();
             rotation = Math.atan2(vxj, vxi);
         }
         VectorType zvec = pose.getXAxis();
-        if(null != zvec) {
+        if (null != zvec) {
             vzi = zvec.getI();
             vzj = zvec.getJ();
             vzk = zvec.getK();
         }
     }
+
     /**
      * Get the value of prpName
      *
      * @return the value of prpName
      */
     public String getPrpName() {
-        return prpName;
+        if (null != prpName) {
+            return prpName;
+        }
+        throw new NullPointerException("prpName is null for PhysicalItem with name=" + name);
     }
 
     /**
@@ -203,30 +210,34 @@ public class PhysicalItem extends PM_CARTESIAN {
 
     protected PhysicalItem(String name, PoseType pose, int visioncycle) {
         this(name);
-        setFromCrclPoseType(pose);
         this.visioncycle = visioncycle;
+        setFromCrclPoseTypeInternal(this, pose);
     }
 
     public final void setFromCrclPoseType(PoseType pose) {
+        setFromCrclPoseTypeInternal(this, pose);
+    }
+
+    private static void setFromCrclPoseTypeInternal(@UnknownInitialization PhysicalItem thisItem, PoseType pose) {
         if (null != pose) {
             VectorType xAxis = pose.getXAxis();
             if (null != xAxis) {
-                this.rotation = Math.atan2(xAxis.getJ(), xAxis.getI());
-                this.vxi = xAxis.getI();
-                this.vxj = xAxis.getJ();
-                this.vxk = xAxis.getK();
+                thisItem.rotation = Math.atan2(xAxis.getJ(), xAxis.getI());
+                thisItem.vxi = xAxis.getI();
+                thisItem.vxj = xAxis.getJ();
+                thisItem.vxk = xAxis.getK();
             }
             VectorType zAxis = pose.getZAxis();
             if (null != zAxis) {
-                this.vzi = zAxis.getI();
-                this.vzj = zAxis.getJ();
-                this.vzk = zAxis.getK();
+                thisItem.vzi = zAxis.getI();
+                thisItem.vzj = zAxis.getJ();
+                thisItem.vzk = zAxis.getK();
             }
             PointType pt = pose.getPoint();
             if (null != pt) {
-                this.x = pt.getX();
-                this.y = pt.getY();
-                this.z = pt.getZ();
+                thisItem.x = pt.getX();
+                thisItem.y = pt.getY();
+                thisItem.z = pt.getZ();
             }
         }
     }
@@ -254,7 +265,7 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.name = name;
     }
 
-    public String getFullName() {
+    @Nullable public String getFullName() {
         return fullName;
     }
 
@@ -358,7 +369,7 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.type = type;
     }
 
-    public AffineTransform getDisplayTransform() {
+    @Nullable public AffineTransform getDisplayTransform() {
         return displayTransform;
     }
 
@@ -366,7 +377,7 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.displayTransform = displayTransform;
     }
 
-    public AffineTransform getOrigTransform() {
+    @Nullable public AffineTransform getOrigTransform() {
         return origTransform;
     }
 
@@ -374,7 +385,7 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.origTransform = origTransform;
     }
 
-    public AffineTransform getRelTransform() {
+    @Nullable public AffineTransform getRelTransform() {
         return relTransform;
     }
 
@@ -382,7 +393,7 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.relTransform = relTransform;
     }
 
-    public Rectangle2D.Double getDisplayRect() {
+    @Nullable public Rectangle2D getDisplayRect() {
         return displayRect;
     }
 
@@ -406,7 +417,8 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.insidePartsTray = insidePartsTray;
     }
 
-    public String getSetQuery() {
+    public @Nullable
+    String getSetQuery() {
         return setQuery;
     }
 
@@ -422,7 +434,7 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.timestamp = timestamp;
     }
 
-    public PhysicalItem getTray() {
+    @Nullable public PhysicalItem getTray() {
         return tray;
     }
 
@@ -470,7 +482,8 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.kitTrayNum = kitTrayNum;
     }
 
-    public String getSlotForSkuName() {
+    public @Nullable
+    String getSlotForSkuName() {
         return slotForSkuName;
     }
 
@@ -486,7 +499,8 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.labelColor = labelColor;
     }
 
-    public String getNewSlotQuery() {
+    public @Nullable
+    String getNewSlotQuery() {
         return newSlotQuery;
     }
 
@@ -494,14 +508,15 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.newSlotQuery = newSlotQuery;
     }
 
-    private Map<String, String> newSlotOffsetResultMap = null;
+    private @Nullable Map<String, String> newSlotOffsetResultMap = null;
 
     /**
      * Get the value of newSlotOffsetResultMap
      *
      * @return the value of newSlotOffsetResultMap
      */
-    public Map<String, String> getNewSlotOffsetResultMap() {
+    public @Nullable
+    Map<String, String> getNewSlotOffsetResultMap() {
         return newSlotOffsetResultMap;
     }
 

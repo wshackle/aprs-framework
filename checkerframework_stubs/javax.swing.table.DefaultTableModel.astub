@@ -1,0 +1,44 @@
+
+package javax.swing.table;
+
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class DefaultTableModel extends AbstractTableModel implements Serializable {
+    protected Vector dataVector;
+    protected Vector columnIdentifiers;
+    DefaultTableModel();
+    DefaultTableModel(int arg0, int arg1);
+    DefaultTableModel(Vector arg0, int arg1);
+    DefaultTableModel(Object[] arg0, int arg1);
+    DefaultTableModel(Vector arg0, Vector arg1);
+    DefaultTableModel(Object[][] arg0, Object[] arg1);
+    Vector getDataVector();
+    void setDataVector(Vector arg0, Vector arg1);
+    void setDataVector(Object[][] arg0, Object[] arg1);
+    void newDataAvailable(TableModelEvent arg0);
+    void newRowsAdded(TableModelEvent arg0);
+    void rowsRemoved(TableModelEvent arg0);
+    void setNumRows(int arg0);
+    void setRowCount(int arg0);
+    void addRow(Vector arg0);
+    void addRow(@Nullable Object[] arg0);
+    void insertRow(int arg0, Vector arg1);
+    void insertRow(int arg0, Object[] arg1);
+    void moveRow(int arg0, int arg1, int arg2);
+    void removeRow(int arg0);
+    void setColumnIdentifiers(Vector arg0);
+    void setColumnIdentifiers(Object[] arg0);
+    void setColumnCount(int arg0);
+    void addColumn(Object arg0);
+    void addColumn(Object arg0, Vector arg1);
+    void addColumn(Object arg0, Object[] arg1);
+    int getRowCount();
+    int getColumnCount();
+    String getColumnName(int arg0);
+    boolean isCellEditable(int arg0, int arg1);
+    @Nullable Object getValueAt(int arg0, int arg1);
+    void setValueAt(@Nullable Object arg0, int arg1, int arg2);
+    protected static Vector convertToVector(Object[] arg0);
+    protected static Vector convertToVector(Object[][] arg0);
+}

@@ -26,6 +26,7 @@ import aprs.framework.database.PhysicalItem;
 import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -34,28 +35,28 @@ import java.util.Map;
 public class UpdateResults {
 
     final String name;
-    private String updateStringFilled;
+    private @Nullable String updateStringFilled;
     private int updateCount;
     private int totalUpdateCount;
     private int statementExecutionCount;
-    private PhysicalItem lastDetectedItem;
+    private @Nullable PhysicalItem lastDetectedItem;
     private double x;
     private double y;
     private double rotation;
-    private List<Map<String, String>> lastResultSetMapList;
-    private Exception exception;
+    private @Nullable List<Map<String, String>> lastResultSetMapList;
+    private @Nullable Exception exception;
     private boolean returnedResultSet;
 
-    private List<Map<String, String>> lastVerificationResultSetListMap;
+    private @Nullable List<Map<String, String>> lastVerificationResultSetListMap;
 
-    private String verificationQueryStringFilled;
+    private @Nullable String verificationQueryStringFilled;
 
     /**
      * Get the value of verificationQueryStringFilled
      *
      * @return the value of verificationQueryStringFilled
      */
-    public String getVerificationQueryStringFilled() {
+    @Nullable public String getVerificationQueryStringFilled() {
         return verificationQueryStringFilled;
     }
 
@@ -74,7 +75,7 @@ public class UpdateResults {
      *
      * @return the value of lastVerificationResultSetListMap
      */
-    public List<Map<String, String>> getLastVerificationResultSetListMap() {
+    @Nullable public List<Map<String, String>> getLastVerificationResultSetListMap() {
         return lastVerificationResultSetListMap;
     }
 
@@ -127,7 +128,7 @@ public class UpdateResults {
     /**
      * @return the updateStringFilled
      */
-    public String getUpdateStringFilled() {
+    @Nullable public String getUpdateStringFilled() {
         return updateStringFilled;
     }
 
@@ -172,7 +173,7 @@ public class UpdateResults {
     public int getStatementExecutionCount() {
         return statementExecutionCount;
     }
-    
+
     public int incrementStatementExecutionCount() {
         statementExecutionCount++;
         return statementExecutionCount;
@@ -188,7 +189,7 @@ public class UpdateResults {
     /**
      * @return the lastDetectedItem
      */
-    public PhysicalItem getLastDetectedItem() {
+    @Nullable public PhysicalItem getLastDetectedItem() {
         return lastDetectedItem;
     }
 
@@ -205,7 +206,7 @@ public class UpdateResults {
     /**
      * @return the lastResultSetMapList
      */
-    public List<Map<String, String>> getLastResultSetMapList() {
+    @Nullable public List<Map<String, String>> getLastResultSetMapList() {
         return lastResultSetMapList;
     }
 
@@ -218,33 +219,45 @@ public class UpdateResults {
 
     @Override
     public String toString() {
-        return "UpdateResults{" 
-                + "name= " + name 
-                + ",\n    updateStringFilled=\n" + updateStringFilled 
-                + "\n\nupdateCount=" + updateCount 
-                + ",\n    totalUpdateCount=" + totalUpdateCount 
-                + ",\n    statementExecutionCount=" + statementExecutionCount 
-                + ",\n    lastDetectedItem=" + lastDetectedItem 
-                + ",\n    x=" + x 
-                + ",\n    y=" + y 
-                + ",\n    rotation=" + rotation 
-                + ",\n    lastResultSetMapList=" + lastResultSetMapList 
-                + ",\n    exception=" + exception + ((null != exception && null != exception.getCause()) ? "\n caused by \n" + exception.getCause() + "\n" : "") 
-                + ",\n    returnedResultSet=" + returnedResultSet 
-                + ",\n    verificationQueryStringFilled=\n" + verificationQueryStringFilled 
-                + "\n\n    verifyException=" + verifyException + ((null != verifyException && null != verifyException.getCause()) ? "\n caused by \n" + exception.getCause() + "\n" : "") 
-                + ",\n    verified=" + verified 
-                + ",\n    lastVerificationResultSetListMap=" + lastVerificationResultSetListMap 
+        return "UpdateResults{"
+                + "name= " + name
+                + ",\n    updateStringFilled=\n" + updateStringFilled
+                + "\n\nupdateCount=" + updateCount
+                + ",\n    totalUpdateCount=" + totalUpdateCount
+                + ",\n    statementExecutionCount=" + statementExecutionCount
+                + ",\n    lastDetectedItem=" + lastDetectedItem
+                + ",\n    x=" + x
+                + ",\n    y=" + y
+                + ",\n    rotation=" + rotation
+                + ",\n    lastResultSetMapList=" + lastResultSetMapList
+                + ",\n    exception=" + exception + ((null != exception && null != exception.getCause()) ? "\n caused by \n" + exception.getCause() + "\n" : "")
+                + ",\n    returnedResultSet=" + returnedResultSet
+                + ",\n    verificationQueryStringFilled=\n" + verificationQueryStringFilled
+                + "\n\n    "+getVerifyExceptionString()
+                + ",\n    verified=" + verified
+                + ",\n    lastVerificationResultSetListMap=" + lastVerificationResultSetListMap
                 + "\n}";
     }
-    private Exception verifyException = null;
+
+    private String getVerifyExceptionString() {
+        if(null == verifyException) {
+           return "";
+        }
+        Throwable cause = verifyException.getCause();
+        if(null == cause) {
+            return "verifyException=" + verifyException;
+        }
+        return "verifyException=" + verifyException +  "\n caused by \n" + cause + "\n";
+    }
+    
+    @Nullable private Exception verifyException = null;
 
     /**
      * Get the value of verifyException
      *
      * @return the value of verifyException
      */
-    public Exception getVerifyException() {
+    @Nullable public Exception getVerifyException() {
         return verifyException;
     }
 
@@ -253,21 +266,21 @@ public class UpdateResults {
      *
      * @param verifyException new value of verifyException
      */
-    public void setVerifyException(Exception verifyException) {
+    public void setVerifyException(@Nullable Exception verifyException) {
         this.verifyException = verifyException;
     }
 
     /**
      * @return the exception
      */
-    public Exception getException() {
+    @Nullable public Exception getException() {
         return exception;
     }
 
     /**
      * @param exception the exception to set
      */
-    public void setException(Exception exception) {
+    public void setException(@Nullable Exception exception) {
         this.exception = exception;
     }
 

@@ -1,0 +1,26 @@
+
+package javax.swing.table;
+
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class AbstractTableModel implements TableModel, Serializable {
+    protected EventListenerList listenerList;
+    AbstractTableModel();
+    String getColumnName(int arg0);
+    int findColumn(String arg0);
+    Class<?> getColumnClass(int arg0);
+    boolean isCellEditable(int arg0, int arg1);
+    void setValueAt(@Nullable Object arg0, int arg1, int arg2);
+    void addTableModelListener(TableModelListener arg0);
+    void removeTableModelListener(TableModelListener arg0);
+    TableModelListener[] getTableModelListeners();
+    void fireTableDataChanged();
+    void fireTableStructureChanged();
+    void fireTableRowsInserted(int arg0, int arg1);
+    void fireTableRowsUpdated(int arg0, int arg1);
+    void fireTableRowsDeleted(int arg0, int arg1);
+    void fireTableCellUpdated(int arg0, int arg1);
+    void fireTableChanged(TableModelEvent arg0);
+    <T> T[] getListeners(Class<T> arg0);
+}

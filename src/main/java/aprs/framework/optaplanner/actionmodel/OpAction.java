@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.domain.variable.PlanningVariable;
@@ -33,10 +35,6 @@ public class OpAction implements OpActionInterface {
         this.location = new Point2D.Double(x, y);
         this.actionType = actionType;
         this.partType = partType;
-        this.id = idCounter.incrementAndGet() + 1;
-    }
-
-    public OpAction() {
         this.id = idCounter.incrementAndGet() + 1;
     }
 
@@ -72,11 +70,12 @@ public class OpAction implements OpActionInterface {
 
     @PlanningVariable(graphType = PlanningVariableGraphType.CHAINED,
             valueRangeProviderRefs = {"possibleNextActions", "endActions"})
-    private OpActionInterface next;
+    private @Nullable OpActionInterface next;
 
     private OpActionType actionType;
 
     @Override
+    @SideEffectFree
     public OpActionType getActionType() {
         return actionType;
     }
@@ -104,7 +103,8 @@ public class OpAction implements OpActionInterface {
     }
 
     @Override
-    public OpActionInterface getNext() {
+    public @Nullable
+    OpActionInterface getNext() {
         return next;
     }
 
@@ -135,7 +135,7 @@ public class OpAction implements OpActionInterface {
     }
 
     private int maxNextEffectiveCount = 0;
-    
+
     public void addPossibleNextActions(List<? extends OpActionInterface> allActions) {
         maxNextEffectiveCount = allActions.size();
         for (OpActionInterface action : allActions) {
@@ -150,7 +150,7 @@ public class OpAction implements OpActionInterface {
         }
     }
 
-    public OpActionInterface effectiveNext() {
+    @Nullable public OpActionInterface effectiveNext() {
         if (getActionType() == FAKE_DROPOFF) {
             return null;
         }
@@ -163,21 +163,23 @@ public class OpAction implements OpActionInterface {
                 return null;
 
             case PICKUP:
-                if (null == next.getNext()) {
+                OpActionInterface nextNext = next.getNext();
+                if (null == nextNext) {
                     throw new IllegalStateException("this=" + name + ", next=" + next + " next.getNext() ==null");
                 }
-                if (next.getNext().getActionType() == FAKE_DROPOFF) {
-                    if (null == next.getNext()) {
-                        throw new IllegalStateException("this=" + name + " next.getNext() ==null");
+                if (nextNext.getActionType() == FAKE_DROPOFF) {
+                    if (null == next) {
+                        return null;
                     }
-                    OpActionInterface nxt2 = next.getNext().getNext();
                     nxts.add(next);
-                    nxts.add(next.getNext());
-                    nxts.add(nxt2);
+                    nxts.add(nextNext);
+                    OpActionInterface nxt2 = nextNext.getNext();
                     if (null == nxt2) {
                         throw new IllegalStateException("this=" + name + " nxt2 ==null");
                     }
-                    if (null == nxt2.getNext()) {
+                    nxts.add(nxt2);
+                    OpActionInterface nxt2Next = nxt2.getNext();
+                    if (null == nxt2Next) {
                         throw new IllegalStateException("this=" + name + " nxt2.getNext() ==null");
                     }
                     if (nxt2 == next) {
@@ -186,20 +188,24 @@ public class OpAction implements OpActionInterface {
                     if (nxt2 == this) {
                         throw new IllegalStateException("this=" + name + " nxt2 == this");
                     }
-                    nxts.add(nxt2.getNext());
+                    nxts.add(nxt2Next);
                     int count = 0;
-                    while (nxt2.getActionType() == PICKUP && nxt2.getNext().getActionType() == FAKE_DROPOFF) {
+                    while (nxt2.getActionType() == PICKUP && nxt2Next.getActionType() == FAKE_DROPOFF) {
                         count++;
                         if (count > maxNextEffectiveCount) {
                             throw new IllegalStateException("this=" + name + " count > maxCount,nxts=" + nxts);
                         }
-                        
-                        nxt2 = nxt2.getNext().getNext();
+
+                        nxt2 = nxt2Next.getNext();
+                        if (null == nxt2) {
+                            throw new IllegalStateException("this=" + name + " nxt2Next.getNext() ==null");
+                        }
                         nxts.add(nxt2);
-                        if (null == nxt2.getNext()) {
+                        nxt2Next = nxt2.getNext();
+                        if (null == nxt2Next) {
                             throw new IllegalStateException("this=" + name + " nxt2.getNext() ==null");
                         }
-                        nxts.add(nxt2.getNext());
+                        nxts.add(nxt2Next);
                         if (nxt2 == next) {
                             throw new IllegalStateException("this=" + name + " nxt2 == next");
                         }
@@ -238,21 +244,23 @@ public class OpAction implements OpActionInterface {
             effNextString = "(effectiveNext=" + effNext.getName() + ")";
         }
         String partTypeString = "";
-        if(null != this.partType && this.partType.length() > 0) {
+        if (null != this.partType && this.partType.length() > 0) {
             partTypeString = "(partType=" + this.partType + ")";
         }
         String infoString = partTypeString + effNextString;
-        if(partTypeString.endsWith(")") && effNextString.startsWith("(")) {
-            infoString = partTypeString.substring(0,partTypeString.length()-1)+","+effNextString.substring(1);
+        if (partTypeString.endsWith(")") && effNextString.startsWith("(")) {
+            infoString = partTypeString.substring(0, partTypeString.length() - 1) + "," + effNextString.substring(1);
         }
         if (next instanceof OpAction) {
-            if (null != next.getNext() && getActionType() != FAKE_DROPOFF && next.getActionType() != FAKE_DROPOFF) {
-                return name+ infoString  + " -> " + ((OpAction) next).name + "(cost=" + String.format("%.3f", cost()) + ")";
+            OpActionType nextActionType = next.getActionType();
+            OpActionType actionType = getActionType();
+            if (null != next.getNext() && actionType != FAKE_DROPOFF && nextActionType != FAKE_DROPOFF) {
+                return name + infoString + " -> " + ((OpAction) next).name + "(cost=" + String.format("%.3f", cost()) + ")";
             } else {
-                return name + infoString  + " -> " + ((OpAction) next).name;
+                return name + infoString + " -> " + ((OpAction) next).name;
             }
         } else if (null != next) {
-            return name+ infoString + " -> " + next.getActionType();
+            return name + infoString + " -> " + next.getActionType();
         }
         return name + "-> null";
     }
@@ -275,7 +283,7 @@ public class OpAction implements OpActionInterface {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         }
@@ -301,5 +309,4 @@ public class OpAction implements OpActionInterface {
         return true;
     }
 
-    
 }

@@ -1,0 +1,5 @@
+ToolName,X (mm),Y (mm),Z (mm),Rx (deg),Ry (deg),Rz (deg)
+ToolName,X (mm),Y (mm),Z (mm),Rx (deg),Ry (deg),Rz (deg)
+tool1,0.0,0.0,0.0,0.0,0.0,0.0
+tool3,0.0,100.0,0.0,0.0,0.0,0.0
+tool4,0.0,0.0,0.0,0.0,0.0,0.0

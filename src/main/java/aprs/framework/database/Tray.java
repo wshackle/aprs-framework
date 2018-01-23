@@ -23,8 +23,11 @@
 package aprs.framework.database;
 
 import crcl.base.PoseType;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.drools.core.rule.Collect;
 import rcs.posemath.PmCartesian;
 
 /**
@@ -49,12 +52,7 @@ public class Tray extends PhysicalItem {
         super(name, pose, visioncycle);
     }
     
-//    public Slot addNewSlot(String partName,int index, double rotation, double x, double y) {
-//        Slot slot =  Slot.slotFromTrayPartNameIndexRotationXY(this, partName,index,rotation,x,y);
-//        return slot;
-//    }
-//    
-    private List<Slot> absSlotList = null;
+    private volatile @Nullable List<Slot> absSlotList = null;
 
     /**
      * Get the value of absSlotList
@@ -62,7 +60,12 @@ public class Tray extends PhysicalItem {
      * @return the value of absSlotList
      */
     public List<Slot> getAbsSlotList() {
-        return absSlotList;
+        List<Slot> ret = this.absSlotList;
+        if(null == ret) {
+            ret = Collections.emptyList();
+            this.absSlotList = ret;
+        }
+        return ret;
     }
 
     /**
@@ -85,7 +88,7 @@ public class Tray extends PhysicalItem {
                 .orElse(java.lang.Double.POSITIVE_INFINITY);
     }
     
-    public Slot closestAbsSlot(PmCartesian cart) {
+    public @Nullable Slot closestAbsSlot(PmCartesian cart) {
         if(null == absSlotList) {
             return null;
         }
