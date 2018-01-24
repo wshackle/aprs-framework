@@ -3989,6 +3989,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * in use. Reload the simulated object positions.
      *
      * @param reverseFlag new value for reverse flag
+     * @return  a future object that can be used to determine when
+     *  setting the reverse flag and all related actions is complete.
      */
     public XFuture<Void> startSetReverseFlag(boolean reverseFlag) {
         return startSetReverseFlag(reverseFlag, true);
@@ -4002,6 +4004,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param reverseFlag new value for reverse flag
      * @param reloadSimFiles whether to load simulated object position files
      * first
+     * @return a future object that can be used to determine when
+     *  setting the reverse flag and all related actions is complete.
      */
     public XFuture<Void> startSetReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
         return XFuture.runAsync("startSetReverseFlag(" + reverseFlag + "," + reloadSimFiles + ")",
@@ -4114,6 +4118,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Reset errors and reload simulation files
+     * @return a future object that can be used to determine when
+     *  setting the reset and all related actions is complete.
      */
     public XFuture<Void> reset() {
         return reset(true);
@@ -4123,6 +4129,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Reset errors and optionally reload simulation files
      *
      * @param reloadSimFiles whether to reload simulation files
+     * 
+     * @return a future object that can be used to determine when
+     *  setting the reset and all related actions is complete.
      */
     public XFuture<Void> reset(boolean reloadSimFiles) {
         return XFuture.runAsync("reset",
@@ -4152,10 +4161,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         prog.setInitCanon(new InitCanonType());
         setCommandID(prog.getInitCanon());
         prog.getMiddleCommand().clear();
-//        MessageType msgCmd = new MessageType();
-//        msgCmd.setMessage("empty program");
-//        msgCmd.setCommandID(BigInteger.valueOf(2));
-//        prog.getMiddleCommand().add(msgCmd);
         prog.setEndCanon(new EndCanonType());
         setCommandID(prog.getEndCanon());
         return prog;
@@ -5563,6 +5568,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Get the current directory for saving log files
      *
      * @return log files directory
+     * @throws java.io.IOException file can not be created ie default log directory does not exist.
      */
     public File getlogFileDir() throws IOException {
         File f = new File(Utils.getlogFileDir(), getRunName());

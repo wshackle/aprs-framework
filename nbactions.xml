@@ -60,8 +60,7 @@
             <goal>deploy</goal>
         </goals>
         <activatedProfiles>
-            
-            <activatedProfile>release</activatedProfile>
+            <activatedProfile>release,jar-with-depends</activatedProfile>
         </activatedProfiles>
     </action>
     <action>

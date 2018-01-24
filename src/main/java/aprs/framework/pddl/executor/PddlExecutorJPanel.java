@@ -5676,7 +5676,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             setCommandId(program.getEndCanon());
             replanStarted.set(false);
             return startCrclProgram(program);
-        } catch (CRCLException | PmException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);
@@ -5705,7 +5705,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             setCommandId(program.getEndCanon());
             replanStarted.set(false);
             return startCrclProgram(program);
-        } catch (CRCLException | PmException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);
@@ -5735,7 +5735,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             setCommandId(program.getEndCanon());
             replanStarted.set(false);
             return startCrclProgram(program);
-        } catch (CRCLException | PmException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);
@@ -5765,7 +5765,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             setCommandId(program.getEndCanon());
             replanStarted.set(false);
             return startCrclProgram(program);
-        } catch (CRCLException | PmException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException | IOException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);

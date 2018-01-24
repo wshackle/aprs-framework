@@ -629,11 +629,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
         }
         boolean showDoneFutures = false;
-        if(jCheckBoxShowDoneFutures != null) {
+        if (jCheckBoxShowDoneFutures != null) {
             showDoneFutures = jCheckBoxShowDoneFutures.isSelected();
         }
         boolean showUnnamedFutures = false;
-        if(null != jCheckBoxShowUnnamedFutures) {
+        if (null != jCheckBoxShowUnnamedFutures) {
             showUnnamedFutures = jCheckBoxShowUnnamedFutures.isSelected();
         }
         updateCurrentFutureDisplay(showDoneFutures, showUnnamedFutures);
@@ -657,7 +657,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     @Nullable public static File getLastSetupFile() throws IOException {
         if (lastSetupFileFile.exists()) {
             String firstLine = readFirstLine(lastSetupFileFile);
-            if(null != firstLine && firstLine.length() > 0) {
+            if (null != firstLine && firstLine.length() > 0) {
                 return new File(firstLine);
             }
         }
@@ -675,7 +675,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     @Nullable public static File getLastSimTeachFile() throws IOException {
         if (lastSimTeachFileFile.exists()) {
             String firstLine = readFirstLine(lastSimTeachFileFile);
-            if(null != firstLine && firstLine.length() > 0) {
+            if (null != firstLine && firstLine.length() > 0) {
                 return new File(firstLine);
             }
         }
@@ -692,7 +692,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     @Nullable public static File getLastTeachPropertiesFile() throws IOException {
         if (lastTeachPropertiesFileFile.exists()) {
             String firstLine = readFirstLine(lastTeachPropertiesFileFile);
-            if(null != firstLine && firstLine.length() > 0) {
+            if (null != firstLine && firstLine.length() > 0) {
                 return new File(firstLine);
             }
         }
@@ -710,7 +710,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     @Nullable public static File getLastPosMapFile() throws IOException {
         if (lastPosMapFileFile.exists()) {
             String firstLine = readFirstLine(lastPosMapFileFile);
-            if(null != firstLine && firstLine.length() > 0) {
+            if (null != firstLine && firstLine.length() > 0) {
                 return new File(firstLine);
             }
         }
@@ -1458,12 +1458,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             System.out.println("calling stealrRobot when already stealingRobots");
             return origStealRobotFuture;
         }
-        
+
         File f = getPosMapFile(stealForRobotName, stealFromRobotName);
         PositionMap pm = (f != null && !f.getName().equals("null")) ? new PositionMap(f) : PositionMap.emptyPositionMap();
 
         initColorTextSocket();
-        
+
         int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
 
         Map<String, String> stealFromOptionsCopy = new HashMap<>();
@@ -1648,8 +1648,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                             && Objects.equals(stealFor.getRobotName(), stealForRobotName)) {
                                 return XFuture.completedFutureWithName("returnRobot.alreadyReturned" + " : srn=" + srn, null);
                             }
-                            checkRunningOrDoingActions(stealFor,srn);
-                            checkRunningOrDoingActions(stealFrom,srn);
+                            checkRunningOrDoingActions(stealFor, srn);
+                            checkRunningOrDoingActions(stealFrom, srn);
                             logEvent("Disconnect robot from " + stealFor);
                             return stealFor.disconnectRobot()
                                     .thenComposeAsync(
@@ -3626,9 +3626,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     /**
      * Reset all systems, clearing errors, resetting states to defaults and
-     * optionally reloading simulation files.
+     * optionally reloading simulation files. This may occur in another thread.
      *
      * @param reloadSimFiles whether to reload simulation files
+     * @return a future which can be used to determine when the resetAll action
+     * is complete.
      */
     public XFuture<Void> resetAll(boolean reloadSimFiles) {
         if (null != lastFutureReturned) {
@@ -4728,10 +4730,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     /**
      * Set the reverseFlag for all systems. When the reverseFlag is set systems
-     * empty kit trays and put parts back in parts trays.
+     * empty kit trays and put parts back in parts trays. This may occur in
+     * another thread.
      *
      * @param reverseFlag false to move parts from parts trays to kitTrays or
      * true to move parts from kitTrays to partsTrays
+     *
+     * @return a future which can be used to determine when the all reverse
+     * flags and related actions are complete.
      */
     public XFuture<Void> startSetAllReverseFlag(boolean reverseFlag) {
         logEvent("setAllReverseFlag(" + reverseFlag + ")");
@@ -5453,10 +5459,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     /**
      * Have all systems immediately abort regardless of the robots position or
-     * the object in the gripper. Robots that have been tempararily reassigned
+     * the object in the gripper. Robots that have been temporarily reassigned
      * will be returned. This may require a delay that can be checked on with
      * the returned future.
      *
+     * @param comment used to identify the call location information in
+     * displays/logs
+     * 
      * @return future allowing a check on when the abort is complete.
      */
     public XFuture<?> immediateAbortAll(String comment) {

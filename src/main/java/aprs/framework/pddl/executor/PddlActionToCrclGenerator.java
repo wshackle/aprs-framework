@@ -113,7 +113,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -121,12 +120,10 @@ import javax.swing.Icon;
 import javax.xml.parsers.ParserConfigurationException;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.dataflow.qual.SideEffectFree;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.impl.factory.Lists;
-import org.eclipse.persistence.logging.LogLevel;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.xml.sax.SAXException;
@@ -897,14 +894,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws java.lang.InterruptedException another thread called
      * Thread.interrupt() while retrieving data from database
      *
-     * @throws
-     * crcl.ui.client.PendantClientInner.ConcurrentBlockProgramsException
+     * @throws PendantClientInner.ConcurrentBlockProgramsException
      * pendant client in a state blocking program execution
      * @throws java.util.concurrent.ExecutionException exception occurred in
      * another thread servicing the waitForCompleteVisionUpdates
+     * @throws crcl.utils.CRCLException
+     *  a failure occurred while composing or sending a  CRCL command.
+     * @throws rcs.posemath.PmException
+     *  failure occurred while computing a pose such as an invalid transform
+     * 
      */
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
-            throws IllegalStateException, SQLException, InterruptedException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
+            throws IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
         assert null != aprsJFrame : "(null == aprsJFrame)";
         return generate(actions, startingIndex, options, startSafeAbortRequestCount, true, null, null);
     }
@@ -2360,9 +2361,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param action PDDL action
      * @param out list of commands to append to
      * @throws IllegalStateException if database is not connected
-     * @throws SQLException if database query fails
+     * @throws crcl.utils.CRCLException failed to compose or send a CRCL message
+     * @throws rcs.posemath.PmException failed to compute a valid pose
+     * @throws SQLException if database query fails 
      */
-    public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
+    public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws SQLException, CRCLException, PmException  {
         checkDbReady();
         checkSettings();
         String partName = action.getArgs()[0];
@@ -2993,10 +2996,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param out list of commands to append to
      * @param nextPlacePartAction action to be checked to see if part should be
      * skipped
-     * @throws IllegalStateException if database is not connected
+     * 
+     * @throws IllegalStateException if database state is not consistent, eg part not in the correct slot
      * @throws SQLException if database query fails
+     * @throws crcl.utils.CRCLException failed to compose or send a CRCL message
+     * @throws rcs.posemath.PmException failed to compute a valid pose
      */
-    public void takePart(PddlAction action, List<MiddleCommandType> out, @Nullable PddlAction nextPlacePartAction) throws IllegalStateException, SQLException, CRCLException, PmException {
+    public void takePart(PddlAction action, List<MiddleCommandType> out, @Nullable PddlAction nextPlacePartAction) throws IllegalStateException, SQLException, CRCLException, PmException  {
         checkDbReady();
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
@@ -3064,8 +3070,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param action PDDL action
      * @param out list of commands to append to
-     * @throws IllegalStateException if database is not connected
+     * 
+     * @throws IllegalStateException if database state is not consistent, eg part not in the correct slot
      * @throws SQLException if database query fails
+     * @throws crcl.utils.CRCLException failed to compose or send a CRCL message
+     * @throws rcs.posemath.PmException failed to compute a valid pose
      */
     public void fakeTakePart(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
         checkDbReady();
@@ -3431,6 +3440,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param cmds list of commands to append to
      * @param pose pose where part is expected
+     * 
+     * @throws crcl.utils.CRCLException failed to compose or send a CRCL message
+     * @throws rcs.posemath.PmException failed to compute a valid pose
      */
     public void takePartByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
 
@@ -3489,6 +3501,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param cmds list of commands to append to
      * @param pose pose where part is expected
+     * 
+     * @throws crcl.utils.CRCLException failed to compose or send a CRCL message
+     * @throws rcs.posemath.PmException failed to compute a valid pose
      */
     public void fakeTakePartByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
 
@@ -3496,8 +3511,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         checkSettings();
         PoseType approachPose = addZToPose(pose, approachZOffset);
-//        PoseType approachPose = CRCLPosemath.copy(pose);
-//        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
 
         PoseType takePose = CRCLPosemath.copy(pose);
         takePose.getPoint().setZ(pose.getPoint().getZ() + takeZOffset);

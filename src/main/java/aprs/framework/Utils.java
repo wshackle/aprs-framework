@@ -50,6 +50,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -172,6 +173,8 @@ public class Utils {
      * Get the current directory used for creating new log files.
      *
      * @return log file directory
+     * @throws java.io.IOException file can not be created ie default log directory
+     * parent does not exist.
      */
     public static File getlogFileDir() throws IOException {
         return new LogFileDirGetter().getLogFileDir();
@@ -326,24 +329,32 @@ public class Utils {
      *
      * @param name optional name for better debugging/logging/visualization
      * @param r object with run method to call
+     * @throws java.lang.InterruptedException  the calling thread was interrupted
+     * @throws java.lang.reflect.InvocationTargetException an exception occurred
+     *  within the called runnable on the dispatch thread
      */
     public static void runAndWaitOnDispatchThread(String name, final Runnable r) throws InterruptedException, InvocationTargetException {
+        AtomicReference<Exception> exRef = new AtomicReference<>();
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             try {
                 r.run();
             } catch (Exception e) {
                 Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, name, e);
+                exRef.set(e);
             }
-            return;
         } else {
             javax.swing.SwingUtilities.invokeAndWait(() -> {
                 try {
                     r.run();
                 } catch (Exception e) {
                     Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, name, e);
+                    exRef.set(e);
                 }
             });
-            return;
+        }
+        Exception ex = exRef.get();
+        if(null != ex) {
+            throw new InvocationTargetException(ex);
         }
     }
 
