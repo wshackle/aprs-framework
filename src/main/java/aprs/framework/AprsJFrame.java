@@ -1585,11 +1585,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         try {
             if (null == motomanCrclServerJInternalFrame) {
                 MotomanCrclServerJInternalFrame newMotomanCrclServerJInternalFrame = new MotomanCrclServerJInternalFrame();
+                this.motomanCrclServerJInternalFrame = newMotomanCrclServerJInternalFrame;
                 updateSubPropertiesFiles();
                 newMotomanCrclServerJInternalFrame.loadProperties();
                 newMotomanCrclServerJInternalFrame.connectCrclMotoplus();
                 newMotomanCrclServerJInternalFrame.setVisible(true);
-                this.motomanCrclServerJInternalFrame = newMotomanCrclServerJInternalFrame;
             }
             addInternalFrame(motomanCrclServerJInternalFrame);
         } catch (Exception ex) {
