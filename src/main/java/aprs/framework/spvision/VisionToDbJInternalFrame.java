@@ -225,23 +225,19 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public void updateFromArgs(Map<String, String> _argsMap) {
         this.visionToDBJPanel.updateFromArgs(_argsMap);
     }
-
-    @Override
+    
     public void setPropertiesFile(File f) {
         this.visionToDBJPanel.setPropertiesFile(f);
     }
 
-    @Override
     public File getPropertiesFile() {
         return this.visionToDBJPanel.getPropertiesFile();
     }
 
-    @Override
     public void saveProperties() {
         this.visionToDBJPanel.saveProperties();
     }
 
-    @Override
     public void loadProperties() {
         this.visionToDBJPanel.loadProperties();
     }

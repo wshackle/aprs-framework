@@ -22,12 +22,10 @@
  */
 package aprs.framework.simview;
 
-import aprs.framework.database.CommonJFrameInterface;
 import aprs.framework.database.PhysicalItem;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import rcs.posemath.PmCartesian;
@@ -36,7 +34,7 @@ import rcs.posemath.PmCartesian;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface Object2DJFrameInterface extends CommonJFrameInterface {
+public interface Object2DJFrameInterface {
     
     public List<PhysicalItem> getItems();
     

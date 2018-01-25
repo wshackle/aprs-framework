@@ -514,10 +514,20 @@ public class Utils {
         }
     }
 
+    /**
+     * Get the global default preferred format for saving or parsing CSV files.
+     * 
+     * @return preferred CSV format.
+     */
     public static CSVFormat preferredCsvFormat() {
         return CSVFormat.DEFAULT.withHeader();
     }
 
+    /**
+     * Convert the table model column names to an array of strings.
+     * @param jtable table to get column names from
+     * @return array of strings with column names
+     */
     public static String[] tableHeaders(JTable jtable) {
         TableModel tm = jtable.getModel();
         List<String> colNameList = new ArrayList<>();
@@ -582,10 +592,28 @@ public class Utils {
         return s;
     }
     
+    /**
+     * Convert an array that may contain null to a possibly shorter array with
+     * only the nonnull values.
+     * @param <T> class of the array members
+     * @param clzz class of the array members
+     * @param in array to read
+     * @return array with only non null values from original array
+     */
     public static <T> T[] copyOfNonNullsOnly(Class<T> clzz, T []in) {
         return copyOfRangeNonNullsOnly(clzz, in, 0, in.length);
     }
 
+    /**
+     * Convert a subset of an array that may contain null to a possibly shorter array with
+     * only the nonnull values.
+     * @param <T> class of the array members
+     * @param clzz class of the array members
+     * @param in array to read
+     * @param start index to start reading input array
+     * @param end index to end reading input array
+     * @return array with only non null values from original array sub range
+     */
     public static <T> T[] copyOfRangeNonNullsOnly(Class<T> clzz, T []in,int start, int end) {
         if(start > end) {
             throw new IllegalArgumentException("start must be less than or equal to end : start = "+start+", end = "+end +" for array ="+Arrays.toString(in));

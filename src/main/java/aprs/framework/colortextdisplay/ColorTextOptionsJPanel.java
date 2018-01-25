@@ -27,36 +27,66 @@ import javax.swing.JDialog;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- *
+ * A panel for querying the user on the port, host etc for listening
+ * for info on when to change color for a ColorTextJPanel/ColorTextJFrame.
+ * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class ColorTextOptionsJPanel extends javax.swing.JPanel {
 
+    /**
+     * Options returned when user presses OK button.
+     */
     public static class ColorTextOptions {
 
         private final int port;
         private final String host;
-        private boolean startDisplay;
+        private final boolean startDisplay;
 
-        public ColorTextOptions(int port, String host, boolean startDisplay) {
+        ColorTextOptions(int port, String host, boolean startDisplay) {
             this.port = port;
             this.host = host;
             this.startDisplay = startDisplay;
         }
 
+        /**
+         *Get the port chosen by the user to connect to for information on when to change color or
+         * text.
+         * 
+         * @return port to connect to for information on when to change color or
+         * text.
+         */
         public int getPort() {
             return port;
         }
 
+        /**
+         *Get the host chosen by the user to connect to for information on when to change color or
+         * text.
+         * 
+         * @return host to connect to for information on when to change color or
+         * text.
+         */
         public String getHost() {
             return host;
         }
 
+        /**
+         * Get the selected state of the checkbox for choosing to start a separate
+         * window (ColorTextJFrame) for display.
+         * 
+         * @return selected state of the checkbox for separate display
+         */
         public boolean isStartDisplay() {
             return startDisplay;
         }
     }
 
+    /**
+     * Get options chosen by the user.
+     * 
+     * @return options selected by user or null if user chose to cancel.
+     */
     @Nullable public ColorTextOptions getOptions() {
         if (cancelled) {
             return null;
@@ -67,6 +97,16 @@ public class ColorTextOptionsJPanel extends javax.swing.JPanel {
                 jCheckBoxStartDisplay.isSelected());
     }
 
+    /**
+     * Query the user with a custom dialog and return user selected options.
+     * 
+     * @param owner     the Frame from which the dialog is displayed
+     * @param modal specifies whether dialog blocks user input to other 
+     * top-level windows when shown. If true, the modality type property is 
+     * set to DEFAULT_MODALITY_TYPE, otherwise the dialog is modeless.
+     * 
+     * @return options selected by user or null if user chose to cancel.
+     */
     @Nullable public static ColorTextOptions query(Frame owner, boolean modal) {
         JDialog dialog = new JDialog(owner, modal);
         ColorTextOptionsJPanel panel = new ColorTextOptionsJPanel();

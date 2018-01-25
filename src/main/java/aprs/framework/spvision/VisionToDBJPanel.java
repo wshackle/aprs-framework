@@ -2520,25 +2520,21 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JTextField jTextFieldVisionPort;
     // End of variables declaration//GEN-END:variables
 
-    @Override
     public void dispose() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     private File propertiesFile = new File(System.getProperty("user.home"), ".visiontodb_properties.txt");
 
-    @Override
     public void setPropertiesFile(File f) {
         propertiesFile = f;
     }
 
-    @Override
     public File getPropertiesFile() {
         return propertiesFile;
     }
     private volatile boolean savingProperties = false;
 
-    @Override
     public void saveProperties() {
         DbSetup setup = dbSetupPublisher.getDbSetup();
         saveProperties(setup.getDbType(), setup.getHost(), setup.getPort());
@@ -2621,7 +2617,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    @Override
     public final void loadProperties() {
         try {
             restoringProperties = true;

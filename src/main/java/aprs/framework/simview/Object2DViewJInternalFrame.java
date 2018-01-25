@@ -132,22 +132,18 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         object2DOuterJPanel1.setItems(items);
     }
 
-    @Override
     public void setPropertiesFile(File f) {
         object2DOuterJPanel1.setPropertiesFile(f);
     }
 
-    @Override
     public File getPropertiesFile() {
        return object2DOuterJPanel1.getPropertiesFile();
     }
 
-    @Override
     public void saveProperties() throws IOException {
        object2DOuterJPanel1.saveProperties();
     }
 
-    @Override
     public void loadProperties() throws IOException {
         object2DOuterJPanel1.loadProperties();
     }

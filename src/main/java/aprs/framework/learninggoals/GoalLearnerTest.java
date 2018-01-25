@@ -250,7 +250,7 @@ public class GoalLearnerTest {
         aFrame.emptyInit();
         aFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         aFrame.setExternalSlotOffsetProvider(sop);
-        aFrame.startActionsToCrclJInternalFrame();
+        aFrame.startExecutorJInternalFrame();
         aFrame.startObject2DJinternalFrame();
         PoseProvider poseProvider = new PoseProvider() {
 
@@ -316,11 +316,11 @@ public class GoalLearnerTest {
 
         aFrame.setPddlExecExternalPoseProvider(poseProvider);
         aFrame.startSimServerJInternalFrame();
-        aFrame.startPendantClientJInternalFrame();
+        aFrame.startCrclClientJInternalFrame();
         aFrame.setRobotName("SimulatedRobot");
         aFrame.setTaskName("GoalLearnerTest");
         aFrame.setSimItemsData(testData);
-        aFrame.setSimViewLimits(-100, -100, +500, +500);
+        aFrame.setViewLimits(-100, -100, +500, +500);
         aFrame.setLookForXYZ(-80, -80, 0);
         aFrame.simViewSimulateAndDisconnect();
         aFrame.setSimViewTrackCurrentPos(true);

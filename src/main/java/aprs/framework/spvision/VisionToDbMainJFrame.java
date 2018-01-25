@@ -241,22 +241,18 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
         this.visionToDBJPanel.setCommandConnected(_val);
     }
 
-    @Override
     public void setPropertiesFile(File f) {
         this.visionToDBJPanel.setPropertiesFile(f);
     }
 
-    @Override
     public File getPropertiesFile() {
         return this.visionToDBJPanel.getPropertiesFile();
     }
 
-    @Override
     public void saveProperties() {
         this.visionToDBJPanel.saveProperties();
     }
 
-    @Override
     public void loadProperties() {
         this.visionToDBJPanel.loadProperties();
     }

@@ -2180,7 +2180,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private aprs.framework.simview.Object2DJPanel object2DJPanel1;
     // End of variables declaration//GEN-END:variables
 
-    @Override
     public void dispose() {
         if (null != this.visionSocketClient) {
             try {
@@ -2198,7 +2197,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private File propertiesFile;
 
-    @Override
     public void setPropertiesFile(File f) {
         this.propertiesFile = f;
     }
@@ -2227,7 +2225,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return str;
     }
 
-    @Override
     public void saveProperties() throws IOException {
         if (null != propertiesFile) {
             File parentFile = propertiesFile.getParentFile();
@@ -2304,7 +2301,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.reverseFlag = reverseFlag;
     }
 
-    @Override
     public void loadProperties() throws IOException {
         if (null != propertiesFile && propertiesFile.exists()) {
             Properties props = new Properties();
@@ -2529,7 +2525,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
-    @Override
     public File getPropertiesFile() {
         return propertiesFile;
     }

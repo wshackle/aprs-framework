@@ -137,7 +137,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     @MonotonicNonNull private Object2DViewJInternalFrame object2DViewJInternalFrame = null;
     @MonotonicNonNull private PddlPlannerJInternalFrame pddlPlannerJInternalFrame = null;
     @MonotonicNonNull private DbSetupJInternalFrame dbSetupJInternalFrame = null;
-    @MonotonicNonNull private volatile PendantClientJInternalFrame pendantClientJInternalFrame = null;
+    @MonotonicNonNull private volatile PendantClientJInternalFrame crclClientJInternalFrame = null;
     @MonotonicNonNull private SimServerJInternalFrame simServerJInternalFrame = null;
     @MonotonicNonNull private LogDisplayJInternalFrame logDisplayJInternalFrame = null;
     @MonotonicNonNull private FanucCRCLMain fanucCRCLMain = null;
@@ -156,6 +156,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private final AtomicLong effectiveStopRunTime = new AtomicLong(-1);
     private final AtomicBoolean running = new AtomicBoolean(false);
 
+    /**
+     * Check if the user has selected a check box asking for snapshot files
+     * to be created for logging/debugging.
+     * 
+     * @return Has user enabled snapshots?
+     */
     public boolean isSnapshotsEnabled() {
         return jCheckBoxMenuItemSnapshotImageSize.isSelected();
     }
@@ -188,6 +194,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private Image scanImage;
 
+    /**
+     * Get the most recent image created when scanning for desired part locations.
+     * 
+     * @return image of most recent scan
+     */
     public Image getScanImage() {
         return scanImage;
     }
@@ -366,11 +377,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return this.visionToDbJInternalFrame.getSlots(tray);
     }
 
+    /**
+     * Set the preference for displaying a '+' at the current position of the robot
+     * tool.
+     * 
+     * @param v should the position be displayed.
+     */
     public void setSimViewTrackCurrentPos(boolean v) {
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
         this.object2DViewJInternalFrame.setTrackCurrentPos(v);
     }
 
+    /**
+     * Set the simulation view to simulation mode and disconnect from any
+     * vision data socket.
+     * 
+     */
     public void simViewSimulateAndDisconnect() {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setSimulatedAndDisconnect();
@@ -395,8 +417,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * or not program was currently running.
      */
     public void pauseCrclProgram() {
-        if (null != pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.pauseCrclProgram();
+        if (null != crclClientJInternalFrame) {
+            crclClientJInternalFrame.pauseCrclProgram();
         }
     }
 
@@ -440,8 +462,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return whether a program is paused
      */
     public boolean isCrclProgramPaused() {
-        if (null != pendantClientJInternalFrame) {
-            return pendantClientJInternalFrame.isPaused();
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.isPaused();
         }
         return false;
     }
@@ -453,8 +475,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return thread
      */
     @Nullable public Thread getCrclRunProgramThread() {
-        if (null != pendantClientJInternalFrame) {
-            return pendantClientJInternalFrame.getRunProgramThread();
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.getRunProgramThread();
         }
         return null;
     }
@@ -466,8 +488,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return future or null if no program is running
      */
     @Nullable public XFuture<Boolean> getCrclRunProgramFuture() {
-        assert (null != pendantClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
-        return pendantClientJInternalFrame.getRunProgramFuture();
+        assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
+        return crclClientJInternalFrame.getRunProgramFuture();
     }
 
     /**
@@ -476,8 +498,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return whether a CRCL program is running.
      */
     public boolean isRunningCrclProgram() {
-        if (null != pendantClientJInternalFrame) {
-            return pendantClientJInternalFrame.isRunningProgram();
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.isRunningProgram();
         }
         return false;
     }
@@ -489,10 +511,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * programs should again be allowed.
      */
     public int startBlockingCrclPrograms() {
-        if (null == pendantClientJInternalFrame) {
+        if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("pendantClientJInternalFrame is null");
         }
-        return pendantClientJInternalFrame.startBlockingPrograms();
+        return crclClientJInternalFrame.startBlockingPrograms();
     }
 
     /**
@@ -506,10 +528,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * corresponding call to startBlockingCrclProgram
      */
     public void stopBlockingCrclPrograms(int count) throws PendantClientInner.ConcurrentBlockProgramsException {
-        if (null == pendantClientJInternalFrame) {
+        if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("pendantClientJInternalFrame is null");
         }
-        pendantClientJInternalFrame.stopBlockingPrograms(count);
+        crclClientJInternalFrame.stopBlockingPrograms(count);
     }
 
     /**
@@ -518,8 +540,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return current CRCL program or null if no program is loaded.
      */
     @Nullable public CRCLProgramType getCrclProgram() {
-        if (null != pendantClientJInternalFrame) {
-            return pendantClientJInternalFrame.getProgram();
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.getProgram();
         }
         return null;
     }
@@ -584,18 +606,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     @Nullable public PoseType getCurrentPose() {
 
-        if (null != pendantClientJInternalFrame) {
+        if (null != crclClientJInternalFrame) {
             try {
-                if (!pendantClientJInternalFrame.isConnected()) {
-                    pendantClientJInternalFrame.connectCurrent();
+                if (!crclClientJInternalFrame.isConnected()) {
+                    crclClientJInternalFrame.connectCurrent();
                 }
             } catch (Exception e) {
                 Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, e);
             }
-            if (!pendantClientJInternalFrame.isConnected()) {
+            if (!crclClientJInternalFrame.isConnected()) {
                 return null;
             }
-            return pendantClientJInternalFrame.getCurrentPose();
+            return crclClientJInternalFrame.getCurrentPose();
         }
         return null;
     }
@@ -620,8 +642,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return if the CRCL client is connected to the server.
      */
     public boolean isConnected() {
-        if (null != pendantClientJInternalFrame) {
-            return pendantClientJInternalFrame.isConnected();
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.isConnected();
         }
         return false;
     }
@@ -647,12 +669,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setTitleErrorString("Can not connect when robotName is null");
             throw new IllegalStateException("Can not connect when robotName is null");
         }
-        if (null != pendantClientJInternalFrame) {
-            if (pendantClientJInternalFrame.isConnected() != connected) {
+        if (null != crclClientJInternalFrame) {
+            if (crclClientJInternalFrame.isConnected() != connected) {
                 if (connected) {
-                    pendantClientJInternalFrame.connectCurrent();
+                    crclClientJInternalFrame.connectCurrent();
                 } else {
-                    pendantClientJInternalFrame.disconnect();
+                    crclClientJInternalFrame.disconnect();
                 }
             }
         }
@@ -869,8 +891,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 //        }
         setStopRunTime();
         setThreadName();
-        if (null != pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.disconnect();
+        if (null != crclClientJInternalFrame) {
+            crclClientJInternalFrame.disconnect();
         }
         if (null != getRobotName()) {
             takeSnapshots("disconnectRobot");
@@ -948,7 +970,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void connectRobotPrivate(String robotName, String host, int port) {
         setThreadName();
         enableCheckedAlready = false;
-        PendantClientJInternalFrame frm = pendantClientJInternalFrame;
+        PendantClientJInternalFrame frm = crclClientJInternalFrame;
         if (null != frm) {
             setRobotName(robotName);
             frm.connect(host, port);
@@ -963,8 +985,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return robot's CRCL host.
      */
     @Nullable public String getRobotCrclHost() {
-        if (null != pendantClientJInternalFrame) {
-            return pendantClientJInternalFrame.getHost();
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.getHost();
         }
         return null;
     }
@@ -975,8 +997,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return robot's CRCL port number.
      */
     public int getRobotCrclPort() {
-        if (null != pendantClientJInternalFrame) {
-            return pendantClientJInternalFrame.getPort();
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.getPort();
         }
         return -1;
     }
@@ -1153,8 +1175,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param l listener to be registered
      */
     public void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
-        if (null != pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.addProgramLineListener(l);
+        if (null != crclClientJInternalFrame) {
+            crclClientJInternalFrame.addProgramLineListener(l);
         }
     }
 
@@ -1164,8 +1186,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param l listener to be removed
      */
     public void removeProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
-        if (null != pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.removeProgramLineListener(l);
+        if (null != crclClientJInternalFrame) {
+            crclClientJInternalFrame.removeProgramLineListener(l);
         }
     }
 
@@ -1204,8 +1226,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param l listener to register
      */
     public void addCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
-        if (null != pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.addCurrentPoseListener(l);
+        if (null != crclClientJInternalFrame) {
+            crclClientJInternalFrame.addCurrentPoseListener(l);
         } else {
             unaddedPoseListeners.add(l);
         }
@@ -1217,8 +1239,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param l listener to be removed
      */
     public void removeCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
-        if (null != pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.removeCurrentPoseListener(l);
+        if (null != crclClientJInternalFrame) {
+            crclClientJInternalFrame.removeCurrentPoseListener(l);
         }
     }
 
@@ -1230,8 +1252,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * in the schema
      */
     public synchronized void setCRCLProgram(CRCLProgramType program) throws JAXBException {
-        if (null != pendantClientJInternalFrame) {
-            synchronized (pendantClientJInternalFrame) {
+        if (null != crclClientJInternalFrame) {
+            synchronized (crclClientJInternalFrame) {
                 setProgram(program);
             }
         }
@@ -1256,7 +1278,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public XFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException {
         setStartRunTime();
-        if (null != pendantClientJInternalFrame) {
+        if (null != crclClientJInternalFrame) {
             lastRunProgramFuture
                     = waitForPause()
                             .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
@@ -1277,8 +1299,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         setThreadName();
         takeSnapshots("startCRCLProgram(" + program.getName() + ")");
         setProgram(program);
-        assert (null != pendantClientJInternalFrame) : "null == pendantClientJInternalFrame ";
-        return pendantClientJInternalFrame.runCurrentProgram();
+        assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
+        return crclClientJInternalFrame.runCurrentProgram();
     }
 
     /**
@@ -1290,8 +1312,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public boolean runCRCLProgram(CRCLProgramType program) throws JAXBException {
         setProgram(program);
-        assert (null != pendantClientJInternalFrame) : "null == pendantClientJInternalFrame ";
-        return pendantClientJInternalFrame.runCurrentProgram();
+        assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
+        return crclClientJInternalFrame.runCurrentProgram();
     }
 
     /**
@@ -1356,8 +1378,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public String getDetailsString() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.toString()).append("\r\n");
-        if (null != pendantClientJInternalFrame) {
-            CRCLCommandType cmd = pendantClientJInternalFrame.getCurrentProgramCommand();
+        if (null != crclClientJInternalFrame) {
+            CRCLCommandType cmd = crclClientJInternalFrame.getCurrentProgramCommand();
             if (null != cmd) {
                 try {
                     sb.append("crcl_cmd=").append(CRCLSocket.getUtilSocket().commandToSimpleString(cmd)).append("\r\n");
@@ -1373,8 +1395,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 sb.append("crcl_program_index=(").append(getCrclProgramLine()).append(" / ").append(prog.getMiddleCommand().size()).append("), ");
                 sb.append("crcl_program_name=").append(prog.getName()).append("\r\n");
             }
-            if (null != pendantClientJInternalFrame) {
-                pendantClientJInternalFrame.getCurrentStatus().ifPresent(status -> {
+            if (null != crclClientJInternalFrame) {
+                crclClientJInternalFrame.getCurrentStatus().ifPresent(status -> {
                     if (null != status.getCommandStatus()
                             && null != status.getCommandStatus().getStateDescription()
                             && status.getCommandStatus().getStateDescription().length() > 0) {
@@ -1404,7 +1426,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             sb.append("actionSetsCompleted=").append(execFrame.getActionSetsCompleted()).append("\r\n");
         }
         sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append(", ");
-        boolean connected = (null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected());
+        boolean connected = (null != crclClientJInternalFrame && crclClientJInternalFrame.isConnected());
         sb.append("connected=").append(connected).append(", ");
         sb.append("reverseFlag=").append(jCheckBoxMenuItemReverse.isSelected()).append(", ");
         sb.append("paused=").append(jCheckBoxMenuItemPause.isSelected()).append("\r\n");
@@ -1444,8 +1466,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Abort the current CRCL program.
      */
     public void abortCrclProgram() {
-        if (null != pendantClientJInternalFrame && pendantClientJInternalFrame.isConnected()) {
-            pendantClientJInternalFrame.abortProgram();
+        if (null != crclClientJInternalFrame && crclClientJInternalFrame.isConnected()) {
+            crclClientJInternalFrame.abortProgram();
         }
     }
 
@@ -1858,7 +1880,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 startPddlPlanner();
             }
             if (jCheckBoxMenuItemStartupPDDLExecutor.isSelected()) {
-                startActionsToCrclJInternalFrame();
+                startExecutorJInternalFrame();
             }
             if (jCheckBoxMenuItemStartupObjectSP.isSelected()) {
                 startVisionToDbJinternalFrame();
@@ -1867,7 +1889,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 startObject2DJinternalFrame();
             }
             if (jCheckBoxMenuItemStartupRobotCrclGUI.isSelected()) {
-                startPendantClientJInternalFrame();
+                startCrclClientJInternalFrame();
             }
             if (jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected()) {
                 startSimServerJInternalFrame();
@@ -2117,6 +2139,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private ActiveWinEnum activeWin = ActiveWinEnum.OTHER;
 
+    /**
+     * Enumeration class for setting/getting which  window (InternalJFrame)  is/should be displayed on top.
+     */
     public static enum ActiveWinEnum {
         CRCL_CLIENT_WINDOW,
         PDDL_EXECUTOR_WINDOW,
@@ -2160,31 +2185,67 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return ActiveWinEnum.OTHER;
     }
 
-    public List<PhysicalItem> getSimItemsData() {
+    /**
+     * Get a list of items with names and poses from the simulation.
+     * 
+     * @return list of items as generated by the simulation
+     * 
+     * @throws IllegalStateException Object 2D view was not opened.
+     * 
+     */
+    public List<PhysicalItem> getSimItemsData() throws IllegalStateException {
         if (null == object2DViewJInternalFrame) {
             throw new IllegalStateException("null == object2DViewJInternalFrame)");
         }
         return object2DViewJInternalFrame.getItems();
     }
 
+    /**
+     * Set a list of items with names and poses to be used by the simulation.
+     * 
+     *  This has no effect if the Object 2D view has not been opened or it is
+     * not in simulation mode.
+     * 
+     * @param items list of items to use
+     */
     public void setSimItemsData(List<PhysicalItem> items) {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setItems(items);
         }
     }
     
+    /**
+     * Set the position the robot tool should be moved to ensure
+     * the robot is no longer obstructing the vision systems view of 
+     * the parts and trays.
+     * 
+     * @param x x coordinate 
+     * @param y y coordinate 
+     * @param z z coordinate 
+     */
     public void setLookForXYZ(double x, double y, double z) {
         if(null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.setLookForXYZ(x,y,z);
         }
     }
 
-    public void setSimViewLimits(double minX, double minY, double maxX, double maxY) {
+    /**
+     * Set limits on the area that should be visible in the Object 2D view.
+     * 
+     * @param minX minimum X
+     * @param minY minimum Y
+     * @param maxX maximum X
+     * @param maxY maximum Y
+     */
+    public void setViewLimits(double minX, double minY, double maxX, double maxY) {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setViewLimits(minX, minY, maxX, maxY);
         }
     }
 
+    /**
+     * Make the Object 2D view visible and create underlying components.
+     */
     public void startObject2DJinternalFrame() {
         try {
             boolean alreadySelected = jCheckBoxMenuItemStartupObject2DView.isSelected();
@@ -2227,8 +2288,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return error string or null if no error has occurred.
      */
     @Nullable public String getCrclClientErrorString() {
-        if (null != pendantClientJInternalFrame) {
-            return pendantClientJInternalFrame.getCrclClientErrorMessage();
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.getCrclClientErrorMessage();
         }
         return null;
     }
@@ -2294,8 +2355,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return current status or null
      */
     @Nullable public CRCLStatusType getCurrentStatus() {
-        if (null != pendantClientJInternalFrame) {
-            return pendantClientJInternalFrame.getCurrentStatus().orElse(null);
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.getCurrentStatus().orElse(null);
         }
         return null;
     }
@@ -2308,8 +2369,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     @Nullable private CommandStatusType getCommandStatus() {
-        if (null != pendantClientJInternalFrame) {
-            return pendantClientJInternalFrame.getCurrentStatus()
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.getCurrentStatus()
                     .map(x -> x.getCommandStatus())
                     .map(CRCLPosemath::copy)
                     .orElse(null);
@@ -2318,8 +2379,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private void updateTitleInternal() {
-        if (null != pendantClientJInternalFrame) {
-            CommandStatusType cs = pendantClientJInternalFrame.getCurrentStatus()
+        if (null != crclClientJInternalFrame) {
+            CommandStatusType cs = crclClientJInternalFrame.getCurrentStatus()
                     .map(x -> x.getCommandStatus())
                     .orElse(null);
             if (null == cs || null == cs.getCommandState()) {
@@ -2340,22 +2401,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    public void startPendantClientJInternalFrame() {
+    /**
+     * Create and display the CRCL client frame (aka pendant client)
+     */
+    public void startCrclClientJInternalFrame() {
         try {
             boolean alreadySelected = jCheckBoxMenuItemStartupRobotCrclGUI.isSelected();
             if (!alreadySelected) {
                 jCheckBoxMenuItemStartupRobotCrclGUI.setSelected(true);
             }
-            pendantClientJInternalFrame = new PendantClientJInternalFrame();
-            pendantClientJInternalFrame.setRunProgramService(runProgramService);
-            pendantClientJInternalFrame.setTempLogDir(Utils.getlogFileDir());
+            crclClientJInternalFrame = new PendantClientJInternalFrame();
+            crclClientJInternalFrame.setRunProgramService(runProgramService);
+            crclClientJInternalFrame.setTempLogDir(Utils.getlogFileDir());
             updateSubPropertiesFiles();
-            pendantClientJInternalFrame.loadProperties();
-            pendantClientJInternalFrame.pack();
-            pendantClientJInternalFrame.setVisible(true);
-            jDesktopPane1.add(pendantClientJInternalFrame, JLayeredPane.DEFAULT_LAYER);
-            pendantClientJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(pendantClientJInternalFrame);
-            pendantClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
+            crclClientJInternalFrame.loadProperties();
+            crclClientJInternalFrame.pack();
+            crclClientJInternalFrame.setVisible(true);
+            jDesktopPane1.add(crclClientJInternalFrame, JLayeredPane.DEFAULT_LAYER);
+            crclClientJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(crclClientJInternalFrame);
+            crclClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
                 @Override
                 public void titleChanged(CommandStatusType ccst, Container container, String stateString, String stateDescription) {
                     updateTitle(stateString, stateDescription);
@@ -2367,7 +2431,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 tempList.addAll(unaddedPoseListeners);
                 unaddedPoseListeners.clear();
                 for (PendantClientJPanel.CurrentPoseListener l : tempList) {
-                    pendantClientJInternalFrame.addCurrentPoseListener(l);
+                    crclClientJInternalFrame.addCurrentPoseListener(l);
                 }
             }
         } catch (Exception ex) {
@@ -2375,6 +2439,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    /**
+     * Create and display the simulation server window and start
+     * the simulation server thread.
+     */
     public void startSimServerJInternalFrame() {
         try {
             if (null == simServerJInternalFrame) {
@@ -2383,8 +2451,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(true);
                 }
                 simServerJInternalFrame = new SimServerJInternalFrame(false);
-//            pendantClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "object2DViewProperties.txt"));
-//            pendantClientJInternalFrame.loadProperties();
                 updateSubPropertiesFiles();
                 simServerJInternalFrame.loadProperties();
                 simServerJInternalFrame.pack();
@@ -2468,17 +2534,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             visionToDbJInternalFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
             jDesktopPane1.add(visionToDbJInternalFrame, JLayeredPane.DEFAULT_LAYER);
             visionToDbJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(visionToDbJInternalFrame);
-//            DbSetupPublisher pub = visionToDbJInternalFrame.getDbSetupPublisher();
-//            if (null != pub) {
-//                pub.addDbSetupListener(toDbListener);
-//            }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public void startActionsToCrclJInternalFrame() {
+    /**
+     * Start the PDDL Executor (aka Actions to CRCL) and create
+     * and display the window for displaying its output.
+     */
+    public void startExecutorJInternalFrame() {
         try {
             Utils.runAndWaitOnDispatchThread("startActionsToCrclJInternalFrame",
                     () -> {
@@ -2981,7 +3047,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void jCheckBoxMenuItemStartupPDDLExecutorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupPDDLExecutorActionPerformed
         try {
             if (jCheckBoxMenuItemStartupPDDLExecutor.isSelected()) {
-                startActionsToCrclJInternalFrame();
+                startExecutorJInternalFrame();
             } else {
                 closeActionsToCrclJInternalFrame();
             }
@@ -3087,7 +3153,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed
         try {
             if (jCheckBoxMenuItemStartupRobotCrclGUI.isSelected()) {
-                startPendantClientJInternalFrame();
+                startCrclClientJInternalFrame();
             } else {
 //                closePddlPlanner();
             }
@@ -3362,8 +3428,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         CRCLProgramType lfpProgram = pddlExecutorJInternalFrame1.createLookForPartsProgram();
         setProgram(lfpProgram);
-        assert (null != pendantClientJInternalFrame) : "null == pendantClientJInternalFrame ";
-        boolean ret = pendantClientJInternalFrame.runCurrentProgram();
+        assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
+        boolean ret = crclClientJInternalFrame.runCurrentProgram();
         if (ret) {
             enableCheckedAlready = true;
         }
@@ -3648,8 +3714,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             badState = badState || pausing;
             clearErrors();
             badState = badState || pausing;
-            if (null != pendantClientJInternalFrame) {
-                pendantClientJInternalFrame.unpauseCrclProgram();
+            if (null != crclClientJInternalFrame) {
+                crclClientJInternalFrame.unpauseCrclProgram();
             }
             notifyPauseFutures();
             badState = badState || pausing;
@@ -3658,8 +3724,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             String methodName = "resume";
             takeSnapshots(methodName);
             badState = badState || pausing;
-            if (null != pendantClientJInternalFrame) {
-                pendantClientJInternalFrame.unpauseCrclProgram();
+            if (null != crclClientJInternalFrame) {
+                crclClientJInternalFrame.unpauseCrclProgram();
             }
             badState = badState || pausing;
             updateTitle("", "");
@@ -3681,6 +3747,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    /**
+     * Check to see if the module responsible for updating the database with
+     * data received from the vision system has connected to the database.
+     * 
+     * @return is vision to database system currently connected to the database
+     */
     public boolean isVisionToDbConnected() {
         return null != visionToDbJInternalFrame && visionToDbJInternalFrame.isDbConnected();
     }
@@ -4081,10 +4153,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 jCheckBoxMenuItemPause.setSelected(true);
             }
             badState = badState || resuming;
-            if (null != pendantClientJInternalFrame && titleErrorString != null && titleErrorString.length() > 0) {
-                String lastMessage = pendantClientJInternalFrame.getLastMessage();
+            if (null != crclClientJInternalFrame && titleErrorString != null && titleErrorString.length() > 0) {
+                String lastMessage = crclClientJInternalFrame.getLastMessage();
                 System.out.println("lastMessage = " + lastMessage);
-                MiddleCommandType cmd = pendantClientJInternalFrame.getCurrentProgramCommand();
+                MiddleCommandType cmd = crclClientJInternalFrame.getCurrentProgramCommand();
                 if (null != cmd) {
                     String cmdString = CRCLSocket.cmdToString(cmd);
                     System.out.println("cmdString = " + cmdString);
@@ -4191,8 +4263,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private void clearCrclClientErrorMessage() {
-        if (null != pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.clearCrclClientErrorMessage();
+        if (null != crclClientJInternalFrame) {
+            crclClientJInternalFrame.clearCrclClientErrorMessage();
         }
     }
 
@@ -4239,7 +4311,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private boolean doCheckEnabled() {
-        assert (null != pendantClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
+        assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
         setStartRunTime();
         if (enableCheckedAlready) {
             return true;
@@ -4254,7 +4326,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setCommandID(emptyProgram.getEndCanon());
             emptyProgram.setName("checkEnabled." + checkEnabledCount.incrementAndGet());
             setProgram(emptyProgram);
-            boolean progRunRet = pendantClientJInternalFrame.runCurrentProgram();
+            boolean progRunRet = crclClientJInternalFrame.runCurrentProgram();
 
             System.out.println("startCheckEnabled finishing with " + progRunRet);
             enableCheckedAlready = progRunRet;
@@ -4269,7 +4341,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private volatile int consecutiveEmptyProgramCount = 0;
 
     private void setProgram(CRCLProgramType program) throws JAXBException {
-        assert (null != pendantClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
+        assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
         if (program.getMiddleCommand().isEmpty()) {
             emptyProgramCount++;
             consecutiveEmptyProgramCount++;
@@ -4280,7 +4352,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         } else {
             consecutiveEmptyProgramCount = 0;
         }
-        pendantClientJInternalFrame.setProgram(program);
+        crclClientJInternalFrame.setProgram(program);
     }
 
     private final ConcurrentLinkedDeque<XFuture<Boolean>> dbConnectedWaiters = new ConcurrentLinkedDeque<>();
@@ -4337,14 +4409,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return startActions("");
     }
 
+    /**
+     * Check to see if the executor is in a state where it could begin working
+     * on a new list of actions.
+     * @return is executor ready for new actions.
+     */
     public boolean readyForNewActionsList() {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         return pddlExecutorJInternalFrame1.readyForNewActionsList();
-    }
-
-    public void warnIfNewActionsNotReady() {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-        pddlExecutorJInternalFrame1.warnIfNewActionsNotReady();
     }
 
     /**
@@ -4485,8 +4557,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return current line
      */
     public int getCrclProgramLine() {
-        assert (null != pendantClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
-        return this.pendantClientJInternalFrame.getCurrentProgramLine();
+        assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
+        return this.crclClientJInternalFrame.getCurrentProgramLine();
     }
 
     private File propertiesFile;
@@ -4975,8 +5047,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             if (null != object2DViewJInternalFrame) {
                 this.object2DViewJInternalFrame.loadProperties();
             }
-            if (null != this.pendantClientJInternalFrame) {
-                pendantClientJInternalFrame.loadProperties();
+            if (null != this.crclClientJInternalFrame) {
+                crclClientJInternalFrame.loadProperties();
             }
             if (null != this.simServerJInternalFrame) {
                 simServerJInternalFrame.loadProperties();
@@ -5043,7 +5115,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    public void showActiveWin() {
+    private void showActiveWin() {
         switch (activeWin) {
             case SIMVIEW_WINDOW:
                 if (null != object2DViewJInternalFrame) {
@@ -5052,8 +5124,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 break;
 
             case CRCL_CLIENT_WINDOW:
-                if (null != pendantClientJInternalFrame) {
-                    activateFrame(pendantClientJInternalFrame);
+                if (null != crclClientJInternalFrame) {
+                    activateFrame(crclClientJInternalFrame);
                 }
                 break;
 
@@ -5095,10 +5167,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    /**
+     * Get the selected or top window (InternalJFrame).
+     * @return active window
+     */
     public ActiveWinEnum getActiveWin() {
         return activeWin;
     }
 
+    /**
+     * Select a window (InternalJFrame)to be shown on top.
+     * 
+     * @param activeWin
+     */
     public void setActiveWin(ActiveWinEnum activeWin) {
         this.activeWin = activeWin;
         showActiveWin();
@@ -5179,8 +5260,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != this.object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.saveProperties();
         }
-        if (null != this.pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.saveProperties();
+        if (null != this.crclClientJInternalFrame) {
+            crclClientJInternalFrame.saveProperties();
         }
         if (null != this.simServerJInternalFrame) {
             simServerJInternalFrame.saveProperties();
@@ -5334,6 +5415,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JPopupMenu.Separator jSeparator3;
     // End of variables declaration//GEN-END:variables
 
+    /**
+     * Get the file where properties are read from and written to.
+     * 
+     * @return properties file
+     */
     public File getPropertiesFile() {
         return propertiesFile;
     }
@@ -5407,8 +5493,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 //            }
             Utils.saveProperties(lastAprsPropertiesFileFile, props);
         }
-        if (null != pendantClientJInternalFrame) {
-            pendantClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_crclPendantClientProperties.txt"));
+        if (null != crclClientJInternalFrame) {
+            crclClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_crclPendantClientProperties.txt"));
         }
 
         if (null != simServerJInternalFrame) {
@@ -5532,8 +5618,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public XFuture<Boolean> continueCrclProgram() {
         setStartRunTime();
-        if (null != pendantClientJInternalFrame) {
-            return pendantClientJInternalFrame.continueCurrentProgram();
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.continueCurrentProgram();
         } else {
             return XFuture.completedFuture(false);
         }
@@ -5629,24 +5715,43 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return getTitle();
     }
 
+    /**
+     * Get a list with information on how the most recently loaded CRCL program
+     * has run so far.
+     * 
+     * @return run data for last program
+     */
     public List<ProgramRunData> getLastProgRunDataList() {
-        if (null == pendantClientJInternalFrame) {
+        if (null == crclClientJInternalFrame) {
             return Collections.emptyList();
         }
-        return pendantClientJInternalFrame.getLastProgRunDataList();
+        return crclClientJInternalFrame.getLastProgRunDataList();
     }
 
+    /**
+     * Save the given run data which contains information on how a given program run went to 
+     * a CSV file.
+     * @param f file to save
+     * @param list data to write to file
+     * @throws IOException file does not exist or not writeable etc
+     */
     public void saveProgramRunDataListToCsv(File f, List<ProgramRunData> list) throws IOException {
-        if (null == pendantClientJInternalFrame) {
+        if (null == crclClientJInternalFrame) {
             return;
         }
-        pendantClientJInternalFrame.saveProgramRunDataListToCsv(f, list);
+        crclClientJInternalFrame.saveProgramRunDataListToCsv(f, list);
     }
 
+    /**
+     * Save the current run data which contains information on how a given program run went to 
+     * a CSV file.
+     * @param f file to save
+     * @throws IOException file does not exist or not writeable etc
+     */
     public void saveLastProgramRunDataListToCsv(File f) throws IOException {
-        if (null == pendantClientJInternalFrame) {
+        if (null == crclClientJInternalFrame) {
             return;
         }
-        pendantClientJInternalFrame.saveLastProgramRunDataListToCsv(f);
+        crclClientJInternalFrame.saveLastProgramRunDataListToCsv(f);
     }
 }

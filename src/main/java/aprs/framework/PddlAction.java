@@ -188,6 +188,12 @@ public class PddlAction {
         return type + "-" + Arrays.toString(args);
     }
 
+    /**
+     * Create a line that could be put in a PDDL file that would perform
+     * this action. Essentially the reverse of parse.
+     * 
+     * @return line of text
+     */
     public String asPddlLine() {
         return ("("+type +" "+String.join(" ", args)+")");
     }

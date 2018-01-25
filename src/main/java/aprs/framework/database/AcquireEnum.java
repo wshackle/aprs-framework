@@ -24,10 +24,25 @@
 package aprs.framework.database;
 
 /**
- *
+ * Enumeration of the possible modes for acquiring vision data for the database.
+ * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public enum AcquireEnum {
-    ONCE,ON,OFF
+
+    /**
+     * Aquire one frame of data and then stop acquiring.
+     */
+    ONCE,
+
+    /**
+     * Continously aquire data indefinitely.
+     */
+    ON,
+    
+    /**
+     * Ignore new data coming from the vision system.
+     */
+    OFF
 }
 
