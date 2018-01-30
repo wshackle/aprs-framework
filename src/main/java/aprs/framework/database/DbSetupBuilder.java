@@ -847,59 +847,64 @@ public class DbSetupBuilder {
 
     private static Connection setupConnectionPriv(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) throws SQLException {
 
-        switch (dbtype) {
-            case MYSQL:
-                Class<?> mysqlDriverClass = com.mysql.jdbc.Driver.class;
-                System.out.println("driverClass = " + mysqlDriverClass);
-                String mysql_url = "jdbc:mysql://" + host + ":" + port + "/" + db;
-                if (debug) {
-                    System.out.println("Connection url = " + mysql_url);
-                }
-                if (loginTimeout > 0) {
-                    DriverManager.setLoginTimeout(loginTimeout);
-                }
-                return DriverManager.getConnection(mysql_url, username, password);
-
-            case NEO4J:
-                Class<?> neo4jDriverClass = org.neo4j.jdbc.Driver.class;
-                try {
-                    neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
-                    //System.out.println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
-                } catch (ClassNotFoundException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
-                }
-
-                Properties properties = new Properties();
-                properties.put("user", username);
-                properties.put("password", password);
-                String neo4j_url = "jdbc:neo4j://" + host + ":" + port;
-                if (debug) {
-                    LOGGER.log(Level.INFO, "neo4j_url = {0}", neo4j_url);
-                    LOGGER.log(Level.INFO, "Connection url = {0}", neo4j_url);
-                    try {
-                        Class<?> neo4JDriverClass = Class.forName("org.neo4j.jdbc.Driver");
-                        LOGGER.log(Level.INFO, "neo4JDriverClass = {0}", neo4JDriverClass);
-                        ProtectionDomain neo4jDriverClassProtectionDomain = neo4JDriverClass.getProtectionDomain();
-                        LOGGER.log(Level.INFO, "neo4jDriverClassProdectionDomain = {0}", neo4jDriverClassProtectionDomain);
-                    } catch (ClassNotFoundException classNotFoundException) {
-                        classNotFoundException.printStackTrace();
+        try {
+            switch (dbtype) {
+                case MYSQL:
+                    Class<?> mysqlDriverClass = Class.forName("com.mysql.jdbc.Driver");
+                    System.out.println("driverClass = " + mysqlDriverClass);
+                    String mysql_url = "jdbc:mysql://" + host + ":" + port + "/" + db;
+                    if (debug) {
+                        System.out.println("Connection url = " + mysql_url);
                     }
-                }
-                try {
                     if (loginTimeout > 0) {
                         DriverManager.setLoginTimeout(loginTimeout);
                     }
-                    return DriverManager.getConnection(neo4j_url, properties);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    org.neo4j.jdbc.Driver neo4jDriver = new org.neo4j.jdbc.Driver();
-                    return neo4jDriver.connect(neo4j_url, properties);
-                }
-
-            case NEO4J_BOLT:
-                throw new RuntimeException("Neo4J BOLT driver not supported.");
+                    return DriverManager.getConnection(mysql_url, username, password);
+                    
+                case NEO4J:
+                    Class<?> neo4jDriverClass = org.neo4j.jdbc.Driver.class;
+                    try {
+                        neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
+                        //System.out.println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
+                    } catch (ClassNotFoundException ex) {
+                        LOGGER.log(Level.SEVERE, null, ex);
+                    }
+                    
+                    Properties properties = new Properties();
+                    properties.put("user", username);
+                    properties.put("password", password);
+                    String neo4j_url = "jdbc:neo4j://" + host + ":" + port;
+                    if (debug) {
+                        LOGGER.log(Level.INFO, "neo4j_url = {0}", neo4j_url);
+                        LOGGER.log(Level.INFO, "Connection url = {0}", neo4j_url);
+                        try {
+                            Class<?> neo4JDriverClass = Class.forName("org.neo4j.jdbc.Driver");
+                            LOGGER.log(Level.INFO, "neo4JDriverClass = {0}", neo4JDriverClass);
+                            ProtectionDomain neo4jDriverClassProtectionDomain = neo4JDriverClass.getProtectionDomain();
+                            LOGGER.log(Level.INFO, "neo4jDriverClassProdectionDomain = {0}", neo4jDriverClassProtectionDomain);
+                        } catch (ClassNotFoundException classNotFoundException) {
+                            classNotFoundException.printStackTrace();
+                        }
+                    }
+                    try {
+                        if (loginTimeout > 0) {
+                            DriverManager.setLoginTimeout(loginTimeout);
+                        }
+                        return DriverManager.getConnection(neo4j_url, properties);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        org.neo4j.jdbc.Driver neo4jDriver = new org.neo4j.jdbc.Driver();
+                        return neo4jDriver.connect(neo4j_url, properties);
+                    }
+                    
+                case NEO4J_BOLT:
+                    throw new RuntimeException("Neo4J BOLT driver not supported.");
+            }
+            throw new IllegalArgumentException("Unsuppored dbtype =" + dbtype);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
         }
-        throw new IllegalArgumentException("Unsuppored dbtype =" + dbtype);
     }
     private static final Logger LOGGER = Logger.getLogger(DbSetupBuilder.class.getName());
 }

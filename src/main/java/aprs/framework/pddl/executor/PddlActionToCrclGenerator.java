@@ -758,8 +758,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private volatile StackTraceElement setLastActionsIndexTrace @Nullable []  = null;
     private volatile StackTraceElement firstSetLastActionsIndexTrace @Nullable []  = null;
 
-    private final ConcurrentLinkedDeque<StackTraceElement[]> setLastActionsIndexTraces
-            = new ConcurrentLinkedDeque<>();
+//    private final ConcurrentLinkedDeque<StackTraceElement[]> setLastActionsIndexTraces
+//            = new ConcurrentLinkedDeque<>();
 
     private void setLastActionsIndex(@Nullable List<PddlAction> actionsList, int index) {
         final Thread curThread = Thread.currentThread();
@@ -772,7 +772,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         if (lastActionsList != actionsList || index != lastIndex.get()) {
             setLastActionsIndexTrace = curThread.getStackTrace();
-            setLastActionsIndexTraces.add(setLastActionsIndexTrace);
+//            setLastActionsIndexTraces.add(setLastActionsIndexTrace);
             if (null != actionsList) {
                 this.lastActionsList = new ArrayList<>(actionsList);
             } else {

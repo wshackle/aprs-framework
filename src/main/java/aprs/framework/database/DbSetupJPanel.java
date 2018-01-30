@@ -86,8 +86,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     public DbSetupJPanel() {
         initComponents();
         editTableArea = new JTextArea();
-        viewAreas = new ArrayList<>();
-        setupMultiLineTable(jTableQueries, 1, editTableArea, viewAreas);
+//        viewAreas = new ArrayList<>();
+        setupMultiLineTable(jTableQueries, 1, editTableArea);
         jTextFieldDBLoginTimeout.setText(Integer.toString(DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT));
         ((DefaultTableModel) jTableQueries.getModel()).addTableModelListener(queriesTableModelListener);
     }
@@ -117,7 +117,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 //                .collect(Collectors.toList());              // Collect remaining lines into a List again
 //    }
     private JTextArea editTableArea;
-    private List<JTextArea> viewAreas;
+//    private List<JTextArea> viewAreas;
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -671,6 +671,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     /**
      * Display options according to the given setup object.
+     *
      * @param setup object to read properties from
      */
     @Override
@@ -790,26 +791,28 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     private void setupMultiLineTable(JTable jTable,
             int multiLineColumnIndex,
-            JTextArea editTableArea,
-            List<JTextArea> viewAreas) {
+            JTextArea editTableArea) {
         jTable.getColumnModel().getColumn(multiLineColumnIndex).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, @Nullable Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                while (viewAreas.size() <= row) {
-                    JTextArea area = new JTextArea();
-                    area.setOpaque(true);
-                    area.setVisible(true);
-                    viewAreas.add(area);
-                }
-                if (null == viewAreas.get(row)) {
-                    JTextArea area = new JTextArea();
-                    area.setOpaque(true);
-                    area.setVisible(true);
-                    viewAreas.set(row, area);
-                }
+//                while (viewAreas.size() <= row) {
+//                    JTextArea area = new JTextArea();
+//                    area.setOpaque(true);
+//                    area.setVisible(true);
+//                    viewAreas.add(area);
+//                }
+//                if (null == viewAreas.get(row)) {
+//                    JTextArea area = new JTextArea();
+//                    area.setOpaque(true);
+//                    area.setVisible(true);
+//                    viewAreas.set(row, area);
+//                }
 
-                viewAreas.get(row).setText(Objects.toString(value));
-                return viewAreas.get(row);
+                JTextArea area = new JTextArea();
+                area.setOpaque(true);
+                area.setVisible(true);
+                area.setText(Objects.toString(value));
+                return area;
             }
 
         });
@@ -927,9 +930,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
 
     /**
-     * Get the name of the directory where query info text files 
-     *  were read from or should be read from.
-     * 
+     * Get the name of the directory where query info text files were read from
+     * or should be read from.
+     *
      * @return queries directory
      */
     public String getQueriesDir() {
@@ -950,7 +953,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     /**
      * Get the user's currently chosen/entered options in a setup object.
-     * @return setup 
+     *
+     * @return setup
      */
     @Override
     public DbSetup getDbSetup() {
@@ -987,14 +991,14 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     @Nullable volatile private List<Future<?>> futures = null;
 
     /**
-     * Call the accept method of all registered listeners with the current
-     *  setup object.
-     * 
-     * Typically forcing multiple modules to reconnect to the database with
-     * new options.
-     * 
-     * @return list of futures for determining when all the listeners have
-     * been notified.
+     * Call the accept method of all registered listeners with the current setup
+     * object.
+     *
+     * Typically forcing multiple modules to reconnect to the database with new
+     * options.
+     *
+     * @return list of futures for determining when all the listeners have been
+     * notified.
      */
     @Override
     public List<Future<?>> notifyAllDbSetupListeners() {
@@ -1113,6 +1117,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     /**
      * Get the properties file.
+     *
      * @return properties file
      */
     public File getPropertiesFile() {
@@ -1409,7 +1414,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
 
     /**
-     * Get name of a script file to execute to start the database server if available
+     * Get name of a script file to execute to start the database server if
+     * available
+     *
      * @return name of start script file
      */
     public String getStartScript() {
