@@ -25,9 +25,12 @@ package aprs.framework.database;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
+ * Class of database query information needed to make a particular query through
+ * the DatabasePoseUpdater or QuerySet taken from text resource files. These
+ * text resource files allow us to change the underlying database without
+ * needing to change the client java code.
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
@@ -36,18 +39,61 @@ public class DbQueryInfo {
     private final String query;
     private final DbParamTypeEnum params[];
     private final Map<DbParamTypeEnum, String> results;
-    private @Nullable Map<DbParamTypeEnum, Integer> paramPosMap = null;
+    private Map<DbParamTypeEnum, Integer> paramPosMap;
     private final String origText;
+    
+    /**
+     * Constructor to create instance from data taken from text resource file.
+     * 
+     * @param query query template taken from resource file.
+     * @param params parameter array info parsed from resource file
+     * @param results results map parsed from resource file 
+     * @param origText complete original text from the file (for display only)
+     */
+    public DbQueryInfo(String query,
+            DbParamTypeEnum[] params,
+            Map<DbParamTypeEnum, String> results,
+            String origText) {
+        this.query = query;
+        this.params = params;
+        this.results = results;
+        this.origText = origText;
+        paramPosMap = new EnumMap<>(DbParamTypeEnum.class);
+        for (int i = 0; i < params.length; i++) {
+            paramPosMap.put(params[i], i + 1);
+        }
+    }
 
+
+    /**
+     * Get the original text from the corresponding text resource file with the
+     * query template and parameter and result info. Used only for display.
+     *
+     * @return original text
+     */
     public String getOrigText() {
         return origText;
     }
 
+    /**
+     * Gets a mapping from the APRS specific but database and query independent
+     * parameter types to the names/indexes in the results of a particular query
+     * for the current database.
+     *
+     * @return map of parameter types to name/index strings.
+     */
     public Map<DbParamTypeEnum, String> getResults() {
         return results;
     }
 
-    @Nullable public Map<DbParamTypeEnum, Integer> getParamPosMap() {
+    /**
+     * Gets a mapping from the APRS specific but database and query independent
+     * parameter types to the indexes in the parameters of a particular query
+     * for the current database.
+     *
+     * @return map of parameter types to indexes.
+     */
+    public Map<DbParamTypeEnum, Integer> getParamPosMap() {
         if (null == paramPosMap && null != params) {
             paramPosMap = new EnumMap<>(DbParamTypeEnum.class);
             for (int i = 0; i < params.length; i++) {
@@ -57,24 +103,33 @@ public class DbQueryInfo {
         return paramPosMap;
     }
 
-    public DbQueryInfo(String query,
-            DbParamTypeEnum[] params,
-            Map<DbParamTypeEnum, String> results,
-            String origText) {
-        this.query = query;
-        this.params = params;
-        this.results = results;
-        this.origText = origText;
-    }
-
+    /**
+     * Query template string with the query to be sent to the database.
+     * Parameter values are not filled in but use '?' or "{1}","{2}" etc 
+     * appropriate to the current database.
+     * 
+     * @return query template string.
+     */
     public String getQuery() {
         return query;
     }
 
+    /**
+     * Get array of parameter types needed for this query.
+     * 
+     * @return array of parameter types.
+     */
     public DbParamTypeEnum[] getParams() {
         return params;
     }
 
+    /**
+     * Parse a string taken from a text resource file and create a new
+     * DbQueryInfo instance.
+     * 
+     * @param s string from resource file.
+     * @return new instance;
+     */
     public static DbQueryInfo parse(String s) {
         String lines[] = s.split("[\r\n]+");
         StringBuilder sb = new StringBuilder();
@@ -95,7 +150,7 @@ public class DbQueryInfo {
         if (null == ta) {
             ta = new DbParamTypeEnum[0];
         }
-        if(null == results) {
+        if (null == results) {
             results = Collections.emptyMap();
         }
         return new DbQueryInfo(sb.toString(), ta, results, s);
@@ -154,7 +209,6 @@ public class DbQueryInfo {
             DbParamTypeEnum type = DbParamTypeEnum.valueOf(name);
             results.put(type, value);
         }
-//        System.out.println("results = " + results);
         return results;
     }
 }

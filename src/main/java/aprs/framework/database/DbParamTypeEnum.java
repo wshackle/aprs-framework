@@ -23,7 +23,12 @@
 package aprs.framework.database;
 
 /**
- *
+ * An enumeration of the various parameter/result types that can be used in a 
+ *  database query through the DatabasePoseUpdater or QuerySet.
+ * 
+ * The same type might be a used as a parameter to one query and one of the
+ * results from another query.
+ * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public enum DbParamTypeEnum {

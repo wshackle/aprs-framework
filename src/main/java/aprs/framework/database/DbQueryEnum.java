@@ -23,7 +23,9 @@
 package aprs.framework.database;
 
 /**
- *
+ * An enumeration of the various queries that can be used
+ * through the DatabasePoseUpdater or QuerySet.
+ * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public enum DbQueryEnum {

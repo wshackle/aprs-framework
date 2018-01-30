@@ -76,7 +76,6 @@ import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import crcl.ui.client.PendantClientInner;
-import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.ui.client.UpdateTitleListener;
 import crcl.ui.server.SimServerJInternalFrame;
@@ -119,6 +118,8 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.xml.sax.SAXException;
 import rcs.posemath.PmCartesian;
+import crcl.ui.client.PendantClientJInternalFrame;
+
 
 /**
  * AprsJFrame is the container for one robotic system in the APRS (Agility
@@ -2499,7 +2500,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             dbSetupJInternalFrame = new DbSetupJInternalFrame();
             dbSetupJInternalFrame.setAprsJframe(this);
             dbSetupJInternalFrame.pack();
-            dbSetupJInternalFrame.loadRecent();
+            dbSetupJInternalFrame.loadRecentSettings();
             jDesktopPane1.add(dbSetupJInternalFrame, JLayeredPane.DEFAULT_LAYER);
             dbSetupJInternalFrame.getDbSetupPublisher().addDbSetupListener(dbSetupListener);
             DbSetup dbs = this.dbSetup;
@@ -5013,6 +5014,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             String startCrclWebAppString = props.getProperty(STARTUPCRCLWEBAPP);
             if (null != startCrclWebAppString) {
                 jCheckBoxMenuItemStartupCRCLWebApp.setSelected(Boolean.valueOf(startCrclWebAppString));
+            }
+            String startKitInspetion = props.getProperty(STARTUPKITINSPECTION);
+            if (null != startKitInspetion) {
+                jCheckBoxMenuItemKitInspectionStartup.setSelected(Boolean.valueOf(startKitInspetion));
             }
             this.updateSubPropertiesFiles();
             if (null != this.pddlPlannerJInternalFrame) {

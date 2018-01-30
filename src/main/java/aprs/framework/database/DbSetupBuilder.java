@@ -48,6 +48,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
 /**
+ * Builder to create DbSetup instances from data queried from the user and/or
+ * obtained from text resource files.
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
@@ -69,6 +71,16 @@ public class DbSetupBuilder {
 
     private static final String BASE_RESOURCE_DIR = "aprs/framework/database/";
 
+    /**
+     * Read a resource directory relative to default base of text resource files
+     * with information for each required query type and create a map of query
+     * types to database query information objects.
+     *
+     * @param resDir resource directory relative to default base directory
+     * @return map of query types to query information objects
+     *
+     * @throws IOException directory doesn't exist etc.
+     */
     public static Map<DbQueryEnum, DbQueryInfo> readRelResourceQueriesDirectory(String resDir) throws IOException {
         if (BASE_RESOURCE_DIR.endsWith("/") && resDir.startsWith("/")) {
             resDir = resDir.substring(1);
@@ -82,6 +94,16 @@ public class DbSetupBuilder {
         return readResourceQueriesDirectory(BASE_RESOURCE_DIR + resDir);
     }
 
+    /**
+     * Read a resource directory of text resource files with information for
+     * each required query type and create a map of query types to database
+     * query information objects.
+     *
+     * @param resDir resource directory
+     * @return map of query types to query information objects
+     *
+     * @throws IOException directory doesn't exist etc.
+     */
     public static Map<DbQueryEnum, DbQueryInfo> readResourceQueriesDirectory(String resDir) throws IOException {
         Map<DbQueryEnum, DbQueryInfo> map = new EnumMap<>(DbQueryEnum.class);
         for (DbQueryEnum q : DbQueryEnum.values()) {
@@ -93,6 +115,16 @@ public class DbSetupBuilder {
         return map;
     }
 
+    /**
+     * Read a  directory of text resource files with information for
+     * each required query type and create a map of query types to database
+     * query information objects.
+     *
+     * @param resDir resource directory
+     * @return map of query types to query information objects
+     *
+     * @throws IOException directory doesn't exist etc.
+     */
     public static Map<DbQueryEnum, DbQueryInfo> readQueriesDirectory(String resDir) throws IOException {
         Map<DbQueryEnum, DbQueryInfo> map = new EnumMap<>(DbQueryEnum.class);
         for (DbQueryEnum q : DbQueryEnum.values()) {
@@ -219,7 +251,7 @@ public class DbSetupBuilder {
 
         @Override
         public Map<DbQueryEnum, DbQueryInfo> getQueriesMap() {
-            if(null == queriesMap) {
+            if (null == queriesMap) {
                 return Collections.emptyMap();
             }
             return queriesMap;
@@ -252,6 +284,14 @@ public class DbSetupBuilder {
 
     }
 
+    /**
+     * Copies the options from the given setup to the builder in order 
+     * to create a new DbSetup instance that differs in only a subset of the 
+     * options.
+     * 
+     * @param setup object to copy properties from
+     * @return new builder with copied initial properties
+     */
     @EnsuresNonNull("this.queriesDir") public DbSetupBuilder setup(DbSetup setup) {
         type = setup.getDbType();
         host = setup.getHost();
@@ -262,7 +302,7 @@ public class DbSetupBuilder {
         passwd = setup.getDbPassword();
         internalQueriesResourceDir = setup.isInternalQueriesResourceDir();
         String setupQueriesDir = setup.getQueriesDir();
-        
+
         queriesMap = setup.getQueriesMap();
         debug = setup.isDebug();
         if (null == queriesMap) {
@@ -284,11 +324,16 @@ public class DbSetupBuilder {
         return this;
     }
 
+    /**
+     * Create a new instance from the current options.
+     * 
+     * @return new instance
+     */
     public DbSetup build() {
         if (connected && (type == null || type == DbType.NONE)) {
             throw new IllegalArgumentException("type = " + type);
         }
-        if(null == queriesDir) {
+        if (null == queriesDir) {
             throw new IllegalStateException("queriesDir not set");
         }
         return new DbSetupInternal(
@@ -307,6 +352,11 @@ public class DbSetupBuilder {
                 startScript);
     }
 
+    /**
+     * Set type option in builder
+     * @param type
+     * @return this builder
+     */
     public DbSetupBuilder type(DbType type) {
         if (null != type) {
             this.type = type;
@@ -314,6 +364,11 @@ public class DbSetupBuilder {
         return this;
     }
 
+    /**
+     * Set host option in builder
+     * @param host
+     * @return this builder
+     */
     public DbSetupBuilder host(String host) {
         if (null != host) {
             this.host = host;
@@ -321,11 +376,21 @@ public class DbSetupBuilder {
         return this;
     }
 
+    /**
+     * Set port option in builder
+     * @param port
+     * @return this builder
+     */
     public DbSetupBuilder port(int port) {
         this.port = port;
         return this;
     }
 
+    /**
+     * Set passwd option in builder
+     * @param passwd
+     * @return this builder
+     */
     public DbSetupBuilder passwd(char[] passwd) {
         if (null != passwd) {
             this.passwd = passwd;
@@ -333,6 +398,11 @@ public class DbSetupBuilder {
         return this;
     }
 
+    /**
+     * Set user option in builder
+     * @param user
+     * @return this builder
+     */
     public DbSetupBuilder user(String user) {
         if (null != user) {
             this.user = user;
@@ -340,21 +410,41 @@ public class DbSetupBuilder {
         return this;
     }
 
+    /**
+     * Set _queriesDir option in builder
+     * @param _queriesDir
+     * @return this builder
+     */
     @EnsuresNonNull("this.queriesDir") public DbSetupBuilder queriesDir(String _queriesDir) {
         this.queriesDir = _queriesDir;
         return this;
     }
 
+    /**
+     * Set internalQueriesResourceDir option in builder
+     * @param internalQueriesResourceDir
+     * @return this builder
+     */
     public DbSetupBuilder internalQueriesResourceDir(boolean internalQueriesResourceDir) {
         this.internalQueriesResourceDir = internalQueriesResourceDir;
         return this;
     }
 
+    /**
+     * Set startScript option in builder
+     * @param startScript
+     * @return this builder
+     */
     public DbSetupBuilder startScript(String startScript) {
         this.startScript = startScript;
         return this;
     }
 
+    /**
+     * Set dbname option in builder
+     * @param dbname
+     * @return this builder
+     */
     public DbSetupBuilder dbname(String dbname) {
         if (null != dbname) {
             this.dbname = dbname;
@@ -362,21 +452,41 @@ public class DbSetupBuilder {
         return this;
     }
 
+     /**
+     * Set connected option in builder
+     * @param connected
+     * @return this builder
+     */
     public DbSetupBuilder connected(boolean connected) {
         this.connected = connected;
         return this;
     }
 
+    /**
+     * Set debug option in builder
+     * @param debug
+     * @return this builder
+     */
     public DbSetupBuilder debug(boolean debug) {
         this.debug = debug;
         return this;
     }
 
+    /**
+     * Set loginTimeout option in builder
+     * @param loginTimeout
+     * @return this builder
+     */
     public DbSetupBuilder loginTimeout(int loginTimeout) {
         this.loginTimeout = loginTimeout;
         return this;
     }
 
+    /**
+     * Set queriesMap option in builder
+     * @param queriesMap
+     * @return this builder
+     */
     public DbSetupBuilder queriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
         this.queriesMap = queriesMap;
         return this;
@@ -395,7 +505,6 @@ public class DbSetupBuilder {
         }
         String dbSpecificHost = _argsMap.get(dbtype + ".host");
         if (null != dbSpecificHost) {
-//                this.jTextFieldDBHost.setText(dbSpecificHost);
             builder = builder.host(dbSpecificHost);
             host = dbSpecificHost;
         } else {
@@ -407,7 +516,6 @@ public class DbSetupBuilder {
         }
         String dbSpecificPort = _argsMap.get(dbtype + "." + host + ".port");
         if (null != dbSpecificPort) {
-//                this.jTextFieldDBPort.setText(dbSpecificPort);
             port = Integer.parseInt(dbSpecificPort);
             builder = builder.port(port);
         } else {
@@ -485,6 +593,10 @@ public class DbSetupBuilder {
         return builder;
     }
 
+    /**
+     * Get a map with hard-coded default argument options.
+     * @return map of argument options
+     */
     public static Map<String, String> getDefaultArgsMap() {
         Map<String, String> defaultArgsMap = new HashMap<>();
         defaultArgsMap.put("--dbhost", "localhost");
@@ -565,7 +677,6 @@ public class DbSetupBuilder {
             if (host == null || host.length() < 1) {
                 String dbSpecificHost = argsMap.get(dbtype + ".host");
                 if (null != dbSpecificHost) {
-//                this.jTextFieldDBHost.setText(dbSpecificHost);
                     builder = builder.host(dbSpecificHost);
                     host = dbSpecificHost;
                 } else {
@@ -581,7 +692,6 @@ public class DbSetupBuilder {
             if (port < 1) {
                 String dbSpecificPort = argsMap.get(dbtype + "." + host + ".port");
                 if (null != dbSpecificPort) {
-//                this.jTextFieldDBPort.setText(dbSpecificPort);
                     port = Integer.parseInt(dbSpecificPort);
                     builder = builder.port(port);
                 } else {
@@ -639,7 +749,7 @@ public class DbSetupBuilder {
             LOGGER.log(Level.SEVERE, null, ex);
         }
         File parentFile = propertiesFile.getParentFile();
-        if(null != parentFile){
+        if (null != parentFile) {
             parentFile.mkdirs();
         }
         Properties props = new Properties();
@@ -666,11 +776,6 @@ public class DbSetupBuilder {
         if (null != queriesDir) {
             props.put(dbHostPort + ".queriesDir", setup.getQueriesDir());
         }
-//            try (FileWriter fw = new FileWriter(propertiesFile)) {
-//                props.store(fw, "");
-//            } catch (IOException ex) {
-//                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//            }
         Utils.saveProperties(propertiesFile, props);
     }
 
@@ -701,6 +806,9 @@ public class DbSetupBuilder {
         return setupConnection(setup.getDbType(), setup.getHost(), setup.getPort(), setup.getDbName(), setup.getDbUser(), new String(setup.getDbPassword()), setup.isDebug(), setup.getLoginTimeout());
     }
 
+    /**
+     * Default login timeout in seconds
+     */
     public static final int DEFAULT_LOGIN_TIMEOUT = 5; // in seconds 
 
     /**
@@ -728,29 +836,19 @@ public class DbSetupBuilder {
         new Thread(() -> {
             Connection conn;
             try {
-                ret.complete(setupConnectionPriv(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT));
+                ret.complete(setupConnectionPriv(dbtype, host, port, db, username, password, debug, loginTimeout));
             } catch (Exception ex) {
                 ret.completeExceptionally(ex);
                 LOGGER.log(Level.SEVERE, null, ex);
             }
         }, "connectionSetupThread").start();
         return ret;
-
-//        return XFuture. -> {
-//            try {
-//                return setupConnectionPriv(dbtype,host,port,db,username,password,debug);
-//            } catch (SQLException ex) {
-//                Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//            
-//                });
     }
 
     private static Connection setupConnectionPriv(DbType dbtype, String host, int port, String db, String username, String password, boolean debug, int loginTimeout) throws SQLException {
 
         switch (dbtype) {
             case MYSQL:
-//                useBatch = true;
                 Class<?> mysqlDriverClass = com.mysql.jdbc.Driver.class;
                 System.out.println("driverClass = " + mysqlDriverClass);
                 String mysql_url = "jdbc:mysql://" + host + ":" + port + "/" + db;
@@ -764,8 +862,6 @@ public class DbSetupBuilder {
 
             case NEO4J:
                 Class<?> neo4jDriverClass = org.neo4j.jdbc.Driver.class;
-
-                //System.out.println(" static neo4jDriverClass = " + neo4jDriverClass);
                 try {
                     neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
                     //System.out.println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
@@ -773,7 +869,6 @@ public class DbSetupBuilder {
                     LOGGER.log(Level.SEVERE, null, ex);
                 }
 
-//                useBatch = false;
                 Properties properties = new Properties();
                 properties.put("user", username);
                 properties.put("password", password);

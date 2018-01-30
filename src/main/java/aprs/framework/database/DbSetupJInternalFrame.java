@@ -39,18 +39,30 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
         initComponents();
     }
 
-    public void loadRecent() {
-        dbSetupJPanel1.loadRecent();
+    /**
+     * Load the most recent settings file.
+     */
+    public void loadRecentSettings() {
+        dbSetupJPanel1.loadRecentSettings();
     }
-    
+
+    /**
+     * Set the value of aprsJFrame
+     *
+     * @param aprsJframe new value of aprsJFrame
+     */
     public void setAprsJframe(AprsJFrame aprsJframe) {
         dbSetupJPanel1.setAprsJFrame(aprsJframe);
     }
-    
+
+    /**
+     * Get name of a script file to execute to start the database server if available
+     * @return name of start script file
+     */
     public String getStartScript() {
         return dbSetupJPanel1.getStartScript();
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -87,19 +99,30 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    
+    /**
+     * Get a source for future database setup information.
+     * @return database setup publisher
+     */
     public DbSetupPublisher getDbSetupPublisher() {
         return this.dbSetupJPanel1;
     }
-    
+
+    /**
+     * Set the properties file   
+     * @param f new value of propertiesFile
+     */
     public void setPropertiesFile(File f) {
         dbSetupJPanel1.setPropertiesFile(f);
     }
-    
+
+    /**
+     * Get the current properties file.
+     * @return properties file
+     */
     public File getPropertiesFile() {
         return dbSetupJPanel1.getPropertiesFile();
     }
-    
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.framework.database.DbSetupJPanel dbSetupJPanel1;

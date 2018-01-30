@@ -1,0 +1,7 @@
+package javax.swing.table;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+interface TableCellRenderer {
+    Component getTableCellRendererComponent(JTable arg0,@Nullable Object arg1, boolean arg2, boolean arg3, int arg4, int arg5);
+}
