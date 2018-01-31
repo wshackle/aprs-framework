@@ -1347,7 +1347,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             return generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, null, null);
         }
         int rc = ropCount.incrementAndGet();
-        System.out.println("runOptaPlanner: rc = " + rc);
+//        System.out.println("runOptaPlanner: rc = " + rc);
         long t0 = System.currentTimeMillis();
         this.options = options1;
         if (actions.size() < 1) {
@@ -1371,13 +1371,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         List<PddlAction> copyFullReplanPddlActions = new ArrayList<>(fullReplanPddlActions);
         List<PddlAction> origActions = new ArrayList<>(actions);
         long t1 = System.currentTimeMillis();
-        System.out.println("runOptaPlanner: (t1-t0) = " + (t1 - t0) + ",rc=" + rc);
+//        System.out.println("runOptaPlanner: (t1-t0) = " + (t1 - t0) + ",rc=" + rc);
         synchronized (actions) {
             actions.clear();
             actions.addAll(fullReplanPddlActions);
         }
         long t2 = System.currentTimeMillis();
-        System.out.println("runOptaPlanner: (t2-t0) = " + (t2 - t0) + ",rc=" + rc);
+//        System.out.println("runOptaPlanner: (t2-t0) = " + (t2 - t0) + ",rc=" + rc);
         if (Math.abs(fullReplanPddlActions.size() - actions.size()) > skippedActions || actions.size() < 1) {
             System.out.println("copyFullReplanPddlActions = " + copyFullReplanPddlActions);
             throw new IllegalStateException("fullReplanPddlActions.size() = " + fullReplanPddlActions.size() + ",actions.size() = " + actions.size() + ",rc=" + rc + ", skippedActions=" + skippedActions);
@@ -1391,7 +1391,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             showCmdList(newCmds);
         }
         long t3 = System.currentTimeMillis();
-        System.out.println("runOptaPlanner: (t3-t0) = " + (t3 - t0) + ",rc=" + rc);
+//        System.out.println("runOptaPlanner: (t3-t0) = " + (t3 - t0) + ",rc=" + rc);
         return newCmds;
     }
 
@@ -1555,7 +1555,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         HardSoftLongScore hardSoftLongScore = solvedPlan.getScore();
         assert (null != hardSoftLongScore) : "solvedPlan.getScore() returned null";
         double solveScore = (hardSoftLongScore.getSoftScore() / 1000.0);
-        System.out.println("Score improved:" + (solveScore - inScore));
+//        System.out.println("Score improved:" + (solveScore - inScore));
         if (null != this.opDisplayJPanelInput) {
             if (null == opDisplayJPanelInput.getOpActionPlan()) {
                 this.opDisplayJPanelInput.setOpActionPlan(inputPlan);
@@ -1565,17 +1565,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (Math.abs(solveScore - inScore) > 0.1) {
             List<PddlAction> fullReplanPddlActions = new ArrayList<>();
             List<PddlAction> preStartPddlActions = new ArrayList<>(actions.subList(0, startingIndex > endl[0] ? startingIndex : endl[0]));
-            System.out.println("preStartPddlActions.size() = " + preStartPddlActions.size());
-            System.out.println("preStartPddlActions = " + preStartPddlActions);
+//            System.out.println("preStartPddlActions.size() = " + preStartPddlActions.size());
+//            System.out.println("preStartPddlActions = " + preStartPddlActions);
             fullReplanPddlActions.addAll(preStartPddlActions);
             List<PddlAction> newPddlActions = opActionsToPddlActions(solvedPlan.orderedActions(), 0);
-            System.out.println("newPddlActions.size() = " + newPddlActions.size());
-            System.out.println("newPddlActions = " + newPddlActions);
+//            System.out.println("newPddlActions.size() = " + newPddlActions.size());
+//            System.out.println("newPddlActions = " + newPddlActions);
             List<PddlAction> replacedPddlActions = new ArrayList<>(actions.subList(endl[0], endl[1]));
-            System.out.println("replacedPddlActions.size() = " + replacedPddlActions.size());
-            System.out.println("replacedPddlActions = " + replacedPddlActions);
+//            System.out.println("replacedPddlActions.size() = " + replacedPddlActions.size());
+//            System.out.println("replacedPddlActions = " + replacedPddlActions);
             if (Math.abs(newPddlActions.size() - replacedPddlActions.size()) != skippedPddlActionsList.size() || newPddlActions.size() < 1) {
-                System.err.println("newPddlActions.size() = " + newPddlActions.size() + ",actions.size() = " + actions.size() + ", skippedActions=" + skippedActions);
+//                System.err.println("newPddlActions.size() = " + newPddlActions.size() + ",actions.size() = " + actions.size() + ", skippedActions=" + skippedActions);
                 int recheckEndl[] = new int[2];
                 List<OpAction> recheckSkippedOpActionsList = new ArrayList<>();
                 List<PddlAction> recheckSkippedPddlActionsList = new ArrayList<>();
@@ -1589,8 +1589,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             fullReplanPddlActions.addAll(newPddlActions);
             fullReplanPddlActions.addAll(skippedPddlActionsList);
             List<PddlAction> laterPddlActions = new ArrayList<>(actions.subList(endl[1], actions.size()));
-            System.out.println("laterPddlActions.size() = " + laterPddlActions.size());
-            System.out.println("laterPddlActions = " + laterPddlActions);
+//            System.out.println("laterPddlActions.size() = " + laterPddlActions.size());
+//            System.out.println("laterPddlActions = " + laterPddlActions);
             fullReplanPddlActions.addAll(laterPddlActions);
 
             if (null != this.opDisplayJPanelSolution) {
@@ -3061,7 +3061,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         lastTakenPart = null;
         takeSnapshots("plan", "skipping-take-part-" + partName + "", pose, partName);
         PoseType poseCheck = getPose(partName);
-        System.out.println("poseCheck = " + poseCheck);
+//        System.out.println("poseCheck = " + poseCheck);
     }
 
     /**
@@ -4583,7 +4583,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void recordSkipPlacePart(String slotName, @Nullable PoseType pose) throws IllegalStateException, SQLException {
         takeSnapshots("plan", "skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "", pose, slotName);
         PoseType poseCheck = getPose(slotName);
-        System.out.println("poseCheck = " + poseCheck);
+//        System.out.println("poseCheck = " + poseCheck);
     }
 
     private void placePartRecovery(PddlAction action, Slot slot, List<MiddleCommandType> out) throws IllegalStateException, SQLException, BadLocationException {

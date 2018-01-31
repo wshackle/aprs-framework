@@ -2680,7 +2680,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
         }
-        System.out.println("runCrclProgram returned = " + ret);
+//        System.out.println("runCrclProgram returned = " + ret);
         return ret;
     }
 
@@ -5067,10 +5067,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private boolean atLastAction() {
         boolean ret = pddlActionToCrclGenerator.atLastIndex();
-        if (ret) {
-            System.out.println("pddlActionToCrclGenerator.getLastIndex() = " + pddlActionToCrclGenerator.getLastIndex());
-            System.out.println("actionsList.size() = " + actionsList.size());
-        }
+//        if (ret) {
+//            System.out.println("pddlActionToCrclGenerator.getLastIndex() = " + pddlActionToCrclGenerator.getLastIndex());
+//            System.out.println("actionsList.size() = " + actionsList.size());
+//        }
         return ret;
 
     }
