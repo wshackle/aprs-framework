@@ -1415,11 +1415,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
     private volatile boolean addRepeatCountsToDatabaseNames = false;
 
-    public List<Slot> getSlotOffsets(String name) {
+    @Override
+    public List<Slot> getSlotOffsets(String name,boolean ignoreEmpty) {
         if (null == dpu) {
             return Collections.emptyList();
         }
-        return dpu.getSlotOffsets(name);
+        return dpu.getSlotOffsets(name,ignoreEmpty);
     }
 
     @Nullable public List<Slot> getSlots(Tray item) {
@@ -1651,7 +1652,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private final AtomicInteger notifySingleListenersUpdateBeginCount = new AtomicInteger();
     private final AtomicInteger notifySingleListenersUpdateEndCount = new AtomicInteger();
 
+    private String getRunName() {
+        if(null != aprsJFrame) {
+            return aprsJFrame.getRunName();
+        }
+        return "";
+    }
     private void notifySingleUpdateListeners(List<PhysicalItem> l) {
+        if(l.isEmpty()) {
+            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.WARNING, getRunName()+": notifySingleUpdateListeners passed empty list");
+        }
         List<PhysicalItem> unmodifiableList = Collections.unmodifiableList(new ArrayList<>(l));
         notifySingleListenersUpdateBeginCount.incrementAndGet();
         List<XFuture<List<PhysicalItem>>> listeners = copyListenersAndDisableUpdates();

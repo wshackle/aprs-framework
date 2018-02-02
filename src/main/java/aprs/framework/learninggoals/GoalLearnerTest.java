@@ -166,7 +166,7 @@ public class GoalLearnerTest {
         }
 
         @Override
-        public List<Slot> getSlotOffsets(String name) {
+        public List<Slot> getSlotOffsets(String name,boolean ignoreEmpty) {
             List<Slot> slots =  map.get(name);
             if(null == slots) {
                 return Collections.emptyList();

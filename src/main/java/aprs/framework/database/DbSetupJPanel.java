@@ -1027,8 +1027,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         this.futures = newFutures;
         if (notifyService != null) {
             final DbSetup thisDbSetup = DbSetupJPanel.this.getDbSetup();
-            System.out.println("thisDbSetup = " + thisDbSetup);
-            System.out.println("thisDbSetup.getQueriesMap() = " + thisDbSetup.getQueriesMap());
+//            System.out.println("thisDbSetup = " + thisDbSetup);
+//            System.out.println("thisDbSetup.getQueriesMap() = " + thisDbSetup.getQueriesMap());
             Future<?> future
                     = notifyService.submit(new Runnable() {
                         @Override

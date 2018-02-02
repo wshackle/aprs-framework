@@ -238,6 +238,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     int skippedActions = 0;
+    
+    private boolean getReverseFlag() {
+        if(aprsJFrame != null) {
+            return aprsJFrame.isReverseFlag();
+        }
+        return false;
+    }
 
     private List<OpAction> pddlActionsToOpActions(List<? extends PddlAction> listIn, int start, int endl @Nullable [], @Nullable List<OpAction> skippedOpActionsList, @Nullable List<PddlAction> skippedPddlActionsList) throws SQLException {
         List<OpAction> ret = new ArrayList<>();
@@ -263,7 +270,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         moveOccurred = true;
                     }
                     String partName = pa.getArgs()[takePartArgIndex];
-                    PoseType partPose = getPose(partName);
+                    PoseType partPose = getPose(partName,getReverseFlag());
                     if (null == partPose) {
                         if (skipMissingParts) {
                             skippedActions++;
@@ -290,7 +297,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         moveOccurred = true;
                     }
                     String slotName = pa.getArgs()[placePartSlotArgIndex];
-                    PoseType slotPose = getPose(slotName);
+                    PoseType slotPose = getPose(slotName,getReverseFlag());
                     if (null == slotPose) {
                         if (skipMissingParts) {
                             skippedActions++;
@@ -760,7 +767,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
 //    private final ConcurrentLinkedDeque<StackTraceElement[]> setLastActionsIndexTraces
 //            = new ConcurrentLinkedDeque<>();
-
     private void setLastActionsIndex(@Nullable List<PddlAction> actionsList, int index) {
         final Thread curThread = Thread.currentThread();
         if (null == setLastActionsIndexThread) {
@@ -768,7 +774,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             setLastActionsIndexTrace = curThread.getStackTrace();
             firstSetLastActionsIndexTrace = setLastActionsIndexTrace;
         } else if (setLastActionsIndexThread != curThread) {
-            System.err.println("setLastActionsIndexThread changed");
+            logger.log(Level.FINE, "setLastActionsIndexThread changed from {0} to {1} ", new Object[]{setLastActionsIndexThread, curThread});
         }
         if (lastActionsList != actionsList || index != lastIndex.get()) {
             setLastActionsIndexTrace = curThread.getStackTrace();
@@ -894,15 +900,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws java.lang.InterruptedException another thread called
      * Thread.interrupt() while retrieving data from database
      *
-     * @throws PendantClientInner.ConcurrentBlockProgramsException
-     * pendant client in a state blocking program execution
+     * @throws PendantClientInner.ConcurrentBlockProgramsException pendant
+     * client in a state blocking program execution
      * @throws java.util.concurrent.ExecutionException exception occurred in
      * another thread servicing the waitForCompleteVisionUpdates
-     * @throws crcl.utils.CRCLException
-     *  a failure occurred while composing or sending a  CRCL command.
-     * @throws rcs.posemath.PmException
-     *  failure occurred while computing a pose such as an invalid transform
-     * 
+     * @throws crcl.utils.CRCLException a failure occurred while composing or
+     * sending a CRCL command.
+     * @throws rcs.posemath.PmException failure occurred while computing a pose
+     * such as an invalid transform
+     *
      */
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
@@ -1077,8 +1083,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     boolean needSkip = false;
                     switch (action.getType()) {
                         case "take-part":
+                            if (newItems.isEmpty()  && poseCache.isEmpty()) {
+                                logger.log(Level.WARNING, "newItems.isEmpty() on take-part for run " + getRunName());
+                            }
                             String partName = action.getArgs()[takePartArgIndex];
-                            PoseType pose = getPose(partName);
+                            PoseType pose = getPose(partName,getReverseFlag());
                             if (pose == null) {
                                 recordSkipTakePart(partName, pose);
                                 skipEndIndex = idx;
@@ -1094,9 +1103,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             break;
 
                         case "place-part":
+                            if (newItems.isEmpty()  && poseCache.isEmpty()) {
+                                logger.log(Level.WARNING, "newItems.isEmpty() on place-part for run " + getRunName());
+                            }
                             String slotName = action.getArgs()[placePartSlotArgIndex];
                             if (null == lastTakenPart) {
-                                PoseType slotPose = getPose(slotName);
+                                PoseType slotPose = getPose(slotName,getReverseFlag());
                                 recordSkipPlacePart(slotName, slotPose);
                                 skipEndIndex = idx;
                                 if (skipStartIndex < 0) {
@@ -1127,6 +1139,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 addTakeSnapshots(cmds, start_action_string, null, null, this.crclNumber.get());
                 switch (action.getType()) {
                     case "take-part":
+                        if (newItems.isEmpty() && poseCache.isEmpty()) {
+                            logger.log(Level.WARNING, "newItems.isEmpty() on take-part for run " + getRunName());
+                        }
                         takePart(action, cmds, getNextPlacePartAction(idx, actions));
                         break;
 
@@ -1159,7 +1174,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                 thrown.printStackTrace();
                                 throw thrown;
                             }
-                            System.out.println("Processed wrapper only commands without sending to robot.");
+                            newItems = checkNewItems(waitForCompleteVisionUpdatesCommentString);
+                            logger.log(Level.FINE, "Processed wrapper only commands without sending to robot.");
                         }
                         break;
 
@@ -1192,6 +1208,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         return cmds;
 
                     case "place-part":
+                        if (newItems.isEmpty()  && poseCache.isEmpty()) {
+                            logger.log(Level.WARNING, "newItems.isEmpty() on place-part for run " + getRunName());
+                        }
                         placePart(action, cmds);
                         break;
 
@@ -1237,6 +1256,20 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             if (localAprsJFrame.isRunningCrclProgram()) {
                 throw new IllegalStateException("already running crcl while trying to generate it");
             }
+        } catch (Exception ex) {
+            System.err.println("getRunName() = " + getRunName());
+            System.err.println("poseCache.keySet() = " + poseCache.keySet());
+            if (null != newItems) {
+                System.err.println("newItems.size()=" + newItems.size());
+                System.err.println("newItems=");
+                for (PhysicalItem newItem : newItems) {
+                    System.err.println(newItem.getName() + " : " + newItem.x + "," + newItem.y);
+                }
+            }
+            Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("");
+            System.err.println("");
+            throw new IllegalStateException(ex);
         } finally {
             localAprsJFrame.stopBlockingCrclPrograms(blockingCount);
         }
@@ -1262,11 +1295,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 case "look-for-part":
                 case "look-for-parts":
                     if (null == newItems) {
-                        if (null == externalPoseProvider) {
-                            newItems = waitForCompleteVisionUpdates(waitForCompleteVisionUpdatesCommentString, lastRequiredPartsMap, 15_000);
-                        } else {
-                            newItems = externalPoseProvider.getNewPhysicalItems();
-                        }
+                        newItems = checkNewItems(waitForCompleteVisionUpdatesCommentString);
 
                         assert (newItems != null) :
                                 "newItems == null";
@@ -1288,6 +1317,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         if (null == newItems) {
             return Collections.emptyList();
+        }
+        return newItems;
+    }
+
+    private List<PhysicalItem> checkNewItems(String waitForCompleteVisionUpdatesCommentString) throws InterruptedException, ExecutionException {
+        List<PhysicalItem> newItems;
+        if (null == externalPoseProvider) {
+            newItems = waitForCompleteVisionUpdates(waitForCompleteVisionUpdatesCommentString, lastRequiredPartsMap, 15_000);
+        } else {
+            newItems = externalPoseProvider.getNewPhysicalItems();
         }
         return newItems;
     }
@@ -1493,7 +1532,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (Thread.currentThread() != optoThread) {
             throw new IllegalStateException("!Thread.currentThread() != optoThread: optoThread=" + optoThread + ", Thread.currentThread() =" + Thread.currentThread());
         }
-        if (!aprsJFrame.isReverseFlag()) {
+        if (!getReverseFlag()) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
                             .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
@@ -1680,7 +1719,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             Tray tray = new Tray(kitSkuName, pose, 0);
             tray.setType("KT");
             if (null != aprsJFrame) {
-                return aprsJFrame.getSlots(tray)
+                return aprsJFrame.getSlots(tray, false)
                         .stream()
                         .filter(slot -> slot.getType().equals("S"))
                         .peek(slot -> {
@@ -2363,9 +2402,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws IllegalStateException if database is not connected
      * @throws crcl.utils.CRCLException failed to compose or send a CRCL message
      * @throws rcs.posemath.PmException failed to compute a valid pose
-     * @throws SQLException if database query fails 
+     * @throws SQLException if database query fails
      */
-    public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws SQLException, CRCLException, PmException  {
+    public void testPartPosition(PddlAction action, List<MiddleCommandType> out) throws SQLException, CRCLException, PmException {
         checkDbReady();
         checkSettings();
         String partName = action.getArgs()[0];
@@ -2996,13 +3035,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @param out list of commands to append to
      * @param nextPlacePartAction action to be checked to see if part should be
      * skipped
-     * 
-     * @throws IllegalStateException if database state is not consistent, eg part not in the correct slot
+     *
+     * @throws IllegalStateException if database state is not consistent, eg
+     * part not in the correct slot
      * @throws SQLException if database query fails
      * @throws crcl.utils.CRCLException failed to compose or send a CRCL message
      * @throws rcs.posemath.PmException failed to compute a valid pose
      */
-    public void takePart(PddlAction action, List<MiddleCommandType> out, @Nullable PddlAction nextPlacePartAction) throws IllegalStateException, SQLException, CRCLException, PmException  {
+    public void takePart(PddlAction action, List<MiddleCommandType> out, @Nullable PddlAction nextPlacePartAction) throws IllegalStateException, SQLException, CRCLException, PmException {
         checkDbReady();
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
@@ -3060,7 +3100,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void recordSkipTakePart(String partName, @Nullable PoseType pose) throws IllegalStateException, SQLException {
         lastTakenPart = null;
         takeSnapshots("plan", "skipping-take-part-" + partName + "", pose, partName);
-        PoseType poseCheck = getPose(partName);
+//        PoseType poseCheck = getPose(partName);
 //        System.out.println("poseCheck = " + poseCheck);
     }
 
@@ -3070,8 +3110,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param action PDDL action
      * @param out list of commands to append to
-     * 
-     * @throws IllegalStateException if database state is not consistent, eg part not in the correct slot
+     *
+     * @throws IllegalStateException if database state is not consistent, eg
+     * part not in the correct slot
      * @throws SQLException if database query fails
      * @throws crcl.utils.CRCLException failed to compose or send a CRCL message
      * @throws rcs.posemath.PmException failed to compute a valid pose
@@ -3162,6 +3203,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws SQLException if query fails.
      */
     @Nullable public PoseType getPose(String posename) throws SQLException, IllegalStateException {
+        return getPose(posename,false);
+    }
+
+    @Nullable private PoseType getPose(String posename, boolean ignoreNull) throws SQLException, IllegalStateException {
         if (null != externalPoseProvider) {
             return externalPoseProvider.getPose(posename);
         }
@@ -3201,12 +3246,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     PointType entryPoint = entry.getValue().getPoint();
                     double diff = CRCLPosemath.diffPoints(point, entryPoint);
                     if (diff < 15.0) {
-                        String errMsg = "two poses in cache are too close : posename=" + posename + ",pose=" + CRCLPosemath.toString(point) + ", entry=" + entry + ", entryPoint=" + CRCLPosemath.toString(entryPoint);
+                        String errMsg = "two poses in cache are too close : diff=" + diff + " posename=" + posename + ",pose=" + CRCLPosemath.toString(point) + ", entry=" + entry + ", entryPoint=" + CRCLPosemath.toString(entryPoint);
                         takeSnapshots("err", errMsg, pose, posename);
-                        throw new IllegalStateException("two poses in cache are too close : posename=" + posename + ",pose=" + CRCLPosemath.toString(point) + ", entry=" + entry + ", entryPoint=" + CRCLPosemath.toString(entryPoint));
+                        throw new IllegalStateException(errMsg);
                     }
                 }
-            } else {
+            } else if(!ignoreNull) {
                 if (debug) {
                     System.err.println("getPose(" + posename + ") returning null.");
                 }
@@ -3440,7 +3485,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param cmds list of commands to append to
      * @param pose pose where part is expected
-     * 
+     *
      * @throws crcl.utils.CRCLException failed to compose or send a CRCL message
      * @throws rcs.posemath.PmException failed to compute a valid pose
      */
@@ -3501,7 +3546,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param cmds list of commands to append to
      * @param pose pose where part is expected
-     * 
+     *
      * @throws crcl.utils.CRCLException failed to compose or send a CRCL message
      * @throws rcs.posemath.PmException failed to compute a valid pose
      */
@@ -4381,6 +4426,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             aprsJFrame.refreshSimView();
         }
         List<PhysicalItem> l = xfl.get();
+        if (l.isEmpty()) {
+            logger.warning(getRunName() + ": waitForCompleteVisionUpdates returing empty list");
+        }
         try {
             aprsJFrame.takeSimViewSnapshot(createTempFile(prefix + "_waitForCompleteVisionUpdates", ".PNG"), l);
             takeDatabaseViewSnapshot(createTempFile(prefix + "_waitForCompleteVisionUpdates_new_database", ".PNG"));
@@ -4582,7 +4630,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void recordSkipPlacePart(String slotName, @Nullable PoseType pose) throws IllegalStateException, SQLException {
         takeSnapshots("plan", "skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "", pose, slotName);
-        PoseType poseCheck = getPose(slotName);
+//        PoseType poseCheck = getPose(slotName);
 //        System.out.println("poseCheck = " + poseCheck);
     }
 

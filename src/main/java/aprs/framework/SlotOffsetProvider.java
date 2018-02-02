@@ -41,9 +41,16 @@ public interface SlotOffsetProvider {
      * kit or parts tray name.
      *
      * @param name name of the type of kit or slot tray
+     * @param ignoreEmpty if false  
+     *          no slots being found logs a verbose error message 
+     *          and throws IllegalStateException (good for fail fast) or
+     *  if true 
+     *          simply returns an empty list (good or display or when multiple 
+     *          will be checked.
+     * 
      * @return list of slots with relative position offsets.
      */
-    public List<Slot> getSlotOffsets(String name);
+    public List<Slot> getSlotOffsets(String name,boolean ignoreEmpty);
 
     /**
      * Compute the absolute position of a slot from a slot offset and a tray

@@ -847,17 +847,32 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
     private final ConcurrentHashMap<String, List<Slot>> offsetsMap = new ConcurrentHashMap<>();
 
-    public List<Slot> getSlotOffsets(String name) {
+    /**
+     * Get a list of slots with names and relative position offsets for a given
+     * kit or parts tray name.
+     *
+     * @param name name of the type of kit or slot tray
+     * @param ignoreEmpty if false  
+     *          no slots being found logs a verbose error message 
+     *          and throws IllegalStateException (good for fail fast) or
+     *  if true 
+     *          simply returns an empty list (good or display or when multiple 
+     *          will be checked.
+     * 
+     * @return list of slots with relative position offsets.
+     */
+    @Override
+    public List<Slot> getSlotOffsets(String name,boolean ignoreEmpty) {
         if (null == getTraySlotsParamTypes) {
             throw new IllegalArgumentException("getTraySlotsParamTypes is null");
         }
         if (null == get_tray_slots_statement) {
             throw new IllegalArgumentException("get_tray_slots_statement is null");
         }
-        return getSlotOffsets(new Tray(name));
+        return getSlotOffsets(new Tray(name),ignoreEmpty);
     }
 
-    public List<Slot> getSlotOffsets(Tray tray) {
+    public List<Slot> getSlotOffsets(Tray tray,boolean ignoreEmpty) {
         if (null == getTraySlotsParamTypes) {
             throw new IllegalArgumentException("getTraySlotsParamTypes is null");
         }
@@ -868,7 +883,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         if (tray_name.startsWith("sku_")) {
             tray_name = tray_name.substring(4);
         }
-        List<Slot> l = offsetsMap.computeIfAbsent(tray_name, (String name) -> getSlotOffsetsNew(tray));
+        List<Slot> l = offsetsMap.computeIfAbsent(tray_name, (String name) -> getSlotOffsetsNew(tray,ignoreEmpty));
         if (l == null && getSlotOffsetsNewSqlException != null) {
             SQLException ex = getSlotOffsetsNewSqlException;
             getSlotOffsetsNewSqlException = null;
@@ -906,7 +921,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     private final ConcurrentHashMap<String, Integer> failuresMap = new ConcurrentHashMap<>();
     private static final List<Slot> failedSlotOffsets = Collections.emptyList();
 
-    public List<Slot> getSlotOffsetsNew(PhysicalItem tray) {
+    public List<Slot> getSlotOffsetsNew(PhysicalItem tray, boolean ignoreEmpty) {
         if (null == getTraySlotsParamTypes) {
             throw new IllegalStateException("getTraySlotsParamTypes is null");
         }
@@ -1007,7 +1022,10 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         }
                     }
                 }
-                if (ret.size() < 1) {
+                if (ret.isEmpty()) {
+                    if(ignoreEmpty) {
+                        return failedSlotOffsets;
+                    }
                     System.err.println("");
                     System.err.println("Can't get items for tray " + tray);
                     System.err.println("getTraySlotsQueryStringFilled=");
@@ -1107,7 +1125,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     }
 
     public static List<Slot> getSlots(Tray tray, SlotOffsetProvider sop) {
-        List<Slot> offsets = sop.getSlotOffsets(tray.getName());
+        List<Slot> offsets = sop.getSlotOffsets(tray.getName(),false);
         List<Slot> ret = new ArrayList<>();
         String tray_name = tray.getName();
         if (tray_name.startsWith("sku_")) {

@@ -348,7 +348,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 double rot = Math.toRadians((double) rotObject);
                 if (null != slotOffsetProvider) {
                     Tray trayItem = new Tray(name, rot, x, y);
-                    List<Slot> l = slotOffsetProvider.getSlotOffsets(name);
+                    List<Slot> l = slotOffsetProvider.getSlotOffsets(name,true);
                     if (null != l) {
                         for (Slot s : l) {
                             Slot absItem = slotOffsetProvider.absSlotFromTrayAndOffset(trayItem, s);

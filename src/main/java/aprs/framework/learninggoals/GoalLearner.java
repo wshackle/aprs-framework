@@ -193,7 +193,7 @@ public class GoalLearner {
         for (PhysicalItem kit : kitTrays) {
             Map<String, String> slotPrpToPartSkuMap = new HashMap<>();
             assert (null != localSlotOffsetProvider) :"@AssumeAssertion(nullness)";
-            List<Slot> slotOffsetList = localSlotOffsetProvider.getSlotOffsets(kit.getName());
+            List<Slot> slotOffsetList = localSlotOffsetProvider.getSlotOffsets(kit.getName(),false);
             if (null == slotOffsetList) {
                 throw new IllegalStateException("getSlotOffsetList(" + kit.getName() + ") returned null");
             }

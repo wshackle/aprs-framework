@@ -530,13 +530,27 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private final ConcurrentHashMap<String, AprsJFrame> slotProvidersMap
             = new ConcurrentHashMap<>();
-    private final SlotOffsetProvider slotOffsetProvider = new SlotOffsetProvider() {
+    
+    private class AprsSupervisorSlotOffsetProvider implements SlotOffsetProvider {
+        
+        /**
+         * Get a list of slots with names and relative position offsets for a
+         * given kit or parts tray name.
+         *
+         * @param name name of the type of kit or slot tray
+         * @param ignoreEmpty if false no slots being found logs a verbose error
+         * message and throws IllegalStateException (good for fail fast) or if
+         * true simply returns an empty list (good or display or when multiple
+         * will be checked.
+         *
+         * @return list of slots with relative position offsets.
+         */
         @Override
-        public List<Slot> getSlotOffsets(String name) {
+        public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty) {
             for (int i = 0; i < aprsSystems.size(); i++) {
                 try {
                     AprsJFrame sys = aprsSystems.get(i);
-                    List<Slot> l = sys.getSlotOffsets(name);
+                    List<Slot> l = sys.getSlotOffsets(name, true);
                     if (null != l && !l.isEmpty()) {
                         slotProvidersMap.put(name, sys);
                         return l;
@@ -556,7 +570,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
             return null;
         }
-    };
+    }
+    
+    private final AprsSupervisorSlotOffsetProvider slotOffsetProvider = new AprsSupervisorSlotOffsetProvider();
 
     @Nullable private volatile JCheckBox robotsEnableCelEditorCheckbox = null;
     @Nullable private volatile JCheckBox robotsEnableCelRendererComponent = null;
@@ -4218,7 +4234,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     double getClosestSlotDist(Collection<PhysicalItem> kitTrays, PhysicalItem item) {
         return kitTrays.stream()
-                .flatMap(kit -> slotOffsetProvider.getSlotOffsets(kit.getName()).stream()
+                .flatMap(kit -> slotOffsetProvider.getSlotOffsets(kit.getName(), false).stream()
                 .flatMap(slotOffset -> absSlotStreamFromTrayAndOffset(kit, slotOffset)))
                 .mapToDouble(slot -> item.dist(slot))
                 .min().orElse(Double.POSITIVE_INFINITY);
@@ -4234,7 +4250,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 .collect(Collectors.toSet());
         Set<PhysicalItem> sysKitTrays = kitTrays.stream()
                 .filter(tray -> {
-                    List<Slot> l2 = sys.getSlotOffsets(tray.getName());
+                    List<Slot> l2 = sys.getSlotOffsets(tray.getName(), false);
                     return l2 != null && !l2.isEmpty();
                 }).collect(Collectors.toSet());
         Set<PhysicalItem> otherSysTrays = new HashSet<>(allTrays);
@@ -5465,7 +5481,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      *
      * @param comment used to identify the call location information in
      * displays/logs
-     * 
+     *
      * @return future allowing a check on when the abort is complete.
      */
     public XFuture<?> immediateAbortAll(String comment) {
@@ -6057,7 +6073,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         XFuture<?> xf = futureToDisplaySupplier.get();
         if (null != xf) {
             DefaultTreeModel model = (DefaultTreeModel) jTreeSelectedFuture.getModel();
-            DefaultMutableTreeNode rootTreeNode = xfutureToNode(xf, showDoneFutures, showUnnamedFutures);
+            DefaultMutableTreeNode rootTreeNode = xfutureToNode(xf, showDoneFutures, showUnnamedFutures,1);
             model.setRoot(rootTreeNode);
             expandAllNodes(jTreeSelectedFuture, 0, jTreeSelectedFuture.getRowCount());
         }
@@ -6151,7 +6167,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                             XFuture<?> xf = (XFuture<?>) depFieldObject;
                             if (showDoneFutures
                                     || (!xf.isDone() || xf.isCompletedExceptionally() || xf.isCancelled())) {
-                                node.add(xfutureToNode(xf, showDoneFutures, showUnnamedFutures));
+                                node.add(xfutureToNode(xf, showDoneFutures, showUnnamedFutures,1));
                             }
                         } else if (depFieldObject instanceof CompletableFuture) {
                             CompletableFuture<?> cf = (CompletableFuture<?>) depFieldObject;
@@ -6189,12 +6205,23 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private DefaultMutableTreeNode xfutureToNode(XFuture<?> future) {
-        return xfutureToNode(future, jCheckBoxShowDoneFutures.isSelected(), jCheckBoxShowUnnamedFutures.isShowing());
+        return xfutureToNode(future, jCheckBoxShowDoneFutures.isSelected(), jCheckBoxShowUnnamedFutures.isShowing(),1);
     }
 
-    static private DefaultMutableTreeNode xfutureToNode(XFuture<?> future, boolean showDoneFutures, boolean showUnnamedFutures) {
+    private static final int XFUTURE_MAX_DEPTH=100;
+    static private boolean firstDepthOverOccured=false;
+    
+    static private DefaultMutableTreeNode xfutureToNode(XFuture<?> future, boolean showDoneFutures, boolean showUnnamedFutures,int depth) {
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(future);
-        if (null != future) {
+        if(depth >= XFUTURE_MAX_DEPTH) {
+            if(!firstDepthOverOccured) {
+                Logger.getLogger(AprsJFrame.class
+                        .getName()).log(Level.SEVERE, "xfutureToNode : depth >= XFUTURE_MAX_DEPTH");
+                firstDepthOverOccured=true;
+            }
+            return node;
+        }
+        if (null != future && depth < XFUTURE_MAX_DEPTH) {
             ConcurrentLinkedDeque<?> deque = future.getAlsoCancel();
             if (null != deque) {
                 for (Object o : deque) {
@@ -6202,7 +6229,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         XFuture<?> xf = (XFuture<?>) o;
                         if (showDoneFutures
                                 || (!xf.isDone() || xf.isCompletedExceptionally() || xf.isCancelled())) {
-                            node.add(xfutureToNode(xf, showDoneFutures, showUnnamedFutures));
+                            node.add(xfutureToNode(xf, showDoneFutures, showUnnamedFutures,(depth+1)));
                         }
                     } else if (o instanceof CompletableFuture) {
                         CompletableFuture<?> cf = (CompletableFuture<?>) o;

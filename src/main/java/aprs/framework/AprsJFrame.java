@@ -335,21 +335,28 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         this.externalSlotOffsetProvider = externalSlotOffsetProvider;
     }
 
+   
     /**
-     * Get a list of slot objects with position offsets and slot names for a
-     * particular parts or kit tray by querying the database if the information
-     * is not already locally cached.
+     * Get a list of slots with names and relative position offsets for a given
+     * kit or parts tray name.
      *
-     * @param name name of parts or kit tray
-     * @return list of slots
+     * @param name name of the type of kit or slot tray
+     * @param ignoreEmpty if false  
+     *          no slots being found logs a verbose error message 
+     *          and throws IllegalStateException (good for fail fast) or
+     *  if true 
+     *          simply returns an empty list (good or display or when multiple 
+     *          will be checked.
+     * 
+     * @return list of slots with relative position offsets.
      */
     @Override
-    public List<Slot> getSlotOffsets(String name) {
+    public List<Slot> getSlotOffsets(String name,boolean ignoreEmpty) {
         if (null != externalSlotOffsetProvider) {
-            return externalSlotOffsetProvider.getSlotOffsets(name);
+            return externalSlotOffsetProvider.getSlotOffsets(name,ignoreEmpty);
         }
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
-        return this.visionToDbJInternalFrame.getSlotOffsets(name);
+        return this.visionToDbJInternalFrame.getSlotOffsets(name,ignoreEmpty);
     }
 
     /**
@@ -370,9 +377,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param tray tray to obtain list of slots
      * @return list of slots
      */
-    public List<Slot> getSlots(Tray tray) {
+    public List<Slot> getSlots(Tray tray,boolean ignoreEmpty) {
         if (null != externalSlotOffsetProvider) {
-            return externalSlotOffsetProvider.getSlotOffsets(tray.getName());
+            return externalSlotOffsetProvider.getSlotOffsets(tray.getName(),ignoreEmpty);
         }
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return this.visionToDbJInternalFrame.getSlots(tray);
@@ -4318,7 +4325,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             return true;
         }
         try {
-            System.out.println("startCheckEnabled called.");
+//            System.out.println("startCheckEnabled called.");
             if (!isConnected()) {
                 setConnected(true);
             }
@@ -4329,7 +4336,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             setProgram(emptyProgram);
             boolean progRunRet = crclClientJInternalFrame.runCurrentProgram();
 
-            System.out.println("startCheckEnabled finishing with " + progRunRet);
+//            System.out.println("startCheckEnabled finishing with " + progRunRet);
             enableCheckedAlready = progRunRet;
             return progRunRet;
         } catch (JAXBException ex) {

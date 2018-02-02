@@ -392,8 +392,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void handleActionCompleted(PddlActionToCrclGenerator.ActionCallbackInfo actionInfo) {
         if (currentActionIndex != actionInfo.getActionIndex()) {
-            System.out.println("actionInfo = " + actionInfo);
-            System.out.println("currentActionIndex = " + currentActionIndex);
+            LOGGER.log(Level.FINE,"(currentActionIndex != actionInfo.getActionIndex())");
+            LOGGER.log(Level.FINE,"actionInfo = " + actionInfo);
+            LOGGER.log(Level.FINE,"currentActionIndex = " + currentActionIndex);
         }
         if (currentActionIndex < actionInfo.getActionIndex() + 1) {
             currentActionIndex = actionInfo.getActionIndex() + 1;
