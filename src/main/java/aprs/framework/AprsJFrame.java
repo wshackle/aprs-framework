@@ -1402,6 +1402,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             if (null != prog) {
                 sb.append("crcl_program_index=(").append(getCrclProgramLine()).append(" / ").append(prog.getMiddleCommand().size()).append("), ");
                 sb.append("crcl_program_name=").append(prog.getName()).append("\r\n");
+            } else {
+                sb.append("crcl_program_index=(").append(getCrclProgramLine()).append(", ");
+                sb.append("crcl_program_name=\r\n");
             }
             if (null != crclClientJInternalFrame) {
                 crclClientJInternalFrame.getCurrentStatus().ifPresent(status -> {
@@ -1420,7 +1423,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             int curActionIndex = execFrame.getCurrentActionIndex();
             if (null != actions) {
                 sb.append("PDDL curActionIndex= ").append(curActionIndex);
-                sb.append(" out of ").append(actions.size()).append("\r\n");
+                sb.append(" out of ").append(actions.size()).append(", ");
                 if (curActionIndex >= 0 && curActionIndex < actions.size()) {
                     sb.append("PDDL action =").append(actions.get(curActionIndex)).append("\r\n");
                 } else {
@@ -1431,7 +1434,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             if (null != pddlErrorString && pddlErrorString.length() > 0) {
                 sb.append("pddlExecutorError=").append(pddlErrorString).append("\r\n");
             }
-            sb.append("actionSetsCompleted=").append(execFrame.getActionSetsCompleted()).append("\r\n");
+            sb.append("actionSetsCompleted=").append(execFrame.getActionSetsCompleted()).append(", ");
         }
         sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append(", ");
         boolean connected = (null != crclClientJInternalFrame && crclClientJInternalFrame.isConnected());
@@ -1440,11 +1443,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         sb.append("paused=").append(jCheckBoxMenuItemPause.isSelected()).append("\r\n");
         sb.append("run_name=").append(this.getRunName()).append("\r\n");
         CRCLProgramType crclProgram = this.getCrclProgram();
-        if (null != crclProgram) {
-            sb.append("crclProgramName=").append(crclProgram.getName()).append("\r\n");
-        }
+        
         sb.append("crclRunning=").append(this.isRunningCrclProgram()).append(", ");
         sb.append("isDoingActions=").append(isDoingActions()).append(", ");
+        if (null != crclProgram) {
+            sb.append("crclProgramName=").append(crclProgram.getName()).append(", ");
+        }
         sb.append("isRunning=").append(running.get()).append("\r\n");
         long runDuration = getRunDuration();
         long stopDuration = getStopDuration();
@@ -1460,14 +1464,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 pause();
             }
         }
-        sb.append("                                                                                                                                                                                                                                                                                        \r\n");
+//        sb.append("                                                                                                                                                                                                                                                                                        \r\n");
 
         if (null != titleErrorString && titleErrorString.length() > 0) {
             sb.append("titleErrorString=").append(titleErrorString).append("\r\n");
         }
 //        sb.append("1111111111222222222233333333334444444444555555555566666666667777777777788888888899999999990000000000111111111122222222223333333333\r\n");
 //        sb.append("0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\r\n");
-        return sb.toString();
+        return sb.toString().trim();
     }
 
     /**
@@ -3574,8 +3578,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void updateScanImageInternal(List<PhysicalItem> requiredItems) {
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
         Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
-        opts.h = 300;
-        opts.w = 300;
+        opts.h = 170;
+        opts.w = 170;
         opts.disableLabels = true;
         opts.enableAutoscale = true;
         opts.disableLimitsLine = true;

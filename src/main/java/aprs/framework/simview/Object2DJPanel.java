@@ -1183,23 +1183,27 @@ public class Object2DJPanel extends JPanel {
             int width = (null != opts) ? opts.w : dim.width;
             int height = (null != opts) ? opts.h : dim.height;
             boolean useSeperateNamesThisTime = useSeparateNames;
+            int borderWidth = 30;
+            int borderHeight = 60;
             if (null != opts) {
                 if (opts.disableLabels) {
                     useSeperateNamesThisTime = false;
+                    borderWidth = 0;
+                    borderHeight = 0;
                 }
             }
             int displayWidth = (useSeperateNamesThisTime ? (width / 2) : width);
             switch (displayAxis) {
                 case POS_X_POS_Y:
                 case NEG_X_NEG_Y:
-                    scale_x = (displayWidth - 30) / (maxX - minX);
-                    scale_y = (height - 60) / (maxY - minY);
+                    scale_x = (displayWidth - borderWidth) / (maxX - minX);
+                    scale_y = (height - borderHeight) / (maxY - minY);
                     break;
 
                 case POS_Y_NEG_X:
                 case NEG_Y_POS_X:
-                    scale_x = (displayWidth - 30) / (maxY - minY);
-                    scale_y = (height - 60) / (maxX - minX);
+                    scale_x = (displayWidth - borderWidth) / (maxY - minY);
+                    scale_y = (height - borderHeight) / (maxX - minX);
                     break;
             }
 //        if (useSeparateNames) {
