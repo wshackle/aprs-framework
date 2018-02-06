@@ -238,9 +238,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     int skippedActions = 0;
-    
+
     private boolean getReverseFlag() {
-        if(aprsJFrame != null) {
+        if (aprsJFrame != null) {
             return aprsJFrame.isReverseFlag();
         }
         return false;
@@ -270,7 +270,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         moveOccurred = true;
                     }
                     String partName = pa.getArgs()[takePartArgIndex];
-                    PoseType partPose = getPose(partName,getReverseFlag());
+                    PoseType partPose = getPose(partName, getReverseFlag());
                     if (null == partPose) {
                         if (skipMissingParts) {
                             skippedActions++;
@@ -297,7 +297,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         moveOccurred = true;
                     }
                     String slotName = pa.getArgs()[placePartSlotArgIndex];
-                    PoseType slotPose = getPose(slotName,getReverseFlag());
+                    PoseType slotPose = getPose(slotName, getReverseFlag());
                     if (null == slotPose) {
                         if (skipMissingParts) {
                             skippedActions++;
@@ -913,7 +913,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     public List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
         assert null != aprsJFrame : "(null == aprsJFrame)";
-        return generate(actions, startingIndex, options, startSafeAbortRequestCount, true, null, null);
+        GenerateParams gparams = new GenerateParams();
+        gparams.actions = actions;
+        gparams.startingIndex = startingIndex;
+        gparams.options = options;
+        gparams.startSafeAbortRequestCount = startSafeAbortRequestCount;
+        gparams.replan = true;
+        return generate(gparams);
+//        return generate(actions, startingIndex, options, startSafeAbortRequestCount, true, null, null);
     }
 
     private boolean diffActions(List<PddlAction> acts1, List<PddlAction> acts2) {
@@ -971,20 +978,40 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addSetUnits(cmds);
     }
 
+    private static class RunOptoToGenerateReturn {
+
+        int newIndex;
+    }
+
+    /**
+     * Class which stores items that used to be separate parameters to the
+     * private implementation of generate
+     *
+     * actions list of PDDL Actions startingIndex starting index into list of
+     * PDDL actions options options to use as commands are generated
+     * startSafeAbortRequestCount abort request count taken when higher level
+     * action was started this method will immediately abort if the request
+     * count is now already higher replan run optaplanner to replan provided
+     * actions origActions actions before being passed through optaplanner
+     * newItems optional list of newItems if the list has already been retreived
+     */
+    private static class GenerateParams {
+
+        List<PddlAction> actions;
+        int startingIndex;
+        Map<String, String> options;
+        int startSafeAbortRequestCount;
+        boolean replan;
+        @Nullable List<PddlAction> origActions;
+        @Nullable List<PhysicalItem> newItems;
+        @Nullable RunOptoToGenerateReturn runOptoToGenerateReturn;
+    }
+
     /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
      *
-     * @param actions list of PDDL Actions
-     * @param startingIndex starting index into list of PDDL actions
-     * @param options options to use as commands are generated
-     * @param startSafeAbortRequestCount abort request count taken when higher
-     * level action was started this method will immediately abort if the
-     * request count is now already higher
-     * @param replan run optaplanner to replan provided actions
-     * @param origActions actions before being passed through optaplanner
-     * @param newItems optional list of newItems if the list has already been
-     * retreived
+     * @param gparams object containing the parameters of the method
      * @return list of CRCL commands
      *
      * @throws IllegalStateException if database not connected
@@ -995,7 +1022,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws java.util.concurrent.ExecutionException exception occurred in
      * another thread servicing the waitForCompleteVisionUpdates
      */
-    private List<MiddleCommandType> generate(List<PddlAction> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount, boolean replan, @Nullable List<PddlAction> origActions, @Nullable List<PhysicalItem> newItems)
+    private List<MiddleCommandType> generate(GenerateParams gparams)
             throws IllegalStateException, SQLException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException, CRCLException, PmException {
 
         assert (null != this.aprsJFrame) : "null == aprsJFrame";
@@ -1011,11 +1038,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             System.out.println("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
-        if (null != solver && replan) {
-            return runOptaPlanner(actions, startingIndex, options, startSafeAbortRequestCount);
+        if (null != solver && gparams.replan) {
+            return runOptaPlanner(gparams.actions, gparams.startingIndex, options, startSafeAbortRequestCount);
         }
 
-        this.startSafeAbortRequestCount = startSafeAbortRequestCount;
+        this.startSafeAbortRequestCount = gparams.startSafeAbortRequestCount;
         checkDbReady();
         if (localAprsJFrame.isRunningCrclProgram()) {
             throw new IllegalStateException("already running crcl while trying to generate it");
@@ -1025,12 +1052,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         ActionCallbackInfo acbi = lastAcbi.get();
         if (null != acbi) {
-            if (startingIndex < acbi.actionIndex) {
-                if (startingIndex != 0 || acbi.actionIndex < acbi.getActionsSize() - 2) {
+            if (gparams.startingIndex < acbi.actionIndex) {
+                if (gparams.startingIndex != 0 || acbi.actionIndex < acbi.getActionsSize() - 2) {
                     System.out.println("Thread.currentThread() = " + Thread.currentThread());
-                    boolean actionsChanged = diffActions(actions, acbi.actions);
+                    boolean actionsChanged = diffActions(gparams.actions, acbi.actions);
                     System.out.println("actionsChanged = " + actionsChanged);
-                    String errString = "generate called with startingIndex=" + startingIndex + ",acbi.getActionsSize()=" + acbi.getActionsSize() + " and acbi.actionIndex=" + acbi.actionIndex + ", lastIndex=" + lastIndex + ", acbi.action.=" + acbi.action;
+                    String errString = "generate called with startingIndex=" + gparams.startingIndex + ",acbi.getActionsSize()=" + acbi.getActionsSize() + " and acbi.actionIndex=" + acbi.actionIndex + ", lastIndex=" + lastIndex + ", acbi.action.=" + acbi.action;
                     System.err.println(errString);
                     System.err.println("acbi = " + acbi);
                     localAprsJFrame.setTitleErrorString(errString);
@@ -1040,54 +1067,54 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         try {
 
-            this.options = options;
-            final int crclNumber = this.crclNumber.incrementAndGet();
+            this.options = gparams.options;
+            final int currentCrclNumber = this.crclNumber.incrementAndGet();
 
-            if (null == actionToCrclIndexes || actionToCrclIndexes.length != actions.size()) {
-                actionToCrclIndexes = new int[actions.size()];
+            if (null == actionToCrclIndexes || actionToCrclIndexes.length != gparams.actions.size()) {
+                actionToCrclIndexes = new int[gparams.actions.size()];
             }
-            for (int i = startingIndex; i < actionToCrclIndexes.length; i++) {
+            for (int i = gparams.startingIndex; i < actionToCrclIndexes.length; i++) {
                 actionToCrclIndexes[i] = -1;
             }
-            if (null == actionToCrclLabels || actionToCrclLabels.length != actions.size()) {
-                actionToCrclLabels = new String[actions.size()];
+            if (null == actionToCrclLabels || actionToCrclLabels.length != gparams.actions.size()) {
+                actionToCrclLabels = new String[gparams.actions.size()];
             }
-            for (int i = startingIndex; i < actionToCrclLabels.length; i++) {
+            for (int i = gparams.startingIndex; i < actionToCrclLabels.length; i++) {
                 actionToCrclLabels[i] = "UNDEFINED";
             }
-            if (null == actionToCrclTakenPartsNames || actionToCrclTakenPartsNames.length != actions.size()) {
-                actionToCrclTakenPartsNames = new String[actions.size()];
+            if (null == actionToCrclTakenPartsNames || actionToCrclTakenPartsNames.length != gparams.actions.size()) {
+                actionToCrclTakenPartsNames = new String[gparams.actions.size()];
             }
-            if (startingIndex == 0) {
+            if (gparams.startingIndex == 0) {
                 this.lastTakenPart = null;
                 this.unitsSet = false;
                 this.rotSpeedSet = false;
             }
             addSetUnits(cmds);
 
-            String waitForCompleteVisionUpdatesCommentString = "generate(start=" + startingIndex + ",crclNumber=" + crclNumber + ")";
-            newItems = updateStalePoseCache(startingIndex, acbi, newItems, waitForCompleteVisionUpdatesCommentString);
+            String waitForCompleteVisionUpdatesCommentString = "generate(start=" + gparams.startingIndex + ",crclNumber=" + currentCrclNumber + ")";
+            gparams.newItems = updateStalePoseCache(gparams.startingIndex, acbi, gparams.newItems, waitForCompleteVisionUpdatesCommentString);
 
-            takeSnapshots("plan", "generate(start=" + startingIndex + ",crclNumber=" + crclNumber + ")", null, null);
-            final List<PddlAction> fixedActionsCopy = Collections.unmodifiableList(new ArrayList<>(actions));
-            final List<PddlAction> fixedOrigActionsCopy = (origActions == null) ? null : Collections.unmodifiableList(new ArrayList<>(actions));
+            takeSnapshots("plan", "generate(start=" + gparams.startingIndex + ",crclNumber=" + currentCrclNumber + ")", null, null);
+            final List<PddlAction> fixedActionsCopy = Collections.unmodifiableList(new ArrayList<>(gparams.actions));
+            final List<PddlAction> fixedOrigActionsCopy = (gparams.origActions == null) ? null : Collections.unmodifiableList(new ArrayList<>(gparams.actions));
 
             int skipStartIndex = -1;
             int skipEndIndex = -1;
-            for (this.setLastActionsIndex(actions, startingIndex); getLastIndex() < actions.size(); incLastActionsIndex()) {
+            for (this.setLastActionsIndex(gparams.actions, gparams.startingIndex); getLastIndex() < gparams.actions.size(); incLastActionsIndex()) {
 
                 final int idx = getLastIndex();
-                PddlAction action = actions.get(idx);
+                PddlAction action = gparams.actions.get(idx);
                 System.out.println("action = " + action);
                 if (skipMissingParts) {
                     boolean needSkip = false;
                     switch (action.getType()) {
                         case "take-part":
-                            if (newItems.isEmpty()  && poseCache.isEmpty()) {
+                            if (gparams.newItems.isEmpty() && poseCache.isEmpty()) {
                                 logger.log(Level.WARNING, "newItems.isEmpty() on take-part for run " + getRunName());
                             }
                             String partName = action.getArgs()[takePartArgIndex];
-                            PoseType pose = getPose(partName,getReverseFlag());
+                            PoseType pose = getPose(partName, getReverseFlag());
                             if (pose == null) {
                                 recordSkipTakePart(partName, pose);
                                 skipEndIndex = idx;
@@ -1103,12 +1130,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             break;
 
                         case "place-part":
-                            if (newItems.isEmpty()  && poseCache.isEmpty()) {
+                            if (gparams.newItems.isEmpty() && poseCache.isEmpty()) {
                                 logger.log(Level.WARNING, "newItems.isEmpty() on place-part for run " + getRunName());
                             }
                             String slotName = action.getArgs()[placePartSlotArgIndex];
                             if (null == lastTakenPart) {
-                                PoseType slotPose = getPose(slotName,getReverseFlag());
+                                PoseType slotPose = getPose(slotName, getReverseFlag());
                                 recordSkipPlacePart(slotName, slotPose);
                                 skipEndIndex = idx;
                                 if (skipStartIndex < 0) {
@@ -1139,10 +1166,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 addTakeSnapshots(cmds, start_action_string, null, null, this.crclNumber.get());
                 switch (action.getType()) {
                     case "take-part":
-                        if (newItems.isEmpty() && poseCache.isEmpty()) {
+                        if (gparams.newItems.isEmpty() && poseCache.isEmpty()) {
                             logger.log(Level.WARNING, "newItems.isEmpty() on take-part for run " + getRunName());
                         }
-                        takePart(action, cmds, getNextPlacePartAction(idx, actions));
+                        takePart(action, cmds, getNextPlacePartAction(idx, gparams.actions));
                         break;
 
                     case "fake-take-part":
@@ -1155,7 +1182,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     case "look-for-part":
                     case "look-for-parts":
                         lookForParts(action, cmds, (idx < 2),
-                                doInspectKit ? (idx == actions.size() - 1) : (idx >= actions.size() - 2)
+                                doInspectKit ? (idx == gparams.actions.size() - 1) : (idx >= gparams.actions.size() - 2)
                         );
                         updateActionToCrclArrays(idx, cmds);
                          {
@@ -1174,8 +1201,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                 thrown.printStackTrace();
                                 throw thrown;
                             }
-                            newItems = checkNewItems(waitForCompleteVisionUpdatesCommentString);
+                            gparams.newItems = checkNewItems(waitForCompleteVisionUpdatesCommentString);
                             logger.log(Level.FINE, "Processed wrapper only commands without sending to robot.");
+                            if (null != gparams.runOptoToGenerateReturn) {
+                                gparams.runOptoToGenerateReturn.newIndex = idx + 1;
+                                return Collections.emptyList();
+                            }
                         }
                         break;
 
@@ -1208,7 +1239,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         return cmds;
 
                     case "place-part":
-                        if (newItems.isEmpty()  && poseCache.isEmpty()) {
+                        if (gparams.newItems.isEmpty() && poseCache.isEmpty()) {
                             logger.log(Level.WARNING, "newItems.isEmpty() on place-part for run " + getRunName());
                         }
                         placePart(action, cmds);
@@ -1219,7 +1250,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         break;
 
                     case "inspect-kit": {
-                        assert (startingIndex == idx) : "inspect-kit startingIndex(" + startingIndex + ") != lastIndex(" + idx + ")";
+                        assert (gparams.startingIndex == idx) : "inspect-kit startingIndex(" + gparams.startingIndex + ") != lastIndex(" + idx + ")";
                         if (doInspectKit) {
                             try {
                                 inspectKit(action, cmds);
@@ -1259,10 +1290,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         } catch (Exception ex) {
             System.err.println("getRunName() = " + getRunName());
             System.err.println("poseCache.keySet() = " + poseCache.keySet());
-            if (null != newItems) {
-                System.err.println("newItems.size()=" + newItems.size());
+            if (null != gparams.newItems) {
+                System.err.println("newItems.size()=" + gparams.newItems.size());
                 System.err.println("newItems=");
-                for (PhysicalItem newItem : newItems) {
+                for (PhysicalItem newItem : gparams.newItems) {
                     System.err.println(newItem.getName() + " : " + newItem.x + "," + newItem.y);
                 }
             }
@@ -1381,10 +1412,25 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         assert (null != this.solver) : "null == solver";
         int lfpIndex = firstLookForPartsIndex(actions, startingIndex);
         int mIndex = firstMoveIndex(actions, startingIndex);
+        GenerateParams gparams = new GenerateParams();
+        gparams.actions = actions;
+        gparams.startingIndex = startingIndex;
+        gparams.options = options1;
+        gparams.startSafeAbortRequestCount = startSafeAbortRequestCount1;
         if (mIndex < 0
                 || (lfpIndex >= 0 && mIndex > lfpIndex)) {
-            return generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, null, null);
+            gparams.replan = false;
+            gparams.runOptoToGenerateReturn = new RunOptoToGenerateReturn();
+            List<MiddleCommandType> l = generate(gparams);
+            if (!l.isEmpty()
+                    || null == gparams.runOptoToGenerateReturn
+                    || gparams.runOptoToGenerateReturn.newIndex <= startingIndex) {
+                return l;
+            }
+            startingIndex = gparams.runOptoToGenerateReturn.newIndex;
+            gparams.startingIndex = startingIndex;
         }
+        gparams.runOptoToGenerateReturn = null;
         int rc = ropCount.incrementAndGet();
 //        System.out.println("runOptaPlanner: rc = " + rc);
         long t0 = System.currentTimeMillis();
@@ -1397,15 +1443,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         ActionCallbackInfo acbi = lastAcbi.get();
         String waitForCompleteVisionUpdatesCommentString = "runOptaPlanner(start=" + startingIndex + ",crclNumber=" + crclNumber + ")";
         newItems = updateStalePoseCache(startingIndex, acbi, newItems, waitForCompleteVisionUpdatesCommentString);
+        gparams.newItems = newItems;
         if (null == newItems) {
-            return generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, null, newItems);
+            gparams.replan = false;
+            return generate(gparams);
         }
         List<PddlAction> fullReplanPddlActions = optimizePddlActionsWithOptaPlanner(actions, startingIndex, newItems);
         if (Math.abs(fullReplanPddlActions.size() - actions.size()) > skippedActions || fullReplanPddlActions.size() < 1) {
             throw new IllegalStateException("fullReplanPddlActions.size() = " + fullReplanPddlActions.size() + ",actions.size() = " + actions.size() + ",rc=" + rc + ", skippedActions=" + skippedActions);
         }
         if (fullReplanPddlActions == actions) {
-            return generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, null, newItems);
+            gparams.replan = false;
+            return generate(gparams);
+//            return generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, null, newItems);
         }
         List<PddlAction> copyFullReplanPddlActions = new ArrayList<>(fullReplanPddlActions);
         List<PddlAction> origActions = new ArrayList<>(actions);
@@ -1424,8 +1474,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (debug) {
             showPddlActionsList(actions);
         }
+
 //        actions.add(startingIndex, new PddlAction("", "pause", new String[0], ""));
-        List<MiddleCommandType> newCmds = generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, origActions, newItems);
+        List<MiddleCommandType> newCmds = generate(gparams);
         if (debug) {
             showCmdList(newCmds);
         }
@@ -3203,7 +3254,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @throws SQLException if query fails.
      */
     @Nullable public PoseType getPose(String posename) throws SQLException, IllegalStateException {
-        return getPose(posename,false);
+        return getPose(posename, false);
     }
 
     @Nullable private PoseType getPose(String posename, boolean ignoreNull) throws SQLException, IllegalStateException {
@@ -3251,7 +3302,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         throw new IllegalStateException(errMsg);
                     }
                 }
-            } else if(!ignoreNull) {
+            } else if (!ignoreNull) {
                 if (debug) {
                     System.err.println("getPose(" + posename + ") returning null.");
                 }

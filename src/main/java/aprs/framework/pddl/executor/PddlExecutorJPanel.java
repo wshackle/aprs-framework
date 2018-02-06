@@ -115,7 +115,6 @@ import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.awt.geom.Point2D;
-import java.net.URL;
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.Set;
@@ -2766,87 +2765,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void jTextFieldIndexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldIndexActionPerformed
         setReplanFromIndex(Integer.parseInt(jTextFieldIndex.getText()));
     }//GEN-LAST:event_jTextFieldIndexActionPerformed
-
-//    private boolean updatingTraySlotTable = false;
-//
-//    private void updateTraySlotTable() {
-//        try {
-//            updatingTraySlotTable = true;
-//            jTableTraySlotDesign.getModel().removeTableModelListener(traySlotModelListener);
-//            checkDbSupplierPublisher().thenRun(() -> {
-//                Utils.runOnDispatchThread(() -> {
-//                    try {
-//                        List<TraySlotDesign> designs = pddlActionToCrclGenerator.getAllTraySlotDesigns();
-//                        DefaultTableModel model = (DefaultTableModel) jTableTraySlotDesign.getModel();
-//                        model.setRowCount(0);
-//                        for (TraySlotDesign d : designs) {
-//                            model.addRow(new Object[]{d.getID(), d.getPartDesignName(), d.getTrayDesignName(), d.getX_OFFSET(), d.getY_OFFSET()});
-//                        }
-//                        jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
-//                        updatingTraySlotTable = false;
-//                    } catch (SQLException ex) {
-//                        Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//                    }
-//                });
-//            });
-//        } catch (IOException ex) {
-//            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//
-//    }
-//
-//    private void newTraySlotTable() {
-//        try {
-//            updatingTraySlotTable = true;
-//            jTableTraySlotDesign.getModel().removeTableModelListener(traySlotModelListener);
-//            checkDbSupplierPublisher().thenRun(() -> {
-//                Utils.runOnDispatchThread(() -> {
-//                    try {
-//                        TraySlotDesign tsd = new TraySlotDesign((-99)); // ID ignored on new operation
-//                        tsd.setPartDesignName("partDesignName");
-//                        tsd.setTrayDesignName("trayDesignName");
-//                        tsd.setX_OFFSET(0.0);
-//                        tsd.setY_OFFSET(0.0);
-//                        pddlActionToCrclGenerator.newSingleTraySlotDesign(tsd);
-//                        List<TraySlotDesign> designs = pddlActionToCrclGenerator.getAllTraySlotDesigns();
-//                        DefaultTableModel model = (DefaultTableModel) jTableTraySlotDesign.getModel();
-//                        model.setRowCount(0);
-//                        for (TraySlotDesign d : designs) {
-//                            model.addRow(new Object[]{d.getID(), d.getPartDesignName(), d.getTrayDesignName(), d.getX_OFFSET(), d.getY_OFFSET()});
-//                        }
-//                    } catch (SQLException ex) {
-//                        Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//                    }
-//                });
-//            });
-//
-//        } catch (IOException ex) {
-//            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        jTableTraySlotDesign.getModel().addTableModelListener(traySlotModelListener);
-//        updatingTraySlotTable = false;
-//    }
-//
-//    private JPopupMenu traySlotPopup = new JPopupMenu();
-//
-//    {
-//        JMenuItem updateMenuItem = new JMenuItem("Update");
-//        updateMenuItem.addActionListener(e -> {
-//            traySlotPopup.setVisible(false);
-//            updateTraySlotTable();
-//        });
-//        traySlotPopup.add(updateMenuItem);
-//        JMenuItem newRowMenuItem = new JMenuItem("New");
-//        newRowMenuItem.addActionListener(e -> {
-//            traySlotPopup.setVisible(false);
-//            newTraySlotTable();
-//        });
-//        traySlotPopup.add(newRowMenuItem);
-//    }
-//
-//    private void showTraySlotPopup(Component comp, int x, int y) {
-//        traySlotPopup.show(comp, x, y);
-//    }
 
     private void jButtonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearActionPerformed
         clearAll();
