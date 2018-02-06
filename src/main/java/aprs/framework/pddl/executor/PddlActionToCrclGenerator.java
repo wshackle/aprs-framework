@@ -997,13 +997,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      */
     private static class GenerateParams {
 
-        List<PddlAction> actions;
+        @MonotonicNonNull List<PddlAction> actions;
         int startingIndex;
-        Map<String, String> options;
+        @MonotonicNonNull Map<String, String> options;
         int startSafeAbortRequestCount;
         boolean replan;
-        @Nullable List<PddlAction> origActions;
-        @Nullable List<PhysicalItem> newItems;
+        @MonotonicNonNull List<PddlAction> origActions;
+        @MonotonicNonNull List<PhysicalItem> newItems;
         @Nullable RunOptoToGenerateReturn runOptoToGenerateReturn;
     }
 
@@ -1026,6 +1026,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throws IllegalStateException, SQLException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException, CRCLException, PmException {
 
         assert (null != this.aprsJFrame) : "null == aprsJFrame";
+        assert (null != gparams.options) : "null == gparams.options";
+        assert (null != gparams.actions) : "null == gparams.actions";
         AprsJFrame localAprsJFrame = this.aprsJFrame;
         if (null == localAprsJFrame) {
             throw new IllegalStateException("aprsJframe is null");
@@ -1039,7 +1041,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
         if (null != solver && gparams.replan) {
-            return runOptaPlanner(gparams.actions, gparams.startingIndex, options, startSafeAbortRequestCount);
+            return runOptaPlanner(gparams.actions, gparams.startingIndex, gparams.options, startSafeAbortRequestCount);
         }
 
         this.startSafeAbortRequestCount = gparams.startSafeAbortRequestCount;
