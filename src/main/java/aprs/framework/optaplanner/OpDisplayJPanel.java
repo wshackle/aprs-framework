@@ -42,7 +42,11 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
@@ -55,8 +59,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import javax.swing.JFrame;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.ToolTipManager;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -112,6 +119,58 @@ public class OpDisplayJPanel extends JPanel {
         }
     };
 
+    private final MouseListener mouseListener = new MouseAdapter() {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            checkPopup(e);
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            checkPopup(e);
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            checkPopup(e);
+        }
+
+    };
+
+    @MonotonicNonNull private JPopupMenu popupMenu = null;
+
+    private JPopupMenu createPopupMenu() {
+        JPopupMenu newPopupMenu = new JPopupMenu("Popup or Plan Display "+label);
+        JMenuItem newWindowMenuItem = new JMenuItem("New Window");
+        newWindowMenuItem.addActionListener((ActionEvent evt) -> {
+            if (null != opActionPlan) {
+                if(null != label) {
+                    showPlan(opActionPlan, label);
+                } else {
+                    showPlan(opActionPlan,"");
+                }
+            }
+            newPopupMenu.setVisible(false);
+        });
+        newPopupMenu.add(newWindowMenuItem);
+        JMenuItem neverMindeMenuItem = new JMenuItem("Never Mind");
+        neverMindeMenuItem.addActionListener((ActionEvent evt) -> {
+            newPopupMenu.setVisible(false);
+        });
+        newPopupMenu.add(neverMindeMenuItem);
+        return newPopupMenu;
+    }
+
+    private void checkPopup(MouseEvent e) {
+        if (e.isPopupTrigger()) {
+            if (null == popupMenu) {
+                popupMenu = createPopupMenu();
+            }
+            popupMenu.setLocation(e.getXOnScreen(), e.getYOnScreen());
+            popupMenu.setVisible(true);
+        } 
+    }
+
     /**
      * Create OpDisplayJPanel from an existing plan.
      *
@@ -123,10 +182,10 @@ public class OpDisplayJPanel extends JPanel {
     }
 
     @SuppressWarnings({"nullness", "initialization"})
-    private void privateInit( 
-        @UnknownInitialization OpDisplayJPanel this) {
+    private void privateInit(@UnknownInitialization OpDisplayJPanel this) {
         super.setBackground(Color.white);
         super.addMouseMotionListener(mml);
+        super.addMouseListener(mouseListener);
         ToolTipManager.sharedInstance().registerComponent(this);
     }
 
@@ -622,11 +681,24 @@ public class OpDisplayJPanel extends JPanel {
     }
 
     private void mouseDragged(MouseEvent e) {
-        this.setToolTipText(findCloseActions(e.getX(), e.getY()).toString());
+        setCloseActionsToolTip(e); 
+    }
+
+    private void setCloseActionsToolTip(MouseEvent e) {
+        List<OpAction> closeActions =
+                findCloseActions(e.getX(), e.getY());
+        if(closeActions.isEmpty()) {
+            return;
+        }
+        List<String> closeActionNames =
+                closeActions.stream()
+                        .map(OpAction::getName)
+                        .collect(Collectors.toList());
+        this.setToolTipText(closeActionNames.toString());
     }
 
     private void mouseMoved(MouseEvent e) {
-        this.setToolTipText(findCloseActions(e.getX(), e.getY()).toString());
+        setCloseActionsToolTip(e); 
     }
 
 }

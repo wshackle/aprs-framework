@@ -1403,7 +1403,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 sb.append("crcl_program_index=(").append(getCrclProgramLine()).append(" / ").append(prog.getMiddleCommand().size()).append("), ");
                 sb.append("crcl_program_name=").append(prog.getName()).append("\r\n");
             } else {
-                sb.append("crcl_program_index=(").append(getCrclProgramLine()).append(", ");
+                sb.append("crcl_program_index=").append(getCrclProgramLine()).append(", ");
                 sb.append("crcl_program_name=\r\n");
             }
             if (null != crclClientJInternalFrame) {
