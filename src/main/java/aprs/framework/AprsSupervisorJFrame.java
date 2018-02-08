@@ -260,6 +260,28 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             });
             jTableTasks.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
 
+                private final List<ImagePanel> areas = new ArrayList<>();
+
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                    if (value instanceof BufferedImage) {
+                        while (areas.size() <= row) {
+                            ImagePanel area = new ImagePanel((BufferedImage) value);
+                            area.setOpaque(true);
+                            area.setVisible(true);
+                            areas.add(area);
+                        }
+                        ImagePanel area = areas.get(row);
+                        if (null != value && null != area) {
+                            area.setImage((BufferedImage) value);
+                        }
+                        return area;
+                    }
+                    return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                }
+            });
+            jTableTasks.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
+
                 private final List<JTextArea> areas = new ArrayList<>();
 
                 @Override
@@ -279,7 +301,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 }
 
             });
-            jTableTasks.getColumnModel().getColumn(4).setCellEditor(new TableCellEditor() {
+            jTableTasks.getColumnModel().getColumn(5).setCellEditor(new TableCellEditor() {
 
                 private final JTextArea editTableArea = new JTextArea();
                 private List<CellEditorListener> listeners = new ArrayList<>();
@@ -2099,14 +2121,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Priority", "Task(s)", "Robot(s)", "Scan Image", "Details", "PropertiesFile"
+                "Priority", "Task(s)", "Robot(s)", "Scan Image", "Live Image", "Details", "PropertiesFile"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.String.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                true, true, true, false, false, true
+                false, false, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -6065,7 +6087,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     pause();
                 }
             }
-            tm.addRow(new Object[]{aprsJframe.getPriority(), taskName, aprsJframe.getRobotName(), aprsJframe.getScanImage(), aprsJframe.getDetailsString(), aprsJframe.getPropertiesFile()});
+            tm.addRow(new Object[]{aprsJframe.getPriority(), taskName, aprsJframe.getRobotName(), aprsJframe.getScanImage(), aprsJframe.getLiveImage(),aprsJframe.getDetailsString(), aprsJframe.getPropertiesFile()});
         }
         if (needSetJListFuturesModel) {
             setJListFuturesModel();

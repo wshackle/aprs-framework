@@ -3585,6 +3585,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
     }
 
+    public Image getLiveImage() {
+        assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
+        Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
+        opts.h = 170;
+        opts.w = 170;
+        opts.disableLabels = true;
+        opts.enableAutoscale = true;
+        opts.disableLimitsLine = true;
+        opts.disableShowCurrent = false;
+        return object2DViewJInternalFrame.createSnapshotImage(opts);
+    }
+    
     private void updateScanImageInternal(List<PhysicalItem> requiredItems) {
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
         Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
