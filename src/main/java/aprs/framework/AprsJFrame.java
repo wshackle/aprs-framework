@@ -3586,6 +3586,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public Image getLiveImage() {
+        if(!isConnected()) {
+            return null;
+        }
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
         Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
         opts.h = 170;

@@ -793,46 +793,26 @@ public class Object2DJPanel extends JPanel {
     private double minY = Double.POSITIVE_INFINITY;
 
     private void translate(Graphics2D g2d, double itemx, double itemy, double minX, double minY, double maxX, double maxY, int width, int height) {
-        double tx = 0;
-        double ty = 0;
-        switch (displayAxis) {
-            case POS_X_POS_Y:
-                tx = (itemx - minX) * scale + 15;
-                ty = (maxY - itemy) * scale + 20;
-                break;
 
-            case POS_Y_NEG_X:
-                tx = (itemy - minY) * scale + 15;
-                ty = (itemx - minX) * scale + 20;
-                break;
-
-            case NEG_X_NEG_Y:
-                tx = (maxX - itemx) * scale + 15;
-                ty = (itemy - minY) * scale + 20;
-                break;
-
-            case NEG_Y_POS_X:
-                tx = (maxY - itemy) * scale + 15;
-                ty = (maxX - itemx) * scale + 20;
-                break;
-        }
+        Point2D.Double t = this.toScreenPoint(itemx, itemy, minX, minY,  maxX, maxY);
         if (width > 0 && height > 0) {
-            if (tx < 0) {
-                throw new IllegalArgumentException("tx < 0 : tx =" + tx);
+            if (t.x < 0) {
+                throw new IllegalArgumentException("t.x < 0 : t.x =" + t.x);
             }
-            if (ty < 0) {
-                throw new IllegalArgumentException("ty < 0 : ty =" + tx);
+            if (t.y < 0) {
+                throw new IllegalArgumentException("t.y < 0 : t.y =" + t.x);
             }
-            if (tx > width) {
-                throw new IllegalArgumentException("tx > width : tx =" + tx);
+            if (t.x > width) {
+                throw new IllegalArgumentException("t.x > width : t.x =" + t.x);
             }
-            if (ty > height) {
-                throw new IllegalArgumentException("tx > width : ty =" + tx);
+            if (t.y > height) {
+                throw new IllegalArgumentException("t.x > width : t.y =" + t.x);
             }
         }
-        g2d.translate(tx, ty);
+        g2d.translate(t.x, t.y);
     }
 
+    
     private Point2D.Double toScreenPoint(double itemx, double itemy, double minX, double minY, double maxX, double maxY) {
         switch (displayAxis) {
             case POS_X_POS_Y:
@@ -848,6 +828,26 @@ public class Object2DJPanel extends JPanel {
                 return new Point2D.Double((maxY - itemy) * scale + 15, (maxX - itemx) * scale + 20);
         }
         throw new IllegalStateException("invalid displayAxis");
+    }
+
+    private boolean endEffectorClosed;
+
+    /**
+     * Get the value of endEffectorClosed
+     *
+     * @return the value of endEffectorClosed
+     */
+    public boolean isEndEffectorClosed() {
+        return endEffectorClosed;
+    }
+
+    /**
+     * Set the value of endEffectorClosed
+     *
+     * @param endEffectorClosed new value of endEffectorClosed
+     */
+    public void setEndEffectorClosed(boolean endEffectorClosed) {
+        this.endEffectorClosed = endEffectorClosed;
     }
 
     private double currentX = 0;
@@ -954,7 +954,8 @@ public class Object2DJPanel extends JPanel {
         this.namesXPos = namesXPos;
     }
 
-    @MonotonicNonNull private AffineTransform origTransform = null;
+    @MonotonicNonNull
+    private AffineTransform origTransform = null;
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -1005,14 +1006,16 @@ public class Object2DJPanel extends JPanel {
         Color.GREEN.darker()
     };
 
-    @MonotonicNonNull private AprsJFrame aprsJFrame;
+    @MonotonicNonNull
+    private AprsJFrame aprsJFrame;
 
     /**
      * Get the value of aprsJFrame
      *
      * @return the value of aprsJFrame
      */
-    @Nullable public AprsJFrame getAprsJFrame() {
+    @Nullable
+    public AprsJFrame getAprsJFrame() {
         return aprsJFrame;
     }
 
@@ -1073,9 +1076,11 @@ public class Object2DJPanel extends JPanel {
         return absSlotList;
     }
 
-    @MonotonicNonNull private SlotOffsetProvider slotOffsetProvider = null;
+    @MonotonicNonNull
+    private SlotOffsetProvider slotOffsetProvider = null;
 
-    @Nullable public SlotOffsetProvider getSlotOffsetProvider() {
+    @Nullable
+    public SlotOffsetProvider getSlotOffsetProvider() {
         return slotOffsetProvider;
     }
 
@@ -1087,7 +1092,7 @@ public class Object2DJPanel extends JPanel {
         if (null == slotOffsetProvider) {
             throw new IllegalStateException("slotOffsetProvider is null");
         }
-        List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName(),false);
+        List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName(), false);
         List<PhysicalItem> slotList = new ArrayList<>();
         if (null != offsets) {
             for (PhysicalItem offset : offsets) {
@@ -1136,6 +1141,48 @@ public class Object2DJPanel extends JPanel {
 
     }
 
+    private @Nullable
+    Image capturedPartImage;
+
+    /**
+     * Get the value of capturedPartImage
+     *
+     * @return the value of capturedPartImage
+     */
+    @Nullable
+    public Image getCapturedPartImage() {
+        return capturedPartImage;
+    }
+
+    /**
+     * Set the value of capturedPartImage
+     *
+     * @param capturedPartImage new value of capturedPartImage
+     */
+    public void setCapturedPartImage(@Nullable Image capturedPartImage) {
+        this.capturedPartImage = capturedPartImage;
+    }
+
+    private Point2D.@Nullable Double capturedPartPoint;
+
+    /**
+     * Get the value of capturedPartPoint
+     *
+     * @return the value of capturedPartPoint
+     */
+    public Point2D.@Nullable Double getCapturedPartPoint() {
+        return capturedPartPoint;
+    }
+
+    /**
+     * Set the value of capturedPartPoint
+     *
+     * @param capturedPartPoint new value of capturedPartPoint
+     */
+    public void setCapturedPartPoint(Point2D.@Nullable Double capturedPartPoint) {
+        this.capturedPartPoint = capturedPartPoint;
+    }
+
     private final Map<String, PartImageInfo> partImageMap;
 
     private boolean viewLimitsLine = true;
@@ -1171,8 +1218,8 @@ public class Object2DJPanel extends JPanel {
 
             int maxNameLength
                     = StreamSupport.stream(itemsToPaint.spliterator(), false)
-                            .mapToInt((PhysicalItem item) -> item.getName().length())
-                            .max().orElse(1);
+                    .mapToInt((PhysicalItem item) -> item.getName().length())
+                    .max().orElse(1);
 
             if (!Double.isFinite(maxX) || !Double.isFinite(minX) || !Double.isFinite(minY) || !Double.isFinite(maxY)) {
                 throw new IllegalArgumentException("Limits must be finite: (" + minX + "," + minY + "," + maxX + "," + maxY + ")");
@@ -1465,7 +1512,7 @@ public class Object2DJPanel extends JPanel {
 
                 try {
                     if (null != slotOffsetProvider && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
-                        List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName(),false);
+                        List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName(), false);
                         if (null != offsets) {
                             for (PhysicalItem offset : offsets) {
                                 double mag = offset.mag();
@@ -1517,12 +1564,25 @@ public class Object2DJPanel extends JPanel {
                 g2d.setTransform(origTransform);
             }
             if (this.showCurrentXY && (null == opts || opts.disableShowCurrent == false)) {
+                Color origColor = g2d.getColor();
+                if (null != capturedPartPoint) {
+                    g2d.setColor(Color.MAGENTA);
+                    Point2D.Double captureScreenPt = toScreenPoint(capturedPartPoint.x, capturedPartPoint.y, minX, minY,  maxX, maxY);
+                    Point2D.Double currentScreenPt = toScreenPoint(currentX,currentY, minX, minY, maxX,maxY);
+                    g2d.draw(new Line2D.Double(currentScreenPt,captureScreenPt));
+                }
                 this.translate(g2d, currentX, currentY, minX, minY, maxX, maxY, -1, -1);
 //            g2d.drawString(String.format("CurrentXY = %.2f,%.2f", currentX, currentY), 10, height - 10);
-                Color origColor = g2d.getColor();
+                if (endEffectorClosed) {
+                    g2d.setColor(Color.black);
+                    g2d.fillArc(-5, -5, 10, 10, 0, 360);
+                } else {
+                    g2d.setColor(Color.white);
+                    g2d.drawArc(-10, -10, 20, 20, 0, 360);
+                }
                 g2d.setColor(Color.red);
-                g2d.drawLine(-10, 0, 10, 0);
-                g2d.drawLine(0, -10, 0, 10);
+                g2d.drawLine(-20, 0, 20, 0);
+                g2d.drawLine(0, -20, 0, 20);
                 g2d.setColor(origColor);
                 g2d.setTransform(origTransform);
             }

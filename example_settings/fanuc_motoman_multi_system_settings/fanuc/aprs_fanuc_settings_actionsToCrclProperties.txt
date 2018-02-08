@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:2036
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:2040
 afterMoveToLookForDwellTime=0.1
 approachZOffset=50.0
 defaultDwellTime=0.1

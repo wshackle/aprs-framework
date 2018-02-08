@@ -257,7 +257,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setItems(items, true);
     }
 
-    private volatile @Nullable Map<String, Integer> origNamesMap = null;
+    private volatile @Nullable
+    Map<String, Integer> origNamesMap = null;
 
     public void setItems(List<PhysicalItem> items, boolean publish) {
         settingItems = true;
@@ -348,7 +349,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 double rot = Math.toRadians((double) rotObject);
                 if (null != slotOffsetProvider) {
                     Tray trayItem = new Tray(name, rot, x, y);
-                    List<Slot> l = slotOffsetProvider.getSlotOffsets(name,true);
+                    List<Slot> l = slotOffsetProvider.getSlotOffsets(name, true);
                     if (null != l) {
                         for (Slot s : l) {
                             Slot absItem = slotOffsetProvider.absSlotFromTrayAndOffset(trayItem, s);
@@ -1349,8 +1350,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         disconnect();
     }
 
-    @Nullable private VisionSocketServer visionSocketServer = null;
-    @Nullable private VisionSocketClient visionSocketClient = null;
+    @Nullable
+    private VisionSocketServer visionSocketServer = null;
+    @Nullable
+    private VisionSocketClient visionSocketClient = null;
 
     private void jCheckBoxConnectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxConnectedActionPerformed
         jButtonReset.setEnabled(false);
@@ -1624,7 +1627,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_object2DJPanel1MouseDragged
 
-    @Nullable private PhysicalItem draggedItem = null;
+    @Nullable
+    private PhysicalItem draggedItem = null;
 
     private boolean insideItem(PhysicalItem item, int x, int y) {
         if (null == item || null == item.getDisplayTransform()) {
@@ -1884,9 +1888,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setSlotOffsetProvider(aprsJFrame);
     }
 
-    @MonotonicNonNull private SlotOffsetProvider slotOffsetProvider = null;
+    @MonotonicNonNull
+    private SlotOffsetProvider slotOffsetProvider = null;
 
-    @Nullable public SlotOffsetProvider getSlotOffsetProvider() {
+    @Nullable
+    public SlotOffsetProvider getSlotOffsetProvider() {
         return slotOffsetProvider;
     }
 
@@ -2476,11 +2482,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return jCheckBoxConnected.isSelected();
     }
 
-    @Nullable private String dataFileString = null;
-    @Nullable private String reverseDataFileString = null;
-    @Nullable private volatile String loadedDataFileString = null;
+    @Nullable
+    private String dataFileString = null;
+    @Nullable
+    private String reverseDataFileString = null;
+    @Nullable
+    private volatile String loadedDataFileString = null;
 
-    @Nullable public String getCurrentDataFileString() {
+    @Nullable
+    public String getCurrentDataFileString() {
         return reverseFlag ? this.reverseDataFileString : this.dataFileString;
     }
 
@@ -2672,6 +2682,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));
         object2DJPanel1.setCurrentX(currentX);
         object2DJPanel1.setCurrentY(currentY);
+        object2DJPanel1.setEndEffectorClosed(isHoldingObjectExpected);
         List<PhysicalItem> l = new ArrayList<>();
         l.addAll(getItems());
         DistIndex di = getClosestDistanceIndex(currentX, currentY, l);
@@ -2686,6 +2697,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             lastNotIsHoldingObjectExpectedTime = time;
         }
 
+        if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
+            object2DJPanel1.setCapturedPartPoint(new Point2D.Double(currentX, currentY));
+        } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
+            object2DJPanel1.setCapturedPartPoint(null);
+        }
         if (this.jCheckBoxSimulated.isSelected()) {
             if (min_dist < dropOffThreshold
                     && lastIsHoldingObjectExpected && !isHoldingObjectExpected
@@ -2771,7 +2787,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         private final int x;
         private final int y;
-        @Nullable private PhysicalItem closestItem;
+        @Nullable
+        private PhysicalItem closestItem;
         private final int minIndex;
 
         public ClosestItemInfo(int x, int y, int minIndex) {
@@ -2802,7 +2819,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
 
-        @Nullable public PhysicalItem getClosestItem() {
+        @Nullable
+        public PhysicalItem getClosestItem() {
             return closestItem;
         }
 
