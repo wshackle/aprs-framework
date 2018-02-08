@@ -256,6 +256,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         ret.add(new OpAction("start", lookForPt.getX(), lookForPt.getY(), OpActionType.START, "NONE"));
         boolean skipNextPlace = false;
         skippedActions = 0;
+        OpAction takePartOpAction = null;
+        PddlAction takePartPddlAction = null;
         for (int i = start; i < listIn.size(); i++) {
             PddlAction pa = listIn.get(i);
 
@@ -278,13 +280,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                 skippedPddlActionsList.add(pa);
                             }
                             skipNextPlace = true;
+                            takePartOpAction = null;
+                            takePartPddlAction = pa;
                         } else {
                             throw new IllegalStateException("null == partPose: partName=" + partName + ",start=" + start + ",i=" + i + ",pa=" + pa);
                         }
                     } else {
                         PointType partPt = partPose.getPoint();
-                        ret.add(new OpAction(pa.toString(), partPt.getX(), partPt.getY(), OpActionType.PICKUP, posNameToType(partName)));
-
+                        takePartOpAction = new OpAction(pa.toString(), partPt.getX(), partPt.getY(), OpActionType.PICKUP, posNameToType(partName));
+                        takePartPddlAction = pa;
                         skipNextPlace = false;
                     }
                     break;
@@ -296,9 +300,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         }
                         moveOccurred = true;
                     }
-                    String slotName = pa.getArgs()[placePartSlotArgIndex];
-                    PoseType slotPose = getPose(slotName, getReverseFlag());
-                    if (null == slotPose) {
+                    if (null == takePartOpAction
+                            || null == takePartPddlAction
+                            || skipNextPlace) {
                         if (skipMissingParts) {
                             skippedActions++;
                             if (null != skippedPddlActionsList) {
@@ -306,24 +310,34 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             }
                             skipNextPlace = true;
                         } else {
-                            throw new IllegalStateException("null == slotPose: slotName=" + slotName + ",start=" + start + ",i=" + i + ",pa=" + pa);
+                            throw new IllegalStateException("takePart not set :,start=" + start + ",i=" + i + ",pa=" + pa);
                         }
                     } else {
-                        PointType slotPt = slotPose.getPoint();
-                        OpAction placePartOpAction = new OpAction(pa.toString(), slotPt.getX(), slotPt.getY(), OpActionType.DROPOFF, posNameToType(slotName));
-                        if (!skipNextPlace) {
-                            ret.add(placePartOpAction);
+                        String slotName = pa.getArgs()[placePartSlotArgIndex];
+                        PoseType slotPose = getPose(slotName, getReverseFlag());
+                        if (null == slotPose) {
+                            if (skipMissingParts) {
+                                skippedActions += 2;
+                                if (null != skippedPddlActionsList) {
+                                    skippedPddlActionsList.add(takePartPddlAction);
+                                    skippedPddlActionsList.add(pa);
+                                }
+                                if (null != skippedOpActionsList) {
+                                    skippedOpActionsList.add(takePartOpAction);
+                                }
+                            } else {
+                                throw new IllegalStateException("null == slotPose: slotName=" + slotName + ",start=" + start + ",i=" + i + ",pa=" + pa);
+                            }
                         } else {
-                            skippedActions++;
-                            if (null != skippedOpActionsList) {
-                                skippedOpActionsList.add(placePartOpAction);
-                            }
-                            if (null != skippedPddlActionsList) {
-                                skippedPddlActionsList.add(pa);
-                            }
-                            skipNextPlace = false;
+                            PointType slotPt = slotPose.getPoint();
+                            OpAction placePartOpAction = new OpAction(pa.toString(), slotPt.getX(), slotPt.getY(), OpActionType.DROPOFF, posNameToType(slotName));
+                            ret.add(takePartOpAction);
+                            ret.add(placePartOpAction);
                         }
                     }
+                    skipNextPlace = false;
+                    takePartPddlAction = null;
+                    takePartOpAction = null;
                     break;
 
                 case "look-for-part":
@@ -959,6 +973,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private void processCommands(List<MiddleCommandType> cmds) {
+        if(cmds.isEmpty()) {
+            return;
+        }
+        long cmd0Id = cmds.get(0).getCommandID();
         for (int i = 0; i < cmds.size(); i++) {
             MiddleCommandType cmd = cmds.get(i);
             if (cmd instanceof SetLengthUnitsType) {
@@ -975,6 +993,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             wrapper.notifyOnDoneListeners();
         }
         cmds.clear();
+        if(cmd0Id > 1) {
+            commandId.set(cmd0Id-1);
+        }
         addSetUnits(cmds);
     }
 
@@ -1041,7 +1062,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
         if (null != solver && gparams.replan) {
-            return runOptaPlanner(gparams.actions, gparams.startingIndex, gparams.options, startSafeAbortRequestCount);
+            return runOptaPlanner(gparams.actions, gparams.startingIndex, gparams.options, gparams.startSafeAbortRequestCount);
         }
 
         this.startSafeAbortRequestCount = gparams.startSafeAbortRequestCount;
@@ -1103,6 +1124,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
             int skipStartIndex = -1;
             int skipEndIndex = -1;
+            List<String> skippedParts = new ArrayList<>();
+            List<String> foundParts = new ArrayList<>();
             for (this.setLastActionsIndex(gparams.actions, gparams.startingIndex); getLastIndex() < gparams.actions.size(); incLastActionsIndex()) {
 
                 final int idx = getLastIndex();
@@ -1118,6 +1141,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             String partName = action.getArgs()[takePartArgIndex];
                             PoseType pose = getPose(partName, getReverseFlag());
                             if (pose == null) {
+                                skippedParts.add(partName);
                                 recordSkipTakePart(partName, pose);
                                 skipEndIndex = idx;
                                 if (skipStartIndex < 0) {
@@ -1125,6 +1149,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                 }
                                 needSkip = true;
                             } else {
+                                foundParts.add(partName);
                                 skipEndIndex = -1;
                                 skipStartIndex = -1;
                                 needSkip = false;
@@ -1195,18 +1220,35 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                     });
                         }
                         if (idx != 0 || cmdsContainNonWrapper(cmds)) {
+                            if (!skippedParts.isEmpty()) {
+                                System.out.println("foundParts = " + foundParts);
+                                System.out.println("skippedParts = " + skippedParts);
+                                System.out.println("poseCache.keySet() = " + poseCache.keySet());
+                            }
                             return cmds;
                         } else {
-                            try {
-                                processCommands(cmds);
-                            } catch (Throwable thrown) {
-                                thrown.printStackTrace();
-                                throw thrown;
+                            long cmd0Id = -1;
+                            if (!cmds.isEmpty()) {
+                                cmd0Id = cmds.get(0).getCommandID();
+                                try {
+                                    processCommands(cmds);
+                                } catch (Throwable thrown) {
+                                    thrown.printStackTrace();
+                                    throw thrown;
+                                }
                             }
                             gparams.newItems = checkNewItems(waitForCompleteVisionUpdatesCommentString);
                             logger.log(Level.FINE, "Processed wrapper only commands without sending to robot.");
                             if (null != gparams.runOptoToGenerateReturn) {
                                 gparams.runOptoToGenerateReturn.newIndex = idx + 1;
+                                if (!skippedParts.isEmpty()) {
+                                    System.out.println("foundParts = " + foundParts);
+                                    System.out.println("skippedParts = " + skippedParts);
+                                    System.out.println("poseCache.keySet() = " + poseCache.keySet());
+                                }
+                                if (cmd0Id > 1) {
+                                    commandId.set(cmd0Id - 1);
+                                }
                                 return Collections.emptyList();
                             }
                         }
@@ -1237,6 +1279,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                     (CrclCommandWrapper wrapper) -> {
                                         notifyActionCompletedListeners(idx, action, wrapper, fixedActionsCopy, fixedOrigActionsCopy);
                                     });
+                        }
+                        if (!skippedParts.isEmpty()) {
+                            System.out.println("foundParts = " + foundParts);
+                            System.out.println("skippedParts = " + skippedParts);
+                            System.out.println("poseCache.keySet() = " + poseCache.keySet());
                         }
                         return cmds;
 
@@ -1285,6 +1332,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                             notifyActionCompletedListeners(idx, action, wrapper, fixedActionsCopy, fixedOrigActionsCopy);
                         });
                 addTakeSnapshots(cmds, end_action_string, null, null, this.crclNumber.get());
+                if (!skippedParts.isEmpty()) {
+                    System.out.println("foundParts = " + foundParts);
+                    System.out.println("skippedParts = " + skippedParts);
+                    System.out.println("poseCache.keySet() = " + poseCache.keySet());
+                }
             }
             if (localAprsJFrame.isRunningCrclProgram()) {
                 throw new IllegalStateException("already running crcl while trying to generate it");
@@ -1654,24 +1706,30 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.1f mm ", -inScore));
             }
         }
-        if (Math.abs(solveScore - inScore) > 0.1) {
+        double scoreDiff = Math.abs(solveScore - inScore);
+        if (scoreDiff > 0.1) {
             List<PddlAction> fullReplanPddlActions = new ArrayList<>();
             List<PddlAction> preStartPddlActions = new ArrayList<>(actions.subList(0, startingIndex > endl[0] ? startingIndex : endl[0]));
-//            System.out.println("preStartPddlActions.size() = " + preStartPddlActions.size());
-//            System.out.println("preStartPddlActions = " + preStartPddlActions);
             fullReplanPddlActions.addAll(preStartPddlActions);
             List<PddlAction> newPddlActions = opActionsToPddlActions(solvedPlan.orderedActions(), 0);
-//            System.out.println("newPddlActions.size() = " + newPddlActions.size());
-//            System.out.println("newPddlActions = " + newPddlActions);
             List<PddlAction> replacedPddlActions = new ArrayList<>(actions.subList(endl[0], endl[1]));
-//            System.out.println("replacedPddlActions.size() = " + replacedPddlActions.size());
-//            System.out.println("replacedPddlActions = " + replacedPddlActions);
-            if (Math.abs(newPddlActions.size() - replacedPddlActions.size()) != skippedPddlActionsList.size() || newPddlActions.size() < 1) {
-//                System.err.println("newPddlActions.size() = " + newPddlActions.size() + ",actions.size() = " + actions.size() + ", skippedActions=" + skippedActions);
+            int sizeDiff = Math.abs(newPddlActions.size() - replacedPddlActions.size());
+            if (sizeDiff != skippedPddlActionsList.size() || newPddlActions.size() < 1) {
+                System.out.println("sizeDiff = " + sizeDiff);
+                System.out.println("endl = " + Arrays.toString(endl));
+                System.out.println("preStartPddlActions.size() = " + preStartPddlActions.size());
+                System.out.println("preStartPddlActions = " + preStartPddlActions);
+                System.out.println("newPddlActions.size() = " + newPddlActions.size());
+                System.out.println("newPddlActions = " + newPddlActions);
+                System.out.println("replacedPddlActions.size() = " + replacedPddlActions.size());
+                System.out.println("replacedPddlActions = " + replacedPddlActions);
+
+                System.err.println("newPddlActions.size() = " + newPddlActions.size() + ",actions.size() = " + actions.size() + ", skippedActions=" + skippedActions);
                 int recheckEndl[] = new int[2];
                 List<OpAction> recheckSkippedOpActionsList = new ArrayList<>();
                 List<PddlAction> recheckSkippedPddlActionsList = new ArrayList<>();
                 List<OpAction> recheckOpActions = pddlActionsToOpActions(actions, startingIndex, recheckEndl, recheckSkippedOpActionsList, recheckSkippedPddlActionsList);
+
                 System.out.println("recheckOpActions = " + recheckOpActions);
                 System.out.println("recheckEndl = " + Arrays.toString(recheckEndl));
                 System.out.println("recheckSkippedPddlActionsList = " + recheckSkippedPddlActionsList);
@@ -3866,7 +3924,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private void addOptionalOpenGripper(List<MiddleCommandType> cmds, CRCLCommandWrapperConsumer cb) {
         SetEndEffectorType openGripperCmd = new SetEndEffectorType();
-        setCommandId(openGripperCmd);
         openGripperCmd.setSetting(1.0);
         addOptionalCommand(openGripperCmd, cmds, cb);
     }
@@ -4450,14 +4507,23 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         assert (aprsJFrame != null) : "aprsJFrame == null : @AssumeAssertion(nullness)";
 
+        String runName = getRunName();
         XFuture<List<PhysicalItem>> xfl = aprsJFrame.getSingleVisionToDbUpdate();
         aprsJFrame.refreshSimView();
         long t0 = System.currentTimeMillis();
         while (!xfl.isDone()) {
             long t1 = System.currentTimeMillis();
             if (timeoutMillis > 0 && t1 - t0 > timeoutMillis) {
-                System.err.println("waitForCompleteVisionUpdates: timedout");
-                throw new RuntimeException("waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout");
+                long updateTime = aprsJFrame.getLastSingleVisionToDbUpdateTime();
+                long timeSinceUpdate = t1-updateTime;
+                System.out.println("timeSinceUpdate = " + timeSinceUpdate);
+                long notifyTime = aprsJFrame.getSingleVisionToDbNotifySingleUpdateListenersTime();
+                long timeSinceNotify = t1-notifyTime;
+                System.out.println("timeSinceNotify = " + timeSinceNotify);
+                System.out.println("xfl = " + xfl);
+                String errMsg = runName+" : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl="+xfl;
+                System.err.println(errMsg);
+                throw new RuntimeException(errMsg);
             }
             if (xfl.isDone()) {
                 break;

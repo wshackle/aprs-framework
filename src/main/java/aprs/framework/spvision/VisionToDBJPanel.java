@@ -88,6 +88,7 @@ import static crcl.utils.CRCLPosemath.vector;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
@@ -1628,6 +1629,19 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return null;
     } 
     
+    private volatile long lastUpdateTime = -1;
+    
+    public long getLastUpdateTime() {
+        return lastUpdateTime;
+    }
+    
+    private volatile long lastNotifySingleUpdateListenersTime = -1;
+    
+    public long getNotifySingleUpdateListenersTime() {
+        return lastNotifySingleUpdateListenersTime;
+    }
+    
+    
     /**
      * Asynchronously get a list of PhysicalItems updated in one frame from the
      * vision system.
@@ -1669,6 +1683,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             future.complete(unmodifiableList);
         }
         notifySingleListenersUpdateEndCount.incrementAndGet();
+        lastNotifySingleUpdateListenersTime=System.currentTimeMillis();
     }
 
     @Nullable private volatile List<XFuture<List<PhysicalItem>>> lastCopyListenersAndDisableUpdatesListeners = null;
@@ -1777,6 +1792,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             System.out.println("line = " + line);
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, throwable);
             setTitleErrorString(throwable.toString());
+        } finally {
+            lastUpdateTime = System.currentTimeMillis();
         }
     }
 

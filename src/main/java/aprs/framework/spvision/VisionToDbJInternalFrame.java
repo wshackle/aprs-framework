@@ -134,6 +134,14 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return visionToDBJPanel.getSingleUpdate();
     }
 
+    public long getLastUpdateTime() {
+        return visionToDBJPanel.getLastUpdateTime();
+    }
+    
+    
+    public long getNotifySingleUpdateListenersTime() {
+        return visionToDBJPanel.getNotifySingleUpdateListenersTime();
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.

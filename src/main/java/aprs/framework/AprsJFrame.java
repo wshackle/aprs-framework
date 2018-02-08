@@ -292,6 +292,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return visionToDbJInternalFrame.getSingleUpdate();
     }
 
+    public long getLastSingleVisionToDbUpdateTime() {
+        return visionToDbJInternalFrame.getLastUpdateTime();
+    }
+    
+    
+    public long getSingleVisionToDbNotifySingleUpdateListenersTime() {
+        return visionToDbJInternalFrame.getNotifySingleUpdateListenersTime();
+    }
+
+    
     /**
      * Get the most recent list of parts and kit trays from the vision system.
      * This will not block waiting for the vision system or database but could
