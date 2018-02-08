@@ -3591,7 +3591,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         opts.h = 170;
         opts.w = 170;
         opts.disableLabels = true;
-        opts.enableAutoscale = true;
+        opts.enableAutoscale = false;
         opts.disableLimitsLine = true;
         opts.disableShowCurrent = false;
         return object2DViewJInternalFrame.createSnapshotImage(opts);
@@ -3603,7 +3603,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         opts.h = 170;
         opts.w = 170;
         opts.disableLabels = true;
-        opts.enableAutoscale = true;
+        opts.enableAutoscale = false;
         opts.disableLimitsLine = true;
         opts.disableShowCurrent = true;
         scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
