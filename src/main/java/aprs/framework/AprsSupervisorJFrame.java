@@ -5792,7 +5792,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @throws IOException file can not be written to
      */
     public void saveSetupFile(File f) throws IOException {
-        saveJTable(f, jTableTasks);
+        saveJTable(f, jTableTasks,Arrays.asList(0,1,2,6));
         setSetupFile(f);
     }
 

@@ -1626,7 +1626,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    private PartImageInfo getPartImageInfo(PhysicalItem item) {
+    @Nullable private PartImageInfo getPartImageInfo(PhysicalItem item) {
         PartImageInfo info = partImageMap.get(item.getName());
         if (null == info) {
             if (item.getName().startsWith("sku_part_")) {
@@ -1649,10 +1649,10 @@ public class Object2DJPanel extends JPanel {
                 info = partImageMap.get("part_" + item.getName());
             }
         }
-        if (null == info) {
-            System.err.println("partImageMap.keySet() = " + partImageMap.keySet());
-            throw new IllegalStateException("Failed to find info for " + item.getName() + " in \r\n " + partImageMap.keySet());
-        }
+//        if (null == info) {
+//            System.err.println("partImageMap.keySet() = " + partImageMap.keySet());
+//            throw new IllegalStateException("Failed to find info for " + item.getName() + " in \r\n " + partImageMap.keySet());
+//        }
         return info;
     }
 

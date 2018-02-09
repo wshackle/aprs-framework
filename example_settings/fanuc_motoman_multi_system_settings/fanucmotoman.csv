@@ -1,2 +1,3 @@
+Priority,Task(s),Robot(s),PropertiesFile
 1,Shared Table,Motoman,motoman\motoman_aprs_settings.txt
 2,Fanuc Cart,Fanuc,fanuc\aprs_fanuc_settings.txt
