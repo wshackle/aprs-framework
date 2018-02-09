@@ -536,6 +536,27 @@ public class Utils {
         }
         return colNameList.toArray(new String[colNameList.size()]);
     }
+    
+    /**
+     * Convert the table model column names to an array of strings.
+     * @param jtable table to get column names from
+     * @return array of strings with column names
+     */
+    public static String[] tableHeaders(JTable jtable, Iterable<Integer> columnIndexes) {
+        TableModel tm = jtable.getModel();
+        List<String> colNameList = new ArrayList<>();
+        for (Integer colIndex : columnIndexes) {
+            if(colIndex == null) {
+                throw new IllegalArgumentException("columnIndexe contains null : "+columnIndexes);
+            }
+            int i = (int) colIndex;
+            if(i < 0 || i > tm.getColumnCount()) {
+                throw new IllegalArgumentException("columnIndexes contains "+i+" outside range 0 to "+tm.getColumnCount()+" : "+columnIndexes);
+            }
+            colNameList.add(tm.getColumnName(i));
+        }
+        return colNameList.toArray(new String[colNameList.size()]);
+    }
 
     /**
      * Save a JTable to a file.

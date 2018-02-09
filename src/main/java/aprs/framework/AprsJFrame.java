@@ -1171,6 +1171,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    
+    public boolean getUseTeachTable() {
+        return jCheckBoxMenuItemUseTeachTable.isSelected();
+    }
+    
+    public void setUseTeachTable(boolean useTeachTable) {
+        jCheckBoxMenuItemUseTeachTable.setSelected(useTeachTable);
+    }
+    
     private void checkReadyToDisconnect() throws IllegalStateException {
         if (isRunningCrclProgram()) {
             String msg = "setRobotName(null)/disconnect() called when running crcl program";
@@ -2698,6 +2707,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenuItemSetPoseMinLimits = new javax.swing.JMenuItem();
         jCheckBoxMenuItemSnapshotImageSize = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemReloadSimFilesOnReverse = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemUseTeachTable = new javax.swing.JCheckBoxMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
@@ -2940,6 +2950,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
         jCheckBoxMenuItemReloadSimFilesOnReverse.setText("Reload Sim Files on Reverse");
         jMenu4.add(jCheckBoxMenuItemReloadSimFilesOnReverse);
+
+        jCheckBoxMenuItemUseTeachTable.setText("Use Teach Table");
+        jMenu4.add(jCheckBoxMenuItemUseTeachTable);
 
         jMenuBar1.add(jMenu4);
 
@@ -3570,7 +3583,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         try {
             List<PhysicalItem> requiredItems = getObjectViewItems();
             List<PhysicalItem> teachItems = requiredItems;
-            updateScanImage(requiredItems);
+            updateScanImage(requiredItems,false);
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
             createActionListFromVision(requiredItems, teachItems);
         } catch (Exception ex) {
@@ -3579,9 +3592,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    private void updateScanImage(List<PhysicalItem> requiredItems) {
+    private void updateScanImage(List<PhysicalItem> requiredItems, boolean autoScale) {
         Utils.runOnDispatchThread(() -> {
-            updateScanImageInternal(requiredItems);
+            updateScanImageInternal(requiredItems,autoScale);
         });
     }
 
@@ -3600,13 +3613,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return object2DViewJInternalFrame.createSnapshotImage(opts);
     }
     
-    private void updateScanImageInternal(List<PhysicalItem> requiredItems) {
+    private void updateScanImageInternal(List<PhysicalItem> requiredItems, boolean autoScale) {
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
         Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
         opts.h = 170;
         opts.w = 170;
         opts.disableLabels = true;
-        opts.enableAutoscale = false;
+        opts.enableAutoscale = autoScale;
         opts.disableLimitsLine = true;
         opts.disableShowCurrent = true;
         scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
@@ -3685,6 +3698,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 pddlExecutorJInternalFrame1.setReverseFlag(false);
                 pddlExecutorJInternalFrame1.loadActionsFile(f);
                 pddlExecutorJInternalFrame1.setReverseFlag(jCheckBoxMenuItemReverse.isSelected());
+            }
+            if(requiredItems != teachItems) {
+                updateScanImage(teachItems,true);
             }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -4983,6 +4999,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
+            String useTeachTableString = props.getProperty(USETEACHTABLE);
+            if(null != useTeachTableString) {
+                jCheckBoxMenuItemUseTeachTable.setSelected(Boolean.valueOf(useTeachTableString));
+            }
             String startPddlPlannerString = props.getProperty(STARTUPPDDLPLANNER);
             if (null != startPddlPlannerString) {
                 jCheckBoxMenuItemStartupPDDLPlanner.setSelected(Boolean.valueOf(startPddlPlannerString));
@@ -5239,6 +5259,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         Map<String, String> propsMap = new HashMap<>();
 
+        propsMap.put(USETEACHTABLE, Boolean.toString(jCheckBoxMenuItemUseTeachTable.isSelected()));
         propsMap.put(STARTUPPDDLPLANNER, Boolean.toString(jCheckBoxMenuItemStartupPDDLPlanner.isSelected()));
         propsMap.put(STARTUPPDDLEXECUTOR, Boolean.toString(jCheckBoxMenuItemStartupPDDLExecutor.isSelected()));
         propsMap.put(STARTUPPDDLOBJECTSP, Boolean.toString(jCheckBoxMenuItemStartupObjectSP.isSelected()));
@@ -5321,6 +5342,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             DbSetupBuilder.savePropertiesFile(dbPropsFile, dbSetup);
         }
     }
+    private static final String USETEACHTABLE = "USETEACHTABLE";
     private static final String RELOAD_SIM_FILES_ON_REVERSE_PROP = "reloadSimFilesOnReverse";
     private static final String SNAP_SHOT_HEIGHT_PROP = "snapShotHeight";
     private static final String SNAP_SHOT_WIDTH_PROP = "snapShotWidth";
@@ -5429,6 +5451,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupPDDLPlanner;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobotCrclGUI;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobtCRCLSimServer;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseTeachTable;
     private javax.swing.JDesktopPane jDesktopPane1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
