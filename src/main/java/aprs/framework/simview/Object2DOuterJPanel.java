@@ -359,6 +359,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             }
                         }
                     }
+//                    else {
+//                        System.err.println("cant' find name");
+//                        List<Slot> l2 = slotOffsetProvider.getSlotOffsets(name, true);
+//                        System.out.println("l2 = " + l2);
+//                    }
                 }
                 break;
 
