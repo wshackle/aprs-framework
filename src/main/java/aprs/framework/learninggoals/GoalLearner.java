@@ -139,8 +139,8 @@ public class GoalLearner {
      * @return list of PddlAction's that can be used to recreate the
      * configuration of the example data.
      */
-    public List<PddlAction> createActionListFromVision(List<PhysicalItem> commonItems, boolean allEmptyA[]) {
-        return createActionListFromVision(commonItems, commonItems, allEmptyA);
+    public List<PddlAction> createActionListFromVision(List<PhysicalItem> commonItems, boolean allEmptyA[], boolean overrideRotationOffset, double newRotationOffset) {
+        return createActionListFromVision(commonItems, commonItems, allEmptyA,overrideRotationOffset,newRotationOffset);
     }
 
     /**
@@ -157,7 +157,7 @@ public class GoalLearner {
      * @return a list of actions than can be run to move parts from trays to
      * recreate the same configuration
      */
-    public List<PddlAction> createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean allEmptyA[]) {
+    public List<PddlAction> createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean allEmptyA[], boolean overrideRotationOffset, double newRotationOffset) {
         Map<String, Integer> requiredItemsMap
                 = requiredItems.stream()
                         .filter(this::isWithinLimits)
@@ -207,7 +207,12 @@ public class GoalLearner {
             int kitNumber = -1;
             for (int slotOffsetIndex = 0; slotOffsetIndex < slotOffsetList.size(); slotOffsetIndex++) {
                 Slot slotOffset = slotOffsetList.get(slotOffsetIndex);
-                PhysicalItem absSlot = localSlotOffsetProvider.absSlotFromTrayAndOffset(kit, slotOffset);
+                PhysicalItem absSlot;
+                if(!overrideRotationOffset) {
+                    absSlot = localSlotOffsetProvider.absSlotFromTrayAndOffset(kit, slotOffset);
+                } else {
+                    absSlot = localSlotOffsetProvider.absSlotFromTrayAndOffset(kit, slotOffset,newRotationOffset);
+                }
                 if(null == absSlot) {
                     throw new IllegalStateException("No absSlot obtainable for slotOffset name "+slotOffset.getName()+" in kit "+kit.getName());
                 }

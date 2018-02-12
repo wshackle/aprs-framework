@@ -1082,14 +1082,20 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         this.rotationOffset = normAngle(rotationOffset);
     }
 
+    @Override
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
+        return absSlotFromTrayAndOffset(tray, offsetItem, this.rotationOffset);
+    }
+    
+    @Override
+    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffsetParam) {
         String name = offsetItem.getFullName();
         if (name == null || name.length() < 1) {
             throw new IllegalStateException("bad fullname for offsetItem=" + offsetItem);
         }
         double x = offsetItem.x;
         double y = offsetItem.y;
-        double angle = normAngle(tray.getRotation() + rotationOffset);
+        double angle = normAngle(tray.getRotation() + rotationOffsetParam);
 
         Slot item = new Slot(name, angle,
                 tray.x + x * Math.cos(angle) - y * Math.sin(angle),

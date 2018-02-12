@@ -119,7 +119,7 @@ public class GoalLearnerTest {
         GoalLearner gl = new GoalLearner();
         gl.setSlotOffsetProvider(sop);
         boolean allEmptyA[] = new boolean[1];
-        List<PddlAction> actions = gl.createActionListFromVision(newTrainingData, allEmptyA);
+        List<PddlAction> actions = gl.createActionListFromVision(newTrainingData, allEmptyA,false,0);
 
         printActionsList(actions);
 
@@ -176,6 +176,11 @@ public class GoalLearnerTest {
 
         @Override
         public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
+            return absSlotFromTrayAndOffset(tray, offsetItem, 0);
+        }
+        
+        @Override
+        public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
 
             String name = offsetItem.getFullName();
             if(null == name || name.length() < 1) {
@@ -183,7 +188,7 @@ public class GoalLearnerTest {
             }
             double x = offsetItem.x;
             double y = offsetItem.y;
-            double angle = tray.getRotation();
+            double angle = tray.getRotation()+rotationOffset;
             Slot item = new Slot(name, angle,
                     tray.x + x * Math.cos(angle) - y * Math.sin(angle),
                     tray.y + x * Math.sin(angle) + y * Math.cos(angle)

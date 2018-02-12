@@ -59,16 +59,22 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         return visionToDBJPanel.absSlotFromTrayAndOffset(tray, offsetItem);
     }
-    
+
+    @Override
+    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
+        return visionToDBJPanel.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
+    }
+
     public boolean isDbConnected() {
         return visionToDBJPanel.isDbConnected();
     }
 
     /**
-     * Get the most recent list of parts and kit trays from  the vision system.
+     * Get the most recent list of parts and kit trays from the vision system.
      * This will not block waiting for the vision system or database but could
-     * return null or an empty list if the vision system has not been connected or
-     * no frame has been received.
+     * return null or an empty list if the vision system has not been connected
+     * or no frame has been received.
+     *
      * @return list of trays
      */
     public List<PartsTray> getPartsTrayList() {
@@ -91,19 +97,17 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
      * kit or parts tray name.
      *
      * @param name name of the type of kit or slot tray
-     * @param ignoreEmpty if false  
-     *          no slots being found logs a verbose error message 
-     *          and throws IllegalStateException (good for fail fast) or
-     *  if true 
-     *          simply returns an empty list (good or display or when multiple 
-     *          will be checked.
-     * 
+     * @param ignoreEmpty if false no slots being found logs a verbose error
+     * message and throws IllegalStateException (good for fail fast) or if true
+     * simply returns an empty list (good or display or when multiple will be
+     * checked.
+     *
      * @return list of slots with relative position offsets.
      */
     @Override
-    public List<Slot> getSlotOffsets(String name,boolean ignoreEmpty) {
-        List<Slot> l =  this.visionToDBJPanel.getSlotOffsets(name,ignoreEmpty);
-        if(null != l) {
+    public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty) {
+        List<Slot> l = this.visionToDBJPanel.getSlotOffsets(name, ignoreEmpty);
+        if (null != l) {
             return l;
         }
         return Collections.emptyList();
@@ -111,7 +115,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
 
     public List<Slot> getSlots(Tray item) {
         List<Slot> l = this.visionToDBJPanel.getSlots(item);
-        if(null != l) {
+        if (null != l) {
             return l;
         }
         return Collections.emptyList();
@@ -124,11 +128,12 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
 //    public XFuture<List<PhysicalItem>> getNextUpdate() {
 //        return visionToDBJPanel.getNextUpdate();
 //    }
-
     /**
-     * Asynchronously get a list of PhysicalItems updated in one frame from 
-     * the vision system.
-     * @return future with list of items updated in the next frame from the vision 
+     * Asynchronously get a list of PhysicalItems updated in one frame from the
+     * vision system.
+     *
+     * @return future with list of items updated in the next frame from the
+     * vision
      */
     public XFuture<List<PhysicalItem>> getSingleUpdate() {
         return visionToDBJPanel.getSingleUpdate();
@@ -137,8 +142,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public long getLastUpdateTime() {
         return visionToDBJPanel.getLastUpdateTime();
     }
-    
-    
+
     public long getNotifySingleUpdateListenersTime() {
         return visionToDBJPanel.getNotifySingleUpdateListenersTime();
     }
@@ -248,7 +252,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public void updateFromArgs(Map<String, String> _argsMap) {
         this.visionToDBJPanel.updateFromArgs(_argsMap);
     }
-    
+
     public void setPropertiesFile(File f) {
         this.visionToDBJPanel.setPropertiesFile(f);
     }
@@ -276,7 +280,8 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     }
 
     @Override
-    @Nullable public Connection getSqlConnection() {
+    @Nullable
+    public Connection getSqlConnection() {
         return visionToDBJPanel.getSqlConnection();
     }
 
@@ -291,7 +296,8 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     }
 
     @Override
-    @Nullable public Callable<DbSetupPublisher> getDbSetupSupplier() {
+    @Nullable
+    public Callable<DbSetupPublisher> getDbSetupSupplier() {
         return visionToDBJPanel.getDbSetupSupplier();
     }
 
@@ -322,13 +328,14 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
      * Set the value of enableDatabaseUpdates
      *
      * @param enableDatabaseUpdates new value of enableDatabaseUpdates
-     * @param requiredParts map of part names to required number of each type of part
+     * @param requiredParts map of part names to required number of each type of
+     * part
      */
     public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
         visionToDBJPanel.setEnableDatabaseUpdates(enableDatabaseUpdates, requiredParts);
     }
-    
-    public Map<String,UpdateResults> getUpdatesResultMap() {
+
+    public Map<String, UpdateResults> getUpdatesResultMap() {
         return visionToDBJPanel.getUpdatesResultMap();
     }
 }

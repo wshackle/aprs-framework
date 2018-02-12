@@ -62,4 +62,15 @@ public interface SlotOffsetProvider {
      * @return slot with absolute position
      */
     @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem);
+    
+    /**
+     * Compute the absolute position of a slot from a slot offset and a tray
+     * instance.
+     *
+     * @param tray tray with absolute position
+     * @param offsetItem slot with relative position offset for that kind of
+     * tray
+     * @return slot with absolute position
+     */
+    @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem,double rotationOffset);
 }

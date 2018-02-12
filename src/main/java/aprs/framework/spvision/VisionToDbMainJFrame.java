@@ -334,4 +334,9 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         return visionToDBJPanel.absSlotFromTrayAndOffset(tray, offsetItem);
     }
+    
+    @Override
+    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem,double rotationOffset) {
+        return visionToDBJPanel.absSlotFromTrayAndOffset(tray, offsetItem,rotationOffset);
+    }
 }

@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.drools.core.rule.Collect;
 import rcs.posemath.PmCartesian;
 
 /**

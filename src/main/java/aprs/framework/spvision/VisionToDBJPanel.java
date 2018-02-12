@@ -122,6 +122,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return dpu.absSlotFromTrayAndOffset(tray, offsetItem);
     }
 
+    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem,double rotationOffset) {
+        assert (null != dpu) : "dpu == null";
+        return dpu.absSlotFromTrayAndOffset(tray, offsetItem,rotationOffset);
+    }
+    
+
     public boolean isDbConnected() {
         return null != dpu && dpu.isConnected();
     }

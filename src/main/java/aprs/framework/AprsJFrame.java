@@ -3572,6 +3572,23 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem);
     }
+    
+    /**
+     * Get a Slot with an absolute position from the slot offset and a tray.
+     *
+     * @param tray slot is within
+     * @param offsetItem slot with relative position offset for this type of
+     * tray
+     * @return slot with absolute position
+     */
+    @Override
+    @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem,double rotationOffset) {
+        if (null != externalSlotOffsetProvider) {
+            return externalSlotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem,rotationOffset);
+        }
+        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem,rotationOffset);
+    }
 
     /**
      * Get a list of items seen by the vision system or simulated in the
@@ -3585,7 +3602,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             List<PhysicalItem> teachItems = requiredItems;
             updateScanImage(requiredItems,false);
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
-            createActionListFromVision(requiredItems, teachItems);
+            createActionListFromVision(requiredItems, teachItems,false,0);
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
@@ -3598,6 +3615,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
     }
 
+    private void updateScanImageWithRotationOffset(List<PhysicalItem> requiredItems, boolean autoScale,double rotationOffset) {
+        Utils.runOnDispatchThread(() -> {
+            updateScanImageWithRotationOffsetInternal(requiredItems,autoScale,rotationOffset);
+        });
+    }
+    
     public Image getLiveImage() {
         if(!isConnected()) {
             return null;
@@ -3625,6 +3648,20 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
     }
 
+    private void updateScanImageWithRotationOffsetInternal(List<PhysicalItem> requiredItems, boolean autoScale,double rotationOffset) {
+        assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
+        Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
+        opts.h = 170;
+        opts.w = 170;
+        opts.disableLabels = true;
+        opts.enableAutoscale = autoScale;
+        opts.overrideRotationOffset = true;
+        opts.disableLimitsLine = true;
+        opts.disableShowCurrent = true;
+        opts.rotationOffset = rotationOffset;
+        scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
+    }
+    
     private GoalLearner goalLearner;
 
     /**
@@ -3665,7 +3702,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param teachItems list of trays and items in the trays as they should be
      * when complete.
      */
-    public void createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems) {
+    public void createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam) {
 
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         try {
@@ -3677,7 +3714,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             goalLearner.setSlotOffsetProvider(visionToDbJInternalFrame);
 
             boolean allEmptyA[] = new boolean[1];
-            List<PddlAction> actions = goalLearner.createActionListFromVision(requiredItems, teachItems, allEmptyA);
+            List<PddlAction> actions = goalLearner.createActionListFromVision(requiredItems, teachItems, allEmptyA,overrideRotation,newRotationOffsetParam);
             boolean allEmpty = allEmptyA[0];
             if (allEmpty || actions == null || actions.isEmpty()) {
                 System.out.println("requiredItems = " + requiredItems);
@@ -3700,7 +3737,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 pddlExecutorJInternalFrame1.setReverseFlag(jCheckBoxMenuItemReverse.isSelected());
             }
             if(requiredItems != teachItems) {
-                updateScanImage(teachItems,true);
+                if(overrideRotation) {
+                    updateScanImageWithRotationOffset(teachItems, true, newRotationOffsetParam);
+                } else {
+                    updateScanImage(teachItems,true);
+                }
             }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);

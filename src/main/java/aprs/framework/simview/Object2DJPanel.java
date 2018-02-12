@@ -55,7 +55,6 @@ import java.util.stream.StreamSupport;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.drools.core.rule.Collect;
 
 /**
  *
@@ -505,8 +504,10 @@ public class Object2DJPanel extends JPanel {
         public boolean disableLabels;
         public boolean enableAutoscale;
         public boolean disableShowCurrent;
+        public boolean overrideRotationOffset;
         public int w;
         public int h;
+        public double rotationOffset;
     }
 
     public BufferedImage createSnapshotImage() {
@@ -1215,7 +1216,10 @@ public class Object2DJPanel extends JPanel {
             @Nullable ViewOptions opts) {
         try {
             origTransform = g2d.getTransform();
-
+            double currentRotationOffset = this.rotationOffset;
+            if(null != opts && opts.overrideRotationOffset) {
+                currentRotationOffset = opts.rotationOffset;
+            }
             int maxNameLength
                     = StreamSupport.stream(itemsToPaint.spliterator(), false)
                     .mapToInt((PhysicalItem item) -> item.getName().length())
@@ -1359,7 +1363,7 @@ public class Object2DJPanel extends JPanel {
                     if ("P".equals(item.getType())) {
                         continue;
                     }
-                    paintPartImage(g2d, minX, minY, maxX, maxY, item);
+                    paintPartImage(g2d, minX, minY, maxX, maxY, item,currentRotationOffset);
                     g2d.setTransform(origTransform);
                 }
                 for (PhysicalItem item : displayItems) {
@@ -1369,7 +1373,7 @@ public class Object2DJPanel extends JPanel {
                     if (!("P".equals(item.getType()))) {
                         continue;
                     }
-                    paintPartImage(g2d, minX, minY, maxX, maxY, item);
+                    paintPartImage(g2d, minX, minY, maxX, maxY, item,currentRotationOffset);
                     g2d.setTransform(origTransform);
                 }
             }
@@ -1436,7 +1440,7 @@ public class Object2DJPanel extends JPanel {
                         continue;
                     }
                 }
-                translateThenRotateItem(g2d, minX, minY, maxX, maxY, item);
+                translateThenRotateItem(g2d, minX, minY, maxX, maxY, item,currentRotationOffset);
                 item.setDisplayTransform(g2d.getTransform());
                 item.setOrigTransform(origTransform);
                 try {
@@ -1467,7 +1471,7 @@ public class Object2DJPanel extends JPanel {
                     continue;
                 }
                 boolean imageShown = checkImageShown(item);
-                translateThenRotateItem(g2d, minX, minY, maxX, maxY, item);
+                translateThenRotateItem(g2d, minX, minY, maxX, maxY, item,currentRotationOffset);
                 g2d.setColor(Color.BLACK);
                 if (!imageShown) {
                     if (!useSeperateNamesThisTime) {
@@ -1548,7 +1552,7 @@ public class Object2DJPanel extends JPanel {
                     return;
                 }
                 if (!imageShown || viewDetails) {
-                    translateThenRotateItem(g2d, minX, minY, maxX, maxY, selectedItem);
+                    translateThenRotateItem(g2d, minX, minY, maxX, maxY, selectedItem,currentRotationOffset);
                     g2d.setColor(Color.WHITE);
                     String typeString = getItemType(selectedItem);
                     Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeperateNamesThisTime ? typeString.length() : selectedItem.getName().length()), 20);
@@ -1600,7 +1604,7 @@ public class Object2DJPanel extends JPanel {
         return imageShown;
     }
 
-    private void paintPartImage(Graphics2D g2d, double minX, double minY, double maxX, double maxY, PhysicalItem item) {
+    private void paintPartImage(Graphics2D g2d, double minX, double minY, double maxX, double maxY, PhysicalItem item, double rotationOffsetParam) {
         if (!viewRotationsAndImages) {
             return;
         }
@@ -1611,7 +1615,7 @@ public class Object2DJPanel extends JPanel {
         if (null != info) {
 
             Image img = info.getScaledImage(scale);
-            translateThenRotateItem(g2d, minX, minY, maxX, maxY, item);
+            translateThenRotateItem(g2d, minX, minY, maxX, maxY, item,rotationOffsetParam);
             g2d.translate(-(img.getWidth(this) / 2.0), -(img.getHeight(this) / 2.0));
             g2d.drawImage(img, null, null);
             if (viewDetails) {
@@ -1656,7 +1660,7 @@ public class Object2DJPanel extends JPanel {
         return info;
     }
 
-    private void translateThenRotateItem(Graphics2D g2d, double minX, double minY, double maxX, double maxY, PhysicalItem item) {
+    private void translateThenRotateItem(Graphics2D g2d, double minX, double minY, double maxX, double maxY, PhysicalItem item, double rotationOffsetParam) {
         double itemx = item.x;
         double itemy = item.y;
         switch (displayAxis) {
@@ -1694,7 +1698,7 @@ public class Object2DJPanel extends JPanel {
                     g2d.rotate(3 * Math.PI / 2.0);
                     break;
             }
-            g2d.rotate(-rotationOffset - item.getRotation());
+            g2d.rotate(-rotationOffsetParam - item.getRotation());
         }
     }
 
