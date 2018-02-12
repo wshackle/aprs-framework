@@ -167,6 +167,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         @Nullable
         BufferedImage image = null;
 
+        @Nullable
+        String label = null;
+        
         public ImagePanel(BufferedImage image) {
             this.image = image;
             if (image != null) {
@@ -174,16 +177,37 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 super.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
             }
         }
+        
+        public ImagePanel(BufferedImage image,String label) {
+            this.image = image;
+            this.label = label;
+            if (image != null) {
+                if(null != label) {
+                    super.setSize(image.getWidth(), image.getHeight());
+                    super.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+                } else {
+                    super.setSize(image.getWidth(), image.getHeight()+30);
+                    super.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()+30));    
+                }
+            }
+        }
 
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             if (image != null) {
-                g.drawImage(image, 0, 0, this);
+                if(null == label) {
+                    g.drawImage(image, 0, 0, this);
+                } else {
+                    g.drawImage(image, 0, 20, this);
+                }
+            }
+            if(null != label) {
+                g.drawString(label, 10, 15);
             }
         }
 
-        public void setImage(BufferedImage image) {
+        public void setImage(@Nullable BufferedImage image) {
             this.image = image;
             if (image != null) {
                 this.setSize(image.getWidth(), image.getHeight());
@@ -192,6 +216,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
         }
 
+        @Nullable public String getLabel() {
+            return label;
+        }
+
+        public void setLabel(@Nullable String label) {
+            this.label = label;
+        }
     }
 
     /**
@@ -235,6 +266,38 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     } catch (Exception exception) {
                         log(Level.SEVERE, null, exception);
                     }
+                }
+            });
+            jTableTasks.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+
+                private final List<ImagePanel> areas = new ArrayList<>();
+
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                    
+                    if (value instanceof String) {
+                        try {
+                            String robotName = (String) value;
+                            BufferedImage image = ColorTextJPanel.getRobotImage(robotName);
+                            while (areas.size() <= row) {
+                                ImagePanel area = new ImagePanel(image,robotName);
+                                area.setOpaque(true);
+                                area.setVisible(true);
+                                areas.add(area);
+                            }
+                            ImagePanel area = areas.get(row);
+                            if (null != area) {
+                                area.setImage((BufferedImage) image);
+                                area.setLabel(robotName);
+                            }
+                            return area;
+                        } catch (IllegalStateException ex) {
+                            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (IOException ex) {
+                            Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 }
             });
             jTableTasks.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
@@ -2158,12 +2221,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTasksLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneTasks)
-                .addContainerGap())
+                .addComponent(jScrollPaneTasks))
         );
         jPanelTasksLayout.setVerticalGroup(
             jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 401, Short.MAX_VALUE)
+            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
         );
 
         jPanelRobots.setBorder(javax.swing.BorderFactory.createTitledBorder("Robots"));
@@ -2204,7 +2266,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 591, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 574, Short.MAX_VALUE)
                     .addGroup(jPanelRobotsLayout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2229,12 +2291,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
                 .addGroup(jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanelTasks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(jPanelRobots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(colorTextJPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 412, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(colorTextJPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
+                        .addComponent(jPanelTasks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(1, 1, 1)))
                 .addContainerGap())
         );
         jPanelTasksAndRobotsLayout.setVerticalGroup(
@@ -2362,7 +2426,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         .addComponent(jButtonDeleteLine)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonSaveSelectedPosMap)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 206, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 208, Short.MAX_VALUE)
                         .addComponent(jButtonSetOutFromCurrent))
                     .addComponent(jTextFieldSelectedPosMapFilename))
                 .addContainerGap())
@@ -2378,7 +2442,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     .addComponent(jButtonSetOutFromCurrent)
                     .addComponent(jButtonSaveSelectedPosMap))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 285, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextFieldSelectedPosMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -2480,7 +2544,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     .addComponent(jScrollPane4)
                     .addGroup(jPanelFutureLayout.createSequentialGroup()
                         .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 61, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 63, Short.MAX_VALUE)
                         .addComponent(jCheckBoxShowUnnamedFutures)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxShowDoneFutures)
@@ -2506,7 +2570,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     .addComponent(jCheckBoxFutureLongForm))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 592, Short.MAX_VALUE)
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 608, Short.MAX_VALUE)
                     .addGroup(jPanelFutureLayout.createSequentialGroup()
                         .addComponent(jScrollPane3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2562,7 +2626,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 1049, Short.MAX_VALUE)
+                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 1051, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2583,7 +2647,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     .addComponent(jLabel5)
                     .addComponent(jTextFieldRunningTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 592, Short.MAX_VALUE)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 608, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -2603,7 +2667,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             .addGroup(jPanelTeachTableLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1049, Short.MAX_VALUE)
+                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1051, Short.MAX_VALUE)
                     .addComponent(jComboBoxTeachSystemView, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -2613,7 +2677,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jComboBoxTeachSystemView, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 600, Short.MAX_VALUE))
+                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 616, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Teach", jPanelTeachTable);
@@ -2908,7 +2972,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTabbedPane2))
+                .addComponent(jTabbedPane2)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

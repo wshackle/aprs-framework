@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:2285
+#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:2290
 --visionhost=localhost
 --visionport=4000
 addPosNoise=false
@@ -23,5 +23,5 @@ simulationUpdateAsNeeded=true
 trackcurrentpos=false
 viewDetails=false
 viewOutput=false
-xmaxymax=750.0, 300.0
-xminymin=150.0, -50.0
+xmaxymax=900.0, 400.0
+xminymin=-50.0, -50.0

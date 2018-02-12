@@ -25,12 +25,16 @@ package aprs.framework.colortextdisplay;
 import aprs.framework.Utils;
 import aprs.framework.database.SocketLineReader;
 import java.awt.Color;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -71,8 +75,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         }
     }
 
-    private static final Class<aprs.framework.colortextdisplay.ColorTextJPanel> 
-            THIS_CLASS = aprs.framework.colortextdisplay.ColorTextJPanel.class;
+    private static final Class<aprs.framework.colortextdisplay.ColorTextJPanel> THIS_CLASS = aprs.framework.colortextdisplay.ColorTextJPanel.class;
 
     /**
      * Get the Icon for the given robot name. The Icon files are normally stored
@@ -95,11 +98,54 @@ public class ColorTextJPanel extends javax.swing.JPanel {
     }
 
     private static Icon getClassResourceIcon(String resourcePath) throws IllegalStateException {
+        URL url = getClassResourceURL(resourcePath);
+        return new javax.swing.ImageIcon(url);
+    }
+
+    private static final ConcurrentHashMap<String, BufferedImage> robotImageMap = new ConcurrentHashMap<>();
+
+    /**
+     * Get the Icon for the given robot name. The Icon files are normally stored
+     * as resources in the same jar.
+     *
+     * @param name name of the robot
+     * @return icon
+     */
+    @Nullable public static BufferedImage getRobotImage(String name) throws IllegalStateException, IOException {
+        if (name == null || name.length() < 1) {
+            return null;
+        }
+        return robotImageMap.computeIfAbsent(name, ColorTextJPanel::getRobotImageNew);
+    }
+
+    public static BufferedImage getRobotImageNew(String name) {
+        try {
+            if (name.toUpperCase().contains("MOTOMAN")) {
+                return getClassResourceImage("/aprs/framework/screensplash/motoman_small.png");
+            } else if (name.toUpperCase().contains("FANUC")) {
+                return getClassResourceImage("/aprs/framework/screensplash/fanuc_small.png");
+            } else {
+                return getClassResourceImage("/aprs/framework/screensplash/" + name.toLowerCase() + "_small.png");
+            }
+        } catch (IllegalStateException | IOException ex) {
+            Logger.getLogger(ColorTextJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            BufferedImage img = new BufferedImage(BufferedImage.TYPE_3BYTE_BGR, 100, 100);
+            img.getGraphics().drawString(ex.toString(), 10, 10);
+            return img;
+        }
+    }
+
+    private static BufferedImage getClassResourceImage(String resourcePath) throws IllegalStateException, IOException {
+        URL url = getClassResourceURL(resourcePath);
+        return ImageIO.read(url);
+    }
+
+    public static URL getClassResourceURL(String resourcePath) throws IllegalStateException {
         URL url = THIS_CLASS.getResource(resourcePath);
         if (url == null) {
             throw new IllegalStateException("getResource(\"" + resourcePath + "\") returned null");
         }
-        return new javax.swing.ImageIcon(url);
+        return url;
     }
 
     /**
