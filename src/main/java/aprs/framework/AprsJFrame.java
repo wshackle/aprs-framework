@@ -293,11 +293,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public long getLastSingleVisionToDbUpdateTime() {
+        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getLastUpdateTime();
     }
     
     
     public long getSingleVisionToDbNotifySingleUpdateListenersTime() {
+        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getNotifySingleUpdateListenersTime();
     }
 
@@ -3621,7 +3623,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
     }
     
-    public Image getLiveImage() {
+    @Nullable public Image getLiveImage() {
         if(!isConnected()) {
             return null;
         }

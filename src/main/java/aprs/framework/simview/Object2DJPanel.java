@@ -1569,14 +1569,14 @@ public class Object2DJPanel extends JPanel {
             }
             if (this.showCurrentXY && (null == opts || opts.disableShowCurrent == false)) {
                 Color origColor = g2d.getColor();
-                if (null != capturedPartPoint) {
+                Point2D.Double fromPoint = capturedPartPoint;
+                if (null != fromPoint) {
                     g2d.setColor(Color.MAGENTA);
-                    Point2D.Double captureScreenPt = toScreenPoint(capturedPartPoint.x, capturedPartPoint.y, minX, minY,  maxX, maxY);
+                    Point2D.Double captureScreenPt = toScreenPoint(fromPoint.x, fromPoint.y, minX, minY,  maxX, maxY);
                     Point2D.Double currentScreenPt = toScreenPoint(currentX,currentY, minX, minY, maxX,maxY);
                     g2d.draw(new Line2D.Double(currentScreenPt,captureScreenPt));
                 }
                 this.translate(g2d, currentX, currentY, minX, minY, maxX, maxY, -1, -1);
-//            g2d.drawString(String.format("CurrentXY = %.2f,%.2f", currentX, currentY), 10, height - 10);
                 if (endEffectorClosed) {
                     g2d.setColor(Color.black);
                     g2d.fillArc(-5, -5, 10, 10, 0, 360);
