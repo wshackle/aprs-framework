@@ -56,6 +56,7 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -5907,8 +5908,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void saveJTable(File f, JTable jtable) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), Utils.preferredCsvFormat())) {
+    private void saveJTable(File f, JTable jtable, CSVFormat csvFormat) throws IOException {
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),csvFormat)) {
             TableModel tm = jtable.getModel();
             for (int i = 0; i < tm.getRowCount(); i++) {
                 List<Object> l = new ArrayList<>();
@@ -5947,7 +5948,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @throws IOException file could not be written to
      */
     public void savePositionMaps(File f) throws IOException {
-        saveJTable(f, jTablePositionMappings);
+        saveJTable(f, jTablePositionMappings,CSVFormat.RFC4180);
         saveLastPosMapFile(f);
     }
 
@@ -5961,15 +5962,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @param sys2 system to convert positions to
      * @return file for converting positions
      */
-    @Nullable
-    public File getPosMapFile(String sys1, String sys2) {
+    public File getPosMapFile(String sys1, String sys2) throws FileNotFoundException {
         Map<String, File> subMap = posMaps.get(sys1);
         if (null == subMap) {
-            return null;
+            throw new IllegalStateException("no subMap for system "+sys1 +" in "+posMaps);
         }
         File f = subMap.get(sys2);
         if (null == f) {
-            return null;
+            throw new IllegalStateException("no entry  for system "+sys2 +" in "+subMap);
         }
         if (f.exists()) {
             return f;
@@ -5982,6 +5982,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     return altFile;
                 }
             }
+        }
+        if(null == f) {
+             throw new IllegalStateException("no entry  for system "+sys1 +" to "+sys2);
+        }
+        if(!f.exists()) {
+            throw new FileNotFoundException(f+" does not exist. failing for getPosMapFile "+sys1 +" to "+sys2);
         }
         return f;
     }
