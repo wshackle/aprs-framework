@@ -1164,7 +1164,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                                             "setRobotEnabled(" + robotName + "," + enabled + ").alreadyComplete",
                                                             x);
                                                 } else {
-                                                    System.err.println("Returning xfuture which will never complet.");
+                                                    System.err.println("Returning xfuture which will never complete. x="+x);
                                                     Thread.dumpStack();
                                                     return new XFuture<>(x + ".neverComplete");
                                                 }
