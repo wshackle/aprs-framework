@@ -120,7 +120,6 @@ import org.xml.sax.SAXException;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
 
-
 /**
  * AprsJFrame is the container for one robotic system in the APRS (Agility
  * Performance of Robotic Systems) framework.
@@ -158,15 +157,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     /**
-     * Check if the user has selected a check box asking for snapshot files
-     * to be created for logging/debugging.
-     * 
+     * Check if the user has selected a check box asking for snapshot files to
+     * be created for logging/debugging.
+     *
      * @return Has user enabled snapshots?
      */
     public boolean isSnapshotsEnabled() {
         return jCheckBoxMenuItemSnapshotImageSize.isSelected();
     }
-    
+
     private void setStartRunTime() {
         checkReadyToRun();
         long t = System.currentTimeMillis();
@@ -196,8 +195,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private Image scanImage;
 
     /**
-     * Get the most recent image created when scanning for desired part locations.
-     * 
+     * Get the most recent image created when scanning for desired part
+     * locations.
+     *
      * @return image of most recent scan
      */
     public Image getScanImage() {
@@ -296,14 +296,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getLastUpdateTime();
     }
-    
-    
+
     public long getSingleVisionToDbNotifySingleUpdateListenersTime() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getNotifySingleUpdateListenersTime();
     }
 
-    
     /**
      * Get the most recent list of parts and kit trays from the vision system.
      * This will not block waiting for the vision system or database but could
@@ -347,28 +345,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         this.externalSlotOffsetProvider = externalSlotOffsetProvider;
     }
 
-   
     /**
      * Get a list of slots with names and relative position offsets for a given
      * kit or parts tray name.
      *
      * @param name name of the type of kit or slot tray
-     * @param ignoreEmpty if false  
-     *          no slots being found logs a verbose error message 
-     *          and throws IllegalStateException (good for fail fast) or
-     *  if true 
-     *          simply returns an empty list (good or display or when multiple 
-     *          will be checked.
-     * 
+     * @param ignoreEmpty if false no slots being found logs a verbose error
+     * message and throws IllegalStateException (good for fail fast) or if true
+     * simply returns an empty list (good or display or when multiple will be
+     * checked.
+     *
      * @return list of slots with relative position offsets.
      */
     @Override
-    public List<Slot> getSlotOffsets(String name,boolean ignoreEmpty) {
+    public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty) {
         if (null != externalSlotOffsetProvider) {
-            return externalSlotOffsetProvider.getSlotOffsets(name,ignoreEmpty);
+            return externalSlotOffsetProvider.getSlotOffsets(name, ignoreEmpty);
         }
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
-        return this.visionToDbJInternalFrame.getSlotOffsets(name,ignoreEmpty);
+        return this.visionToDbJInternalFrame.getSlotOffsets(name, ignoreEmpty);
     }
 
     /**
@@ -389,18 +384,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param tray tray to obtain list of slots
      * @return list of slots
      */
-    public List<Slot> getSlots(Tray tray,boolean ignoreEmpty) {
+    public List<Slot> getSlots(Tray tray, boolean ignoreEmpty) {
         if (null != externalSlotOffsetProvider) {
-            return externalSlotOffsetProvider.getSlotOffsets(tray.getName(),ignoreEmpty);
+            return externalSlotOffsetProvider.getSlotOffsets(tray.getName(), ignoreEmpty);
         }
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return this.visionToDbJInternalFrame.getSlots(tray);
     }
 
     /**
-     * Set the preference for displaying a '+' at the current position of the robot
-     * tool.
-     * 
+     * Set the preference for displaying a '+' at the current position of the
+     * robot tool.
+     *
      * @param v should the position be displayed.
      */
     public void setSimViewTrackCurrentPos(boolean v) {
@@ -409,9 +404,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
-     * Set the simulation view to simulation mode and disconnect from any
-     * vision data socket.
-     * 
+     * Set the simulation view to simulation mode and disconnect from any vision
+     * data socket.
+     *
      */
     public void simViewSimulateAndDisconnect() {
         if (null != object2DViewJInternalFrame) {
@@ -699,6 +694,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         }
         takeSnapshots("setConnected_" + connected);
+        Utils.runOnDispatchThread(() -> {
+            jCheckBoxMenuItemConnectedRobot.setSelected(isConnected());
+            jCheckBoxMenuItemConnectedRobot.setText("Robot (CRCL " + robotName + " " + getRobotCrclHost() + ":" + getRobotCrclPort() + " )");
+        });
     }
 
     /**
@@ -919,6 +918,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         this.setRobotName(null);
         System.out.println("disconnectRobot completed");
+        Utils.runOnDispatchThread(() -> jCheckBoxMenuItemConnectedRobot.setSelected(isConnected()));
     }
 
     private volatile String origCrclRobotHost;
@@ -964,6 +964,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 && Objects.equals(robotName, robotName)
                 && Objects.equals(this.getRobotCrclHost(), host)
                 && this.getRobotCrclPort() == port) {
+            Utils.runOnDispatchThread(() -> {
+                jCheckBoxMenuItemConnectedRobot.setSelected(isConnected());
+                jCheckBoxMenuItemConnectedRobot.setText("Robot (CRCL " + robotName + " " + host + ":" + port + " )");
+            });
             return XFuture.completedFuture(null);
         }
         enableCheckedAlready = false;
@@ -997,6 +1001,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         maybeSetOrigCrclRobotHost(getRobotCrclHost());
         maybeSetOrigCrclRobotPort(getRobotCrclPort());
+        Utils.runOnDispatchThread(() -> {
+            jCheckBoxMenuItemConnectedRobot.setSelected(isConnected());
+            jCheckBoxMenuItemConnectedRobot.setText("Robot (CRCL " + robotName + " " + host + ":" + port + " )");
+        });
     }
 
     /**
@@ -1173,15 +1181,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    
     public boolean getUseTeachTable() {
         return jCheckBoxMenuItemUseTeachTable.isSelected();
     }
-    
+
     public void setUseTeachTable(boolean useTeachTable) {
         jCheckBoxMenuItemUseTeachTable.setSelected(useTeachTable);
     }
-    
+
     private void checkReadyToDisconnect() throws IllegalStateException {
         if (isRunningCrclProgram()) {
             String msg = "setRobotName(null)/disconnect() called when running crcl program";
@@ -1464,7 +1471,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         sb.append("paused=").append(jCheckBoxMenuItemPause.isSelected()).append("\r\n");
         sb.append("run_name=").append(this.getRunName()).append("\r\n");
         CRCLProgramType crclProgram = this.getCrclProgram();
-        
+
         sb.append("crclRunning=").append(this.isRunningCrclProgram()).append(", ");
         sb.append("isDoingActions=").append(isDoingActions()).append(", ");
         if (null != crclProgram) {
@@ -1487,8 +1494,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
 //        sb.append("                                                                                                                                                                                                                                                                                        \r\n");
 
-        if (null != titleErrorString && titleErrorString.length() > 0) {
-            sb.append("titleErrorString=").append(titleErrorString).append("\r\n");
+        String currentTitleErrorString = this.titleErrorString;
+        if (null != currentTitleErrorString && currentTitleErrorString.length() > 0) {
+            sb.append("titleErrorString=").append(currentTitleErrorString).append("\r\n");
         }
 //        sb.append("1111111111222222222233333333334444444444555555555566666666667777777777788888888899999999990000000000111111111122222222223333333333\r\n");
 //        sb.append("0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\r\n");
@@ -1634,6 +1642,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             lastNewTitleErrorString = newTitleErrorString;
         }
+        this.asString = getTitle();
     }
 
     private void startMotomanCrclServer() {
@@ -1805,6 +1814,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         try {
             initPropertiesFileInfo();
             initComponents();
+            this.asString = getTitle();
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1880,6 +1890,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
         commonInit();
+        this.asString = getTitle();
     }
 
     private boolean skipCreateDbSetupFrame = false;
@@ -2173,7 +2184,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private ActiveWinEnum activeWin = ActiveWinEnum.OTHER;
 
     /**
-     * Enumeration class for setting/getting which  window (InternalJFrame)  is/should be displayed on top.
+     * Enumeration class for setting/getting which window (InternalJFrame)
+     * is/should be displayed on top.
      */
     public static enum ActiveWinEnum {
         CRCL_CLIENT_WINDOW,
@@ -2220,11 +2232,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Get a list of items with names and poses from the simulation.
-     * 
+     *
      * @return list of items as generated by the simulation
-     * 
+     *
      * @throws IllegalStateException Object 2D view was not opened.
-     * 
+     *
      */
     public List<PhysicalItem> getSimItemsData() throws IllegalStateException {
         if (null == object2DViewJInternalFrame) {
@@ -2235,10 +2247,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Set a list of items with names and poses to be used by the simulation.
-     * 
-     *  This has no effect if the Object 2D view has not been opened or it is
-     * not in simulation mode.
-     * 
+     *
+     * This has no effect if the Object 2D view has not been opened or it is not
+     * in simulation mode.
+     *
      * @param items list of items to use
      */
     public void setSimItemsData(List<PhysicalItem> items) {
@@ -2246,25 +2258,24 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             object2DViewJInternalFrame.setItems(items);
         }
     }
-    
+
     /**
-     * Set the position the robot tool should be moved to ensure
-     * the robot is no longer obstructing the vision systems view of 
-     * the parts and trays.
-     * 
-     * @param x x coordinate 
-     * @param y y coordinate 
-     * @param z z coordinate 
+     * Set the position the robot tool should be moved to ensure the robot is no
+     * longer obstructing the vision systems view of the parts and trays.
+     *
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param z z coordinate
      */
     public void setLookForXYZ(double x, double y, double z) {
-        if(null != pddlExecutorJInternalFrame1) {
-            pddlExecutorJInternalFrame1.setLookForXYZ(x,y,z);
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.setLookForXYZ(x, y, z);
         }
     }
 
     /**
      * Set limits on the area that should be visible in the Object 2D view.
-     * 
+     *
      * @param minX minimum X
      * @param minY minimum Y
      * @param maxX maximum X
@@ -2360,6 +2371,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         if (!oldTitle.equals(newTitle)) {
             setTitle(newTitle);
+            this.asString = newTitle;
             setupWindowsMenu();
         }
         for (Runnable r : titleUpdateRunnables) {
@@ -2473,8 +2485,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
-     * Create and display the simulation server window and start
-     * the simulation server thread.
+     * Create and display the simulation server window and start the simulation
+     * server thread.
      */
     public void startSimServerJInternalFrame() {
         try {
@@ -2574,8 +2586,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
-     * Start the PDDL Executor (aka Actions to CRCL) and create
-     * and display the window for displaying its output.
+     * Start the PDDL Executor (aka Actions to CRCL) and create and display the
+     * window for displaying its output.
      */
     public void startExecutorJInternalFrame() {
         try {
@@ -2703,6 +2715,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenu2 = new javax.swing.JMenu();
         jCheckBoxMenuItemConnectDatabase = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemConnectVision = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemConnectedRobot = new javax.swing.JCheckBoxMenuItem();
         jMenu4 = new javax.swing.JMenu();
         jCheckBoxMenuItemEnableDebugDumpstacks = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetPoseMaxLimits = new javax.swing.JMenuItem();
@@ -2724,6 +2737,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+        });
 
         jMenu1.setText("File");
 
@@ -2887,7 +2908,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
         jMenu3.add(jCheckBoxMenuItemStartupCRCLWebApp);
 
-        jCheckBoxMenuItemKitInspectionStartup.setSelected(true);
         jCheckBoxMenuItemKitInspectionStartup.setText("Kit Inspection");
         jCheckBoxMenuItemKitInspectionStartup.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2918,6 +2938,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenu2.add(jCheckBoxMenuItemConnectVision);
+
+        jCheckBoxMenuItemConnectedRobot.setText("Robot (CRCL ... )");
+        jCheckBoxMenuItemConnectedRobot.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemConnectedRobotActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jCheckBoxMenuItemConnectedRobot);
 
         jMenuBar1.add(jMenu2);
 
@@ -3446,6 +3474,54 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         startLookForParts();
     }//GEN-LAST:event_jMenuItemLookForActionPerformed
 
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        immediateAbort();
+        disconnectVision();
+        startDisconnectDatabase();
+        disconnectRobotPrivate();
+        if (connectDatabaseFuture != null) {
+            connectDatabaseFuture.cancelAll(true);
+            connectDatabaseFuture = null;
+        }
+        if (continuousDemoFuture != null) {
+            continuousDemoFuture.cancelAll(true);
+            continuousDemoFuture = null;
+        }
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.stopSimUpdateTimer();
+        }
+        this.runProgramService.shutdown();
+    }//GEN-LAST:event_formWindowClosing
+
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        disconnectVision();
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.stopSimUpdateTimer();
+        }
+    }//GEN-LAST:event_formWindowClosed
+
+    private void jCheckBoxMenuItemConnectedRobotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
+        boolean selected = jCheckBoxMenuItemConnectedRobot.isSelected();
+        if (selected) {
+            String name = robotName;
+            if (name == null || name.length() < 1) {
+                name = JOptionPane.showInputDialog("Robot name?", origRobotName);
+            }
+            String host = this.getRobotCrclHost();
+            if (host == null || host.length() < 1) {
+                host = JOptionPane.showInputDialog("Robot host?", origCrclRobotHost);
+            }
+            int port = this.getRobotCrclPort();
+            if (port < 1) {
+                String portString = JOptionPane.showInputDialog("Robot port?", origCrclRobotPort);
+                port = Integer.parseInt(portString);
+            }
+            this.connectRobot(name, host, port);
+        } else {
+            this.disconnectRobot();
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
+
     /**
      * Start a sequence of actions to move the robot out of the way so the
      * vision system can see the parts and wait for the vision system to provide
@@ -3574,7 +3650,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem);
     }
-    
+
     /**
      * Get a Slot with an absolute position from the slot offset and a tray.
      *
@@ -3584,12 +3660,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return slot with absolute position
      */
     @Override
-    @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem,double rotationOffset) {
+    @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
         if (null != externalSlotOffsetProvider) {
-            return externalSlotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem,rotationOffset);
+            return externalSlotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
         }
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
-        return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem,rotationOffset);
+        return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
     }
 
     /**
@@ -3602,9 +3678,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         try {
             List<PhysicalItem> requiredItems = getObjectViewItems();
             List<PhysicalItem> teachItems = requiredItems;
-            updateScanImage(requiredItems,false);
+            updateScanImage(requiredItems, false);
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
-            createActionListFromVision(requiredItems, teachItems,false,0);
+            createActionListFromVision(requiredItems, teachItems, false, 0);
         } catch (Exception ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
@@ -3613,18 +3689,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private void updateScanImage(List<PhysicalItem> requiredItems, boolean autoScale) {
         Utils.runOnDispatchThread(() -> {
-            updateScanImageInternal(requiredItems,autoScale);
+            updateScanImageInternal(requiredItems, autoScale);
         });
     }
 
-    private void updateScanImageWithRotationOffset(List<PhysicalItem> requiredItems, boolean autoScale,double rotationOffset) {
+    private void updateScanImageWithRotationOffset(List<PhysicalItem> requiredItems, boolean autoScale, double rotationOffset) {
         Utils.runOnDispatchThread(() -> {
-            updateScanImageWithRotationOffsetInternal(requiredItems,autoScale,rotationOffset);
+            updateScanImageWithRotationOffsetInternal(requiredItems, autoScale, rotationOffset);
         });
     }
-    
+
     @Nullable public Image getLiveImage() {
-        if(!isConnected()) {
+        if (!isConnected()) {
             return null;
         }
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
@@ -3637,7 +3713,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         opts.disableShowCurrent = false;
         return object2DViewJInternalFrame.createSnapshotImage(opts);
     }
-    
+
     private void updateScanImageInternal(List<PhysicalItem> requiredItems, boolean autoScale) {
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
         Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
@@ -3650,7 +3726,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
     }
 
-    private void updateScanImageWithRotationOffsetInternal(List<PhysicalItem> requiredItems, boolean autoScale,double rotationOffset) {
+    private void updateScanImageWithRotationOffsetInternal(List<PhysicalItem> requiredItems, boolean autoScale, double rotationOffset) {
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
         Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
         opts.h = 170;
@@ -3663,7 +3739,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         opts.rotationOffset = rotationOffset;
         scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
     }
-    
+
     private GoalLearner goalLearner;
 
     /**
@@ -3716,7 +3792,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             goalLearner.setSlotOffsetProvider(visionToDbJInternalFrame);
 
             boolean allEmptyA[] = new boolean[1];
-            List<PddlAction> actions = goalLearner.createActionListFromVision(requiredItems, teachItems, allEmptyA,overrideRotation,newRotationOffsetParam);
+            List<PddlAction> actions = goalLearner.createActionListFromVision(requiredItems, teachItems, allEmptyA, overrideRotation, newRotationOffsetParam);
             boolean allEmpty = allEmptyA[0];
             if (allEmpty || actions == null || actions.isEmpty()) {
                 System.out.println("requiredItems = " + requiredItems);
@@ -3738,11 +3814,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 pddlExecutorJInternalFrame1.loadActionsFile(f);
                 pddlExecutorJInternalFrame1.setReverseFlag(jCheckBoxMenuItemReverse.isSelected());
             }
-            if(requiredItems != teachItems) {
-                if(overrideRotation) {
+            if (requiredItems != teachItems) {
+                if (overrideRotation) {
                     updateScanImageWithRotationOffset(teachItems, true, newRotationOffsetParam);
                 } else {
-                    updateScanImage(teachItems,true);
+                    updateScanImage(teachItems, true);
                 }
             }
         } catch (IOException ex) {
@@ -3846,7 +3922,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     /**
      * Check to see if the module responsible for updating the database with
      * data received from the vision system has connected to the database.
-     * 
+     *
      * @return is vision to database system currently connected to the database
      */
     public boolean isVisionToDbConnected() {
@@ -4157,8 +4233,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * in use. Reload the simulated object positions.
      *
      * @param reverseFlag new value for reverse flag
-     * @return  a future object that can be used to determine when
-     *  setting the reverse flag and all related actions is complete.
+     * @return a future object that can be used to determine when setting the
+     * reverse flag and all related actions is complete.
      */
     public XFuture<Void> startSetReverseFlag(boolean reverseFlag) {
         return startSetReverseFlag(reverseFlag, true);
@@ -4172,8 +4248,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param reverseFlag new value for reverse flag
      * @param reloadSimFiles whether to load simulated object position files
      * first
-     * @return a future object that can be used to determine when
-     *  setting the reverse flag and all related actions is complete.
+     * @return a future object that can be used to determine when setting the
+     * reverse flag and all related actions is complete.
      */
     public XFuture<Void> startSetReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
         return XFuture.runAsync("startSetReverseFlag(" + reverseFlag + "," + reloadSimFiles + ")",
@@ -4286,8 +4362,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Reset errors and reload simulation files
-     * @return a future object that can be used to determine when
-     *  setting the reset and all related actions is complete.
+     *
+     * @return a future object that can be used to determine when setting the
+     * reset and all related actions is complete.
      */
     public XFuture<Void> reset() {
         return reset(true);
@@ -4297,9 +4374,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Reset errors and optionally reload simulation files
      *
      * @param reloadSimFiles whether to reload simulation files
-     * 
-     * @return a future object that can be used to determine when
-     *  setting the reset and all related actions is complete.
+     *
+     * @return a future object that can be used to determine when setting the
+     * reset and all related actions is complete.
      */
     public XFuture<Void> reset(boolean reloadSimFiles) {
         return XFuture.runAsync("reset",
@@ -4508,6 +4585,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     /**
      * Check to see if the executor is in a state where it could begin working
      * on a new list of actions.
+     *
      * @return is executor ready for new actions.
      */
     public boolean readyForNewActionsList() {
@@ -5043,7 +5121,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 props.load(fr);
             }
             String useTeachTableString = props.getProperty(USETEACHTABLE);
-            if(null != useTeachTableString) {
+            if (null != useTeachTableString) {
                 jCheckBoxMenuItemUseTeachTable.setSelected(Boolean.valueOf(useTeachTableString));
             }
             String startPddlPlannerString = props.getProperty(STARTUPPDDLPLANNER);
@@ -5273,6 +5351,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Get the selected or top window (InternalJFrame).
+     *
      * @return active window
      */
     public ActiveWinEnum getActiveWin() {
@@ -5281,7 +5360,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Select a window (InternalJFrame)to be shown on top.
-     * 
+     *
      * @param activeWin
      */
     public void setActiveWin(ActiveWinEnum activeWin) {
@@ -5475,6 +5554,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToDatabaseOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToVisionOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVision;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectedRobot;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinuousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemEnableDebugDumpstacks;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
@@ -5524,7 +5604,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     /**
      * Get the file where properties are read from and written to.
-     * 
+     *
      * @return properties file
      */
     public File getPropertiesFile() {
@@ -5761,7 +5841,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Get the current directory for saving log files
      *
      * @return log files directory
-     * @throws java.io.IOException file can not be created ie default log directory does not exist.
+     * @throws java.io.IOException file can not be created ie default log
+     * directory does not exist.
      */
     public File getlogFileDir() throws IOException {
         File f = new File(Utils.getlogFileDir(), getRunName());
@@ -5817,15 +5898,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, dir);
     }
 
+    private volatile String asString = "";
+
     @Override
     public String toString() {
-        return getTitle();
+        return asString;
     }
 
     /**
      * Get a list with information on how the most recently loaded CRCL program
      * has run so far.
-     * 
+     *
      * @return run data for last program
      */
     public List<ProgramRunData> getLastProgRunDataList() {
@@ -5836,8 +5919,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
-     * Save the given run data which contains information on how a given program run went to 
-     * a CSV file.
+     * Save the given run data which contains information on how a given program
+     * run went to a CSV file.
+     *
      * @param f file to save
      * @param list data to write to file
      * @throws IOException file does not exist or not writeable etc
@@ -5850,8 +5934,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     /**
-     * Save the current run data which contains information on how a given program run went to 
-     * a CSV file.
+     * Save the current run data which contains information on how a given
+     * program run went to a CSV file.
+     *
      * @param f file to save
      * @throws IOException file does not exist or not writeable etc
      */

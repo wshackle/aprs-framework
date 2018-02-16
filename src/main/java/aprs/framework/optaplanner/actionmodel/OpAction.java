@@ -75,7 +75,6 @@ public class OpAction implements OpActionInterface {
     private OpActionType actionType;
 
     @Override
-    @SideEffectFree
     public OpActionType getActionType() {
         return actionType;
     }
@@ -157,7 +156,7 @@ public class OpAction implements OpActionInterface {
         if (null == next) {
             return null;
         }
-        List<OpActionInterface> nxts = new ArrayList<>();
+//        List<OpActionInterface> nxts = new ArrayList<>();
         switch (next.getActionType()) {
             case FAKE_DROPOFF:
                 return null;
@@ -171,13 +170,13 @@ public class OpAction implements OpActionInterface {
                     if (null == next) {
                         return null;
                     }
-                    nxts.add(next);
-                    nxts.add(nextNext);
+//                    nxts.add(next);
+//                    nxts.add(nextNext);
                     OpActionInterface nxt2 = nextNext.getNext();
                     if (null == nxt2) {
                         throw new IllegalStateException("this=" + name + " nxt2 ==null");
                     }
-                    nxts.add(nxt2);
+//                    nxts.add(nxt2);
                     OpActionInterface nxt2Next = nxt2.getNext();
                     if (null == nxt2Next) {
                         throw new IllegalStateException("this=" + name + " nxt2.getNext() ==null");
@@ -188,24 +187,24 @@ public class OpAction implements OpActionInterface {
                     if (nxt2 == this) {
                         throw new IllegalStateException("this=" + name + " nxt2 == this");
                     }
-                    nxts.add(nxt2Next);
+//                    nxts.add(nxt2Next);
                     int count = 0;
                     while (nxt2.getActionType() == PICKUP && nxt2Next.getActionType() == FAKE_DROPOFF) {
                         count++;
                         if (count > maxNextEffectiveCount) {
-                            throw new IllegalStateException("this=" + name + " count > maxCount,nxts=" + nxts);
+                            throw new IllegalStateException("this=" + name + " count > maxCount");//,nxts=" + nxts);
                         }
 
                         nxt2 = nxt2Next.getNext();
                         if (null == nxt2) {
                             throw new IllegalStateException("this=" + name + " nxt2Next.getNext() ==null");
                         }
-                        nxts.add(nxt2);
+//                        nxts.add(nxt2);
                         nxt2Next = nxt2.getNext();
                         if (null == nxt2Next) {
                             throw new IllegalStateException("this=" + name + " nxt2.getNext() ==null");
                         }
-                        nxts.add(nxt2Next);
+//                        nxts.add(nxt2Next);
                         if (nxt2 == next) {
                             throw new IllegalStateException("this=" + name + " nxt2 == next");
                         }
@@ -251,16 +250,17 @@ public class OpAction implements OpActionInterface {
         if (partTypeString.endsWith(")") && effNextString.startsWith("(")) {
             infoString = partTypeString.substring(0, partTypeString.length() - 1) + "," + effNextString.substring(1);
         }
-        if (next instanceof OpAction) {
-            OpActionType nextActionType = next.getActionType();
+        OpActionInterface localNext = this.next;
+        if (localNext instanceof OpAction) {
+            OpActionType nextActionType = localNext.getActionType();
             OpActionType actionType = getActionType();
-            if (null != next.getNext() && actionType != FAKE_DROPOFF && nextActionType != FAKE_DROPOFF) {
-                return name + infoString + " -> " + ((OpAction) next).name + "(cost=" + String.format("%.3f", cost()) + ")";
+            if (null != localNext.getNext() && actionType != FAKE_DROPOFF && nextActionType != FAKE_DROPOFF) {
+                return name + infoString + " -> " + ((OpAction) localNext).name + "(cost=" + String.format("%.3f", cost()) + ")";
             } else {
-                return name + infoString + " -> " + ((OpAction) next).name;
+                return name + infoString + " -> " + ((OpAction) localNext).name;
             }
-        } else if (null != next) {
-            return name + infoString + " -> " + next.getActionType();
+        } else if (null != localNext) {
+            return name + infoString + " -> " + localNext.getActionType();
         }
         return name + "-> null";
     }

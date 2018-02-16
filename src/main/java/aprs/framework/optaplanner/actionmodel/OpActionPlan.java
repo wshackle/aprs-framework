@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.impl.factory.Lists;
@@ -147,9 +148,15 @@ public class OpActionPlan {
     public void setScore(HardSoftLongScore score) {
         this.score = score;
     }
+    
+    private volatile String asString = "";
 
     @Override
     public String toString() {
+        return asString;
+    }
+    
+    public String computeString() {
         double totalCost = 0;
         OpAction startAction = findStartAction();
         StringBuilder sb = new StringBuilder();
@@ -232,7 +239,9 @@ public class OpActionPlan {
                 sb.append(" recheckCost(").append(recheckCost).append(") ");
             }
         }
-        return sb.toString();
+        String ret = sb.toString();
+        this.asString = ret;
+        return ret;
     }
 
     @Nullable public OpAction findStartAction() {

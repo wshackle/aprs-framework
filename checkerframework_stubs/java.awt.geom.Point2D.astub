@@ -1,0 +1,41 @@
+package java.awt.geom;
+
+import org.checkerframework.dataflow.qual.SideEffectFree;
+
+class Point2D implements Cloneable {
+    protected Point2D();
+    double getX();
+    double getY();
+    void setLocation(double arg0, double arg1);
+    void setLocation(Point2D arg0);
+    static double distanceSq(double arg0, double arg1, double arg2, double arg3);
+    static double distance(double arg0, double arg1, double arg2, double arg3);
+    double distanceSq(double arg0, double arg1);
+    double distanceSq(Point2D arg0);
+    @SideEffectFree double distance(double arg0, double arg1);
+    @SideEffectFree double distance(Point2D arg0);
+    Object clone();
+    int hashCode();
+    boolean equals(Object arg0);
+}
+class Point2D$Float extends Point2D implements Serializable {
+    float x;
+    float y;
+    Float();
+    Float(float arg0, float arg1);
+    double getX();
+    double getY();
+    void setLocation(double arg0, double arg1);
+    void setLocation(float arg0, float arg1);
+    String toString();
+}
+class Point2D$Double extends Point2D implements Serializable {
+    double x;
+    double y;
+    Double();
+    Double(double arg0, double arg1);
+    double getX();
+    double getY();
+    void setLocation(double arg0, double arg1);
+    String toString();
+}

@@ -66,6 +66,10 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         this.object2DOuterJPanel1.reloadDataFile();
     }
     
+    public void stopSimUpdateTimer() {
+        this.object2DOuterJPanel1.stopSimUpdateTimer();
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

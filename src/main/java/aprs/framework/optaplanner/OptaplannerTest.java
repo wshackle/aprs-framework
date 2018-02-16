@@ -86,10 +86,10 @@ public class OptaplannerTest {
         
         // Set the location to return to after the task is complete.
         ap.getEndAction().setLocation(new Point2D.Double(7, 0));
-        String apStr = ap.toString();
+        String apStr = ap.computeString();
         System.out.println("apStr = " + apStr);
         ap.initNextActions();
-        System.out.println("ap = " + ap);
+        System.out.println("ap = " + ap.computeString());
         
         // Manually get an score for the initial plan just for display.
         EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
@@ -110,7 +110,7 @@ public class OptaplannerTest {
         OpActionPlan solvedActionPlan = solver.solve(ap);
         
         // Print the results
-        System.out.println("solvedActionPlan = " + solvedActionPlan);
+        System.out.println("solvedActionPlan = " + solvedActionPlan.computeString());
         System.out.println("solvedActionPlan.getActions() = " + solvedActionPlan.getActions());
         score = calculator.calculateScore(solvedActionPlan);
         System.out.println("score = " + score);

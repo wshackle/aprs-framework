@@ -88,7 +88,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener, PendantClientJPanel.CurrentPoseListener {
-    
+
     public static List<PhysicalItem> showAndModifyData(List<PhysicalItem> itemsIn, SlotOffsetProvider sop, double minX, double minY, double maxX, double maxY) {
         JDialog diag = new JDialog();
         diag.setModal(true);
@@ -102,29 +102,29 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         diag.setVisible(true);
         return panel.getItems();
     }
-    
+
     public BufferedImage createSnapshotImage() {
         return object2DJPanel1.createSnapshotImage();
     }
-    
+
     public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts) {
         return object2DJPanel1.createSnapshotImage(opts);
     }
-    
+
     public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
         return object2DJPanel1.createSnapshotImage(opts, itemsToPaint);
     }
-    
+
     public List<PhysicalItem> getItems() {
         return object2DJPanel1.getItems();
     }
-    
+
     public List<PhysicalItem> getOutputItems() {
         return object2DJPanel1.getOutputItems();
     }
-    
+
     private volatile boolean settingItems = false;
-    
+
     @Override
     public void takeSnapshot(File f, PoseType pose, String label) {
         if (null != pose) {
@@ -133,7 +133,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             takeSnapshot(f, (PmCartesian) null, (String) null);
         }
     }
-    
+
     @Override
     public void takeSnapshot(File f, PointType point, String label) {
         if (null != point) {
@@ -142,7 +142,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             takeSnapshot(f, (PmCartesian) null, (String) null);
         }
     }
-    
+
     @Override
     public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         try {
@@ -166,7 +166,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     @Override
     public void takeSnapshot(File f, @Nullable PoseType pose, @Nullable String label, int w, int h) {
         if (null != pose) {
@@ -175,7 +175,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             takeSnapshot(f, (PmCartesian) null, (String) null, w, h);
         }
     }
-    
+
     @Override
     public void takeSnapshot(File f, @Nullable PointType point, @Nullable String label, int w, int h) {
         if (null != point) {
@@ -184,7 +184,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             takeSnapshot(f, (PmCartesian) null, (String) null);
         }
     }
-    
+
     @Override
     public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, int w, int h) {
         try {
@@ -209,7 +209,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     private boolean forceOutputFlag;
 
     /**
@@ -229,7 +229,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void setForceOutputFlag(boolean forceOutputFlag) {
         this.forceOutputFlag = forceOutputFlag;
     }
-    
+
     public void refresh(boolean loadFile) {
         if (jCheckBoxSimulated.isSelected()) {
             boolean fileLoaded = false;
@@ -251,17 +251,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
     }
-    
+
     @Override
     public void setItems(List<PhysicalItem> items) {
         setItems(items, true);
     }
-    
+
     private volatile @Nullable
     Map<String, Integer> origNamesMap = null;
-    
+
     public void setItems(List<PhysicalItem> items, boolean publish) {
         settingItems = true;
+        for (PhysicalItem item : items) {
+            if (item.x < 100 || item.y > 300) {
+                System.out.println("item = " + item);
+            }
+        }
         Utils.runOnDispatchThread(() -> {
             setItemsInternal(items);
             settingItems = false;
@@ -273,7 +278,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
     }
-    
+
     public void setOutputItems(List<PhysicalItem> items) {
         settingItems = true;
         Utils.runOnDispatchThread(() -> {
@@ -281,12 +286,25 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             settingItems = false;
         });
     }
-    
+
     private void setItemsInternal(List<PhysicalItem> items) {
         if (null != aprsJFrame && aprsJFrame.isVisionToDbConnected()) {
             object2DJPanel1.setRotationOffset(aprsJFrame.getVisionToDBRotationOffset());
         }
         object2DJPanel1.setItems(items);
+        updateItemsTableInternal(items);
+        loadTraySlotInfo(items);
+    }
+
+    private void updateItemsTable(List<PhysicalItem> items) {
+        settingItems = true;
+        Utils.runOnDispatchThread(() -> {
+            updateItemsTableInternal(items);
+            settingItems = false;
+        });
+    }
+    
+    private void updateItemsTableInternal(List<PhysicalItem> items) {
         if (!object2DJPanel1.isShowOutputItems()) {
             if (object2DJPanel1.isShowAddedSlotPositions()) {
                 loadItemsToTable(object2DJPanel1.getItemsWithAddedSlots(), jTableItems);
@@ -294,9 +312,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 loadItemsToTable(items, jTableItems);
             }
         }
-        loadTraySlotInfo(items);
     }
-    
+
     private static double minDist(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()
                 .filter(x -> x.getType().equals("P"))
@@ -304,11 +321,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .min()
                 .orElse(Double.POSITIVE_INFINITY);
     }
-    
+
     private boolean slotFilled(double sx, double sy, List<PhysicalItem> items) {
         return minDist(sx, sy, items) < 20.0;
     }
-    
+
     private void loadTraySlotInfo(List<PhysicalItem> items) {
         int row = jTableItems.getSelectedRow();
         if (row < 0) {
@@ -319,7 +336,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (object2DJPanel1.isShowOutputItems()) {
             return;
         }
-        
+
         String type = (String) jTableItems.getValueAt(row, 5);
         if (null == type) {
             return;
@@ -366,13 +383,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //                    }
                 }
                 break;
-            
+
             default:
                 tm.setRowCount(0);
         }
         Utils.autoResizeTableColWidths(jTableTraySlots);
     }
-    
+
     private void setOutputItemsInternal(List<PhysicalItem> items) {
         object2DJPanel1.setOutputItems(items);
         if (object2DJPanel1.isShowOutputItems()) {
@@ -383,20 +400,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
     }
-    
+
     private void loadItemsToTable(List<PhysicalItem> items, JTable jtable) {
         boolean origSettingItems = settingItems;
         settingItems = true;
         int origSelectedRow = jtable.getSelectedRow();
         int origSelectedRowIndex = -1;
-        
+
         if (origSelectedRow >= 0 && origSelectedRow < jtable.getRowCount()) {
             Integer indexFromTable = (Integer) jtable.getValueAt(origSelectedRow, 0);
             if (null != indexFromTable) {
                 origSelectedRowIndex = (int) indexFromTable;
             }
         }
-        
+
         RowSorter<? extends TableModel> rowSorter = jtable.getRowSorter();
         if (null != rowSorter) {
             jtable.setRowSorter(null);
@@ -434,7 +451,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         settingItems = origSettingItems;
     }
-    
+
     public List<PhysicalItem> computeAbsSlotPositions(List<PhysicalItem> l) {
         return object2DJPanel1.computeAbsSlotPositions(l);
     }
@@ -451,7 +468,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             public void tableChanged(TableModelEvent e) {
                 try {
                     boolean changeFound = false;
-                    
+
                     if (!settingItems && !object2DJPanel1.isShowOutputItems()) {
                         List<PhysicalItem> l = new ArrayList<>();
                         l.addAll(getItems());
@@ -630,6 +647,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseMoved(evt);
+            }
             public void mouseDragged(java.awt.event.MouseEvent evt) {
                 object2DJPanel1MouseDragged(evt);
             }
@@ -643,6 +663,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 object2DJPanel1MouseClicked(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseExited(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseEntered(evt);
             }
         });
 
@@ -1278,7 +1304,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         updateTextFieldDouble(posNoise, jTextFieldPosNoise, 0.01);
         this.posNoise = posNoise;
     }
-    
+
     private double rotNoise = 1.0;
 
     /**
@@ -1289,7 +1315,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public double getRotNoise() {
         return rotNoise;
     }
-    
+
     private void updateTextFieldDouble(double value, JTextField textField, double threshold) {
         if (Math.abs(value - Double.parseDouble(textField.getText().trim())) > threshold) {
             textField.setText(String.format("%.3f", value));
@@ -1305,9 +1331,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         updateTextFieldDouble(rotNoise, jTextFieldRotNoise, 0.01);
         this.rotNoise = rotNoise;
     }
-    
+
     private void setSimulatedInternal(boolean simulated) {
-        
+
         jButtonAdd.setEnabled(simulated);
         jButtonDelete.setEnabled(simulated);
         jButtonReset.setEnabled(simulated);
@@ -1350,14 +1376,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setSimulatedInternal(this.jCheckBoxSimulated.isSelected());
         disconnect();
     }//GEN-LAST:event_jCheckBoxSimulatedActionPerformed
-    
+
     public void setSimulatedAndDisconnect() {
         this.jCheckBoxConnected.setSelected(false);
         this.jCheckBoxSimulated.setSelected(true);
         setSimulatedInternal(true);
         disconnect();
     }
-    
+
     @Nullable
     private VisionSocketServer visionSocketServer = null;
     @Nullable
@@ -1374,7 +1400,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             disconnect();
         }
     }//GEN-LAST:event_jCheckBoxConnectedActionPerformed
-    
+
     private void disconnect() {
         if (null != visionSocketClient) {
             try {
@@ -1390,7 +1416,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             visionSocketServer = null;
         }
     }
-    
+
     private void connect() throws NumberFormatException {
         if (this.jCheckBoxSimulated.isSelected()) {
             try {
@@ -1441,7 +1467,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             clnt.addListener(this);
         }
     }
-    
+
     private double simulatedDropRate = 0.0;
 
     /**
@@ -1468,18 +1494,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         updateTextFieldDouble(simulatedDropRate, jTextFieldSimDropRate, 0.001);
         this.simulatedDropRate = simulatedDropRate;
     }
-    
+
     private final Random dropRandom = new Random();
-    
+
     private boolean dropFilter(Object x) {
         if (simulatedDropRate < 0.001) {
             return true;
         }
         return dropRandom.nextDouble() > simulatedDropRate;
     }
-    
+
     private final Random posRandom = new Random();
-    
+
     private PhysicalItem noiseFilter(PhysicalItem in) {
         if (!jCheckBoxAddPosNoise.isSelected()) {
             return in;
@@ -1494,7 +1520,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         return out;
     }
-    
+
     private void publishCurrentItems() {
         if (forceOutputFlag) {
             return;
@@ -1546,7 +1572,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             setItems(l);
         }
     }//GEN-LAST:event_jButtonDeleteActionPerformed
-    
+
+    private volatile double last_drag_scale;
+    private volatile double last_drag_min_x;
+    private volatile double last_drag_max_x;
+    private volatile double last_drag_min_y;
+    private volatile double last_drag_max_y;
 
     private void object2DJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseDragged
         double scale = object2DJPanel1.getScale();
@@ -1563,17 +1594,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     itemToDrag.x = ((evt.getX() - 15) / scale) + min_x;
                     itemToDrag.y = max_y - ((evt.getY() - 20) / scale);
                     break;
-                
+
                 case POS_Y_NEG_X:
                     itemToDrag.x = ((evt.getY() - 20) / scale) + min_x;
                     itemToDrag.y = ((evt.getX() - 15) / scale) + min_y;
                     break;
-                
+
                 case NEG_X_NEG_Y:
                     itemToDrag.x = max_x - ((evt.getX() - 15) / scale);
                     itemToDrag.y = ((evt.getY() - 20) / scale) + min_y;
                     break;
-                
+
                 case NEG_Y_POS_X:
                     itemToDrag.x = max_x - ((evt.getY() - 20) / scale);
                     itemToDrag.y = max_y - ((evt.getX() - 15) / scale);
@@ -1583,65 +1614,78 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //            itemToDrag.y = max_y - ((evt.getY() - 20) / scale);
             double xdiff = itemToDrag.x - orig_x;
             double ydiff = itemToDrag.y - orig_y;
-            List<PhysicalItem> origItems = this.getItems();
-            if (itemToDrag.getMaxSlotDist() > 0) {
-                for (int i = 0; i < origItems.size(); i++) {
-                    PhysicalItem item = origItems.get(i);
-                    if (item == itemToDrag) {
-                        continue;
-                    }
-                    if (item.getMaxSlotDist() > 0) {
-                        continue;
-                    }
-                    if (item.dist(orig_x, orig_y) > itemToDrag.getMaxSlotDist() * object2DJPanel1.getSlotMaxDistExpansion()) {
-                        continue;
-                    }
-                    boolean foundCloser = false;
-                    for (int j = 0; j < origItems.size(); j++) {
-                        if (j == i) {
+            if (Math.abs(xdiff) > 100 || Math.abs(ydiff) > 100) {
+                System.out.println("big drag jump");
+                this.draggedItem = null;
+                return;
+            }
+            last_drag_max_x = max_x;
+            last_drag_min_x = min_x;
+            last_drag_max_y = max_y;
+            last_drag_min_y = min_y;
+            last_drag_scale = scale;
+
+            if (!evt.isShiftDown() && !evt.isAltDown() && !evt.isControlDown()) {
+                List<PhysicalItem> origItems = this.getItems();
+                if (itemToDrag.getMaxSlotDist() > 0) {
+                    for (int i = 0; i < origItems.size(); i++) {
+                        PhysicalItem item = origItems.get(i);
+                        if (item == itemToDrag) {
                             continue;
                         }
-                        PhysicalItem otherItem = origItems.get(j);
-                        if (otherItem == itemToDrag) {
+                        if (item.getMaxSlotDist() > 0) {
                             continue;
                         }
-                        if (otherItem == item) {
+                        if (item.dist(orig_x, orig_y) > itemToDrag.getMaxSlotDist() * object2DJPanel1.getSlotMaxDistExpansion()) {
                             continue;
                         }
-                        if (otherItem.getMaxSlotDist() > 1e-6
-                                && item.dist(otherItem) < item.dist(orig_x, orig_y)) {
-                            foundCloser = true;
-                            break;
+                        boolean foundCloser = false;
+                        for (int j = 0; j < origItems.size(); j++) {
+                            if (j == i) {
+                                continue;
+                            }
+                            PhysicalItem otherItem = origItems.get(j);
+                            if (otherItem == itemToDrag) {
+                                continue;
+                            }
+                            if (otherItem == item) {
+                                continue;
+                            }
+                            if (otherItem.getMaxSlotDist() > 1e-6
+                                    && item.dist(otherItem) < item.dist(orig_x, orig_y)) {
+                                foundCloser = true;
+                                break;
+                            }
                         }
+                        if (foundCloser) {
+                            continue;
+                        }
+                        item.x += xdiff;
+                        item.y += ydiff;
                     }
-                    if (foundCloser) {
-                        continue;
-                    }
-                    item.x += xdiff;
-                    item.y += ydiff;
                 }
             }
-            this.setItems(this.getItems());
+            this.updateItemsTable(getItems());
         }
-        int minIndex = -1;
-        int x = evt.getX();
-        int y = evt.getY();
-        ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex);
-        PhysicalItem closestItem = closestItemInfo.getClosestItem();
-        minIndex = closestItemInfo.getMinIndex();
-        if (minIndex >= 0 && closestItem == itemToDrag) {
-            ListSelectionModel selectModel = jTableItems.getSelectionModel();
-            selectModel.setAnchorSelectionIndex(minIndex);
-            selectModel.setLeadSelectionIndex(minIndex);
-            selectModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            selectModel.setSelectionInterval(minIndex, minIndex);
-            object2DJPanel1.setSelectedItemIndex(minIndex);
-        }
+//        int minIndex = -1;
+//        int x = evt.getX();
+//        int y = evt.getY();
+//        ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex);
+//        PhysicalItem closestItem = closestItemInfo.getClosestItem();
+//        minIndex = closestItemInfo.getMinIndex();
+//        if (minIndex >= 0 && closestItem == itemToDrag) {
+//            ListSelectionModel selectModel = jTableItems.getSelectionModel();
+//            selectModel.setAnchorSelectionIndex(minIndex);
+//            selectModel.setLeadSelectionIndex(minIndex);
+//            selectModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+//            selectModel.setSelectionInterval(minIndex, minIndex);
+//            object2DJPanel1.setSelectedItemIndex(minIndex);
+//        }
     }//GEN-LAST:event_object2DJPanel1MouseDragged
-    
+
     @Nullable
-    private PhysicalItem draggedItem = null;
-    
+    private volatile PhysicalItem draggedItem = null;
+
     private boolean insideItem(PhysicalItem item, int x, int y) {
         if (null == item || null == item.getDisplayTransform()) {
             return false;
@@ -1666,11 +1710,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private void object2DJPanel1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MousePressed
-        
+
         int x = evt.getX();
         int y = evt.getY();
         draggedItem = null;
-        
+
         int minIndex = -1;
         ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex);
         PhysicalItem closestItem = closestItemInfo.getClosestItem();
@@ -1694,7 +1738,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         String txt = jTextFieldMaxXMaxY.getText().trim();
         setMaxXMaxYText(txt);
     }//GEN-LAST:event_jTextFieldMaxXMaxYActionPerformed
-    
+
     public void setViewLimits(double minX, double minY, double maxX, double maxY) {
         String minXMinYString = String.format("%.3f,%.3f", minX, minY);
         jTextFieldMinXMinY.setText(minXMinYString);
@@ -1706,7 +1750,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.jCheckBoxAutoscale.setSelected(false);
         object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
     }
-    
+
     public void setMaxXMaxYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
@@ -1759,31 +1803,31 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void jComboBoxDisplayAxisActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxDisplayAxisActionPerformed
         object2DJPanel1.setDisplayAxis((DisplayAxis) jComboBoxDisplayAxis.getSelectedItem());
     }//GEN-LAST:event_jComboBoxDisplayAxisActionPerformed
-    
+
     public File createTempFile(String prefix, String suffix) throws IOException {
         if (null == aprsJFrame) {
             return Utils.createTempFile(prefix, suffix);
         }
-        
+
         return aprsJFrame.createTempFile(prefix, suffix);
     }
-    
+
     public File createTempFile(String prefix, String suffix, File dir) throws IOException {
         if (null == aprsJFrame) {
             return Utils.createTempFile(prefix, suffix, dir);
         }
         return aprsJFrame.createTempFile(prefix, suffix, dir);
     }
-    
+
     private boolean isSnapshotsEnabled() {
         if (null == aprsJFrame) {
             return true;
         }
         return aprsJFrame.isSnapshotsEnabled();
     }
-    
+
     public void loadFile(File f) throws IOException {
-        
+
         boolean takeSnapshots = isSnapshotsEnabled();
         if (takeSnapshots) {
             try {
@@ -1809,20 +1853,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             });
         }
     }
-    
+
     public void saveFile(File f) throws IOException {
         saveFile(f, getItems());
     }
-    
+
     private void saveFile(File f, Collection<? extends PhysicalItem> items) throws IOException {
-        
+
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             pw.println("name,rotation,x,y,score,type");
             for (PhysicalItem item : items) {
                 pw.println(item.getName() + "," + item.getRotation() + "," + item.x + "," + item.y + "," + item.getScore() + "," + item.getType());
             }
         }
-        
+
     }
 
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
@@ -1878,10 +1922,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void jTextFieldCurrentXYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldCurrentXYActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextFieldCurrentXYActionPerformed
-    
+
     double currentX = 0.0;
     double currentY = 0.0;
-    
+
     private AprsJFrame aprsJFrame;
 
     /**
@@ -1903,26 +1947,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.object2DJPanel1.setAprsJFrame(aprsJFrame);
         setSlotOffsetProvider(aprsJFrame);
     }
-    
+
     @MonotonicNonNull
     private SlotOffsetProvider slotOffsetProvider = null;
-    
+
     @Nullable
     public SlotOffsetProvider getSlotOffsetProvider() {
         return slotOffsetProvider;
     }
-    
+
     public void setSlotOffsetProvider(SlotOffsetProvider slotOffsetProvider) {
         this.slotOffsetProvider = slotOffsetProvider;
         this.object2DJPanel1.setSlotOffsetProvider(slotOffsetProvider);
     }
-    
+
     public void connectCurrentPosition() {
         if (null != aprsJFrame) {
             aprsJFrame.addCurrentPoseListener(this);
         }
     }
-    
+
     public void disconnectCurrentPosition() {
         if (null != aprsJFrame) {
             aprsJFrame.removeCurrentPoseListener(this);
@@ -1950,7 +1994,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void jCheckBoxAutoscaleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAutoscaleActionPerformed
         object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
     }//GEN-LAST:event_jCheckBoxAutoscaleActionPerformed
-    
+
     PmCartesian getMinOffset() {
         PmCartesian minDiffCart = new PmCartesian();
         PointType current = aprsJFrame.getCurrentPosePoint();
@@ -2004,7 +2048,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void jCheckBoxViewOutputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxViewOutputActionPerformed
         setShowOutputItems(jCheckBoxViewOutput.isSelected());
     }//GEN-LAST:event_jCheckBoxViewOutputActionPerformed
-    
+
     public void setShowOutputItems(boolean showOutputItems) {
         object2DJPanel1.setShowOutputItems(showOutputItems);
         if (!showOutputItems) {
@@ -2053,10 +2097,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             selectModel.setSelectionInterval(minIndex, minIndex);
             object2DJPanel1.setSelectedItemIndex(minIndex);
         }
+        this.draggedItem = null;
     }//GEN-LAST:event_object2DJPanel1MouseClicked
-    
+
+    private void object2DJPanel1MouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseMoved
+        this.draggedItem = null;
+    }//GEN-LAST:event_object2DJPanel1MouseMoved
+
+    private void object2DJPanel1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseEntered
+       this.draggedItem = null;
+    }//GEN-LAST:event_object2DJPanel1MouseEntered
+
+    private void object2DJPanel1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseExited
+        this.draggedItem = null;
+    }//GEN-LAST:event_object2DJPanel1MouseExited
+
     javax.swing.@Nullable Timer simUpdateTimer = null;
-    
+
     private int simRefreshMillis = 50;
 
     /**
@@ -2079,7 +2136,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         this.simRefreshMillis = simRefreshMillis;
     }
-    
+
     private void simUpdateAction(ActionEvent evt) {
         if (jCheckBoxSimulationUpdateAsNeeded.isSelected()) {
             return;
@@ -2088,22 +2145,25 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             refresh(false);
         }
     }
-    
-    private void setupSimUpdateTimer() {
-        if (forceOutputFlag) {
-            return;
-        }
+
+    public void stopSimUpdateTimer() {
         if (null != simUpdateTimer) {
             simUpdateTimer.stop();
             simUpdateTimer = null;
         }
+    }
+    private void setupSimUpdateTimer() {
+        if (forceOutputFlag) {
+            return;
+        }
+        stopSimUpdateTimer();
         if (jCheckBoxSimulationUpdateAsNeeded.isSelected()) {
             return;
         }
         simUpdateTimer = new javax.swing.Timer(simRefreshMillis, this::simUpdateAction);
         simUpdateTimer.start();
     }
-    
+
     private void offsetAll() {
         try {
             PmCartesian minOffset = getMinOffset();
@@ -2134,7 +2194,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void setTrackCurrentPos(boolean v) {
         if (jCheckBoxShowCurrent.isSelected() != v) {
             jCheckBoxShowCurrent.setSelected(v);
@@ -2146,7 +2206,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             disconnectCurrentPosition();
         }
     }
-    
+
     public void setMinXMinYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
@@ -2233,13 +2293,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             visionSocketServer = null;
         }
     }
-    
+
     private File propertiesFile;
-    
+
     public void setPropertiesFile(File f) {
         this.propertiesFile = f;
     }
-    
+
     private static String makeShortPath(File f, String str) {
         try {
             if (str.startsWith("..")) {
@@ -2263,7 +2323,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         return str;
     }
-    
+
     public void saveProperties() throws IOException {
         if (null != propertiesFile) {
             File parentFile = propertiesFile.getParentFile();
@@ -2319,7 +2379,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
     private static final String ITEMS_PROPERTY_NAME = "items";
-    
+
     private boolean reverseFlag = false;
 
     /**
@@ -2339,7 +2399,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void setReverseFlag(boolean reverseFlag) {
         this.reverseFlag = reverseFlag;
     }
-    
+
     public void loadProperties() throws IOException {
         if (null != propertiesFile && propertiesFile.exists()) {
             Properties props = new Properties();
@@ -2370,7 +2430,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            
+
             String simulationUpdateAsNeededString = props.getProperty("simulationUpdateAsNeeded");
             if (null != simulationUpdateAsNeededString && simulationUpdateAsNeededString.length() > 0) {
                 boolean simulationUpdateAsNeeded = Boolean.valueOf(simulationUpdateAsNeededString);
@@ -2378,19 +2438,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jTextFieldSimulationUpdateTime.setEditable(jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
                 jTextFieldSimulationUpdateTime.setEnabled(jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
             }
-            
+
             String shuffleSimulatedUpdatesString = props.getProperty("shuffleSimulatedUpdates");
             if (null != shuffleSimulatedUpdatesString && shuffleSimulatedUpdatesString.length() > 0) {
                 boolean shuffleSimulatedUpdates = Boolean.valueOf(shuffleSimulatedUpdatesString);
                 jCheckBoxShuffleSimulatedUpdates.setSelected(shuffleSimulatedUpdates);
             }
-            
+
             String viewOutputString = props.getProperty("viewOutput");
             if (null != viewOutputString && viewOutputString.length() > 0) {
                 boolean viewOutput = Boolean.valueOf(viewOutputString);
                 jCheckBoxViewOutput.setSelected(viewOutput);
             }
-            
+
             String addPosNoiseString = props.getProperty("addPosNoise");
             if (null != addPosNoiseString && addPosNoiseString.length() > 0) {
                 boolean addPosNoise = Boolean.valueOf(addPosNoiseString);
@@ -2404,25 +2464,25 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
                 setSimulatedDropRate(simDropRate);
             }
-            
+
             String pickupDistString = props.getProperty("pickupDist");
             if (null != pickupDistString && pickupDistString.length() > 0) {
                 double simPickupDist = Double.parseDouble(pickupDistString);
                 setPickupDist(simPickupDist);
             }
-            
+
             String dropOffThresholdString = props.getProperty("dropOffThreshold");
             if (null != dropOffThresholdString && dropOffThresholdString.length() > 0) {
                 double simDropOffThreshold = Double.parseDouble(dropOffThresholdString);
                 setDropOffThreshold(simDropOffThreshold);
             }
-            
+
             String posNoiseString = props.getProperty("posNoise");
             if (null != posNoiseString && posNoiseString.length() > 0) {
                 double simPosNoise = Double.parseDouble(posNoiseString);
                 setPosNoise(simPosNoise);
             }
-            
+
             String rotNoiseString = props.getProperty("rotNoise");
             if (null != rotNoiseString && rotNoiseString.length() > 0) {
                 double simRotNoise = Double.parseDouble(rotNoiseString);
@@ -2433,14 +2493,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 int simRefreshMs = Integer.parseInt(simRefreshMillisString);
                 setSimRefreshMillis(simRefreshMs);
             }
-            
+
             String simulatedString = props.getProperty("simulated");
             if (null != simulatedString && simulatedString.length() > 0) {
                 boolean simulated = Boolean.valueOf(simulatedString);
                 jCheckBoxSimulated.setSelected(simulated);
                 setSimulatedInternal(simulated);
             }
-            
+
             String autoscaleString = props.getProperty("autoscale");
             if (null != autoscaleString && autoscaleString.length() > 0) {
                 boolean autoscale = Boolean.valueOf(autoscaleString);
@@ -2449,7 +2509,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             reverseDataFileString = props.getProperty("reverse_datafile");
             dataFileString = props.getProperty("datafile");
-            
+
             String xmaxymaxString = props.getProperty("xmaxymax");
             if (null != xmaxymaxString) {
                 setMaxXMaxYText(xmaxymaxString);
@@ -2506,27 +2566,27 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
     }
-    
+
     public boolean isSimulated() {
         return jCheckBoxSimulated.isSelected();
     }
-    
+
     public boolean isConnected() {
         return jCheckBoxConnected.isSelected();
     }
-    
+
     @Nullable
     private String dataFileString = null;
     @Nullable
     private String reverseDataFileString = null;
     @Nullable
     private volatile String loadedDataFileString = null;
-    
+
     @Nullable
     public String getCurrentDataFileString() {
         return reverseFlag ? this.reverseDataFileString : this.dataFileString;
     }
-    
+
     public boolean needReloadDataFile() {
         String currentDataFileString = getCurrentDataFileString();
         if (null == currentDataFileString) {
@@ -2537,7 +2597,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         return !Objects.equals(currentDataFileString, loadedDataFileString);
     }
-    
+
     public void reloadDataFile() throws IOException {
         String currentDataFileString = getCurrentDataFileString();
         if (null != currentDataFileString && currentDataFileString.length() > 0) {
@@ -2567,11 +2627,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             loadedDataFileString = currentDataFileString;
         }
     }
-    
+
     public File getPropertiesFile() {
         return propertiesFile;
     }
-    
+
     @Override
     public void visionClientUpdateRecieved(List<PhysicalItem> l, String line) {
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
@@ -2585,15 +2645,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             });
         }
     }
-    
+
     private volatile boolean lastIsHoldingObjectExpected = false;
     private volatile int captured_item_index = -1;
-    
+
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
         saveSnapshotCsv(f, itemsToPaint);
     }
-    
+
     private void saveSnapshotCsv(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         try {
             File csvDir = new File(f.getParentFile(), "csv");
@@ -2603,15 +2663,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
         saveSnapshotCsv(f, itemsToPaint);
     }
-    
+
     private volatile long lastIsHoldingObjectExpectedTime = -1;
     private volatile long lastNotIsHoldingObjectExpectedTime = -1;
-    
+
     private double pickupDist = 5.0;
 
     /**
@@ -2632,7 +2692,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         updateTextFieldDouble(pickupDist, jTextFieldPickupDist, 0.005);
         this.pickupDist = pickupDist;
     }
-    
+
     private double dropOffThreshold = 25.0;
 
     /**
@@ -2653,18 +2713,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         updateTextFieldDouble(pickupDist, jTextFieldDropOffThreshold, 0.005);
         this.dropOffThreshold = dropOffThreshold;
     }
-    
+
     public static class DistIndex {
-        
+
         public double dist;
         public int index;
-        
+
         public DistIndex(double dist, int index) {
             this.dist = dist;
             this.index = index;
         }
     }
-    
+
     public double getClosestRobotPartDistance() {
         if (null == aprsJFrame) {
             return Double.POSITIVE_INFINITY;
@@ -2675,16 +2735,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         return getClosestUncorrectedDistance(currentPoint);
     }
-    
+
     public double getClosestUncorrectedDistance(PointType ptIn) {
         PointType uncorrectedPoint = aprsJFrame.reverseCorrectPoint(ptIn);
         List<PhysicalItem> l = new ArrayList<>();
         l.addAll(getItems());
         return getClosestDistanceIndex(uncorrectedPoint.getX(), uncorrectedPoint.getY(), l).dist;
     }
-    
+
     private DistIndex getClosestDistanceIndex(double x, double y, List<PhysicalItem> l) {
-        
+
         double min_dist = Double.POSITIVE_INFINITY;
         int min_dist_index = -1;
         for (int i = 0; i < l.size(); i++) {
@@ -2703,11 +2763,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         return new DistIndex(min_dist, min_dist_index);
     }
-    
+
     @Override
     public void handlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
+
+        if (!jCheckBoxShowCurrent.isSelected()) {
+            return;
+        }
         PointType ptIn = pose.getPoint();
-        
+
         boolean takeSnapshots = isSnapshotsEnabled();
         PointType uncorrectedPoint = aprsJFrame.reverseCorrectPoint(ptIn);
         currentX = uncorrectedPoint.getX();
@@ -2721,15 +2785,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         DistIndex di = getClosestDistanceIndex(currentX, currentY, l);
         double min_dist = di.dist;
         int min_dist_index = di.index;
-        
+
         long time = System.currentTimeMillis();
-        
+
         if (isHoldingObjectExpected) {
             lastIsHoldingObjectExpectedTime = time;
         } else {
             lastNotIsHoldingObjectExpectedTime = time;
         }
-        
+
         if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
             object2DJPanel1.setCapturedPartPoint(new Point2D.Double(currentX, currentY));
         } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
@@ -2815,15 +2879,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         lastIsHoldingObjectExpected = isHoldingObjectExpected;
     }
-    
+
     private class ClosestItemInfo {
-        
+
         private final int x;
         private final int y;
         @Nullable
         private PhysicalItem closestItem;
         private int minIndex;
-        
+
         public ClosestItemInfo(int x, int y, int minIndex) {
             this.x = x;
             this.y = y;
@@ -2838,7 +2902,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 PhysicalItem item = items.get(i);
                 double rel_x = (item.x - min_x) * scale + 15;
                 double rel_y = (max_y - item.y) * scale + 20;
-                
+
                 double diff_x = rel_x - x;
                 double diff_y = rel_y - y;
                 double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
@@ -2851,12 +2915,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
         }
-        
+
         @Nullable
         public PhysicalItem getClosestItem() {
             return closestItem;
         }
-        
+
         public int getMinIndex() {
             return minIndex;
         }

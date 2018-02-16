@@ -4494,7 +4494,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addMoveTo(out, pose, false);
     }
 
-    @SideEffectFree private void checkDbReady() throws IllegalStateException {
+    private void checkDbReady() throws IllegalStateException {
         if (null == externalPoseProvider) {
             if (null == qs) {
                 throw new IllegalStateException("Database not setup and connected.");
