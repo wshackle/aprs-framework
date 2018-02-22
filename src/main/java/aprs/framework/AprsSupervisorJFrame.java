@@ -45,6 +45,7 @@ import crcl.ui.misc.MultiLineStringJPanel;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GraphicsDevice;
@@ -2176,6 +2177,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemPauseAllForOne = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemContDemoReverseFirstOption = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemUseTeachCamera = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemKeepAndDisplayXFutureProfiles = new javax.swing.JCheckBoxMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Multi Aprs Supervisor");
@@ -2961,6 +2963,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemUseTeachCamera.setText("Use Teach Camera");
         jMenuOptions.add(jCheckBoxMenuItemUseTeachCamera);
 
+        jCheckBoxMenuItemKeepAndDisplayXFutureProfiles.setText("Keep and Display XFuture Profiles");
+        jMenuOptions.add(jCheckBoxMenuItemKeepAndDisplayXFutureProfiles);
+
         jMenuBar1.add(jMenuOptions);
 
         setJMenuBar(jMenuBar1);
@@ -3153,17 +3158,23 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             connectAll();
             setAllReverseFlag(false);
             enableAllRobots();
-            XFuture.setKeepOldProfileStrings(true);
+//            XFuture.setKeepOldProfileStrings(true);
             lastFutureReturned = startAll();
             mainFuture = lastFutureReturned;
             XFuture<?> xf = lastFutureReturned;
             xf.thenRun(() -> {
-                try (PrintStream ps = new PrintStream(new FileOutputStream(Utils.createTempFile("startAll_profile_", ".csv")))) {
-                    xf.printProfile(ps);
+                try {
+                    if (jCheckBoxMenuItemKeepAndDisplayXFutureProfiles.isSelected()) {
+                        File profileFile = Utils.createTempFile("startAll_profile_", ".csv");
+                        try (PrintStream ps = new PrintStream(new FileOutputStream(profileFile))) {
+                            xf.printProfile(ps);
+                        }
+                        Desktop.getDesktop().open(profileFile);
+                    }
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-            });
+            }).thenCompose(x -> showAllTasksCompleteDisplay());
         });
     }//GEN-LAST:event_jMenuItemStartAllActionPerformed
 
@@ -4459,7 +4470,16 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         logEvent("Scans Complete");
         setAbortTimeCurrent();
         return showMessageFullScreen("Scans Complete", 80.0f,
-                SplashScreen.getRobotArmImage(),
+                null,
+                SplashScreen.getBlueWhiteGreenColorList(), gd);
+    }
+
+    private XFuture<Void> showAllTasksCompleteDisplay() {
+        final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
+        logEvent("All Tasks Complete");
+        setAbortTimeCurrent();
+        return showMessageFullScreen("All Tasks Complete", 80.0f,
+                null,
                 SplashScreen.getBlueWhiteGreenColorList(), gd);
     }
 
@@ -4485,7 +4505,6 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                         });
 
                     });
-
                 });
     }
 
@@ -5218,7 +5237,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      */
     public XFuture<Boolean> startCheckAndEnableAllRobots() {
 
-        Utils.runOnDispatchThread(() -> {
+        Utils.SwingFuture<Void> step1Future = Utils.runOnDispatchThread(() -> {
             DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
             for (int i = 0; i < model.getRowCount(); i++) {
                 String robotName = (String) jTableRobots.getValueAt(i, 0);
@@ -5230,7 +5249,10 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 }
             }
             Utils.autoResizeTableColWidths(jTableRobots);
-        }).thenRunAsync("sendEnableToColorTextSocket", () -> {
+        });
+        boolean KeepAndDisplayXFutureProfilesSelected = jCheckBoxMenuItemKeepAndDisplayXFutureProfiles.isSelected();
+        step1Future.setKeepOldProfileStrings(KeepAndDisplayXFutureProfilesSelected);
+        XFuture<Void> step2Future = step1Future.thenRunAsync("sendEnableToColorTextSocket", () -> {
             try {
                 initColorTextSocket();
                 Socket socket = colorTextSocket;
@@ -5243,15 +5265,19 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 log(Level.SEVERE, null, ex);
             }
         }, supervisorExecutorService);
-        String blockerName = "enableAndCheckAllRobots" + enableAndCheckAllRobotsCount.incrementAndGet();
-        AprsJFrame sysArray[] = getAprsSystems().toArray(new AprsJFrame[getAprsSystems().size()]);
-        disallowToggles(blockerName, sysArray);
-        cancelAllStealUnsteal(false);
-        return returnRobots("enableAndCheckAllRobots")
-                .thenComposeAsync(x -> checkEnabledAll(), supervisorExecutorService)
-                .alwaysAsync(() -> {
-                    allowToggles(blockerName, sysArray);
-                }, supervisorExecutorService);
+        return step2Future.thenCompose(x -> {
+            String blockerName = "enableAndCheckAllRobots" + enableAndCheckAllRobotsCount.incrementAndGet();
+            AprsJFrame sysArray[] = getAprsSystems().toArray(new AprsJFrame[getAprsSystems().size()]);
+            disallowToggles(blockerName, sysArray);
+            cancelAllStealUnsteal(false);
+            XFuture<@Nullable Void> rrF = returnRobots("enableAndCheckAllRobots");
+            rrF.setKeepOldProfileStrings(KeepAndDisplayXFutureProfilesSelected);
+            return rrF
+                    .thenComposeAsync(x2 -> checkEnabledAll(), supervisorExecutorService)
+                    .alwaysAsync(() -> {
+                        allowToggles(blockerName, sysArray);
+                    }, supervisorExecutorService);
+        });
     }
 
     private XFuture<Boolean> checkEnabledAll() {
@@ -6598,6 +6624,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemFixedRandomTestSeed;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemIndContinousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemIndRandomToggleTest;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKeepAndDisplayXFutureProfiles;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPauseAllForOne;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPauseResumeTest;

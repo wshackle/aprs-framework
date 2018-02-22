@@ -306,6 +306,11 @@
                 <Property name="text" type="java.lang.String" value="Use Teach Camera"/>
               </Properties>
             </MenuItem>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemKeepAndDisplayXFutureProfiles">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Keep and Display XFuture Profiles"/>
+              </Properties>
+            </MenuItem>
           </SubComponents>
         </Menu>
       </SubComponents>
