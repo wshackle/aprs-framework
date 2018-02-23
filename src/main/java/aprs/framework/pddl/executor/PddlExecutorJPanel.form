@@ -1382,12 +1382,14 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jButtonClearPoseCache" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="1071" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jButtonUpdatePoseCache" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace pref="1034" max="32767" attributes="0"/>
                   </Group>
                   <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" max="-2" attributes="0"/>
-                          <Component id="jScrollPanePositionTable" pref="1168" max="32767" attributes="0"/>
+                          <Component id="jScrollPanePositionTable" pref="1238" max="32767" attributes="0"/>
                           <EmptySpace min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -1396,14 +1398,17 @@
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="1" attributes="0">
-                      <EmptySpace pref="239" max="32767" attributes="0"/>
-                      <Component id="jButtonClearPoseCache" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace pref="237" max="32767" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jButtonClearPoseCache" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonUpdatePoseCache" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
                   <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="1" attributes="0">
                           <EmptySpace min="-2" max="-2" attributes="0"/>
-                          <Component id="jScrollPanePositionTable" pref="228" max="32767" attributes="0"/>
+                          <Component id="jScrollPanePositionTable" pref="227" max="32767" attributes="0"/>
                           <EmptySpace min="-2" pref="38" max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -1439,6 +1444,14 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonClearPoseCacheActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonUpdatePoseCache">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Update Cache"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonUpdatePoseCacheActionPerformed"/>
               </Events>
             </Component>
           </SubComponents>

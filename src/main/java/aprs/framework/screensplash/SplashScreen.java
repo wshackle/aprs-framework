@@ -86,7 +86,8 @@ public class SplashScreen extends JFrame {
 
         final String messageLines[];
         final float fontSize;
-        @Nullable final Image image;
+        @Nullable
+        final Image image;
     }
 
     public SplashScreen(String message, float fontSize, @Nullable Image image) {
@@ -95,7 +96,7 @@ public class SplashScreen extends JFrame {
         super.add(panel);
     }
 
-    private javax.swing.@Nullable Timer timer = null;
+    private volatile javax.swing.@Nullable Timer timer = null;
 
     private void close(GraphicsDevice gd, XFuture<Void> returnFuture) {
         gd.setFullScreenWindow(null);
@@ -109,11 +110,13 @@ public class SplashScreen extends JFrame {
 
     private static class RobotArmImageHider {
 
-        @Nullable public static final BufferedImage ROBOT_ARM_IMAGE = readImageOrNull("robot-arm.jpeg");
+        @Nullable
+        public static final BufferedImage ROBOT_ARM_IMAGE = readImageOrNull("robot-arm.jpeg");
 
     }
 
-    @Nullable private static BufferedImage readImageOrNull(String name) {
+    @Nullable
+    private static BufferedImage readImageOrNull(String name) {
         try {
             InputStream stream = SplashScreen.class.getResourceAsStream(name);
             if (null == stream) {
@@ -127,17 +130,20 @@ public class SplashScreen extends JFrame {
         return null;
     }
 
-    @Nullable public static Image getRobotArmImage() {
+    @Nullable
+    public static Image getRobotArmImage() {
         return RobotArmImageHider.ROBOT_ARM_IMAGE;
     }
 
     private static class DisableImageHider {
 
-        @Nullable public static final BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobotHalf.jpg");
+        @Nullable
+        public static final BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobotHalf.jpg");
 
     }
 
-    @Nullable public static Image getDisableImageImage() {
+    @Nullable
+    public static Image getDisableImageImage() {
         return DisableImageHider.DISABLED_IMAGE;
     }
 
@@ -161,7 +167,7 @@ public class SplashScreen extends JFrame {
 
     public static XFuture<Void> showMessageFullScreen(String message, float fontSize, @Nullable Image image, List<Color> colors, @Nullable GraphicsDevice graphicsDevice) {
         XFuture<Void> returnFuture = new XFuture<>("showMessageFullScreen(" + message + ")");
-        Utils.runOnDispatchThread(() -> {
+        XFuture<Void> step1Future = Utils.runOnDispatchThread("showMessageFullScreen(" + message + ").start", () -> {
             SplashScreen ss = new SplashScreen(message, fontSize, image);
             ss.setVisible(true);
             GraphicsDevice gd0 = graphicsDevice;
@@ -171,33 +177,34 @@ public class SplashScreen extends JFrame {
             gd0.setFullScreenWindow(ss);
 
             final GraphicsDevice gd = gd0;
-            javax.swing.Timer ssTimer = 
-                 new javax.swing.Timer(500, new ActionListener() {
-                int colorIndex = 0;
+            javax.swing.Timer ssTimer
+                    = new javax.swing.Timer(500, new ActionListener() {
+                        int colorIndex = 0;
 
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (colorIndex < colors.size()) {
-                        Color color = colors.get(colorIndex);
-                        ss.setBackground(color);
-                        ss.panel.setBackground(color);
-                        ss.repaint();
-                        colorIndex++;
-                    } else {
-                        ss.close(gd, returnFuture);
-                    }
-                }
-            });
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            if (colorIndex < colors.size()) {
+                                Color color = colors.get(colorIndex);
+                                ss.setBackground(color);
+                                ss.panel.setBackground(color);
+                                ss.repaint();
+                                colorIndex++;
+                            } else {
+                                ss.close(gd, returnFuture);
+                            }
+                        }
+                    });
 
             KeyListener kl = new KeyListener() {
                 @Override
                 public void keyTyped(KeyEvent e) {
+                    ssTimer.stop();
                     ss.close(gd, returnFuture);
-
                 }
 
                 @Override
                 public void keyPressed(KeyEvent e) {
+                    ssTimer.stop();
                     ss.close(gd, returnFuture);
                 }
 
@@ -210,9 +217,9 @@ public class SplashScreen extends JFrame {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     super.mouseClicked(e);
+                    ssTimer.stop();
                     ss.close(gd, returnFuture);
                 }
-
             };
             ss.timer = ssTimer;
             ss.addMouseListener(ml);

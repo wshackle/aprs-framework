@@ -212,14 +212,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return ret;
     }
 
-    @Nullable private Solver<OpActionPlan> solver;
+    @Nullable
+    private Solver<OpActionPlan> solver;
 
     /**
      * Get the value of solver
      *
      * @return the value of solver
      */
-    @Nullable public Solver<OpActionPlan> getSolver() {
+    @Nullable
+    public Solver<OpActionPlan> getSolver() {
         return solver;
     }
 
@@ -361,16 +363,20 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private java.sql.@MonotonicNonNull Connection dbConnection;
-    private @MonotonicNonNull DbSetup dbSetup;
+    private @MonotonicNonNull
+    DbSetup dbSetup;
     private boolean closeDbConnection = true;
-    private @MonotonicNonNull QuerySet qs;
+    private @MonotonicNonNull
+    QuerySet qs;
     private final List<String> TakenPartList = new ArrayList<>();
-    private @MonotonicNonNull Set<Slot> EmptySlotSet;
+    private @MonotonicNonNull
+    Set<Slot> EmptySlotSet;
     private final List<PoseType> PlacePartSlotPoseList = new ArrayList<>();
     private boolean takeSnapshots = false;
     private final AtomicInteger crclNumber = new AtomicInteger();
     private final ConcurrentMap<String, PoseType> poseCache = new ConcurrentHashMap<>();
-    private volatile @MonotonicNonNull KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
+    private volatile @MonotonicNonNull
+    KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
     private volatile boolean pauseInsteadOfRecover;
 
@@ -422,8 +428,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         final String name;
         final Map<String, String> slotMap;
-        @Nullable List<String> kitInstanceNames;
-        @Nullable Map<String, KitToCheckInstanceInfo> instanceInfoMap;
+        @Nullable
+        List<String> kitInstanceNames;
+        @Nullable
+        Map<String, KitToCheckInstanceInfo> instanceInfoMap;
 
         public KitToCheck(String name, Map<String, String> slotMap) {
             this.name = name;
@@ -438,7 +446,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
     private final ConcurrentLinkedDeque<KitToCheck> kitsToCheck = new ConcurrentLinkedDeque<>();
 
-    @Nullable private PartsTray correctPartsTray = null;
+    @Nullable
+    private PartsTray correctPartsTray = null;
 
     Boolean part_in_pt_found = false;
     Boolean part_in_kt_found = false;
@@ -505,7 +514,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         public List<PhysicalItem> getNewPhysicalItems();
 
-        @Nullable public PoseType getPose(String name);
+        @Nullable
+        public PoseType getPose(String name);
 
         public List<String> getInstanceNames(String skuName);
     }
@@ -638,7 +648,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @return database setup object.
      */
-    @Nullable public DbSetup getDbSetup() {
+    @Nullable
+    public DbSetup getDbSetup() {
         return dbSetup;
     }
 
@@ -700,7 +711,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private double placeZOffset = 5.0;
     private double takeZOffset = 0.0;
 
-    private @Nullable String actionToCrclTakenPartsNames[] = new String[0];
+    private @Nullable
+    String actionToCrclTakenPartsNames[] = new String[0];
     private int visionCycleNewDiffThreshold = 3;
 
     /**
@@ -740,10 +752,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private Map<String, String> options = Collections.emptyMap();
 
     private final AtomicInteger lastIndex = new AtomicInteger();
-    @Nullable private volatile List<PddlAction> lastActionsList = null;
+    @Nullable
+    private volatile List<PddlAction> lastActionsList = null;
 
     private volatile int lastAtLastIndexIdx = -1;
-    @Nullable private volatile List<PddlAction> lastAtLastIndexList = null;
+    @Nullable
+    private volatile List<PddlAction> lastAtLastIndexList = null;
     private volatile int lastAtLastIndexRepPos = -1;
 
     public boolean atLastIndex() {
@@ -775,7 +789,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return lastIndex.get();
     }
 
-    @Nullable private volatile Thread setLastActionsIndexThread = null;
+    @Nullable
+    private volatile Thread setLastActionsIndexThread = null;
     private volatile StackTraceElement setLastActionsIndexTrace @Nullable []  = null;
     private volatile StackTraceElement firstSetLastActionsIndexTrace @Nullable []  = null;
 
@@ -812,7 +827,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @return options
      */
-    @Nullable public Map<String, String> getOptions() {
+    @Nullable
+    public Map<String, String> getOptions() {
         return options;
     }
 
@@ -828,7 +844,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private boolean doInspectKit = false;
     private boolean requireNewPoses = false;
 
-    @Nullable private PddlAction getNextPlacePartAction(int lastIndex, List<PddlAction> actions) {
+    @Nullable
+    private PddlAction getNextPlacePartAction(int lastIndex, List<PddlAction> actions) {
         for (int i = lastIndex + 1; i < actions.size(); i++) {
             PddlAction action = actions.get(i);
             switch (action.getType()) {
@@ -843,28 +860,34 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return null;
     }
 
-    /**
-     * Set state/history/cache variables back to their initial values.
-     */
-    public void reset() {
+    public void partialReset() {
         lastAcbi.set(null);
-        this.lastTakenPart = null;
         this.unitsSet = false;
         this.rotSpeedSet = false;
         this.genThread = null;
         setLastActionsIndex(null, 0);
-        clearPoseCache();
         clearLastRequiredPartsMap();
     }
 
-    private @Nullable OpDisplayJPanel opDisplayJPanelSolution;
+    /**
+     * Set state/history/cache variables back to their initial values.
+     */
+    public void reset() {
+        partialReset();
+        this.lastTakenPart = null;
+        clearPoseCache();
+    }
+
+    private @Nullable
+    OpDisplayJPanel opDisplayJPanelSolution;
 
     /**
      * Get the value of opDisplayJPanelSolution
      *
      * @return the value of opDisplayJPanelSolution
      */
-    @Nullable public OpDisplayJPanel getOpDisplayJPanelSolution() {
+    @Nullable
+    public OpDisplayJPanel getOpDisplayJPanelSolution() {
         return opDisplayJPanelSolution;
     }
 
@@ -877,14 +900,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.opDisplayJPanelSolution = opDisplayJPanelSolution;
     }
 
-    private @Nullable OpDisplayJPanel opDisplayJPanelInput;
+    private @Nullable
+    OpDisplayJPanel opDisplayJPanelInput;
 
     /**
      * Get the value of opDisplayJPanelInput
      *
      * @return the value of opDisplayJPanelInput
      */
-    @Nullable public OpDisplayJPanel getOpDisplayJPanelInput() {
+    @Nullable
+    public OpDisplayJPanel getOpDisplayJPanelInput() {
         return opDisplayJPanelInput;
     }
 
@@ -953,7 +978,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return false;
     }
 
-    @Nullable private volatile Thread genThread = null;
+    @Nullable
+    private volatile Thread genThread = null;
     private volatile StackTraceElement genThreadSetTrace @Nullable []  = null;
 
     private static boolean cmdsContainNonWrapper(List<MiddleCommandType> cmds) {
@@ -973,7 +999,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private void processCommands(List<MiddleCommandType> cmds) {
-        if(cmds.isEmpty()) {
+        if (cmds.isEmpty()) {
             return;
         }
         long cmd0Id = cmds.get(0).getCommandID();
@@ -993,8 +1019,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             wrapper.notifyOnDoneListeners();
         }
         cmds.clear();
-        if(cmd0Id > 1) {
-            commandId.set(cmd0Id-1);
+        if (cmd0Id > 1) {
+            commandId.set(cmd0Id - 1);
         }
         addSetUnits(cmds);
     }
@@ -1018,14 +1044,39 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      */
     private static class GenerateParams {
 
-        @MonotonicNonNull List<PddlAction> actions;
+        @MonotonicNonNull
+        List<PddlAction> actions;
         int startingIndex;
-        @MonotonicNonNull Map<String, String> options;
+        @MonotonicNonNull
+        Map<String, String> options;
         int startSafeAbortRequestCount;
         boolean replan;
-        @MonotonicNonNull List<PddlAction> origActions;
-        @MonotonicNonNull List<PhysicalItem> newItems;
-        @Nullable RunOptoToGenerateReturn runOptoToGenerateReturn;
+        @MonotonicNonNull
+        List<PddlAction> origActions;
+        @MonotonicNonNull
+        List<PhysicalItem> newItems;
+        @Nullable
+        RunOptoToGenerateReturn runOptoToGenerateReturn;
+    }
+
+    private boolean manualAction;
+
+    /**
+     * Get the value of manualAction
+     *
+     * @return the value of manualAction
+     */
+    public boolean isManualAction() {
+        return manualAction;
+    }
+
+    /**
+     * Set the value of manualAction
+     *
+     * @param manualAction new value of manualAction
+     */
+    public void setManualAction(boolean manualAction) {
+        this.manualAction = manualAction;
     }
 
     /**
@@ -1109,7 +1160,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 actionToCrclTakenPartsNames = new String[gparams.actions.size()];
             }
             if (gparams.startingIndex == 0) {
-                this.lastTakenPart = null;
+                if (!manualAction) {
+                    this.lastTakenPart = null;
+                }
                 this.unitsSet = false;
                 this.rotSpeedSet = false;
             }
@@ -1380,19 +1433,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 case "look-for-part":
                 case "look-for-parts":
                     if (null == newItems) {
-                        newItems = checkNewItems(waitForCompleteVisionUpdatesCommentString);
-
-                        assert (newItems != null) :
-                                "newItems == null";
-
-                        synchronized (poseCache) {
-                            for (PhysicalItem item : newItems) {
-                                String fullName = item.getFullName();
-                                if (null != fullName) {
-                                    poseCache.put(fullName, item.getPose());
-                                }
-                            }
-                        }
+                        newItems = newPoseItems(waitForCompleteVisionUpdatesCommentString);
                     }
                     break;
 
@@ -1402,6 +1443,21 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
         if (null == newItems) {
             return Collections.emptyList();
+        }
+        return newItems;
+    }
+
+    public List<PhysicalItem> newPoseItems(String waitForCompleteVisionUpdatesCommentString) throws InterruptedException, ExecutionException {
+        List<PhysicalItem> newItems = checkNewItems(waitForCompleteVisionUpdatesCommentString);
+        assert (newItems != null) :
+                "newItems == null";
+        synchronized (poseCache) {
+            for (PhysicalItem item : newItems) {
+                String fullName = item.getFullName();
+                if (null != fullName) {
+                    poseCache.put(fullName, item.getPose());
+                }
+            }
         }
         return newItems;
     }
@@ -1640,13 +1696,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (!getReverseFlag()) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, PddlAction> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals("take-part"))
-                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                    .select(action -> action.getType().equals("take-part"))
+                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -1782,8 +1838,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                        .map(arg -> arg.split("="))
-                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                .map(arg -> arg.split("="))
+                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -1930,7 +1986,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     System.out.println("");
                 }
             }
-            Map<String, Integer> prefixCountMap = new HashMap<>();
+            
             if (optoThread == null) {
                 optoThread = Thread.currentThread();
             }
@@ -1943,7 +1999,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 if (pauseInsteadOfRecover) {
                     pause(action, cmds);
                 } else {
-
+                    Map<String, Integer> prefixCountMap = new HashMap<>();
+                    Map<String, List<String>> itemsNameMap = new HashMap<>();
                     for (KitToCheck kit : kitsToFix) {
                         List<String> kitInstanceNames = getKitInstanceNames(kit.name);
                         for (String kitInstanceName : kitInstanceNames) {
@@ -1989,12 +2046,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                     if (!slotItemSkuName.equals("empty")) {
                                         String shortSkuName = slotItemSkuName;
                                         if (shortSkuName.startsWith("sku_")) {
-                                            shortSkuName = shortSkuName.substring(4);
+                                             shortSkuName = shortSkuName.substring(4);
                                         }
-                                        String partNamePrefix = shortSkuName + "_in_pt";
-                                        int count = prefixCountMap.compute(partNamePrefix,
-                                                (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
-                                        takePartByName(partNamePrefix + "_" + count, null, cmds);
+                                        final String finalShortSkuName = shortSkuName;
+                                        List<String> partNames =
+                                                itemsNameMap.computeIfAbsent(finalShortSkuName,
+                                                        k -> partNamesListForShortSkuName(newItems, k));
+                                        System.out.println("partNames = " + partNames);
+//                                        String partNamePrefix = shortSkuName + "_in_pt";
+//                                        int count = prefixCountMap.compute(partNamePrefix,
+//                                                (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
+                                        String partName= partNames.remove(0);
+                                        takePartByName(partName, null, cmds);
                                         placePartByPose(cmds, visionToRobotPose(absSlot.getPose()));
                                     }
                                 }
@@ -2010,6 +2073,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
+    }
+
+    private List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
+        List<String> partNames =
+                newItems.stream()
+                        .filter(item -> item.getType().equals("P"))
+                        .map(PhysicalItem::getFullName)
+                        .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
+                        .sorted()
+                        .collect(Collectors.toList());
+        return partNames;
     }
 
     private void printLastOptoInfo() {
@@ -2049,9 +2123,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private final Map<String, PoseType> returnPosesByName = new HashMap<>();
 
-    @Nullable private String lastTakenPart = null;
+    @Nullable
+    private String lastTakenPart = null;
 
-    @Nullable private String getLastTakenPart() {
+    @Nullable
+    private String getLastTakenPart() {
         return lastTakenPart;
     }
 
@@ -2290,7 +2366,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return pout;
     }
 
-    @MonotonicNonNull private AprsJFrame aprsJFrame;
+    @MonotonicNonNull
+    private AprsJFrame aprsJFrame;
 
     /**
      * Get the value of aprsJFrame
@@ -2314,14 +2391,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.aprsJFrame = aprsJFrame;
     }
 
-    @MonotonicNonNull private PddlExecutorJPanel parentPddlExecutorJPanel = null;
+    @MonotonicNonNull
+    private PddlExecutorJPanel parentPddlExecutorJPanel = null;
 
     /**
      * Get the value of parentPddlExecutorJPanel
      *
      * @return the value of parentPddlExecutorJPanel
      */
-    @Nullable public PddlExecutorJPanel getParentPddlExecutorJPanel() {
+    @Nullable
+    public PddlExecutorJPanel getParentPddlExecutorJPanel() {
         return parentPddlExecutorJPanel;
     }
 
@@ -2818,7 +2897,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @return tray from database
      * @throws SQLException if query fails
      */
-    @Nullable private PartsTray findCorrectKitTray(String kitSku) throws SQLException {
+    @Nullable
+    private PartsTray findCorrectKitTray(String kitSku) throws SQLException {
 
         assert (null != this.aprsJFrame) : "null == this.aprsJFrame: @AssumeAssertion(nullness)";
         assert (null != this.qs) : "null == this.qs: @AssumeAssertion(nullness)";
@@ -3313,11 +3393,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @throws SQLException if query fails.
      */
-    @Nullable public PoseType getPose(String posename) throws SQLException, IllegalStateException {
+    @Nullable
+    public PoseType getPose(String posename) throws SQLException, IllegalStateException {
         return getPose(posename, false);
     }
 
-    @Nullable private PoseType getPose(String posename, boolean ignoreNull) throws SQLException, IllegalStateException {
+    @Nullable
+    private PoseType getPose(String posename, boolean ignoreNull) throws SQLException, IllegalStateException {
         if (null != externalPoseProvider) {
             return externalPoseProvider.getPose(posename);
         }
@@ -3377,7 +3459,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    @Nullable private PoseType getNewPoseFromDb(String posename) throws SQLException {
+    @Nullable
+    private PoseType getNewPoseFromDb(String posename) throws SQLException {
 
         assert (aprsJFrame != null) : "aprsJFrame == null : @AssumeAssertion(nullness)";
         if (null == qs) {
@@ -3389,7 +3472,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return pose;
     }
 
-    @Nullable private PoseType debugGetNewPoseFromDb(String posename) throws SQLException {
+    @Nullable
+    private PoseType debugGetNewPoseFromDb(String posename) throws SQLException {
 
         assert (aprsJFrame != null) : "aprsJFrame == null : @AssumeAssertion(nullness)";
         if (null == qs) {
@@ -3447,7 +3531,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return partsInPtList;
     }
 
-    @Nullable volatile PoseType lastTestApproachPose = null;
+    @Nullable
+    volatile PoseType lastTestApproachPose = null;
 
     private final ConcurrentMap<String, String> toolChangerJointValsMap
             = new ConcurrentHashMap<>();
@@ -3456,7 +3541,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         toolChangerJointValsMap.put(key, value);
     }
 
-    @Nullable public String getToolChangerJointVals(String key) {
+    @Nullable
+    public String getToolChangerJointVals(String key) {
         return toolChangerJointValsMap.get(key);
     }
 
@@ -4206,7 +4292,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         atLookForPosition = false;
     }
 
-    @Nullable private volatile Thread clearPoseCacheThread = null;
+    @Nullable
+    private volatile Thread clearPoseCacheThread = null;
     private volatile StackTraceElement clearPoseCacheTrace @Nullable []  = null;
 
     public void clearPoseCache() {
@@ -4217,7 +4304,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    @Nullable private volatile Thread putPoseCacheThread = null;
+    @Nullable
+    private volatile Thread putPoseCacheThread = null;
     private volatile StackTraceElement putPoseCacheTrace @Nullable []  = null;
 
     public void putPoseCache(String name, PoseType pose) {
@@ -4515,13 +4603,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             long t1 = System.currentTimeMillis();
             if (timeoutMillis > 0 && t1 - t0 > timeoutMillis) {
                 long updateTime = aprsJFrame.getLastSingleVisionToDbUpdateTime();
-                long timeSinceUpdate = t1-updateTime;
+                long timeSinceUpdate = t1 - updateTime;
                 System.out.println("timeSinceUpdate = " + timeSinceUpdate);
                 long notifyTime = aprsJFrame.getSingleVisionToDbNotifySingleUpdateListenersTime();
-                long timeSinceNotify = t1-notifyTime;
+                long timeSinceNotify = t1 - notifyTime;
                 System.out.println("timeSinceNotify = " + timeSinceNotify);
                 System.out.println("xfl = " + xfl);
-                String errMsg = runName+" : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl="+xfl;
+                String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
                 System.err.println(errMsg);
                 throw new RuntimeException(errMsg);
             }
@@ -4587,7 +4675,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         private final PddlAction action;
         private final int pddlActionIndex;
         private final int outIndex;
-        @Nullable private CrclCommandWrapper wrapper = null;
+        @Nullable
+        private CrclCommandWrapper wrapper = null;
         private final int startSafeAbortRequestCount;
 
         public PlacePartInfo(PddlAction action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount) {
@@ -4597,7 +4686,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             this.startSafeAbortRequestCount = startSafeAbortRequestCount;
         }
 
-        @Nullable public CrclCommandWrapper getWrapper() {
+        @Nullable
+        public CrclCommandWrapper getWrapper() {
             return wrapper;
         }
 
@@ -4784,7 +4874,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }));
     }
 
-    @Nullable public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
+    @Nullable
+    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
         for (Entry<T, E> entry : map.entrySet()) {
             if (Objects.equals(value, entry.getValue())) {
                 return entry.getKey();
@@ -4908,7 +4999,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         private final PddlAction action;
         private final CrclCommandWrapper wrapper;
         private final List<PddlAction> actions;
-        @Nullable private final List<PddlAction> origActions;
+        @Nullable
+        private final List<PddlAction> origActions;
         private final int actionsSize;
 
         public ActionCallbackInfo(int actionIndex, PddlAction action, CrclCommandWrapper wrapper, List<PddlAction> actions, @Nullable List<PddlAction> origActions) {
@@ -4940,7 +5032,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             return actions;
         }
 
-        @Nullable public List<PddlAction> getOrigActions() {
+        @Nullable
+        public List<PddlAction> getOrigActions() {
             return origActions;
         }
 

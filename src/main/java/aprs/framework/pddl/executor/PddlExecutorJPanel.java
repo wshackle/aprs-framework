@@ -32,6 +32,7 @@ import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupListener;
 import aprs.framework.database.DbSetupPublisher;
+import aprs.framework.database.PhysicalItem;
 import aprs.framework.optaplanner.OpDisplayJPanel;
 import aprs.framework.optaplanner.actionmodel.OpAction;
 import aprs.framework.optaplanner.actionmodel.OpActionPlan;
@@ -132,6 +133,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.eclipse.collections.impl.block.factory.Comparators;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
@@ -581,6 +583,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         jScrollPanePositionTable = new javax.swing.JScrollPane();
         jTablePositionCache = new javax.swing.JTable();
         jButtonClearPoseCache = new javax.swing.JButton();
+        jButtonUpdatePoseCache = new javax.swing.JButton();
         jPanelOpOuter = new javax.swing.JPanel();
         opDisplayJPanelInput = new aprs.framework.optaplanner.OpDisplayJPanel();
         opDisplayJPanelSolution = new aprs.framework.optaplanner.OpDisplayJPanel();
@@ -1521,6 +1524,13 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             }
         });
 
+        jButtonUpdatePoseCache.setText("Update Cache");
+        jButtonUpdatePoseCache.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonUpdatePoseCacheActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelContainerPoseCacheLayout = new javax.swing.GroupLayout(jPanelContainerPoseCache);
         jPanelContainerPoseCache.setLayout(jPanelContainerPoseCacheLayout);
         jPanelContainerPoseCacheLayout.setHorizontalGroup(
@@ -1528,23 +1538,27 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jButtonClearPoseCache)
-                .addContainerGap(1071, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonUpdatePoseCache)
+                .addContainerGap(1034, Short.MAX_VALUE))
             .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 1168, Short.MAX_VALUE)
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 1238, Short.MAX_VALUE)
                     .addContainerGap()))
         );
         jPanelContainerPoseCacheLayout.setVerticalGroup(
             jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
-                .addContainerGap(239, Short.MAX_VALUE)
-                .addComponent(jButtonClearPoseCache)
+                .addContainerGap(237, Short.MAX_VALUE)
+                .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonClearPoseCache)
+                    .addComponent(jButtonUpdatePoseCache))
                 .addContainerGap())
             .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 228, Short.MAX_VALUE)
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
                     .addGap(38, 38, 38)))
         );
 
@@ -1893,7 +1907,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private final List<PddlAction> actionsList = Collections.synchronizedList(new ArrayList<>());
     private volatile List<PddlAction> readOnlyActionsList = Collections.unmodifiableList(new ArrayList<>(actionsList));
 
-    @Nullable private volatile Thread resetReadOnlyActionsListThread = null;
+    @Nullable
+    private volatile Thread resetReadOnlyActionsListThread = null;
     private volatile StackTraceElement resetReadOnlyActionsListTrace @Nullable []  = null;
 
     private void resetReadOnlyActionsList() {
@@ -2007,8 +2022,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return str;
     }
 
-    @Nullable private String actionsFileString = null;
-    @Nullable private String reverseActionsFileString = null;
+    @Nullable
+    private String actionsFileString = null;
+    @Nullable
+    private String reverseActionsFileString = null;
 
     public void saveProperties() throws IOException {
         Map<String, String> propsMap = new HashMap<>();
@@ -2040,7 +2057,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         Utils.saveProperties(propertiesFile, props);
     }
 
-    @Nullable private String[] getRelPathPositionMapFileNames() {
+    @Nullable
+    private String[] getRelPathPositionMapFileNames() {
         String[] origNames = positionMapJPanel1.getPositionMapFileNames();
         String[] newNames = new String[origNames.length];
         for (int i = 0; i < newNames.length; i++) {
@@ -2104,7 +2122,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
     }
 
-    @MonotonicNonNull private Solver<OpActionPlan> solver = null;
+    @MonotonicNonNull
+    private Solver<OpActionPlan> solver = null;
 
     private static volatile boolean firstLoad = true;
 
@@ -2339,9 +2358,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private DbSetupPublisher dbSetupPublisher;
 
-    @MonotonicNonNull private Callable<DbSetupPublisher> dbSetupSupplier = null;
+    @MonotonicNonNull
+    private Callable<DbSetupPublisher> dbSetupSupplier = null;
 
-    @Nullable public Callable<DbSetupPublisher> getDbSetupSupplier() {
+    @Nullable
+    public Callable<DbSetupPublisher> getDbSetupSupplier() {
         return dbSetupSupplier;
     }
 
@@ -2555,7 +2576,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private boolean autoStart = true;
 
-    @Nullable private volatile CRCLProgramType unstartedProgram = null;
+    @Nullable
+    private volatile CRCLProgramType unstartedProgram = null;
 
     private AprsJFrame aprsJFrame;
 
@@ -2721,12 +2743,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return replanFromIndex.get();
     }
 
-    @Nullable private String currentPart = null;
+    @Nullable
+    private String currentPart = null;
     private volatile StackTraceElement setReplanFromIndexLastTrace @Nullable []  = null;
     private volatile StackTraceElement prevSetReplanFromIndexLastTrace @Nullable []  = null;
 
-    @Nullable private volatile Thread setReplanFromIndexLastThread = null;
-    @Nullable private volatile Thread prevSetReplanFromIndexLastThread = null;
+    @Nullable
+    private volatile Thread setReplanFromIndexLastThread = null;
+    @Nullable
+    private volatile Thread prevSetReplanFromIndexLastThread = null;
 
     private void setReplanFromIndex(int replanFromIndex) {
         setReplanFromIndex(replanFromIndex, false);
@@ -2744,7 +2769,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     System.err.println("Reducing replanFromIndex when generater not readyForNewActionsList: oldRpi=" + oldRpi + ", new replanFromIndex=" + replanFromIndex + ",  pddlActionToCrclGenerator.getLastIndex()=" + pddlActionToCrclGenerator.getLastIndex());
                 }
             }
-            @Nullable String[] names = this.pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
+            @Nullable
+            String[] names = this.pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
             if (replanFromIndex == 0) {
                 currentPart = null;
             } else if (names != null && names.length >= replanFromIndex && replanFromIndex > 0) {
@@ -2840,7 +2866,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             setReplanFromIndex(0);
             abortProgram();
             takePartCount++;
-            clearAll();
             autoStart = true;
             String part = getComboPart();
             cancelRunProgramFuture();
@@ -2861,7 +2886,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         JOptionPane.showMessageDialog(this, msg);
     }
 
-    @Nullable public String getComboPart() {
+    @Nullable
+    public String getComboPart() {
         Object object = jComboBoxManualObjectName.getSelectedItem();
         if (null == object) {
             return null;
@@ -3303,8 +3329,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }//GEN-LAST:event_jButtonGenerateAndRunActionPerformed
 
-    @Nullable private ServerSocket externalControlSocket = null;
-    @Nullable private Thread externalControlAcceptThread = null;
+    @Nullable
+    private ServerSocket externalControlSocket = null;
+    @Nullable
+    private Thread externalControlAcceptThread = null;
     final private List<Socket> externalControlClientSockets = new ArrayList<>();
     final private List<Thread> externalControlClientThreads = new ArrayList<>();
 
@@ -3431,7 +3459,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }//GEN-LAST:event_jCheckBoxEnableExternalControlPortActionPerformed
 
-    @Nullable private volatile XFuture<Boolean> runningProgramFuture = null;
+    @Nullable
+    private volatile XFuture<Boolean> runningProgramFuture = null;
 
     private void jButtonStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStepActionPerformed
 
@@ -3533,12 +3562,16 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private volatile boolean startSafeAbortRunningProgram = false;
     private volatile long startSafeAbortTime = 0;
 
-    @Nullable private volatile XFuture<Void> lastSafeAbortFuture = null;
-    @Nullable private volatile XFuture<Boolean> startSafeAbortRunningProgramFuture = null;
+    @Nullable
+    private volatile XFuture<Void> lastSafeAbortFuture = null;
+    @Nullable
+    private volatile XFuture<Boolean> startSafeAbortRunningProgramFuture = null;
     private volatile boolean startSafeAbortRunningProgramFutureDone = false;
 
-    @Nullable private volatile CRCLProgramType startSafeAbortProgram = null;
-    @Nullable private volatile String startSafeAbortProgramName = null;
+    @Nullable
+    private volatile CRCLProgramType startSafeAbortProgram = null;
+    @Nullable
+    private volatile String startSafeAbortProgramName = null;
     private volatile boolean startSafeAbortIsRunningCrclProgram = false;
 
     private void completeSafeAbortFuture(XFuture<Void> f) {
@@ -3604,7 +3637,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         continueActionListPrivate();
     }//GEN-LAST:event_jButtonContinueActionPerformed
 
-    @Nullable private volatile XFuture<Void> lastContinueActionFuture = null;
+    @Nullable
+    private volatile XFuture<Void> lastContinueActionFuture = null;
 
     public int getSafeAbortRequestCount() {
         return safeAbortRequestCount.get();
@@ -3676,7 +3710,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             setReplanFromIndex(0);
             abortProgram();
             placePartCount++;
-            clearAll();
             autoStart = true;
 //            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
@@ -3805,11 +3838,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                        .stream()
-                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                        .map(JointStatusType::getJointPosition)
-                        .map(Objects::toString)
-                        .collect(Collectors.joining(","));
+                .stream()
+                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                .map(JointStatusType::getJointPosition)
+                .map(Objects::toString)
+                .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -3832,12 +3865,15 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setForceFakeTakeFlag(jCheckBoxForceFakeTake.isSelected());
     }//GEN-LAST:event_jCheckBoxForceFakeTakeActionPerformed
 
-    @Nullable private volatile PoseType toolChangerPose = null;
-    @Nullable private volatile String toolChangerPoseName = null;
+    @Nullable
+    private volatile PoseType toolChangerPose = null;
+    @Nullable
+    private volatile String toolChangerPoseName = null;
     private final Map<String, PoseType> toolChangerPoseMap = new ConcurrentHashMap<>();
     private final Map<String, PoseType> toolOffsetPoseMap = new ConcurrentHashMap<>();
 
-    @Nullable private String toolChangerPoseMapFileName = null;
+    @Nullable
+    private String toolChangerPoseMapFileName = null;
 
     private void loadToolChangerPoseMap() {
         if (null == propertiesFile || !propertiesFile.exists()) {
@@ -4176,7 +4212,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
-    @Nullable public String getSelectedToolChangerPoseName() {
+    @Nullable
+    public String getSelectedToolChangerPoseName() {
         int r = jTableToolHolderPositions.getSelectedRow();
         if (r < 0) {
             return null;
@@ -4276,7 +4313,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private static final int APPROACH_COLUMN_INDEX = 7;
     private static final String APPROACH_COLUMN_HEADER = "Approach";
 
-    @Nullable private String getJointValsString() {
+    @Nullable
+    private String getJointValsString() {
         CRCLStatusType stat = aprsJFrame.getCurrentStatus();
         if (null != stat && null != stat.getJointStatuses()) {
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
@@ -4608,6 +4646,35 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setToolOffsetTableModelListener();
     }//GEN-LAST:event_jButtonDeleteToolOffsetActionPerformed
 
+    private void jButtonUpdatePoseCacheActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpdatePoseCacheActionPerformed
+        try {
+            pddlActionToCrclGenerator.clearPoseCache();
+            List<PhysicalItem> newItems = pddlActionToCrclGenerator.newPoseItems("userRequestedPoseUpdate");
+            DefaultComboBoxModel<String> objectCbm
+                    = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
+            objectCbm.removeAllElements();
+            DefaultComboBoxModel<String> slotCbm
+                    = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
+            slotCbm.removeAllElements();
+            newItems = new ArrayList<>(newItems);
+            Collections.sort(newItems, Comparators.fromFunctions(PhysicalItem::getFullName));
+            for (PhysicalItem item : newItems) {
+                switch(item.getType()) {
+                    case "P":
+                        objectCbm.addElement(item.getFullName());
+                        break;
+                        
+                    case "ES":
+                        slotCbm.addElement(item.getFullName());
+                        break;
+                }
+            }
+            updatePositionCacheTable();
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonUpdatePoseCacheActionPerformed
+
     private void clearPoseCache() {
         pddlActionToCrclGenerator.clearPoseCache();
         updatePositionCacheTable();
@@ -4723,7 +4790,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
-    @Nullable private String errorString;
+    @Nullable
+    private String errorString;
 
     /**
      * Get the value of errorString
@@ -4763,8 +4831,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
-    @Nullable private String crclProgName = null;
-    @Nullable private String lastCrclProgName = null;
+    @Nullable
+    private String crclProgName = null;
+    @Nullable
+    private String lastCrclProgName = null;
 
     private final List<Runnable> programCompleteRunnablesList = new ArrayList<>();
 
@@ -4825,7 +4895,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private volatile long doSafeAbortTime = 0;
     private final AtomicInteger doSafeAbortCount = new AtomicInteger(0);
-    @Nullable private volatile String lastCheckAbortCurrentPart = null;
+    @Nullable
+    private volatile String lastCheckAbortCurrentPart = null;
     private volatile boolean lastCheckAbortSafeAbortRequested = false;
     private volatile long lastCheckSafeAbortTime = 0;
 
@@ -4879,9 +4950,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return doSafeAbort;
     }
 
-    @Nullable private ExecutorService generateCrclService = null;
+    @Nullable
+    private ExecutorService generateCrclService = null;
 
-    @Nullable public ExecutorService getGenerateCrclService() {
+    @Nullable
+    public ExecutorService getGenerateCrclService() {
         return generateCrclService;
     }
 
@@ -5073,8 +5146,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         int indexesCopy[] = Arrays.copyOf(indexes, indexes.length);
         String labels[] = pddlActionToCrclGenerator.getActionToCrclLabels();
         final String labelsCopy[] = Utils.copyOfNonNullsOnly(String.class, labels);
-        @Nullable String takenPartNames[] = pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
-        final @Nullable String takenPartNamesCopy[] = Arrays.copyOf(takenPartNames, takenPartNames.length);
+        @Nullable
+        String takenPartNames[] = pddlActionToCrclGenerator.getActionToCrclTakenPartsNames();
+        final @Nullable
+        String takenPartNamesCopy[] = Arrays.copyOf(takenPartNames, takenPartNames.length);
         javax.swing.SwingUtilities.invokeLater(() -> {
             setCrclIndexes(indexesCopy);
             setPddlLabelss(labelsCopy);
@@ -5237,7 +5312,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public XFuture<Boolean> placePartSlot(String part, String slot) throws IOException, IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
-        clearAll();
+        pddlActionToCrclGenerator.partialReset();
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
         List<PddlAction> placePartActionsList = new ArrayList<>();
@@ -5246,7 +5321,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         placePartActionsList.add(placePartAction);
         pddlActionToCrclGenerator.setPositionMaps(getPositionMaps());
         CRCLProgramType program = createEmptyProgram();
+        pddlActionToCrclGenerator.setManualAction(true);
         List<MiddleCommandType> cmds = pddlActionToCrclGenerator.generate(placePartActionsList, 0, options, safeAbortRequestCount.get());
+        pddlActionToCrclGenerator.setManualAction(false);
         jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
@@ -5304,7 +5381,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     public XFuture<Boolean> takePart(String part) throws IOException, IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
-        clearAll();
+        pddlActionToCrclGenerator.partialReset();
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
         List<PddlAction> takePartActionsList = new ArrayList<>();
@@ -5757,7 +5834,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }
 
-    @Nullable private String getConnnectionURL() throws SQLException {
+    @Nullable
+    private String getConnnectionURL() throws SQLException {
         Connection con = pddlActionToCrclGenerator.getDbConnection();
         if (null == con) {
             throw new IllegalStateException("connection is null");
@@ -5868,6 +5946,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private javax.swing.JButton jButtonTake;
     private javax.swing.JButton jButtonTest;
     private javax.swing.JButton jButtonTestPickup;
+    private javax.swing.JButton jButtonUpdatePoseCache;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxEnableExternalControlPort;
     private javax.swing.JCheckBox jCheckBoxEnableOptaPlanner;

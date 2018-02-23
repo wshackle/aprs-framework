@@ -132,19 +132,32 @@ import crcl.ui.client.PendantClientJInternalFrame;
  */
 public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, AutoCloseable, SlotOffsetProvider {
 
-    @MonotonicNonNull private VisionToDbJInternalFrame visionToDbJInternalFrame = null;
-    @MonotonicNonNull private PddlExecutorJInternalFrame pddlExecutorJInternalFrame1 = null;
-    @MonotonicNonNull private Object2DViewJInternalFrame object2DViewJInternalFrame = null;
-    @MonotonicNonNull private PddlPlannerJInternalFrame pddlPlannerJInternalFrame = null;
-    @MonotonicNonNull private DbSetupJInternalFrame dbSetupJInternalFrame = null;
-    @MonotonicNonNull private volatile PendantClientJInternalFrame crclClientJInternalFrame = null;
-    @MonotonicNonNull private SimServerJInternalFrame simServerJInternalFrame = null;
-    @MonotonicNonNull private LogDisplayJInternalFrame logDisplayJInternalFrame = null;
-    @MonotonicNonNull private FanucCRCLMain fanucCRCLMain = null;
-    @MonotonicNonNull private FanucCRCLServerJInternalFrame fanucCRCLServerJInternalFrame = null;
-    @MonotonicNonNull private ExploreGraphDbJInternalFrame exploreGraphDbJInternalFrame = null;
-    @MonotonicNonNull private MotomanCrclServerJInternalFrame motomanCrclServerJInternalFrame = null;
-    @MonotonicNonNull private KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
+    @MonotonicNonNull
+    private VisionToDbJInternalFrame visionToDbJInternalFrame = null;
+    @MonotonicNonNull
+    private PddlExecutorJInternalFrame pddlExecutorJInternalFrame1 = null;
+    @MonotonicNonNull
+    private Object2DViewJInternalFrame object2DViewJInternalFrame = null;
+    @MonotonicNonNull
+    private PddlPlannerJInternalFrame pddlPlannerJInternalFrame = null;
+    @MonotonicNonNull
+    private DbSetupJInternalFrame dbSetupJInternalFrame = null;
+    @MonotonicNonNull
+    private volatile PendantClientJInternalFrame crclClientJInternalFrame = null;
+    @MonotonicNonNull
+    private SimServerJInternalFrame simServerJInternalFrame = null;
+    @MonotonicNonNull
+    private LogDisplayJInternalFrame logDisplayJInternalFrame = null;
+    @MonotonicNonNull
+    private FanucCRCLMain fanucCRCLMain = null;
+    @MonotonicNonNull
+    private FanucCRCLServerJInternalFrame fanucCRCLServerJInternalFrame = null;
+    @MonotonicNonNull
+    private ExploreGraphDbJInternalFrame exploreGraphDbJInternalFrame = null;
+    @MonotonicNonNull
+    private MotomanCrclServerJInternalFrame motomanCrclServerJInternalFrame = null;
+    @MonotonicNonNull
+    private KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
     private String taskName;
 
@@ -209,7 +222,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return the value of externalGetPoseFunction
      */
-    @Nullable public PoseProvider getPddlExecExternalPoseProvider() {
+    @Nullable
+    public PoseProvider getPddlExecExternalPoseProvider() {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         return pddlExecutorJInternalFrame1.getExternalPoseProvider();
     }
@@ -325,14 +339,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    private @Nullable SlotOffsetProvider externalSlotOffsetProvider = null;
+    private @Nullable
+    SlotOffsetProvider externalSlotOffsetProvider = null;
 
     /**
      * Get the value of externalSlotOffsetProvider
      *
      * @return the value of externalSlotOffsetProvider
      */
-    @Nullable public SlotOffsetProvider getExternalSlotOffsetProvider() {
+    @Nullable
+    public SlotOffsetProvider getExternalSlotOffsetProvider() {
         return externalSlotOffsetProvider;
     }
 
@@ -442,7 +458,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return Kit Inspection InternalJFrame
      */
-    @Nullable public KitInspectionJInternalFrame getKitInspectionJInternalFrame() {
+    @Nullable
+    public KitInspectionJInternalFrame getKitInspectionJInternalFrame() {
         return kitInspectionJInternalFrame;
     }
 
@@ -489,7 +506,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return thread
      */
-    @Nullable public Thread getCrclRunProgramThread() {
+    @Nullable
+    public Thread getCrclRunProgramThread() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getRunProgramThread();
         }
@@ -502,7 +520,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return future or null if no program is running
      */
-    @Nullable public XFuture<Boolean> getCrclRunProgramFuture() {
+    @Nullable
+    public XFuture<Boolean> getCrclRunProgramFuture() {
         assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
         return crclClientJInternalFrame.getRunProgramFuture();
     }
@@ -554,7 +573,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return current CRCL program or null if no program is loaded.
      */
-    @Nullable public CRCLProgramType getCrclProgram() {
+    @Nullable
+    public CRCLProgramType getCrclProgram() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getProgram();
         }
@@ -619,7 +639,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return current pose of the robot.
      */
-    @Nullable public PoseType getCurrentPose() {
+    @Nullable
+    public PoseType getCurrentPose() {
 
         if (null != crclClientJInternalFrame) {
             try {
@@ -642,7 +663,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return current point(translation only) from current pose of the robot.
      */
-    @Nullable public PointType getCurrentPosePoint() {
+    @Nullable
+    public PointType getCurrentPosePoint() {
         PoseType pose = getCurrentPose();
         if (null != pose) {
             return pose.getPoint();
@@ -715,7 +737,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return future or null if no safe abort requested
      */
-    @Nullable public XFuture<Void> getSafeAbortFuture() {
+    @Nullable
+    public XFuture<Void> getSafeAbortFuture() {
         return safeAbortFuture;
     }
 
@@ -725,7 +748,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return future or null if no safe abort requested
      */
-    @Nullable public XFuture<Boolean> getLastRunProgramFuture() {
+    @Nullable
+    public XFuture<Boolean> getLastRunProgramFuture() {
         return lastRunProgramFuture;
     }
 
@@ -735,12 +759,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return future or null if no resume requested
      */
-    @Nullable public XFuture<Boolean> getLastResumeFuture() {
+    @Nullable
+    public XFuture<Boolean> getLastResumeFuture() {
         return lastResumeFuture;
     }
 
-    @Nullable private volatile XFuture<Void> safeAbortFuture = null;
-    @Nullable private volatile XFuture<Void> safeAbortAndDisconnectFuture = null;
+    @Nullable
+    private volatile XFuture<Void> safeAbortFuture = null;
+    @Nullable
+    private volatile XFuture<Void> safeAbortAndDisconnectFuture = null;
 
     /**
      * Attempt to safely abort the current CRCL program in a way that does not
@@ -783,11 +810,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return safeAbortFuture;
     }
 
-    @Nullable private volatile Thread startSafeAbortAndDisconnectThread = null;
+    @Nullable
+    private volatile Thread startSafeAbortAndDisconnectThread = null;
     private volatile long startSafeAbortAndDisconnectTime = -1;
     private volatile StackTraceElement startSafeAbortAndDisconnectStackTrace @Nullable []  = null;
 
-    @Nullable private volatile Thread startSafeAbortThread = null;
+    @Nullable
+    private volatile Thread startSafeAbortThread = null;
     private volatile long startSafeAbortTime = -1;
     private volatile StackTraceElement startSafeAbortStackTrace @Nullable []  = null;
 
@@ -826,16 +855,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
                 safeAbortAndDisconnectFuture
                         = localSafeAbortFuture
-                                .thenRun(() -> {
+                        .thenRun(() -> {
 //                                    if (null != continousDemoFuture) {
 //                                        continousDemoFuture.cancelAll(true);
 //                                        continousDemoFuture = null;
 //                                    }
-                                    setStopRunTime();
-                                })
-                                .thenCompose(x -> waitAllLastFutures())
-                                .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
-                                .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
+                            setStopRunTime();
+                        })
+                        .thenCompose(x -> waitAllLastFutures())
+                        .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
+                        .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
             } else {
                 safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected", null);
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -877,7 +906,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return visionToDbJInternalFrame.getUpdatesResultMap();
     }
 
-    @Nullable private volatile XFuture<Void> disconnectRobotFuture = null;
+    @Nullable
+    private volatile XFuture<Void> disconnectRobotFuture = null;
 
     /**
      * Disconnect from the robot's crcl server and set robotName to null.
@@ -1012,7 +1042,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return robot's CRCL host.
      */
-    @Nullable public String getRobotCrclHost() {
+    @Nullable
+    public String getRobotCrclHost() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getHost();
         }
@@ -1045,7 +1076,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    @Nullable private volatile XFuture<Void> lastPauseFuture = null;
+    @Nullable
+    private volatile XFuture<Void> lastPauseFuture = null;
 
     private XFuture<Void> waitForPause() {
         boolean paused = isPaused();
@@ -1060,8 +1092,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return pauseFuture;
     }
 
-    @Nullable private volatile XFuture<Boolean> lastContinueActionListFuture = null;
-    @Nullable private volatile String lastContinueActionListFutureComment = null;
+    @Nullable
+    private volatile XFuture<Boolean> lastContinueActionListFuture = null;
+    @Nullable
+    private volatile String lastContinueActionListFutureComment = null;
     private volatile int lastContinueStartAbortCount = -1;
 
     /**
@@ -1085,17 +1119,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         lastContinueStartAbortCount = startAbortCount;
         lastContinueActionListFuture
                 = waitForPause()
-                        .thenApplyAsync("AprsJFrame.continueActionList" + comment,
-                                x -> {
-                                    setThreadName();
-                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                                    assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                .thenApplyAsync("AprsJFrame.continueActionList" + comment,
+                        x -> {
+                            setThreadName();
+                            takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
+                            assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
-                                    }
-                                    return false;
-                                }, runProgramService);
+                            }
+                            return false;
+                        }, runProgramService);
         return lastContinueActionListFuture;
     }
 
@@ -1129,21 +1163,25 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         updateTitle("", "");
     }
 
-    @Nullable private String robotName = null;
+    @Nullable
+    private String robotName = null;
 
     /**
      * Get the value of robotName
      *
      * @return the value of robotName
      */
-    @Nullable public String getRobotName() {
+    @Nullable
+    public String getRobotName() {
         return robotName;
     }
 
-    @Nullable private volatile Thread setRobotNameNullThread = null;
+    @Nullable
+    private volatile Thread setRobotNameNullThread = null;
     private volatile StackTraceElement setRobotNameNullStackTrace @Nullable []  = null;
     private volatile long setRobotNameNullThreadTime = -1;
-    @Nullable private volatile Thread setRobotNameNonNullThread = null;
+    @Nullable
+    private volatile Thread setRobotNameNonNullThread = null;
     private volatile StackTraceElement setRobotNameNonNullStackTrace @Nullable []  = null;
     private volatile long setRobotNameNonNullThreadTime = -1;
 
@@ -1295,7 +1333,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    @Nullable private volatile XFuture<Boolean> lastRunProgramFuture = null;
+    @Nullable
+    private volatile XFuture<Boolean> lastRunProgramFuture = null;
 
     /**
      * Load the given program an begin running it.
@@ -1317,13 +1356,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != crclClientJInternalFrame) {
             lastRunProgramFuture
                     = waitForPause()
-                            .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
-                                try {
-                                    return runCrclProgram(program);
-                                } catch (JAXBException ex) {
-                                    throw new RuntimeException(ex);
-                                }
-                            }, runProgramService);
+                    .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
+                        try {
+                            return runCrclProgram(program);
+                        } catch (JAXBException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }, runProgramService);
             return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
@@ -1512,8 +1551,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    @Nullable private PrintStream origOut = null;
-    @Nullable private PrintStream origErr = null;
+    @Nullable
+    private PrintStream origOut = null;
+    @Nullable
+    private PrintStream origErr = null;
 
     static private class MyPrintStream extends PrintStream {
 
@@ -1581,7 +1622,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    @Nullable private String titleErrorString = null;
+    @Nullable
+    private String titleErrorString = null;
 
     /**
      * Get the title error string, which should be a short string identifying
@@ -1590,13 +1632,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return title error string
      */
-    @Nullable public String getTitleErrorString() {
+    @Nullable
+    public String getTitleErrorString() {
         return titleErrorString;
     }
 
-    @Nullable private volatile CommandStatusType titleErrorStringCommandStatus = null;
+    @Nullable
+    private volatile CommandStatusType titleErrorStringCommandStatus = null;
 
-    @Nullable private volatile String lastNewTitleErrorString = null;
+    @Nullable
+    private volatile String lastNewTitleErrorString = null;
 
     private volatile StackTraceElement setTitleErrorStringTrace @Nullable []  = null;
 
@@ -1708,7 +1753,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private ExecutorService runProgramService = defaultRunProgramService;
     private ExecutorService connectService = defaultRunProgramService;
-    @Nullable private XFuture<Void> connectDatabaseFuture = null;
+    @Nullable
+    private XFuture<Void> connectDatabaseFuture = null;
 
     /**
      * Get the ExecutorService used for running CRCL programs.
@@ -2331,7 +2377,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return error string or null if no error has occurred.
      */
-    @Nullable public String getCrclClientErrorString() {
+    @Nullable
+    public String getCrclClientErrorString() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getCrclClientErrorMessage();
         }
@@ -2399,7 +2446,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return current status or null
      */
-    @Nullable public CRCLStatusType getCurrentStatus() {
+    @Nullable
+    public CRCLStatusType getCurrentStatus() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getCurrentStatus().orElse(null);
         }
@@ -2413,7 +2461,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         Utils.runOnDispatchThread(this::updateTitleInternal);
     }
 
-    @Nullable private CommandStatusType getCommandStatus() {
+    @Nullable
+    private CommandStatusType getCommandStatus() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getCurrentStatus()
                     .map(x -> x.getCommandStatus())
@@ -3267,7 +3316,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }//GEN-LAST:event_jCheckBoxMenuItemExploreGraphDbStartupActionPerformed
 
-    @Nullable CRCLWebAppRunner crclWebAppRunner = null;
+    @Nullable
+    CRCLWebAppRunner crclWebAppRunner = null;
 
     private void stopCrclWebApp() {
         if (null != crclWebAppRunner) {
@@ -3475,6 +3525,24 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_jMenuItemLookForActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        windowClosing();
+    }//GEN-LAST:event_formWindowClosing
+
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        windowClosed();
+    }//GEN-LAST:event_formWindowClosed
+
+    private void windowClosed() {
+        if(isVisible()) {
+            setVisible(false);
+        }
+        disconnectVision();
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.stopSimUpdateTimer();
+        }
+    }
+    
+    private void windowClosing() {
         immediateAbort();
         disconnectVision();
         startDisconnectDatabase();
@@ -3491,15 +3559,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             object2DViewJInternalFrame.stopSimUpdateTimer();
         }
         this.runProgramService.shutdown();
-    }//GEN-LAST:event_formWindowClosing
-
-    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
-        disconnectVision();
-        if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.stopSimUpdateTimer();
-        }
-    }//GEN-LAST:event_formWindowClosed
-
+        this.close();
+    }
+    
+    public void forceClose() {
+        
+    }
     private void jCheckBoxMenuItemConnectedRobotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
         boolean selected = jCheckBoxMenuItemConnectedRobot.isSelected();
         if (selected) {
@@ -3516,7 +3581,21 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 String portString = JOptionPane.showInputDialog("Robot port?", origCrclRobotPort);
                 port = Integer.parseInt(portString);
             }
-            this.connectRobot(name, host, port);
+             clearErrors();
+            resume();
+            jCheckBoxMenuItemPause.setSelected(false);
+            this.connectRobot(name, host, port)
+                    .thenCompose(x -> startCheckEnabled())
+                    .thenApply(success -> {
+                        if (!success) {
+                            jCheckBoxMenuItemConnectedRobot.setSelected(false);
+                        }
+                        return success;
+                    })
+                    .exceptionally(x -> {
+                        jCheckBoxMenuItemConnectedRobot.setSelected(false);
+                        return false;
+                    });
         } else {
             this.disconnectRobot();
         }
@@ -3627,7 +3706,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
     }
 
-    @Nullable private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
+    @Nullable
+    private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()
                 .filter(x -> x.getType().equals("P"))
                 .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
@@ -3643,7 +3723,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return slot with absolute position
      */
     @Override
-    @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
+    @Nullable
+    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem);
         }
@@ -3660,7 +3741,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return slot with absolute position
      */
     @Override
-    @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
+    @Nullable
+    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
         if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
         }
@@ -3699,7 +3781,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         });
     }
 
-    @Nullable public Image getLiveImage() {
+    @Nullable
+    public Image getLiveImage() {
         if (!isConnected()) {
             return null;
         }
@@ -3857,9 +3940,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    @Nullable private volatile XFuture<Boolean> lastResumeFuture = null;
+    @Nullable
+    private volatile XFuture<Boolean> lastResumeFuture = null;
 
-    @Nullable private volatile Thread resumingThread = null;
+    @Nullable
+    private volatile Thread resumingThread = null;
     private volatile StackTraceElement resumingTrace @Nullable []  = null;
     private volatile boolean resuming = false;
 
@@ -4022,7 +4107,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         System.out.println("startSafeAbortAndDisconnectTime = " + (curTime - startSafeAbortAndDisconnectTime));
     }
 
-    @Nullable private volatile XFuture<Boolean> continuousDemoFuture = null;
+    @Nullable
+    private volatile XFuture<Boolean> continuousDemoFuture = null;
 
     private final AtomicInteger cdStart = new AtomicInteger();
 
@@ -4099,14 +4185,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return false;
     }
 
-    @Nullable private volatile transient Consumer<String> supervisorEventLogger = null;
+    @Nullable
+    private volatile transient Consumer<String> supervisorEventLogger = null;
 
     /**
      * Get the value of supervisorEventLogger
      *
      * @return the value of supervisorEventLogger
      */
-    @Nullable public Consumer<String> getSupervisorEventLogger() {
+    @Nullable
+    public Consumer<String> getSupervisorEventLogger() {
         return supervisorEventLogger;
     }
 
@@ -4312,7 +4400,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private volatile boolean pausing = false;
-    @Nullable private volatile Thread pauseThread = null;
+    @Nullable
+    private volatile Thread pauseThread = null;
     private volatile StackTraceElement pauseTrace @Nullable []  = null;
 
     private void pauseInternal() {
@@ -4419,6 +4508,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    
     /**
      * Clear any error flags / strings set.
      */
@@ -4536,7 +4626,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return f;
     }
 
-    @Nullable private volatile XFuture<Boolean> lastStartActionsFuture = null;
+    @Nullable
+    private volatile XFuture<Boolean> lastStartActionsFuture = null;
 
     /**
      * Get the last future created from a startActions request. Only used for
@@ -4544,7 +4635,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return future or null if no startActions request has been made.
      */
-    @Nullable public XFuture<Boolean> getLastStartActionsFuture() {
+    @Nullable
+    public XFuture<Boolean> getLastStartActionsFuture() {
         return lastStartActionsFuture;
     }
 
@@ -4554,7 +4646,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      * @return future or null if no continueActions request has been made.
      */
-    @Nullable public XFuture<Boolean> getContinueActionListFuture() {
+    @Nullable
+    public XFuture<Boolean> getContinueActionListFuture() {
         return lastContinueActionListFuture;
     }
 
@@ -5094,7 +5187,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    @MonotonicNonNull DbSetup dbSetup = null;
+    @MonotonicNonNull
+    DbSetup dbSetup = null;
 
     @Override
     public final void loadProperties() throws IOException {
@@ -5699,7 +5793,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    @Nullable Future<?> disconnectDatabaseFuture = null;
+    @Nullable
+    Future<?> disconnectDatabaseFuture = null;
 
     private void startDisconnectDatabase() {
         jCheckBoxMenuItemConnectDatabase.setEnabled(false);
