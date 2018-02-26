@@ -3718,8 +3718,12 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         if (jCheckBoxMenuItemPause.isSelected()) {
             pause();
         } else {
+            boolean origIgnoreTitleErrs = ignoreTitleErrors.getAndSet(true);
             clearAllErrors();
             resume();
+            if (!origIgnoreTitleErrs) {
+                ignoreTitleErrors.set(false);
+            }
         }
     }//GEN-LAST:event_jCheckBoxMenuItemPauseActionPerformed
 
@@ -3798,7 +3802,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                 Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, e);
                                 JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
                             } finally {
-                                if(!origIgnoreTitleErrs) {
+                                if (!origIgnoreTitleErrs) {
                                     ignoreTitleErrors.set(false);
                                 }
                             }
@@ -5680,7 +5684,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         for (int i = 0; i < aprsSystems.size(); i++) {
             aprsSystems.get(i).clearErrors();
         }
-        if(!origIgnoreTitleErrs) {
+        if (!origIgnoreTitleErrs) {
             ignoreTitleErrors.set(false);
         }
     }

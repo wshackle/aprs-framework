@@ -2783,15 +2783,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jCheckBoxMenuItemForceFakeTake = new javax.swing.JCheckBoxMenuItem();
         jMenuItemCreateActionListFromVision = new javax.swing.JMenuItem();
         jMenuItemLookFor = new javax.swing.JMenuItem();
+        jMenuItemClearErrors = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                formWindowClosing(evt);
-            }
             public void windowClosed(java.awt.event.WindowEvent evt) {
                 formWindowClosed(evt);
+            }
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
             }
         });
 
@@ -3117,6 +3118,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenuExecute.add(jMenuItemLookFor);
+
+        jMenuItemClearErrors.setText("Clear Errors");
+        jMenuItemClearErrors.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemClearErrorsActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemClearErrors);
 
         jMenuBar1.add(jMenuExecute);
 
@@ -3533,7 +3542,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }//GEN-LAST:event_formWindowClosed
 
     private void windowClosed() {
-        if(isVisible()) {
+        if (isVisible()) {
             setVisible(false);
         }
         disconnectVision();
@@ -3541,7 +3550,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             object2DViewJInternalFrame.stopSimUpdateTimer();
         }
     }
-    
+
     private void windowClosing() {
         immediateAbort();
         disconnectVision();
@@ -3561,9 +3570,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         this.runProgramService.shutdown();
         this.close();
     }
-    
+
     public void forceClose() {
-        
+
     }
     private void jCheckBoxMenuItemConnectedRobotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
         boolean selected = jCheckBoxMenuItemConnectedRobot.isSelected();
@@ -3581,7 +3590,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 String portString = JOptionPane.showInputDialog("Robot port?", origCrclRobotPort);
                 port = Integer.parseInt(portString);
             }
-             clearErrors();
+            clearErrors();
             resume();
             jCheckBoxMenuItemPause.setSelected(false);
             this.connectRobot(name, host, port)
@@ -3600,6 +3609,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             this.disconnectRobot();
         }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
+
+    private void jMenuItemClearErrorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemClearErrorsActionPerformed
+        this.clearErrors();
+    }//GEN-LAST:event_jMenuItemClearErrorsActionPerformed
 
     /**
      * Start a sequence of actions to move the robot out of the way so the
@@ -4508,7 +4521,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    
     /**
      * Clear any error flags / strings set.
      */
@@ -5676,6 +5688,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenu jMenuExecute;
+    private javax.swing.JMenuItem jMenuItemClearErrors;
     private javax.swing.JMenuItem jMenuItemContinueActionList;
     private javax.swing.JMenuItem jMenuItemCreateActionListFromVision;
     private javax.swing.JMenuItem jMenuItemDebugAction;

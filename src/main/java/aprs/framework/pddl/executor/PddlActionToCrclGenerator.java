@@ -2022,7 +2022,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                     break;
                                 }
                                 String itemSkuName = "empty";
-                                if (null != closestItem && closestItem.distFromXY(absSlot) < absSlot.getDiameter() / 2.0) {
+                                if (closestItem.distFromXY(absSlot) < absSlot.getDiameter() / 2.0) {
                                     itemSkuName = closestItem.origName;
                                 }
                                 String slotItemSkuName = kit.slotMap.get(absSlotPrpName);
@@ -2063,6 +2063,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                 }
                             }
                             matchedKitInstanceNames.add(kitInstanceName);
+                            break;
                         }
                         System.out.println("matchedKitInstanceNames = " + matchedKitInstanceNames);
                         System.out.println("kitsToFix = " + kitsToFix);
