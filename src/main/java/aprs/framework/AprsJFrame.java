@@ -3618,8 +3618,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public void forceClose() {
-
+        try {
+            windowClosing();
+        } catch (Throwable t) {
+        }
+        try {
+            windowClosed();
+        } catch (Throwable t) {
+        }
+        super.removeAll();
+        super.dispose();
     }
+    
     private void jCheckBoxMenuItemConnectedRobotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
         boolean selected = jCheckBoxMenuItemConnectedRobot.isSelected();
         if (selected) {

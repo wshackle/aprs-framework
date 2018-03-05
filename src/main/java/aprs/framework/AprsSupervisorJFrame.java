@@ -2019,6 +2019,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private void startUpdateRunningTimeTimer() {
+        if (closing) {
+            return;
+        }
         if (runTimeTimer == null) {
             runTimeTimer = new Timer(2000, x -> updateRunningTime());
             runTimeTimer.start();
@@ -3649,7 +3652,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemStartColorTextDisplayActionPerformed
 
+    private volatile boolean closing = false;
+
     public void close() {
+        closing = true;
+        if (null != runTimeTimer) {
+            runTimeTimer.stop();
+            runTimeTimer = null;
+        }
         this.colorTextJPanel1.stopReader();
         if (null != colorTextJFrame) {
             colorTextJFrame.setVisible(false);
@@ -3692,32 +3702,32 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         if (null != stealRobotFuture) {
             XFuture<Void> xf = stealRobotFuture.get();
-            if(null != xf) {
+            if (null != xf) {
                 xf.cancelAll(true);
             }
         }
         if (null != unStealRobotFuture) {
             XFuture<Void> xf = unStealRobotFuture.get();
-            if(null != xf) {
+            if (null != xf) {
                 xf.cancelAll(true);
             }
         }
-        if(null != cancelStealRobotFuture) {
+        if (null != cancelStealRobotFuture) {
             XFuture<Void> xf = cancelStealRobotFuture.get();
-            if(null != xf) {
+            if (null != xf) {
                 xf.cancelAll(true);
             }
         }
-        if(null != cancelUnStealRobotFuture) {
+        if (null != cancelUnStealRobotFuture) {
             XFuture<Void> xf = cancelUnStealRobotFuture.get();
-            if(null != xf) {
+            if (null != xf) {
                 xf.cancelAll(true);
             }
         }
-        if(null != mainFuture) {
+        if (null != mainFuture) {
             mainFuture.cancelAll(true);
         }
-        if(null != randomTest) {
+        if (null != randomTest) {
             randomTest.cancelAll(true);
         }
 
@@ -3734,6 +3744,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         } catch (InterruptedException ex) {
             Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
+        super.removeAll();
         super.dispose();
     }
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
@@ -4692,8 +4703,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                     } catch (InterruptedException ex) {
                         log(Level.SEVERE, null, ex);
                     }
-                }
-        ,randomDelayExecutorService);
+                },
+                 randomDelayExecutorService);
 
     }
 
@@ -4769,6 +4780,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void allowToggles(String blockerName, AprsJFrame... systems) {
 
+        if (closing) {
+            return;
+        }
         try {
             if (null != systems && systems.length > 0) {
                 for (AprsJFrame sys : systems) {
@@ -4799,6 +4813,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
                 final boolean showTogglesEnabledArg = togglesAllowed;
                 Utils.runOnDispatchThread(() -> {
+                    if (closing) {
+                        return;
+                    }
                     showTogglesEnabled(showTogglesEnabledArg);
                     jTextFieldRobotEnableToggleBlockers.setText(blockerList);
                     XFuture.runAsync("finishAllowToggle." + blockerName, () -> finishAllowToggles(lockInfo), supervisorExecutorService);
@@ -5036,7 +5053,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         return XFuture.completedFuture(null);
                     }
                 })
-                .thenComposeAsync("continueRandomTest.recurse" + randomTestCount.get(), x -> continueRandomTest(),randomDelayExecutorService);
+                .thenComposeAsync("continueRandomTest.recurse" + randomTestCount.get(), x -> continueRandomTest(), randomDelayExecutorService);
         randomTest = ret;
         resetMainRandomTestFuture();
         return ret;
@@ -5208,19 +5225,20 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private final ExecutorService defaultRandomDelayExecutorService
             = Executors.newCachedThreadPool(new ThreadFactory() {
-                
-                private  int t;
+
+                private int t;
+
                 @Override
                 public Thread newThread(Runnable r) {
                     t++;
-                    Thread thread = new Thread(r, "AprsSupervisor_random_delay_" + myThreadId+"_"+t);
+                    Thread thread = new Thread(r, "AprsSupervisor_random_delay_" + myThreadId + "_" + t);
                     thread.setDaemon(true);
                     return thread;
                 }
             });
 
     private ExecutorService randomDelayExecutorService = defaultRandomDelayExecutorService;
-    
+
     public int getMax_cycles() {
         return max_cycles;
     }

@@ -412,6 +412,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         long timeDiff = endTime - startTime;
                         System.out.println("timeDiff = " + timeDiff);
                         JOptionPane.showMessageDialog(null, String.format("Test took %.3f seconds or %02d:%02d:%02d", (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60));
+                        System.exit(0);
                     });
                 });
 
