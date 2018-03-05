@@ -36,6 +36,36 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class PddlAction {
 
+    
+    private volatile long planTime;
+    private volatile long execTime;
+    private volatile boolean executed;
+    
+    
+    public boolean getExecuted() {
+        return executed;
+    }
+    
+    public void setExecTime() {
+        executed = true;
+        execTime = System.currentTimeMillis();
+    }
+    
+    public long getExecTime() {
+        return execTime;
+    }
+    
+    public void setPlanTime() {
+        if(executed) {
+            throw new IllegalStateException("already executed action being planned again");
+        }
+        planTime = System.currentTimeMillis();
+    }
+    
+    public long getPlanTime() {
+        return planTime;
+    }
+    
     /**
      * Create an instance from the required parameters.
      * @param label string added to the display table 

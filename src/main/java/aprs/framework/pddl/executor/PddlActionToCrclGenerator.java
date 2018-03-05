@@ -1079,6 +1079,43 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.manualAction = manualAction;
     }
 
+    @Nullable private volatile List<List<PddlAction>> takePlaceActions = null;
+    
+    
+    private static void checkTakePlaceActions(List<List<PddlAction>>  tplist, List<PddlAction> fullList) {
+        int tplistTotal= 0;
+        for(int i=0; i< tplist.size() -1;i++) {
+            List<PddlAction> l = tplist.get(i);
+            for(PddlAction act : l) {
+                if(act.getExecuted()) {
+                    tplistTotal++;
+                }
+            }
+        }
+        if(tplist.size() > 0) {
+            tplistTotal += tplist.get(tplist.size()-1).size();
+        }
+        int fullListTotal  =0;
+        for(PddlAction act : fullList) {
+            switch(act.getType()) {
+                case "take-part":
+                case "place-part":
+                    fullListTotal++;
+                    break;
+            }
+        }
+        if(tplistTotal > fullListTotal) {
+            long time = System.currentTimeMillis();
+            System.err.println("tplistTotal > fullListTotal : redundant or repeated actions suspected");
+            for(int i= 0; i < tplist.size(); i++) {
+                System.out.println("i = " + i);
+                for(PddlAction act : tplist.get(i)) {
+                    System.out.println((act.getExecuted()?(time-act.getExecTime()):"--")+" : " +act.asPddlLine());
+                }
+            }
+            System.err.println("tplistTotal > fullListTotal : redundant or repeated actions suspected");
+        }
+    }
     /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
@@ -1165,7 +1202,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
                 this.unitsSet = false;
                 this.rotSpeedSet = false;
+                takePlaceActions = new ArrayList<>();
             }
+            List<PddlAction> newTakePlaceList = new ArrayList<>();
+            takePlaceActions.add(newTakePlaceList);
             addSetUnits(cmds);
 
             String waitForCompleteVisionUpdatesCommentString = "generate(start=" + gparams.startingIndex + ",crclNumber=" + currentCrclNumber + ")";
@@ -1246,6 +1286,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 addTakeSnapshots(cmds, start_action_string, null, null, this.crclNumber.get());
                 switch (action.getType()) {
                     case "take-part":
+                        newTakePlaceList.add(action);
+                        checkTakePlaceActions(takePlaceActions,gparams.actions);
                         if (gparams.newItems.isEmpty() && poseCache.isEmpty()) {
                             logger.log(Level.WARNING, "newItems.isEmpty() on take-part for run " + getRunName());
                         }
@@ -1341,6 +1383,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         return cmds;
 
                     case "place-part":
+                        newTakePlaceList.add(action);
+                        checkTakePlaceActions(takePlaceActions,gparams.actions);
                         if (gparams.newItems.isEmpty() && poseCache.isEmpty()) {
                             logger.log(Level.WARNING, "newItems.isEmpty() on place-part for run " + getRunName());
                         }
@@ -1380,6 +1424,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
                 updateActionToCrclArrays(idx, cmds);
                 String end_action_string = "end_" + idx + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+                action.setPlanTime();
                 addMarkerCommand(cmds, end_action_string,
                         (CrclCommandWrapper wrapper) -> {
                             notifyActionCompletedListeners(idx, action, wrapper, fixedActionsCopy, fixedOrigActionsCopy);
@@ -1565,18 +1610,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (fullReplanPddlActions == actions) {
             gparams.replan = false;
             return generate(gparams);
-//            return generate(actions, startingIndex, options1, startSafeAbortRequestCount1, false, null, newItems);
         }
         List<PddlAction> copyFullReplanPddlActions = new ArrayList<>(fullReplanPddlActions);
         List<PddlAction> origActions = new ArrayList<>(actions);
-        long t1 = System.currentTimeMillis();
-//        System.out.println("runOptaPlanner: (t1-t0) = " + (t1 - t0) + ",rc=" + rc);
         synchronized (actions) {
             actions.clear();
             actions.addAll(fullReplanPddlActions);
         }
-        long t2 = System.currentTimeMillis();
-//        System.out.println("runOptaPlanner: (t2-t0) = " + (t2 - t0) + ",rc=" + rc);
         if (Math.abs(fullReplanPddlActions.size() - actions.size()) > skippedActions || actions.size() < 1) {
             System.out.println("copyFullReplanPddlActions = " + copyFullReplanPddlActions);
             throw new IllegalStateException("fullReplanPddlActions.size() = " + fullReplanPddlActions.size() + ",actions.size() = " + actions.size() + ",rc=" + rc + ", skippedActions=" + skippedActions);
@@ -1585,13 +1625,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             showPddlActionsList(actions);
         }
 
-//        actions.add(startingIndex, new PddlAction("", "pause", new String[0], ""));
         List<MiddleCommandType> newCmds = generate(gparams);
         if (debug) {
             showCmdList(newCmds);
         }
-        long t3 = System.currentTimeMillis();
-//        System.out.println("runOptaPlanner: (t3-t0) = " + (t3 - t0) + ",rc=" + rc);
         return newCmds;
     }
 
@@ -2080,7 +2117,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         List<String> partNames =
                 newItems.stream()
                         .filter(item -> item.getType().equals("P"))
-                        .map(PhysicalItem::getFullName)
+                        .flatMap(item -> {
+                            String fullName = item.getFullName();
+                            if(null != fullName) {
+                                return Stream.of(fullName);
+                            }
+                            return Stream.empty();
+                        })
                         .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
                         .sorted()
                         .collect(Collectors.toList());
@@ -5070,6 +5113,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void notifyActionCompletedListeners(int actionIndex, PddlAction action, CrclCommandWrapper wrapper, List<PddlAction> actions, @Nullable List<PddlAction> origActions) {
         ActionCallbackInfo acbi = new ActionCallbackInfo(actionIndex, action, wrapper, actions, origActions);
         lastAcbi.set(acbi);
+        action.setExecTime();
         for (Consumer<ActionCallbackInfo> listener : actionCompletedListeners) {
             listener.accept(acbi);
         }

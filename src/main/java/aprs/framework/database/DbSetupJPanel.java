@@ -53,6 +53,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -989,6 +990,15 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     });
 
     @Nullable volatile private List<Future<?>> futures = null;
+    
+    public void shutDownNotifyService() {
+        try {
+            notifyService.shutdownNow();
+            notifyService.awaitTermination(100, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     /**
      * Call the accept method of all registered listeners with the current setup

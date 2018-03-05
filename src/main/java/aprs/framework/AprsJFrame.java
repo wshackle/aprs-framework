@@ -855,16 +855,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
                 safeAbortAndDisconnectFuture
                         = localSafeAbortFuture
-                        .thenRun(() -> {
+                                .thenRun(() -> {
 //                                    if (null != continousDemoFuture) {
 //                                        continousDemoFuture.cancelAll(true);
 //                                        continousDemoFuture = null;
 //                                    }
-                            setStopRunTime();
-                        })
-                        .thenCompose(x -> waitAllLastFutures())
-                        .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
-                        .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
+                                    setStopRunTime();
+                                })
+                                .thenCompose(x -> waitAllLastFutures())
+                                .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
+                                .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
             } else {
                 safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected", null);
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -1119,17 +1119,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         lastContinueStartAbortCount = startAbortCount;
         lastContinueActionListFuture
                 = waitForPause()
-                .thenApplyAsync("AprsJFrame.continueActionList" + comment,
-                        x -> {
-                            setThreadName();
-                            takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                            assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                        .thenApplyAsync("AprsJFrame.continueActionList" + comment,
+                                x -> {
+                                    setThreadName();
+                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
+                                    assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
-                            }
-                            return false;
-                        }, runProgramService);
+                                    }
+                                    return false;
+                                }, runProgramService);
         return lastContinueActionListFuture;
     }
 
@@ -1356,13 +1356,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != crclClientJInternalFrame) {
             lastRunProgramFuture
                     = waitForPause()
-                    .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
-                        try {
-                            return runCrclProgram(program);
-                        } catch (JAXBException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }, runProgramService);
+                            .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
+                                try {
+                                    return runCrclProgram(program);
+                                } catch (JAXBException ex) {
+                                    throw new RuntimeException(ex);
+                                }
+                            }, runProgramService);
             return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
@@ -1738,7 +1738,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private void setThreadName() {
-        Thread.currentThread().setName(getThreadName());
+        if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
+            Thread.currentThread().setName(getThreadName());
+        }
     }
 
     private final ExecutorService defaultRunProgramService
@@ -1844,9 +1846,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private void disconnectVision() {
-        if (closing) {
-            throw new IllegalStateException("Attempt to start connect vision when already closing.");
-        }
         if (null != visionToDbJInternalFrame) {
             Utils.runOnDispatchThread(visionToDbJInternalFrame::disconnectVision);
         }
@@ -2048,7 +2047,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void closeAllWindows() {
         try {
             closePddlPlanner();
-
         } catch (Exception exception) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, exception);
@@ -2062,7 +2060,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
         try {
             stopCrclWebApp();
-
         } catch (Exception exception) {
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, exception);
@@ -2090,28 +2087,53 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             object2DViewJInternalFrame.dispose();
         }
 
-        abortCrclProgram();
-        disconnectRobot();
-        disconnectVision();
-        disconnectDatabase();
-        DbSetupJInternalFrame dbSetupFrame = this.dbSetupJInternalFrame;
-        if (null != dbSetupFrame) {
-            dbSetupFrame.getDbSetupPublisher().removeAllDbSetupListeners();
-            dbSetupFrame.setVisible(false);
-            dbSetupFrame.dispose();
+        try {
+            immediateAbort();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        JInternalFrame frames[] = jDesktopPane1.getAllFrames();
-        for (JInternalFrame f : frames) {
-            jDesktopPane1.getDesktopManager().closeFrame(f);
-            jDesktopPane1.remove(f);
+        try {
+            disconnectVision();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        if (null != this.exploreGraphDbJInternalFrame) {
-            this.exploreGraphDbJInternalFrame.setVisible(false);
-            this.exploreGraphDbJInternalFrame.dispose();
+        try {
+            startDisconnectDatabase();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        if (null != this.logDisplayJInternalFrame) {
-            this.logDisplayJInternalFrame.setVisible(false);
-            this.logDisplayJInternalFrame.dispose();
+        try {
+            disconnectRobotPrivate();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        try {
+            abortCrclProgram();
+            disconnectRobot();
+            disconnectVision();
+            disconnectDatabase();
+            DbSetupJInternalFrame dbSetupFrame = this.dbSetupJInternalFrame;
+            if (null != dbSetupFrame) {
+                dbSetupFrame.getDbSetupPublisher().removeAllDbSetupListeners();
+                dbSetupFrame.setVisible(false);
+                dbSetupFrame.shutDownNotifyService();
+                dbSetupFrame.dispose();
+            }
+            JInternalFrame frames[] = jDesktopPane1.getAllFrames();
+            for (JInternalFrame f : frames) {
+                jDesktopPane1.getDesktopManager().closeFrame(f);
+                jDesktopPane1.remove(f);
+            }
+            if (null != this.exploreGraphDbJInternalFrame) {
+                this.exploreGraphDbJInternalFrame.setVisible(false);
+                this.exploreGraphDbJInternalFrame.dispose();
+            }
+            if (null != this.logDisplayJInternalFrame) {
+                this.logDisplayJInternalFrame.setVisible(false);
+                this.logDisplayJInternalFrame.dispose();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -3552,23 +3574,47 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private void windowClosing() {
-        immediateAbort();
-        disconnectVision();
-        startDisconnectDatabase();
-        disconnectRobotPrivate();
-        if (connectDatabaseFuture != null) {
-            connectDatabaseFuture.cancelAll(true);
-            connectDatabaseFuture = null;
+        try {
+            immediateAbort();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        if (continuousDemoFuture != null) {
-            continuousDemoFuture.cancelAll(true);
-            continuousDemoFuture = null;
+        try {
+            disconnectVision();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.stopSimUpdateTimer();
+        try {
+            startDisconnectDatabase();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        this.runProgramService.shutdown();
-        this.close();
+        try {
+            disconnectRobotPrivate();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        try {
+            if (connectDatabaseFuture != null) {
+                connectDatabaseFuture.cancelAll(true);
+                connectDatabaseFuture = null;
+            }
+            if (continuousDemoFuture != null) {
+                continuousDemoFuture.cancelAll(true);
+                continuousDemoFuture = null;
+            }
+            if (null != object2DViewJInternalFrame) {
+                object2DViewJInternalFrame.stopSimUpdateTimer();
+            }
+            try {
+                this.runProgramService.shutdownNow();
+                this.runProgramService.awaitTermination(100, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException interruptedException) {
+            }
+            this.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     public void forceClose() {
@@ -4157,6 +4203,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         String logLabel = "startContinousDemo(task=" + getTaskName() + ")." + comment + "." + startAbortCount + "." + startDisconnectCount + "." + cdStart + "." + cdCur;
         logToSuper(logLabel);
         takeSnapshots(logLabel);
+        String startRobotName = this.robotName;
         continuousDemoFuture
                 = XFuture.supplyAsync("startContinousDemo(task=" + getTaskName() + ") comment=" + comment,
                         new Callable<Boolean>() {
@@ -4168,7 +4215,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                         if (!r0) {
                             System.err.println("starting continous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + cdCur);
                         }
-                        boolean enabledOk = doCheckEnabled();
+                        boolean enabledOk = doCheckEnabled(startAbortCount, startRobotName);
                         boolean r1 = pddlExecutorJInternalFrame1.readyForNewActionsList();
                         if (!r1) {
                             System.err.println("starting continous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + cdCur);
@@ -4558,11 +4605,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startCheckEnabled() {
+        int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        String startRobotName = this.robotName;
         setStartRunTime();
         if (enableCheckedAlready) {
             return XFuture.completedFutureWithName("startCheckEnabled.enableCheckedAlready", true);
         }
-        return XFuture.supplyAsync("startCheckEnabled", this::doCheckEnabled, runProgramService);
+        return XFuture.supplyAsync("startCheckEnabled", () -> this.doCheckEnabled(startAbortCount, this.robotName), runProgramService);
 //        try {
 //            System.out.println("startCheckEnabled called.");
 //            if (!isConnected()) {
@@ -4585,14 +4634,27 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 //        }
     }
 
-    private boolean doCheckEnabled() {
+    private boolean doCheckEnabled(int startAbortCount, String startRobotName) {
         assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
+        if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() != startAbortCount) {
+            return false;
+        }
+        if (!Objects.equals(this.robotName, startRobotName)) {
+            System.out.println("startRobotName = " + startRobotName);
+            System.out.println("this.robotName = " + this.robotName);
+            System.out.println("setRobotNameNullThread = " + setRobotNameNullThread);
+            System.out.println("setRobotNameNullStackTrace = " + Arrays.toString(setRobotNameNullStackTrace));
+            System.out.println("setRobotNameNullThreadTime = " + setRobotNameNullThreadTime);
+            System.out.println("setRobotNameNonNullThread = " + setRobotNameNonNullThread);
+            System.out.println("setRobotNameNonNullStackTrace = " + Arrays.toString(setRobotNameNonNullStackTrace));
+            System.out.println("setRobotNameNonNullThreadTime = " + setRobotNameNonNullThreadTime);
+            return false;
+        }
         setStartRunTime();
         if (enableCheckedAlready) {
             return true;
         }
         try {
-//            System.out.println("startCheckEnabled called.");
             if (!isConnected()) {
                 setConnected(true);
             }

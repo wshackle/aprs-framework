@@ -61,8 +61,8 @@ public class SocketLineReader {
 
         @Nullable volatile Socket socket;
         @Nullable volatile Thread thread;
-        @Nullable volatile BufferedReader br;
-        @Nullable volatile PrintStream ps;
+//        @Nullable volatile BufferedReader br;
+//        @Nullable volatile PrintStream ps;
 
         public void close() {
             try {
@@ -72,19 +72,19 @@ public class SocketLineReader {
                 }
             } catch (Exception exception) {
             }
-            try {
-                if (null != br) {
-                    br.close();
-                }
-            } catch (Exception exception) {
-            }
+//            try {
+//                if (null != br) {
+//                    br.close();
+//                }
+//            } catch (Exception exception) {
+//            }
             try {
                 if (null != socket) {
                     socket.close();
                 }
             } catch (Exception exception) {
             }
-            br = null;
+//            br = null;
             socket = null;
             thread = null;
         }
@@ -103,8 +103,8 @@ public class SocketLineReader {
     @Nullable private volatile List<Clnt> als = null;
     @Nullable private volatile Socket socket = null;
     @Nullable private volatile Thread thread = null;
-    @Nullable private volatile BufferedReader br = null;
-    @Nullable private volatile PrintStream ps;
+//    @Nullable private volatile BufferedReader br = null;
+//    @Nullable private volatile PrintStream ps;
     private SocketLineReader.@Nullable CallBack cb;
 
     public int getPort() {
@@ -140,15 +140,16 @@ public class SocketLineReader {
             this.host = host;
             socket.connect(new InetSocketAddress(host, port), 500);
             socket.setReuseAddress(true);
-            BufferedReader brl = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            br = brl;
-            PrintStream psl = new PrintStream(socket.getOutputStream());
-            ps = psl;
+            
+//            br = brl;
+//            PrintStream psl = new PrintStream(socket.getOutputStream());
+//            ps = psl;
             thread = new Thread(new Runnable() {
 
                 @Override
                 public void run() {
-                    try {
+                    try(BufferedReader brl = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                            PrintStream psl = new PrintStream(socket.getOutputStream());) {
                         String line = null;
                         while (null != (line = brl.readLine()) && !Thread.currentThread().isInterrupted()) {
                             _cb.call(line, psl);
@@ -172,21 +173,18 @@ public class SocketLineReader {
                 @Override
                 public void run() {
                     try {
-                        while (!Thread.currentThread().isInterrupted()) {
+                        while (!Thread.currentThread().isInterrupted() && !closing) {
                             final Clnt c = new Clnt();
                             Socket lcs = lss.accept();
                             c.socket = lcs;
-                            BufferedReader lcbr = new BufferedReader(new InputStreamReader(lcs.getInputStream()));
-                            c.br = lcbr;
-                            PrintStream lcps = new PrintStream(lcs.getOutputStream());
-                            c.ps = lcps;
                             Thread lct = new Thread(new Runnable() {
 
                                 @Override
                                 public void run() {
-                                    try {
+                                    try(BufferedReader lcbr = new BufferedReader(new InputStreamReader(lcs.getInputStream()));
+                                            PrintStream lcps = new PrintStream(lcs.getOutputStream());) {
                                         String line = null;
-                                        while (null != (line = lcbr.readLine()) && !Thread.currentThread().isInterrupted()) {
+                                        while (null != (line = lcbr.readLine()) && !Thread.currentThread().isInterrupted() && !closing) {
                                             _cb.call(line, lcps);
                                         }
                                     } catch (SocketException exception) {
@@ -203,6 +201,7 @@ public class SocketLineReader {
                                     }
                                 }
                             }, threadname);
+                            lct.setDaemon(true);
                             c.thread = lct;
                             lcals.add(c);
                             lct.start();
@@ -212,6 +211,7 @@ public class SocketLineReader {
                     }
                 }
             }, threadname + "Listener");
+            thread.setDaemon(true);
             thread.start();
         }
         return this;
@@ -247,18 +247,26 @@ public class SocketLineReader {
 //            }
 //        } catch (Exception e) {
 //        }
-        try {
-            if (null != ps) {
-                ps.close();
-            }
-        } catch (Exception e) {
-        }
+//        try {
+//            if (null != ps) {
+//                ps.close();
+//            }
+//        } catch (Exception e) {
+//        }
         try {
             if (null != socket) {
                 socket.close();
             }
         } catch (Exception e) {
         }
+        
+        try {
+            if (null != serverSocket) {
+                serverSocket.close();
+            }
+        } catch (Exception e) {
+        }
+        
 
         try {
             List<Clnt> lals = als;
@@ -272,8 +280,6 @@ public class SocketLineReader {
         }
         socket = null;
         thread = null;
-        br = null;
-        ps = null;
         als = null;
     }
 

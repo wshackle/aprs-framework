@@ -960,7 +960,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         List<Slot> ret = new ArrayList<>();
         try {
             String trayFullName = tray.getFullName();
-            if (null == trayFullName) {
+            if (null == trayFullName || !tray.isFullNameSet()) {
                 trayFullName = tray.getName() + "_1";
                 tray.setFullName(trayFullName);
                 if (trayFullName.startsWith("sku_")) {
@@ -1111,7 +1111,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     @Override
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffsetParam) {
         String name = offsetItem.getFullName();
-        if (name == null || name.length() < 1) {
+        if (name == null || name.length() < 1 || !offsetItem.isFullNameSet()) {
             throw new IllegalStateException("bad fullname for offsetItem=" + offsetItem);
         }
         double x = offsetItem.x;
@@ -1870,7 +1870,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             }
             if (!keepFullNames) {
                 String ciFullName = ci.getFullName();
-                if (name != null && name.length() > 0 && (ciFullName == null || ciFullName.length() < 1)) {
+                if (name != null && name.length() > 0 && (ciFullName == null || ciFullName.length() < 1 || !ci.isFullNameSet())) {
                     ci.setFullName(name);
                 }
             }
@@ -2065,7 +2065,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         continue;
                     }
                     String ciFullName = ci.getFullName();
-                    if (ci.getName() != null && ci.getName().length() > 0 && (ciFullName == null || ciFullName.length() < 1)) {
+                    if (ci.getName() != null && ci.getName().length() > 0 && (ciFullName == null || ciFullName.length() < 1 || !ci.isFullNameSet())) {
                         ciFullName = ci.getName();
                         ci.setFullName(ciFullName);
                     }

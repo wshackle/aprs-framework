@@ -1129,7 +1129,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             for (int i = 0; i < visionList.size(); i++) {
                 PhysicalItem ci = visionList.get(i);
                 String ciFullName = ci.getFullName();
-                if (ciFullName == null || ciFullName.length() < 1) {
+                if (ciFullName == null || ciFullName.length() < 1 || !ci.isFullNameSet()) {
                     System.err.println("bad ci fullname " + ci);
                 }
                 if (tm.getRowCount() <= i) {

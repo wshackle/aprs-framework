@@ -265,8 +265,15 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.name = name;
     }
 
-    @Nullable public String getFullName() {
+    public String getFullName() {
+        if(fullName == null) {
+            return name;
+        }
         return fullName;
+    }
+    
+    public boolean isFullNameSet() {
+        return null != fullName;
     }
 
     public void setFullName(String fullName) {

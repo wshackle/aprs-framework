@@ -1515,7 +1515,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 in.x + posRandom.nextGaussian() * posNoise,
                 in.y + posRandom.nextGaussian() * posNoise, in.getScore(), in.getType());
         String fullName = in.getFullName();
-        if (null != fullName) {
+        if (null != fullName && in.isFullNameSet()) {
             out.setFullName(fullName);
         }
         return out;

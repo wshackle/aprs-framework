@@ -3838,11 +3838,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                .stream()
-                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                .map(JointStatusType::getJointPosition)
-                .map(Objects::toString)
-                .collect(Collectors.joining(","));
+                        .stream()
+                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                        .map(JointStatusType::getJointPosition)
+                        .map(Objects::toString)
+                        .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -4659,14 +4659,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             newItems = new ArrayList<>(newItems);
             Collections.sort(newItems, Comparators.fromFunctions(PhysicalItem::getFullName));
             for (PhysicalItem item : newItems) {
-                switch(item.getType()) {
-                    case "P":
-                        objectCbm.addElement(item.getFullName());
-                        break;
-                        
-                    case "ES":
-                        slotCbm.addElement(item.getFullName());
-                        break;
+                String fullName = item.getFullName();
+                if (null != fullName) {
+                    switch (item.getType()) {
+                        case "P":
+                            objectCbm.addElement(fullName);
+                            break;
+
+                        case "ES":
+                            slotCbm.addElement(fullName);
+                            break;
+                    }
                 }
             }
             updatePositionCacheTable();
@@ -5029,10 +5032,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 return false;
             }
 
-//            if (sectionNumber > 1) {
-//                aprsJFrame.pause();
-//                return false;
-//            }
             doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
             if (doSafeAbort) {
                 return atLastAction();

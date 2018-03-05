@@ -123,6 +123,9 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
         return dbSetupJPanel1.getPropertiesFile();
     }
 
+    public void shutDownNotifyService() {
+        dbSetupJPanel1.shutDownNotifyService();
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.framework.database.DbSetupJPanel dbSetupJPanel1;
