@@ -262,11 +262,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     public void setItems(List<PhysicalItem> items, boolean publish) {
         settingItems = true;
-        for (PhysicalItem item : items) {
-            if (item.x < 100 || item.y > 300) {
-                System.out.println("item = " + item);
-            }
-        }
+//        for (PhysicalItem item : items) {
+//            if (item.x < 100 || item.y > 300) {
+//                System.out.println("item = " + item);
+//            }
+//        }
         Utils.runOnDispatchThread(() -> {
             setItemsInternal(items);
             settingItems = false;

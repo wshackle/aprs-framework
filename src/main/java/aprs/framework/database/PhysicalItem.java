@@ -254,7 +254,7 @@ public class PhysicalItem extends PM_CARTESIAN {
 
     @Override
     public String toString() {
-        return "DetectedItem{" + "name=" + name + ", visioncycle=" + visioncycle + ", fullName=" + fullName + ", repeats=" + repeats + ", index=" + index + ", rotation=" + rotation + ", x=" + x + ", y=" + y + ", z=" + z + ", vxi=" + vxi + ", vxj=" + vxj + ", vxk=" + vxk + ", vzi=" + vzi + ", vzj=" + vzj + ", vzk=" + vzk + ", score=" + score + ", type=" + type + '}';
+        return "PhysicalItem{" + "name=" + name + ", visioncycle=" + visioncycle + ", fullName=" + fullName + ", repeats=" + repeats + ", index=" + index + ", rotation=" + rotation + ", x=" + x + ", y=" + y + ", z=" + z + ", vxi=" + vxi + ", vxj=" + vxj + ", vxk=" + vxk + ", vzi=" + vzi + ", vzj=" + vzj + ", vzk=" + vzk + ", score=" + score + ", type=" + type + '}';
     }
 
     public String getName() {

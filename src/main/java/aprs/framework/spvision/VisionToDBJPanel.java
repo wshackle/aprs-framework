@@ -2462,9 +2462,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         item.setInsideKitTray((boolean) (Boolean) tableValue10);
         item.setFullName((String) tableValue11);
         item.setVisioncycle(Integer.parseInt(tableValue12.toString()));
-        System.out.println("item = " + item);
+//        System.out.println("item = " + item);
         List<PhysicalItem> singletonList = Collections.singletonList(item);
-        System.out.println("singletonList = " + singletonList);
+//        System.out.println("singletonList = " + singletonList);
         boolean origForceUpdates = dpu.isForceUpdates();
         dpu.setForceUpdates(true);
         boolean isDebug = jCheckBoxDebug.isSelected();

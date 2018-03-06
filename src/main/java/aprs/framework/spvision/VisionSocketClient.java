@@ -247,7 +247,7 @@ public class VisionSocketClient implements AutoCloseable {
         int i = 0;
         final int cur_visioncycle = visioncycle.incrementAndGet();
         try {
-            fa = line.split(",");
+            fa = line.split(",[ ]*");
 
             int index = 0;
             long timestamp = System.currentTimeMillis();
@@ -259,6 +259,7 @@ public class VisionSocketClient implements AutoCloseable {
                     logErr(displayInterface, errMsg);
                     continue;
                 }
+                name = name.trim();
                 boolean missingVal = false;
                 for (int j = 0; j < 5; j++) {
                     if (fa[i + j].length() < 1) {
@@ -295,7 +296,7 @@ public class VisionSocketClient implements AutoCloseable {
                         continue;
                     }
                 }
-                String type = fa[i + 5];
+                String type = fa[i + 5].trim();
                 PhysicalItem ci = PhysicalItem.newPhysicalItemNameRotXYScoreType(name, rot, x, y, score, type);
                 ci.setVisioncycle(cur_visioncycle);
                 //System.out.println("VisionSocketClient visioncycle-----> "+visioncycle);
