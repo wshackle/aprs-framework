@@ -56,9 +56,9 @@ public class PddlAction {
     }
     
     public void setPlanTime() {
-        if(executed) {
-            throw new IllegalStateException("already executed action being planned again");
-        }
+//        if(executed) {
+//            throw new IllegalStateException("already executed action being planned again");
+//        }
         planTime = System.currentTimeMillis();
     }
     
