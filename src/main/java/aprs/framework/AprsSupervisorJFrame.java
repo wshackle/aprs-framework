@@ -6431,6 +6431,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private final ConcurrentHashMap<Integer, String> titleErrorMap = new ConcurrentHashMap<>();
 
     private void updateTasksTable() {
+        if(closing) {
+            return;
+        }
         DefaultTableModel tm = (DefaultTableModel) jTableTasks.getModel();
         boolean needSetJListFuturesModel = false;
         tm.setRowCount(0);
@@ -6686,6 +6689,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private void updateRobotsTable() {
+        if(closing) {
+            return;
+        }
         Map<String, AprsJFrame> robotMap = new HashMap<>();
         robotEnableMap.clear();
         DefaultTableModel tm = (DefaultTableModel) jTableRobots.getModel();
