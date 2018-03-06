@@ -42,4 +42,6 @@ public interface DbSetupPublisher {
     public void removeAllDbSetupListeners();
     
     public List<Future<?>> notifyAllDbSetupListeners();
+    
+    public void disconnect();
 }

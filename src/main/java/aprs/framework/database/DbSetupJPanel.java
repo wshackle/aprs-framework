@@ -39,6 +39,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EventObject;
@@ -484,14 +486,16 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }//GEN-LAST:event_jComboBoxDbTypeActionPerformed
 
-    @MonotonicNonNull private AprsJFrame aprsJFrame = null;
+    @MonotonicNonNull
+    private AprsJFrame aprsJFrame = null;
 
     /**
      * Get the value of aprsJFrame
      *
      * @return the value of aprsJFrame
      */
-    @Nullable public AprsJFrame getAprsJFrame() {
+    @Nullable
+    public AprsJFrame getAprsJFrame() {
         return aprsJFrame;
     }
 
@@ -593,7 +597,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }//GEN-LAST:event_jButtonBrowseActionPerformed
 
-    @MonotonicNonNull private volatile String lastResourceDirSet = null;
+    @MonotonicNonNull
+    private volatile String lastResourceDirSet = null;
 
     private void jComboBoxResourceDirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxResourceDirActionPerformed
         try {
@@ -877,10 +882,30 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         });
     }
 
-    @Nullable private volatile Map<DbQueryEnum, DbQueryInfo> map = null;
+    @Nullable
+    private volatile Map<DbQueryEnum, DbQueryInfo> map = null;
     private volatile boolean mapUpToDate = false;
 
+    private volatile boolean disconnecting = false;
+
+    @Override
+    public void disconnect() {
+        boolean was_disconnecting = disconnecting;
+        try {
+            disconnecting = true;
+            setDbSetup(new DbSetupBuilder().setup(this.getDbSetup()).connected(false).build());
+        } finally {
+            disconnecting = was_disconnecting;
+        }
+    }
+
     public Map<DbQueryEnum, DbQueryInfo> getQueriesMap() {
+        if (disconnecting) {
+            if (map == null) {
+                return Collections.emptyMap();
+            }
+            return map;
+        }
         if (null != map && mapUpToDate) {
             return map;
         }
@@ -898,8 +923,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     mapUpToDate = true;
                 });
             } catch (InterruptedException | InvocationTargetException ex) {
-                Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                throw new RuntimeException(ex);
+                if (!disconnecting) {
+                    Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new RuntimeException(ex);
+                }
             }
         }
         Map<DbQueryEnum, DbQueryInfo> ret = map;
@@ -989,8 +1016,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     });
 
-    @Nullable volatile private List<Future<?>> futures = null;
-    
+    @Nullable
+    volatile private List<Future<?>> futures = null;
+
     public void shutDownNotifyService() {
         try {
             notifyService.shutdownNow();

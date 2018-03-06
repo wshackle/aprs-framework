@@ -619,7 +619,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         try {
             if (null != this.dbConnection && dbConnection != this.dbConnection && closeDbConnection) {
                 try {
-                    this.dbConnection.close();
+                    if (!this.dbConnection.isClosed()) {
+                        this.dbConnection.close();
+                    }
                     if (null != qs) {
                         qs.close();
                     }
@@ -1079,43 +1081,44 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.manualAction = manualAction;
     }
 
-    @Nullable private volatile List<List<PddlAction>> takePlaceActions = null;
-    
-    
-    private static void checkTakePlaceActions(List<List<PddlAction>>  tplist, List<PddlAction> fullList) {
-        int tplistTotal= 0;
-        for(int i=0; i< tplist.size() -1;i++) {
+    @Nullable
+    private volatile List<List<PddlAction>> takePlaceActions = null;
+
+    private static void checkTakePlaceActions(List<List<PddlAction>> tplist, List<PddlAction> fullList) {
+        int tplistTotal = 0;
+        for (int i = 0; i < tplist.size() - 1; i++) {
             List<PddlAction> l = tplist.get(i);
-            for(PddlAction act : l) {
-                if(act.getExecuted()) {
+            for (PddlAction act : l) {
+                if (act.getExecuted()) {
                     tplistTotal++;
                 }
             }
         }
-        if(tplist.size() > 0) {
-            tplistTotal += tplist.get(tplist.size()-1).size();
+        if (tplist.size() > 0) {
+            tplistTotal += tplist.get(tplist.size() - 1).size();
         }
-        int fullListTotal  =0;
-        for(PddlAction act : fullList) {
-            switch(act.getType()) {
+        int fullListTotal = 0;
+        for (PddlAction act : fullList) {
+            switch (act.getType()) {
                 case "take-part":
                 case "place-part":
                     fullListTotal++;
                     break;
             }
         }
-        if(tplistTotal > fullListTotal) {
+        if (tplistTotal > fullListTotal) {
             long time = System.currentTimeMillis();
             System.err.println("tplistTotal > fullListTotal : redundant or repeated actions suspected");
-            for(int i= 0; i < tplist.size(); i++) {
+            for (int i = 0; i < tplist.size(); i++) {
                 System.out.println("i = " + i);
-                for(PddlAction act : tplist.get(i)) {
-                    System.out.println((act.getExecuted()?(time-act.getExecTime()):"--")+" : " +act.asPddlLine());
+                for (PddlAction act : tplist.get(i)) {
+                    System.out.println((act.getExecuted() ? (time - act.getExecTime()) : "--") + " : " + act.asPddlLine());
                 }
             }
             System.err.println("tplistTotal > fullListTotal : redundant or repeated actions suspected");
         }
     }
+
     /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
@@ -1287,7 +1290,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 switch (action.getType()) {
                     case "take-part":
                         newTakePlaceList.add(action);
-                        checkTakePlaceActions(takePlaceActions,gparams.actions);
+                        checkTakePlaceActions(takePlaceActions, gparams.actions);
                         if (gparams.newItems.isEmpty() && poseCache.isEmpty()) {
                             logger.log(Level.WARNING, "newItems.isEmpty() on take-part for run " + getRunName());
                         }
@@ -1384,7 +1387,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
                     case "place-part":
                         newTakePlaceList.add(action);
-                        checkTakePlaceActions(takePlaceActions,gparams.actions);
+                        checkTakePlaceActions(takePlaceActions, gparams.actions);
                         if (gparams.newItems.isEmpty() && poseCache.isEmpty()) {
                             logger.log(Level.WARNING, "newItems.isEmpty() on place-part for run " + getRunName());
                         }
@@ -2023,7 +2026,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     System.out.println("");
                 }
             }
-            
+
             if (optoThread == null) {
                 optoThread = Thread.currentThread();
             }
@@ -2083,17 +2086,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                     if (!slotItemSkuName.equals("empty")) {
                                         String shortSkuName = slotItemSkuName;
                                         if (shortSkuName.startsWith("sku_")) {
-                                             shortSkuName = shortSkuName.substring(4);
+                                            shortSkuName = shortSkuName.substring(4);
                                         }
                                         final String finalShortSkuName = shortSkuName;
-                                        List<String> partNames =
-                                                itemsNameMap.computeIfAbsent(finalShortSkuName,
+                                        List<String> partNames
+                                                = itemsNameMap.computeIfAbsent(finalShortSkuName,
                                                         k -> partNamesListForShortSkuName(newItems, k));
                                         System.out.println("partNames = " + partNames);
 //                                        String partNamePrefix = shortSkuName + "_in_pt";
 //                                        int count = prefixCountMap.compute(partNamePrefix,
 //                                                (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
-                                        String partName= partNames.remove(0);
+                                        String partName = partNames.remove(0);
                                         takePartByName(partName, null, cmds);
                                         placePartByPose(cmds, visionToRobotPose(absSlot.getPose()));
                                     }
@@ -2114,19 +2117,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
-        List<String> partNames =
-                newItems.stream()
-                        .filter(item -> item.getType().equals("P"))
-                        .flatMap(item -> {
-                            String fullName = item.getFullName();
-                            if(null != fullName) {
-                                return Stream.of(fullName);
-                            }
-                            return Stream.empty();
-                        })
-                        .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
-                        .sorted()
-                        .collect(Collectors.toList());
+        List<String> partNames
+                = newItems.stream()
+                .filter(item -> item.getType().equals("P"))
+                .flatMap(item -> {
+                    String fullName = item.getFullName();
+                    if (null != fullName) {
+                        return Stream.of(fullName);
+                    }
+                    return Stream.empty();
+                })
+                .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
+                .sorted()
+                .collect(Collectors.toList());
         return partNames;
     }
 

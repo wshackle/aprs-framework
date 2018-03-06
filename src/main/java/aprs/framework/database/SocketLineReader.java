@@ -47,7 +47,8 @@ public class SocketLineReader {
 
         public void call(String line, PrintStream ps);
     }
-    @Nullable private volatile ServerSocket serverSocket = null;
+    @Nullable
+    private volatile ServerSocket serverSocket = null;
 
     public boolean isConnected() {
         if (null != socket) {
@@ -59,8 +60,10 @@ public class SocketLineReader {
 
     private class Clnt {
 
-        @Nullable volatile Socket socket;
-        @Nullable volatile Thread thread;
+        @Nullable
+        volatile Socket socket;
+        @Nullable
+        volatile Thread thread;
 //        @Nullable volatile BufferedReader br;
 //        @Nullable volatile PrintStream ps;
 
@@ -100,9 +103,12 @@ public class SocketLineReader {
             return "Clnt{" + "socket=" + socket + ", thread=" + thread + '}';
         }
     }
-    @Nullable private volatile List<Clnt> als = null;
-    @Nullable private volatile Socket socket = null;
-    @Nullable private volatile Thread thread = null;
+    @Nullable
+    private volatile List<Clnt> als = null;
+    @Nullable
+    private volatile Socket socket = null;
+    @Nullable
+    private volatile Thread thread = null;
 //    @Nullable private volatile BufferedReader br = null;
 //    @Nullable private volatile PrintStream ps;
     private SocketLineReader.@Nullable CallBack cb;
@@ -116,11 +122,13 @@ public class SocketLineReader {
         return socketPort;
     }
 
-    @Nullable public String getHost() {
+    @Nullable
+    public String getHost() {
         return host;
     }
 
-    @Nullable private String host = null;
+    @Nullable
+    private String host = null;
 
     private int port = -1;
 
@@ -140,7 +148,7 @@ public class SocketLineReader {
             this.host = host;
             socket.connect(new InetSocketAddress(host, port), 500);
             socket.setReuseAddress(true);
-            
+
 //            br = brl;
 //            PrintStream psl = new PrintStream(socket.getOutputStream());
 //            ps = psl;
@@ -148,7 +156,7 @@ public class SocketLineReader {
 
                 @Override
                 public void run() {
-                    try(BufferedReader brl = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    try (BufferedReader brl = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                             PrintStream psl = new PrintStream(socket.getOutputStream());) {
                         String line = null;
                         while (null != (line = brl.readLine()) && !Thread.currentThread().isInterrupted()) {
@@ -181,7 +189,7 @@ public class SocketLineReader {
 
                                 @Override
                                 public void run() {
-                                    try(BufferedReader lcbr = new BufferedReader(new InputStreamReader(lcs.getInputStream()));
+                                    try (BufferedReader lcbr = new BufferedReader(new InputStreamReader(lcs.getInputStream()));
                                             PrintStream lcps = new PrintStream(lcs.getOutputStream());) {
                                         String line = null;
                                         while (null != (line = lcbr.readLine()) && !Thread.currentThread().isInterrupted() && !closing) {
@@ -197,7 +205,9 @@ public class SocketLineReader {
                                             // ignore
                                         }
                                     } catch (Exception exception) {
-                                        exception.printStackTrace();
+                                        if(!closing) {
+                                            exception.printStackTrace();
+                                        }
                                     }
                                 }
                             }, threadname);
@@ -207,7 +217,9 @@ public class SocketLineReader {
                             lct.start();
                         }
                     } catch (Exception exception) {
-                        exception.printStackTrace();
+                        if (!closing) {
+                            exception.printStackTrace();
+                        }
                     }
                 }
             }, threadname + "Listener");
@@ -259,14 +271,13 @@ public class SocketLineReader {
             }
         } catch (Exception e) {
         }
-        
+
         try {
             if (null != serverSocket) {
                 serverSocket.close();
             }
         } catch (Exception e) {
         }
-        
 
         try {
             List<Clnt> lals = als;

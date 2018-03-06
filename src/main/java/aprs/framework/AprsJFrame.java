@@ -119,6 +119,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.xml.sax.SAXException;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
+import java.util.concurrent.CancellationException;
 
 /**
  * AprsJFrame is the container for one robotic system in the APRS (Agility
@@ -5900,17 +5901,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 connectDatabaseFuture = null;
             }
             DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
-            dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(false).build());
+            //dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(false).build());
+            dbSetupPublisher.disconnect();
             List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners();
             for (Future<?> f : futures) {
                 if (!f.isDone() && !f.isCancelled()) {
                     try {
                         f.get(100, TimeUnit.MILLISECONDS);
 
-                    } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+                    } catch ( CancellationException | InterruptedException | ExecutionException | TimeoutException ex) {
                         Logger.getLogger(AprsJFrame.class
-                                .getName()).log(Level.SEVERE, null, ex);
-
+                                .getName()).log(Level.FINE, null, ex);
                     }
                 }
             }
