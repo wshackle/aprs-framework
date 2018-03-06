@@ -119,7 +119,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.xml.sax.SAXException;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
+import java.io.FileWriter;
 import java.util.concurrent.CancellationException;
+import java.util.stream.Collectors;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
 /**
  * AprsJFrame is the container for one robotic system in the APRS (Agility
@@ -304,7 +308,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public XFuture<List<PhysicalItem>> getSingleVisionToDbUpdate() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
-        return visionToDbJInternalFrame.getSingleUpdate();
+        logEvent("start getSingleVisionToDbUpdate", null);
+        XFuture<List<PhysicalItem>> ret = visionToDbJInternalFrame.getSingleUpdate();
+        return ret.thenApply(x -> {
+            logEvent("end getSingleVisionToDbUpdate",x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList()));
+            return x;
+        });
     }
 
     public long getLastSingleVisionToDbUpdateTime() {
@@ -1387,9 +1396,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @throws JAXBException the program did not meet schema requirements
      */
     public boolean runCRCLProgram(CRCLProgramType program) throws JAXBException {
+        logEvent("start runCrclProgram",programToString(program));
         setProgram(program);
         assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
-        return crclClientJInternalFrame.runCurrentProgram();
+        boolean ret =  crclClientJInternalFrame.runCurrentProgram();
+        logEvent("end runCrclProgram","("+crclClientJInternalFrame.getCurrentProgramLine()+"/"+program.getMiddleCommand().size()+")");
+        return ret;
     }
 
     /**
@@ -1723,6 +1735,46 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     final static private AtomicInteger runProgramThreadCount = new AtomicInteger();
 
     private final int myThreadId = runProgramThreadCount.incrementAndGet();
+
+    @Nullable private volatile CSVPrinter eventLogPrinter = null;
+
+    private volatile long lastTime = -1;
+    private final AtomicInteger logNumber = new AtomicInteger();
+    private void logEvent(String s,Object arg) {
+        try {
+            CSVPrinter printer = eventLogPrinter;
+            if (null == printer) {
+
+                printer = new CSVPrinter(new FileWriter(Utils.createTempFile(getRunName(), ".csv")), CSVFormat.DEFAULT.withHeader("number","time","timediff", "event","arg"));
+                eventLogPrinter = printer;
+            }
+            long curTime = System.currentTimeMillis();
+            long diff = lastTime>0?curTime-lastTime:-1;
+            lastTime = curTime;
+            printer.printRecord(logNumber.incrementAndGet(), curTime,diff, s,arg);
+        } catch (IOException ex) {
+            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private String programToString(CRCLProgramType prog) {
+        StringBuilder sb = new StringBuilder();
+        List<MiddleCommandType> midCmds = prog.getMiddleCommand();
+        for (int i = 0; i < midCmds.size(); i++) {
+            sb.append(String.format("%03d", i));
+            sb.append(" \t");
+            try {
+                sb.append(CRCLSocket.getUtilSocket().commandToSimpleString(midCmds.get(i)));
+            } catch (ParserConfigurationException | SAXException | IOException ex) {
+                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                sb.append(ex);
+                sb.append("\r\n");
+                return sb.toString();
+            }
+            sb.append("\r\n");
+        }
+        return sb.toString();
+    }
 
     /**
      * Get the unique thread id number for this system. It is set only when this
@@ -3630,7 +3682,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         super.removeAll();
         super.dispose();
     }
-    
+
     private void jCheckBoxMenuItemConnectedRobotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
         boolean selected = jCheckBoxMenuItemConnectedRobot.isSelected();
         if (selected) {
@@ -5909,7 +5961,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     try {
                         f.get(100, TimeUnit.MILLISECONDS);
 
-                    } catch ( CancellationException | InterruptedException | ExecutionException | TimeoutException ex) {
+                    } catch (CancellationException | InterruptedException | ExecutionException | TimeoutException ex) {
                         Logger.getLogger(AprsJFrame.class
                                 .getName()).log(Level.FINE, null, ex);
                     }
@@ -5948,6 +6000,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     @Override
     public void close() {
         closing = true;
+        if (null != eventLogPrinter) {
+            try {
+                eventLogPrinter.close();
+            } catch (IOException ex) {
+                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            eventLogPrinter = null;
+        }
         System.out.println("AprsJFrame.close()");
         closeAllWindows();
         connectService.shutdownNow();
