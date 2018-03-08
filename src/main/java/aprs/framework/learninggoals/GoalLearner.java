@@ -50,14 +50,16 @@ import org.eclipse.collections.impl.block.factory.Comparators;
  */
 public class GoalLearner {
 
-    private @Nullable Predicate<PhysicalItem> itemPredicate = null;
+    private @Nullable
+    Predicate<PhysicalItem> itemPredicate = null;
 
     /**
      * Get the value of itemPredicate
      *
      * @return the value of itemPredicate
      */
-    @Nullable public Predicate<PhysicalItem> getItemPredicate() {
+    @Nullable
+    public Predicate<PhysicalItem> getItemPredicate() {
         return itemPredicate;
     }
 
@@ -77,14 +79,16 @@ public class GoalLearner {
         return itemPredicate.test(item);
     }
 
-    private @Nullable Predicate<List<PhysicalItem>> kitTrayListPredicate;
+    private @Nullable
+    Predicate<List<PhysicalItem>> kitTrayListPredicate;
 
     /**
      * Get the value of kitTrayListPredicate
      *
      * @return the value of kitTrayListPredicate
      */
-    @Nullable public Predicate<List<PhysicalItem>> getKitTrayListPredicate() {
+    @Nullable
+    public Predicate<List<PhysicalItem>> getKitTrayListPredicate() {
         return kitTrayListPredicate;
     }
 
@@ -104,14 +108,16 @@ public class GoalLearner {
         return kitTrayListPredicate.test(kitTrays);
     }
 
-    private @Nullable SlotOffsetProvider slotOffsetProvider;
+    private @Nullable
+    SlotOffsetProvider slotOffsetProvider;
 
     /**
      * Get the value of slotOffsetProvider
      *
      * @return the value of slotOffsetProvider
      */
-    @Nullable public SlotOffsetProvider getSlotOffsetProvider() {
+    @Nullable
+    public SlotOffsetProvider getSlotOffsetProvider() {
         return slotOffsetProvider;
     }
 
@@ -124,7 +130,8 @@ public class GoalLearner {
         this.slotOffsetProvider = slotOffsetProvider;
     }
 
-    @Nullable private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
+    @Nullable
+    private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()
                 .filter(x -> x.getType() != null && x.getType().equals("P"))
                 .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
@@ -173,7 +180,7 @@ public class GoalLearner {
     public boolean isCorrectionMode() {
         return correctionMode;
     }
-    
+
     private volatile boolean correctionMode = false;
 
     public void setCorrectionMode(boolean newCorrectionMode) {
@@ -197,8 +204,8 @@ public class GoalLearner {
     public List<PddlAction> createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean allEmptyA[], boolean overrideRotationOffset, double newRotationOffset) {
         Map<String, Integer> requiredItemsMap
                 = requiredItems.stream()
-                        .filter(this::isWithinLimits)
-                        .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
+                .filter(this::isWithinLimits)
+                .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
 
         SlotOffsetProvider localSlotOffsetProvider = this.slotOffsetProvider;
         if (null == localSlotOffsetProvider) {
@@ -207,10 +214,10 @@ public class GoalLearner {
 
         String requiredItemsString
                 = requiredItemsMap
-                        .entrySet()
-                        .stream()
-                        .map(entry -> entry.getKey() + "=" + entry.getValue())
-                        .collect(Collectors.joining(" "));
+                .entrySet()
+                .stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining(" "));
         List<PhysicalItem> kitTrays = teachItems.stream()
                 .filter(x -> "KT".equals(x.getType()))
                 .collect(Collectors.toList());
@@ -222,7 +229,9 @@ public class GoalLearner {
 
         boolean allEmpty = true;
 
-        l.add(PddlAction.parse("(clear-kits-to-check)"));
+        if(!correctionMode) {
+            l.add(PddlAction.parse("(clear-kits-to-check)"));
+        }
         l.add(PddlAction.parse("(look-for-parts 0 " + requiredItemsString + ")"));
         ConcurrentMap<String, Integer> kitUsedMap = new ConcurrentHashMap<>();
         ConcurrentMap<String, Integer> ptUsedMap = new ConcurrentHashMap<>();
@@ -304,19 +313,22 @@ public class GoalLearner {
             }
             kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                     + slotPrpToPartSkuMap.entrySet().stream()
-                            .sorted(Comparators.byFunction(Map.Entry::getKey))
-                            .map(e -> e.getKey() + "=" + e.getValue())
-                            .collect(Collectors.joining(" "))
+                    .sorted(Comparators.byFunction(Map.Entry::getKey))
+                    .map(e -> e.getKey() + "=" + e.getValue())
+                    .collect(Collectors.joining(" "))
                     + ")");
         }
-
-        l.add(PddlAction.parse("(look-for-parts 2)"));
+        if (!correctionMode) {
+            l.add(PddlAction.parse("(look-for-parts 2)"));
+        }
         l.add(PddlAction.parse("(clear-kits-to-check)"));
         for (String kitToCheckString : kitToCheckStrings) {
             l.add(PddlAction.parse(kitToCheckString));
         }
         l.add(PddlAction.parse("(check-kits)"));
-        l.add(PddlAction.parse("(clear-kits-to-check)"));
+        if (!correctionMode) {
+            l.add(PddlAction.parse("(clear-kits-to-check)"));
+        }
         l.add(PddlAction.parse("(end-program)"));
         if (null != allEmptyA && allEmptyA.length > 0) {
             allEmptyA[0] = allEmpty;
