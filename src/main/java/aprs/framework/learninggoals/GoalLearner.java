@@ -174,6 +174,18 @@ public class GoalLearner {
                 return false;
             }
         }
+        for (String s2 : kitToCheckStrings2) {
+            boolean matchFound = false;
+            for (String s1 : kitToCheckStrings1) {
+                if (s1.equals(s2)) {
+                    matchFound = true;
+                    break;
+                }
+            }
+            if (!matchFound) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -268,7 +280,7 @@ public class GoalLearner {
                     continue;
                 }
                 double minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
-                if (minDist < 20) {
+                if (minDist < 20 + slotOffset.getDiameter()/2.0) {
                     int pt_used_num = ptUsedMap.compute(closestPart.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
                     String shortPartName = closestPart.getName();
                     if (shortPartName.startsWith("sku_")) {

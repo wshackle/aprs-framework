@@ -4623,7 +4623,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private void completeScanTillNewInternal() {
 
         boolean anyChanged = false;
-        while (!anyChanged) {
+        while (!anyChanged && jCheckBoxMenuItemContinousDemo.isSelected() && !closing) {
             List<PhysicalItem> teachItems = Collections.emptyList();
             if (jCheckBoxMenuItemUseTeachCamera.isSelected()) {
                 teachItems = object2DOuterJPanel1.getItems();
@@ -4649,7 +4649,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 return;
             }
             try {
-                Thread.sleep(250);
+                Thread.sleep(50);
             } catch (InterruptedException ex) {
                 if(!closing) {
                     Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);

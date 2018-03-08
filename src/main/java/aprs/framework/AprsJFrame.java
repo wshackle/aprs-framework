@@ -127,6 +127,7 @@ import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.utils.CrclCommandWrapper;
 import java.io.FileWriter;
+import java.util.StringJoiner;
 import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
 import org.apache.commons.csv.CSVFormat;
@@ -882,16 +883,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
                 safeAbortAndDisconnectFuture
                         = localSafeAbortFuture
-                                .thenRun(() -> {
+                        .thenRun(() -> {
 //                                    if (null != continousDemoFuture) {
 //                                        continousDemoFuture.cancelAll(true);
 //                                        continousDemoFuture = null;
 //                                    }
-                                    setStopRunTime();
-                                })
-                                .thenCompose(x -> waitAllLastFutures())
-                                .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
-                                .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
+                            setStopRunTime();
+                        })
+                        .thenCompose(x -> waitAllLastFutures())
+                        .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
+                        .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
             } else {
                 safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected", null);
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -1149,17 +1150,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         logEvent("continueActionList", comment);
         lastContinueActionListFuture
                 = waitForPause()
-                        .thenApplyAsync("AprsJFrame.continueActionList" + comment,
-                                x -> {
-                                    setThreadName();
-                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                                    assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                .thenApplyAsync("AprsJFrame.continueActionList" + comment,
+                        x -> {
+                            setThreadName();
+                            takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
+                            assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
-                                    }
-                                    return false;
-                                }, runProgramService);
+                            }
+                            return false;
+                        }, runProgramService);
         return lastContinueActionListFuture.always(() -> logEvent("finished continueActionList", comment));
     }
 
@@ -1386,13 +1387,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != crclClientJInternalFrame) {
             lastRunProgramFuture
                     = waitForPause()
-                            .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
-                                try {
-                                    return runCrclProgram(program);
-                                } catch (JAXBException ex) {
-                                    throw new RuntimeException(ex);
-                                }
-                            }, runProgramService);
+                    .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
+                        try {
+                            return runCrclProgram(program);
+                        } catch (JAXBException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }, runProgramService);
             return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
@@ -1806,7 +1807,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private final int myThreadId = runProgramThreadCount.incrementAndGet();
 
-    @Nullable private volatile CSVPrinter eventLogPrinter = null;
+    @Nullable
+    private volatile CSVPrinter eventLogPrinter = null;
 
     private volatile long lastTime = -1;
     private final AtomicInteger logNumber = new AtomicInteger();
@@ -4102,8 +4104,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam) {
 
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
-        logEvent("createActionListFromVision", null);
         try {
+            List<String> startingList = this.getLastCreateActionListFromVisionKitToCheckStrings();
             if (goalLearner == null) {
                 goalLearner = new GoalLearner();
             }
@@ -4131,7 +4133,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     ps.println(act.asPddlLine());
                 }
             }
-            if (null != pddlExecutorJInternalFrame1) {
+            List<String> endingList = goalLearner.getLastCreateActionListFromVisionKitToCheckStrings();
+            boolean equal = GoalLearner.kitToCheckStringsEqual(startingList, endingList);
+            if (null != pddlExecutorJInternalFrame1 && !equal) {
                 pddlExecutorJInternalFrame1.setReverseFlag(false);
                 pddlExecutorJInternalFrame1.loadActionsFile(f);
                 pddlExecutorJInternalFrame1.setReverseFlag(jCheckBoxMenuItemReverse.isSelected());
@@ -4142,6 +4146,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 } else {
                     updateScanImage(teachItems, true);
                 }
+            }
+            
+            if (!equal || !lastLogEvent.equals("createActionListFromVision")) {
+                logEvent("createActionListFromVision",
+                        equal + "\n"
+                        + endingList
+                        .stream()
+                        .collect(Collectors.joining("\n")));
             }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);

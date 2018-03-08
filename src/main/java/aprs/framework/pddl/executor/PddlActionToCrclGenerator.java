@@ -124,6 +124,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.SideEffectFree;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.multimap.MutableMultimap;
+import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.factory.Lists;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
@@ -410,7 +411,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String failedAbsSlotPrpName;
         private @Nullable
         String failedItemSkuName;
+        int failedSlots;
 
+        public int getFailedSlots() {
+            return failedSlots;
+        }
         public KitToCheckInstanceInfo(String instanceName, List<Slot> absSlots) {
             this.instanceName = instanceName;
             this.absSlots = absSlots;
@@ -2030,8 +2035,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         if (!Objects.equals(kit.slotMap.get(absSlotPrpName), itemSkuName)) {
                             info.failedAbsSlotPrpName = absSlotPrpName;
                             info.failedItemSkuName = itemSkuName;
+                            info.failedSlots++;
                             allSlotsCorrect = false;
-                            break;
                         }
                     }
                     if (allSlotsCorrect) {
@@ -2070,9 +2075,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     Map<String, Integer> prefixCountMap = new HashMap<>();
                     Map<String, List<String>> itemsNameMap = new HashMap<>();
                     for (KitToCheck kit : kitsToFix) {
-                        List<String> kitInstanceNames = getKitInstanceNames(kit.name);
-                        for (String kitInstanceName : kitInstanceNames) {
-
+                        List<KitToCheckInstanceInfo> infoList = new ArrayList<>(kit.instanceInfoMap.values());
+                        Collections.sort(infoList,Comparators.byIntFunction(KitToCheckInstanceInfo::getFailedSlots));
+                        for(KitToCheckInstanceInfo info: infoList) {
+                            String kitInstanceName = info.instanceName;
                             if (matchedKitInstanceNames.contains(kitInstanceName)) {
                                 continue;
                             }
