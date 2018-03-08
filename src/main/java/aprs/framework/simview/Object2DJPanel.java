@@ -515,6 +515,7 @@ public class Object2DJPanel extends JPanel {
         public double rotationOffset;
         public boolean scale_set;
         public double scale;
+        public boolean paintingComponent;
     }
 
     public BufferedImage createSnapshotImage() {
@@ -986,6 +987,7 @@ public class Object2DJPanel extends JPanel {
         opts.h = h;
         opts.scale = this.scale;
         opts.scale_set = this.scale_set && !this.autoscale;
+        opts.paintingComponent = true;
         if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
             if (this.autoscale || !Double.isFinite(this.minX) || !Double.isFinite(this.minY) || !Double.isFinite(maxX) || !Double.isFinite(maxY)) {
                 paintWithAutoScale(itemsToPaint, selectedItem, g2d, opts);
@@ -1433,15 +1435,17 @@ public class Object2DJPanel extends JPanel {
                 translateThenRotateItem(g2d, minX, minY, maxX, maxY, item, currentRotationOffset, new_scale);
                 item.setDisplayTransform(g2d.getTransform());
                 item.setOrigTransform(origTransform);
-                try {
-                    AffineTransform itemRelTransform = origTransform.createInverse();
-                    item.setRelTransform(itemRelTransform);
-                    AffineTransform itemDisplayTransform = item.getDisplayTransform();
-                    if (null != itemDisplayTransform) {
-                        itemRelTransform.concatenate(itemDisplayTransform);
+                if (opts.paintingComponent) {
+                    try {
+                        AffineTransform itemRelTransform = origTransform.createInverse();
+                        AffineTransform itemDisplayTransform = item.getDisplayTransform();
+                        if (null != itemDisplayTransform) {
+                            itemRelTransform.concatenate(itemDisplayTransform);
+                            item.setRelTransform(itemRelTransform);
+                        }
+                    } catch (NoninvertibleTransformException ex) {
+                        Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                } catch (NoninvertibleTransformException ex) {
-                    Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 int namelen = useSeperateNamesThisTime ? 1 : item.getName().length();
                 Rectangle2D.Double itemDisplayRect
@@ -1449,7 +1453,9 @@ public class Object2DJPanel extends JPanel {
                                 -5, -12, // x,y
                                 10 + 10 * namelen, 20 // w,h
                         );
-                item.setDisplayRect(itemDisplayRect);
+                if (opts.paintingComponent) {
+                    item.setDisplayRect(itemDisplayRect);
+                }
                 g2d.setColor(this.getBackground());
                 g2d.fill(itemDisplayRect);
                 g2d.setTransform(origTransform);
@@ -1482,25 +1488,30 @@ public class Object2DJPanel extends JPanel {
                         g2d.drawString(item.getName().substring(0, 1), 0, 0);
                     }
                 }
-                AffineTransform itemDisplayTransform = g2d.getTransform();
-                item.setDisplayTransform(itemDisplayTransform);
-                item.setOrigTransform(origTransform);
-                try {
-                    AffineTransform itemRelTransform = origTransform.createInverse();
-                    item.setRelTransform(itemRelTransform);
-                    itemRelTransform.concatenate(itemDisplayTransform);
-                } catch (NoninvertibleTransformException ex) {
-                    Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                
+                if (opts.paintingComponent) {
+                    AffineTransform itemDisplayTransform = g2d.getTransform();
+                    item.setDisplayTransform(itemDisplayTransform);
+                    item.setOrigTransform(origTransform);
+                    try {
+                        AffineTransform itemRelTransform = origTransform.createInverse();
+                        itemRelTransform.concatenate(itemDisplayTransform);
+                        item.setRelTransform(itemRelTransform);
+                    } catch (NoninvertibleTransformException ex) {
+                        Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
-                int namelen = useSeperateNamesThisTime ? 1 : item.getName().length();
-                Rectangle2D.Double itemDisplayRect
-                        = new Rectangle2D.Double(
-                                -5, -12, // x,y
-                                10 + 10 * namelen, 20 // w,h
-                        );
-                item.setDisplayRect(itemDisplayRect);
-                if (!imageShown) {
 
+                if (!imageShown) {
+                    int namelen = useSeperateNamesThisTime ? 1 : item.getName().length();
+                    Rectangle2D.Double itemDisplayRect
+                            = new Rectangle2D.Double(
+                                    -5, -12, // x,y
+                                    10 + 10 * namelen, 20 // w,h
+                            );
+                    if(opts.paintingComponent) {
+                        item.setDisplayRect(itemDisplayRect);
+                    }
                     g2d.setColor(item.getLabelColor());
                     g2d.draw(itemDisplayRect);
                 }
@@ -1718,6 +1729,14 @@ public class Object2DJPanel extends JPanel {
             } else {
                 info = partImageMap.get("part_" + item.getName());
             }
+        }
+        if (null != info) {
+            Rectangle2D.Double itemDisplayRect
+                    = new Rectangle2D.Double(
+                            -info.scaledImage.getWidth(null) / 2, -info.scaledImage.getHeight(null) / 2, // x,y
+                            info.scaledImage.getWidth(null), info.scaledImage.getHeight(null)// w,h
+                    );
+            item.setDisplayRect(itemDisplayRect);
         }
 //        if (null == info) {
 //            System.err.println("partImageMap.keySet() = " + partImageMap.keySet());

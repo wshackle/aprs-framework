@@ -303,7 +303,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             settingItems = false;
         });
     }
-    
+
     private void updateItemsTableInternal(List<PhysicalItem> items) {
         if (!object2DJPanel1.isShowOutputItems()) {
             if (object2DJPanel1.isShowAddedSlotPositions()) {
@@ -1666,6 +1666,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
             this.updateItemsTable(getItems());
+            object2DJPanel1.repaint();
         }
 //        int minIndex = -1;
 //        int x = evt.getX();
@@ -2105,7 +2106,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_object2DJPanel1MouseMoved
 
     private void object2DJPanel1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseEntered
-       this.draggedItem = null;
+        this.draggedItem = null;
     }//GEN-LAST:event_object2DJPanel1MouseEntered
 
     private void object2DJPanel1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseExited
@@ -2152,6 +2153,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             simUpdateTimer = null;
         }
     }
+
     private void setupSimUpdateTimer() {
         if (forceOutputFlag) {
             return;
@@ -2907,12 +2909,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 double diff_y = rel_y - y;
                 double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
                 if (dist < minDist) {
-                    if (insideItem(item, x, y)) {
-                        minDist = dist;
-                        closestItem = item;
-                        this.minIndex = i;
-                    }
+                    minDist = dist;
+                    closestItem = item;
+                    this.minIndex = i;
                 }
+            }
+            if (!insideItem(closestItem, x, y)) {
+                System.err.println("insideItem("+closestItem+","+ x+","+ y+") failed");
+                boolean recheck = insideItem(closestItem, x, y);
+                closestItem = null;
+                this.minIndex = -1;
             }
         }
 

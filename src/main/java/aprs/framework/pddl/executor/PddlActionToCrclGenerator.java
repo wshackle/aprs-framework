@@ -117,6 +117,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.Icon;
+import javax.swing.JOptionPane;
 import javax.xml.parsers.ParserConfigurationException;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -1044,7 +1045,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * actions origActions actions before being passed through optaplanner
      * newItems optional list of newItems if the list has already been retreived
      */
-    private static class GenerateParams {
+    private class GenerateParams {
 
         @MonotonicNonNull
         List<PddlAction> actions;
@@ -1059,6 +1060,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         List<PhysicalItem> newItems;
         @Nullable
         RunOptoToGenerateReturn runOptoToGenerateReturn;
+
+        boolean newItemsRecieved;
+        final int startingVisionUpdateCount;
+
+        public GenerateParams() {
+            this.startingVisionUpdateCount = visionUpdateCount.get();
+        }
     }
 
     private boolean manualAction;
@@ -1212,8 +1220,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             addSetUnits(cmds);
 
             String waitForCompleteVisionUpdatesCommentString = "generate(start=" + gparams.startingIndex + ",crclNumber=" + currentCrclNumber + ")";
-            gparams.newItems = updateStalePoseCache(gparams.startingIndex, acbi, gparams.newItems, waitForCompleteVisionUpdatesCommentString);
-
+            boolean isNewRetArray[] = new boolean[1];
+            gparams.newItems = updateStalePoseCache(gparams.startingIndex, acbi, gparams.newItems, waitForCompleteVisionUpdatesCommentString, isNewRetArray);
+            if (isNewRetArray[0]) {
+                gparams.newItemsRecieved = true;
+            }
             takeSnapshots("plan", "generate(start=" + gparams.startingIndex + ",crclNumber=" + currentCrclNumber + ")", null, null);
             final List<PddlAction> fixedActionsCopy = Collections.unmodifiableList(new ArrayList<>(gparams.actions));
             final List<PddlAction> fixedOrigActionsCopy = (gparams.origActions == null) ? null : Collections.unmodifiableList(new ArrayList<>(gparams.actions));
@@ -1335,7 +1346,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                     throw thrown;
                                 }
                             }
-                            gparams.newItems = checkNewItems(waitForCompleteVisionUpdatesCommentString);
+                            if (!gparams.newItemsRecieved && visionUpdateCount.get() == gparams.startingVisionUpdateCount) {
+                                gparams.newItems = checkNewItems(waitForCompleteVisionUpdatesCommentString);
+                            }
                             logger.log(Level.FINE, "Processed wrapper only commands without sending to robot.");
                             if (null != gparams.runOptoToGenerateReturn) {
                                 gparams.runOptoToGenerateReturn.newIndex = idx + 1;
@@ -1474,7 +1487,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
-    private List<PhysicalItem> updateStalePoseCache(int startingIndex, @Nullable ActionCallbackInfo acbi, @Nullable List<PhysicalItem> newItems, String waitForCompleteVisionUpdatesCommentString) throws InterruptedException, ExecutionException {
+    private List<PhysicalItem> updateStalePoseCache(int startingIndex, @Nullable ActionCallbackInfo acbi, @Nullable List<PhysicalItem> newItems, String waitForCompleteVisionUpdatesCommentString, boolean isNetRetArray[]) throws InterruptedException, ExecutionException {
         if (startingIndex > 0 && null != acbi && null != acbi.action) {
             switch (acbi.action.getType()) {
 
@@ -1482,6 +1495,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 case "look-for-parts":
                     if (null == newItems) {
                         newItems = newPoseItems(waitForCompleteVisionUpdatesCommentString);
+                        if (null != isNetRetArray && isNetRetArray.length == 1) {
+                            isNetRetArray[0] = true;
+                        }
                     }
                     break;
 
@@ -1600,11 +1616,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         ActionCallbackInfo acbi = lastAcbi.get();
         String waitForCompleteVisionUpdatesCommentString = "runOptaPlanner(start=" + startingIndex + ",crclNumber=" + crclNumber + ")";
-        newItems = updateStalePoseCache(startingIndex, acbi, newItems, waitForCompleteVisionUpdatesCommentString);
+        boolean isNewRetArray[] = new boolean[1];
+        newItems = updateStalePoseCache(startingIndex, acbi, newItems, waitForCompleteVisionUpdatesCommentString, isNewRetArray);
         gparams.newItems = newItems;
         if (null == newItems) {
             gparams.replan = false;
             return generate(gparams);
+        }
+        if (isNewRetArray[0]) {
+            gparams.newItemsRecieved = true;
         }
         List<PddlAction> fullReplanPddlActions = optimizePddlActionsWithOptaPlanner(actions, startingIndex, newItems);
         if (Math.abs(fullReplanPddlActions.size() - actions.size()) > skippedActions || fullReplanPddlActions.size() < 1) {
@@ -1736,13 +1756,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (!getReverseFlag()) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                    .groupBy(item -> posNameToType(item.getName()));
+                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                            .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, PddlAction> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                    .select(action -> action.getType().equals("take-part"))
-                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                            .select(action -> action.getType().equals("take-part"))
+                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -1878,8 +1898,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                .map(arg -> arg.split("="))
-                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                        .map(arg -> arg.split("="))
+                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2036,7 +2056,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             if (!kitsToFix.isEmpty()) {
                 System.out.println("kitsToFix = " + kitsToFix);
                 printLastOptoInfo();
-                if (pauseInsteadOfRecover) {
+                if (pauseInsteadOfRecover && !aprsJFrame.isCorrectionMode()) {
+                    for (KitToCheck kit : kitsToFix) {
+                        for (KitToCheckInstanceInfo info : kit.instanceInfoMap.values()) {
+                            if (null != info.failedAbsSlotPrpName && null != info.failedItemSkuName) {
+                                JOptionPane.showMessageDialog(null, kit.name + " needs " + kit.slotMap.get(info.failedAbsSlotPrpName) + " instead of" + info.failedItemSkuName + " in " + info.failedAbsSlotPrpName);
+                                break;
+                            }
+                        }
+                    }
                     pause(action, cmds);
                 } else {
                     Map<String, Integer> prefixCountMap = new HashMap<>();
@@ -2119,17 +2147,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
         List<String> partNames
                 = newItems.stream()
-                .filter(item -> item.getType().equals("P"))
-                .flatMap(item -> {
-                    String fullName = item.getFullName();
-                    if (null != fullName) {
-                        return Stream.of(fullName);
-                    }
-                    return Stream.empty();
-                })
-                .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
-                .sorted()
-                .collect(Collectors.toList());
+                        .filter(item -> item.getType().equals("P"))
+                        .flatMap(item -> {
+                            String fullName = item.getFullName();
+                            if (null != fullName) {
+                                return Stream.of(fullName);
+                            }
+                            return Stream.empty();
+                        })
+                        .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
+                        .sorted()
+                        .collect(Collectors.toList());
         return partNames;
     }
 
@@ -4637,12 +4665,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         }
     }
 
+    private final AtomicInteger visionUpdateCount = new AtomicInteger();
+
     private List<PhysicalItem> waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap, long timeoutMillis)
             throws InterruptedException, ExecutionException {
 
         assert (aprsJFrame != null) : "aprsJFrame == null : @AssumeAssertion(nullness)";
 
         String runName = getRunName();
+        visionUpdateCount.incrementAndGet();
         XFuture<List<PhysicalItem>> xfl = aprsJFrame.getSingleVisionToDbUpdate();
         aprsJFrame.refreshSimView();
         long t0 = System.currentTimeMillis();

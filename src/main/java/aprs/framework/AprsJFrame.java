@@ -64,6 +64,7 @@ import aprs.framework.tomcat.CRCLWebAppRunner;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
+import crcl.base.ActuateJointsType;
 import crcl.base.CRCLCommandType;
 import crcl.base.CRCLProgramType;
 import crcl.base.CRCLStatusType;
@@ -72,8 +73,13 @@ import crcl.base.CommandStatusType;
 import crcl.base.EndCanonType;
 import crcl.base.InitCanonType;
 import crcl.base.MiddleCommandType;
+import crcl.base.MoveThroughToType;
+import crcl.base.MoveToType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
+import crcl.base.SetAngleUnitsType;
+import crcl.base.SetEndEffectorType;
+import crcl.base.SetLengthUnitsType;
 import crcl.ui.XFuture;
 import crcl.ui.client.PendantClientInner;
 import crcl.ui.client.PendantClientJPanel;
@@ -119,6 +125,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.xml.sax.SAXException;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
+import crcl.utils.CrclCommandWrapper;
 import java.io.FileWriter;
 import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
@@ -298,6 +305,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+//    private volatile StackTraceElement lastGetSingleVisionToDbUpdateStackTrace[] = null;
     /**
      * Asynchronously get a list of PhysicalItems updated in one frame from the
      * vision system. The list will not be available until after the next frame
@@ -308,10 +316,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public XFuture<List<PhysicalItem>> getSingleVisionToDbUpdate() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+//        if(null != lastLogEvent && lastLogEvent.endsWith("getSingleVisionToDbUpdate")) {
+//            for(StackTraceElement ste : lastGetSingleVisionToDbUpdateStackTrace) {
+//                System.err.println(ste.toString());
+//            }
+//            System.err.println("getSingleVisionToDbUpdate called twice");
+//        }
         logEvent("start getSingleVisionToDbUpdate", null);
+//        lastGetSingleVisionToDbUpdateStackTrace = Thread.currentThread().getStackTrace();
         XFuture<List<PhysicalItem>> ret = visionToDbJInternalFrame.getSingleUpdate();
         return ret.thenApply(x -> {
-            logEvent("end getSingleVisionToDbUpdate",x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList()));
+            logEvent("end getSingleVisionToDbUpdate", x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList()));
             return x;
         });
     }
@@ -708,6 +723,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param connected the new desired connected state.
      */
     public void setConnected(boolean connected) {
+        logEvent("setConnected", connected);
         if (!connected || robotName == null || !isConnected()) {
             enableCheckedAlready = false;
         }
@@ -844,17 +860,18 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return future providing info on when complete
      */
     public XFuture<Void> startSafeAbortAndDisconnect(String comment) {
+
         if (isAborting()) {
             String errMsg = "startSafeAbort(" + comment + ") called when already aborting";
             setTitleErrorString(errMsg);
             throw new IllegalStateException(errMsg);
         }
         try {
+            logEvent("startSafeAbortAndDisconnect", comment);
             Thread curThread = Thread.currentThread();
             startSafeAbortAndDisconnectThread = curThread;
             startSafeAbortAndDisconnectTime = System.currentTimeMillis();
             startSafeAbortAndDisconnectStackTrace = curThread.getStackTrace();
-
             if (isConnected()) {
                 assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
 
@@ -879,7 +896,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected", null);
                 safeAbortAndDisconnectFuture = safeAbortFuture;
             }
-            return safeAbortAndDisconnectFuture;
+            return safeAbortAndDisconnectFuture.always(() -> logEvent("finished startSafeAbortAndDisconnect", comment));
         } catch (Exception e) {
             setTitleErrorString(e.toString());
             XFuture<Void> ret = new XFuture<>("startSafeAbortAndDisconnect." + e.toString());
@@ -1010,9 +1027,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             });
             return XFuture.completedFuture(null);
         }
+        logEvent("connectRobot", robotName + " -> " + host + ":" + port);
         enableCheckedAlready = false;
         return waitForPause().
-                thenRunAsync(() -> connectRobotPrivate(robotName, host, port), connectService);
+                thenRunAsync(() -> connectRobotPrivate(robotName, host, port), connectService)
+                .always(() -> logEvent("finished connectRobot", robotName + " -> " + host + ":" + port));
     }
 
     private void maybeSetOrigCrclRobotPort(int port) {
@@ -1127,6 +1146,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         lastContinueStartAbortCount = startAbortCount;
+        logEvent("continueActionList", comment);
         lastContinueActionListFuture
                 = waitForPause()
                         .thenApplyAsync("AprsJFrame.continueActionList" + comment,
@@ -1140,7 +1160,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                                     }
                                     return false;
                                 }, runProgramService);
-        return lastContinueActionListFuture;
+        return lastContinueActionListFuture.always(() -> logEvent("finished continueActionList", comment));
     }
 
     /**
@@ -1388,6 +1408,49 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return crclClientJInternalFrame.runCurrentProgram();
     }
 
+    private boolean isMove(MiddleCommandType midCmd) {
+        if (midCmd instanceof MoveToType) {
+            return true;
+        }
+        if (midCmd instanceof MoveThroughToType) {
+            return true;
+        }
+        if (midCmd instanceof ActuateJointsType) {
+            return true;
+        }
+        if (midCmd instanceof SetEndEffectorType) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkNoMoves(CRCLProgramType prog) {
+        for (MiddleCommandType midCmd : prog.getMiddleCommand()) {
+            if (isMove(midCmd)) {
+                return false;
+            }
+            if (midCmd instanceof CrclCommandWrapper) {
+                CrclCommandWrapper wrapper = (CrclCommandWrapper) midCmd;
+                if (isMove(wrapper.getWrappedCommand())) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private void processWrapperCommands(CRCLProgramType program) {
+        List<MiddleCommandType> cmds = program.getMiddleCommand();
+        for (int i = 0; i < cmds.size(); i++) {
+            MiddleCommandType cmd = cmds.get(i);
+            if (cmd instanceof CrclCommandWrapper) {
+                CrclCommandWrapper wrapper = (CrclCommandWrapper) cmd;
+                wrapper.notifyOnStartListeners();
+                wrapper.notifyOnDoneListeners();
+            }
+        }
+    }
+
     /**
      * Run a CRCL program.
      *
@@ -1396,11 +1459,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @throws JAXBException the program did not meet schema requirements
      */
     public boolean runCRCLProgram(CRCLProgramType program) throws JAXBException {
-        logEvent("start runCrclProgram",programToString(program));
+        if (enableCheckedAlready && checkNoMoves(program)) {
+            logEvent("skipping runCrclProgram", programToString(program));
+            processWrapperCommands(program);
+            return true;
+        }
+        logEvent("start runCrclProgram", programToString(program));
         setProgram(program);
         assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
-        boolean ret =  crclClientJInternalFrame.runCurrentProgram();
-        logEvent("end runCrclProgram","("+crclClientJInternalFrame.getCurrentProgramLine()+"/"+program.getMiddleCommand().size()+")");
+        boolean ret = crclClientJInternalFrame.runCurrentProgram();
+        logEvent("end runCrclProgram", "(" + crclClientJInternalFrame.getCurrentProgramLine() + "/" + program.getMiddleCommand().size() + ")");
         return ret;
     }
 
@@ -1675,8 +1743,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param newTitleErrorString title error string
      */
     public void setTitleErrorString(@Nullable String newTitleErrorString) {
+
         if (!Objects.equals(lastNewTitleErrorString, newTitleErrorString)) {
             if (!Objects.equals(this.titleErrorString, newTitleErrorString)) {
+                logEvent("setTitleErrorString", newTitleErrorString);
                 titleErrorStringCommandStatus = getCommandStatus();
                 if (null != this.titleErrorString
                         && null != newTitleErrorString
@@ -1740,23 +1810,38 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private volatile long lastTime = -1;
     private final AtomicInteger logNumber = new AtomicInteger();
-    private void logEvent(String s,Object arg) {
+
+    private volatile String lastLogEvent = null;
+
+    private long logEvent(String s, Object arg) {
         try {
+            if (closing) {
+                return -1;
+            }
+            lastLogEvent = s;
             CSVPrinter printer = eventLogPrinter;
+
             if (null == printer) {
 
-                printer = new CSVPrinter(new FileWriter(Utils.createTempFile(getRunName(), ".csv")), CSVFormat.DEFAULT.withHeader("number","time","timediff", "event","arg"));
+                printer = new CSVPrinter(new FileWriter(Utils.createTempFile(getRunName(), ".csv")), CSVFormat.DEFAULT.withHeader("number", "time", "timediff", "event", "arg"));
                 eventLogPrinter = printer;
             }
             long curTime = System.currentTimeMillis();
-            long diff = lastTime>0?curTime-lastTime:-1;
+            long diff = lastTime > 0 ? curTime - lastTime : -1;
             lastTime = curTime;
-            printer.printRecord(logNumber.incrementAndGet(), curTime,diff, s,arg);
+            synchronized (printer) {
+                printer.printRecord(logNumber.incrementAndGet(), curTime, diff, s, arg);
+            }
+            return curTime;
         } catch (IOException ex) {
+            if (closing) {
+                return -1;
+            }
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            return -1;
         }
     }
-    
+
     private String programToString(CRCLProgramType prog) {
         StringBuilder sb = new StringBuilder();
         List<MiddleCommandType> midCmds = prog.getMiddleCommand();
@@ -3733,9 +3818,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * complete.
      */
     public XFuture<Boolean> startLookForParts() {
+        long t0 = logEvent("startLookForParts", null);
         return XFuture.supplyAsync("startLookForParts", () -> {
             return lookForPartsInternal();
-        }, runProgramService);
+        }, runProgramService)
+                .always(() -> logEvent("finished startLookForParts", (System.currentTimeMillis() - t0)));
     }
 
     private boolean lookForPartsInternal() throws JAXBException {
@@ -3976,6 +4063,33 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         return true;
     }
 
+    public List<String> getLastCreateActionListFromVisionKitToCheckStrings() {
+        if (null == goalLearner) {
+            return Collections.emptyList();
+        }
+        return goalLearner.getLastCreateActionListFromVisionKitToCheckStrings();
+    }
+
+    /**
+     * Get the value of correctionMode
+     *
+     * @return the value of correctionMode
+     */
+    public boolean isCorrectionMode() {
+        return (null != goalLearner && goalLearner.isCorrectionMode());
+    }
+
+    /**
+     * Set the value of correctionMode
+     *
+     * @param correctionMode new value of correctionMode
+     */
+    public void setCorrectionMode(boolean correctionMode) {
+        if (null != goalLearner) {
+            goalLearner.setCorrectionMode(correctionMode);
+        }
+    }
+
     /**
      * Use the provided list of items create a set of actions that will fill
      * empty trays to match.Load this list into the PDDL executor.
@@ -3988,6 +4102,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam) {
 
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        logEvent("createActionListFromVision", null);
         try {
             if (goalLearner == null) {
                 goalLearner = new GoalLearner();
@@ -3999,13 +4114,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             boolean allEmptyA[] = new boolean[1];
             List<PddlAction> actions = goalLearner.createActionListFromVision(requiredItems, teachItems, allEmptyA, overrideRotation, newRotationOffsetParam);
             boolean allEmpty = allEmptyA[0];
-            if (allEmpty || actions == null || actions.isEmpty()) {
-                System.out.println("requiredItems = " + requiredItems);
-                System.out.println("teachItems = " + teachItems);
-                if (JOptionPane.YES_OPTION
-                        != JOptionPane.showConfirmDialog(this, "Load action list with all trays empty?")) {
-                    setTitleErrorString("createActionListFromVision: All kit trays empty");
-                    throw new IllegalStateException("All kit trays empty");
+            if (!goalLearner.isCorrectionMode()) {
+                if (allEmpty || actions == null || actions.isEmpty()) {
+                    System.out.println("requiredItems = " + requiredItems);
+                    System.out.println("teachItems = " + teachItems);
+                    if (JOptionPane.YES_OPTION
+                            != JOptionPane.showConfirmDialog(this, "Load action list with all trays empty?")) {
+                        setTitleErrorString("createActionListFromVision: All kit trays empty");
+                        throw new IllegalStateException("All kit trays empty");
+                    }
                 }
             }
             File f = createTempFile("actionList", ".txt");
@@ -4074,6 +4191,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * Continue operations that were previously paused.
      */
     public void resume() {
+        logEvent("resume", null);
         resumingThread = Thread.currentThread();
         resumingTrace = resumingThread.getStackTrace();
         resuming = true;
@@ -4248,10 +4366,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      */
     public XFuture<Boolean> startContinousDemo(String comment, boolean reverseFirst) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        logEvent("startContinousDemo", null);
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         int startDisconnectCount = disconnectRobotCount.get();
         continuousDemoFuture = startContinousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart.incrementAndGet(), 1);
-        return continuousDemoFuture;
+        return continuousDemoFuture.always(() -> logEvent("finished startContinousDemo", null));
     }
 
     private XFuture<Boolean> startContinousDemo(String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart, int cdCur) {
@@ -4463,11 +4582,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * reverse flag and all related actions is complete.
      */
     public XFuture<Void> startSetReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
+        logEvent("startSetReverseFlag", reverseFlag);
         return XFuture.runAsync("startSetReverseFlag(" + reverseFlag + "," + reloadSimFiles + ")",
                 () -> {
                     setReverseFlag(reverseFlag, reloadSimFiles);
                 },
-                runProgramService);
+                runProgramService).always(() -> logEvent("finished startSetReverseFlag", reverseFlag));
     }
 
     private void setReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
@@ -4528,6 +4648,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private volatile StackTraceElement pauseTrace @Nullable []  = null;
 
     private void pauseInternal() {
+        logEvent("pause", null);
         pauseThread = Thread.currentThread();
         pauseTrace = pauseThread.getStackTrace();
         pausing = true;
@@ -4674,7 +4795,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (enableCheckedAlready) {
             return XFuture.completedFutureWithName("startCheckEnabled.enableCheckedAlready", true);
         }
-        return XFuture.supplyAsync("startCheckEnabled", () -> this.doCheckEnabled(startAbortCount, this.robotName), runProgramService);
+        long t0 = logEvent("startCheckEnabled", null);
+        return XFuture.supplyAsync("startCheckEnabled", () -> this.doCheckEnabled(startAbortCount, this.robotName), runProgramService)
+                .always(() -> logEvent("finished startCheckEnabled", (System.currentTimeMillis() - t0)));
 //        try {
 //            System.out.println("startCheckEnabled called.");
 //            if (!isConnected()) {

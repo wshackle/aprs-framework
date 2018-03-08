@@ -31,6 +31,7 @@ import aprs.framework.colortextdisplay.ColorTextJFrame;
 import aprs.framework.colortextdisplay.ColorTextJPanel;
 import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.Slot;
+import aprs.framework.learninggoals.GoalLearner;
 import aprs.framework.pddl.executor.PositionMap;
 import aprs.framework.pddl.executor.PositionMapEntry;
 import aprs.framework.pddl.executor.PositionMapJPanel;
@@ -45,7 +46,6 @@ import crcl.ui.misc.MultiLineStringJPanel;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GraphicsDevice;
@@ -2173,6 +2173,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemIndContinousDemo = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemIndRandomToggleTest = new javax.swing.JCheckBoxMenuItem();
         jMenuItemRunCustom = new javax.swing.JMenuItem();
+        jMenuItemStartContinousScanAndRun = new javax.swing.JMenuItem();
         jMenuOptions = new javax.swing.JMenu();
         jCheckBoxMenuItemDisableTextPopups = new javax.swing.JCheckBoxMenuItem();
         jMenuItemStartColorTextDisplay = new javax.swing.JMenuItem();
@@ -2188,11 +2189,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Multi Aprs Supervisor");
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosed(java.awt.event.WindowEvent evt) {
-                formWindowClosed(evt);
-            }
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
+            }
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
             }
         });
 
@@ -2914,6 +2915,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
         });
         jMenuActionsAdditionalTests.add(jMenuItemRunCustom);
+
+        jMenuItemStartContinousScanAndRun.setText("Start Continous Scan and Run");
+        jMenuItemStartContinousScanAndRun.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemStartContinousScanAndRunActionPerformed(evt);
+            }
+        });
+        jMenuActionsAdditionalTests.add(jMenuItemStartContinousScanAndRun);
 
         jMenuActions.add(jMenuActionsAdditionalTests);
 
@@ -4387,6 +4396,22 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemSetMaxCyclesActionPerformed
 
+    private void jMenuItemStartContinousScanAndRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartContinousScanAndRunActionPerformed
+        jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
+        prepAndFinishOnDispatch(() -> {
+            immediateAbortAll("jCheckBoxMenuItemContinousDemoActionPerformed");
+            clearEventLog();
+            clearAllErrors();
+            connectAll();
+            setAllReverseFlag(false);
+            enableAllRobots();
+            continousDemoCycle.set(0);
+            jCheckBoxMenuItemContinousDemo.setSelected(true);
+            continousDemoFuture = startContinousScanAndRun();
+            mainFuture = continousDemoFuture;
+        });
+    }//GEN-LAST:event_jMenuItemStartContinousScanAndRunActionPerformed
+
     public void setShowFullScreenMessages(boolean showFullScreenMessages) {
         jCheckBoxMenuItemShowSplashMessages.setSelected(showFullScreenMessages);
     }
@@ -4595,10 +4620,56 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
+    private void completeScanTillNewInternal() {
+
+        boolean anyChanged = false;
+        while (!anyChanged) {
+            List<PhysicalItem> teachItems = Collections.emptyList();
+            if (jCheckBoxMenuItemUseTeachCamera.isSelected()) {
+                teachItems = object2DOuterJPanel1.getItems();
+            }
+            for (int i = 0; i < aprsSystems.size(); i++) {
+                AprsJFrame aprsSys = aprsSystems.get(i);
+                List<String> startingKitStrings = aprsSys.getLastCreateActionListFromVisionKitToCheckStrings();
+                if(!startingKitStrings.isEmpty()) {
+                    aprsSys.setCorrectionMode(true);
+                }
+                if (jCheckBoxMenuItemUseTeachCamera.isSelected() && aprsSys.getUseTeachTable()) {
+                    aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0);
+                } else {
+                    aprsSys.createActionListFromVision();
+                }
+                List<String> endingKitStrings = aprsSys.getLastCreateActionListFromVisionKitToCheckStrings();
+                boolean equal = GoalLearner.kitToCheckStringsEqual(startingKitStrings, endingKitStrings);
+                if (!equal) {
+                    anyChanged = true;
+                }
+            }
+            if (anyChanged) {
+                return;
+            }
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException ex) {
+                if(!closing) {
+                    Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return;
+            }
+        }
+    }
+
     private XFuture<Void> scanAllInternal() {
         return lookForPartsAll()
                 .thenComposeAsync("scanAllInternal.clearReverseAll", x -> clearReverseAll(), supervisorExecutorService)
                 .thenRunAsync("completeScanAllInternal", this::completeScanAllInternal, supervisorExecutorService)
+                .thenCompose(x -> showScanCompleteDisplay());
+    }
+
+    private XFuture<Void> scanTillNewInternal() {
+        return lookForPartsAll()
+                .thenComposeAsync("scanAllInternal.clearReverseAll", x -> clearReverseAll(), supervisorExecutorService)
+                .thenRunAsync("completeScanAllInternal", this::completeScanTillNewInternal, supervisorExecutorService)
                 .thenCompose(x -> showScanCompleteDisplay());
     }
 
@@ -4704,7 +4775,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         log(Level.SEVERE, null, ex);
                     }
                 },
-                 randomDelayExecutorService);
+                randomDelayExecutorService);
 
     }
 
@@ -5148,6 +5219,22 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      *
      * @return future that can be used to determine if it fails or is cancelled
      */
+    public XFuture<?> startContinousScanAndRun() {
+        logEvent("Start continous scan and run");
+        connectAll();
+        continousDemoFuture
+                = startCheckAndEnableAllRobots()
+                        .thenCompose("startContinousScanAndRun", ok -> checkOkElse(ok, this::continueContinousScanAndRun, this::showCheckEnabledErrorSplash));
+        return continousDemoFuture;
+    }
+
+    /**
+     * Start a continuous demo where kit trays will first be filled and then
+     * emptied repeatedly. Systems will wait for all systems to be filled before
+     * any begin emptying and vice versa.
+     *
+     * @return future that can be used to determine if it fails or is cancelled
+     */
     public XFuture<?> startContinousDemo() {
         logEvent("Start continous demo");
         connectAll();
@@ -5245,6 +5332,32 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     public void setMax_cycles(int max_cycles) {
         this.max_cycles = max_cycles;
+    }
+
+    private XFuture<?> continueContinousScanAndRun() {
+        logEvent("Continue Continous Scan and Run : " + continousDemoCycle.get());
+        return continousDemoSetup()
+                .thenCompose("continueContinousScanAndRun.part2", x2 -> {
+                    final XFuture<?> lfr = this.lastFutureReturned;
+                    XFuture<?> ret
+                            = startCheckAndEnableAllRobots()
+                                    .thenComposeAsync("continueContinousScanAndRun.scanAllInternal", x -> scanTillNewInternal(), supervisorExecutorService)
+                                    .thenComposeAsync("continueContinousScanAndRun.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                                    .thenComposeAsync("continueContinousScanAndRun.startAllActions1", x -> startAllActions(), supervisorExecutorService)
+                                    .thenComposeAsync("continueContinousScanAndRun.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                                    .thenCompose("continueContinousScanAndRun.incrementContinousDemoCycle", x -> incrementContinousDemoCycle())
+                                    .thenComposeAsync("continueContinousScanAndRun.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
+                                    .thenComposeAsync("continueContinousScanAndRun.recurse" + continousDemoCycle.get(), ok -> checkOkElse(ok && checkMaxCycles(), this::continueContinousScanAndRun, this::showCheckEnabledErrorSplash), supervisorExecutorService);
+                    continousDemoFuture = ret;
+                    if (null != randomTest) {
+                        if (jCheckBoxMenuItemRandomTest.isSelected()) {
+                            resetMainRandomTestFuture();
+                        } else if (jCheckBoxMenuItemPauseResumeTest.isSelected()) {
+                            resetMainPauseTestFuture();
+                        }
+                    }
+                    return ret;
+                });
     }
 
     private XFuture<?> continueContinousDemo() {
@@ -6431,7 +6544,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private final ConcurrentHashMap<Integer, String> titleErrorMap = new ConcurrentHashMap<>();
 
     private void updateTasksTable() {
-        if(closing) {
+        if (closing) {
             return;
         }
         DefaultTableModel tm = (DefaultTableModel) jTableTasks.getModel();
@@ -6689,7 +6802,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     }
 
     private void updateRobotsTable() {
-        if(closing) {
+        if (closing) {
             return;
         }
         Map<String, AprsJFrame> robotMap = new HashMap<>();
@@ -6862,6 +6975,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemStartAll;
     private javax.swing.JMenuItem jMenuItemStartAllReverse;
     private javax.swing.JMenuItem jMenuItemStartColorTextDisplay;
+    private javax.swing.JMenuItem jMenuItemStartContinousScanAndRun;
     private javax.swing.JMenu jMenuOptions;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;

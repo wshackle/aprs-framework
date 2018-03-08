@@ -40,7 +40,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import javax.crypto.Mac;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.eclipse.collections.impl.block.factory.Comparators;
 
 /**
  *
@@ -140,7 +142,42 @@ public class GoalLearner {
      * configuration of the example data.
      */
     public List<PddlAction> createActionListFromVision(List<PhysicalItem> commonItems, boolean allEmptyA[], boolean overrideRotationOffset, double newRotationOffset) {
-        return createActionListFromVision(commonItems, commonItems, allEmptyA,overrideRotationOffset,newRotationOffset);
+        return createActionListFromVision(commonItems, commonItems, allEmptyA, overrideRotationOffset, newRotationOffset);
+    }
+
+    private volatile List<String> lastCreateActionListFromVisionKitToCheckStrings = Collections.emptyList();
+
+    public List<String> getLastCreateActionListFromVisionKitToCheckStrings() {
+        return new ArrayList<>(lastCreateActionListFromVisionKitToCheckStrings);
+    }
+
+    public static boolean kitToCheckStringsEqual(List<String> kitToCheckStrings1, List<String> kitToCheckStrings2) {
+        if (kitToCheckStrings1.size() != kitToCheckStrings2.size()) {
+            return false;
+        }
+        for (String s1 : kitToCheckStrings1) {
+            boolean matchFound = false;
+            for (String s2 : kitToCheckStrings2) {
+                if (s1.equals(s2)) {
+                    matchFound = true;
+                    break;
+                }
+            }
+            if (!matchFound) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isCorrectionMode() {
+        return correctionMode;
+    }
+    
+    private volatile boolean correctionMode = false;
+
+    public void setCorrectionMode(boolean newCorrectionMode) {
+        this.correctionMode = newCorrectionMode;
     }
 
     /**
@@ -192,8 +229,8 @@ public class GoalLearner {
         List<String> kitToCheckStrings = new ArrayList<>();
         for (PhysicalItem kit : kitTrays) {
             Map<String, String> slotPrpToPartSkuMap = new HashMap<>();
-            assert (null != localSlotOffsetProvider) :"@AssumeAssertion(nullness)";
-            List<Slot> slotOffsetList = localSlotOffsetProvider.getSlotOffsets(kit.getName(),false);
+            assert (null != localSlotOffsetProvider) : "@AssumeAssertion(nullness)";
+            List<Slot> slotOffsetList = localSlotOffsetProvider.getSlotOffsets(kit.getName(), false);
             if (null == slotOffsetList) {
                 throw new IllegalStateException("getSlotOffsetList(" + kit.getName() + ") returned null");
             }
@@ -208,16 +245,16 @@ public class GoalLearner {
             for (int slotOffsetIndex = 0; slotOffsetIndex < slotOffsetList.size(); slotOffsetIndex++) {
                 Slot slotOffset = slotOffsetList.get(slotOffsetIndex);
                 PhysicalItem absSlot;
-                if(!overrideRotationOffset) {
+                if (!overrideRotationOffset) {
                     absSlot = localSlotOffsetProvider.absSlotFromTrayAndOffset(kit, slotOffset);
                 } else {
-                    absSlot = localSlotOffsetProvider.absSlotFromTrayAndOffset(kit, slotOffset,newRotationOffset);
+                    absSlot = localSlotOffsetProvider.absSlotFromTrayAndOffset(kit, slotOffset, newRotationOffset);
                 }
-                if(null == absSlot) {
-                    throw new IllegalStateException("No absSlot obtainable for slotOffset name "+slotOffset.getName()+" in kit "+kit.getName());
+                if (null == absSlot) {
+                    throw new IllegalStateException("No absSlot obtainable for slotOffset name " + slotOffset.getName() + " in kit " + kit.getName());
                 }
                 PhysicalItem closestPart = closestPart(absSlot.x, absSlot.y, teachItems);
-                if(null == closestPart) {
+                if (null == closestPart) {
                     slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
                     continue;
                 }
@@ -229,7 +266,9 @@ public class GoalLearner {
                         shortPartName = shortPartName.substring(4);
                     }
                     String partName = shortPartName + "_in_pt_" + pt_used_num;
-                    l.add(PddlAction.parse("(take-part " + partName + ")"));
+                    if (!correctionMode) {
+                        l.add(PddlAction.parse("(take-part " + partName + ")"));
+                    }
                     String shortSkuName = slotOffset.getSlotForSkuName();
                     if (null == shortSkuName) {
                         throw new IllegalStateException("slotOffset has no slotForSkuName :" + slotOffset.getName());
@@ -254,7 +293,9 @@ public class GoalLearner {
                         }
                     }
                     String slotName = "empty_slot_" + indexString + "_for_" + shortSkuName + "_in_" + shortKitName + "_" + kitNumber;
-                    l.add(PddlAction.parse("(place-part " + slotName + ")"));
+                    if (!correctionMode) {
+                        l.add(PddlAction.parse("(place-part " + slotName + ")"));
+                    }
                     slotPrpToPartSkuMap.put(slotOffset.getPrpName(), closestPart.getName());
                     allEmpty = false;
                 } else {
@@ -263,6 +304,7 @@ public class GoalLearner {
             }
             kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                     + slotPrpToPartSkuMap.entrySet().stream()
+                            .sorted(Comparators.byFunction(Map.Entry::getKey))
                             .map(e -> e.getKey() + "=" + e.getValue())
                             .collect(Collectors.joining(" "))
                     + ")");
@@ -279,6 +321,7 @@ public class GoalLearner {
         if (null != allEmptyA && allEmptyA.length > 0) {
             allEmptyA[0] = allEmpty;
         }
+        lastCreateActionListFromVisionKitToCheckStrings = kitToCheckStrings;
         return l;
     }
 
