@@ -202,6 +202,17 @@ public class VisionSocketServer implements AutoCloseable {
         this.debug = debug;
     }
 
+    private volatile long lastPublishListTime;
+    private final AtomicInteger publishCount = new AtomicInteger();
+    
+    public long getLastPublishTime() {
+        return lastPublishListTime;
+    }
+    
+    public int getPublishCount() {
+        return publishCount.get();
+    }
+    
     public void publishList(List<PhysicalItem> list) {
         String line = listToLine(list);
         byte ba[] = line.getBytes();
@@ -240,6 +251,8 @@ public class VisionSocketServer implements AutoCloseable {
                             }
                         }
                     }
+                    lastPublishListTime = System.currentTimeMillis();
+                    publishCount.incrementAndGet();
                 }
             });
         }

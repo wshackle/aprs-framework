@@ -10,6 +10,7 @@ import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
+import aprs.framework.optaplanner.actionmodel.score.DistToTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -148,14 +149,76 @@ public class OpActionPlan {
     public void setScore(HardSoftLongScore score) {
         this.score = score;
     }
-    
+
     private volatile String asString = "";
 
     @Override
     public String toString() {
         return asString;
     }
+
+        
+
+    private double maxSpeed = 1.0;
+
+    /**
+     * Get the value of maxSpeed
+     *
+     * @return the value of maxSpeed
+     */
+    public double getMaxSpeed() {
+        return maxSpeed;
+    }
+
+    /**
+     * Set the value of maxSpeed
+     *
+     * @param maxSpeed new value of maxSpeed
+     */
+    public void setMaxSpeed(double maxSpeed) {
+        this.maxSpeed = maxSpeed;
+    }
+
+    private double startEndMaxSpeed = 2 * maxSpeed;
+
+    /**
+     * Get the value of startEndMaxSpeed
+     *
+     * @return the value of startEndMaxSpeed
+     */
+    public double getStartEndMaxSpeed() {
+        return startEndMaxSpeed;
+    }
+
+    /**
+     * Set the value of startEndMaxSpeed
+     *
+     * @param startEndMaxSpeed new value of startEndMaxSpeed
+     */
+    public void setStartEndMaxSpeed(double startEndMaxSpeed) {
+        this.startEndMaxSpeed = startEndMaxSpeed;
+    }
     
+    private double accelleration = 1.0;
+
+    /**
+     * Get the value of accelleration
+     *
+     * @return the value of accelleration
+     */
+    public double getAccelleration() {
+        return accelleration;
+    }
+
+    /**
+     * Set the value of accelleration
+     *
+     * @param accelleration new value of accelleration
+     */
+    public void setAccelleration(double accelleration) {
+        this.accelleration = accelleration;
+    }
+
     public String computeString() {
         double totalCost = 0;
         OpAction startAction = findStartAction();
@@ -193,7 +256,7 @@ public class OpActionPlan {
                         tmp = null;
                         break;
                     }
-                    totalCost += actionTmp.cost();
+                    totalCost += actionTmp.cost(this);
                     sb.append(actionTmp.getName());
                     OpActionInterface effNext = actionTmp.effectiveNext();
                     if (null != effNext && effNext != actionTmp.getNext()) {
@@ -201,7 +264,7 @@ public class OpActionPlan {
                         sb.append(effNext.getName());
                         sb.append(")");
                     }
-                    sb.append(String.format("(%.2f)", actionTmp.cost()));
+                    sb.append(String.format("(%.2f)", actionTmp.distance()));
                 } else {
                     sb.append(tmp.getActionType());
                 }
@@ -227,7 +290,7 @@ public class OpActionPlan {
                     }
                     continue;
                 }
-                recheckCost += action.cost();
+                recheckCost += action.cost(this);
                 if (!visited.contains(action.getName())) {
                     sb.append(" NOT_VISITED(").append(action.getName()).append(") ");
                 }

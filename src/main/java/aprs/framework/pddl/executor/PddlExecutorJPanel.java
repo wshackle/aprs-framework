@@ -338,10 +338,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         int ppiSarc = ppi.getStartSafeAbortRequestCount();
         boolean requestCountDiffer = ppiSarc != sarc;
         boolean aborting = aprsJFrame.isAborting();
-        if (requestCountDiffer && !aborting) {
-            System.out.println("sarc = " + sarc);
-            System.out.println("ppiSarc = " + ppiSarc);
-        }
+        aprsJFrame.logEvent("handlePlacePartCompleted", "requestCountDiffer="+requestCountDiffer+",aboring="+aborting+", ppi.getPddlActionIndex()="+ppi.getPddlActionIndex()+",action="+ppi.getAction().asPddlLine());
         if (requestCountDiffer || aborting) {
             pddlActionToCrclGenerator.takeSnapshots("exec", "safeAbortRequested" + sarc + ":" + safeAboutCount.get() + ".ppi=" + ppi, null, null);
             CrclCommandWrapper wrapper = ppi.getWrapper();
@@ -359,12 +356,6 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             pddlActionToCrclGenerator.addMoveToLookForPosition(l, false);
             setReplanFromIndex(ppi.getPddlActionIndex() + 1, true);
         }
-//        else if(aprsJFrame.isAborting()) {
-//            XFuture<Void> saf = aprsJFrame.getSafeAbortFuture();
-//            String errMsg = "isAborting() but ppi.getStartSafeAbortRequestCount() == safeAbortRequestCount.get() == "+sarc+" , safeAbortFuture="+saf;
-//            aprsJFrame.setTitleErrorString(errMsg);
-//            throw new IllegalStateException(errMsg);
-//        }
     }
 
     private boolean stepping;
@@ -4943,7 +4934,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             doSafeAbortCount.incrementAndGet();
             this.abortProgram();
             try {
-                if (pddlActionToCrclGenerator.isTakeSnapshots()) {
+                if (pddlActionToCrclGenerator.isTakeSnapshots() && aprsJFrame.snapshotsEnabled()) {
                     takeSimViewSnapshot(aprsJFrame.createTempFile("-safe-abort-", ".PNG"), null, "");
                 }
             } catch (IOException iOException) {

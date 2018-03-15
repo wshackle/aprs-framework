@@ -78,6 +78,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JDialog;
 import javax.swing.table.TableModel;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -230,25 +231,51 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.forceOutputFlag = forceOutputFlag;
     }
 
+    private volatile long lastRefreshTime;
+    private final AtomicInteger refreshCount = new AtomicInteger();
+
+    public long getLastRefreshTime() {
+        return lastRefreshTime;
+    }
+
+    public int getRefreshCount() {
+        return refreshCount.get();
+    }
+
+    public long getLastPublishTime() {
+        return (null != visionSocketServer) ? visionSocketServer.getLastPublishTime() : -1;
+    }
+
+    public int getPublishCount() {
+        return (null != visionSocketServer) ? visionSocketServer.getPublishCount() : -1;
+    }
+
     public void refresh(boolean loadFile) {
-        if (jCheckBoxSimulated.isSelected()) {
-            boolean fileLoaded = false;
-            if (loadFile) {
-                String fname = jTextFieldFilename.getText().trim();
-                File f = new File(fname);
-                if (f.exists() && f.canRead()) {
-                    try {
-                        loadFile(f);
-                        fileLoaded = true;
-                    } catch (IOException ex) {
-                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        try {
+            if (jCheckBoxSimulated.isSelected()) {
+                boolean fileLoaded = false;
+                if (loadFile) {
+                    String fname = jTextFieldFilename.getText().trim();
+                    File f = new File(fname);
+                    if (f.exists() && f.canRead()) {
+                        try {
+                            loadFile(f);
+                            fileLoaded = true;
+                        } catch (IOException ex) {
+                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
                 }
+                if (!fileLoaded && null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
+                    this.setItems(object2DJPanel1.getItems());
+                    publishCurrentItems();
+                }
             }
-            if (!fileLoaded && null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
-                this.setItems(object2DJPanel1.getItems());
-                publishCurrentItems();
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            lastRefreshTime = System.currentTimeMillis();
+            refreshCount.incrementAndGet();
         }
     }
 
@@ -2899,7 +2926,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             double min_x = object2DJPanel1.getMinX();
             double max_y = object2DJPanel1.getMaxY();
             double minDist = Double.POSITIVE_INFINITY;
-            closestItem = null;
+            PhysicalItem localClosestItem = null;
             for (int i = 0; i < items.size(); i++) {
                 PhysicalItem item = items.get(i);
                 double rel_x = (item.x - min_x) * scale + 15;
@@ -2910,16 +2937,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
                 if (dist < minDist) {
                     minDist = dist;
-                    closestItem = item;
+                    localClosestItem = item;
                     this.minIndex = i;
                 }
             }
-            if (!insideItem(closestItem, x, y)) {
-                System.err.println("insideItem("+closestItem+","+ x+","+ y+") failed");
-                boolean recheck = insideItem(closestItem, x, y);
-                closestItem = null;
-                this.minIndex = -1;
+            if (null != localClosestItem) {
+                if (!insideItem(localClosestItem, x, y)) {
+                    System.err.println("insideItem(" + localClosestItem + "," + x + "," + y + ") failed");
+                    boolean recheck = insideItem(localClosestItem, x, y);
+                    localClosestItem = null;
+                    this.minIndex = -1;
+                }
             }
+            this.closestItem = localClosestItem;
         }
 
         @Nullable

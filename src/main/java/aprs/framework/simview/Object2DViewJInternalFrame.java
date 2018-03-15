@@ -70,6 +70,23 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         this.object2DOuterJPanel1.stopSimUpdateTimer();
     }
     
+    
+    public long getLastRefreshTime() {
+        return object2DOuterJPanel1.getLastRefreshTime();
+    }
+    
+    public int getRefreshCount() {
+        return object2DOuterJPanel1.getRefreshCount();
+    }
+    
+    public long getLastPublishTime() {
+        return object2DOuterJPanel1.getLastPublishTime();
+    }
+    
+    public int getPublishCount() {
+        return object2DOuterJPanel1.getPublishCount();
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

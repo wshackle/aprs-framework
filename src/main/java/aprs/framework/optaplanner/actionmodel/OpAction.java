@@ -9,13 +9,14 @@ import static aprs.framework.optaplanner.actionmodel.OpActionType.DROPOFF;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.PICKUP;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
+import aprs.framework.optaplanner.actionmodel.score.DistToTime;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.dataflow.qual.SideEffectFree;
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.domain.variable.PlanningVariable;
@@ -218,7 +219,21 @@ public class OpAction implements OpActionInterface {
         return next;
     }
 
-    public double cost() {
+    public double cost(OpActionPlan plan) {
+        if(this.actionType == START) {
+            return  DistToTime.distToTime(this.distance(), plan.getAccelleration(), plan.getStartEndMaxSpeed());
+        }
+        OpActionInterface effNext = effectiveNext();
+        if (null == effNext) {
+            return 0;
+        }
+        if(effNext.getActionType() == END) {
+            return  DistToTime.distToTime(this.distance(), plan.getAccelleration(), plan.getStartEndMaxSpeed());
+        }
+       return  DistToTime.distToTime(this.distance(), plan.getAccelleration(), plan.getMaxSpeed());
+    }
+    
+    public double distance() {
         if (null == next) {
             throw new IllegalStateException("this=" + name + " next==null");
         }
@@ -255,7 +270,7 @@ public class OpAction implements OpActionInterface {
             OpActionType nextActionType = localNext.getActionType();
             OpActionType actionType = getActionType();
             if (null != localNext.getNext() && actionType != FAKE_DROPOFF && nextActionType != FAKE_DROPOFF) {
-                return name + infoString + " -> " + ((OpAction) localNext).name + "(cost=" + String.format("%.3f", cost()) + ")";
+                return name + infoString + " -> " + ((OpAction) localNext).name + "(cost=" + String.format("%.3f", distance()) + ")";
             } else {
                 return name + infoString + " -> " + ((OpAction) localNext).name;
             }

@@ -31,6 +31,8 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
         int startlength = 0;
         int badNexts = 0;
         List<OpAction> actionsList = solution.getActions();
+        double accelleration = solution.getAccelleration();
+        double maxSpeed = solution.getMaxSpeed();
         if (null != actionsList) {
             for (OpAction action : actionsList) {
                 OpActionInterface nextAction = action.getNext();
@@ -41,7 +43,7 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
                 } else if (!action.checkNextAction(nextAction)) {
                     badNexts++;
                 }
-                costTotal += action.cost();
+                costTotal +=  action.cost(solution);
                 Set<String> visited = new HashSet<>();
                 if (action.getActionType() == START) {
                     OpActionInterface tmp = action;

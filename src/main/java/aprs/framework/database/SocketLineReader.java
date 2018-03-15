@@ -149,6 +149,7 @@ public class SocketLineReader {
             socket.connect(new InetSocketAddress(host, port), 500);
             socket.setReuseAddress(true);
 
+            final Socket finalSocket = socket;
 //            br = brl;
 //            PrintStream psl = new PrintStream(socket.getOutputStream());
 //            ps = psl;
@@ -156,8 +157,8 @@ public class SocketLineReader {
 
                 @Override
                 public void run() {
-                    try (BufferedReader brl = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                            PrintStream psl = new PrintStream(socket.getOutputStream());) {
+                    try (BufferedReader brl = new BufferedReader(new InputStreamReader(finalSocket.getInputStream()));
+                            PrintStream psl = new PrintStream(finalSocket.getOutputStream());) {
                         String line = null;
                         while (null != (line = brl.readLine()) && !Thread.currentThread().isInterrupted()) {
                             _cb.call(line, psl);

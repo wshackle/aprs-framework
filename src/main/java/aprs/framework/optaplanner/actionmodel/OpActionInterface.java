@@ -7,7 +7,6 @@ package aprs.framework.optaplanner.actionmodel;
 
 import java.awt.geom.Point2D;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.dataflow.qual.SideEffectFree;
 
 /**
  *
@@ -26,4 +25,5 @@ public interface OpActionInterface {
     public @Nullable OpActionInterface getNext();
     
     public Point2D.Double getLocation();
+    
 }

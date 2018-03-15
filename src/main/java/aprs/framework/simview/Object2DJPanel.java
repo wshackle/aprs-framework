@@ -50,6 +50,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import rcs.posemath.PmCartesian;
 import static aprs.framework.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import java.awt.image.ImageObserver;
 
 import java.util.stream.StreamSupport;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -1435,7 +1436,7 @@ public class Object2DJPanel extends JPanel {
                 translateThenRotateItem(g2d, minX, minY, maxX, maxY, item, currentRotationOffset, new_scale);
                 item.setDisplayTransform(g2d.getTransform());
                 item.setOrigTransform(origTransform);
-                if (opts.paintingComponent) {
+                if (null != opts && opts.paintingComponent) {
                     try {
                         AffineTransform itemRelTransform = origTransform.createInverse();
                         AffineTransform itemDisplayTransform = item.getDisplayTransform();
@@ -1453,7 +1454,7 @@ public class Object2DJPanel extends JPanel {
                                 -5, -12, // x,y
                                 10 + 10 * namelen, 20 // w,h
                         );
-                if (opts.paintingComponent) {
+                if (opts != null && opts.paintingComponent) {
                     item.setDisplayRect(itemDisplayRect);
                 }
                 g2d.setColor(this.getBackground());
@@ -1488,8 +1489,8 @@ public class Object2DJPanel extends JPanel {
                         g2d.drawString(item.getName().substring(0, 1), 0, 0);
                     }
                 }
-                
-                if (opts.paintingComponent) {
+
+                if (null != opts && opts.paintingComponent) {
                     AffineTransform itemDisplayTransform = g2d.getTransform();
                     item.setDisplayTransform(itemDisplayTransform);
                     item.setOrigTransform(origTransform);
@@ -1509,7 +1510,7 @@ public class Object2DJPanel extends JPanel {
                                     -5, -12, // x,y
                                     10 + 10 * namelen, 20 // w,h
                             );
-                    if(opts.paintingComponent) {
+                    if (opts != null && opts.paintingComponent) {
                         item.setDisplayRect(itemDisplayRect);
                     }
                     g2d.setColor(item.getLabelColor());
@@ -1731,12 +1732,32 @@ public class Object2DJPanel extends JPanel {
             }
         }
         if (null != info) {
-            Rectangle2D.Double itemDisplayRect
-                    = new Rectangle2D.Double(
-                            -info.scaledImage.getWidth(null) / 2, -info.scaledImage.getHeight(null) / 2, // x,y
-                            info.scaledImage.getWidth(null), info.scaledImage.getHeight(null)// w,h
-                    );
-            item.setDisplayRect(itemDisplayRect);
+            ImageObserver observer = new ImageObserver() {
+                @Override
+                public boolean imageUpdate(Image img, int infoflags, int x, int y, int w, int h) {
+                    if ((infoflags & ImageObserver.WIDTH) == ImageObserver.WIDTH
+                            && (infoflags & ImageObserver.HEIGHT) == ImageObserver.HEIGHT) {
+                        Rectangle2D.Double itemDisplayRect
+                                = new Rectangle2D.Double(
+                                        -w / 2, -h / 2, // x,y
+                                        w, h// w,h
+                                );
+                        item.setDisplayRect(itemDisplayRect);
+                        return false;
+                    }
+                    return true;
+                }
+            };
+            int w = info.scaledImage.getWidth(observer);
+            int h = info.scaledImage.getHeight(observer);
+            if (w > 0 && h > 0) {
+                Rectangle2D.Double itemDisplayRect
+                        = new Rectangle2D.Double(
+                                -w / 2, -h / 2, // x,y
+                                w, h// w,h
+                        );
+                item.setDisplayRect(itemDisplayRect);
+            }
         }
 //        if (null == info) {
 //            System.err.println("partImageMap.keySet() = " + partImageMap.keySet());

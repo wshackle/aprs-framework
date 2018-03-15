@@ -325,7 +325,7 @@ public class GoalLearner {
             }
             kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                     + slotPrpToPartSkuMap.entrySet().stream()
-                    .sorted(Comparators.byFunction(Map.Entry::getKey))
+                    .sorted(Comparators.byFunction(Map.Entry<String,String>::getKey))
                     .map(e -> e.getKey() + "=" + e.getValue())
                     .collect(Collectors.joining(" "))
                     + ")");

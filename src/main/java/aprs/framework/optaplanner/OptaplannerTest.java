@@ -81,6 +81,9 @@ public class OptaplannerTest {
                 new OpAction("dropoff B2", 4 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B")
         );
         List<OpAction> shuffledList = new ArrayList<>(initList);
+        ap.setAccelleration(0.1);
+        ap.setMaxSpeed(0.25);
+        ap.setStartEndMaxSpeed(1.0);
         Collections.shuffle(shuffledList);
         ap.setActions(shuffledList);
         
