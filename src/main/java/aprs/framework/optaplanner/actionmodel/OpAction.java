@@ -220,6 +220,9 @@ public class OpAction implements OpActionInterface {
     }
 
     public double cost(OpActionPlan plan) {
+        if(plan.isUseDistForCost()) {
+            return distance();
+        }
         if(this.actionType == START) {
             return  DistToTime.distToTime(this.distance(), plan.getAccelleration(), plan.getStartEndMaxSpeed());
         }

@@ -65,6 +65,27 @@ public class OpActionPlan {
     @Nullable public List<OpAction> getActions() {
         return actions;
     }
+    
+        private boolean useDistForCost =true;
+
+    /**
+     * Get the value of useDistForCost
+     *
+     * @return the value of useDistForCost
+     */
+    public boolean isUseDistForCost() {
+        return useDistForCost;
+    }
+
+    /**
+     * Set the value of useDistForCost
+     *
+     * @param useDistForCost new value of useDistForCost
+     */
+    public void setUseDistForCost(boolean useDistForCost) {
+        this.useDistForCost = useDistForCost;
+    }
+
 
     public List<OpAction> orderedActions() {
         List<OpAction> orderedActions = new ArrayList<>();

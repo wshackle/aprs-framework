@@ -21,6 +21,10 @@ public class OpActionPlanCloner implements SolutionCloner<OpActionPlan> {
     @Override
     public OpActionPlan cloneSolution(OpActionPlan original) {
         OpActionPlan newPlan = new OpActionPlan();
+        newPlan.setAccelleration(original.getAccelleration());
+        newPlan.setMaxSpeed(original.getMaxSpeed());
+        newPlan.setStartEndMaxSpeed(original.getStartEndMaxSpeed());
+        newPlan.setUseDistForCost(original.isUseDistForCost());
         newPlan.setEndAction(original.getEndAction());
         newPlan.setEndActions(original.getEndActions());
         HardSoftLongScore hardSoftLongScore = original.getScore();

@@ -28,6 +28,9 @@ package aprs.framework.optaplanner.actionmodel.score;
  */
 public class DistToTime {
     
+    private static String badTime(double time) {
+        return "time =" + time;
+    }
     public static double distToTime(double dist, double accel, double speed) {
         if(dist < 0) {
             throw new IllegalArgumentException("dist="+dist);
@@ -46,6 +49,8 @@ public class DistToTime {
         if(dist <  distToMaxSpeed) {
             return Math.sqrt(dist/accel);
         }
-        return (dist-distToMaxSpeed)/speed+timeToMaxSpeed;
+        double time = (dist-distToMaxSpeed)/speed+timeToMaxSpeed;
+        assert time > 0 : badTime(time);
+        return time;
     }
 }
