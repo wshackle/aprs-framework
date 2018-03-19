@@ -1050,7 +1050,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         if (null != origFutures) {
             for (Future<?> f : origFutures) {
                 if (!f.isDone() && !f.isCancelled()) {
-                    if (!cancelWarnGiven) {
+                    if (!cancelWarnGiven && !parentFrame.isClosing()) {
                         cancelWarnGiven = true;
                         System.err.println("Cancelling a dbSetup notification");
                         if (checkedParentFrame.isEnableDebugDumpstacks()) {
@@ -1063,7 +1063,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
         List<Future<?>> newFutures = new ArrayList<>();
         this.futures = newFutures;
-        if (notifyService != null) {
+        if (notifyService != null && !parentFrame.isClosing()) {
             final DbSetup thisDbSetup = DbSetupJPanel.this.getDbSetup();
 //            System.out.println("thisDbSetup = " + thisDbSetup);
 //            System.out.println("thisDbSetup.getQueriesMap() = " + thisDbSetup.getQueriesMap());

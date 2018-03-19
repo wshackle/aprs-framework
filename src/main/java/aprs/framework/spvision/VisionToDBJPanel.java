@@ -952,9 +952,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void disconnectVision() {
         stopVisionStartThread();
         closeVision();
-        Exception ex = new IllegalStateException("visionDisconnected");
-        notifySingleUpdateListenersExceptionally(ex);
-        setTitleErrorString("vision disconnected");
+        if (null != aprsJFrame && !aprsJFrame.isClosing()) {
+            Exception ex = new IllegalStateException("visionDisconnected");
+            notifySingleUpdateListenersExceptionally(ex);
+            setTitleErrorString("vision disconnected");
+        } else {
+            cancelListenersAndDisableUpdates();
+        }
     }
 
     public void closeVision() {
@@ -1714,6 +1718,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return listeners;
     }
 
+    private void cancelListenersAndDisableUpdates() {
+        synchronized (singleUpdateListeners) {
+            for (XFuture<List<PhysicalItem>> xf : singleUpdateListeners) {
+                xf.cancelAll(true);
+            }
+            singleUpdateListeners.clear();
+            setEnableDatabaseUpdates(false);
+        }
+    }
+
     private void notifySingleUpdateListenersExceptionally(Throwable ex) {
         List<XFuture<List<PhysicalItem>>> listeners = copyListenersAndDisableUpdates();
         for (XFuture<List<PhysicalItem>> future : listeners) {
@@ -2139,6 +2153,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private void copyText( 
+         
+         
          
          
          

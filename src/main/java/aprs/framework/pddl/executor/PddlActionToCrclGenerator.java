@@ -453,6 +453,24 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         public String toString() {
             return "KitToCheck{" + "name=" + name + ", instanceInfoMap=" + instanceInfoMap + '}';
         }
+        
+        int getMaxDiffFailedSlots() {
+            int minFailedSlots = instanceInfoMap
+                    .values()
+                    .stream()
+                    .mapToInt(KitToCheckInstanceInfo::getFailedSlots)
+                    .min()
+                    .orElse(0);
+            int maxFailedSlots = instanceInfoMap
+                    .values()
+                    .stream()
+                    .mapToInt(KitToCheckInstanceInfo::getFailedSlots)
+                    .max()
+                    .orElse(0);
+            int diff = maxFailedSlots - minFailedSlots;
+            System.out.println("diff = " + diff);
+            return diff;
+        }
 
     }
     private final ConcurrentLinkedDeque<KitToCheck> kitsToCheck = new ConcurrentLinkedDeque<>();
@@ -891,7 +909,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         clearPoseCache();
     }
 
-    @MonotonicNonNull private OpDisplayJPanel opDisplayJPanelSolution;
+    @MonotonicNonNull
+    private OpDisplayJPanel opDisplayJPanelSolution;
 
     /**
      * Get the value of opDisplayJPanelSolution
@@ -912,7 +931,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.opDisplayJPanelSolution = opDisplayJPanelSolution;
     }
 
-    @MonotonicNonNull private OpDisplayJPanel opDisplayJPanelInput;
+    @MonotonicNonNull
+    private OpDisplayJPanel opDisplayJPanelInput;
 
     /**
      * Get the value of opDisplayJPanelInput
@@ -2176,6 +2196,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 } else {
                     Map<String, Integer> prefixCountMap = new HashMap<>();
                     Map<String, List<String>> itemsNameMap = new HashMap<>();
+                    Collections.sort(kitsToFix, Comparators.byIntFunction(KitToCheck::getMaxDiffFailedSlots));
                     for (KitToCheck kit : kitsToFix) {
                         List<KitToCheckInstanceInfo> infoList = new ArrayList<>(kit.instanceInfoMap.values());
                         Collections.sort(infoList, Comparators.byIntFunction(KitToCheckInstanceInfo::getFailedSlots));
@@ -4862,6 +4883,12 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 break;
             }
             aprsJFrame.refreshSimView();
+            if (aprsJFrame.isClosing()) {
+                return Collections.emptyList();
+            }
+        }
+        if (aprsJFrame.isClosing()) {
+            return Collections.emptyList();
         }
         List<PhysicalItem> l = xfl.get();
         if (l.isEmpty()) {

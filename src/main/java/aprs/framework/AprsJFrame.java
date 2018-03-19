@@ -305,22 +305,22 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             return lastStartRunTime - t;
         }
     }
-    
+
     private String printListToString(List<String> l, int itemsPerLine) {
         StringBuilder sb = new StringBuilder();
-        for(int i = 0; i < l.size(); i += itemsPerLine) {
-            int end = Math.min(i+itemsPerLine,l.size());
+        for (int i = 0; i < l.size(); i += itemsPerLine) {
+            int end = Math.min(i + itemsPerLine, l.size());
             sb.append(i);
             sb.append("-");
-            sb.append((end-1));
+            sb.append((end - 1));
             sb.append(": \t");
-            for(int j =i ; j < end; j++) {
+            for (int j = i; j < end; j++) {
                 sb.append(l.get(j));
-                if(j < end-1) {
+                if (j < end - 1) {
                     sb.append(",");
                 }
             }
-            if(end < l.size()) {
+            if (end < l.size()) {
                 sb.append("\n");
             }
         }
@@ -349,7 +349,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         XFuture<List<PhysicalItem>> ret = visionToDbJInternalFrame.getSingleUpdate();
         return ret.thenApply(x -> {
             logEvent("end getSingleVisionToDbUpdate",
-                    printListToString(x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList()),8)
+                    printListToString(x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList()), 8)
                     + "\n started at" + startTime
                     + "\n timeDiff=" + (startTime - System.currentTimeMillis())
             );
@@ -937,16 +937,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
                 safeAbortAndDisconnectFuture
                         = localSafeAbortFuture
-                                .thenRun(() -> {
+                        .thenRun(() -> {
 //                                    if (null != continousDemoFuture) {
 //                                        continousDemoFuture.cancelAll(true);
 //                                        continousDemoFuture = null;
 //                                    }
-                                    setStopRunTime();
-                                })
-                                .thenCompose(x -> waitAllLastFutures())
-                                .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
-                                .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
+                            setStopRunTime();
+                        })
+                        .thenCompose(x -> waitAllLastFutures())
+                        .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
+                        .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
             } else {
                 safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected", null);
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -1014,9 +1014,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private final AtomicInteger disconnectRobotCount = new AtomicInteger();
 
+    
+    public boolean isClosing() {
+        return closing;
+    }
+    
     private void disconnectRobotPrivate() {
         startingCheckEnabledCheck();
-        checkReadyToDisconnect();
+        if (!closing) {
+            checkReadyToDisconnect();
+        }
         enableCheckedAlready = false;
         disconnectRobotCount.incrementAndGet();
 //        if (null != continousDemoFuture) {
@@ -1214,17 +1221,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         logEvent("continueActionList", comment);
         lastContinueActionListFuture
                 = waitForPause()
-                        .thenApplyAsync("AprsJFrame.continueActionList" + comment,
-                                x -> {
-                                    setThreadName();
-                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                                    assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                .thenApplyAsync("AprsJFrame.continueActionList" + comment,
+                        x -> {
+                            setThreadName();
+                            takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
+                            assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
-                                    }
-                                    return false;
-                                }, runProgramService);
+                            }
+                            return false;
+                        }, runProgramService);
         return lastContinueActionListFuture.always(() -> logEvent("finished continueActionList", comment));
     }
 
@@ -1324,6 +1331,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private void checkReadyToDisconnect() throws IllegalStateException {
+        if (closing) {
+            return;
+        }
         if (isRunningCrclProgram()) {
             String msg = "setRobotName(null)/disconnect() called when running crcl program";
             setTitleErrorString(msg);
@@ -1452,13 +1462,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != crclClientJInternalFrame) {
             lastRunProgramFuture
                     = waitForPause()
-                            .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
-                                try {
-                                    return runCrclProgram(program);
-                                } catch (JAXBException ex) {
-                                    throw new RuntimeException(ex);
-                                }
-                            }, runProgramService);
+                    .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
+                        try {
+                            return runCrclProgram(program);
+                        } catch (JAXBException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }, runProgramService);
             return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
@@ -1888,12 +1898,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private final int myThreadId = runProgramThreadCount.incrementAndGet();
 
-    @Nullable private volatile CSVPrinter eventLogPrinter = null;
+    @Nullable
+    private volatile CSVPrinter eventLogPrinter = null;
 
     private volatile long lastTime = -1;
     private final AtomicInteger logNumber = new AtomicInteger();
 
-    @Nullable private volatile String lastLogEvent = null;
+    @Nullable
+    private volatile String lastLogEvent = null;
 
     public long logEvent(String s, @Nullable Object arg) {
         try {
@@ -1913,18 +1925,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             long diff = lastTime > 0 ? curTime - lastTime : -1;
             lastTime = curTime;
             String argString = "";
-            if(null != arg) {
+            if (null != arg) {
                 argString = arg.toString().trim();
             }
-            String argStringSplit[] =  argString.split("\n");
+            String argStringSplit[] = argString.split("\n");
             synchronized (printer) {
-                if(argStringSplit.length < 2) {
+                if (argStringSplit.length < 2) {
                     printer.printRecord(logNumber.incrementAndGet(), curTime, diff, s, argString.trim(), getRunDuration(), getStopDuration(), Thread.currentThread(), getRunName());
-                }
-                else {
+                } else {
                     printer.printRecord(logNumber.incrementAndGet(), curTime, diff, s, argStringSplit[0].trim(), getRunDuration(), getStopDuration(), Thread.currentThread(), getRunName());
                     for (int i = 1; i < argStringSplit.length; i++) {
-                        printer.printRecord("", "", "", "", argStringSplit[i].trim(), "","","","");
+                        printer.printRecord("", "", "", "", argStringSplit[i].trim(), "", "", "", "");
                     }
                 }
             }
@@ -4248,8 +4259,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 logEvent("createActionListFromVision",
                         equal + "\n"
                         + endingList
-                                .stream()
-                                .collect(Collectors.joining("\n")));
+                        .stream()
+                        .collect(Collectors.joining("\n")));
             }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -4363,9 +4374,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     public boolean snapshotsEnabled() {
-      return null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected();
+        return null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected();
     }
-    
+
     /**
      * Used for logging/debugging. Save a file(s) in the temporary directory
      * with the comment and a timestamp with the current view of the parts and
@@ -4500,7 +4511,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         logToSuper(logLabel);
         takeSnapshots(logLabel);
         String startRobotName = this.robotName;
-        if(null == startRobotName) {
+        if (null == startRobotName) {
             throw new IllegalStateException("startContinousDemo with robotName ==null");
         }
         final String checkedRobotName = startRobotName;
@@ -4896,8 +4907,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private volatile boolean enableCheckedAlready = false;
 
-    @Nullable private volatile XFuture<Boolean> lastStartCheckEnabledFuture1=null;
-    @Nullable private volatile XFuture<Boolean> lastStartCheckEnabledFuture2=null;
+    @Nullable
+    private volatile XFuture<Boolean> lastStartCheckEnabledFuture1 = null;
+    @Nullable
+    private volatile XFuture<Boolean> lastStartCheckEnabledFuture2 = null;
     private volatile boolean startingCheckEnabled = false;
 
     /**
@@ -4914,12 +4927,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != disconnectRobotFuture && !disconnectRobotFuture.isDone()) {
             throw new IllegalStateException("trying to startCheckEnabled when disconnecRobotFuture is still not complete");
         }
-        if(null == pddlExecutorJInternalFrame1) {
+        if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
         }
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         String startRobotName = this.robotName;
-        if(null == startRobotName) {
+        if (null == startRobotName) {
             throw new IllegalStateException("null == startRobotName");
         }
         final String checkedRobotName = startRobotName;
@@ -4936,7 +4949,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         this.lastStartCheckEnabledFuture1 = xf1;
         XFuture<Boolean> xf2
                 = xf1
-                        .always(() -> logEvent("finished startCheckEnabled", (System.currentTimeMillis() - t0)));
+                .always(() -> logEvent("finished startCheckEnabled", (System.currentTimeMillis() - t0)));
         this.lastStartCheckEnabledFuture2 = xf2;
         return xf2;
 //        try {
@@ -6386,7 +6399,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      *
      */
     public File createTempFile(String prefix, String suffix) throws IOException {
-        if(suffix.endsWith(".PNG")) {
+        if (suffix.endsWith(".PNG")) {
             System.out.println("suffix = " + suffix);
         }
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, getlogFileDir());
