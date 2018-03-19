@@ -8,7 +8,7 @@
 
     <!-- Score configuration -->
     <scoreDirectorFactory>
-        <easyScoreCalculatorClass>aprs.framework.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator</easyScoreCalculatorClass>
+         <easyScoreCalculatorClass>aprs.framework.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator</easyScoreCalculatorClass> 
     </scoreDirectorFactory>
 
     <!-- Optimization algorithms configuration -->

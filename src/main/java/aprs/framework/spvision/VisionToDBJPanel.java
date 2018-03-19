@@ -1566,7 +1566,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     List<String> namesList = list.stream().map(PhysicalItem::getName).collect(Collectors.toList());
                     String msg = "Found only " + found + " of " + name + " when " + required + " needed."
                             + " : failures = " + failures + " out of " + maxRequiredPartFailures + "_ : list.siz()=" + list.size() + ", namesList=" + namesList;
-                    if (aprsJFrame.snapshotsEnabled()) {
+                    if (null != aprsJFrame && aprsJFrame.snapshotsEnabled()) {
                         try {
                             takeSimViewSnapshot(createTempFile("checkRequiredParts_" + msg, ".PNG"), list);
                         } catch (IOException ex) {

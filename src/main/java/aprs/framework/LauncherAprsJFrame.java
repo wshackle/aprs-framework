@@ -76,6 +76,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         jMenu1 = new javax.swing.JMenu();
         jMenuSpecialTests = new javax.swing.JMenu();
         jMenuItemTenCycleMultiSystemTest = new javax.swing.JMenuItem();
+        jMenuItemTenCycleMultiSystemTestNoDisables = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS Launcher");
@@ -257,6 +258,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         });
         jMenuSpecialTests.add(jMenuItemTenCycleMultiSystemTest);
 
+        jMenuItemTenCycleMultiSystemTestNoDisables.setText("10 Cycle Multi-System without Random Enable/Disable Test ");
+        jMenuItemTenCycleMultiSystemTestNoDisables.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemTenCycleMultiSystemTestNoDisablesActionPerformed(evt);
+            }
+        });
+        jMenuSpecialTests.add(jMenuItemTenCycleMultiSystemTestNoDisables);
+
         jMenuBar1.add(jMenuSpecialTests);
 
         setJMenuBar(jMenuBar1);
@@ -401,6 +410,88 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_jButtonGoalLearningTestActionPerformed
 
+    private static void tenCycleTestNoDisables() {
+        long startTime = System.currentTimeMillis();
+        AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
+        amsFrame.startColorTextReader();
+        amsFrame.loadPrevSetup();
+        amsFrame.loadPrevPosMapFile();
+        amsFrame.loadPrevSimTeach();
+        amsFrame.loadPrevTeachProperties();
+        amsFrame.setVisible(true);
+        
+        amsFrame.setShowFullScreenMessages(false);
+        amsFrame.setMax_cycles(10);
+        XFuture<?> xf1 = amsFrame.startScanAll();
+        XFuture<?> xf2 = xf1
+                .thenRun(() -> {
+                    if (!xf1.isDone()) {
+                        System.err.println("wtf");
+                    }
+                });
+        XFuture<?> xf3 = xf2
+                .thenCompose(x -> {
+                    if (!xf1.isDone()) {
+                        System.err.println("wtf");
+                    }
+                    if (!xf1.isDone()) {
+                        System.err.println("wtf");
+                    }
+                    return amsFrame.startContinuousDemoRevFirst();
+                });
+        XFuture<?> xf4 = xf3
+                .always(() -> {
+                    int cycle_count = amsFrame.getContiousDemoCycleCount();
+                    long endTime = System.currentTimeMillis();
+                    long timeDiff = endTime - startTime;
+                    long timeDiffPerCycle = cycle_count > 0 ? timeDiff / cycle_count : -1;
+                    File f = new File(System.getProperty("user.home"),
+                            "aprs_multi_test_logs.csv");
+                    int disableCount = amsFrame.getTotalDisableCount();
+                    long disableTime = amsFrame.getTotalDisableTime();
+                    boolean alreadyExists = f.exists();
+                    try (CSVPrinter printer = new CSVPrinter(
+                            new FileWriter(f, true),
+                            alreadyExists
+                                    ? CSVFormat.DEFAULT
+                                    : CSVFormat.DEFAULT.withHeader(
+                                            "Date",
+                                            "cycle_count",
+                                            "timeDiff",
+                                            "timeDiffPerCycle",
+                                            "disableCount",
+                                            "disableTime"))) {
+                        if (alreadyExists) {
+                            printer.println();
+                        }
+                        printer.printRecord(
+                                Utils.getDateTimeString(),
+                                cycle_count,
+                                timeDiff,
+                                timeDiffPerCycle,
+                                disableCount,
+                                disableTime);
+                    } catch (IOException ex) {
+                        Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
+                    if (!xf2.isDone()) {
+                        System.err.println("wtf");
+                    }
+                    if (!xf3.isDone()) {
+                        System.err.println("wtf");
+                    }
+                    Utils.runOnDispatchThread(() -> {
+                        
+                        System.out.println("timeDiff = " + timeDiff);
+                        JOptionPane.showMessageDialog(amsFrame,
+                                String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
+                                        (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count));
+                        amsFrame.close();
+                        System.exit(0);
+                    });
+                });
+    }
     private static void tenCycleTest() {
         long startTime = System.currentTimeMillis();
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
@@ -492,6 +583,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         this.setVisible(false);
         tenCycleTest();
     }//GEN-LAST:event_jMenuItemTenCycleMultiSystemTestActionPerformed
+
+    private void jMenuItemTenCycleMultiSystemTestNoDisablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemTenCycleMultiSystemTestNoDisablesActionPerformed
+        this.setVisible(false);
+        tenCycleTestNoDisables();
+    }//GEN-LAST:event_jMenuItemTenCycleMultiSystemTestNoDisablesActionPerformed
 
     private static void openSingle(String args @Nullable []) throws IOException {
         AprsJFrame aFrame = new AprsJFrame();
@@ -636,6 +732,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItemTenCycleMultiSystemTest;
+    private javax.swing.JMenuItem jMenuItemTenCycleMultiSystemTestNoDisables;
     private javax.swing.JMenu jMenuSpecialTests;
     private javax.swing.JPanel jPanelMultiWorkcellSystem;
     private javax.swing.JPanel jPanelSingleWorkcellSystem;

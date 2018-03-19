@@ -891,8 +891,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         clearPoseCache();
     }
 
-    private @Nullable
-    OpDisplayJPanel opDisplayJPanelSolution;
+    @MonotonicNonNull private OpDisplayJPanel opDisplayJPanelSolution;
 
     /**
      * Get the value of opDisplayJPanelSolution
@@ -913,8 +912,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.opDisplayJPanelSolution = opDisplayJPanelSolution;
     }
 
-    private @Nullable
-    OpDisplayJPanel opDisplayJPanelInput;
+    @MonotonicNonNull private OpDisplayJPanel opDisplayJPanelInput;
 
     /**
      * Get the value of opDisplayJPanelInput

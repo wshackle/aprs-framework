@@ -39,25 +39,25 @@ import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
 
 /**
- * Class for Demonstrating/Testing the use of OptaPlanner to optimize a 
- * plan for picking up a set of parts to put in slots in a kit.
- * 
- * 
+ * Class for Demonstrating/Testing the use of OptaPlanner to optimize a plan for
+ * picking up a set of parts to put in slots in a kit.
+ *
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class OptaplannerTest {
 
     /**
-     *Create an example random task to optimize a plan for, run OptaPlanner
-     * and display the results.
-     * 
+     * Create an example random task to optimize a plan for, run OptaPlanner and
+     * display the results.
+     *
      * @param args not used
      */
     public static void main(String[] args) {
         OpActionPlan ap = new OpActionPlan();
-
-        Random rand = new Random();
         
+        Random rand = new Random();
+
         // Create an initial plan with some set of parts to pickup and drop off.
         List<OpAction> initList = Arrays.asList(
                 new OpAction("pickup A3", 5 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A"),
@@ -86,37 +86,58 @@ public class OptaplannerTest {
         ap.setStartEndMaxSpeed(1.0);
         Collections.shuffle(shuffledList);
         ap.setActions(shuffledList);
-        
+
         // Set the location to return to after the task is complete.
         ap.getEndAction().setLocation(new Point2D.Double(7, 0));
         String apStr = ap.computeString();
         System.out.println("apStr = " + apStr);
         ap.initNextActions();
         System.out.println("ap = " + ap.computeString());
-        
+
         // Manually get an score for the initial plan just for display.
         EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
         HardSoftLongScore score = calculator.calculateScore(ap);
-        
+
         // Show a window with the initial plan.
-        showPlan(ap, "Input : "+score.getSoftScore());
+        showPlan(ap, "Input : " + score.getSoftScore());
         System.out.println("score = " + score);
         SolverFactory<OpActionPlan> solverFactory = SolverFactory.createFromXmlResource(
                 "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
-
+        
         Solver<OpActionPlan> solver = solverFactory.buildSolver();
-        
+
         // Setup callback to have the solver print some status as it runs.
-        solver.addEventListener(e -> System.out.println("After " +e.getTimeMillisSpent() + "ms the best score is " + e.getNewBestScore()));
-        
+//        solver.addEventListener(e -> System.out.println("After " + e.getTimeMillisSpent() + "ms the best score is " + e.getNewBestScore()));
+
         // Run the solver.
+        long t0 = System.currentTimeMillis();
         OpActionPlan solvedActionPlan = solver.solve(ap);
         
+        long t1 = System.currentTimeMillis();
+        HardSoftLongScore bestScore = calculator.calculateScore(solvedActionPlan);
+        OpActionPlan bestPlan = solvedActionPlan;
+        for (int i = 0; i < 20; i++) {
+            Collections.shuffle(shuffledList);
+            ap.setActions(shuffledList);
+            solvedActionPlan = solver.solve(ap);
+            score = calculator.calculateScore(solvedActionPlan);
+            System.out.println("score = " + score);
+            if(score.getHardScore() > bestScore.getHardScore() 
+                    || (score.getHardScore() == bestScore.getHardScore() && score.getSoftScore() > bestScore.getSoftScore())) {
+                bestScore = score;
+                bestPlan = solvedActionPlan;
+            }
+        }
+
+        long t2 = System.currentTimeMillis();
+        System.out.println("(t1-t0) = " + (t1-t0));
+        System.out.println("(t2-t0) = " + (t2-t0));
+        
         // Print the results
-        System.out.println("solvedActionPlan = " + solvedActionPlan.computeString());
-        System.out.println("solvedActionPlan.getActions() = " + solvedActionPlan.getActions());
-        score = calculator.calculateScore(solvedActionPlan);
-        System.out.println("score = " + score);
-        showPlan(solvedActionPlan, "Solution: "+score.getSoftScore());
+        System.out.println("bestPlan = " + bestPlan.computeString());
+        System.out.println("bestPlan.getActions() = " + bestPlan.getActions());
+//        score = calculator.calculateScore(bestPlan);
+        System.out.println("bestScore = " + bestScore);
+        showPlan(bestPlan, "Solution: " + bestScore.getSoftScore());
     }
 }

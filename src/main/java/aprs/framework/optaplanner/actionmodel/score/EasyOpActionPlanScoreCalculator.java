@@ -22,6 +22,12 @@ import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
  */
 public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpActionPlan> {
 
+    
+    private int lastScoreEnds=0;
+    private int lastScoreNulls=0;
+    private int lastScoreBadNexts=0;
+    private int lastStartLength=0;
+    
     @Override
     public HardSoftLongScore calculateScore(OpActionPlan solution) {
         double costTotal = 0;
@@ -60,6 +66,11 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
                     }
                 }
             }
+            lastScoreEnds = ends;
+            lastScoreNulls = nulls;
+            lastScoreBadNexts = badNexts;
+            lastStartLength = startlength;
+//            assert (startlength == actionsList.size()) :"startLength != actionsList.size()";
             long hardScoreLong = -Math.abs(startlength - actionsList.size()) - Math.abs(1 - ends) - 2 * nulls - badNexts;
             long softScoreLong = (long) (-1000.0 * costTotal);
             HardSoftLongScore score = HardSoftLongScore.valueOf(hardScoreLong, softScoreLong);

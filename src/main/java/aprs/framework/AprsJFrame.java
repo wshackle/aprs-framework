@@ -305,6 +305,27 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             return lastStartRunTime - t;
         }
     }
+    
+    private String printListToString(List<String> l, int itemsPerLine) {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < l.size(); i += itemsPerLine) {
+            int end = Math.min(i+itemsPerLine,l.size());
+            sb.append(i);
+            sb.append("-");
+            sb.append((end-1));
+            sb.append(": \t");
+            for(int j =i ; j < end; j++) {
+                sb.append(l.get(j));
+                if(j < end-1) {
+                    sb.append(",");
+                }
+            }
+            if(end < l.size()) {
+                sb.append("\n");
+            }
+        }
+        return sb.toString();
+    }
 
 //    private volatile StackTraceElement lastGetSingleVisionToDbUpdateStackTrace[] = null;
     /**
@@ -328,7 +349,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         XFuture<List<PhysicalItem>> ret = visionToDbJInternalFrame.getSingleUpdate();
         return ret.thenApply(x -> {
             logEvent("end getSingleVisionToDbUpdate",
-                    x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList())
+                    printListToString(x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList()),8)
                     + "\n started at" + startTime
                     + "\n timeDiff=" + (startTime - System.currentTimeMillis())
             );
@@ -1893,10 +1914,19 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             lastTime = curTime;
             String argString = "";
             if(null != arg) {
-                argString = arg.toString();
+                argString = arg.toString().trim();
             }
+            String argStringSplit[] =  argString.split("\n");
             synchronized (printer) {
-                printer.printRecord(logNumber.incrementAndGet(), curTime, diff, s, argString, getRunDuration(), getStopDuration(), Thread.currentThread(), getRunName());
+                if(argStringSplit.length < 2) {
+                    printer.printRecord(logNumber.incrementAndGet(), curTime, diff, s, argString.trim(), getRunDuration(), getStopDuration(), Thread.currentThread(), getRunName());
+                }
+                else {
+                    printer.printRecord(logNumber.incrementAndGet(), curTime, diff, s, argStringSplit[0].trim(), getRunDuration(), getStopDuration(), Thread.currentThread(), getRunName());
+                    for (int i = 1; i < argStringSplit.length; i++) {
+                        printer.printRecord("", "", "", "", argStringSplit[i].trim(), "","","","");
+                    }
+                }
             }
             return curTime;
         } catch (IOException ex) {
