@@ -11,6 +11,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <main.class>aprs.framework.LauncherAprsJFrame</main.class>
         <optiplanner.version>7.6.0.Final</optiplanner.version>
+        <crcl4java.version>1.5-1</crcl4java.version>
     </properties>
     <name>aprs-framework</name>
     
@@ -60,28 +61,28 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>crcl4java-base</artifactId>
-            <version>1.5-SNAPSHOT</version>
+            <version>${crcl4java.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>crcl4java-utils</artifactId>
-            <version>1.5-SNAPSHOT</version>
+            <version>${crcl4java.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>crcl4java-ui</artifactId>
-            <version>1.5-SNAPSHOT</version>
+            <version>${crcl4java.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>crcl4java-vaadin-webapp</artifactId>
-            <version>1.5-SNAPSHOT</version>
+            <version>${crcl4java.version}</version>
             <classifier>classes</classifier>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>fanucCRCLServer</artifactId>
-            <version>1.5-SNAPSHOT</version>
+            <version>${crcl4java.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jcraft</groupId>
@@ -96,7 +97,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>crcl4java-motoman</artifactId>
-            <version>1.5-SNAPSHOT</version>
+            <version>${crcl4java.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
