@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.wshackle</groupId>
     <artifactId>aprs-framework</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -44,7 +44,7 @@
         <developerConnection>scm:git:https://github.com/wshackle/aprs-framework.git</developerConnection>
         <!-- <developerConnection>scm:git:git@github.com:usnistgov/crcl.git</developerConnection> -->
         <url>https://github.com/wshackle/aprs-framework</url>
-        <tag>HEAD</tag>
+        <tag>aprs-framework-1.0</tag>
     </scm>
     
     
