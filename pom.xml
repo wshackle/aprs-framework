@@ -14,7 +14,31 @@
         <crcl4java.version>1.5-1</crcl4java.version>
     </properties>
     <name>aprs-framework</name>
-    
+    <description>
+        Framework for the Agility Performance of Robotic Systems(APRS) an experimental
+        research project by the National Institute of Standards and Technology(NIST).
+    </description>
+     <licenses>
+        <license>
+            <name>Public Domain(US Government Work)</name>
+            <url>http://www.copyright.gov/title17/92chap1.html#105</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>wshackle</id>
+            <name>Will Shackleford</name>
+            <email>william.shackleford@nist.gov</email>
+            <url>https://github.com/wshackle</url>
+            <organization>NIST</organization>
+            <organizationUrl>http://www.nist.gov</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>America/New_York</timezone>
+        </developer>
+    </developers>
     <scm>
         <connection>scm:git:https://github.com/wshackle/aprs-framework.git</connection>
         <developerConnection>scm:git:https://github.com/wshackle/aprs-framework.git</developerConnection>
