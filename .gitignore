@@ -25,6 +25,8 @@ run*.err
 *.VC.opendb
 *.exe
 _ErrorLog.txt
+pom.xml.versionsBackup
+release.properties
 
 
 /tools/java/crcl4java/crcl4java-motoman/NetBeansProjects/MotoPlusTcpSvr/nbproject/Makefile-Debug.mk
