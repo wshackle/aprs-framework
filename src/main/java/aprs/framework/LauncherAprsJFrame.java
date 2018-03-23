@@ -23,15 +23,19 @@
 package aprs.framework;
 
 import static aprs.framework.Utils.copyOfRangeNonNullsOnly;
+import static aprs.framework.Utils.readFirstLine;
 import aprs.framework.learninggoals.GoalLearnerTest;
 import aprs.framework.optaplanner.OptaplannerTest;
+import aprs.framework.process.launcher.ProcessLauncherJFrame;
 import crcl.ui.XFuture;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -77,6 +81,9 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         jMenuSpecialTests = new javax.swing.JMenu();
         jMenuItemTenCycleMultiSystemTest = new javax.swing.JMenuItem();
         jMenuItemTenCycleMultiSystemTestNoDisables = new javax.swing.JMenuItem();
+        jMenu2 = new javax.swing.JMenu();
+        jCheckBoxMenuItemLaunchExternal = new javax.swing.JCheckBoxMenuItem();
+        jMenuItemSetLaunchFile = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS Launcher");
@@ -268,6 +275,21 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenuSpecialTests);
 
+        jMenu2.setText("Launcher Settings");
+
+        jCheckBoxMenuItemLaunchExternal.setText("Launch External Processes First");
+        jMenu2.add(jCheckBoxMenuItemLaunchExternal);
+
+        jMenuItemSetLaunchFile.setText("Set Launch File ...");
+        jMenuItemSetLaunchFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSetLaunchFileActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItemSetLaunchFile);
+
+        jMenuBar1.add(jMenu2);
+
         setJMenuBar(jMenuBar1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -299,7 +321,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private void jButtonPrevMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevMultiActionPerformed
         try {
-            prevMulti();
+            if(jCheckBoxMenuItemLaunchExternal.isSelected()) {
+                prevMulti(getLastLaunchFile());
+            } else {
+                prevMulti(null);
+            }
             this.setVisible(false);
             this.dispose();
         } catch (Exception e) {
@@ -309,8 +335,48 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     }//GEN-LAST:event_jButtonPrevMultiActionPerformed
 
-    private static void prevMulti() {
+    private final static File lastLaunchFileFile = new File(System.getProperty("aprsLastLaunchFile", System.getProperty("user.home") + File.separator + ".lastAprsLaunchFile.txt"));
+
+    /**
+     * Get the location of the last text file with lines to execute in the
+     * launcher file used.
+     *
+     * @return setup file location
+     * @throws IOException setup files location can not be read
+     */
+    @Nullable
+    public static File getLastLaunchFile() throws IOException {
+        if (lastLaunchFileFile.exists()) {
+            String firstLine = readFirstLine(lastLaunchFileFile);
+            if (null != firstLine && firstLine.length() > 0) {
+                return new File(firstLine);
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private File lastLaunchFile = null;
+
+    private void saveLastLaunchFile(File f) throws IOException {
+        lastLaunchFile = f;
+        try (PrintWriter pw = new PrintWriter(new FileWriter(lastLaunchFileFile))) {
+            pw.println(f.getCanonicalPath());
+        }
+    }
+
+    private static void prevMulti(@Nullable File launchFile) {
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
+        if(null != launchFile) {
+            try {
+                ProcessLauncherJFrame  processLauncher = new ProcessLauncherJFrame();
+                processLauncher.setVisible(true);
+                processLauncher.run(launchFile);
+                amsFrame.setProcessLauncher(processLauncher);
+            } catch (IOException ex) {
+                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         amsFrame.startColorTextReader();
         amsFrame.loadPrevSetup();
         amsFrame.loadPrevPosMapFile();
@@ -344,6 +410,16 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private static void openMulti(String args @Nullable []) throws IOException {
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
+        if(null != args && args.length > 1) {
+            try {
+                ProcessLauncherJFrame  processLauncher = new ProcessLauncherJFrame();
+                processLauncher.setVisible(true);
+                processLauncher.run(new File(args[1]));
+                amsFrame.setProcessLauncher(processLauncher);
+            } catch (IOException ex) {
+                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         amsFrame.startColorTextReader();
         amsFrame.setVisible(true);
         if (null == args || args.length < 1) {
@@ -419,7 +495,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         amsFrame.loadPrevSimTeach();
         amsFrame.loadPrevTeachProperties();
         amsFrame.setVisible(true);
-        
+
         amsFrame.setShowFullScreenMessages(false);
         amsFrame.setMax_cycles(10);
         XFuture<?> xf1 = amsFrame.startScanAll();
@@ -482,7 +558,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         System.err.println("wtf");
                     }
                     Utils.runOnDispatchThread(() -> {
-                        
+
                         System.out.println("timeDiff = " + timeDiff);
                         JOptionPane.showMessageDialog(amsFrame,
                                 String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
@@ -492,6 +568,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                     });
                 });
     }
+
     private static void tenCycleTest() {
         long startTime = System.currentTimeMillis();
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
@@ -501,7 +578,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         amsFrame.loadPrevSimTeach();
         amsFrame.loadPrevTeachProperties();
         amsFrame.setVisible(true);
-        
+
         amsFrame.setShowFullScreenMessages(false);
         amsFrame.setMax_cycles(10);
         XFuture<?> xf1 = amsFrame.startScanAll();
@@ -564,7 +641,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         System.err.println("wtf");
                     }
                     Utils.runOnDispatchThread(() -> {
-                        
+
                         System.out.println("timeDiff = " + timeDiff);
                         JOptionPane.showMessageDialog(amsFrame,
                                 String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
@@ -588,6 +665,21 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         this.setVisible(false);
         tenCycleTestNoDisables();
     }//GEN-LAST:event_jMenuItemTenCycleMultiSystemTestNoDisablesActionPerformed
+
+    private void jMenuItemSetLaunchFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetLaunchFileActionPerformed
+        JFileChooser chooser = new JFileChooser();
+        try {
+            File oldFile = getLastLaunchFile();
+            if (null != oldFile) {
+                chooser.setCurrentDirectory(oldFile.getParentFile());
+            }
+            if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
+                saveLastLaunchFile(chooser.getSelectedFile());
+            }
+        } catch (IOException iOException) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, iOException);
+        }
+    }//GEN-LAST:event_jMenuItemSetLaunchFileActionPerformed
 
     private static void openSingle(String args @Nullable []) throws IOException {
         AprsJFrame aFrame = new AprsJFrame();
@@ -630,6 +722,15 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         } else {
             jButtonPrevMulti.setEnabled(false);
         }
+        f = null;
+        try {
+            f = getLastLaunchFile();
+        } catch (IOException ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (f != null && f.exists()) {
+            jCheckBoxMenuItemLaunchExternal.setSelected(true);
+        } 
     }
 
     /**
@@ -664,11 +765,16 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 if (null != args && args.length > 0) {
+                    File launchFile = null;
                     try {
                         String argsLeft[] = copyOfRangeNonNullsOnly(String.class, args, 1, args.length);
                         switch (args[0]) {
                             case "--prevMulti":
-                                prevMulti();
+                                if(argsLeft.length > 0) {
+                                    prevMulti(new File(argsLeft[0]));
+                                } else {
+                                    prevMulti(null);
+                                }
                                 break;
 
                             case "--openMulti":
@@ -729,8 +835,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButtonOptaplannerTest;
     private javax.swing.JButton jButtonPrevMulti;
     private javax.swing.JButton jButtonPrevSingle;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemLaunchExternal;
     private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItemSetLaunchFile;
     private javax.swing.JMenuItem jMenuItemTenCycleMultiSystemTest;
     private javax.swing.JMenuItem jMenuItemTenCycleMultiSystemTestNoDisables;
     private javax.swing.JMenu jMenuSpecialTests;

@@ -28,8 +28,10 @@ import crcl.utils.CRCLSocket;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -87,6 +89,14 @@ public class Utils {
         public void run() throws Exception;
     }
 
+    
+    @Nullable
+    public static String readFirstLine(File f) throws IOException {
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            return br.readLine();
+        }
+    }
+    
     /**
      * Extension of XFuture which extends CompleteableFuture specifically for
      * operations that are happening on the Swing event dispatch thread.
