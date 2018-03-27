@@ -321,7 +321,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private void jButtonPrevMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevMultiActionPerformed
         try {
-            if(jCheckBoxMenuItemLaunchExternal.isSelected()) {
+            if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
                 prevMulti(getLastLaunchFile());
             } else {
                 prevMulti(null);
@@ -334,7 +334,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
 
     }//GEN-LAST:event_jButtonPrevMultiActionPerformed
-
+    
     private final static File lastLaunchFileFile = new File(System.getProperty("aprsLastLaunchFile", System.getProperty("user.home") + File.separator + ".lastAprsLaunchFile.txt"));
 
     /**
@@ -354,29 +354,37 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
         return null;
     }
-
+    
     @Nullable
     private File lastLaunchFile = null;
-
+    
     private void saveLastLaunchFile(File f) throws IOException {
         lastLaunchFile = f;
         try (PrintWriter pw = new PrintWriter(new FileWriter(lastLaunchFileFile))) {
             pw.println(f.getCanonicalPath());
         }
     }
-
+    
     private static void prevMulti(@Nullable File launchFile) {
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
-        if(null != launchFile) {
+        if (null != launchFile) {
             try {
-                ProcessLauncherJFrame  processLauncher = new ProcessLauncherJFrame();
+                ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
                 processLauncher.setVisible(true);
-                processLauncher.run(launchFile);
-                amsFrame.setProcessLauncher(processLauncher);
+                processLauncher.run(launchFile)
+                        .thenRun(() -> {
+                            amsFrame.setProcessLauncher(processLauncher);
+                            completePrevMulti(amsFrame);
+                        });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
+        } else {
+            completePrevMulti(amsFrame);
         }
+    }
+    
+    private static void completePrevMulti(AprsSupervisorJFrame amsFrame) {
         amsFrame.startColorTextReader();
         amsFrame.loadPrevSetup();
         amsFrame.loadPrevPosMapFile();
@@ -390,7 +398,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         this.setVisible(false);
         this.dispose();
     }//GEN-LAST:event_jButtonNewMultiActionPerformed
-
+    
     private static void newMulti() {
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
         amsFrame.startColorTextReader();
@@ -407,29 +415,46 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonOpenMultiActionPerformed
-
+    
     private static void openMulti(String args @Nullable []) throws IOException {
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
-        if(null != args && args.length > 1) {
+        if (null != args && args.length > 1) {
             try {
-                ProcessLauncherJFrame  processLauncher = new ProcessLauncherJFrame();
+                ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
                 processLauncher.setVisible(true);
-                processLauncher.run(new File(args[1]));
-                amsFrame.setProcessLauncher(processLauncher);
+                processLauncher.run(new File(args[1]))
+                        .thenRun(() -> {
+                            try {
+                                amsFrame.setProcessLauncher(processLauncher);
+                                amsFrame.startColorTextReader();
+                                amsFrame.setVisible(true);
+                                if (null == args || args.length < 1) {
+                                    amsFrame.browseOpenSetup();
+                                } else {
+                                    amsFrame.loadSetupFile(new File(args[0]));
+                                }
+                                amsFrame.loadPrevPosMapFile();
+                                amsFrame.loadPrevSimTeach();
+                                amsFrame.loadPrevTeachProperties();
+                            } catch (IOException iOException) {
+                                iOException.printStackTrace();
+                            }
+                        });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
-        amsFrame.startColorTextReader();
-        amsFrame.setVisible(true);
-        if (null == args || args.length < 1) {
-            amsFrame.browseOpenSetup();
         } else {
-            amsFrame.loadSetupFile(new File(args[0]));
+            amsFrame.startColorTextReader();
+            amsFrame.setVisible(true);
+            if (null == args || args.length < 1) {
+                amsFrame.browseOpenSetup();
+            } else {
+                amsFrame.loadSetupFile(new File(args[0]));
+            }
+            amsFrame.loadPrevPosMapFile();
+            amsFrame.loadPrevSimTeach();
+            amsFrame.loadPrevTeachProperties();
         }
-        amsFrame.loadPrevPosMapFile();
-        amsFrame.loadPrevSimTeach();
-        amsFrame.loadPrevTeachProperties();
     }
 
     private void jButtonPrevSingleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevSingleActionPerformed
@@ -437,15 +462,15 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         this.setVisible(false);
         this.dispose();
     }//GEN-LAST:event_jButtonPrevSingleActionPerformed
-
+    
     private static void goalLearningTest() {
         GoalLearnerTest.main(new String[]{});
     }
-
+    
     private static void optaplannerTest() {
         OptaplannerTest.main(new String[]{});
     }
-
+    
     private static void prevSingle() {
         AprsJFrame aFrame = new AprsJFrame();
         aFrame.defaultInit();
@@ -457,7 +482,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         this.setVisible(false);
         this.dispose();
     }//GEN-LAST:event_jButtonNewSingleActionPerformed
-
+    
     private static void newSingle() {
         AprsJFrame aFrame = new AprsJFrame();
         aFrame.emptyInit();
@@ -485,17 +510,12 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         goalLearningTest();
         this.dispose();
     }//GEN-LAST:event_jButtonGoalLearningTestActionPerformed
-
+    
     private static void tenCycleTestNoDisables() {
         long startTime = System.currentTimeMillis();
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
-        amsFrame.startColorTextReader();
-        amsFrame.loadPrevSetup();
-        amsFrame.loadPrevPosMapFile();
-        amsFrame.loadPrevSimTeach();
-        amsFrame.loadPrevTeachProperties();
-        amsFrame.setVisible(true);
-
+        completePrevMulti(amsFrame);
+        
         amsFrame.setShowFullScreenMessages(false);
         amsFrame.setMax_cycles(10);
         XFuture<?> xf1 = amsFrame.startScanAll();
@@ -550,7 +570,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                     } catch (IOException ex) {
                         Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                     }
-
+                    
                     if (!xf2.isDone()) {
                         System.err.println("wtf");
                     }
@@ -558,7 +578,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         System.err.println("wtf");
                     }
                     Utils.runOnDispatchThread(() -> {
-
+                        
                         System.out.println("timeDiff = " + timeDiff);
                         JOptionPane.showMessageDialog(amsFrame,
                                 String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
@@ -568,17 +588,12 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                     });
                 });
     }
-
+    
     private static void tenCycleTest() {
         long startTime = System.currentTimeMillis();
         AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
-        amsFrame.startColorTextReader();
-        amsFrame.loadPrevSetup();
-        amsFrame.loadPrevPosMapFile();
-        amsFrame.loadPrevSimTeach();
-        amsFrame.loadPrevTeachProperties();
-        amsFrame.setVisible(true);
-
+        completePrevMulti(amsFrame);
+        
         amsFrame.setShowFullScreenMessages(false);
         amsFrame.setMax_cycles(10);
         XFuture<?> xf1 = amsFrame.startScanAll();
@@ -633,7 +648,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                     } catch (IOException ex) {
                         Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                     }
-
+                    
                     if (!xf2.isDone()) {
                         System.err.println("wtf");
                     }
@@ -641,7 +656,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         System.err.println("wtf");
                     }
                     Utils.runOnDispatchThread(() -> {
-
+                        
                         System.out.println("timeDiff = " + timeDiff);
                         JOptionPane.showMessageDialog(amsFrame,
                                 String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
@@ -671,7 +686,10 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         try {
             File oldFile = getLastLaunchFile();
             if (null != oldFile) {
-                chooser.setCurrentDirectory(oldFile.getParentFile());
+                File parentFile = oldFile.getParentFile();
+                if(null != parentFile) {
+                    chooser.setCurrentDirectory(parentFile);
+                }
             }
             if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
                 saveLastLaunchFile(chooser.getSelectedFile());
@@ -680,7 +698,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, iOException);
         }
     }//GEN-LAST:event_jMenuItemSetLaunchFileActionPerformed
-
+    
     private static void openSingle(String args @Nullable []) throws IOException {
         AprsJFrame aFrame = new AprsJFrame();
         aFrame.emptyInit();
@@ -693,7 +711,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             aFrame.loadProperties();
         }
     }
-
+    
     private void checkFiles() {
         File f = AprsJFrame.getDefaultPropertiesFile();
         if (f != null && f.exists()) {
@@ -730,7 +748,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
         if (f != null && f.exists()) {
             jCheckBoxMenuItemLaunchExternal.setSelected(true);
-        } 
+        }
     }
 
     /**
@@ -770,37 +788,37 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         String argsLeft[] = copyOfRangeNonNullsOnly(String.class, args, 1, args.length);
                         switch (args[0]) {
                             case "--prevMulti":
-                                if(argsLeft.length > 0) {
+                                if (argsLeft.length > 0) {
                                     prevMulti(new File(argsLeft[0]));
                                 } else {
                                     prevMulti(null);
                                 }
                                 break;
-
+                            
                             case "--openMulti":
                                 openMulti(argsLeft);
                                 break;
-
+                            
                             case "--newMulti":
                                 newMulti();
                                 break;
-
+                            
                             case "--prevSingle":
                                 prevSingle();
                                 break;
-
+                            
                             case "--openSingle":
                                 openSingle(argsLeft);
                                 break;
-
+                            
                             case "--newSingle":
                                 newSingle();
                                 break;
-
+                            
                             case "--tenCycleTest":
                                 tenCycleTest();
                                 break;
-
+                            
                             default:
                                 System.err.println("Invalid argumens args=" + Arrays.toString(args));
                                 System.err.println("args[0] must be one of:");

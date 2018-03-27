@@ -29,6 +29,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -36,36 +39,34 @@ import java.util.List;
  */
 public class Neo4JKiller {
 
-    
-    
     public static String getJpsCommand() throws IOException {
         String jpsCommandProperty = System.getProperty("jps.command");
-        if(null != jpsCommandProperty && jpsCommandProperty.length() > 0) {
+        if (null != jpsCommandProperty && jpsCommandProperty.length() > 0) {
             return jpsCommandProperty;
         }
-        File jpsCommandFile = new File(System.getProperty("user.home"),"jpsCommand.txt");
-        if(jpsCommandFile.exists()) {
-            try(BufferedReader br = new BufferedReader(new FileReader(jpsCommandFile))) {
+        File jpsCommandFile = new File(System.getProperty("user.home"), "jpsCommand.txt");
+        if (jpsCommandFile.exists()) {
+            try (BufferedReader br = new BufferedReader(new FileReader(jpsCommandFile))) {
                 String line;
-                while(null != (line = br.readLine())) {
+                while (null != (line = br.readLine())) {
                     String trimmed = line.trim();
-                    if(trimmed.length() > 0) {
+                    if (trimmed.length() > 0) {
                         return trimmed;
                     }
                 }
             }
         }
-        
+
         String jpsCmd = "jps";
-        if(isWindowsOs()) {
+        if (isWindowsOs()) {
             jpsCmd = DEFAULT_WINDOWS_JPS_COMMAND;
         }
-        System.out.println("Using command \""+jpsCmd+"\" to run jps to find the neo4j processes, if you need to use a different command on your system put the text for that command in:");
+        System.out.println("Using command \"" + jpsCmd + "\" to run jps to find the neo4j processes, if you need to use a different command on your system put the text for that command in:");
         System.out.println(jpsCommandFile.getCanonicalPath());
         System.out.println(" or set the property jps.command");
         return jpsCmd;
     }
-    
+
     public static List<Integer> getNeo4JPIDs() throws IOException {
 
         ProcessBuilder pb = new ProcessBuilder(getJpsCommand(), "-l");
@@ -87,19 +88,43 @@ public class Neo4JKiller {
     private static final String DEFAULT_WINDOWS_JPS_COMMAND = "c:\\Program Files\\Java\\jdk1.8.0_92\\bin\\jps";
 
     private static void killPIDsWindows(Iterable<Integer> pids) throws IOException {
-        for(Integer pid : pids) {
-            Runtime.getRuntime().exec(new String[]{"taskkill","/T","/F","/PID",""+pid});
+        List<Process> processes = new ArrayList<>();
+        for (Integer pid : pids) {
+            Process p = Runtime.getRuntime().exec(new String[]{"taskkill", "/T", "/F", "/PID", "" + pid});
+            processes.add(p);
+        }
+        for (Process p : processes) {
+            try {
+                if (!p.waitFor(100, TimeUnit.MILLISECONDS)) {
+                    p.destroyForcibly();
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Neo4JKiller.class.getName()).log(Level.SEVERE, null, ex);
+                p.destroyForcibly();
+            }
         }
     }
-    
+
     private static void killPIDsLinux(Iterable<Integer> pids) throws IOException {
-        for(Integer pid : pids) {
-            Runtime.getRuntime().exec(new String[]{"kill","-KILL",""+pid});
+        List<Process> processes = new ArrayList<>();
+        for (Integer pid : pids) {
+            Process p = Runtime.getRuntime().exec(new String[]{"kill", "-KILL", "" + pid});
+            processes.add(p);
+        }
+        for (Process p : processes) {
+            try {
+                if (!p.waitFor(100, TimeUnit.MILLISECONDS)) {
+                    p.destroyForcibly();
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Neo4JKiller.class.getName()).log(Level.SEVERE, null, ex);
+                p.destroyForcibly();
+            }
         }
     }
-    
+
     public static void killPIDs(Iterable<Integer> pids) throws IOException {
-        if(isWindowsOs()) {
+        if (isWindowsOs()) {
             killPIDsWindows(pids);
         } else {
             killPIDsLinux(pids);
@@ -109,12 +134,12 @@ public class Neo4JKiller {
     private static boolean isWindowsOs() {
         return System.getProperty("os.name").startsWith("Windows");
     }
-    
+
     public static void killNeo4J() throws IOException {
         List<Integer> pids = getNeo4JPIDs();
         killPIDs(pids);
     }
-    
+
     public static void main(String[] args) throws IOException {
         killNeo4J();
     }

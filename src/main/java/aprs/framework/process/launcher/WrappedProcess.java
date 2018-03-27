@@ -22,138 +22,191 @@
  */
 package aprs.framework.process.launcher;
 
+import crcl.ui.XFuture;
+import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
  * @author shackle
  */
 public class WrappedProcess {
-    
+
     private final Thread outputReaderThread;
     private final Thread errorReaderThread;
     private final OutputStream outputPrintStream;
     private final OutputStream errorPrintStream;
-    private final Process process;
+    private volatile Process process;
     private volatile boolean closed = false;
-    
+    private final XFuture<Process> xf;
+    private final String cmdLine;
+
+    @MonotonicNonNull private Component displayComponent;
+
+    /**
+     * Get the value of displayComponent
+     *
+     * @return the value of displayComponent
+     */
+    @Nullable public Component getDisplayComponent() {
+        return displayComponent;
+    }
+
+    /**
+     * Set the value of displayComponent
+     *
+     * @param displayComponent new value of displayComponent
+     */
+    public void setDisplayComponent(Component displayComponent) {
+        this.displayComponent = displayComponent;
+    }
+
     private void readOutputStream() {
         try {
             int readRet = -1;
-            while(!closed && (-1 != (readRet = process.getInputStream().read()))) {
+            while (!closed && (-1 != (readRet = process.getInputStream().read()))) {
                 outputPrintStream.write(readRet);
             }
         } catch (IOException ex) {
-            if(!closed) {
+            if (!closed) {
                 Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
-    
+
     private void readErrorStream() {
         try {
             int readRet = -1;
-            while(!closed && (-1 != (readRet = process.getErrorStream().read()))) {
+            while (!closed && (-1 != (readRet = process.getErrorStream().read()))) {
                 errorPrintStream.write(readRet);
             }
         } catch (IOException ex) {
-            if(!closed) {
+            if (!closed) {
                 Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
     private static final AtomicInteger num = new AtomicInteger();
     private final int myNum;
-    
-    public WrappedProcess(OutputStream outputPrintStream, OutputStream errorPrintStream, List<String> command ) throws IOException {
-        ProcessBuilder pb = new ProcessBuilder(command);
-        String cmdLine = command.stream().collect(Collectors.joining(" "));
+
+    private static final ThreadFactory threadFactory = new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "processStarterThread");
+            t.setDaemon(true);
+            return t;
+        }
+    };
+
+    private static final ExecutorService processStarterService = Executors.newSingleThreadExecutor(threadFactory);
+
+    public static void shutdownStarterService() {
+        processStarterService.shutdown();
+    }
+
+    private void setProcess(Process p) {
+        this.process = p;
+        outputReaderThread.start();
+        errorReaderThread.start();
+    }
+
+    @SuppressWarnings("initialization")
+    private WrappedProcess(ProcessBuilder pb, String cmdLine,
+            OutputStream outputPrintStream, OutputStream errorPrintStream) {
+        myNum = num.incrementAndGet();
+        this.cmdLine = cmdLine;
         pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
         pb.redirectError(ProcessBuilder.Redirect.PIPE);
         this.errorPrintStream = errorPrintStream;
         this.outputPrintStream = outputPrintStream;
-        process = pb.start();
-        myNum  = num.incrementAndGet();
-        outputReaderThread = new Thread(this::readOutputStream, "outputReader:"+myNum+cmdLine);
+        outputReaderThread = new Thread(this::readOutputStream, "outputReader:" + myNum + cmdLine);
         outputReaderThread.setDaemon(true);
-        errorReaderThread = new Thread(this::readErrorStream, "errorReader:"+myNum+cmdLine);
+        errorReaderThread = new Thread(this::readErrorStream, "errorReader:" + myNum + cmdLine);
         errorReaderThread.setDaemon(true);
-        outputReaderThread.start();
-        errorReaderThread.start();
+        xf = XFuture.supplyAsync(cmdLine, pb::start, processStarterService);
+        xf.thenAccept(this::setProcess);
     }
-    
-    public WrappedProcess(OutputStream outputPrintStream, OutputStream errorPrintStream, String ...command ) throws IOException {
-        ProcessBuilder pb = new ProcessBuilder(command);
-        String cmdLine = String.join(" ",command);
-        pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
-        pb.redirectError(ProcessBuilder.Redirect.PIPE);
-        this.errorPrintStream = errorPrintStream;
-        this.outputPrintStream = outputPrintStream;
-        process = pb.start();
-        myNum  = num.incrementAndGet();
-        outputReaderThread = new Thread(this::readOutputStream, "outputReader:"+myNum+cmdLine);
-        outputReaderThread.setDaemon(true);
-        errorReaderThread = new Thread(this::readErrorStream, "errorReader:"+myNum+cmdLine);
-        errorReaderThread.setDaemon(true);
-        outputReaderThread.start();
-        errorReaderThread.start();
+
+    public WrappedProcess(OutputStream outputPrintStream, OutputStream errorPrintStream, List<String> command) throws IOException {
+        this(new ProcessBuilder(command),
+                command.stream().collect(Collectors.joining(" ")),
+                outputPrintStream,
+                errorPrintStream);
     }
-    
-    public WrappedProcess(File directory, OutputStream outputPrintStream, OutputStream errorPrintStream, String ...command ) throws IOException {
-        ProcessBuilder pb = new ProcessBuilder(command).directory(directory);
-        String cmdLine = String.join(" ",command);
-        pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
-        pb.redirectError(ProcessBuilder.Redirect.PIPE);
-        this.errorPrintStream = errorPrintStream;
-        this.outputPrintStream = outputPrintStream;
-        process = pb.start();
-        myNum  = num.incrementAndGet();
-        outputReaderThread = new Thread(this::readOutputStream, "outputReader:"+myNum+cmdLine);
-        outputReaderThread.setDaemon(true);
-        errorReaderThread = new Thread(this::readErrorStream, "errorReader:"+myNum+cmdLine);
-        errorReaderThread.setDaemon(true);
-        outputReaderThread.start();
-        errorReaderThread.start();
+
+    public WrappedProcess(OutputStream outputPrintStream, OutputStream errorPrintStream, String... command) throws IOException {
+        this(new ProcessBuilder(command),
+                String.join(" ", command),
+                outputPrintStream,
+                errorPrintStream);
     }
-    
-    public WrappedProcess(File directory, OutputStream outputPrintStream, OutputStream errorPrintStream, List<String> command ) throws IOException {
-        ProcessBuilder pb = new ProcessBuilder(command).directory(directory);
-        String cmdLine = command.stream().collect(Collectors.joining(" "));
-        pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
-        pb.redirectError(ProcessBuilder.Redirect.PIPE);
-        this.errorPrintStream = errorPrintStream;
-        this.outputPrintStream = outputPrintStream;
-        process = pb.start();
-        myNum  = num.incrementAndGet();
-        outputReaderThread = new Thread(this::readOutputStream, "outputReader:"+myNum+cmdLine);
-        outputReaderThread.setDaemon(true);
-        errorReaderThread = new Thread(this::readErrorStream, "errorReader:"+myNum+cmdLine);
-        errorReaderThread.setDaemon(true);
-        outputReaderThread.start();
-        errorReaderThread.start();
+
+    public WrappedProcess(File directory, OutputStream outputPrintStream, OutputStream errorPrintStream, String... command) throws IOException {
+        this(new ProcessBuilder(command).directory(directory),
+                String.join(" ", command),
+                outputPrintStream,
+                errorPrintStream);
     }
-    
+
+    public WrappedProcess(File directory, OutputStream outputPrintStream, OutputStream errorPrintStream, List<String> command) throws IOException {
+        this(new ProcessBuilder(command).directory(directory),
+                command.stream().collect(Collectors.joining(" ")),
+                outputPrintStream,
+                errorPrintStream);
+    }
+
+    public boolean waitFor(long timeout,
+            TimeUnit unit) throws InterruptedException {
+        System.out.println("waiting For cmdLine="+cmdLine+ ", process="+process+" ...");
+        if (null != process) {
+            boolean ret =  process.waitFor(timeout, unit);
+            System.out.println("waitFor cmdLine="+cmdLine+ " returning "+ret);
+            return ret;
+        }
+        return true;
+    }
+
     public void close() {
         this.closed = true;
-        process.destroyForcibly();
-        outputReaderThread.interrupt();
-        try {
-            outputReaderThread.join(100);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, null, ex);
+        xf.cancelAll(true);
+        if (null != process) {
+            try {
+                if (!process.waitFor(50, TimeUnit.MILLISECONDS)) {
+                    process.destroyForcibly();
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, null, ex);
+                process.destroyForcibly();
+            }
         }
-        errorReaderThread.interrupt();
-        try {
-            errorReaderThread.join(100);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, null, ex);
+        if (null != outputReaderThread) {
+            outputReaderThread.interrupt();
+            try {
+                outputReaderThread.join(100);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        if (null != errorReaderThread) {
+            errorReaderThread.interrupt();
+            try {
+                errorReaderThread.join(100);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         try {
             outputPrintStream.close();
@@ -166,5 +219,5 @@ public class WrappedProcess {
             Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
 }

@@ -22,16 +22,26 @@
  */
 package aprs.framework.process.launcher;
 
+import aprs.framework.Utils;
 import aprs.framework.logdisplay.LogDisplayJPanel;
+import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFrame;
+import org.drools.core.rule.Collect;
 
 /**
  *
@@ -42,6 +52,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     /**
      * Creates new form ProcessLauncherJFrame
      */
+    @SuppressWarnings("initialization")
     public ProcessLauncherJFrame() {
         initComponents();
     }
@@ -58,12 +69,13 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         jTabbedPaneProcesses = new javax.swing.JTabbedPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("APRS External Processes");
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosed(java.awt.event.WindowEvent evt) {
-                formWindowClosed(evt);
-            }
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
+            }
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
             }
         });
 
@@ -127,6 +139,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             public void run() {
                 try {
                     ProcessLauncherJFrame frm = new ProcessLauncherJFrame();
+                    frm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     frm.addProcess("C:\\Users\\Public\\Documents\\APRS_AntVision_2018_03_06\\VideoTeachTable.exe");
 //                    frm.addProcess("C:\\Users\\shackle\\neo4j-community-2.3.11-motoman\\bin\\Neo4j.bat");
                     frm.addProcess("C:\\Users\\shackle\\neo4j-community-2.3.11-fanuc\\bin\\Neo4j.bat");
@@ -153,14 +166,25 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
         final private LogDisplayJPanel logDisplayJPanel;
 
-        public LogDisplayPanelOutputStream(LogDisplayJPanel logDisplayJInternalFrame) {
+        public LogDisplayPanelOutputStream(LogDisplayJPanel logDisplayJInternalFrame, List<Consumer<String>> lineConsumers) {
             this.logDisplayJPanel = logDisplayJInternalFrame;
             if (null == logDisplayJInternalFrame) {
                 throw new IllegalArgumentException("logDisplayJInteralFrame may not be null");
             }
+            this.lineConsumers = lineConsumers;
         }
 
         private StringBuffer sb = new StringBuffer();
+
+        private final List<Consumer<String>> lineConsumers;
+
+        private void notifiyLineConsumers(String line) {
+            System.out.println("line = " + line);
+            System.out.println("lineConsumers = " + lineConsumers);
+            for (Consumer<String> consumer : lineConsumers) {
+                consumer.accept(line);
+            }
+        }
 
         @Override
         public void write(byte[] buf, int off, int len) {
@@ -169,10 +193,10 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 sb.append(s);
                 if (s.contains("\n")) {
                     String fullString = sb.toString();
+                    notifiyLineConsumers(fullString);
                     if (javax.swing.SwingUtilities.isEventDispatchThread()) {
                         logDisplayJPanel.appendText(fullString);
                     } else {
-
                         javax.swing.SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {
@@ -197,41 +221,59 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     }
     private final List<WrappedProcess> processes = new ArrayList<>();
 
-    public void addProcess(String... command) throws IOException {
+    private List<Consumer<String>> lineConsumers = new ArrayList<>();
+
+    public WrappedProcess addProcess(String... command) throws IOException {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String cmdLine = String.join(" ", command);
         this.jTabbedPaneProcesses.add(cmdLine, logPanel);
-        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel);
+        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
+        lineConsumers = new ArrayList<>();
         WrappedProcess wrappedProcess = new WrappedProcess(errPrintStream, errPrintStream, command);
+        wrappedProcess.setDisplayComponent(logPanel);
         processes.add(wrappedProcess);
+        return wrappedProcess;
     }
 
-    
-     public void addProcess(List<String> command) throws IOException {
+    public WrappedProcess addProcess(List<String> command) throws IOException {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String cmdLine = String.join(" ", command);
         this.jTabbedPaneProcesses.add(cmdLine, logPanel);
-        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel);
+        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
+        lineConsumers = new ArrayList<>();
         WrappedProcess wrappedProcess = new WrappedProcess(errPrintStream, errPrintStream, command);
+        wrappedProcess.setDisplayComponent(logPanel);
         processes.add(wrappedProcess);
+        return wrappedProcess;
     }
-     
-    public void addProcess(File directory, String... command) throws IOException {
+
+    public WrappedProcess addProcess(File directory, String... command) throws IOException {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String cmdLine = String.join(" ", command);
         this.jTabbedPaneProcesses.add(cmdLine, logPanel);
-        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel);
+        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
+        lineConsumers = new ArrayList<>();
         WrappedProcess wrappedProcess = new WrappedProcess(directory, errPrintStream, errPrintStream, command);
+        wrappedProcess.setDisplayComponent(logPanel);
         processes.add(wrappedProcess);
+        return wrappedProcess;
     }
-    
-    public void addProcess(File directory, List<String> command) throws IOException {
+
+    public WrappedProcess addProcess(File directory, List<String> command) throws IOException {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String cmdLine = String.join(" ", command);
         this.jTabbedPaneProcesses.add(cmdLine, logPanel);
-        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel);
+        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
+        lineConsumers = new ArrayList<>();
         WrappedProcess wrappedProcess = new WrappedProcess(directory, errPrintStream, errPrintStream, command);
+        wrappedProcess.setDisplayComponent(logPanel);
         processes.add(wrappedProcess);
+        return wrappedProcess;
+    }
+
+    public static String[] parseCommandLineToArray(String line) {
+        List<String> args = parseCommandLine(line);
+        return args.toArray(new String[args.size()]);
     }
 
     public static List<String> parseCommandLine(String line) {
@@ -269,11 +311,11 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                         sb.append(c);
                     }
                     break;
-                    
+
                 case '\\':
-                    if(lastC == '\\' || isWindows) {
+                    if (lastC == '\\' || isWindows) {
                         sb.append(c);
-                        c=0;
+                        c = 0;
                     }
                     break;
 
@@ -284,31 +326,124 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             lastC = c;
         }
         String last = sb.toString();
-        if(last.length() > 0) {
+        if (last.length() > 0) {
             args.add(last);
         }
         return args;
     }
 
-    public void run(File f) throws IOException {
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-            while (null != (line = br.readLine())) {
-                addProcess(parseCommandLine(line));
+    private volatile boolean stopLineSeen = false;
+
+    private volatile List<String> stopLines = new ArrayList<>();
+
+    private void parseLaunchFileLine(String line, List<XFutureVoid> futures) throws IOException {
+        if (stopLineSeen) {
+            stopLines.add(line);
+            return;
+        }
+        if (!line.trim().startsWith("#")) {
+            addProcess(parseCommandLine(line));
+        } else {
+            line = line.trim();
+            if (line.startsWith("#waitfor")) {
+                String text = line.substring("#waitfor".length()).trim();
+                XFutureVoid xf = new XFutureVoid("#waitfor " + text);
+                Consumer<String> consumer = (String s) -> {
+                    if (s.contains(text)) {
+                        xf.complete();
+                    }
+                };
+                lineConsumers.add(consumer);
+                futures.add(xf);
+            } else if (line.startsWith("#stop")) {
+                stopLineSeen = true;
+                stopLines = new ArrayList<>();
             }
         }
     }
 
-    public void close() {
+    @SuppressWarnings({"unchecked","raw_types"})
+    public XFuture<Void> run(File f) throws IOException {
+        List<XFutureVoid> futures = new ArrayList<>();
+        stopLineSeen = false;
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String line;
+            while (null != (line = br.readLine())) {
+                parseLaunchFileLine(line, futures);
+            }
+        }
+        return XFuture.allOf(futures.toArray(new XFuture<?>[futures.size()]));
+    }
+
+    private final ConcurrentLinkedDeque<Runnable> onCloseRunnables = new ConcurrentLinkedDeque<>();
+
+    public void addOnCloseRunnable(Runnable r) {
+        onCloseRunnables.add(r);
+    }
+
+    public void removeOnCloseRunnable(Runnable r) {
+        onCloseRunnables.remove(r);
+    }
+
+    private final AtomicBoolean closing = new AtomicBoolean();
+
+    private volatile XFuture<Void> closingFuture = new XFuture<Void>("processLauncherClosingFuture");
+    
+    public XFuture<Void> close() {
+        boolean wasClosing = closing.getAndSet(true);
+        if (wasClosing) {
+            return closingFuture;
+        }
+        for (Runnable r : onCloseRunnables) {
+            try {
+                r.run();
+            } catch (Exception ex) {
+                Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        Thread closingThread = new Thread(this::completeClose, "closeProcessLauncherThread");
+        closingThread.start();
+//        System.out.println("closingThread = " + closingThread);
+//        System.out.println("closingThread.getState() = " + closingThread.getState());
+        return closingFuture;
+    }
+
+    private void completeClose() {
+        List<WrappedProcess> stopProcesses = new ArrayList<>();
+//        System.out.println("stopLines = " + stopLines);
+        for (String line : stopLines) {
+//            System.out.println("line = " + line);
+            try {
+                stopProcesses.add(addProcess(parseCommandLine(line)));
+            } catch (IOException ex) {
+                Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+//        System.out.println("stopProcesses = " + stopProcesses);
+        for (WrappedProcess p : stopProcesses) {
+            try {
+                if (!p.waitFor(5, TimeUnit.SECONDS)) {
+                    p.close();
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+//        System.out.println("this.processes = " + this.processes);
+        for (WrappedProcess wp : this.processes) {
+            wp.close();
+        }
+        WrappedProcess.shutdownStarterService();
         try {
             Neo4JKiller.killNeo4J();
         } catch (IOException ex) {
             Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-        for (WrappedProcess wp : processes) {
-            wp.close();
-        }
+        Utils.runOnDispatchThread("coseProcessLauncher", this::finalFinishClose);
+    }
+    private void finalFinishClose() {
         this.setVisible(false);
+        closingFuture.complete(null);
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTabbedPane jTabbedPaneProcesses;
