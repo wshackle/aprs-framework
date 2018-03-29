@@ -651,6 +651,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxDebug = new javax.swing.JCheckBox();
         jCheckBoxPause = new javax.swing.JCheckBox();
         jButtonRefresh = new javax.swing.JButton();
+        jLabel11 = new javax.swing.JLabel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTextAreaConnectDetails = new javax.swing.JTextArea();
         jPanelSimulationTab = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldSimulationUpdateTime = new javax.swing.JTextField();
@@ -999,6 +1002,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jLabel11.setText("Details:");
+
+        jTextAreaConnectDetails.setEditable(false);
+        jTextAreaConnectDetails.setColumns(20);
+        jTextAreaConnectDetails.setRows(5);
+        jScrollPane3.setViewportView(jTextAreaConnectDetails);
+
         javax.swing.GroupLayout jPanelConnectionsTabLayout = new javax.swing.GroupLayout(jPanelConnectionsTab);
         jPanelConnectionsTab.setLayout(jPanelConnectionsTabLayout);
         jPanelConnectionsTabLayout.setHorizontalGroup(
@@ -1007,9 +1017,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                        .addComponent(jScrollPane3)
+                        .addContainerGap())
+                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                         .addComponent(jCheckBoxSimulated)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.DEFAULT_SIZE, 198, Short.MAX_VALUE)
                         .addGap(142, 142, 142))
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                         .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1027,7 +1040,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 .addComponent(jCheckBoxDebug)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jCheckBoxPause)))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                        .addComponent(jLabel11)
+                        .addGap(0, 0, Short.MAX_VALUE))))
         );
         jPanelConnectionsTabLayout.setVerticalGroup(
             jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1047,7 +1063,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxDebug)
                     .addComponent(jCheckBoxPause))
-                .addContainerGap(156, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel11)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         jTabbedPane1.addTab("Connections", jPanelConnectionsTab);
@@ -2275,6 +2295,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JComboBox<DisplayAxis> jComboBoxDisplayAxis;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -2290,9 +2311,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JPanel jPanelSimulationTab;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTableItems;
     private javax.swing.JTable jTableTraySlots;
+    private javax.swing.JTextArea jTextAreaConnectDetails;
     private javax.swing.JTextField jTextFieldCurrentXY;
     private javax.swing.JTextField jTextFieldDropOffThreshold;
     private javax.swing.JTextField jTextFieldFilename;
@@ -2661,15 +2684,30 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return propertiesFile;
     }
 
+    private volatile long lastVisionUpdateTime = System.currentTimeMillis();
+    
     @Override
     public void visionClientUpdateRecieved(List<PhysicalItem> l, String line) {
+        long now = System.currentTimeMillis();
+        
+        String detailsMessage =
+                "size="+l.size()+"\n"
+                + "count="+visionSocketClient.getLineCount()+"\n"
+                + "skipped="+visionSocketClient.getSkippedLineCount()+"\n"
+                + "ignored="+visionSocketClient.getIgnoreCount()+"\n"
+                + "consecutive="+visionSocketClient.getConsecutiveIgnoreCount()+"\n"
+                + "time="+(now-lastVisionUpdateTime)+"\n";
+        
+        lastVisionUpdateTime = now;
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             setItems(l);
+            jTextAreaConnectDetails.setText(detailsMessage);
         } else {
             javax.swing.SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
                     setItems(l);
+                    jTextAreaConnectDetails.setText(detailsMessage);
                 }
             });
         }

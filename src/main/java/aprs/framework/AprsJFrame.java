@@ -1014,11 +1014,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private final AtomicInteger disconnectRobotCount = new AtomicInteger();
 
-    
     public boolean isClosing() {
         return closing;
     }
-    
+
     private void disconnectRobotPrivate() {
         startingCheckEnabledCheck();
         if (!closing) {
@@ -2344,7 +2343,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             ex.printStackTrace();
         }
         try {
-            startDisconnectDatabase();
+            jCheckBoxMenuItemConnectDatabase.setEnabled(false);
+            if (null != connectDatabaseFuture) {
+                connectDatabaseFuture.cancel(true);
+                connectDatabaseFuture = null;
+            }
+            disconnectDatabase();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -4128,6 +4132,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     }
 
     private void updateScanImageWithRotationOffsetInternal(List<PhysicalItem> requiredItems, boolean autoScale, double rotationOffset) {
+        if (requiredItems.isEmpty()) {
+            return;
+        }
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
         Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
         opts.h = 170;
@@ -4163,6 +4170,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
     private boolean checkKitTrays(List<PhysicalItem> kitTrays) {
         if (kitTrays.isEmpty()) {
+            Thread.dumpStack();
             if (JOptionPane.YES_OPTION
                     != JOptionPane.showConfirmDialog(this, "Create action list with no kit trays?")) {
                 setTitleErrorString("createActionListFromVision: No kit trays");
@@ -4177,6 +4185,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             return Collections.emptyList();
         }
         return goalLearner.getLastCreateActionListFromVisionKitToCheckStrings();
+    }
+
+    public void setLastCreateActionListFromVisionKitToCheckStrings(List<String> strings) {
+        if (null == goalLearner) {
+            goalLearner = new GoalLearner();
+        }
+        goalLearner.setLastCreateActionListFromVisionKitToCheckStrings(strings);
     }
 
     /**
@@ -4194,9 +4209,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @param correctionMode new value of correctionMode
      */
     public void setCorrectionMode(boolean correctionMode) {
-        if (null != goalLearner) {
-            goalLearner.setCorrectionMode(correctionMode);
+        if (goalLearner == null) {
+            goalLearner = new GoalLearner();
         }
+        goalLearner.setCorrectionMode(correctionMode);
     }
 
     /**
@@ -4216,8 +4232,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             if (goalLearner == null) {
                 goalLearner = new GoalLearner();
             }
+            if (teachItems.isEmpty()) {
+                return;
+            }
             goalLearner.setItemPredicate(this::isWithinLimits);
-            goalLearner.setKitTrayListPredicate(this::checkKitTrays);
+            if (goalLearner.isCorrectionMode()) {
+                goalLearner.setKitTrayListPredicate(null);
+            } else {
+                goalLearner.setKitTrayListPredicate(this::checkKitTrays);
+            }
             goalLearner.setSlotOffsetProvider(visionToDbJInternalFrame);
 
             boolean allEmptyA[] = new boolean[1];
@@ -4227,6 +4250,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 if (allEmpty || actions == null || actions.isEmpty()) {
                     System.out.println("requiredItems = " + requiredItems);
                     System.out.println("teachItems = " + teachItems);
+                    Thread.dumpStack();
                     if (JOptionPane.YES_OPTION
                             != JOptionPane.showConfirmDialog(this, "Load action list with all trays empty?")) {
                         setTitleErrorString("createActionListFromVision: All kit trays empty");
@@ -4242,7 +4266,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
             List<String> endingList = goalLearner.getLastCreateActionListFromVisionKitToCheckStrings();
             boolean equal = GoalLearner.kitToCheckStringsEqual(startingList, endingList);
-            if (null != pddlExecutorJInternalFrame1 && !equal) {
+            if (null != pddlExecutorJInternalFrame1 && (!equal || !goalLearner.isCorrectionMode())) {
                 pddlExecutorJInternalFrame1.setReverseFlag(false);
                 pddlExecutorJInternalFrame1.loadActionsFile(f);
                 pddlExecutorJInternalFrame1.setReverseFlag(jCheckBoxMenuItemReverse.isSelected());

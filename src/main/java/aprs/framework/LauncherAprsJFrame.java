@@ -374,7 +374,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 processLauncher.run(launchFile)
                         .thenRun(() -> {
                             amsFrame.setProcessLauncher(processLauncher);
-                            completePrevMulti(amsFrame);
+                            Utils.runOnDispatchThread(() -> completePrevMulti(amsFrame));
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);

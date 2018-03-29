@@ -528,6 +528,7 @@ public class Object2DJPanel extends JPanel {
     }
 
     public BufferedImage createSnapshotImage(@Nullable ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+        
         Dimension dim = this.getSize();
         int w = (opts != null) ? opts.w : dim.width;
         int h = (opts != null) ? opts.h : dim.height;
@@ -555,6 +556,9 @@ public class Object2DJPanel extends JPanel {
 
     public void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, @Nullable PhysicalItem selectedItem, Graphics2D g2d, @Nullable ViewOptions opts) {
         try {
+            if(itemsToPaint.isEmpty()) {
+                return;
+            }
             Dimension dim = getSize();
             int w = (null != opts) ? opts.w : dim.width;
             int h = (null != opts) ? opts.h : dim.height;
@@ -1234,6 +1238,9 @@ public class Object2DJPanel extends JPanel {
             double maxY,
             @Nullable ViewOptions opts) {
         try {
+            if(itemsToPaint.isEmpty()) {
+                return;
+            }
             AffineTransform origTransform = g2d.getTransform();
             double currentRotationOffset = this.rotationOffset;
             if (null != opts && opts.overrideRotationOffset) {

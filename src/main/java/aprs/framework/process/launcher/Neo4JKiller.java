@@ -28,6 +28,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -76,10 +77,13 @@ public class Neo4JKiller {
         String line;
         List<Integer> pids = new ArrayList<>();
         while (null != (line = br.readLine())) {
+            System.out.println("getNeo4JPIDS: line = " + line);
             String words[] = line.split("[ \t]+");
             if (words.length == 2) {
                 if (words[1].equals("org.neo4j.server.CommunityBootstrapper")) {
                     pids.add(Integer.valueOf(words[0]));
+                } else {
+                    System.out.println("words = " + Arrays.toString(words));
                 }
             }
         }
@@ -95,7 +99,7 @@ public class Neo4JKiller {
         }
         for (Process p : processes) {
             try {
-                if (!p.waitFor(100, TimeUnit.MILLISECONDS)) {
+                if (!p.waitFor(500, TimeUnit.MILLISECONDS)) {
                     p.destroyForcibly();
                 }
             } catch (InterruptedException ex) {
@@ -113,7 +117,7 @@ public class Neo4JKiller {
         }
         for (Process p : processes) {
             try {
-                if (!p.waitFor(100, TimeUnit.MILLISECONDS)) {
+                if (!p.waitFor(500, TimeUnit.MILLISECONDS)) {
                     p.destroyForcibly();
                 }
             } catch (InterruptedException ex) {
@@ -137,7 +141,10 @@ public class Neo4JKiller {
 
     public static void killNeo4J() throws IOException {
         List<Integer> pids = getNeo4JPIDs();
+        System.out.println("killNeo4J: pids = " + pids);
         killPIDs(pids);
+        List<Integer> newpids = getNeo4JPIDs();
+        System.out.println("killNeo4J: newpids = " + newpids);
     }
 
     public static void main(String[] args) throws IOException {

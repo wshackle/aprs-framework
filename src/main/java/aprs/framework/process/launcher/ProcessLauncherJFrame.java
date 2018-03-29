@@ -336,13 +336,20 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     private volatile List<String> stopLines = new ArrayList<>();
 
+    private volatile File processLaunchDirectory = null;
+
     private void parseLaunchFileLine(String line, List<XFutureVoid> futures) throws IOException {
         if (stopLineSeen) {
             stopLines.add(line);
             return;
         }
+
         if (!line.trim().startsWith("#")) {
-            addProcess(parseCommandLine(line));
+            if (null != processLaunchDirectory) {
+                addProcess(processLaunchDirectory, parseCommandLine(line));
+            } else {
+                addProcess(parseCommandLine(line));
+            }
         } else {
             line = line.trim();
             if (line.startsWith("#waitfor")) {
@@ -361,6 +368,11 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 };
                 containingList.add(consumer);
                 futures.add(xf);
+            } else if (line.startsWith("#killNeo4J")) {
+                Neo4JKiller.killNeo4J();
+            } else if (line.startsWith("#cd")) {
+                String text = line.substring("#cd".length()).trim();
+                processLaunchDirectory = new File(text);
             } else if (line.startsWith("#stop")) {
                 stopLineSeen = true;
                 stopLines = new ArrayList<>();
@@ -368,10 +380,11 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         }
     }
 
-    @SuppressWarnings({"unchecked","raw_types"})
+    @SuppressWarnings({"unchecked", "raw_types"})
     public XFuture<Void> run(File f) throws IOException {
         List<XFutureVoid> futures = new ArrayList<>();
         stopLineSeen = false;
+        processLaunchDirectory = null;
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while (null != (line = br.readLine())) {
@@ -394,7 +407,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     private final AtomicBoolean closing = new AtomicBoolean();
 
     private volatile XFuture<Void> closingFuture = new XFuture<Void>("processLauncherClosingFuture");
-    
+
     public XFuture<Void> close() {
         boolean wasClosing = closing.getAndSet(true);
         if (wasClosing) {
@@ -447,6 +460,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         }
         Utils.runOnDispatchThread("coseProcessLauncher", this::finalFinishClose);
     }
+
     private void finalFinishClose() {
         this.setVisible(false);
         closingFuture.complete(null);

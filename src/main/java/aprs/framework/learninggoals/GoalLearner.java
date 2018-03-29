@@ -157,6 +157,13 @@ public class GoalLearner {
     public List<String> getLastCreateActionListFromVisionKitToCheckStrings() {
         return new ArrayList<>(lastCreateActionListFromVisionKitToCheckStrings);
     }
+    
+    public void setLastCreateActionListFromVisionKitToCheckStrings(List<String> strings) {
+        if(null == strings) {
+            throw new IllegalArgumentException("null == strings");
+        }
+        this.lastCreateActionListFromVisionKitToCheckStrings = new ArrayList<>(strings);
+    }
 
     public static boolean kitToCheckStringsEqual(List<String> kitToCheckStrings1, List<String> kitToCheckStrings2) {
         if (kitToCheckStrings1.size() != kitToCheckStrings2.size()) {

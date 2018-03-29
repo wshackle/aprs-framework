@@ -161,6 +161,24 @@ public class VisionSocketClient implements AutoCloseable {
         return visionSlr.getHost();
     }
 
+    private AtomicInteger skippedLineCount = new AtomicInteger();
+    private AtomicInteger lineCount = new AtomicInteger();
+    
+    public int getSkippedLineCount() {
+        return skippedLineCount.get();
+    }
+    
+    public int getLineCount() {
+        return lineCount.get();
+    }
+    
+    public int getIgnoreCount() {
+        return ignoreCount;
+    }
+    public int getConsecutiveIgnoreCount() {
+        return consecutiveIgnoreCount;
+    }
+    
     public void start(Map<String, String> argsMap) {
         String host = "HOSTNOTSET";
         short port = -99;
@@ -186,10 +204,11 @@ public class VisionSocketClient implements AutoCloseable {
                     port,
                     "visionReader_for_" + hostf + ":" + portf,
                     new SocketLineReader.CallBack() {
-                @Nullable private String lastSkippedLine = null;
+                @Nullable private volatile String lastSkippedLine = null;
 
                 @Override
                 public void call(final String line, PrintStream os) {
+                    lineCount.incrementAndGet();
 //                    System.out.println("line = " + line+", parsing_line="+parsing_line);
                     if (null == parsing_line) {
                         parsing_line = line;
@@ -214,6 +233,9 @@ public class VisionSocketClient implements AutoCloseable {
                             }
                         });
                     } else {
+                        if(null != lastSkippedLine) {
+                            skippedLineCount.incrementAndGet();
+                        }
                         lastSkippedLine = line;
                     }
                 }
@@ -341,13 +363,14 @@ public class VisionSocketClient implements AutoCloseable {
 
     private int prevVisionListSize = -1;
     private int ignoreCount = 0;
-    private int lineCount = 0;
+    private int consecutiveIgnoreCount = 0;
+    private int parseeVisionLineCount = 0;
 
     public void parseVisionLine(final String line) {
         try {
             long t0 = System.nanoTime();
             this.line = line;
-            lineCount++;
+            parseeVisionLineCount++;
             if (visionList == null) {
                 visionList = new ArrayList<>();
             }
@@ -361,12 +384,14 @@ public class VisionSocketClient implements AutoCloseable {
                     System.err.println("No more messages about ignored vision lists will be printed");
                 }
                 ignoreCount++;
+                consecutiveIgnoreCount++;
                 prevVisionListSize--;
                 return;
             }
             prevVisionListSize = visionList.size();
             poseUpdatesParsed += visionList.size();
             updateListeners();
+            consecutiveIgnoreCount=0;
             if (debug) {
                 long t1 = System.nanoTime();
                 long time_diff = t1 - t0;

@@ -2252,6 +2252,19 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                                 = itemsNameMap.computeIfAbsent(finalShortSkuName,
                                                         k -> partNamesListForShortSkuName(newItems, k));
                                         System.out.println("partNames = " + partNames);
+                                        if(partNames.isEmpty()) {
+                                            System.out.println("");
+                                            System.out.println("No partnames for finalShortSkuName="+finalShortSkuName);
+                                            System.out.println("newItems = " + newItems);
+                                            System.out.println("itemsNameMap = " + itemsNameMap);
+                                            System.out.println("slotItemSkuName = " + slotItemSkuName);
+                                            System.out.println("itemSkuName = " + itemSkuName);
+                                            throw new IllegalStateException("No partnames for finalShortSkuName="+finalShortSkuName
+                                                    +",slotItemSkuName = " + slotItemSkuName
+                                                    +",itemSkuName = " + itemSkuName
+                                                    +",newItems = " + newItems
+                                                    +",itemsNameMap = " + itemsNameMap);
+                                        }
 //                                        String partNamePrefix = shortSkuName + "_in_pt";
 //                                        int count = prefixCountMap.compute(partNamePrefix,
 //                                                (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
