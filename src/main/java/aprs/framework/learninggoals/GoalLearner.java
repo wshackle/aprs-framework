@@ -97,7 +97,7 @@ public class GoalLearner {
      *
      * @param kitTrayListPredicate new value of kitTrayListPredicate
      */
-    public void setKitTrayListPredicate(Predicate<List<PhysicalItem>> kitTrayListPredicate) {
+    public void setKitTrayListPredicate(@Nullable Predicate<List<PhysicalItem>> kitTrayListPredicate) {
         this.kitTrayListPredicate = kitTrayListPredicate;
     }
 

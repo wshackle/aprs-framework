@@ -1626,6 +1626,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile double last_drag_min_y;
     private volatile double last_drag_max_y;
 
+    private volatile long mouseDragTime = -1;
+
+    public boolean isPartMoving() {
+        return null != this.draggedItem || System.currentTimeMillis() - mouseDragTime < 30;
+    }
+
     private void object2DJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseDragged
         double scale = object2DJPanel1.getScale();
         double min_x = object2DJPanel1.getMinX();
@@ -1633,6 +1639,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         double min_y = object2DJPanel1.getMinY();
         double max_y = object2DJPanel1.getMaxY();
         PhysicalItem itemToDrag = this.draggedItem;
+        mouseDragTime = System.currentTimeMillis();
         if (null != itemToDrag) {
             double orig_x = itemToDrag.x;
             double orig_y = itemToDrag.y;
@@ -2685,29 +2692,36 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private volatile long lastVisionUpdateTime = System.currentTimeMillis();
-    
+
     @Override
     public void visionClientUpdateRecieved(List<PhysicalItem> l, String line) {
         long now = System.currentTimeMillis();
-        
-        String detailsMessage =
-                "size="+l.size()+"\n"
-                + "count="+visionSocketClient.getLineCount()+"\n"
-                + "skipped="+visionSocketClient.getSkippedLineCount()+"\n"
-                + "ignored="+visionSocketClient.getIgnoreCount()+"\n"
-                + "consecutive="+visionSocketClient.getConsecutiveIgnoreCount()+"\n"
-                + "time="+(now-lastVisionUpdateTime)+"\n";
-        
+
+        String detailsMessage = null;
+        if (null != visionSocketClient) {
+            detailsMessage
+                    = "size=" + l.size() + "\n"
+                    + "count=" + visionSocketClient.getLineCount() + "\n"
+                    + "skipped=" + visionSocketClient.getSkippedLineCount() + "\n"
+                    + "ignored=" + visionSocketClient.getIgnoreCount() + "\n"
+                    + "consecutive=" + visionSocketClient.getConsecutiveIgnoreCount() + "\n"
+                    + "time=" + (now - lastVisionUpdateTime) + "\n";
+        }
+        final String finalDetailsMessage = detailsMessage;
         lastVisionUpdateTime = now;
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             setItems(l);
-            jTextAreaConnectDetails.setText(detailsMessage);
+            if (null != detailsMessage) {
+                jTextAreaConnectDetails.setText(detailsMessage);
+            }
         } else {
             javax.swing.SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
                     setItems(l);
-                    jTextAreaConnectDetails.setText(detailsMessage);
+                    if (null != finalDetailsMessage) {
+                        jTextAreaConnectDetails.setText(finalDetailsMessage);
+                    }
                 }
             });
         }

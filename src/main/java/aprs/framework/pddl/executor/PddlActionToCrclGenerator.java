@@ -43,7 +43,6 @@ import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
-import aprs.framework.optaplanner.actionmodel.score.DistToTime;
 import aprs.framework.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
@@ -114,6 +113,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -244,7 +244,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return pddlActionsToOpActions(listIn, start, null, null, null);
     }
 
-    int skippedActions = 0;
+    private volatile int skippedActions = 0;
 
     private boolean getReverseFlag() {
         if (aprsJFrame != null) {
@@ -253,10 +253,39 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return false;
     }
 
-    private List<OpAction> pddlActionsToOpActions(List<? extends PddlAction> listIn, int start, int endl @Nullable [], @Nullable List<OpAction> skippedOpActionsList, @Nullable List<PddlAction> skippedPddlActionsList) throws SQLException {
+    private List<OpAction> pddlActionsToOpActions(
+            List<? extends PddlAction> listIn, int start, int endl @Nullable [], @Nullable List<OpAction> skippedOpActionsList, @Nullable List<PddlAction> skippedPddlActionsList) throws SQLException {
+        return pddlActionsToOpActions(
+                listIn,
+                start,
+                endl,
+                skippedOpActionsList,
+                skippedPddlActionsList,
+                getLookForXYZ(),
+                takePartArgIndex,
+                skipMissingParts,
+                getReverseFlag(),
+                this::getPose);
+    }
+
+    private static interface GetPoseFunction {
+
+        @Nullable public PoseType apply(String name, boolean ignoreNull) throws SQLException;
+    }
+
+    private List<OpAction> pddlActionsToOpActions(
+            List<? extends PddlAction> listIn,
+            int start,
+            int endl @Nullable [],
+            @Nullable List<OpAction> skippedOpActionsList,
+            @Nullable List<PddlAction> skippedPddlActionsList,
+            @Nullable PointType lookForPt,
+            int takePartArgIndex,
+            boolean skipMissingParts,
+            boolean reverseFlag,
+            GetPoseFunction getPose) throws SQLException {
         List<OpAction> ret = new ArrayList<>();
         boolean moveOccurred = false;
-        PointType lookForPt = getLookForXYZ();
         if (null == lookForPt) {
             throw new IllegalStateException("lookForPt == null");
         }
@@ -279,7 +308,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         moveOccurred = true;
                     }
                     String partName = pa.getArgs()[takePartArgIndex];
-                    PoseType partPose = getPose(partName, getReverseFlag());
+                    PoseType partPose = getPose.apply(partName, reverseFlag);
                     if (null == partPose) {
                         if (skipMissingParts) {
                             skippedActions++;
@@ -321,7 +350,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         }
                     } else {
                         String slotName = pa.getArgs()[placePartSlotArgIndex];
-                        PoseType slotPose = getPose(slotName, getReverseFlag());
+                        PoseType slotPose = getPose.apply(slotName, reverseFlag);
                         if (null == slotPose) {
                             if (skipMissingParts) {
                                 skippedActions += 2;
@@ -453,7 +482,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         public String toString() {
             return "KitToCheck{" + "name=" + name + ", instanceInfoMap=" + instanceInfoMap + '}';
         }
-        
+
         int getMaxDiffFailedSlots() {
             int minFailedSlots = instanceInfoMap
                     .values()
@@ -988,7 +1017,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         gparams.startingIndex = startingIndex;
         gparams.options = options;
         gparams.startSafeAbortRequestCount = startSafeAbortRequestCount;
-        gparams.replan = true;
+        gparams.replan = !aprsJFrame.isCorrectionMode();
         return generate(gparams);
 //        return generate(actions, startingIndex, options, startSafeAbortRequestCount, true, null, null);
     }
@@ -1688,7 +1717,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return -1;
     }
 
-    private List<MiddleCommandType> runOptaPlanner(List<PddlAction> actions, int startingIndex, Map<String, String> options1, int startSafeAbortRequestCount1)
+    private List<MiddleCommandType> runOptaPlanner(
+            List<PddlAction> actions,
+            int startingIndex, Map<String, String> options1,
+            int startSafeAbortRequestCount1)
             throws IllegalStateException, InterruptedException, SQLException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException, CRCLException, PmException {
         assert (null != this.aprsJFrame) : "null == aprsJFrame";
         assert (null != this.solver) : "null == solver";
@@ -1838,10 +1870,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return "solveScore < inScore : solveScore=" + solveScore + " inscore=" + inScore;
     }
 
-    private List<PddlAction> optimizePddlActionsWithOptaPlanner(List<PddlAction> actions, int startingIndex, List<PhysicalItem> items) throws SQLException, InterruptedException, ExecutionException {
-
+    private List<PddlAction> optimizePddlActionsWithOptaPlanner(
+            List<PddlAction> actions,
+            int startingIndex,
+            List<PhysicalItem> items) throws SQLException, InterruptedException, ExecutionException {
         assert (null != this.aprsJFrame) : "null == aprsJFrame";
-
         Solver<OpActionPlan> solverToRun = this.solver;
         if (null == solverToRun) {
             return actions;
@@ -1868,13 +1901,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (!getReverseFlag()) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                    .groupBy(item -> posNameToType(item.getName()));
+                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                            .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, PddlAction> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                    .select(action -> action.getType().equals("take-part"))
-                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                            .select(action -> action.getType().equals("take-part"))
+                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -1914,6 +1947,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         }
         if (skippedActions != skippedPddlActionsList.size()) {
+            System.err.println("skippedPddlActionsList = " + skippedPddlActionsList);
+            System.err.println("actions = " + actions);
             throw new IllegalStateException("skippedPddlActionsList.size() = " + skippedPddlActionsList.size() + ",actions.size() = " + actions.size() + ", skippedActions=" + skippedActions);
         }
         OpActionPlan inputPlan = new OpActionPlan();
@@ -1976,8 +2011,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             fullReplanPddlActions.addAll(newPddlActions);
             fullReplanPddlActions.addAll(skippedPddlActionsList);
             List<PddlAction> laterPddlActions = new ArrayList<>(actions.subList(endl[1], actions.size()));
-//            System.out.println("laterPddlActions.size() = " + laterPddlActions.size());
-//            System.out.println("laterPddlActions = " + laterPddlActions);
             fullReplanPddlActions.addAll(laterPddlActions);
 
             if (null != this.opDisplayJPanelSolution) {
@@ -2023,8 +2056,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                .map(arg -> arg.split("="))
-                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                        .map(arg -> arg.split("="))
+                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2045,10 +2078,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
             }
             return names;
-//            return qs.getPartsTrays(skuName).stream()
-//                    .filter((PartsTray tray) -> null != tray.getPartsTrayName())
-//                    .map(PartsTray::getPartsTrayName)
-//                    .collect(Collectors.toList());
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
@@ -2197,6 +2226,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     Map<String, Integer> prefixCountMap = new HashMap<>();
                     Map<String, List<String>> itemsNameMap = new HashMap<>();
                     Collections.sort(kitsToFix, Comparators.byIntFunction(KitToCheck::getMaxDiffFailedSlots));
+                    List<PddlAction> correctiveActions = new ArrayList<>();
                     for (KitToCheck kit : kitsToFix) {
                         List<KitToCheckInstanceInfo> infoList = new ArrayList<>(kit.instanceInfoMap.values());
                         Collections.sort(infoList, Comparators.byIntFunction(KitToCheckInstanceInfo::getFailedSlots));
@@ -2228,7 +2258,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                 if (null != slotItemSkuName && !slotItemSkuName.equals(itemSkuName)) {
 
                                     if (!itemSkuName.equals("empty")) {
-                                        takePartByPose(cmds, visionToRobotPose(closestItem.getPose()));
+////                                        takePartByPose(cmds, visionToRobotPose(closestItem.getPose()));
                                         String shortSkuName = itemSkuName;
                                         if (shortSkuName.startsWith("sku_")) {
                                             shortSkuName = shortSkuName.substring(4);
@@ -2240,7 +2270,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                         int count = prefixCountMap.compute(slotPrefix,
                                                 (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
                                         lastTakenPart = closestItem.getName();
-                                        placePartBySlotName(slotPrefix + "_" + count, cmds, action);
+////                                        placePartBySlotName(slotPrefix + "_" + count, cmds, action);
+                                        correctiveActions.add(new PddlAction("", "take-part", new String[]{closestItem.getFullName()}, ""));
+                                        correctiveActions.add(new PddlAction("", "place-part", new String[]{slotPrefix + "_" + count}, ""));
                                     }
                                     if (!slotItemSkuName.equals("empty")) {
                                         String shortSkuName = slotItemSkuName;
@@ -2252,25 +2284,49 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                                 = itemsNameMap.computeIfAbsent(finalShortSkuName,
                                                         k -> partNamesListForShortSkuName(newItems, k));
                                         System.out.println("partNames = " + partNames);
-                                        if(partNames.isEmpty()) {
+                                        if (partNames.isEmpty()) {
                                             System.out.println("");
-                                            System.out.println("No partnames for finalShortSkuName="+finalShortSkuName);
+                                            System.out.println("No partnames for finalShortSkuName=" + finalShortSkuName);
                                             System.out.println("newItems = " + newItems);
                                             System.out.println("itemsNameMap = " + itemsNameMap);
                                             System.out.println("slotItemSkuName = " + slotItemSkuName);
                                             System.out.println("itemSkuName = " + itemSkuName);
-                                            throw new IllegalStateException("No partnames for finalShortSkuName="+finalShortSkuName
-                                                    +",slotItemSkuName = " + slotItemSkuName
-                                                    +",itemSkuName = " + itemSkuName
-                                                    +",newItems = " + newItems
-                                                    +",itemsNameMap = " + itemsNameMap);
+                                            throw new IllegalStateException("No partnames for finalShortSkuName=" + finalShortSkuName
+                                                    + ",slotItemSkuName = " + slotItemSkuName
+                                                    + ",itemSkuName = " + itemSkuName
+                                                    + ",newItems = " + newItems
+                                                    + ",itemsNameMap = " + itemsNameMap);
                                         }
 //                                        String partNamePrefix = shortSkuName + "_in_pt";
 //                                        int count = prefixCountMap.compute(partNamePrefix,
 //                                                (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
                                         String partName = partNames.remove(0);
-                                        takePartByName(partName, null, cmds);
-                                        placePartByPose(cmds, visionToRobotPose(absSlot.getPose()));
+                                        correctiveActions.add(new PddlAction("", "take-part", new String[]{partName}, ""));
+                                        String slotName = absSlot.getFullName();
+                                        System.out.println("slotName = " + slotName);
+//                                        boolean inCache = poseCache.keySet().contains(slotName);
+//                                        if(!inCache) {
+//                                                System.out.println("poseCache.keySet() = " + poseCache.keySet());
+//                                                System.out.println("inCache = " + inCache);
+//                                                
+//                                        }
+                                        PoseType slotPose = visionToRobotPose(absSlot.getPose());
+                                        double min_dist = Double.POSITIVE_INFINITY;
+                                        String closestKey = null;
+                                        for (Entry<String, PoseType> entry : poseCache.entrySet()) {
+                                            double dist = CRCLPosemath.diffPosesTran(slotPose, entry.getValue());
+                                            if (dist < min_dist) {
+                                                closestKey = entry.getKey();
+                                                min_dist = dist;
+                                            }
+                                        }
+                                        if (closestKey == null || min_dist > 0.1) {
+                                            throw new IllegalStateException("absSlotPose for " + slotName + " not in poseCache keys=" + poseCache.keySet());
+                                        }
+                                        correctiveActions.add(new PddlAction("", "place-part", new String[]{closestKey}, ""));
+
+//                                        takePartByName(partName, null, cmds);
+//                                        placePartByPose(cmds, visionToRobotPose(absSlot.getPose()));
                                     }
                                 }
                             }
@@ -2280,6 +2336,34 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                         System.out.println("matchedKitInstanceNames = " + matchedKitInstanceNames);
                         System.out.println("kitsToFix = " + kitsToFix);
                         System.out.println("");
+                    }
+                    List<PddlAction> optimizedCorrectiveActions
+                            = optimizePddlActionsWithOptaPlanner(correctiveActions, 0, newItems);
+                    CORRECT_ACTIONS_LOOP:
+                    for (int caIndex = 0; caIndex < optimizedCorrectiveActions.size(); caIndex++) {
+                        PddlAction correctiveAction = optimizedCorrectiveActions.get(caIndex);
+                        switch (correctiveAction.getType()) {
+                            case "take-part":
+                                String partName = correctiveAction.getArgs()[takePartArgIndex];
+                                if (partName.contains("in_pt")) {
+                                    if (caIndex < optimizedCorrectiveActions.size() - 1) {
+                                        PddlAction nextAction = optimizedCorrectiveActions.get(caIndex + 1);
+                                        String nextSlotName = nextAction.getArgs()[placePartSlotArgIndex];
+                                        if (!nextSlotName.contains("kit")) {
+                                            System.out.println("nextSlotName = " + nextSlotName);
+                                            caIndex++;
+                                            continue CORRECT_ACTIONS_LOOP;
+                                        }
+                                    }
+                                }
+                                takePartByName(partName, null, cmds);
+                                break;
+
+                            case "place-part":
+                                String slotName = correctiveAction.getArgs()[placePartSlotArgIndex];
+                                placePartBySlotName(slotName, cmds, correctiveAction);  //ByName(slotName, null, cmds);
+                                break;
+                        }
                     }
                 }
             }
@@ -2291,17 +2375,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
         List<String> partNames
                 = newItems.stream()
-                .filter(item -> item.getType().equals("P"))
-                .flatMap(item -> {
-                    String fullName = item.getFullName();
-                    if (null != fullName) {
-                        return Stream.of(fullName);
-                    }
-                    return Stream.empty();
-                })
-                .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
-                .sorted()
-                .collect(Collectors.toList());
+                        .filter(item -> item.getType().equals("P"))
+                        .flatMap(item -> {
+                            String fullName = item.getFullName();
+                            if (null != fullName) {
+                                return Stream.of(fullName);
+                            }
+                            return Stream.empty();
+                        })
+                        .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
+                        .sorted()
+                        .collect(Collectors.toList());
         return partNames;
     }
 
@@ -5212,7 +5296,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         dwellCmd.setDwellTime(settleDwellTime);
         cmds.add(dwellCmd);
     }
-// addAfterMoveToLookForDwell
 
     private void addAfterMoveToLookForDwell(List<MiddleCommandType> cmds, boolean firstLook, boolean lastLook) {
         DwellType dwellCmd = new DwellType();
@@ -5230,13 +5313,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void addSkipLookDwell(List<MiddleCommandType> cmds, boolean firstLook, boolean lastLook) {
         DwellType dwellCmd = new DwellType();
         setCommandId(dwellCmd);
-//        if (firstLook) {
-//            dwellCmd.setDwellTime(skipLookDwellTime + firstLookDwellTime);
-//        } else if (lastLook) {
-//            dwellCmd.setDwellTime(skipLookDwellTime + lastLookDwellTime);
-//        } else {
-//            dwellCmd.setDwellTime(skipLookDwellTime);
-//        }
         dwellCmd.setDwellTime(skipLookDwellTime);
         cmds.add(dwellCmd);
     }

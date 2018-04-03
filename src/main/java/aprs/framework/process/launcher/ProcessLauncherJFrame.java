@@ -32,7 +32,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +40,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
-import org.drools.core.rule.Collect;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -162,27 +161,44 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         });
     }
 
+    private static abstract class LineConsumer implements Consumer<String> {
+        
+        public abstract boolean isFinished();
+    };
+    
     static private class LogDisplayPanelOutputStream extends OutputStream {
 
         final private LogDisplayJPanel logDisplayJPanel;
 
-        public LogDisplayPanelOutputStream(LogDisplayJPanel logDisplayJInternalFrame, List<Consumer<String>> lineConsumers) {
+        public LogDisplayPanelOutputStream(LogDisplayJPanel logDisplayJInternalFrame, List<LineConsumer> lineConsumers) {
             this.logDisplayJPanel = logDisplayJInternalFrame;
             if (null == logDisplayJInternalFrame) {
                 throw new IllegalArgumentException("logDisplayJInteralFrame may not be null");
             }
-            this.lineConsumers = lineConsumers;
+            this.lineConsumers =  new ArrayList<>(lineConsumers);
         }
 
         private StringBuffer sb = new StringBuffer();
 
-        private final List<Consumer<String>> lineConsumers;
+        private final List<LineConsumer> lineConsumers;
 
         private void notifiyLineConsumers(String line) {
 //            System.out.println("line = " + line);
 //            System.out.println("lineConsumers = " + lineConsumers);
-            for (Consumer<String> consumer : lineConsumers) {
+            for (int i = 0; i < lineConsumers.size(); i++) {
+                LineConsumer consumer = lineConsumers.get(i);
+                if(consumer.isFinished()) {
+                    lineConsumers.remove(consumer);
+                }
+            }
+            for (LineConsumer consumer : lineConsumers) {
                 consumer.accept(line);
+            }
+            for (int i = 0; i < lineConsumers.size(); i++) {
+                LineConsumer consumer = lineConsumers.get(i);
+                if(consumer.isFinished()) {
+                    lineConsumers.remove(consumer);
+                }
             }
         }
 
@@ -221,7 +237,8 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     }
     private final List<WrappedProcess> processes = new ArrayList<>();
 
-    private List<Consumer<String>> lineConsumers = new ArrayList<>();
+    private volatile List<LineConsumer> lineConsumers = new ArrayList<>();
+    private volatile List<LineConsumer> errorLineConsumers = new ArrayList<>();
 
     public WrappedProcess addProcess(String... command) throws IOException {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
@@ -336,48 +353,136 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     private volatile List<String> stopLines = new ArrayList<>();
 
-    private volatile File processLaunchDirectory = null;
+    @Nullable private volatile File processLaunchDirectory = null;
 
-    private void parseLaunchFileLine(String line, List<XFutureVoid> futures) throws IOException {
+    private volatile String onFailLine = null;
+    private volatile XFutureVoid waitForFuture = null;
+
+    @Nullable private WrappedProcess parseLaunchFileLine(String line, List<XFutureVoid> futures) throws IOException {
+        if (line.length() < 1) {
+            return null;
+        }
         if (stopLineSeen) {
             stopLines.add(line);
-            return;
+            return null;
         }
+        String currentOnFailLine = onFailLine;
+        XFutureVoid currentWaitForFuture = waitForFuture;
+        List<LineConsumer> currentErrorLineConsumers = errorLineConsumers;
 
-        if (!line.trim().startsWith("#")) {
+        line = line.trim();
+        if (line.length() < 1) {
+            return null;
+        }
+        if (!line.startsWith("#")) {
+            errorLineConsumers = new ArrayList<>();
+            waitForFuture = null;
+            onFailLine = null;
             if (null != processLaunchDirectory) {
-                addProcess(processLaunchDirectory, parseCommandLine(line));
+                return addProcess(processLaunchDirectory, parseCommandLine(line));
             } else {
-                addProcess(parseCommandLine(line));
+                return addProcess(parseCommandLine(line));
             }
+
         } else {
-            line = line.trim();
-            if (line.startsWith("#waitfor")) {
-                String text = line.substring("#waitfor".length()).trim();
-                XFutureVoid xf = new XFutureVoid("#waitfor " + text);
-                final List<Consumer<String>> containingList = lineConsumers;
-                Consumer<String> consumer = (String s) -> {
-//                    System.out.println("s = " + s);
-//                    System.out.println("text = " + text);
-//                    System.out.println("s.contains(text) = " + s.contains(text));
-                    if (s.contains(text)) {
-                        xf.complete();
-                        containingList.remove(this);
-//                        System.out.println("xf = " + xf);
+            if (line.startsWith("#!recoverWaitFor")) {
+                String text = line.substring("#!recoverWaitFor".length()).trim();
+                final List<LineConsumer> containingList = errorLineConsumers;
+                LineConsumer consumer = new LineConsumer() {
+                    
+                    private volatile boolean finished = false;
+                    @Override
+                    public void accept(String s) {
+                        if (s.contains(text)) {
+                            if (null != currentWaitForFuture) {
+                                currentWaitForFuture.complete();
+                            }
+                            finished=true;
+                        }
+                    }
+
+                    @Override
+                    public boolean isFinished() {
+                        return finished;
+                    }
+                };
+                containingList.add(consumer);
+            } else if (line.startsWith("#!onfail")) {
+                String text = line.substring("#!onfail".length()).trim();
+                onFailLine = text;
+            } else if (line.startsWith("#!checkfail")) {
+                String text = line.substring("#!checkfail".length()).trim();
+                final List<LineConsumer> containingList = lineConsumers;
+                LineConsumer consumer = new LineConsumer() {
+                    
+                    private volatile boolean finished = false; 
+                    @Override
+                    public void accept(String s) {
+                        if (s.contains(text)) {
+                            if (null != currentOnFailLine) {
+                                Utils.runOnDispatchThread(() -> {
+                                    List<LineConsumer> origLineConsumers = lineConsumers;
+                                    try {
+                                        lineConsumers = currentErrorLineConsumers;
+                                        if (null != processLaunchDirectory) {
+                                            addProcess(processLaunchDirectory, parseCommandLine(currentOnFailLine));
+
+                                        } else {
+                                            addProcess(parseCommandLine(currentOnFailLine));
+                                        }
+                                    } catch (IOException ex) {
+                                        Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                    lineConsumers = origLineConsumers;
+                                });
+                            }
+                            finished = true;
+                        }
+                    }
+
+                    @Override
+                    public boolean isFinished() {
+                        return finished;
+                    }
+                };
+                containingList.add(consumer);
+            } else if (line.startsWith("#!waitfor")) {
+                String text = line.substring("#!waitfor".length()).trim();
+                XFutureVoid xf = new XFutureVoid("#!waitfor " + text);
+                final List<LineConsumer> containingList = lineConsumers;
+                LineConsumer consumer = new LineConsumer() {
+                    
+                    private volatile boolean finished = false;
+                    @Override
+                    public void accept(String s) {
+                        if (s.contains(text)) {
+                            xf.complete();
+                            finished=true;
+                        }
+                    }
+
+                    @Override
+                    public boolean isFinished() {
+                       return finished;
                     }
                 };
                 containingList.add(consumer);
                 futures.add(xf);
-            } else if (line.startsWith("#killNeo4J")) {
+                waitForFuture = xf;
+            } else if (line.startsWith("#!killNeo4J")) {
                 Neo4JKiller.killNeo4J();
-            } else if (line.startsWith("#cd")) {
-                String text = line.substring("#cd".length()).trim();
+            } else if (line.startsWith("#!cd")) {
+                String text = line.substring("#!cd".length()).trim();
                 processLaunchDirectory = new File(text);
-            } else if (line.startsWith("#stop")) {
+            } else if (line.startsWith("#!stop")) {
                 stopLineSeen = true;
                 stopLines = new ArrayList<>();
+            } else if (line.startsWith("#!")) {
+                throw new IllegalArgumentException("line starts with #! but is not recognized : line=" + line);
             }
         }
+
+        return null;
     }
 
     @SuppressWarnings({"unchecked", "raw_types"})
@@ -416,8 +521,10 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         for (Runnable r : onCloseRunnables) {
             try {
                 r.run();
+
             } catch (Exception ex) {
-                Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ProcessLauncherJFrame.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
         Thread closingThread = new Thread(this::completeClose, "closeProcessLauncherThread");
@@ -430,12 +537,20 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     private void completeClose() {
         List<WrappedProcess> stopProcesses = new ArrayList<>();
 //        System.out.println("stopLines = " + stopLines);
+        List<XFutureVoid> futures = new ArrayList<>();
+        stopLineSeen = false;
+        processLaunchDirectory = null;
         for (String line : stopLines) {
 //            System.out.println("line = " + line);
             try {
-                stopProcesses.add(addProcess(parseCommandLine(line)));
+                WrappedProcess p = parseLaunchFileLine(line, futures);
+                if (null != p) {
+                    stopProcesses.add(p);
+
+                }
             } catch (IOException ex) {
-                Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ProcessLauncherJFrame.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
 //        System.out.println("stopProcesses = " + stopProcesses);
@@ -443,9 +558,11 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             try {
                 if (!p.waitFor(5, TimeUnit.SECONDS)) {
                     p.close();
+
                 }
             } catch (InterruptedException ex) {
-                Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ProcessLauncherJFrame.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
 //        System.out.println("this.processes = " + this.processes);
@@ -453,11 +570,6 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             wp.close();
         }
         WrappedProcess.shutdownStarterService();
-        try {
-            Neo4JKiller.killNeo4J();
-        } catch (IOException ex) {
-            Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
         Utils.runOnDispatchThread("coseProcessLauncher", this::finalFinishClose);
     }
 

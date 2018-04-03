@@ -937,16 +937,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
                 safeAbortAndDisconnectFuture
                         = localSafeAbortFuture
-                        .thenRun(() -> {
+                                .thenRun(() -> {
 //                                    if (null != continousDemoFuture) {
 //                                        continousDemoFuture.cancelAll(true);
 //                                        continousDemoFuture = null;
 //                                    }
-                            setStopRunTime();
-                        })
-                        .thenCompose(x -> waitAllLastFutures())
-                        .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
-                        .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
+                                    setStopRunTime();
+                                })
+                                .thenCompose(x -> waitAllLastFutures())
+                                .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
+                                .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
             } else {
                 safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected", null);
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -1220,17 +1220,17 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         logEvent("continueActionList", comment);
         lastContinueActionListFuture
                 = waitForPause()
-                .thenApplyAsync("AprsJFrame.continueActionList" + comment,
-                        x -> {
-                            setThreadName();
-                            takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                            assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                        .thenApplyAsync("AprsJFrame.continueActionList" + comment,
+                                x -> {
+                                    setThreadName();
+                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
+                                    assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
-                            }
-                            return false;
-                        }, runProgramService);
+                                    }
+                                    return false;
+                                }, runProgramService);
         return lastContinueActionListFuture.always(() -> logEvent("finished continueActionList", comment));
     }
 
@@ -1461,13 +1461,13 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != crclClientJInternalFrame) {
             lastRunProgramFuture
                     = waitForPause()
-                    .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
-                        try {
-                            return runCrclProgram(program);
-                        } catch (JAXBException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }, runProgramService);
+                            .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
+                                try {
+                                    return runCrclProgram(program);
+                                } catch (JAXBException ex) {
+                                    throw new RuntimeException(ex);
+                                }
+                            }, runProgramService);
             return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
@@ -2907,6 +2907,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
+    private volatile XFuture<?> xf1 = null;
+    private volatile XFuture<?> xf2 = null;
+    private volatile Utils.SwingFuture<Void> xf3 = null;
+
     /**
      * Start the PDDL Executor (aka Actions to CRCL) and create and display the
      * window for displaying its output.
@@ -2931,20 +2935,26 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                             jDesktopPane1.add(execFrame, JLayeredPane.DEFAULT_LAYER);
                             execFrame.getDesktopPane().getDesktopManager().maximizeFrame(execFrame);
                             updateSubPropertiesFiles();
-                            XFuture.runAsync("startActionsToCrclJInternalFrame.loadProperties", () -> {
+                            execFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
+                            if (null != pddlPlannerJInternalFrame) {
+                                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(execFrame);
+                            }
+                            xf1 = XFuture.runAsync("startActionsToCrclJInternalFrame.loadProperties", () -> {
                                 try {
                                     execFrame.loadProperties();
                                 } catch (IOException ex) {
                                     Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                                 }
-                            }, runProgramService).join();
-                            execFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
-                            if (null != pddlPlannerJInternalFrame) {
-                                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(execFrame);
-                            }
-                            if (!alreadySelected) {
-                                setupWindowsMenu();
-                            }
+                            }, runProgramService);
+                            xf2 = xf1
+                                    .thenRun(() -> {
+                                        xf3 = Utils.runOnDispatchThread(() -> {
+                                            if (!alreadySelected) {
+                                                setupWindowsMenu();
+                                            }
+                                        });
+                                    });
+
                         } catch (IOException ex) {
                             Logger.getLogger(AprsJFrame.class
                                     .getName()).log(Level.SEVERE, null, ex);
@@ -4227,6 +4237,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public void createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam) {
 
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        long t0 = System.currentTimeMillis();
+        long t1 = t0;
         try {
             List<String> startingList = this.getLastCreateActionListFromVisionKitToCheckStrings();
             if (goalLearner == null) {
@@ -4245,6 +4257,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 
             boolean allEmptyA[] = new boolean[1];
             List<PddlAction> actions = goalLearner.createActionListFromVision(requiredItems, teachItems, allEmptyA, overrideRotation, newRotationOffsetParam);
+            t1 = System.currentTimeMillis();
             boolean allEmpty = allEmptyA[0];
             if (!goalLearner.isCorrectionMode()) {
                 if (allEmpty || actions == null || actions.isEmpty()) {
@@ -4283,13 +4296,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 logEvent("createActionListFromVision",
                         equal + "\n"
                         + endingList
-                        .stream()
-                        .collect(Collectors.joining("\n")));
+                                .stream()
+                                .collect(Collectors.joining("\n")));
             }
         } catch (IOException ex) {
             Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
         }
+        long t2 = System.currentTimeMillis();
+//        System.out.println("createActionListFromVision: (t1-t0) = " +(t1-t0));
+//        System.out.println("createActionListFromVision: (t2-t0) = " +(t2-t0));
     }
 
     /**
@@ -4973,7 +4989,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         this.lastStartCheckEnabledFuture1 = xf1;
         XFuture<Boolean> xf2
                 = xf1
-                .always(() -> logEvent("finished startCheckEnabled", (System.currentTimeMillis() - t0)));
+                        .always(() -> logEvent("finished startCheckEnabled", (System.currentTimeMillis() - t0)));
         this.lastStartCheckEnabledFuture2 = xf2;
         return xf2;
 //        try {
