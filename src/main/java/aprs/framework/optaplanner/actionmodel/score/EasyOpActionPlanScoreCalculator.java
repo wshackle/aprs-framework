@@ -26,7 +26,8 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
     private int lastScoreNulls = 0;
     private int lastScoreBadNexts = 0;
     private int lastStartLength = 0;
-
+    private int lastScoreRepeats = 0;
+    
     @Override
     public HardSoftLongScore calculateScore(OpActionPlan solution) {
         double costTotal = 0;
@@ -36,6 +37,7 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
         int startlength = 0;
         int badNexts = 0;
         int skippedKitTrayAction = 0;
+        int repeats = 0;
         List<OpAction> actionsList = solution.getActions();
         double accelleration = solution.getAccelleration();
         double maxSpeed = solution.getMaxSpeed();
@@ -52,9 +54,26 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
             }
             OpAction startAction = solution.findStartAction();
 
-            Set<String> visited = new HashSet<>();
+            Set<String> orderedVisited = new HashSet<>();
             List<OpAction> orderedActionsList = solution.getOrderedList(false);
+            for (int i = 0; i < orderedActionsList.size(); i++) {
+                OpAction orderedAct = orderedActionsList.get(i);
+                String orderedActName = orderedAct.getName();
+                if(orderedVisited.contains(orderedActName)) {
+                    repeats++;
+                }
+                orderedVisited.add(orderedActName);
+            }
+            Set<String> effectiveOrderedVisited = new HashSet<>();
             List<OpAction> effectiveOrderedActionsList = solution.getEffectiveOrderedList(false);
+            for (int i = 0; i < effectiveOrderedActionsList.size(); i++) {
+                OpAction orderedAct = effectiveOrderedActionsList.get(i);
+                String orderedActName = orderedAct.getName();
+                if(effectiveOrderedVisited.contains(orderedActName)) {
+                    repeats++;
+                }
+                effectiveOrderedVisited.add(orderedActName);
+            }
             for(OpAction act : effectiveOrderedActionsList) {
                 costTotal +=  act.cost(solution);
             }
@@ -62,8 +81,9 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
             lastScoreNulls = nulls;
             lastScoreBadNexts = badNexts;
             lastStartLength = startlength;
+            lastScoreRepeats = repeats;
 //            assert (startlength == actionsList.size()) :"startLength != actionsList.size()";
-            long hardScoreLong = -Math.abs(orderedActionsList.size() - actionsList.size()) - Math.abs(1 - ends) - 2 * nulls - badNexts;
+            long hardScoreLong = -Math.abs(orderedActionsList.size() - actionsList.size()) - Math.abs(1 - ends) - 2 * nulls - badNexts - repeats;
             long softScoreLong = (long) (-1000.0 * costTotal);
             HardSoftLongScore score = HardSoftLongScore.valueOf(hardScoreLong, softScoreLong);
             return score;

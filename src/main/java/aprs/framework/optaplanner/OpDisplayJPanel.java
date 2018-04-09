@@ -60,6 +60,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -144,7 +145,8 @@ public class OpDisplayJPanel extends JPanel {
 
     };
 
-    @MonotonicNonNull private JPopupMenu popupMenu = null;
+    @MonotonicNonNull
+    private JPopupMenu popupMenu = null;
 
     public void replan() {
         List<OpAction> origActions = opActionPlan.getActions();
@@ -194,7 +196,8 @@ public class OpDisplayJPanel extends JPanel {
         this.solver = solver;
     }
 
-    @Nullable SolverFactory<OpActionPlan> solverFactory = null;
+    @Nullable
+    SolverFactory<OpActionPlan> solverFactory = null;
 
     Solver<OpActionPlan> solver = null;
 
@@ -219,22 +222,30 @@ public class OpDisplayJPanel extends JPanel {
             repaint();
         });
         newPopupMenu.add(replanMenuItem);
-        for(ActionListener l : showSkippableNextMenuItem.getActionListeners()) {
-            showSkippableNextMenuItem.removeActionListener(l);
-        }
+        clearActionListeners(showSkippableNextMenuItem);
         showSkippableNextMenuItem.addActionListener((ActionEvent evt) -> {
             newPopupMenu.setVisible(false);
             repaint();
         });
         newPopupMenu.add(showSkippableNextMenuItem);
-        for(ActionListener l : showPossibleNextMenuItem.getActionListeners()) {
-            showPossibleNextMenuItem.removeActionListener(l);
-        }
+        clearActionListeners(showPossibleNextMenuItem);
         showPossibleNextMenuItem.addActionListener((ActionEvent evt) -> {
             newPopupMenu.setVisible(false);
             repaint();
         });
         newPopupMenu.add(showPossibleNextMenuItem);
+
+        clearActionListeners(showFakeActionsMenuItem);
+        showFakeActionsMenuItem.addActionListener((ActionEvent evt) -> {
+            newPopupMenu.setVisible(false);
+            if(showFakeActionsMenuItem.isSelected()) {
+                setKeyWidth(150);
+            } else {
+                setKeyWidth(110);
+            }
+            repaint();
+        });
+        newPopupMenu.add(showFakeActionsMenuItem);
         JMenuItem neverMindMenuItem = new JMenuItem("Never Mind");
         neverMindMenuItem.addActionListener((ActionEvent evt) -> {
             newPopupMenu.setVisible(false);
@@ -242,6 +253,12 @@ public class OpDisplayJPanel extends JPanel {
         });
         newPopupMenu.add(neverMindMenuItem);
         return newPopupMenu;
+    }
+
+    private void clearActionListeners(JCheckBoxMenuItem cbmi) {
+        for (ActionListener l : cbmi.getActionListeners()) {
+            cbmi.removeActionListener(l);
+        }
     }
 
     private void checkPopup(MouseEvent e) {
@@ -266,6 +283,10 @@ public class OpDisplayJPanel extends JPanel {
 
     @SuppressWarnings({"nullness", "initialization"})
     private void privateInit( 
+         
+         
+         
+         
          
          
          
@@ -342,14 +363,16 @@ public class OpDisplayJPanel extends JPanel {
         return partsColorsMap.computeIfAbsent(partName, (k) -> colors[partsColorsMap.size() % colors.length]);
     }
 
-    @Nullable private OpActionPlan opActionPlan;
+    @Nullable
+    private OpActionPlan opActionPlan;
 
     /**
      * Get the value of opActionPlan
      *
      * @return the value of opActionPlan
      */
-    @Nullable public OpActionPlan getOpActionPlan() {
+    @Nullable
+    public OpActionPlan getOpActionPlan() {
         return opActionPlan;
     }
 
@@ -391,8 +414,8 @@ public class OpDisplayJPanel extends JPanel {
         }
         MutableMap<OpActionType, Integer> typeCountMap
                 = Lists.adapt(actionsList)
-                        .countBy(OpAction::getActionType)
-                        .toMapOfItemToCount();
+                .countBy(OpAction::getActionType)
+                .toMapOfItemToCount();
 
         Dimension dim = this.getSize();
         if (dim.width < 1 || dim.height < 1) {
@@ -434,13 +457,19 @@ public class OpDisplayJPanel extends JPanel {
                         continue;
                     }
                 }
-                if (type == FAKE_DROPOFF || type == FAKE_PICKUP) {
-                    continue;
+                if (!showFakeActionsMenuItem.isSelected()) {
+                    if (type == FAKE_DROPOFF || type == FAKE_PICKUP) {
+                        continue;
+                    }
                 }
                 int x = 10;
                 paintActionSymbol(g2d, x, keyY, type, false);
                 g2d.drawString(type.toString(), 40, keyY);
-                g2d.drawString(": " + typeCount, 100, keyY);
+                if(showFakeActionsMenuItem.isSelected()) {
+                    g2d.drawString(": " + typeCount, 140, keyY);
+                } else {
+                    g2d.drawString(": " + typeCount, 100, keyY);
+                }
                 keyY += 25;
             }
             int x = 10;
@@ -452,6 +481,24 @@ public class OpDisplayJPanel extends JPanel {
 
     private JCheckBoxMenuItem showPossibleNextMenuItem = new JCheckBoxMenuItem("Show Possible Next(s)", false);
     private JCheckBoxMenuItem showSkippableNextMenuItem = new JCheckBoxMenuItem("Show Skippable Next(s)", false);
+    private JCheckBoxMenuItem showFakeActionsMenuItem = new JCheckBoxMenuItem("Show Fake Actions(s)", false);
+    private final ConcurrentHashMap<String, Point2D.Double> fakeLocationsMap = new ConcurrentHashMap<>();
+    private final Random locRandom = new Random();
+
+    private Point2D.Double getActionLocation(OpActionInterface act, double minX, double maxX, double minY, double maxY) {
+        if (!showFakeActionsMenuItem.isSelected()) {
+            return act.getLocation();
+        }
+        if (act.getActionType() != FAKE_DROPOFF && act.getActionType() != FAKE_PICKUP) {
+            return act.getLocation();
+        }
+        return fakeLocationsMap.computeIfAbsent(act.getName(), (String key)
+                -> {
+            return new Point2D.Double(
+                    locRandom.nextDouble() * (maxX - minX) + minX,
+                    locRandom.nextDouble() * (maxY - minY) + minY);
+        });
+    }
 
     private void paintOpActionPlan(OpActionPlan plan, Dimension dim, List<OpAction> actionsList, Graphics2D g2d) {
         OpEndAction endAction = plan.getEndAction();
@@ -477,8 +524,10 @@ public class OpDisplayJPanel extends JPanel {
                 }
             }
             for (OpAction action : actions) {
-                if (action.getActionType() == FAKE_DROPOFF || action.getActionType() == FAKE_PICKUP) {
-                    continue;
+                if (!showFakeActionsMenuItem.isSelected()) {
+                    if (action.getActionType() == FAKE_DROPOFF || action.getActionType() == FAKE_PICKUP) {
+                        continue;
+                    }
                 }
                 Point2D.Double loc = action.getLocation();
                 if (minX > loc.x) {
@@ -508,16 +557,16 @@ public class OpDisplayJPanel extends JPanel {
             Set<OpAction> numLabeledItems = new HashSet<>();
             for (OpAction actionToPaintBackground : actionsList) {
                 OpActionType actionType = actionToPaintBackground.getActionType();
-                Point2D.Double location = actionToPaintBackground.getLocation();
+                Point2D.Double location = getActionLocation(actionToPaintBackground, minX, maxX, minY, maxY);
                 int x = keyWidth + (int) ((0.9 * (location.x - minX) / xdiff) * w + 0.05 * w);
                 int y = ly + (int) ((0.9 * (location.y - minY) / ydiff) * h + 0.05 * h);
                 if (showSkippableNextMenuItem.isSelected()) {
                     OpActionInterface nextAction = actionToPaintBackground.getNext();
-                    if (actionType == PICKUP || actionType == DROPOFF || actionType == START) {
+                    if (actionType == PICKUP || actionType == DROPOFF || actionType == START || showFakeActionsMenuItem.isSelected()) {
                         if (null != nextAction) {
                             OpActionType nextActionType = nextAction.getActionType();
-                            if (nextActionType == PICKUP || nextActionType == DROPOFF || nextActionType == END) {
-                                Point2D.Double nextLocation = nextAction.getLocation();
+                            if (nextActionType == PICKUP || nextActionType == DROPOFF || nextActionType == END || showFakeActionsMenuItem.isSelected()) {
+                                Point2D.Double nextLocation = getActionLocation(nextAction, minX, maxX, minY, maxY);
                                 int nx = keyWidth + (int) ((0.9 * (nextLocation.x - minX) / xdiff) * w + 0.05 * w);
                                 int ny = ly + (int) ((0.9 * (nextLocation.y - minY) / ydiff) * h + 0.05 * h);
                                 double l = Math.hypot(nx - x, ny - y);
@@ -542,8 +591,8 @@ public class OpDisplayJPanel extends JPanel {
                         for (OpActionInterface possibleNextAction : actionToPaintBackground.getPossibleNextActions()) {
                             if (null != possibleNextAction) {
                                 OpActionType nextActionType = possibleNextAction.getActionType();
-                                if (nextActionType == PICKUP || nextActionType == DROPOFF || nextActionType == END) {
-                                    Point2D.Double nextLocation = possibleNextAction.getLocation();
+                                if (nextActionType == PICKUP || nextActionType == DROPOFF || nextActionType == END || showFakeActionsMenuItem.isSelected()) {
+                                    Point2D.Double nextLocation = getActionLocation(possibleNextAction, minX, maxX, minY, maxY);
                                     int nx = keyWidth + (int) ((0.9 * (nextLocation.x - minX) / xdiff) * w + 0.05 * w);
                                     int ny = ly + (int) ((0.9 * (nextLocation.y - minY) / ydiff) * h + 0.05 * h);
                                     double l = Math.hypot(nx - x, ny - y);
@@ -591,8 +640,9 @@ public class OpDisplayJPanel extends JPanel {
                     action = action.getNext();
                     continue;
                 }
-                int x = keyWidth + (int) ((0.9 * (action.getLocation().x - minX) / xdiff) * w + 0.05 * w);
-                int y = ly + (int) ((0.9 * (action.getLocation().y - minY) / ydiff) * h + 0.05 * h);
+                Point2D.Double location = getActionLocation(action, minX, maxX, minY, maxY);
+                int x = keyWidth + (int) ((0.9 * (location.x - minX) / xdiff) * w + 0.05 * w);
+                int y = ly + (int) ((0.9 * (location.y - minY) / ydiff) * h + 0.05 * h);
                 double l = Math.hypot(x - prevx, y - prevy);
                 double dx = 25 * (x - prevx) / l;
                 double dy = 25 * (y - prevy) / l;
@@ -714,7 +764,8 @@ public class OpDisplayJPanel extends JPanel {
         g2d.setTransform(origTransform);
     }
 
-    @Nullable private Font boldFont = null;
+    @Nullable
+    private Font boldFont = null;
 
     private void paintActionSymbol(Graphics2D g2d, int x, int y, OpActionType type, boolean required) {
         String typeLetterString = type.name().substring(0, 1);
@@ -787,14 +838,16 @@ public class OpDisplayJPanel extends JPanel {
         this.carryStroke = carryStroke;
     }
 
-    @Nullable private String label;
+    @Nullable
+    private String label;
 
     /**
      * Get the value of label
      *
      * @return the value of label
      */
-    @Nullable public String getLabel() {
+    @Nullable
+    public String getLabel() {
         return label;
     }
 
@@ -808,14 +861,16 @@ public class OpDisplayJPanel extends JPanel {
         this.repaint();
     }
 
-    @MonotonicNonNull private Point labelPos;
+    @MonotonicNonNull
+    private Point labelPos;
 
     /**
      * Get the value of labelPos
      *
      * @return the value of labelPos
      */
-    @Nullable public Point getLabelPos() {
+    @Nullable
+    public Point getLabelPos() {
         return labelPos;
     }
 
@@ -828,14 +883,16 @@ public class OpDisplayJPanel extends JPanel {
         this.labelPos = labelPos;
     }
 
-    @Nullable private Font labelFont;
+    @Nullable
+    private Font labelFont;
 
     /**
      * Get the value of labelFont
      *
      * @return the value of labelFont
      */
-    @Nullable public Font getLabelFont() {
+    @Nullable
+    public Font getLabelFont() {
         return labelFont;
     }
 
@@ -866,11 +923,14 @@ public class OpDisplayJPanel extends JPanel {
         }
         List<OpAction> closeActions = new ArrayList<>();
         for (OpAction actionToCheck : actonsList) {
-            if (actionToCheck.getActionType() == FAKE_DROPOFF) {
-                continue;
+            if (!showFakeActionsMenuItem.isSelected()) {
+                if (actionToCheck.getActionType() == FAKE_DROPOFF || actionToCheck.getActionType() == FAKE_PICKUP) {
+                    continue;
+                }
             }
-            int actionX = keyWidth + (int) ((0.9 * (actionToCheck.getLocation().x - minX) / xdiff) * w + 0.05 * w);
-            int actionY = ly + (int) ((0.9 * (actionToCheck.getLocation().y - minY) / ydiff) * h + 0.05 * h);
+            Point2D.Double location = getActionLocation(actionToCheck, minX, maxX, minY, maxY);
+            int actionX = keyWidth + (int) ((0.9 * (location.x - minX) / xdiff) * w + 0.05 * w);
+            int actionY = ly + (int) ((0.9 * (location.y - minY) / ydiff) * h + 0.05 * h);
             if (Math.abs(actionX - x) < 30 && Math.abs(actionY - y) < 30) {
                 closeActions.add(actionToCheck);
             }
@@ -890,8 +950,8 @@ public class OpDisplayJPanel extends JPanel {
         }
         List<String> closeActionNames
                 = closeActions.stream()
-                        .map(OpAction::getName)
-                        .collect(Collectors.toList());
+                .map(OpAction::getName)
+                .collect(Collectors.toList());
         this.setToolTipText(closeActionNames.toString());
     }
 
