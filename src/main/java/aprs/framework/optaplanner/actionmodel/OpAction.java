@@ -8,6 +8,7 @@ package aprs.framework.optaplanner.actionmodel;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.DROPOFF;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_PICKUP;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
 import aprs.framework.optaplanner.actionmodel.score.DistToTime;
@@ -31,12 +32,33 @@ public class OpAction implements OpActionInterface {
 
     private final static AtomicInteger idCounter = new AtomicInteger();
 
-    public OpAction(String name, double x, double y, OpActionType actionType, String partType) {
+    public OpAction(String name, double x, double y, OpActionType actionType, String partType, boolean required) {
         this.name = name;
         this.location = new Point2D.Double(x, y);
         this.actionType = actionType;
         this.partType = partType;
         this.id = idCounter.incrementAndGet() + 1;
+        this.required = required;
+        switch (actionType) {
+            case PICKUP:
+            case DROPOFF:
+                if (name.contains("_in_pt_") || name.endsWith("in_pt")) {
+                    this.trayType = "PT";
+                } else if (name.contains("_in_kit_")) {
+                    this.trayType = "KT";
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    private final boolean required;
+
+    @Override
+    public boolean isRequired() {
+        return required;
     }
 
     private String name;
@@ -109,24 +131,35 @@ public class OpAction implements OpActionInterface {
     }
 
     public void setNext(OpActionInterface next) {
-//        if(!checkNextAction(next)) {
-//            throw new IllegalStateException("this="+name+" Settting next for "+this+" to "+next+" : possibles="+getPossibleNextActions());
-//        }
+        if (!checkNextAction(next)) {
+            throw new IllegalStateException("this=" + name + " Settting next for " + this + " to " + next + " : possibles=" + getPossibleNextActions());
+        }
         this.next = next;
+    }
+
+    public boolean actionRequired() {
+        return Objects.equals(trayType, "KT");
     }
 
     public boolean checkNextAction(OpActionInterface possibleNextAction) {
         switch (actionType) {
             case START:
                 return (possibleNextAction.getActionType() == PICKUP);
-            case DROPOFF:
             case FAKE_DROPOFF:
+            case DROPOFF:
                 return (possibleNextAction.getActionType() == PICKUP)
+                        || (possibleNextAction.getActionType() == FAKE_PICKUP)
                         || possibleNextAction.getActionType() == END;
 
             case PICKUP:
                 return (Objects.equals(partType, possibleNextAction.getPartType())
-                        && (possibleNextAction.getActionType() == DROPOFF || possibleNextAction.getActionType() == FAKE_DROPOFF));
+                        && (possibleNextAction.getActionType() == DROPOFF)
+                        || ((!this.actionRequired() && possibleNextAction.getActionType() == FAKE_DROPOFF)));
+
+            case FAKE_PICKUP:
+                return (Objects.equals(partType, possibleNextAction.getPartType())
+                        && ((!possibleNextAction.isRequired() && possibleNextAction.getActionType() == DROPOFF)
+                        || possibleNextAction.getActionType() == FAKE_DROPOFF));
 
             case END:
             default:
@@ -150,12 +183,44 @@ public class OpAction implements OpActionInterface {
         }
     }
 
-    @Nullable public OpActionInterface effectiveNext() {
+    @Nullable private String trayType = null;
+
+    @Nullable @Override
+    public String getTrayType() {
+        return this.trayType;
+    }
+
+    public void setTrayType(String trayType) {
+        this.trayType = trayType;
+    }
+
+    @Override
+    public boolean skipNext() {
+        if (null == next) {
+            return false;
+        }
+        if (this.actionType == FAKE_PICKUP) {
+            return true;
+        }
+        if (this.actionType != PICKUP) {
+            return false;
+        }
+        if (next.getActionType() == FAKE_DROPOFF) {
+            return true;
+        }
+        return !this.isRequired() && !next.isRequired();
+    }
+
+    @Override @Nullable
+    public OpActionInterface effectiveNext(boolean quiet) {
         if (getActionType() == FAKE_DROPOFF) {
-            return null;
+            return next;
         }
         if (null == next) {
-            return null;
+            if (quiet) {
+                return null;
+            }
+            throw new IllegalStateException("this=" + name + ", next=" + next + " next.getNext() ==null");
         }
 //        List<OpActionInterface> nxts = new ArrayList<>();
         switch (next.getActionType()) {
@@ -163,14 +228,16 @@ public class OpAction implements OpActionInterface {
                 return null;
 
             case PICKUP:
+            case FAKE_PICKUP:
                 OpActionInterface nextNext = next.getNext();
                 if (null == nextNext) {
+                    if (quiet) {
+                        return next;
+                    }
                     throw new IllegalStateException("this=" + name + ", next=" + next + " next.getNext() ==null");
                 }
-                if (nextNext.getActionType() == FAKE_DROPOFF) {
-                    if (null == next) {
-                        return null;
-                    }
+                if (next.skipNext()) {
+
 //                    nxts.add(next);
 //                    nxts.add(nextNext);
                     OpActionInterface nxt2 = nextNext.getNext();
@@ -190,7 +257,7 @@ public class OpAction implements OpActionInterface {
                     }
 //                    nxts.add(nxt2Next);
                     int count = 0;
-                    while (nxt2.getActionType() == PICKUP && nxt2Next.getActionType() == FAKE_DROPOFF) {
+                    while (nxt2.skipNext()) {
                         count++;
                         if (count > maxNextEffectiveCount) {
                             throw new IllegalStateException("this=" + name + " count > maxCount");//,nxts=" + nxts);
@@ -203,7 +270,7 @@ public class OpAction implements OpActionInterface {
 //                        nxts.add(nxt2);
                         nxt2Next = nxt2.getNext();
                         if (null == nxt2Next) {
-                            throw new IllegalStateException("this=" + name + " nxt2.getNext() ==null");
+                            throw new IllegalStateException("this=" + name + " nxt2="+nxt2+" nxt2.getNext() ==null");
                         }
 //                        nxts.add(nxt2Next);
                         if (nxt2 == next) {
@@ -220,35 +287,53 @@ public class OpAction implements OpActionInterface {
     }
 
     public double cost(OpActionPlan plan) {
-        if(plan.isUseDistForCost()) {
-            return distance();
-        }
-        if(this.actionType == START) {
-            return  DistToTime.distToTime(this.distance(), plan.getAccelleration(), plan.getStartEndMaxSpeed());
-        }
-        OpActionInterface effNext = effectiveNext();
-        if (null == effNext) {
+        if (actionType == FAKE_PICKUP || actionType == FAKE_DROPOFF || next.getActionType() == FAKE_DROPOFF) {
             return 0;
         }
-        if(effNext.getActionType() == END) {
-            return  DistToTime.distToTime(this.distance(), plan.getAccelleration(), plan.getStartEndMaxSpeed());
+        if (this.skipNext()) {
+            return 0;
         }
-       return  DistToTime.distToTime(this.distance(), plan.getAccelleration(), plan.getMaxSpeed());
+        if (plan.isUseDistForCost()) {
+            return distance(false);
+        }
+        if (this.actionType == START) {
+            return DistToTime.distToTime(this.distance(false), plan.getAccelleration(), plan.getStartEndMaxSpeed());
+        }
+        OpActionInterface effNext = effectiveNext(false);
+        if (null == effNext) {
+            return Double.POSITIVE_INFINITY;
+        }
+        if (effNext.getActionType() == END) {
+            return DistToTime.distToTime(this.distance(false), plan.getAccelleration(), plan.getStartEndMaxSpeed());
+        }
+        return DistToTime.distToTime(this.distance(false), plan.getAccelleration(), plan.getMaxSpeed());
     }
-    
-    public double distance() {
+
+    public double distance(boolean quiet) {
         if (null == next) {
+            if (quiet) {
+                return Double.POSITIVE_INFINITY;
+            }
             throw new IllegalStateException("this=" + name + " next==null");
         }
         if (null == next.getLocation()) {
+            if (quiet) {
+                return Double.POSITIVE_INFINITY;
+            }
             throw new IllegalStateException("this=" + name + " next.getLocation()==null");
         }
         if (null == location) {
+            if (quiet) {
+                return Double.POSITIVE_INFINITY;
+            }
             throw new IllegalStateException("this=" + name + " location ==null");
         }
-        OpActionInterface effNext = effectiveNext();
+        OpActionInterface effNext = effectiveNext(quiet);
         if (null == effNext) {
-            return 0;
+            if (quiet) {
+                return Double.POSITIVE_INFINITY;
+            }
+            throw new IllegalStateException("this=" + name + " effNext == null, next =" + next);
         }
         return effNext.getLocation().distance(location);
     }
@@ -256,7 +341,11 @@ public class OpAction implements OpActionInterface {
     @Override
     public String toString() {
         String effNextString = "";
-        OpActionInterface effNext = effectiveNext();
+        OpActionInterface effNext = null;
+        try {
+            effNext = effectiveNext(true);
+        } catch (Exception e) {
+        }
         if (effNext != next && null != effNext) {
             effNextString = "(effectiveNext=" + effNext.getName() + ")";
         }
@@ -273,7 +362,12 @@ public class OpAction implements OpActionInterface {
             OpActionType nextActionType = localNext.getActionType();
             OpActionType actionType = getActionType();
             if (null != localNext.getNext() && actionType != FAKE_DROPOFF && nextActionType != FAKE_DROPOFF) {
-                return name + infoString + " -> " + ((OpAction) localNext).name + "(cost=" + String.format("%.3f", distance()) + ")";
+                double dist = Double.POSITIVE_INFINITY;
+                try {
+                    dist = distance(true);
+                } catch (Exception e) {
+                }
+                return name + infoString + " -> " + ((OpAction) localNext).name + "(cost=" + String.format("%.3f", dist) + ")";
             } else {
                 return name + infoString + " -> " + ((OpAction) localNext).name;
             }
@@ -325,6 +419,28 @@ public class OpAction implements OpActionInterface {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public int getPriority(boolean prevRequired) {
+        switch (actionType) {
+            case START:
+                return 0;
+
+            case END:
+                return 10;
+
+            case PICKUP:
+            case DROPOFF:
+                return required ? 1 : 2;
+
+            case FAKE_DROPOFF:
+            case FAKE_PICKUP:
+                return 3;
+
+            default:
+                return 3;
+        }
     }
 
 }

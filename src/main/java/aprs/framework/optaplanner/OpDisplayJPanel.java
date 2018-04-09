@@ -25,13 +25,16 @@ package aprs.framework.optaplanner;
 import aprs.framework.optaplanner.actionmodel.OpAction;
 import aprs.framework.optaplanner.actionmodel.OpActionInterface;
 import aprs.framework.optaplanner.actionmodel.OpActionPlan;
+import aprs.framework.optaplanner.actionmodel.OpActionPlanCloner;
 import aprs.framework.optaplanner.actionmodel.OpActionType;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.DROPOFF;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_PICKUP;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
 import aprs.framework.optaplanner.actionmodel.OpEndAction;
+import aprs.framework.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -60,6 +63,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
@@ -70,6 +74,9 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.factory.Lists;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
+import org.optaplanner.core.api.solver.Solver;
+import org.optaplanner.core.api.solver.SolverFactory;
 
 /**
  * Class for displaying either a solved or initial OpActionPlan, plotting the 2D
@@ -86,10 +93,10 @@ public class OpDisplayJPanel extends JPanel {
      * @param plan plan to show
      * @param title title of new window
      */
-    public static void showPlan(OpActionPlan plan, String title) {
+    public static void showPlan(OpActionPlan plan, String title, int defaultCloseOperation) {
         javax.swing.SwingUtilities.invokeLater(() -> {
             JFrame frm = new JFrame();
-            frm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frm.setDefaultCloseOperation(defaultCloseOperation);
             frm.add(new OpDisplayJPanel(plan));
             frm.pack();
             frm.setSize(new Dimension(600, 600));
@@ -104,7 +111,7 @@ public class OpDisplayJPanel extends JPanel {
      * @param args not used
      */
     public static void main(String[] args) {
-        showPlan(createTestInitPlan(), "testInit");
+        showPlan(createTestInitPlan(), "testInit", JFrame.EXIT_ON_CLOSE);
     }
 
     private final MouseMotionListener mml = new MouseMotionListener() {
@@ -139,25 +146,101 @@ public class OpDisplayJPanel extends JPanel {
 
     @MonotonicNonNull private JPopupMenu popupMenu = null;
 
+    public void replan() {
+        List<OpAction> origActions = opActionPlan.getActions();
+        OpActionPlan newOpActionPlan = new OpActionPlanCloner().cloneSolution(opActionPlan);
+        List<OpAction> newActions = new ArrayList<>();
+        for (OpAction act : origActions) {
+            switch (act.getActionType()) {
+                case PICKUP:
+                case DROPOFF:
+                case START:
+                    newActions.add(new OpAction(act.getName(), act.getLocation().x, act.getLocation().y, act.getActionType(), act.getPartType(), act.isRequired()));
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        Collections.shuffle(newActions);
+        newOpActionPlan.setActions(newActions);
+        newOpActionPlan.initNextActions();
+        if (null == solver) {
+            if (null == solverFactory) {
+                solverFactory = SolverFactory.createFromXmlResource(
+                        "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
+            }
+            solver = solverFactory.buildSolver();
+        }
+        OpActionPlan newSolution = solver.solve(newOpActionPlan);
+        EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+        HardSoftLongScore score = calculator.calculateScore(newSolution);
+        showPlan(newSolution, "Replanned:" + score.toShortString(), JFrame.DISPOSE_ON_CLOSE);
+    }
+
+    public SolverFactory<OpActionPlan> getSolverFactory() {
+        return solverFactory;
+    }
+
+    public void setSolverFactory(SolverFactory<OpActionPlan> solverFactory) {
+        this.solverFactory = solverFactory;
+    }
+
+    public Solver<OpActionPlan> getSolver() {
+        return solver;
+    }
+
+    public void setSolver(Solver<OpActionPlan> solver) {
+        this.solver = solver;
+    }
+
+    @Nullable SolverFactory<OpActionPlan> solverFactory = null;
+
+    Solver<OpActionPlan> solver = null;
+
     private JPopupMenu createPopupMenu() {
-        JPopupMenu newPopupMenu = new JPopupMenu("Popup or Plan Display "+label);
+        JPopupMenu newPopupMenu = new JPopupMenu("Popup or Plan Display " + label);
         JMenuItem newWindowMenuItem = new JMenuItem("New Window");
         newWindowMenuItem.addActionListener((ActionEvent evt) -> {
             if (null != opActionPlan) {
-                if(null != label) {
-                    showPlan(opActionPlan, label);
+                if (null != label) {
+                    showPlan(opActionPlan, label, JFrame.DISPOSE_ON_CLOSE);
                 } else {
-                    showPlan(opActionPlan,"");
+                    showPlan(opActionPlan, "", JFrame.DISPOSE_ON_CLOSE);
                 }
             }
             newPopupMenu.setVisible(false);
         });
         newPopupMenu.add(newWindowMenuItem);
-        JMenuItem neverMindeMenuItem = new JMenuItem("Never Mind");
-        neverMindeMenuItem.addActionListener((ActionEvent evt) -> {
+        JMenuItem replanMenuItem = new JMenuItem("Replan");
+        replanMenuItem.addActionListener((ActionEvent evt) -> {
+            replan();
             newPopupMenu.setVisible(false);
+            repaint();
         });
-        newPopupMenu.add(neverMindeMenuItem);
+        newPopupMenu.add(replanMenuItem);
+        for(ActionListener l : showSkippableNextMenuItem.getActionListeners()) {
+            showSkippableNextMenuItem.removeActionListener(l);
+        }
+        showSkippableNextMenuItem.addActionListener((ActionEvent evt) -> {
+            newPopupMenu.setVisible(false);
+            repaint();
+        });
+        newPopupMenu.add(showSkippableNextMenuItem);
+        for(ActionListener l : showPossibleNextMenuItem.getActionListeners()) {
+            showPossibleNextMenuItem.removeActionListener(l);
+        }
+        showPossibleNextMenuItem.addActionListener((ActionEvent evt) -> {
+            newPopupMenu.setVisible(false);
+            repaint();
+        });
+        newPopupMenu.add(showPossibleNextMenuItem);
+        JMenuItem neverMindMenuItem = new JMenuItem("Never Mind");
+        neverMindMenuItem.addActionListener((ActionEvent evt) -> {
+            newPopupMenu.setVisible(false);
+            repaint();
+        });
+        newPopupMenu.add(neverMindMenuItem);
         return newPopupMenu;
     }
 
@@ -168,7 +251,7 @@ public class OpDisplayJPanel extends JPanel {
             }
             popupMenu.setLocation(e.getXOnScreen(), e.getYOnScreen());
             popupMenu.setVisible(true);
-        } 
+        }
     }
 
     /**
@@ -182,7 +265,20 @@ public class OpDisplayJPanel extends JPanel {
     }
 
     @SuppressWarnings({"nullness", "initialization"})
-    private void privateInit(@UnknownInitialization OpDisplayJPanel this) {
+    private void privateInit( 
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+        @UnknownInitialization OpDisplayJPanel this) {
         super.setBackground(Color.white);
         super.addMouseMotionListener(mml);
         super.addMouseListener(mouseListener);
@@ -201,19 +297,19 @@ public class OpDisplayJPanel extends JPanel {
 
     static private OpActionPlan createTestInitPlan() {
         List<OpAction> initList = Arrays.asList(
-                new OpAction("pickup A3", 5.1, 0.2, PICKUP, "A"),
-                new OpAction("dropoff A3", 6.3, 0.4, DROPOFF, "A"),
-                new OpAction("Start", 0, 0, START, "START"),
-                new OpAction("pickup A1", 1.5, 0.6, PICKUP, "A"),
-                new OpAction("dropoff A1", 2.7, 0.8, DROPOFF, "A"),
-                new OpAction("pickup A2", 3.9, 0.1, PICKUP, "A"),
-                new OpAction("dropoff A2", 4.2, 0.3, DROPOFF, "A"),
-                new OpAction("pickup B3", 5.4, 1.5, PICKUP, "B"),
-                new OpAction("dropoff B3", 6.6, 1.7, DROPOFF, "B"),
-                new OpAction("pickup B1", 1.8, 1.9, PICKUP, "B"),
-                new OpAction("dropoff B1", 2.1, 1.2, DROPOFF, "B"),
-                new OpAction("pickup B2", 3.3, 1.4, PICKUP, "B"),
-                new OpAction("dropoff B2", 4.5, 1.6, DROPOFF, "B")
+                new OpAction("pickup A3", 5.1, 0.2, PICKUP, "A", true),
+                new OpAction("dropoff A3", 6.3, 0.4, DROPOFF, "A", true),
+                new OpAction("Start", 0, 0, START, "START", true),
+                new OpAction("pickup A1", 1.5, 0.6, PICKUP, "A", true),
+                new OpAction("dropoff A1", 2.7, 0.8, DROPOFF, "A", true),
+                new OpAction("pickup A2", 3.9, 0.1, PICKUP, "A", true),
+                new OpAction("dropoff A2", 4.2, 0.3, DROPOFF, "A", true),
+                new OpAction("pickup B3", 5.4, 1.5, PICKUP, "B", true),
+                new OpAction("dropoff B3", 6.6, 1.7, DROPOFF, "B", true),
+                new OpAction("pickup B1", 1.8, 1.9, PICKUP, "B", true),
+                new OpAction("dropoff B1", 2.1, 1.2, DROPOFF, "B", true),
+                new OpAction("pickup B2", 3.3, 1.4, PICKUP, "B", true),
+                new OpAction("dropoff B2", 4.5, 1.6, DROPOFF, "B", true)
         );
         OpActionPlan ap = new OpActionPlan();
         ap.setActions(initList);
@@ -338,17 +434,24 @@ public class OpDisplayJPanel extends JPanel {
                         continue;
                     }
                 }
-                if (type == FAKE_DROPOFF) {
+                if (type == FAKE_DROPOFF || type == FAKE_PICKUP) {
                     continue;
                 }
                 int x = 10;
-                paintActionSymbol(g2d, x, keyY, type);
+                paintActionSymbol(g2d, x, keyY, type, false);
                 g2d.drawString(type.toString(), 40, keyY);
                 g2d.drawString(": " + typeCount, 100, keyY);
                 keyY += 25;
             }
+            int x = 10;
+            paintActionSymbol(g2d, x, keyY, " ", true);
+            g2d.drawString("required", 40, keyY);
+            g2d.drawString(": " + opActionPlan.getActions().stream().filter(OpAction::isRequired).count(), 100, keyY);
         }
     }
+
+    private JCheckBoxMenuItem showPossibleNextMenuItem = new JCheckBoxMenuItem("Show Possible Next(s)", false);
+    private JCheckBoxMenuItem showSkippableNextMenuItem = new JCheckBoxMenuItem("Show Skippable Next(s)", false);
 
     private void paintOpActionPlan(OpActionPlan plan, Dimension dim, List<OpAction> actionsList, Graphics2D g2d) {
         OpEndAction endAction = plan.getEndAction();
@@ -374,6 +477,9 @@ public class OpDisplayJPanel extends JPanel {
                 }
             }
             for (OpAction action : actions) {
+                if (action.getActionType() == FAKE_DROPOFF || action.getActionType() == FAKE_PICKUP) {
+                    continue;
+                }
                 Point2D.Double loc = action.getLocation();
                 if (minX > loc.x) {
                     minX = loc.x;
@@ -391,10 +497,6 @@ public class OpDisplayJPanel extends JPanel {
             xdiff = (maxX - minX);
             ydiff = (maxY - minY);
 
-            OpActionInterface prevAction = null;
-            OpActionInterface action = plan.findStartAction();
-            int prevx = -1;
-            int prevy = -1;
             int ly = 0;
             int h = dim.height;
             int w = keyVisible ? (dim.width - keyWidth) : dim.width;
@@ -402,11 +504,70 @@ public class OpDisplayJPanel extends JPanel {
                 ly = labelPos.y;
                 h = dim.height - ly;
             }
+
             Set<OpAction> numLabeledItems = new HashSet<>();
             for (OpAction actionToPaintBackground : actionsList) {
-                int x = keyWidth + (int) ((0.9 * (actionToPaintBackground.getLocation().x - minX) / xdiff) * w + 0.05 * w);
-                int y = ly + (int) ((0.9 * (actionToPaintBackground.getLocation().y - minY) / ydiff) * h + 0.05 * h);
+                OpActionType actionType = actionToPaintBackground.getActionType();
+                Point2D.Double location = actionToPaintBackground.getLocation();
+                int x = keyWidth + (int) ((0.9 * (location.x - minX) / xdiff) * w + 0.05 * w);
+                int y = ly + (int) ((0.9 * (location.y - minY) / ydiff) * h + 0.05 * h);
+                if (showSkippableNextMenuItem.isSelected()) {
+                    OpActionInterface nextAction = actionToPaintBackground.getNext();
+                    if (actionType == PICKUP || actionType == DROPOFF || actionType == START) {
+                        if (null != nextAction) {
+                            OpActionType nextActionType = nextAction.getActionType();
+                            if (nextActionType == PICKUP || nextActionType == DROPOFF || nextActionType == END) {
+                                Point2D.Double nextLocation = nextAction.getLocation();
+                                int nx = keyWidth + (int) ((0.9 * (nextLocation.x - minX) / xdiff) * w + 0.05 * w);
+                                int ny = ly + (int) ((0.9 * (nextLocation.y - minY) / ydiff) * h + 0.05 * h);
+                                double l = Math.hypot(nx - x, ny - y);
+                                double dx = 25 * (nx - x) / l;
+                                double dy = 25 * (ny - y) / l;
+                                int idx = (int) dx;
+                                int idy = (int) dy;
+                                Color origColor = g2d.getColor();
+                                Stroke origStroke = g2d.getStroke();
+
+                                g2d.setColor(Color.darkGray);
+                                if (null != nextStroke) {
+                                    g2d.setStroke(nextStroke);
+                                }
+                                g2d.drawLine(nx - idx, ny - idy, x + idx, y + idy);
+                                g2d.setColor(origColor);
+                                g2d.setStroke(origStroke);
+                            }
+                        }
+                    }
+                    if (showPossibleNextMenuItem.isSelected()) {
+                        for (OpActionInterface possibleNextAction : actionToPaintBackground.getPossibleNextActions()) {
+                            if (null != possibleNextAction) {
+                                OpActionType nextActionType = possibleNextAction.getActionType();
+                                if (nextActionType == PICKUP || nextActionType == DROPOFF || nextActionType == END) {
+                                    Point2D.Double nextLocation = possibleNextAction.getLocation();
+                                    int nx = keyWidth + (int) ((0.9 * (nextLocation.x - minX) / xdiff) * w + 0.05 * w);
+                                    int ny = ly + (int) ((0.9 * (nextLocation.y - minY) / ydiff) * h + 0.05 * h);
+                                    double l = Math.hypot(nx - x, ny - y);
+                                    double dx = 25 * (nx - x) / l;
+                                    double dy = 25 * (ny - y) / l;
+                                    int idx = (int) dx;
+                                    int idy = (int) dy;
+                                    Color origColor = g2d.getColor();
+                                    Stroke origStroke = g2d.getStroke();
+
+                                    g2d.setColor(Color.lightGray);
+                                    if (null != possibleNextStroke) {
+                                        g2d.setStroke(possibleNextStroke);
+                                    }
+                                    g2d.drawLine(nx - idx, ny - idy, x + idx, y + idy);
+                                    g2d.setColor(origColor);
+                                    g2d.setStroke(origStroke);
+                                }
+                            }
+                        }
+                    }
+                }
                 paintBackgroundSymbol(g2d, x, y, actionToPaintBackground);
+                paintActionSymbol(g2d, x, y, actionToPaintBackground.getActionType(), actionToPaintBackground.isRequired());
                 if (!numLabeledItems.contains(actionToPaintBackground)) {
                     List<OpAction> closeItems = findCloseActions(x, y);
                     if (closeItems.size() > 1) {
@@ -416,8 +577,17 @@ public class OpDisplayJPanel extends JPanel {
                     }
                 }
             }
+            OpActionInterface prevAction = null;
+            OpActionInterface action = plan.findStartAction();
+            int prevx = -1;
+            int prevy = -1;
             while (action != null && action != prevAction) {
                 if (action.getActionType() == OpActionType.FAKE_DROPOFF) {
+                    action = action.getNext();
+                    continue;
+                }
+                if (action.getActionType() == OpActionType.FAKE_PICKUP) {
+                    action = action.getNext();
                     action = action.getNext();
                     continue;
                 }
@@ -431,7 +601,7 @@ public class OpDisplayJPanel extends JPanel {
                 if (actionNamesVisible) {
                     g2d.drawString(action.getName(), x + 10, y + 10);
                 } else {
-                    paintActionSymbol(g2d, x, y, action.getActionType());
+                    paintActionSymbol(g2d, x, y, action.getActionType(), action.isRequired());
                 }
                 OpActionInterface nextActon = action.getNext();
                 if (null == nextActon) {
@@ -448,6 +618,11 @@ public class OpDisplayJPanel extends JPanel {
                         g2d.setColor(getColor(action.getPartType()));
                         if (null != carryStroke) {
                             g2d.setStroke(carryStroke);
+                        }
+                    } else {
+                        g2d.setColor(Color.black);
+                        if (null != emptyStroke) {
+                            g2d.setStroke(emptyStroke);
                         }
                     }
 
@@ -466,7 +641,7 @@ public class OpDisplayJPanel extends JPanel {
                 prevAction = action;
                 prevx = x;
                 prevy = y;
-                action = action.getNext();
+                action = action.effectiveNext(true);
             }
         }
     }
@@ -530,24 +705,41 @@ public class OpDisplayJPanel extends JPanel {
         AffineTransform origTransform = g2d.getTransform();
         g2d.translate(x - 7, y - 15);
         Color origColor = g2d.getColor();
+
         g2d.setColor(OpDisplayJPanel.getColor(action.getPartType()));
         g2d.fill(circleLetterShape);
+        g2d.setColor(Color.white);
+        g2d.fill(centerLetterShape);
         g2d.setColor(origColor);
         g2d.setTransform(origTransform);
     }
 
-    private void paintActionSymbol(Graphics2D g2d, int x, int y, OpActionType type) {
+    @Nullable private Font boldFont = null;
+
+    private void paintActionSymbol(Graphics2D g2d, int x, int y, OpActionType type, boolean required) {
+        String typeLetterString = type.name().substring(0, 1);
+        paintActionSymbol(g2d, x, y, typeLetterString, required);
+    }
+
+    private void paintActionSymbol(Graphics2D g2d, int x, int y, String typeLetterString, boolean required) {
         AffineTransform origTransform = g2d.getTransform();
         g2d.translate(x - 7, y - 15);
         g2d.draw(circleLetterShape);
+        if (required) {
+            g2d.draw(requiredCircleLetterShape);
+        }
         g2d.setTransform(origTransform);
-        g2d.drawString(type.name().substring(0, 1), x, y);
+        g2d.drawString(typeLetterString, x, y);
     }
 
     private Shape arrowHead = new Polygon(new int[]{-10, 0, 10}, new int[]{0, 10, 0}, 3);
 
+    private final Arc2D.Double centerLetterShape
+            = new Arc2D.Double(4, 4, 12, 12, 0, 360, Arc2D.OPEN);
     private final Arc2D.Double circleLetterShape
             = new Arc2D.Double(0, 0, 20, 20, 0, 360, Arc2D.OPEN);
+    private final Arc2D.Double requiredCircleLetterShape
+            = new Arc2D.Double(-2, -2, 24, 24, 0, 360, Arc2D.OPEN);
 
     private boolean actionNamesVisible = false;
 
@@ -569,7 +761,13 @@ public class OpDisplayJPanel extends JPanel {
         this.actionNamesVisible = actionNamesVisible;
     }
 
-    private Stroke carryStroke = new BasicStroke(3f);
+    private Stroke carryStroke = new BasicStroke(4f);
+
+    private Stroke emptyStroke = new BasicStroke(3f);
+
+    private Stroke nextStroke = new BasicStroke(2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1f, new float[]{0.5f, 0.5f}, 0f);
+
+    private Stroke possibleNextStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1f, new float[]{0.5f, 0.5f}, 0f);
 
     /**
      * Get the value of carryStroke
@@ -681,24 +879,24 @@ public class OpDisplayJPanel extends JPanel {
     }
 
     private void mouseDragged(MouseEvent e) {
-        setCloseActionsToolTip(e); 
+        setCloseActionsToolTip(e);
     }
 
     private void setCloseActionsToolTip(MouseEvent e) {
-        List<OpAction> closeActions =
-                findCloseActions(e.getX(), e.getY());
-        if(closeActions.isEmpty()) {
+        List<OpAction> closeActions
+                = findCloseActions(e.getX(), e.getY());
+        if (closeActions.isEmpty()) {
             return;
         }
-        List<String> closeActionNames =
-                closeActions.stream()
+        List<String> closeActionNames
+                = closeActions.stream()
                         .map(OpAction::getName)
                         .collect(Collectors.toList());
         this.setToolTipText(closeActionNames.toString());
     }
 
     private void mouseMoved(MouseEvent e) {
-        setCloseActionsToolTip(e); 
+        setCloseActionsToolTip(e);
     }
 
 }

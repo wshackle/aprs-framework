@@ -26,4 +26,13 @@ public interface OpActionInterface {
     
     public Point2D.Double getLocation();
     
+    public @Nullable String getTrayType();
+    
+    public boolean skipNext();
+    
+    public boolean isRequired();
+    
+    public int getPriority(boolean prevRequired);
+    
+    public OpActionInterface effectiveNext(boolean quiet);
 }

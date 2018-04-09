@@ -1639,6 +1639,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         double min_y = object2DJPanel1.getMinY();
         double max_y = object2DJPanel1.getMaxY();
         PhysicalItem itemToDrag = this.draggedItem;
+        if (!evt.isShiftDown() && null != draggedItem && !"P".equals(draggedItem.getType())) {
+            draggedItem = null;
+            System.out.println("Hold SHIFT to move trays : closestItem="+draggedItem.getFullName());
+            return;
+        }
         mouseDragTime = System.currentTimeMillis();
         if (null != itemToDrag) {
             double orig_x = itemToDrag.x;
@@ -1774,7 +1779,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex);
         PhysicalItem closestItem = closestItemInfo.getClosestItem();
         minIndex = closestItemInfo.getMinIndex();
+        if (!evt.isShiftDown() && null != closestItem && !"P".equals(closestItem.getType())) {
+            draggedItem = null;
+            System.out.println("Hold SHIFT to move trays : closestItem="+closestItem.getFullName());
+            return;
+        }
         if (minIndex >= 0) {
+
             ListSelectionModel selectModel = jTableItems.getSelectionModel();
             selectModel.setAnchorSelectionIndex(minIndex);
             selectModel.setLeadSelectionIndex(minIndex);

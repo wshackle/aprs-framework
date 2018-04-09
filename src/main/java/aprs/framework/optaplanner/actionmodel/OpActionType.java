@@ -13,6 +13,7 @@ public enum OpActionType {
     PICKUP,
     DROPOFF,
     FAKE_DROPOFF,
+    FAKE_PICKUP,
     START,
     END
 }

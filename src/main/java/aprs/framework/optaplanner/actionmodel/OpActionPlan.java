@@ -8,16 +8,17 @@ package aprs.framework.optaplanner.actionmodel;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.DROPOFF;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
+import static aprs.framework.optaplanner.actionmodel.OpActionType.FAKE_PICKUP;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.framework.optaplanner.actionmodel.OpActionType.START;
-import aprs.framework.optaplanner.actionmodel.score.DistToTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.dataflow.qual.SideEffectFree;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.impl.factory.Lists;
@@ -65,8 +66,8 @@ public class OpActionPlan {
     @Nullable public List<OpAction> getActions() {
         return actions;
     }
-    
-        private boolean useDistForCost =true;
+
+    private boolean useDistForCost = true;
 
     /**
      * Get the value of useDistForCost
@@ -86,20 +87,24 @@ public class OpActionPlan {
         this.useDistForCost = useDistForCost;
     }
 
+    private boolean debug;
 
-    public List<OpAction> orderedActions() {
-        List<OpAction> orderedActions = new ArrayList<>();
-        OpAction start = findStartAction();
-        if (null != start) {
-            orderedActions.add(start);
-            OpActionInterface nxt = start.getNext();
-            while (nxt instanceof OpAction) {
-                OpAction nxtAction = (OpAction) nxt;
-                orderedActions.add(nxtAction);
-                nxt = nxtAction.getNext();
-            }
-        }
-        return orderedActions;
+    /**
+     * Get the value of debug
+     *
+     * @return the value of debug
+     */
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /**
+     * Set the value of debug
+     *
+     * @param debug new value of debug
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 
     public void setActions(List<OpAction> actions) {
@@ -108,9 +113,13 @@ public class OpActionPlan {
 
     public void initNextActions() {
 
+        debug =true;
         List<OpAction> origActions = actions;
         if (null == origActions) {
             throw new IllegalStateException("actions not initialized");
+        }
+        if(debug) {
+            System.out.println("origActions = " + origActions);
         }
         MutableMultimap<String, OpAction> multimapWithList
                 = Lists.mutable.ofAll(origActions)
@@ -120,8 +129,14 @@ public class OpActionPlan {
             MutableCollection<OpAction> theseActions = multimapWithList.get(partType);
             long pickupCount = theseActions.count(a -> a.getActionType() == PICKUP);
             long dropoffCount = theseActions.count(a -> a.getActionType() == DROPOFF);
-            for (long j = dropoffCount; j < pickupCount; j++) {
-                origActions.add(new OpAction("fake_dropoff_" + partType + "_" + j, 0, 0, FAKE_DROPOFF, partType));
+            if (dropoffCount < pickupCount) {
+                for (long j = dropoffCount; j < pickupCount; j++) {
+                    origActions.add(new OpAction("fake_dropoff_" + partType + "_" + j, 0, 0, FAKE_DROPOFF, partType, false));
+                }
+            } else if (pickupCount < dropoffCount) {
+                for (long j = pickupCount; j < dropoffCount; j++) {
+                    origActions.add(new OpAction("fake_pickup_" + partType + "_" + j, 0, 0, FAKE_PICKUP, partType, false));
+                }
             }
         }
         List<OpActionInterface> unusedActions = new ArrayList<>(origActions);
@@ -131,16 +146,28 @@ public class OpActionPlan {
         for (OpAction act : origActions) {
             act.addPossibleNextActions(allActions);
         }
+        for (OpAction act : origActions) {
+            boolean actRequired = act.isRequired();
+            Collections.sort(act.getPossibleNextActions(), new Comparator<OpActionInterface>() {
+                @Override
+                public int compare(OpActionInterface o1, OpActionInterface o2) {
+                    return Integer.compare(o1.getPriority(actRequired), o2.getPriority(actRequired));
+                }
+            });
+        }
         List<OpAction> newActions = new ArrayList<>();
         if (null != startAction) {
             newActions.add(startAction);
             unusedActions.remove(startAction);
         }
+        OpAction lastStartAction = startAction;
+        OpActionInterface lastNextAction = null;
         while (startAction != null) {
             OpAction action = startAction;
-
+            lastStartAction = startAction;
             startAction = null;
             for (OpActionInterface nxtAction : action.getPossibleNextActions()) {
+                lastNextAction = nxtAction;
                 if (unusedActions.contains(nxtAction)) {
                     unusedActions.remove(nxtAction);
 
@@ -148,16 +175,43 @@ public class OpActionPlan {
                     if (nxtAction.getActionType() != END && nxtAction instanceof OpAction) {
                         newActions.add((OpAction) nxtAction);
                         startAction = (OpAction) nxtAction;
+                    } else if (debug) {
+                        System.out.println("Ending with action =" + action);
+                        System.out.println("nxtAction = " + nxtAction);
                     }
                     break;
                 }
             }
+            if(action.getNext() == null) {
+               throw new IllegalStateException("action has null next:action=" + action+",\norigActions="+origActions+",\nnewActions="+newActions+",\naction.getPossibleNextActions()"+action.getPossibleNextActions()+",\nunusedActions="+unusedActions);
+            }
+        }
+        if (debug) {
+            System.out.println("origActions = " + origActions);
+            System.out.println("newActions.size() = " + newActions.size());
+            for (int i = 0; i < newActions.size(); i++) {
+                System.out.println("i = " + i);
+                OpAction act = newActions.get(i);
+                if (act.getNext() == null) {
+                    throw new IllegalStateException("action has null next:i="+i+",act=" + act+",\norigActions="+origActions+",\nnewActions="+newActions);
+                }
+                if (act.getPossibleNextActions() == null || act.getPossibleNextActions().isEmpty()) {
+                    throw new IllegalStateException("action has no possibleNextAction :" + act);
+                }
+                System.out.println(act + ".getPossibleNextActions() = "
+                        + act.getPossibleNextActions()
+                                .stream()
+                                .map(OpActionInterface::getName)
+                                .collect(Collectors.joining(",")));
+            }
         }
         actions = newActions;
-        if (unusedActions.size() > 0) {
+        if (debug && unusedActions.size() > 0) {
             System.out.println("unusedActions = " + unusedActions);
             System.out.println("actions = " + actions);
         }
+        List<OpAction> effectiveOrderedList = getEffectiveOrderedList(true);
+        System.out.println("effectiveOrderedList = " + effectiveOrderedList);
     }
 
     private @Nullable HardSoftLongScore score;
@@ -177,8 +231,6 @@ public class OpActionPlan {
     public String toString() {
         return asString;
     }
-
-        
 
     private double maxSpeed = 1.0;
 
@@ -219,7 +271,7 @@ public class OpActionPlan {
     public void setStartEndMaxSpeed(double startEndMaxSpeed) {
         this.startEndMaxSpeed = startEndMaxSpeed;
     }
-    
+
     private double accelleration = 1.0;
 
     /**
@@ -279,13 +331,13 @@ public class OpActionPlan {
                     }
                     totalCost += actionTmp.cost(this);
                     sb.append(actionTmp.getName());
-                    OpActionInterface effNext = actionTmp.effectiveNext();
+                    OpActionInterface effNext = actionTmp.effectiveNext(true);
                     if (null != effNext && effNext != actionTmp.getNext()) {
                         sb.append("(effectiveNext=");
                         sb.append(effNext.getName());
                         sb.append(")");
                     }
-                    sb.append(String.format("(%.2f)", actionTmp.distance()));
+                    sb.append(String.format("(%.2f)", actionTmp.distance(true)));
                 } else {
                     sb.append(tmp.getActionType());
                 }
@@ -326,6 +378,67 @@ public class OpActionPlan {
         String ret = sb.toString();
         this.asString = ret;
         return ret;
+    }
+
+    public List<OpAction> getOrderedList(boolean quiet) {
+        List<OpAction> l = new ArrayList<>();
+        OpAction startAction = findStartAction();
+        l.add(startAction);
+        OpActionInterface tmp = startAction;
+        while (null != tmp) {
+            tmp = tmp.getNext();
+            if (!(tmp instanceof OpAction)) {
+                return l;
+            }
+            OpAction tmpAction = (OpAction) tmp;
+            if (null == tmp) {
+                return l;
+            }
+            if (tmpAction.getActionType() == END) {
+                return l;
+            }
+            if (l.contains(tmpAction)) {
+                if (quiet) {
+                    return l;
+                }
+                throw new IllegalStateException("loop found: tmp=" + tmp + ",l=" + l);
+            }
+            l.add(tmpAction);
+        }
+        return l;
+    }
+
+    public List<OpAction> getEffectiveOrderedList(boolean quiet) {
+        List<OpAction> l = new ArrayList<>();
+        try {
+            OpAction startAction = findStartAction();
+            l.add(startAction);
+            OpActionInterface tmp = startAction;
+            while (null != tmp) {
+                tmp = tmp.effectiveNext(quiet);
+                if (!(tmp instanceof OpAction)) {
+                    return l;
+                }
+                OpAction tmpAction = (OpAction) tmp;
+                if (null == tmp) {
+                    return l;
+                }
+                if (tmpAction.getActionType() == END) {
+                    return l;
+                }
+                if (l.contains(tmpAction)) {
+                    if (quiet) {
+                        return l;
+                    }
+                    throw new IllegalStateException("loop found: tmp=" + tmp);
+                }
+                l.add(tmpAction);
+            }
+        } catch (Exception illegalStateException) {
+            System.err.println("actions = " + actions);
+            throw new IllegalStateException("l ="+l, illegalStateException);
+        }
+        return l;
     }
 
     @Nullable public OpAction findStartAction() {

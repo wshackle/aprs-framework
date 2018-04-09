@@ -22,12 +22,11 @@ import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
  */
 public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpActionPlan> {
 
-    
-    private int lastScoreEnds=0;
-    private int lastScoreNulls=0;
-    private int lastScoreBadNexts=0;
-    private int lastStartLength=0;
-    
+    private int lastScoreEnds = 0;
+    private int lastScoreNulls = 0;
+    private int lastScoreBadNexts = 0;
+    private int lastStartLength = 0;
+
     @Override
     public HardSoftLongScore calculateScore(OpActionPlan solution) {
         double costTotal = 0;
@@ -36,6 +35,7 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
         int starts = 0;
         int startlength = 0;
         int badNexts = 0;
+        int skippedKitTrayAction = 0;
         List<OpAction> actionsList = solution.getActions();
         double accelleration = solution.getAccelleration();
         double maxSpeed = solution.getMaxSpeed();
@@ -49,29 +49,21 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
                 } else if (!action.checkNextAction(nextAction)) {
                     badNexts++;
                 }
-                costTotal +=  action.cost(solution);
-                Set<String> visited = new HashSet<>();
-                if (action.getActionType() == START) {
-                    OpActionInterface tmp = action;
-                    if (!actionsList.contains(tmp)) {
-                        throw new IllegalStateException(tmp + " not in " + actionsList);
-                    }
-                    while (tmp != null
-                            && tmp.getActionType() != END
-                            && tmp instanceof OpAction
-                            && !visited.contains(((OpAction) tmp).getName())) {
-                        visited.add(((OpAction) tmp).getName());
-                        startlength++;
-                        tmp = tmp.getNext();
-                    }
-                }
+            }
+            OpAction startAction = solution.findStartAction();
+
+            Set<String> visited = new HashSet<>();
+            List<OpAction> orderedActionsList = solution.getOrderedList(false);
+            List<OpAction> effectiveOrderedActionsList = solution.getEffectiveOrderedList(false);
+            for(OpAction act : effectiveOrderedActionsList) {
+                costTotal +=  act.cost(solution);
             }
             lastScoreEnds = ends;
             lastScoreNulls = nulls;
             lastScoreBadNexts = badNexts;
             lastStartLength = startlength;
 //            assert (startlength == actionsList.size()) :"startLength != actionsList.size()";
-            long hardScoreLong = -Math.abs(startlength - actionsList.size()) - Math.abs(1 - ends) - 2 * nulls - badNexts;
+            long hardScoreLong = -Math.abs(orderedActionsList.size() - actionsList.size()) - Math.abs(1 - ends) - 2 * nulls - badNexts;
             long softScoreLong = (long) (-1000.0 * costTotal);
             HardSoftLongScore score = HardSoftLongScore.valueOf(hardScoreLong, softScoreLong);
             return score;

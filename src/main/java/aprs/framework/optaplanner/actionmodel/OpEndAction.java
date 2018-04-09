@@ -7,6 +7,7 @@ package aprs.framework.optaplanner.actionmodel;
 
 import static aprs.framework.optaplanner.actionmodel.OpActionType.END;
 import java.awt.geom.Point2D;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -58,6 +59,28 @@ public class OpEndAction  implements OpActionInterface{
     public String getName() {
        return "END";
     }
+
+    @Override
+    @Nullable public String getTrayType() {
+        return null;
+    }
+
+    @Override
+    public boolean skipNext() {
+        return false;
+    }
     
+    @Override
+    public boolean isRequired() {
+        return true;
+    }
+
+    @Override
+    public int getPriority(boolean prevRequired) {
+        return 10;
+    }
     
+    @Nullable public OpActionInterface effectiveNext(boolean quiet) {
+        return null;
+    }
 }
