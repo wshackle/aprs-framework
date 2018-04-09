@@ -274,7 +274,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
     private static interface GetPoseFunction {
 
-        @Nullable public PoseType apply(String name, boolean ignoreNull) throws SQLException;
+        @Nullable
+        public PoseType apply(String name, boolean ignoreNull) throws SQLException;
     }
 
     boolean inKitTrayByName(String name) {
@@ -1910,8 +1911,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, PddlAction> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
@@ -2097,8 +2098,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                        .map(arg -> arg.split("="))
-                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                .map(arg -> arg.split("="))
+                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2329,9 +2330,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                             System.out.println("");
                                             System.out.println("No partnames for finalShortSkuName=" + finalShortSkuName);
                                             System.out.println("newItems = " + newItems);
+                                            List<String> newItemsFullNames = newItems
+                                                    .stream()
+                                                    .map(PhysicalItem::getFullName)
+                                                    .collect(Collectors.toList());
+                                            System.out.println("newItemsFullNames = " + newItemsFullNames);
                                             System.out.println("itemsNameMap = " + itemsNameMap);
                                             System.out.println("slotItemSkuName = " + slotItemSkuName);
                                             System.out.println("itemSkuName = " + itemSkuName);
+                                            List<String> recalcPartNames
+                                                    = partNamesListForShortSkuName(newItems, finalShortSkuName);
+                                            System.out.println("recalcPartNames = " + recalcPartNames);
                                             throw new IllegalStateException("No partnames for finalShortSkuName=" + finalShortSkuName
                                                     + ",slotItemSkuName = " + slotItemSkuName
                                                     + ",itemSkuName = " + itemSkuName
@@ -2361,7 +2370,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                                 min_dist = dist;
                                             }
                                         }
-                                        if (closestKey == null || min_dist > 0.1) {
+                                        if (closestKey == null || min_dist > 6.0) {
+                                            System.out.println("closestKey = " + closestKey);
+                                            System.out.println("min_dist = " + min_dist);
+                                            for (Entry<String, PoseType> entry : poseCache.entrySet()) {
+                                                double dist = CRCLPosemath.diffPosesTran(slotPose, entry.getValue());
+                                                System.out.println("entry.getKey = " + entry.getKey()+", dist="+dist);
+                                            }
                                             throw new IllegalStateException("absSlotPose for " + slotName + " not in poseCache keys=" + poseCache.keySet());
                                         }
                                         correctiveActions.add(new PddlAction("", "place-part", new String[]{closestKey}, ""));
@@ -2416,17 +2431,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
         List<String> partNames
                 = newItems.stream()
-                        .filter(item -> item.getType().equals("P"))
-                        .flatMap(item -> {
-                            String fullName = item.getFullName();
-                            if (null != fullName) {
-                                return Stream.of(fullName);
-                            }
-                            return Stream.empty();
-                        })
-                        .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
-                        .sorted()
-                        .collect(Collectors.toList());
+                .filter(item -> item.getType().equals("P"))
+                .flatMap(item -> {
+                    String fullName = item.getFullName();
+                    if (null != fullName) {
+                        return Stream.of(fullName);
+                    }
+                    return Stream.empty();
+                })
+                .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
+                .sorted()
+                .collect(Collectors.toList());
         return partNames;
     }
 
