@@ -355,7 +355,7 @@ public class OpAction implements OpActionInterface {
         }
         String infoString = partTypeString + effNextString;
         if (partTypeString.endsWith(")") && effNextString.startsWith("(")) {
-            infoString = partTypeString.substring(0, partTypeString.length() - 1) + "," + effNextString.substring(1);
+            infoString = partTypeString.substring(0, partTypeString.length() - 1) + (isRequired()?",required":"") + "," + effNextString.substring(1);
         }
         OpActionInterface localNext = this.next;
         if (localNext instanceof OpAction) {

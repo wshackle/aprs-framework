@@ -172,6 +172,10 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         int in_index = partName.indexOf("_in_");
         if (in_index > 0) {
             return partName.substring(0, in_index);
+        } 
+        String tail = partName.substring(partName.length()-2);
+        if(tail.charAt(0) == '_' && Character.isDigit(tail.charAt(1))) {
+            partName = partName.substring(0,partName.length()-2);
         }
         return partName;
     }

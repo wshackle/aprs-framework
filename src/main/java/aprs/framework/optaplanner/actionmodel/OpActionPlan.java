@@ -61,9 +61,11 @@ public class OpActionPlan {
     }
 
     @PlanningEntityCollectionProperty
-    private @Nullable List<OpAction> actions;
+    private @Nullable
+    List<OpAction> actions;
 
-    @Nullable public List<OpAction> getActions() {
+    @Nullable
+    public List<OpAction> getActions() {
         return actions;
     }
 
@@ -113,40 +115,55 @@ public class OpActionPlan {
 
     public void initNextActions() {
 
-        debug =true;
-        List<OpAction> origActions = actions;
-        if (null == origActions) {
+        debug = true;
+        if (null == actions) {
             throw new IllegalStateException("actions not initialized");
         }
-        if(debug) {
+        List<OpAction> tmpActions = new ArrayList<>(actions);
+        List<OpAction> origActions = new ArrayList<>(actions);
+        
+        if (debug) {
             System.out.println("origActions = " + origActions);
         }
+        for (int i = 0; i < tmpActions.size(); i++) {
+            OpAction act = tmpActions.get(i);
+            if(act.getActionType() == FAKE_PICKUP || act.getActionType() == FAKE_DROPOFF) {
+                throw new IllegalStateException("input list should not have fake actions : act ="+act+",\norigActions="+origActions);
+            }
+        }
         MutableMultimap<String, OpAction> multimapWithList
-                = Lists.mutable.ofAll(origActions)
-                        .select(a -> a.getActionType() == PICKUP || a.getActionType() == DROPOFF)
-                        .groupBy(a -> a.getPartType());
+                = Lists.mutable.ofAll(tmpActions)
+                .select(a -> a.getActionType() == PICKUP || a.getActionType() == DROPOFF)
+                .groupBy(a -> a.getPartType());
         for (String partType : multimapWithList.keySet()) {
             MutableCollection<OpAction> theseActions = multimapWithList.get(partType);
             long pickupCount = theseActions.count(a -> a.getActionType() == PICKUP);
             long dropoffCount = theseActions.count(a -> a.getActionType() == DROPOFF);
+            System.out.println("partType = " + partType);
+            System.out.println("dropoffCount = " + dropoffCount);
+            System.out.println("pickupCount = " + pickupCount);
+            System.out.println("theseActions = " + theseActions);
             if (dropoffCount < pickupCount) {
                 for (long j = dropoffCount; j < pickupCount; j++) {
-                    origActions.add(new OpAction("fake_dropoff_" + partType + "_" + j, 0, 0, FAKE_DROPOFF, partType, false));
+                    tmpActions.add(new OpAction("fake_dropoff_" + partType + "_" + j, 0, 0, FAKE_DROPOFF, partType, false));
                 }
             } else if (pickupCount < dropoffCount) {
                 for (long j = pickupCount; j < dropoffCount; j++) {
-                    origActions.add(new OpAction("fake_pickup_" + partType + "_" + j, 0, 0, FAKE_PICKUP, partType, false));
+                    tmpActions.add(new OpAction("fake_pickup_" + partType + "_" + j, 0, 0, FAKE_PICKUP, partType, false));
                 }
             }
         }
-        List<OpActionInterface> unusedActions = new ArrayList<>(origActions);
+        List<OpActionInterface> unusedActions = new ArrayList<>(tmpActions);
         unusedActions.addAll(endActions);
         List<OpActionInterface> allActions = new ArrayList<>(unusedActions);
         OpAction startAction = findStartAction();
-        for (OpAction act : origActions) {
+        for (OpAction act : tmpActions) {
             act.addPossibleNextActions(allActions);
+            if (act.getPossibleNextActions().isEmpty()) {
+                throw new IllegalStateException("action has no possible next action=" + act + ", act.getPartType()="+act.getPartType()+",\norigActions=" + origActions + ",\nallActions=" + allActions+",\nmultimapWithList="+multimapWithList);
+            }
         }
-        for (OpAction act : origActions) {
+        for (OpAction act : tmpActions) {
             boolean actRequired = act.isRequired();
             Collections.sort(act.getPossibleNextActions(), new Comparator<OpActionInterface>() {
                 @Override
@@ -182,8 +199,8 @@ public class OpActionPlan {
                     break;
                 }
             }
-            if(action.getNext() == null) {
-               throw new IllegalStateException("action has null next:action=" + action+",\norigActions="+origActions+",\nnewActions="+newActions+",\naction.getPossibleNextActions()"+action.getPossibleNextActions()+",\nunusedActions="+unusedActions);
+            if (action.getNext() == null) {
+                throw new IllegalStateException("action has null next:action=" + action + ",\norigActions=" + origActions + ",\nnewActions=" + newActions + ",\naction.getPossibleNextActions()" + action.getPossibleNextActions() + ",\nunusedActions=" + unusedActions);
             }
         }
         if (debug) {
@@ -193,16 +210,16 @@ public class OpActionPlan {
                 System.out.println("i = " + i);
                 OpAction act = newActions.get(i);
                 if (act.getNext() == null) {
-                    throw new IllegalStateException("action has null next:i="+i+",act=" + act+",\norigActions="+origActions+",\nnewActions="+newActions);
+                    throw new IllegalStateException("action has null next:i=" + i + ",act=" + act + ",\norigActions=" + tmpActions + ",\nnewActions=" + newActions);
                 }
                 if (act.getPossibleNextActions() == null || act.getPossibleNextActions().isEmpty()) {
                     throw new IllegalStateException("action has no possibleNextAction :" + act);
                 }
                 System.out.println(act + ".getPossibleNextActions() = "
                         + act.getPossibleNextActions()
-                                .stream()
-                                .map(OpActionInterface::getName)
-                                .collect(Collectors.joining(",")));
+                        .stream()
+                        .map(OpActionInterface::getName)
+                        .collect(Collectors.joining(",")));
             }
         }
         actions = newActions;
@@ -214,9 +231,11 @@ public class OpActionPlan {
         System.out.println("effectiveOrderedList = " + effectiveOrderedList);
     }
 
-    private @Nullable HardSoftLongScore score;
+    private @Nullable
+    HardSoftLongScore score;
 
-    @Nullable @PlanningScore
+    @Nullable
+    @PlanningScore
     public HardSoftLongScore getScore() {
         return score;
     }
@@ -436,12 +455,13 @@ public class OpActionPlan {
             }
         } catch (Exception illegalStateException) {
             System.err.println("actions = " + actions);
-            throw new IllegalStateException("l ="+l, illegalStateException);
+            throw new IllegalStateException("l =" + l, illegalStateException);
         }
         return l;
     }
 
-    @Nullable public OpAction findStartAction() {
+    @Nullable
+    public OpAction findStartAction() {
         OpAction startAction = null;
         List<OpAction> l = actions;
         if (null != l) {
