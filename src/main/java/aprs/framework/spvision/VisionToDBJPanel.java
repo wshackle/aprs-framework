@@ -2419,7 +2419,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private void jButtonShowImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonShowImageActionPerformed
+        boolean snapShotsEnabled = aprsJFrame.isSnapshotsEnabled();
+        if(!snapShotsEnabled) {
+            aprsJFrame.setSnapshotsEnabled(true);
+        }
         showDatabaseTableImage();
+        if(!snapShotsEnabled) {
+            aprsJFrame.setSnapshotsEnabled(false);
+        }
     }//GEN-LAST:event_jButtonShowImageActionPerformed
 
     private void jCheckBoxDbUpdateEnabledActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxDbUpdateEnabledActionPerformed
