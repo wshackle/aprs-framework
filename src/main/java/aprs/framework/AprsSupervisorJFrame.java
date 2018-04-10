@@ -6855,17 +6855,23 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             DefaultTreeModel model = (DefaultTreeModel) jTreeSelectedFuture.getModel();
             DefaultMutableTreeNode rootTreeNode = xfutureToNode(xf, showDoneFutures, showUnnamedFutures, 1);
             model.setRoot(rootTreeNode);
-            expandAllNodes(jTreeSelectedFuture, 0, jTreeSelectedFuture.getRowCount());
+            expandAllNodes(jTreeSelectedFuture, 0, jTreeSelectedFuture.getRowCount(),0,0);
         }
     }
 
-    private static void expandAllNodes(JTree tree, int startingIndex, int rowCount) {
+    private static final  int MAX_EXPAND_NODE_COUNT = 2000;
+    private static final int MAX_RECURSE_DEPTH = 100;
+    
+    private static void expandAllNodes(JTree tree, int startingIndex, int rowCount, int startExpandCount, int recurseDepth) {
+        if(recurseDepth > MAX_RECURSE_DEPTH) {
+            return;
+        }
         for (int i = startingIndex; i < rowCount; ++i) {
             tree.expandRow(i);
         }
 
-        if (tree.getRowCount() != rowCount) {
-            expandAllNodes(tree, rowCount, tree.getRowCount());
+        if (tree.getRowCount() != rowCount && startExpandCount < MAX_EXPAND_NODE_COUNT) {
+            expandAllNodes(tree, rowCount, tree.getRowCount(),startExpandCount + (rowCount>startingIndex?(rowCount - startingIndex):0),recurseDepth+1);
         }
     }
 
