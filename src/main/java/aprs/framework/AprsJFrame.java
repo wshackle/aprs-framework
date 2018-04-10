@@ -191,7 +191,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public boolean isSnapshotsEnabled() {
         return jCheckBoxMenuItemSnapshotImageSize.isSelected();
     }
-
+    
+    public void setSnapshotsEnabled(boolean enable) {
+        jCheckBoxMenuItemSnapshotImageSize.setSelected(enable);
+    }
+    
     private void setStartRunTime() {
         checkReadyToRun();
         long t = System.currentTimeMillis();
@@ -1855,8 +1859,15 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
                     setTitleErrorStringTrace = Thread.currentThread().getStackTrace();
                     System.err.println(newTitleErrorString);
+                    boolean snapshotsEnabled = this.isSnapshotsEnabled();
+                    if(!snapshotsEnabled) {
+                        setSnapshotsEnabled(true);
+                    }
                     takeSnapshots("setTitleError_" + newTitleErrorString + "_");
                     pause();
+                    if(!snapshotsEnabled) {
+                        setSnapshotsEnabled(false);
+                    }
                 }
             }
             lastNewTitleErrorString = newTitleErrorString;
