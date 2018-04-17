@@ -50,17 +50,19 @@ Build
 
 To build one needs:
   * JDK 1.8+ (http://www.oracle.com/technetwork/java/javase/downloads/index.html)  and
-  * maven 3.0.5+ (https://maven.apache.org/download.cgi) 
+  * maven 3.5.0+ (https://maven.apache.org/download.cgi) 
   
 Use the command:
 
-    mvn package
+    mvn -Pjar-with-depends package
     
 OR 
 
   * An IDE bundled with both maven and a JDK such as Netbeans, IntelliJ, or Eclipse.
       * Netbeans will open a maven project with File -> Open Project just like Netbeans generated Ant projects.
       * IntelliJ and Eclipse both have options to import maven projects.
+       (Be sure to enable the jar-with-depends maven profile to include depends in jar
+       to make jar easier to run from command line. It is not required to run from IDE.)
 
 Neo4J Database Install
 -----
@@ -75,7 +77,7 @@ downloaded by going to
 4.  Get the tar or zip file rather than the exe of dmg file for your operating system in the community column in the center at the bottom
 of the page with the latest 2.3.?? version. Using the tar or zip file will make it
 easier to setup multiple instances. 
-5.  Extract the tar or zip into two seperate directories. (One for Motoman, and one for Fanuc or their simulations)
+5.  Extract the tar or zip into two separate directories. (One for Motoman, and one for Fanuc or their simulations)
 
         mkdir motoman-neo4j-database
         cd motoman-neo4j-database/
@@ -200,7 +202,7 @@ For Windows:
 
 Or directly with:
 
-    java -jar target/aprs-framework-1.0-SNAPSHOT-jar-with-dependencies.jar
+    java -jar target/aprs-framework-1.1-SNAPSHOT-jar-with-dependencies.jar
 
 
 To run with the simulated Fanuc/Motoman demo add the arguments "--openMulti example_settings/multiple_simulated_systems_settings/multisim9.csv"
