@@ -4169,9 +4169,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                                         randomTestCount.set(0);
                                         jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(true);
                                         jCheckBoxMenuItemRandomTest.setSelected(true);
+                                        lastFutureReturned = null;
                                         XFuture<Void> ret = startRandomTest();
-                                        lastFutureReturned = ret;
-                                        mainFuture = lastFutureReturned;
+                                        mainFuture = ret;
                                         return ret;
                                     } catch (Exception e) {
                                         Logger.getLogger(AprsSupervisorJFrame.class.getName()).log(Level.SEVERE, null, e);
@@ -4890,6 +4890,9 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private XFuture<Void> startRandomTestStep2() {
         int c = srts2Count.incrementAndGet();
+        if(c > 1) {
+            throw new IllegalStateException("c="+c);
+        }
         logEvent("Start Random Test Step 2 :" + c);
         XFuture<Void> f1;
         if (!jCheckBoxMenuItemContDemoReverseFirstOption.isSelected()) {

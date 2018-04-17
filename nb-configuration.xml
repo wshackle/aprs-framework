@@ -17,9 +17,4 @@ Any value defined here will override the pom.xml file value but is only applicab
         <netbeans.compile.on.save>none</netbeans.compile.on.save>
         <netbeans.hint.jdkPlatform>JDK_1.8</netbeans.hint.jdkPlatform>
     </properties>
-    <config-data xmlns="http://www.netbeans.org/ns/maven-config-data/1">
-        <configurations>
-            <configuration id="debug" profiles=""/>
-        </configurations>
-    </config-data>
 </project-shared-configuration>

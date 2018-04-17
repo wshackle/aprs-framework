@@ -600,15 +600,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 processLauncher.run(launchFile)
                         .thenRun(() -> {
                             amsFrame.setProcessLauncher(processLauncher);
-                            Utils.runOnDispatchThread(() -> completeTenCycleTest(amsFrame,startTime));
+                            Utils.runOnDispatchThread(() -> completeTenCycleTest(amsFrame, startTime));
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
-
+            completeTenCycleTest(amsFrame, startTime);
         }
-        completeTenCycleTest(amsFrame, startTime);
     }
 
     private static void completeTenCycleTest(final AprsSupervisorJFrame amsFrame, long startTime) {
@@ -843,7 +842,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                                 break;
 
                             case "--tenCycleTest":
-                               if (argsLeft.length > 0) {
+                                if (argsLeft.length > 0) {
                                     tenCycleTest(new File(argsLeft[0]));
                                 } else {
                                     tenCycleTest(null);
@@ -852,6 +851,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
                             default:
                                 System.err.println("Invalid argumens args=" + Arrays.toString(args));
+                                System.err.println("args[0] = " + args[0]);
                                 System.err.println("args[0] must be one of:");
                                 System.err.println("--prevMulti");
                                 System.err.println("--openMulti");

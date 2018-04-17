@@ -191,11 +191,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     public boolean isSnapshotsEnabled() {
         return jCheckBoxMenuItemSnapshotImageSize.isSelected();
     }
-    
+
     public void setSnapshotsEnabled(boolean enable) {
         jCheckBoxMenuItemSnapshotImageSize.setSelected(enable);
     }
-    
+
     private void setStartRunTime() {
         checkReadyToRun();
         long t = System.currentTimeMillis();
@@ -1632,12 +1632,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (null != crclClientJInternalFrame) {
             CRCLCommandType cmd = crclClientJInternalFrame.getCurrentProgramCommand();
             if (null != cmd) {
-                try {
-                    sb.append("crcl_cmd=").append(CRCLSocket.getUtilSocket().commandToSimpleString(cmd)).append("\r\n");
-                } catch (ParserConfigurationException | SAXException | IOException ex) {
-                    sb.append("crcl_cmd= Exception : ").append(ex).append("\r\n");
-                    Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                sb.append("crcl_cmd=").append(CRCLSocket.commandToSimpleString(cmd)).append("\r\n");
             } else {
                 sb.append("crcl_cmd= \r\n");
             }
@@ -1859,13 +1854,14 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
                     setTitleErrorStringTrace = Thread.currentThread().getStackTrace();
                     System.err.println(newTitleErrorString);
+                    Thread.dumpStack();
                     boolean snapshotsEnabled = this.isSnapshotsEnabled();
-                    if(!snapshotsEnabled) {
+                    if (!snapshotsEnabled) {
                         setSnapshotsEnabled(true);
                     }
                     takeSnapshots("setTitleError_" + newTitleErrorString + "_");
                     pause();
-                    if(!snapshotsEnabled) {
+                    if (!snapshotsEnabled) {
                         setSnapshotsEnabled(false);
                     }
                 }
@@ -1965,14 +1961,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         for (int i = 0; i < midCmds.size(); i++) {
             sb.append(String.format("%03d", i));
             sb.append(" \t");
-            try {
-                sb.append(CRCLSocket.getUtilSocket().commandToSimpleString(midCmds.get(i)));
-            } catch (ParserConfigurationException | SAXException | IOException ex) {
-                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                sb.append(ex);
-                sb.append("\r\n");
-                return sb.toString();
-            }
+            sb.append(CRCLSocket.commandToSimpleString(midCmds.get(i)));
             sb.append("\r\n");
         }
         return sb.toString();
@@ -2328,16 +2317,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             disconnectDatabaseFuture.cancel(true);
             disconnectDatabaseFuture = null;
         }
-        SimServerJInternalFrame simServerFrame = this.simServerJInternalFrame;
-        if (null != simServerFrame) {
-            try {
-                simServerFrame.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            simServerFrame.setVisible(false);
-            simServerFrame = null;
-        }
+
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setVisible(false);
             object2DViewJInternalFrame.dispose();
@@ -2360,6 +2340,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 connectDatabaseFuture = null;
             }
             disconnectDatabase();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        try {
+            abortCrclProgram();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -2393,6 +2378,16 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             if (null != this.logDisplayJInternalFrame) {
                 this.logDisplayJInternalFrame.setVisible(false);
                 this.logDisplayJInternalFrame.dispose();
+            }
+            SimServerJInternalFrame simServerFrame = this.simServerJInternalFrame;
+            if (null != simServerFrame) {
+                try {
+                    simServerFrame.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                simServerFrame.setVisible(false);
+                simServerFrame = null;
             }
         } catch (Exception ex) {
             ex.printStackTrace();

@@ -78,6 +78,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JDialog;
 import javax.swing.table.TableModel;
@@ -156,7 +157,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 xmlDir.mkdirs();
                 CRCLStatusType status = aprsJFrame.getCurrentStatus();
                 if (null != status) {
-                    String xmlString = CRCLSocket.getUtilSocket().statusToPrettyString(status, false);
+                    String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
                     try (FileWriter fw = new FileWriter(xmlFile)) {
                         fw.write(xmlString);
@@ -199,7 +200,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (null != af) {
                 CRCLStatusType status = aprsJFrame.getCurrentStatus();
                 if (null != status) {
-                    String xmlString = CRCLSocket.getUtilSocket().statusToPrettyString(status, false);
+                    String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
                     try (FileWriter fw = new FileWriter(xmlFile)) {
                         fw.write(xmlString);
@@ -2856,8 +2857,56 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return new DistIndex(min_dist, min_dist_index);
     }
 
+    private class PoseUpdateHistoryItem {
+
+        final PoseType pose;
+        final CRCLStatusType stat;
+        CRCLCommandType cmd;
+        final boolean isHoldingObjectExpected;
+        final long time;
+
+        public PoseUpdateHistoryItem(PoseType pose, CRCLStatusType stat, boolean isHoldingObjectExpected, long time) {
+            this.pose = pose;
+            this.stat = stat;
+            this.isHoldingObjectExpected = isHoldingObjectExpected;
+            this.time = time;
+        }
+
+        @Override
+        public String toString() {
+            return "\nPoseUpdateHistoryItem{" + "pose=" + pose + ", stat=" + CRCLSocket.statusToPrettyString(stat) + ", cmd=" + CRCLSocket.commandToSimpleString(cmd) + ", isHoldingObjectExpected=" + isHoldingObjectExpected + ", time=" + (time - poseUpdateHistoryTime) + '}';
+        }
+
+    }
+
+    private final ConcurrentLinkedDeque<PoseUpdateHistoryItem> poseUpdateHistory
+            = new ConcurrentLinkedDeque<>();
+
+    private volatile long poseUpdateHistoryTime = System.currentTimeMillis();
+
+    private static Random r = new Random();
+
+    private volatile javax.swing.Timer timer = null;
+
+    private volatile PoseUpdateHistoryItem lastDropUpdate = null;
+
     @Override
     public void handlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
+//        timer = new javax.swing.Timer(r.nextInt(100), (ActionEvent e) -> delayedHandlePoseUpdate(panel, pose, stat, cmd, isHoldingObjectExpected));
+//        timer.setRepeats(false);
+//        timer.setInitialDelay(r.nextInt(100));
+//        timer.start();
+//    }
+//
+//    public void delayedHandlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
+
+        PoseUpdateHistoryItem currentUpdate
+                = new PoseUpdateHistoryItem(pose, stat, isHoldingObjectExpected, System.currentTimeMillis());
+        poseUpdateHistory.add(currentUpdate);
+        if (poseUpdateHistory.size() > 5) {
+            poseUpdateHistory.removeFirst();
+        }
+        poseUpdateHistoryTime = System.currentTimeMillis();
 
         if (!jCheckBoxShowCurrent.isSelected()) {
             return;
@@ -2912,30 +2961,34 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (min_dist < pickupDist && min_dist_index >= 0) {
                     captured_item_index = min_dist_index;
                     if (true) {
-                        System.out.println("Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
-                        if (takeSnapshots) {
-                            try {
-                                takeSnapshot(createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
-                            } catch (IOException ex) {
-                                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-                    }
-                } else {
-                    if (takeSnapshots) {
                         try {
-                            takeSnapshot(createTempFile("failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                            System.out.println(aprsJFrame.getRunName() + " : Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                            if (takeSnapshots) {
+                                takeSnapshot(createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                            }
                         } catch (IOException ex) {
                             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                    System.err.println("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+                } else {
+                    try {
+                        System.out.println("poseUpdateHistory = " + poseUpdateHistory);
+                        System.out.println("pose = " + pose);
+                        System.out.println("stat = " + CRCLSocket.statusToPrettyString(stat));
+                        System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
+                        if (takeSnapshots) {
+                            takeSnapshot(createTempFile("failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                        }
+                        System.err.println("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+
+                    } catch (Exception ex) {
+                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     this.aprsJFrame.setTitleErrorString("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
-                    this.aprsJFrame.pause();
                 }
             } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
                 if (true) {
-                    System.out.println("Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                    System.out.println(aprsJFrame.getRunName() + " : Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
                     if (takeSnapshots) {
                         try {
                             takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
@@ -2945,18 +2998,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 }
                 if (captured_item_index < 0) {
-                    if (takeSnapshots) {
-                        try {
-                            takeSnapshot(createTempFile("failed_to_drop_part_", ".PNG"), (PmCartesian) null, "");
-                        } catch (IOException ex) {
-                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    System.err.println("Should be dropping item but no item captured");
+
+                    System.out.println("poseUpdateHistory = " + poseUpdateHistory);
+                    System.out.println("pose = " + pose);
+                    System.out.println("stat = " + CRCLSocket.statusToPrettyString(stat));
+                    System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
+                    System.out.println("lastDropUpdate = " + lastDropUpdate);
+                    this.aprsJFrame.setTitleErrorString("Should be dropping item but no item captured");
                 }
             }
         }
-        if (!isHoldingObjectExpected) {
+        if (!isHoldingObjectExpected && captured_item_index >= 0) {
+            lastDropUpdate = currentUpdate;
             captured_item_index = -1;
         }
         if (this.jCheckBoxSimulated.isSelected()) {
