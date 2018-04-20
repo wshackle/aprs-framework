@@ -105,21 +105,17 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import java.util.Collection;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import crcl.utils.CRCLSocket;
 import java.awt.geom.Point2D;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
-import javax.xml.parsers.ParserConfigurationException;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.api.collection.MutableCollection;
@@ -128,10 +124,11 @@ import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.factory.Lists;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
-import org.xml.sax.SAXException;
 import rcs.posemath.PmException;
 import rcs.posemath.PmPose;
 import rcs.posemath.Posemath;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -1911,13 +1908,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, PddlAction> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals("take-part") && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                    .select(action -> action.getType().equals("take-part") && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -1940,15 +1937,15 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             System.out.println("typeSet = " + typeSet);
             MutableMultimap<String, PhysicalItem> availSlotsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("ES")
+                    .select(item -> item.getType().equals("ES")
                             && item.getName().startsWith("empty_slot_")
                             && !item.getName().contains("_in_kit_"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, PddlAction> placePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals("place-part") && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
+                    .select(action -> action.getType().equals("place-part") && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
 
             for (String partTypeName : placePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeSlots
@@ -2098,8 +2095,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                        .map(arg -> arg.split("="))
-                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                .map(arg -> arg.split("="))
+                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2431,17 +2428,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
         List<String> partNames
                 = newItems.stream()
-                        .filter(item -> item.getType().equals("P"))
-                        .flatMap(item -> {
-                            String fullName = item.getFullName();
-                            if (null != fullName) {
-                                return Stream.of(fullName);
-                            }
-                            return Stream.empty();
-                        })
-                        .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
-                        .sorted()
-                        .collect(Collectors.toList());
+                .filter(item -> item.getType().equals("P"))
+                .flatMap(item -> {
+                    String fullName = item.getFullName();
+                    if (null != fullName) {
+                        return Stream.of(fullName);
+                    }
+                    return Stream.empty();
+                })
+                .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
+                .sorted()
+                .collect(Collectors.toList());
         return partNames;
     }
 
@@ -3538,6 +3535,26 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return isPartInSlot;
     }
 
+    private int toolChangeToolNameArgIndex = 1;
+
+    /**
+     * Get the value of toolChangeToolNameArgIndex
+     *
+     * @return the value of toolChangeToolNameArgIndex
+     */
+    public int getToolChangeToolNameArgIndex() {
+        return toolChangeToolNameArgIndex;
+    }
+
+    /**
+     * Set the value of toolChangeToolNameArgIndex
+     *
+     * @param toolChangeToolNameArgIndex new value of toolChangeToolNameArgIndex
+     */
+    public void setToolChangeToolNameArgIndex(int toolChangeToolNameArgIndex) {
+        this.toolChangeToolNameArgIndex = toolChangeToolNameArgIndex;
+    }
+
     private int toolChangePosArgIndex = 0;
 
     /**
@@ -3621,11 +3638,24 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         takePartByName(partName, nextPlacePartAction, out);
     }
 
+    private static String getBaseName(String name) {
+        String baseName = name;
+        int lastCharIndex = baseName.length() - 1;
+        char lastChar = baseName.charAt(lastCharIndex);
+        while (lastChar == '_' || Character.isDigit(lastChar) && lastCharIndex > 1) {
+            lastCharIndex--;
+            lastChar = baseName.charAt(lastCharIndex);
+        }
+        return baseName.substring(0, lastCharIndex + 1);
+    }
+
     public void takePartByName(String partName, @Nullable PddlAction nextPlacePartAction, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
         PoseType pose = getPose(partName);
+        PoseType pose1 = pose;
         if (takeSnapshots) {
             takeSnapshots("plan", "take-part-" + partName + "", pose, partName);
         }
+
         if (null == pose) {
             if (skipMissingParts) {
                 recordSkipTakePart(partName, pose);
@@ -3645,7 +3675,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 }
             }
         }
+        String basePartName = getBaseName(partName);
+        if (null != basePartName && basePartName.length() > 1) {
+            PoseType attachPoseOffset = trayAttachOffsetsMap.get(basePartName);
+            if (null != attachPoseOffset) {
+                pose = CRCLPosemath.multiply(pose,attachPoseOffset);
+                PoseType pose3 = pose;
+            }
+        }
         pose = visionToRobotPose(pose);
+        PoseType pose2 = pose;
+        
         returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
@@ -4051,6 +4091,110 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         this.pickupDistMax = pickupDistMax;
     }
 
+    private PoseType toolOffsetPose = CRCLPosemath.identityPose();
+
+    /**
+     * Get the value of toolOffsetPose
+     *
+     * @return the value of toolOffsetPose
+     */
+    public PoseType getToolOffsetPose() {
+        return toolOffsetPose;
+    }
+
+    /**
+     * Set the value of toolOffsetPose
+     *
+     * @param toolOffsetPose new value of toolOffsetPose
+     */
+    public void setToolOffsetPose(PoseType toolOffsetPose) {
+        this.toolOffsetPose = toolOffsetPose;
+    }
+
+    private final ConcurrentHashMap<String, PoseType> toolOffsetMap = new ConcurrentHashMap<>();
+
+    /**
+     * Get the value of toolOffsetMap
+     *
+     * @return the value of toolOffsetMap
+     */
+    public ConcurrentHashMap<String, PoseType> getToolOffsetMap() {
+        return toolOffsetMap;
+    }
+
+    private String toolName;
+
+    /**
+     * Get the value of toolName
+     *
+     * @return the value of toolName
+     */
+    public String getToolName() {
+        return toolName;
+    }
+
+    private ConcurrentHashMap<String, PoseType> trayAttachOffsetsMap = new ConcurrentHashMap<>();
+
+    /**
+     * Get the value of trayAttachOffsetsMap
+     *
+     * @return the value of trayAttachOffsetsMap
+     */
+    public ConcurrentHashMap<String, PoseType> getTrayAttachOffsetsMap() {
+        return trayAttachOffsetsMap;
+    }
+
+    /**
+     * Set the value of trayAttachOffsetsMap
+     *
+     * @param trayAttachOffsetsMap new value of trayAttachOffsetsMap
+     */
+    public void setTrayAttachOffsetsMap(ConcurrentHashMap<String, PoseType> trayAttachOffsetsMap) {
+        this.trayAttachOffsetsMap = trayAttachOffsetsMap;
+    }
+
+    /**
+     * Set the value of toolName
+     *
+     * @param toolName new value of toolName
+     */
+    public void setToolName(String toolName) {
+        String oldCurrentToolName = this.toolName;
+        this.toolName = toolName;
+        if (null != toolName && toolName.length() > 0) {
+            PoseType newPose = toolOffsetMap.get(toolName);
+            if (null != newPose) {
+                setToolOffsetPose(newPose);
+            }
+            if (Objects.equals(toolName, oldCurrentToolName)) {
+                return;
+            }
+            if (null != parentPddlExecutorJPanel) {
+                parentPddlExecutorJPanel.setSelectedToolName(toolName);
+            }
+        }
+    }
+
+    private transient final java.beans.PropertyChangeSupport propertyChangeSupport = new java.beans.PropertyChangeSupport(this);
+
+    /**
+     * Add PropertyChangeListener.
+     *
+     * @param listener
+     */
+    public void addPropertyChangeListener(java.beans.PropertyChangeListener listener) {
+        propertyChangeSupport.addPropertyChangeListener(listener);
+    }
+
+    /**
+     * Remove PropertyChangeListener.
+     *
+     * @param listener
+     */
+    public void removePropertyChangeListener(java.beans.PropertyChangeListener listener) {
+        propertyChangeSupport.removePropertyChangeListener(listener);
+    }
+
     /**
      * Add commands to the list that will take a part at a given pose.
      *
@@ -4064,15 +4208,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         assert (aprsJFrame != null) : "aprsJFrame == null : @AssumeAssertion(nullness)";
 
+        PoseType poseWithToolOffset = CRCLPosemath.multiply(pose, toolOffsetPose);
+
         addOpenGripper(cmds);
 
         checkSettings();
-        PoseType approachPose = addZToPose(pose, approachZOffset);
+        PoseType approachPose = addZToPose(poseWithToolOffset, approachZOffset);
 
         lastTestApproachPose = null;
 
-        PoseType takePose = CRCLPosemath.copy(pose);
-        takePose.getPoint().setZ(pose.getPoint().getZ() + takeZOffset);
+        PoseType takePose = CRCLPosemath.copy(poseWithToolOffset);
+        takePose.getPoint().setZ(poseWithToolOffset.getPoint().getZ() + takeZOffset);
 
         addSetFastSpeed(cmds);
 
@@ -4930,6 +5076,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private void pickupTool(PddlAction action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
         lastTestApproachPose = null;
         String toolChangerPosName = action.getArgs()[toolChangePosArgIndex];
+        String newToolName = action.getArgs()[toolChangeToolNameArgIndex];
         checkSettings();
         checkDbReady();
         PoseType pose = getPose(toolChangerPosName);
@@ -4940,6 +5087,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addSetVerySlowSpeed(out);
         addMoveTo(out, pose, false);
         addCloseToolChanger(out);
+        setToolName(newToolName);
         gotoToolChangerApproachByPose(pose, out);
     }
 
@@ -5309,14 +5457,16 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         checkSettings();
 
-        PoseType approachPose = CRCLPosemath.copy(pose);
+        PoseType poseWithToolOffset = CRCLPosemath.multiply(pose, toolOffsetPose);
+
+        PoseType approachPose = CRCLPosemath.copy(poseWithToolOffset);
         lastTestApproachPose = null;
 
         //System.out.println("Z= " + pose.getPoint().getZ());
-        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
+        approachPose.getPoint().setZ(poseWithToolOffset.getPoint().getZ() + approachZOffset);
 
-        PoseType placePose = CRCLPosemath.copy(pose);
-        placePose.getPoint().setZ(pose.getPoint().getZ() + placeZOffset);
+        PoseType placePose = CRCLPosemath.copy(poseWithToolOffset);
+        placePose.getPoint().setZ(poseWithToolOffset.getPoint().getZ() + placeZOffset);
 
         addSetFastSpeed(cmds);
 

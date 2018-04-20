@@ -824,7 +824,8 @@
                   <Group type="102" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
+                          <Component id="jTabbedPaneToolChangeInner" max="32767" attributes="0"/>
+                          <Group type="102" attributes="0">
                               <Component id="jButtonGotoToolChangerPose" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jLabel13" min="-2" max="-2" attributes="0"/>
@@ -836,10 +837,21 @@
                               <Component id="jButtonDropTool" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButtonPickupTool" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                           </Group>
-                          <Component id="jTabbedPaneToolChangeInner" alignment="0" min="-2" pref="887" max="-2" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jTextFieldCurrentToolName" min="-2" pref="199" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonSetCurrentTool" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jLabel21" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jTextFieldCurrentToolOffset" max="32767" attributes="0"/>
+                          </Group>
                       </Group>
-                      <EmptySpace pref="357" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -856,7 +868,15 @@
                           <Component id="jButtonPickupTool" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jTabbedPaneToolChangeInner" pref="227" max="32767" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jTextFieldCurrentToolName" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonSetCurrentTool" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel21" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jTextFieldCurrentToolOffset" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jTabbedPaneToolChangeInner" pref="191" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -929,7 +949,7 @@
                     <Component class="javax.swing.JTable" name="jTableHolderContents">
                       <Properties>
                         <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                          <Table columnCount="3" rowCount="4">
+                          <Table columnCount="3" rowCount="0">
                             <Column editable="true" title="Holder Position Name" type="java.lang.String"/>
                             <Column editable="true" title="Occupied" type="java.lang.Boolean"/>
                             <Column editable="true" title="Contents" type="java.lang.String"/>
@@ -960,12 +980,12 @@
                               <Component id="jButtonAddToolHolderPose" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButtonDeleteToolHolderPose" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="129" max="32767" attributes="0"/>
+                              <EmptySpace pref="546" max="32767" attributes="0"/>
                           </Group>
                           <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="0" attributes="0">
                                   <EmptySpace min="-2" max="-2" attributes="0"/>
-                                  <Component id="jScrollPaneToolHolderPositions" pref="875" max="32767" attributes="0"/>
+                                  <Component id="jScrollPaneToolHolderPositions" pref="1226" max="32767" attributes="0"/>
                                   <EmptySpace min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
@@ -986,7 +1006,7 @@
                           <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="1" attributes="0">
                                   <EmptySpace min="-2" pref="40" max="-2" attributes="0"/>
-                                  <Component id="jScrollPaneToolHolderPositions" pref="152" max="32767" attributes="0"/>
+                                  <Component id="jScrollPaneToolHolderPositions" pref="115" max="32767" attributes="0"/>
                                   <EmptySpace min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
@@ -1068,12 +1088,12 @@
                               <Component id="jButtonAddToolOffset" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButtonDeleteToolOffset" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="694" max="32767" attributes="0"/>
+                              <EmptySpace pref="1059" max="32767" attributes="0"/>
                           </Group>
                           <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="0" attributes="0">
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jScrollPaneToolOffsets" pref="875" max="32767" attributes="0"/>
+                                  <Component id="jScrollPaneToolOffsets" pref="1226" max="32767" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                               </Group>
                           </Group>
@@ -1092,7 +1112,7 @@
                           <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="1" attributes="0">
                                   <EmptySpace min="-2" pref="42" max="-2" attributes="0"/>
-                                  <Component id="jScrollPaneToolOffsets" pref="150" max="32767" attributes="0"/>
+                                  <Component id="jScrollPaneToolOffsets" pref="113" max="32767" attributes="0"/>
                                   <EmptySpace min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
@@ -1126,7 +1146,7 @@
                         <Component class="javax.swing.JTable" name="jTableToolOffsets">
                           <Properties>
                             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                              <Table columnCount="7" rowCount="4">
+                              <Table columnCount="8" rowCount="0">
                                 <Column editable="true" title="ToolName" type="java.lang.String"/>
                                 <Column editable="true" title="X (mm)" type="java.lang.Double"/>
                                 <Column editable="true" title="Y (mm)" type="java.lang.Double"/>
@@ -1134,6 +1154,90 @@
                                 <Column editable="true" title="Rx (deg)" type="java.lang.Double"/>
                                 <Column editable="true" title="Ry (deg)" type="java.lang.Double"/>
                                 <Column editable="true" title="Rz (deg)" type="java.lang.Double"/>
+                                <Column editable="true" title="Comment" type="java.lang.String"/>
+                              </Table>
+                            </Property>
+                          </Properties>
+                        </Component>
+                      </SubComponents>
+                    </Container>
+                  </SubComponents>
+                </Container>
+                <Container class="javax.swing.JPanel" name="jPanel1">
+                  <Constraints>
+                    <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+                      <JTabbedPaneConstraints tabName="Tray Attach Locations">
+                        <Property name="tabTitle" type="java.lang.String" value="Tray Attach Locations"/>
+                      </JTabbedPaneConstraints>
+                    </Constraint>
+                  </Constraints>
+
+                  <Layout>
+                    <DimensionLayout dim="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="jScrollPaneToolOffsets1" pref="1226" max="32767" attributes="0"/>
+                                  <Group type="102" attributes="0">
+                                      <Component id="jButtonAddTrayAttach" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jButtonDeleteTrayAttach" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                    </DimensionLayout>
+                    <DimensionLayout dim="1">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="jButtonAddTrayAttach" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jButtonDeleteTrayAttach" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jScrollPaneToolOffsets1" pref="115" max="32767" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                    </DimensionLayout>
+                  </Layout>
+                  <SubComponents>
+                    <Component class="javax.swing.JButton" name="jButtonAddTrayAttach">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Add"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonAddTrayAttachActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="jButtonDeleteTrayAttach">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Delete"/>
+                      </Properties>
+                    </Component>
+                    <Container class="javax.swing.JScrollPane" name="jScrollPaneToolOffsets1">
+                      <AuxValues>
+                        <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
+                      </AuxValues>
+
+                      <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+                      <SubComponents>
+                        <Component class="javax.swing.JTable" name="jTableTrayAttachOffsets">
+                          <Properties>
+                            <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
+                              <Table columnCount="8" rowCount="0">
+                                <Column editable="true" title="TrayName" type="java.lang.String"/>
+                                <Column editable="true" title="X (mm)" type="java.lang.Double"/>
+                                <Column editable="true" title="Y (mm)" type="java.lang.Double"/>
+                                <Column editable="true" title="Z (mm)" type="java.lang.Double"/>
+                                <Column editable="true" title="Rx (deg)" type="java.lang.Double"/>
+                                <Column editable="true" title="Ry (deg)" type="java.lang.Double"/>
+                                <Column editable="true" title="Rz (deg)" type="java.lang.Double"/>
+                                <Column editable="true" title="Comment" type="java.lang.String"/>
                               </Table>
                             </Property>
                           </Properties>
@@ -1144,6 +1248,34 @@
                 </Container>
               </SubComponents>
             </Container>
+            <Component class="javax.swing.JLabel" name="jLabel7">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Current Tool Name: "/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="jTextFieldCurrentToolName">
+              <Properties>
+                <Property name="editable" type="boolean" value="false"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonSetCurrentTool">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Set Current Tool"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonSetCurrentToolActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel21">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Offset: "/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="jTextFieldCurrentToolOffset">
+              <Properties>
+                <Property name="editable" type="boolean" value="false"/>
+              </Properties>
+            </Component>
           </SubComponents>
         </Container>
         <Container class="javax.swing.JPanel" name="jPanelContainerPositionMap">
@@ -1427,11 +1559,15 @@
                   <Properties>
                     <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                      <Table columnCount="4" rowCount="4">
+                      <Table columnCount="8" rowCount="0">
                         <Column editable="false" title="Name" type="java.lang.String"/>
                         <Column editable="false" title="X" type="java.lang.Double"/>
                         <Column editable="false" title="Y" type="java.lang.Double"/>
                         <Column editable="false" title="Z" type="java.lang.Double"/>
+                        <Column editable="false" title="Roll" type="java.lang.Double"/>
+                        <Column editable="false" title="Pitch" type="java.lang.Double"/>
+                        <Column editable="false" title="Yaw" type="java.lang.Double"/>
+                        <Column editable="true" title="Comment" type="java.lang.String"/>
                       </Table>
                     </Property>
                   </Properties>
