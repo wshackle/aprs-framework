@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:2659
+#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties() at VisionToDBJPanel.java:2662
 --acquirestate=ON
 --aquirestate=ON
 --commandport=4001
