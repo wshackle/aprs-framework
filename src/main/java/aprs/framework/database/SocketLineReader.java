@@ -197,7 +197,9 @@ public class SocketLineReader {
                                             _cb.call(line, lcps);
                                         }
                                     } catch (SocketException exception) {
-                                        System.out.println("Closing client socket " + c);
+                                        if (null != c && (null != c.socket || null != c.thread)) {
+                                            System.err.println("Closing client socket " + c);
+                                        }
                                         try {
                                             if (null != socket) {
                                                 socket.close();
@@ -206,7 +208,7 @@ public class SocketLineReader {
                                             // ignore
                                         }
                                     } catch (Exception exception) {
-                                        if(!closing) {
+                                        if (!closing) {
                                             exception.printStackTrace();
                                         }
                                     }

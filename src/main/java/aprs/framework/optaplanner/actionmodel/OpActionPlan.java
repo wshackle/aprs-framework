@@ -115,34 +115,35 @@ public class OpActionPlan {
 
     public void initNextActions() {
 
-        debug = true;
         if (null == actions) {
             throw new IllegalStateException("actions not initialized");
         }
         List<OpAction> tmpActions = new ArrayList<>(actions);
         List<OpAction> origActions = new ArrayList<>(actions);
-        
+
         if (debug) {
             System.out.println("origActions = " + origActions);
         }
         for (int i = 0; i < tmpActions.size(); i++) {
             OpAction act = tmpActions.get(i);
-            if(act.getActionType() == FAKE_PICKUP || act.getActionType() == FAKE_DROPOFF) {
-                throw new IllegalStateException("input list should not have fake actions : act ="+act+",\norigActions="+origActions);
+            if (act.getActionType() == FAKE_PICKUP || act.getActionType() == FAKE_DROPOFF) {
+                throw new IllegalStateException("input list should not have fake actions : act =" + act + ",\norigActions=" + origActions);
             }
         }
         MutableMultimap<String, OpAction> multimapWithList
                 = Lists.mutable.ofAll(tmpActions)
-                .select(a -> a.getActionType() == PICKUP || a.getActionType() == DROPOFF)
-                .groupBy(a -> a.getPartType());
+                        .select(a -> a.getActionType() == PICKUP || a.getActionType() == DROPOFF)
+                        .groupBy(a -> a.getPartType());
         for (String partType : multimapWithList.keySet()) {
             MutableCollection<OpAction> theseActions = multimapWithList.get(partType);
             long pickupCount = theseActions.count(a -> a.getActionType() == PICKUP);
             long dropoffCount = theseActions.count(a -> a.getActionType() == DROPOFF);
-            System.out.println("partType = " + partType);
-            System.out.println("dropoffCount = " + dropoffCount);
-            System.out.println("pickupCount = " + pickupCount);
-            System.out.println("theseActions = " + theseActions);
+            if (debug) {
+                System.out.println("partType = " + partType);
+                System.out.println("dropoffCount = " + dropoffCount);
+                System.out.println("pickupCount = " + pickupCount);
+                System.out.println("theseActions = " + theseActions);
+            }
             if (dropoffCount < pickupCount) {
                 for (long j = dropoffCount; j < pickupCount; j++) {
                     tmpActions.add(new OpAction("fake_dropoff_" + partType + "_" + j, 0, 0, FAKE_DROPOFF, partType, false));
@@ -160,7 +161,7 @@ public class OpActionPlan {
         for (OpAction act : tmpActions) {
             act.addPossibleNextActions(allActions);
             if (act.getPossibleNextActions().isEmpty()) {
-                throw new IllegalStateException("action has no possible next action=" + act + ", act.getPartType()="+act.getPartType()+",\norigActions=" + origActions + ",\nallActions=" + allActions+",\nmultimapWithList="+multimapWithList);
+                throw new IllegalStateException("action has no possible next action=" + act + ", act.getPartType()=" + act.getPartType() + ",\norigActions=" + origActions + ",\nallActions=" + allActions + ",\nmultimapWithList=" + multimapWithList);
             }
         }
         for (OpAction act : tmpActions) {
@@ -207,7 +208,6 @@ public class OpActionPlan {
             System.out.println("origActions = " + origActions);
             System.out.println("newActions.size() = " + newActions.size());
             for (int i = 0; i < newActions.size(); i++) {
-                System.out.println("i = " + i);
                 OpAction act = newActions.get(i);
                 if (act.getNext() == null) {
                     throw new IllegalStateException("action has null next:i=" + i + ",act=" + act + ",\norigActions=" + tmpActions + ",\nnewActions=" + newActions);
@@ -215,11 +215,11 @@ public class OpActionPlan {
                 if (act.getPossibleNextActions() == null || act.getPossibleNextActions().isEmpty()) {
                     throw new IllegalStateException("action has no possibleNextAction :" + act);
                 }
-                System.out.println(act + ".getPossibleNextActions() = "
+                System.out.println("i="+i+", "+act + ".getPossibleNextActions() = "
                         + act.getPossibleNextActions()
-                        .stream()
-                        .map(OpActionInterface::getName)
-                        .collect(Collectors.joining(",")));
+                                .stream()
+                                .map(OpActionInterface::getName)
+                                .collect(Collectors.joining(",")));
             }
         }
         actions = newActions;
@@ -227,8 +227,11 @@ public class OpActionPlan {
             System.out.println("unusedActions = " + unusedActions);
             System.out.println("actions = " + actions);
         }
-        List<OpAction> effectiveOrderedList = getEffectiveOrderedList(true);
-        System.out.println("effectiveOrderedList = " + effectiveOrderedList);
+
+        if (debug) {
+            List<OpAction> effectiveOrderedList = getEffectiveOrderedList(true);
+            System.out.println("effectiveOrderedList = " + effectiveOrderedList);
+        }
     }
 
     private @Nullable
@@ -402,6 +405,9 @@ public class OpActionPlan {
     public List<OpAction> getOrderedList(boolean quiet) {
         List<OpAction> l = new ArrayList<>();
         OpAction startAction = findStartAction();
+        if (null == startAction) {
+            throw new IllegalStateException("findStartAction returned null");
+        }
         l.add(startAction);
         OpActionInterface tmp = startAction;
         while (null != tmp) {
@@ -431,6 +437,9 @@ public class OpActionPlan {
         List<OpAction> l = new ArrayList<>();
         try {
             OpAction startAction = findStartAction();
+            if (null == startAction) {
+                throw new IllegalStateException("findStartAction returned null");
+            }
             l.add(startAction);
             OpActionInterface tmp = startAction;
             while (null != tmp) {

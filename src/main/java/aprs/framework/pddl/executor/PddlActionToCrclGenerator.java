@@ -1318,7 +1318,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
                 final int idx = getLastIndex();
                 PddlAction action = gparams.actions.get(idx);
-                System.out.println("action = " + action);
+                if (debug) {
+                    System.out.println("action[" + idx + "] = " + action);
+                }
                 if (skipMissingParts) {
                     boolean needSkip = false;
                     switch (action.getType()) {
@@ -1908,13 +1910,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                    .groupBy(item -> posNameToType(item.getName()));
+                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                            .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, PddlAction> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                    .select(action -> action.getType().equals("take-part") && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
-                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                            .select(action -> action.getType().equals("take-part") && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
+                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -1933,19 +1935,20 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     .stream()
                     .map(PhysicalItem::getType)
                     .collect(Collectors.toSet());
-
-            System.out.println("typeSet = " + typeSet);
+            if (debug) {
+                System.out.println("typeSet = " + typeSet);
+            }
             MutableMultimap<String, PhysicalItem> availSlotsMap
                     = Lists.mutable.ofAll(items)
-                    .select(item -> item.getType().equals("ES")
+                            .select(item -> item.getType().equals("ES")
                             && item.getName().startsWith("empty_slot_")
                             && !item.getName().contains("_in_kit_"))
-                    .groupBy(item -> posNameToType(item.getName()));
+                            .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, PddlAction> placePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                    .select(action -> action.getType().equals("place-part") && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
-                    .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
+                            .select(action -> action.getType().equals("place-part") && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
+                            .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
 
             for (String partTypeName : placePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeSlots
@@ -1962,7 +1965,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         }
         if (opActions.size() < 3) {
-            logger.warning("opActions.size()=" + opActions.size());
+            logger.warning("optimizePddlActionsWithOptaPlanner: small size of opActions list : opActions.size()=" + opActions.size()+", actions="+actions);
             return actions;
         }
         if (skippedActions > 0) {
@@ -2095,8 +2098,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                .map(arg -> arg.split("="))
-                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                        .map(arg -> arg.split("="))
+                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2132,7 +2135,18 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private List<Slot> getAbsSlotListForKitInstance(String kitSkuName, String kitInstanceName) {
         try {
             PoseType pose = getPose(kitInstanceName);
-            System.out.println("pose = " + pose);
+            if (debug) {
+                try {
+                    if (null != pose) {
+                        System.out.println("getAbsSlotListForKitInstance(" + kitSkuName + "," + kitInstanceName + ") : pose = " + CRCLPosemath.poseToString(pose));
+                    } else {
+                        System.out.println("getAbsSlotListForKitInstance(" + kitSkuName + "," + kitInstanceName + ") : pose = null");
+
+                    }
+                } catch (CRCLException ex) {
+                    Logger.getLogger(PddlActionToCrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
             if (null == pose) {
                 return Collections.emptyList();
             }
@@ -2183,7 +2197,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 .filter(x -> !x.getName().startsWith("empty_slot"))
                 .filter(x -> !x.getName().contains("vessel"))
                 .collect(Collectors.toList());
-        System.out.println("parts = " + parts);
+        if (debug) {
+            System.out.println("checkKits: parts = " + parts);
+        }
         Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
         List<KitToCheck> kitsToFix = new ArrayList<>(kitsToCheck);
@@ -2322,7 +2338,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                         List<String> partNames
                                                 = itemsNameMap.computeIfAbsent(finalShortSkuName,
                                                         k -> partNamesListForShortSkuName(newItems, k));
-                                        System.out.println("partNames = " + partNames);
+                                        System.out.println("checkKits: partNames = " + partNames);
                                         if (partNames.isEmpty()) {
                                             System.out.println("");
                                             System.out.println("No partnames for finalShortSkuName=" + finalShortSkuName);
@@ -2350,7 +2366,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                                         String partName = partNames.remove(0);
                                         correctiveActions.add(new PddlAction("", "take-part", new String[]{partName}, ""));
                                         String slotName = absSlot.getFullName();
-                                        System.out.println("slotName = " + slotName);
+                                        System.out.println("checkKits: slotName = " + slotName);
 //                                        boolean inCache = poseCache.keySet().contains(slotName);
 //                                        if(!inCache) {
 //                                                System.out.println("poseCache.keySet() = " + poseCache.keySet());
@@ -2428,17 +2444,17 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     private List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
         List<String> partNames
                 = newItems.stream()
-                .filter(item -> item.getType().equals("P"))
-                .flatMap(item -> {
-                    String fullName = item.getFullName();
-                    if (null != fullName) {
-                        return Stream.of(fullName);
-                    }
-                    return Stream.empty();
-                })
-                .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
-                .sorted()
-                .collect(Collectors.toList());
+                        .filter(item -> item.getType().equals("P"))
+                        .flatMap(item -> {
+                            String fullName = item.getFullName();
+                            if (null != fullName) {
+                                return Stream.of(fullName);
+                            }
+                            return Stream.empty();
+                        })
+                        .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
+                        .sorted()
+                        .collect(Collectors.toList());
         return partNames;
     }
 
@@ -2907,9 +2923,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     private File createTempFile(String prefix, String suffix) throws IOException {
-        if (suffix.endsWith(".PNG")) {
-            System.out.println("suffix = " + suffix);
-        }
         if (null != aprsJFrame) {
             return aprsJFrame.createTempFile(prefix, suffix);
         }
@@ -3679,13 +3692,13 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         if (null != basePartName && basePartName.length() > 1) {
             PoseType attachPoseOffset = trayAttachOffsetsMap.get(basePartName);
             if (null != attachPoseOffset) {
-                pose = CRCLPosemath.multiply(pose,attachPoseOffset);
+                pose = CRCLPosemath.multiply(pose, attachPoseOffset);
                 PoseType pose3 = pose;
             }
         }
         pose = visionToRobotPose(pose);
         PoseType pose2 = pose;
-        
+
         returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
@@ -4122,14 +4135,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return toolOffsetMap;
     }
 
-    private String toolName;
+    @Nullable private String toolName;
 
     /**
      * Get the value of toolName
      *
      * @return the value of toolName
      */
-    public String getToolName() {
+    @Nullable public String getToolName() {
         return toolName;
     }
 
@@ -4173,26 +4186,6 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                 parentPddlExecutorJPanel.setSelectedToolName(toolName);
             }
         }
-    }
-
-    private transient final java.beans.PropertyChangeSupport propertyChangeSupport = new java.beans.PropertyChangeSupport(this);
-
-    /**
-     * Add PropertyChangeListener.
-     *
-     * @param listener
-     */
-    public void addPropertyChangeListener(java.beans.PropertyChangeListener listener) {
-        propertyChangeSupport.addPropertyChangeListener(listener);
-    }
-
-    /**
-     * Remove PropertyChangeListener.
-     *
-     * @param listener
-     */
-    public void removePropertyChangeListener(java.beans.PropertyChangeListener listener) {
-        propertyChangeSupport.removePropertyChangeListener(listener);
     }
 
     /**

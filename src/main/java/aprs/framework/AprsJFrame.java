@@ -555,7 +555,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
      * @return current setting of menu item
      */
     public boolean isEnableDebugDumpstacks() {
-        return jCheckBoxMenuItemEnableDebugDumpstacks.isSelected();
+        return debug;
     }
 
     /**
@@ -995,6 +995,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     @Nullable
     private volatile XFuture<Void> disconnectRobotFuture = null;
 
+    private volatile boolean debug = false;
+
     /**
      * Disconnect from the robot's crcl server and set robotName to null.
      *
@@ -1011,8 +1013,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         XFuture<Void> ret = waitForPause().
                 thenRunAsync("disconnectRobot(" + getRobotName() + ")", this::disconnectRobotPrivate, connectService);
         this.disconnectRobotFuture = ret;
-        System.out.println("disconnectRobotFuture = " + disconnectRobotFuture);
-        System.out.println("connectService = " + connectService);
+        if (debug) {
+            System.out.println("disconnectRobotFuture = " + disconnectRobotFuture);
+            System.out.println("connectService = " + connectService);
+        }
         return ret;
     }
 
@@ -2913,9 +2917,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }
 
-    private volatile XFuture<?> xf1 = null;
-    private volatile XFuture<?> xf2 = null;
-    private volatile Utils.SwingFuture<Void> xf3 = null;
+    @Nullable private volatile XFuture<?> xf1 = null;
+    @Nullable private volatile XFuture<?> xf2 = null;
+    private volatile Utils.@Nullable SwingFuture<Void> xf3 = null;
 
     /**
      * Start the PDDL Executor (aka Actions to CRCL) and create and display the
@@ -3291,6 +3295,11 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jMenu4.setText("Options");
 
         jCheckBoxMenuItemEnableDebugDumpstacks.setText("Enable Debug DumpStacks");
+        jCheckBoxMenuItemEnableDebugDumpstacks.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed(evt);
+            }
+        });
         jMenu4.add(jCheckBoxMenuItemEnableDebugDumpstacks);
 
         jMenuItemSetPoseMaxLimits.setText("Set Pose Max Limits ... (+10000,+10000,+10000)    ...");
@@ -3938,6 +3947,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private void jMenuItemClearErrorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemClearErrorsActionPerformed
         this.clearErrors();
     }//GEN-LAST:event_jMenuItemClearErrorsActionPerformed
+
+    private void jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed
+        this.debug = jCheckBoxMenuItemConnectDatabase.isSelected();
+    }//GEN-LAST:event_jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed
 
     /**
      * Start a sequence of actions to move the robot out of the way so the
@@ -5072,7 +5085,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         if (program.getMiddleCommand().isEmpty()) {
             emptyProgramCount++;
             consecutiveEmptyProgramCount++;
-            if (consecutiveEmptyProgramCount > 1) {
+            if (consecutiveEmptyProgramCount > 1 && debug) {
                 System.out.println("emptyProgramCount=" + emptyProgramCount);
                 System.out.println("consecutiveEmptyProgramCount=" + consecutiveEmptyProgramCount);
             }

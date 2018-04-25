@@ -93,7 +93,7 @@ public class OpAction implements OpActionInterface {
 
     @PlanningVariable(graphType = PlanningVariableGraphType.CHAINED,
             valueRangeProviderRefs = {"possibleNextActions", "endActions"})
-    private @Nullable OpActionInterface next;
+    private volatile @Nullable OpActionInterface next;
 
     private OpActionType actionType;
 
@@ -196,7 +196,8 @@ public class OpAction implements OpActionInterface {
 
     @Override
     public boolean skipNext() {
-        if (null == next) {
+        OpActionInterface n = this.next;
+        if (null == n) {
             return false;
         }
         if (this.actionType == FAKE_PICKUP) {
@@ -205,10 +206,10 @@ public class OpAction implements OpActionInterface {
         if (this.actionType != PICKUP) {
             return false;
         }
-        if (next.getActionType() == FAKE_DROPOFF) {
+        if (n.getActionType() == FAKE_DROPOFF) {
             return true;
         }
-        return !this.isRequired() && !next.isRequired();
+        return !this.isRequired() && !n.isRequired();
     }
 
     @Override @Nullable
@@ -270,7 +271,7 @@ public class OpAction implements OpActionInterface {
 //                        nxts.add(nxt2);
                         nxt2Next = nxt2.getNext();
                         if (null == nxt2Next) {
-                            throw new IllegalStateException("this=" + name + " nxt2="+nxt2+" nxt2.getNext() ==null");
+                            throw new IllegalStateException("this=" + name + " nxt2=" + nxt2 + " nxt2.getNext() ==null");
                         }
 //                        nxts.add(nxt2Next);
                         if (nxt2 == next) {
@@ -287,7 +288,11 @@ public class OpAction implements OpActionInterface {
     }
 
     public double cost(OpActionPlan plan) {
-        if (actionType == FAKE_PICKUP || actionType == FAKE_DROPOFF || next.getActionType() == FAKE_DROPOFF) {
+        OpActionInterface n = this.next;
+        if (null == n) {
+            return Double.POSITIVE_INFINITY;
+        }
+        if (actionType == FAKE_PICKUP || actionType == FAKE_DROPOFF || n.getActionType() == FAKE_DROPOFF) {
             return 0;
         }
         if (this.skipNext()) {
@@ -355,7 +360,7 @@ public class OpAction implements OpActionInterface {
         }
         String infoString = partTypeString + effNextString;
         if (partTypeString.endsWith(")") && effNextString.startsWith("(")) {
-            infoString = partTypeString.substring(0, partTypeString.length() - 1) + (isRequired()?",required":"") + "," + effNextString.substring(1);
+            infoString = partTypeString.substring(0, partTypeString.length() - 1) + (isRequired() ? ",required" : "") + "," + effNextString.substring(1);
         }
         OpActionInterface localNext = this.next;
         if (localNext instanceof OpAction) {

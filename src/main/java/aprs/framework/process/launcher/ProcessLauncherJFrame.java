@@ -355,8 +355,8 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     @Nullable private volatile File processLaunchDirectory = null;
 
-    private volatile String onFailLine = null;
-    private volatile XFutureVoid waitForFuture = null;
+    @Nullable private volatile String onFailLine = null;
+    @Nullable private volatile XFutureVoid waitForFuture = null;
 
     @Nullable private WrappedProcess parseLaunchFileLine(String line, List<XFutureVoid> futures) throws IOException {
         if (line.length() < 1) {
@@ -419,16 +419,19 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                     @Override
                     public void accept(String s) {
                         if (s.contains(text)) {
-                            if (null != currentOnFailLine) {
+                            String line = currentOnFailLine;
+                            if (null != line) {
+                                String lineToParse = line;
                                 Utils.runOnDispatchThread(() -> {
                                     List<LineConsumer> origLineConsumers = lineConsumers;
                                     try {
                                         lineConsumers = currentErrorLineConsumers;
-                                        if (null != processLaunchDirectory) {
-                                            addProcess(processLaunchDirectory, parseCommandLine(currentOnFailLine));
+                                        File dir = processLaunchDirectory;
+                                        if (null != dir) {
+                                            addProcess(dir, parseCommandLine(lineToParse));
 
                                         } else {
-                                            addProcess(parseCommandLine(currentOnFailLine));
+                                            addProcess(parseCommandLine(lineToParse));
                                         }
                                     } catch (IOException ex) {
                                         Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);

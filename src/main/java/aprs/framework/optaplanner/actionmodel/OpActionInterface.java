@@ -34,5 +34,5 @@ public interface OpActionInterface {
     
     public int getPriority(boolean prevRequired);
     
-    public OpActionInterface effectiveNext(boolean quiet);
+    public @Nullable OpActionInterface effectiveNext(boolean quiet);
 }

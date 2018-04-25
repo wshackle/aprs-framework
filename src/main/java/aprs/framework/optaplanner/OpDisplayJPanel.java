@@ -149,38 +149,42 @@ public class OpDisplayJPanel extends JPanel {
     private JPopupMenu popupMenu = null;
 
     public void replan() {
-        List<OpAction> origActions = opActionPlan.getActions();
-        OpActionPlan newOpActionPlan = new OpActionPlanCloner().cloneSolution(opActionPlan);
-        List<OpAction> newActions = new ArrayList<>();
-        for (OpAction act : origActions) {
-            switch (act.getActionType()) {
-                case PICKUP:
-                case DROPOFF:
-                case START:
-                    newActions.add(new OpAction(act.getName(), act.getLocation().x, act.getLocation().y, act.getActionType(), act.getPartType(), act.isRequired()));
-                    break;
+        if (null != opActionPlan) {
+            List<OpAction> origActions = opActionPlan.getActions();
+            if (null != origActions) {
+                OpActionPlan newOpActionPlan = new OpActionPlanCloner().cloneSolution(opActionPlan);
+                List<OpAction> newActions = new ArrayList<>();
+                for (OpAction act : origActions) {
+                    switch (act.getActionType()) {
+                        case PICKUP:
+                        case DROPOFF:
+                        case START:
+                            newActions.add(new OpAction(act.getName(), act.getLocation().x, act.getLocation().y, act.getActionType(), act.getPartType(), act.isRequired()));
+                            break;
 
-                default:
-                    break;
+                        default:
+                            break;
+                    }
+                }
+                Collections.shuffle(newActions);
+                newOpActionPlan.setActions(newActions);
+                newOpActionPlan.initNextActions();
+                if (null == solver) {
+                    if (null == solverFactory) {
+                        solverFactory = SolverFactory.createFromXmlResource(
+                                "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
+                    }
+                    solver = solverFactory.buildSolver();
+                }
+                OpActionPlan newSolution = solver.solve(newOpActionPlan);
+                EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+                HardSoftLongScore score = calculator.calculateScore(newSolution);
+                showPlan(newSolution, "Replanned:" + score.toShortString(), JFrame.DISPOSE_ON_CLOSE);
             }
         }
-        Collections.shuffle(newActions);
-        newOpActionPlan.setActions(newActions);
-        newOpActionPlan.initNextActions();
-        if (null == solver) {
-            if (null == solverFactory) {
-                solverFactory = SolverFactory.createFromXmlResource(
-                        "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
-            }
-            solver = solverFactory.buildSolver();
-        }
-        OpActionPlan newSolution = solver.solve(newOpActionPlan);
-        EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
-        HardSoftLongScore score = calculator.calculateScore(newSolution);
-        showPlan(newSolution, "Replanned:" + score.toShortString(), JFrame.DISPOSE_ON_CLOSE);
     }
 
-    public SolverFactory<OpActionPlan> getSolverFactory() {
+    @Nullable public SolverFactory<OpActionPlan> getSolverFactory() {
         return solverFactory;
     }
 
@@ -188,7 +192,7 @@ public class OpDisplayJPanel extends JPanel {
         this.solverFactory = solverFactory;
     }
 
-    public Solver<OpActionPlan> getSolver() {
+    @Nullable public Solver<OpActionPlan> getSolver() {
         return solver;
     }
 
@@ -196,9 +200,10 @@ public class OpDisplayJPanel extends JPanel {
         this.solver = solver;
     }
 
-    @Nullable
+    private volatile @MonotonicNonNull
     SolverFactory<OpActionPlan> solverFactory = null;
 
+    private volatile @MonotonicNonNull
     Solver<OpActionPlan> solver = null;
 
     private JPopupMenu createPopupMenu() {
@@ -238,7 +243,7 @@ public class OpDisplayJPanel extends JPanel {
         clearActionListeners(showFakeActionsMenuItem);
         showFakeActionsMenuItem.addActionListener((ActionEvent evt) -> {
             newPopupMenu.setVisible(false);
-            if(showFakeActionsMenuItem.isSelected()) {
+            if (showFakeActionsMenuItem.isSelected()) {
                 setKeyWidth(150);
             } else {
                 setKeyWidth(110);
@@ -283,6 +288,11 @@ public class OpDisplayJPanel extends JPanel {
 
     @SuppressWarnings({"nullness", "initialization"})
     private void privateInit( 
+         
+         
+         
+         
+         
          
          
          
@@ -414,8 +424,8 @@ public class OpDisplayJPanel extends JPanel {
         }
         MutableMap<OpActionType, Integer> typeCountMap
                 = Lists.adapt(actionsList)
-                .countBy(OpAction::getActionType)
-                .toMapOfItemToCount();
+                        .countBy(OpAction::getActionType)
+                        .toMapOfItemToCount();
 
         Dimension dim = this.getSize();
         if (dim.width < 1 || dim.height < 1) {
@@ -465,7 +475,7 @@ public class OpDisplayJPanel extends JPanel {
                 int x = 10;
                 paintActionSymbol(g2d, x, keyY, type, false);
                 g2d.drawString(type.toString(), 40, keyY);
-                if(showFakeActionsMenuItem.isSelected()) {
+                if (showFakeActionsMenuItem.isSelected()) {
                     g2d.drawString(": " + typeCount, 140, keyY);
                 } else {
                     g2d.drawString(": " + typeCount, 100, keyY);
@@ -475,7 +485,12 @@ public class OpDisplayJPanel extends JPanel {
             int x = 10;
             paintActionSymbol(g2d, x, keyY, " ", true);
             g2d.drawString("required", 40, keyY);
-            g2d.drawString(": " + opActionPlan.getActions().stream().filter(OpAction::isRequired).count(), 100, keyY);
+            if (null != opActionPlan) {
+                List<OpAction> acts = opActionPlan.getActions();
+                if (null != acts) {
+                    g2d.drawString(": " + acts.stream().filter(OpAction::isRequired).count(), 100, keyY);
+                }
+            }
         }
     }
 
@@ -637,6 +652,9 @@ public class OpDisplayJPanel extends JPanel {
                 }
                 if (action.getActionType() == OpActionType.FAKE_PICKUP) {
                     action = action.getNext();
+                    if(null == action) {
+                        throw new IllegalStateException("action of type FAKE_PICKUP has null next: prevAction="+prevAction);
+                    }
                     action = action.getNext();
                     continue;
                 }
@@ -950,8 +968,8 @@ public class OpDisplayJPanel extends JPanel {
         }
         List<String> closeActionNames
                 = closeActions.stream()
-                .map(OpAction::getName)
-                .collect(Collectors.toList());
+                        .map(OpAction::getName)
+                        .collect(Collectors.toList());
         this.setToolTipText(closeActionNames.toString());
     }
 

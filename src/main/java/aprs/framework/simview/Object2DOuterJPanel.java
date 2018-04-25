@@ -1641,8 +1641,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         double max_y = object2DJPanel1.getMaxY();
         PhysicalItem itemToDrag = this.draggedItem;
         if (!evt.isShiftDown() && null != draggedItem && !"P".equals(draggedItem.getType())) {
-            draggedItem = null;
             System.out.println("Hold SHIFT to move trays : closestItem=" + draggedItem.getFullName());
+            draggedItem = null;
             return;
         }
         mouseDragTime = System.currentTimeMillis();
@@ -2861,15 +2861,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         final PoseType pose;
         final CRCLStatusType stat;
-        CRCLCommandType cmd;
+        final CRCLCommandType cmd;
         final boolean isHoldingObjectExpected;
         final long time;
 
-        public PoseUpdateHistoryItem(PoseType pose, CRCLStatusType stat, boolean isHoldingObjectExpected, long time) {
+        public PoseUpdateHistoryItem(PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected, long time) {
             this.pose = pose;
             this.stat = stat;
             this.isHoldingObjectExpected = isHoldingObjectExpected;
             this.time = time;
+            this.cmd = cmd;
         }
 
         @Override
@@ -2886,9 +2887,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private static Random r = new Random();
 
-    private volatile javax.swing.Timer timer = null;
+    private volatile javax.swing.@Nullable Timer timer = null;
 
-    private volatile PoseUpdateHistoryItem lastDropUpdate = null;
+    @Nullable private volatile PoseUpdateHistoryItem lastDropUpdate = null;
 
     @Override
     public void handlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
@@ -2901,7 +2902,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //    public void delayedHandlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
 
         PoseUpdateHistoryItem currentUpdate
-                = new PoseUpdateHistoryItem(pose, stat, isHoldingObjectExpected, System.currentTimeMillis());
+                = new PoseUpdateHistoryItem(pose, stat, cmd, isHoldingObjectExpected, System.currentTimeMillis());
         poseUpdateHistory.add(currentUpdate);
         if (poseUpdateHistory.size() > 5) {
             poseUpdateHistory.removeFirst();

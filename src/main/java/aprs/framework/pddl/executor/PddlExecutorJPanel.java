@@ -238,7 +238,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             if (null != newToolName && newToolName.length() > 0) {
                 String currentToolName = pddlActionToCrclGenerator.getToolName();
                 if (!Objects.equals(currentToolName, newToolName)) {
-                    pddlActionToCrclGenerator.setToolName(currentToolName);
+                    pddlActionToCrclGenerator.setToolName(newToolName);
                 }
                 jTextFieldCurrentToolName.setText(newToolName);
             }
@@ -4144,7 +4144,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setTrayAttachOffsetTableModelListener();
     }
     
-    private void readCsvPoseFileToTableAndMap(DefaultTableModel dtm, File f, String nameRecord, Map<String, PoseType> map) {
+    private void readCsvPoseFileToTableAndMap(DefaultTableModel dtm, File f, @Nullable String nameRecord, @Nullable Map<String, PoseType> map) {
         dtm.setRowCount(0);
         try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
@@ -4694,6 +4694,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }//GEN-LAST:event_jButtonRecordToolHolderApproachActionPerformed
 
+    private static double getDoubleValueAt(DefaultTableModel dtm,int row, int col) {
+       Object o = dtm.getValueAt(row, col);
+       if(o == null) {
+           throw new IllegalStateException("null value in table at "+row+","+col);
+       }
+       if(o instanceof  java.lang.Double) {
+           return ((java.lang.Double)o);
+       }
+       throw new IllegalStateException(" value in table at "+row+","+col+" is not of class Double : o="+o);
+    }
+    
     private void loadTrayAttachOffsetsTableToMap() {
         try {
             DefaultTableModel dtm = (DefaultTableModel) jTableTrayAttachOffsets.getModel();
@@ -4707,14 +4718,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     if (name.length() < 1) {
                         continue;
                     }
-                    double x = (double) dtm.getValueAt(i, 1);
-                    double y = (double) dtm.getValueAt(i, 2);
-                    double z = (double) dtm.getValueAt(i, 3);
-                    double roll = (double) dtm.getValueAt(i, 4);
+                    double x = getDoubleValueAt(dtm,i, 1);
+                    double y = getDoubleValueAt(dtm,i, 2);
+                    double z = getDoubleValueAt(dtm,i, 3);
+                    double roll = getDoubleValueAt(dtm,i, 4);
                     roll = Math.toRadians(roll);
-                    double pitch = (double) dtm.getValueAt(i, 5);
+                    double pitch = getDoubleValueAt(dtm,i, 5);
                     pitch = Math.toRadians(pitch);
-                    double yaw = (double) dtm.getValueAt(i, 6);
+                    double yaw = getDoubleValueAt(dtm,i, 6);
                     yaw = Math.toRadians(yaw);
                     PoseType pose = CRCLPosemath.toPoseType(new PmCartesian(x, y, z), new PmRpy(roll, pitch, yaw));
                     map.put(name, pose);
@@ -4738,14 +4749,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     if (name.length() < 1) {
                         continue;
                     }
-                    double x = (double) dtm.getValueAt(i, 1);
-                    double y = (double) dtm.getValueAt(i, 2);
-                    double z = (double) dtm.getValueAt(i, 3);
-                    double roll = (double) dtm.getValueAt(i, 4);
+                    double x = getDoubleValueAt(dtm,i, 1);
+                    double y = getDoubleValueAt(dtm,i, 2);
+                    double z = getDoubleValueAt(dtm,i, 3);
+                    double roll = getDoubleValueAt(dtm,i, 4);
                     roll = Math.toRadians(roll);
-                    double pitch = (double) dtm.getValueAt(i, 5);
+                    double pitch = getDoubleValueAt(dtm,i, 5);
                     pitch = Math.toRadians(pitch);
-                    double yaw = (double) dtm.getValueAt(i, 6);
+                    double yaw = getDoubleValueAt(dtm,i, 6);
                     yaw = Math.toRadians(yaw);
                     PoseType pose = CRCLPosemath.toPoseType(new PmCartesian(x, y, z), new PmRpy(roll, pitch, yaw));
                     map.put(name, pose);
