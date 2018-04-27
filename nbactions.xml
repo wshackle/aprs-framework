@@ -62,6 +62,9 @@
         <activatedProfiles>
             <activatedProfile>release,jar-with-depends</activatedProfile>
         </activatedProfiles>
+        <properties>
+            <profile.release>true</profile.release>
+        </properties>
     </action>
     <action>
             <actionName>CUSTOM-debug_with_checkers2</actionName>
