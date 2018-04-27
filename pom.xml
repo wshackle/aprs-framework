@@ -3,15 +3,16 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.wshackle</groupId>
     <artifactId>aprs-framework</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1.dev.branch-SNAPSHOT</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <main.class>aprs.framework.LauncherAprsJFrame</main.class>
+        <exec.mainClass>${main.class}</exec.mainClass>
         <optiplanner.version>7.6.0.Final</optiplanner.version>
-        <crcl4java.version>1.5-1</crcl4java.version>
+        <crcl4java.version>1.6.dev.branch-SNAPSHOT</crcl4java.version>
     </properties>
     <name>aprs-framework</name>
     <url>
@@ -21,7 +22,7 @@
         Framework for the Agility Performance of Robotic Systems(APRS) an experimental
         research project by the National Institute of Standards and Technology(NIST).
     </description>
-     <licenses>
+    <licenses>
         <license>
             <name>Public Domain(US Government Work)</name>
             <url>http://www.copyright.gov/title17/92chap1.html#105</url>
@@ -155,7 +156,7 @@
             <artifactId>checker-qual</artifactId>
             <!-- Use checker-qual7 if targeting Java 7 -->
             <!-- <artifactId>checker-qual7</artifactId> -->
-            <version>2.4.0</version>
+            <version>2.5.0</version>
         </dependency>
                 
         <!-- <dependency>
@@ -243,8 +244,7 @@
             </resource>
         </resources>
         
-        <plugins>
- 
+        <plugins>        
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -254,7 +254,6 @@
                 </configuration>
             </plugin>
         </plugins>
-        
     </build>
     <profiles>
         <profile>
@@ -565,7 +564,7 @@
                 <dependency>
                     <groupId>org.checkerframework</groupId>
                     <artifactId>checker</artifactId>
-                    <version>2.4.0</version>
+                    <version>2.5.0</version>
                 </dependency>
                 
                 
@@ -578,7 +577,7 @@
                 <dependency>
                     <groupId>org.checkerframework</groupId>
                     <artifactId>jdk8</artifactId>
-                    <version>2.4.0</version>
+                    <version>2.5.0</version>
                 </dependency>
             </dependencies>
             <build>
@@ -588,7 +587,7 @@
                         <!-- This plugin will set properties values using dependency information -->
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-dependency-plugin</artifactId>
-                        <version>3.0.2</version>
+                        <version>3.1.0</version>
                         <executions>
                             <execution>
                                 <goals>
@@ -642,6 +641,64 @@
                         </configuration>
                     </plugin>
                     
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>jdpa_listen_not_true</id>
+            <activation>
+                <property>
+                    <name>jpda.listen</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <properties>
+                <custom.nb.exec.args>-ea -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n ${exec.args}</custom.nb.exec.args>
+            </properties>
+        </profile>
+        
+        <profile>
+            <id>jdpa_listen_true</id>
+            <activation>
+                <property>
+                    <name>jpda.listen</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <custom.nb.exec.args>
+                    ${exec.args}
+                </custom.nb.exec.args>
+            </properties>
+        </profile>
+        <profile>
+            <id>custom_nb_exec</id>
+            <activation>
+                <property>
+                    <name>env.NB_EXEC_MAVEN_PROCESS_UUID</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.2.1</version>
+                        <executions>
+                            <execution>
+                                <id>default-cli</id>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${exec.executable}</executable>
+                                    <commandlineArgs>
+                                        ${custom.nb.exec.args}
+                                    </commandlineArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
         </profile>

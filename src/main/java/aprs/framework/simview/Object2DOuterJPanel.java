@@ -78,6 +78,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JDialog;
 import javax.swing.table.TableModel;
@@ -156,7 +157,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 xmlDir.mkdirs();
                 CRCLStatusType status = aprsJFrame.getCurrentStatus();
                 if (null != status) {
-                    String xmlString = CRCLSocket.getUtilSocket().statusToPrettyString(status, false);
+                    String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
                     try (FileWriter fw = new FileWriter(xmlFile)) {
                         fw.write(xmlString);
@@ -199,7 +200,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (null != af) {
                 CRCLStatusType status = aprsJFrame.getCurrentStatus();
                 if (null != status) {
-                    String xmlString = CRCLSocket.getUtilSocket().statusToPrettyString(status, false);
+                    String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
                     try (FileWriter fw = new FileWriter(xmlFile)) {
                         fw.write(xmlString);
@@ -651,6 +652,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxDebug = new javax.swing.JCheckBox();
         jCheckBoxPause = new javax.swing.JCheckBox();
         jButtonRefresh = new javax.swing.JButton();
+        jLabel11 = new javax.swing.JLabel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTextAreaConnectDetails = new javax.swing.JTextArea();
         jPanelSimulationTab = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldSimulationUpdateTime = new javax.swing.JTextField();
@@ -999,6 +1003,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jLabel11.setText("Details:");
+
+        jTextAreaConnectDetails.setEditable(false);
+        jTextAreaConnectDetails.setColumns(20);
+        jTextAreaConnectDetails.setRows(5);
+        jScrollPane3.setViewportView(jTextAreaConnectDetails);
+
         javax.swing.GroupLayout jPanelConnectionsTabLayout = new javax.swing.GroupLayout(jPanelConnectionsTab);
         jPanelConnectionsTab.setLayout(jPanelConnectionsTabLayout);
         jPanelConnectionsTabLayout.setHorizontalGroup(
@@ -1007,9 +1018,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                        .addComponent(jScrollPane3)
+                        .addContainerGap())
+                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                         .addComponent(jCheckBoxSimulated)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.DEFAULT_SIZE, 198, Short.MAX_VALUE)
                         .addGap(142, 142, 142))
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                         .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1027,7 +1041,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 .addComponent(jCheckBoxDebug)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jCheckBoxPause)))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                        .addComponent(jLabel11)
+                        .addGap(0, 0, Short.MAX_VALUE))))
         );
         jPanelConnectionsTabLayout.setVerticalGroup(
             jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1047,7 +1064,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxDebug)
                     .addComponent(jCheckBoxPause))
-                .addContainerGap(156, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel11)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         jTabbedPane1.addTab("Connections", jPanelConnectionsTab);
@@ -1606,6 +1627,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile double last_drag_min_y;
     private volatile double last_drag_max_y;
 
+    private volatile long mouseDragTime = -1;
+
+    public boolean isPartMoving() {
+        return null != this.draggedItem || System.currentTimeMillis() - mouseDragTime < 30;
+    }
+
     private void object2DJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseDragged
         double scale = object2DJPanel1.getScale();
         double min_x = object2DJPanel1.getMinX();
@@ -1613,6 +1640,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         double min_y = object2DJPanel1.getMinY();
         double max_y = object2DJPanel1.getMaxY();
         PhysicalItem itemToDrag = this.draggedItem;
+        if (!evt.isShiftDown() && null != draggedItem && !"P".equals(draggedItem.getType())) {
+            System.out.println("Hold SHIFT to move trays : closestItem=" + draggedItem.getFullName());
+            draggedItem = null;
+            return;
+        }
+        mouseDragTime = System.currentTimeMillis();
         if (null != itemToDrag) {
             double orig_x = itemToDrag.x;
             double orig_y = itemToDrag.y;
@@ -1747,7 +1780,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex);
         PhysicalItem closestItem = closestItemInfo.getClosestItem();
         minIndex = closestItemInfo.getMinIndex();
+        if (!evt.isShiftDown() && null != closestItem && !"P".equals(closestItem.getType())) {
+            draggedItem = null;
+            System.out.println("Hold SHIFT to move trays : closestItem=" + closestItem.getFullName());
+            return;
+        }
         if (minIndex >= 0) {
+
             ListSelectionModel selectModel = jTableItems.getSelectionModel();
             selectModel.setAnchorSelectionIndex(minIndex);
             selectModel.setLeadSelectionIndex(minIndex);
@@ -2275,6 +2314,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JComboBox<DisplayAxis> jComboBoxDisplayAxis;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -2290,9 +2330,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JPanel jPanelSimulationTab;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTableItems;
     private javax.swing.JTable jTableTraySlots;
+    private javax.swing.JTextArea jTextAreaConnectDetails;
     private javax.swing.JTextField jTextFieldCurrentXY;
     private javax.swing.JTextField jTextFieldDropOffThreshold;
     private javax.swing.JTextField jTextFieldFilename;
@@ -2661,15 +2703,37 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return propertiesFile;
     }
 
+    private volatile long lastVisionUpdateTime = System.currentTimeMillis();
+
     @Override
     public void visionClientUpdateRecieved(List<PhysicalItem> l, String line) {
+        long now = System.currentTimeMillis();
+
+        String detailsMessage = null;
+        if (null != visionSocketClient) {
+            detailsMessage
+                    = "size=" + l.size() + "\n"
+                    + "count=" + visionSocketClient.getLineCount() + "\n"
+                    + "skipped=" + visionSocketClient.getSkippedLineCount() + "\n"
+                    + "ignored=" + visionSocketClient.getIgnoreCount() + "\n"
+                    + "consecutive=" + visionSocketClient.getConsecutiveIgnoreCount() + "\n"
+                    + "time=" + (now - lastVisionUpdateTime) + "\n";
+        }
+        final String finalDetailsMessage = detailsMessage;
+        lastVisionUpdateTime = now;
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             setItems(l);
+            if (null != detailsMessage) {
+                jTextAreaConnectDetails.setText(detailsMessage);
+            }
         } else {
             javax.swing.SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
                     setItems(l);
+                    if (null != finalDetailsMessage) {
+                        jTextAreaConnectDetails.setText(finalDetailsMessage);
+                    }
                 }
             });
         }
@@ -2793,8 +2857,57 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return new DistIndex(min_dist, min_dist_index);
     }
 
+    private class PoseUpdateHistoryItem {
+
+        final PoseType pose;
+        final CRCLStatusType stat;
+        final CRCLCommandType cmd;
+        final boolean isHoldingObjectExpected;
+        final long time;
+
+        public PoseUpdateHistoryItem(PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected, long time) {
+            this.pose = pose;
+            this.stat = stat;
+            this.isHoldingObjectExpected = isHoldingObjectExpected;
+            this.time = time;
+            this.cmd = cmd;
+        }
+
+        @Override
+        public String toString() {
+            return "\nPoseUpdateHistoryItem{" + "pose=" + pose + ", stat=" + CRCLSocket.statusToPrettyString(stat) + ", cmd=" + CRCLSocket.commandToSimpleString(cmd) + ", isHoldingObjectExpected=" + isHoldingObjectExpected + ", time=" + (time - poseUpdateHistoryTime) + '}';
+        }
+
+    }
+
+    private final ConcurrentLinkedDeque<PoseUpdateHistoryItem> poseUpdateHistory
+            = new ConcurrentLinkedDeque<>();
+
+    private volatile long poseUpdateHistoryTime = System.currentTimeMillis();
+
+    private static Random r = new Random();
+
+    private volatile javax.swing.@Nullable Timer timer = null;
+
+    @Nullable private volatile PoseUpdateHistoryItem lastDropUpdate = null;
+
     @Override
     public void handlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
+//        timer = new javax.swing.Timer(r.nextInt(100), (ActionEvent e) -> delayedHandlePoseUpdate(panel, pose, stat, cmd, isHoldingObjectExpected));
+//        timer.setRepeats(false);
+//        timer.setInitialDelay(r.nextInt(100));
+//        timer.start();
+//    }
+//
+//    public void delayedHandlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
+
+        PoseUpdateHistoryItem currentUpdate
+                = new PoseUpdateHistoryItem(pose, stat, cmd, isHoldingObjectExpected, System.currentTimeMillis());
+        poseUpdateHistory.add(currentUpdate);
+        if (poseUpdateHistory.size() > 5) {
+            poseUpdateHistory.removeFirst();
+        }
+        poseUpdateHistoryTime = System.currentTimeMillis();
 
         if (!jCheckBoxShowCurrent.isSelected()) {
             return;
@@ -2849,30 +2962,34 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (min_dist < pickupDist && min_dist_index >= 0) {
                     captured_item_index = min_dist_index;
                     if (true) {
-                        System.out.println("Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
-                        if (takeSnapshots) {
-                            try {
-                                takeSnapshot(createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
-                            } catch (IOException ex) {
-                                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-                    }
-                } else {
-                    if (takeSnapshots) {
                         try {
-                            takeSnapshot(createTempFile("failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                            System.out.println(aprsJFrame.getRunName() + " : Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                            if (takeSnapshots) {
+                                takeSnapshot(createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                            }
                         } catch (IOException ex) {
                             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                    System.err.println("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+                } else {
+                    try {
+                        System.out.println("poseUpdateHistory = " + poseUpdateHistory);
+                        System.out.println("pose = " + pose);
+                        System.out.println("stat = " + CRCLSocket.statusToPrettyString(stat));
+                        System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
+                        if (takeSnapshots) {
+                            takeSnapshot(createTempFile("failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                        }
+                        System.err.println("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+
+                    } catch (Exception ex) {
+                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     this.aprsJFrame.setTitleErrorString("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
-                    this.aprsJFrame.pause();
                 }
             } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
                 if (true) {
-                    System.out.println("Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                    System.out.println(aprsJFrame.getRunName() + " : Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
                     if (takeSnapshots) {
                         try {
                             takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
@@ -2882,18 +2999,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 }
                 if (captured_item_index < 0) {
-                    if (takeSnapshots) {
-                        try {
-                            takeSnapshot(createTempFile("failed_to_drop_part_", ".PNG"), (PmCartesian) null, "");
-                        } catch (IOException ex) {
-                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    System.err.println("Should be dropping item but no item captured");
+
+                    System.out.println("poseUpdateHistory = " + poseUpdateHistory);
+                    System.out.println("pose = " + pose);
+                    System.out.println("stat = " + CRCLSocket.statusToPrettyString(stat));
+                    System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
+                    System.out.println("lastDropUpdate = " + lastDropUpdate);
+                    this.aprsJFrame.setTitleErrorString("Should be dropping item but no item captured");
                 }
             }
         }
-        if (!isHoldingObjectExpected) {
+        if (!isHoldingObjectExpected && captured_item_index >= 0) {
+            lastDropUpdate = currentUpdate;
             captured_item_index = -1;
         }
         if (this.jCheckBoxSimulated.isSelected()) {

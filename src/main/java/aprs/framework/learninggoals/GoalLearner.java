@@ -97,7 +97,7 @@ public class GoalLearner {
      *
      * @param kitTrayListPredicate new value of kitTrayListPredicate
      */
-    public void setKitTrayListPredicate(Predicate<List<PhysicalItem>> kitTrayListPredicate) {
+    public void setKitTrayListPredicate(@Nullable Predicate<List<PhysicalItem>> kitTrayListPredicate) {
         this.kitTrayListPredicate = kitTrayListPredicate;
     }
 
@@ -156,6 +156,13 @@ public class GoalLearner {
 
     public List<String> getLastCreateActionListFromVisionKitToCheckStrings() {
         return new ArrayList<>(lastCreateActionListFromVisionKitToCheckStrings);
+    }
+    
+    public void setLastCreateActionListFromVisionKitToCheckStrings(List<String> strings) {
+        if(null == strings) {
+            throw new IllegalArgumentException("null == strings");
+        }
+        this.lastCreateActionListFromVisionKitToCheckStrings = new ArrayList<>(strings);
     }
 
     public static boolean kitToCheckStringsEqual(List<String> kitToCheckStrings1, List<String> kitToCheckStrings2) {

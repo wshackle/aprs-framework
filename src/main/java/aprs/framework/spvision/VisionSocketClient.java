@@ -46,17 +46,28 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class VisionSocketClient implements AutoCloseable {
 
-    @Nullable private List<PhysicalItem> visionList = null;
-    @Nullable private SocketLineReader visionSlr = null;
-    @Nullable private ExecutorService visionExecServ = Executors.newFixedThreadPool(1);
-    @Nullable private volatile String parsing_line = null;
+    @Nullable
+    private volatile List<PhysicalItem> visionList = null;
+    
+    @Nullable
+    private volatile List<PhysicalItem> lastIgnoredVisionList = null;
+    
+    @Nullable
+    private SocketLineReader visionSlr = null;
+    @Nullable
+    private ExecutorService visionExecServ = Executors.newFixedThreadPool(1);
+    @Nullable
+    private volatile String parsing_line = null;
     private static final AtomicInteger visioncycle = new AtomicInteger();
 
-    @Nullable private PrintStream replyPs;
+    @Nullable
+    private PrintStream replyPs;
 
-    @Nullable private PoseType transform = null;
+    @Nullable
+    private PoseType transform = null;
 
-    @Nullable public PoseType getTransform() {
+    @Nullable
+    public PoseType getTransform() {
         return transform;
     }
 
@@ -65,7 +76,8 @@ public class VisionSocketClient implements AutoCloseable {
         this.updateListeners();
     }
 
-    @Nullable public PrintStream getReplyPs() {
+    @Nullable
+    public PrintStream getReplyPs() {
         return replyPs;
     }
 
@@ -127,14 +139,16 @@ public class VisionSocketClient implements AutoCloseable {
         }
     }
 
-    @Nullable private VisionToDBJFrameInterface displayInterface;
+    @Nullable
+    private VisionToDBJFrameInterface displayInterface;
 
     /**
      * Get the value of displayInterface
      *
      * @return the value of displayInterface
      */
-    @Nullable public VisionToDBJFrameInterface getDisplayInterface() {
+    @Nullable
+    public VisionToDBJFrameInterface getDisplayInterface() {
         return displayInterface;
     }
 
@@ -154,11 +168,31 @@ public class VisionSocketClient implements AutoCloseable {
         return visionSlr.getPort();
     }
 
-    @Nullable public String getHost() {
+    @Nullable
+    public String getHost() {
         if (null == visionSlr) {
             return null;
         }
         return visionSlr.getHost();
+    }
+
+    private AtomicInteger skippedLineCount = new AtomicInteger();
+    private AtomicInteger lineCount = new AtomicInteger();
+
+    public int getSkippedLineCount() {
+        return skippedLineCount.get();
+    }
+
+    public int getLineCount() {
+        return lineCount.get();
+    }
+
+    public int getIgnoreCount() {
+        return ignoreCount;
+    }
+
+    public int getConsecutiveIgnoreCount() {
+        return consecutiveIgnoreCount;
     }
 
     public void start(Map<String, String> argsMap) {
@@ -186,10 +220,12 @@ public class VisionSocketClient implements AutoCloseable {
                     port,
                     "visionReader_for_" + hostf + ":" + portf,
                     new SocketLineReader.CallBack() {
-                @Nullable private String lastSkippedLine = null;
+                @Nullable
+                private volatile String lastSkippedLine = null;
 
                 @Override
                 public void call(final String line, PrintStream os) {
+                    lineCount.incrementAndGet();
 //                    System.out.println("line = " + line+", parsing_line="+parsing_line);
                     if (null == parsing_line) {
                         parsing_line = line;
@@ -214,6 +250,9 @@ public class VisionSocketClient implements AutoCloseable {
                             }
                         });
                     } else {
+                        if (null != lastSkippedLine) {
+                            skippedLineCount.incrementAndGet();
+                        }
                         lastSkippedLine = line;
                     }
                 }
@@ -231,9 +270,11 @@ public class VisionSocketClient implements AutoCloseable {
         }
     }
 
-    @Nullable private String line;
+    @Nullable
+    private String line;
 
-    @Nullable public String getLine() {
+    @Nullable
+    public String getLine() {
         return line;
     }
 
@@ -319,8 +360,8 @@ public class VisionSocketClient implements AutoCloseable {
                 listOut.remove(index);
             }
         } catch (Exception exception) {
-            System.out.println("i = " + i);
-            System.out.println("fa = " + Arrays.toString(fa));
+            System.err.println("i = " + i+",exception="+exception);
+            System.err.println("fa = " + Arrays.toString(fa));
             String msg = "Failed to parse line \"" + line + "\" : " + exception.getMessage() + System.lineSeparator();
             if (null != displayInterface) {
                 displayInterface.addLogMessage(msg);
@@ -341,32 +382,44 @@ public class VisionSocketClient implements AutoCloseable {
 
     private int prevVisionListSize = -1;
     private int ignoreCount = 0;
-    private int lineCount = 0;
+    private int consecutiveIgnoreCount = 0;
+    private int parseeVisionLineCount = 0;
+    private volatile long prevListSizeSetTime  = -1;
 
     public void parseVisionLine(final String line) {
         try {
             long t0 = System.nanoTime();
             this.line = line;
-            lineCount++;
+            parseeVisionLineCount++;
             if (visionList == null) {
                 visionList = new ArrayList<>();
             }
-            visionList = lineToList(line, displayInterface);
-            if (visionList.size() < prevVisionListSize - 2) {
-                if (ignoreCount < 100 || debug) {
-                    System.err.println("ignoring vision list that decreased from " + prevVisionListSize + " to " + visionList.size() + " items");
-                    System.err.println("lineCount=" + lineCount);
-                    System.err.println("ignoreCount=" + ignoreCount);
-                } else if (ignoreCount == 100) {
-                    System.err.println("No more messages about ignored vision lists will be printed");
-                }
+            List<PhysicalItem> newVisionList  = lineToList(line, displayInterface);
+            if (null == newVisionList || newVisionList.size() < prevVisionListSize) {
+//                if (ignoreCount < 100 || debug) {
+//                    System.err.println("ignoring vision list that decreased from " + prevVisionListSize + " to " + visionList.size() + " items");
+//                    System.err.println("lineCount=" + lineCount);
+//                    System.err.println("ignoreCount=" + ignoreCount);
+//                } else if (ignoreCount == 100) {
+//                    System.err.println("No more messages about ignored vision lists will be printed");
+//                }
+                this.lastIgnoredVisionList = newVisionList;
                 ignoreCount++;
-                prevVisionListSize--;
+                consecutiveIgnoreCount++;
+                if (consecutiveIgnoreCount > 2 
+                        && consecutiveIgnoreCount % 3 == 0
+                        && System.currentTimeMillis() - prevListSizeSetTime > 60000) {
+                    prevVisionListSize--;
+                    prevListSizeSetTime = System.currentTimeMillis();
+                }
                 return;
             }
-            prevVisionListSize = visionList.size();
-            poseUpdatesParsed += visionList.size();
+            prevListSizeSetTime = System.currentTimeMillis();
+            prevVisionListSize = newVisionList.size();
+            poseUpdatesParsed += newVisionList.size();
+            this.visionList = newVisionList;
             updateListeners();
+            consecutiveIgnoreCount = 0;
             if (debug) {
                 long t1 = System.nanoTime();
                 long time_diff = t1 - t0;
@@ -463,7 +516,5 @@ public class VisionSocketClient implements AutoCloseable {
     public String toString() {
         return "" + visionSlr;
     }
-    
-    
 
 }

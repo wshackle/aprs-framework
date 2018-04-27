@@ -54,15 +54,16 @@ To build one needs:
   
 Use the command:
 
-    mvn -Pjar-with-depends package
+     mvn -Pjar-with-depends package
     
 OR 
 
   * An IDE bundled with both maven and a JDK such as Netbeans, IntelliJ, or Eclipse.
       * Netbeans will open a maven project with File -> Open Project just like Netbeans generated Ant projects.
       * IntelliJ and Eclipse both have options to import maven projects.
-       (Be sure to enable the jar-with-depends maven profile to include depends in jar
-       to make jar easier to run from command line. It is not required to run from IDE.)
+      (switch to or enable the profile "jar-with-depends" if you want dependencies
+        added to the jar, this makes running from the command-line easier but is
+        not necessary when running from the IDE)
 
 Neo4J Database Install
 -----
@@ -202,7 +203,11 @@ For Windows:
 
 Or directly with:
 
+<<<<<<< HEAD
     java -jar target/aprs-framework-1.1-SNAPSHOT-jar-with-dependencies.jar
+=======
+     java -jar target/aprs-framework-1.1.dev.branch-SNAPSHOT-jar-with-dependencies.jar
+>>>>>>> dev-branch
 
 
 To run with the simulated Fanuc/Motoman demo add the arguments "--openMulti example_settings/multiple_simulated_systems_settings/multisim9.csv"

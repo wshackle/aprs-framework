@@ -2163,6 +2163,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
          
          
          
+         
         @UnknownInitialization VisionToDBJPanel this) {
         JTextArea area = jTextAreaLog;
         if (area != null) {
@@ -2419,7 +2420,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private void jButtonShowImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonShowImageActionPerformed
-        showDatabaseTableImage();
+        if (null != aprsJFrame) {
+            boolean snapShotsEnabled = aprsJFrame.isSnapshotsEnabled();
+            if (!snapShotsEnabled) {
+                aprsJFrame.setSnapshotsEnabled(true);
+            }
+            showDatabaseTableImage();
+            if (!snapShotsEnabled) {
+                aprsJFrame.setSnapshotsEnabled(false);
+            }
+        }
     }//GEN-LAST:event_jButtonShowImageActionPerformed
 
     private void jCheckBoxDbUpdateEnabledActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxDbUpdateEnabledActionPerformed

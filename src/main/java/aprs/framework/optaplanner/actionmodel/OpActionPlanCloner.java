@@ -42,7 +42,8 @@ public class OpActionPlanCloner implements SolutionCloner<OpActionPlan> {
                         origAction.getLocation().x,
                         origAction.getLocation().y,
                         origAction.getActionType(),
-                        origAction.getPartType()
+                        origAction.getPartType(),
+                        origAction.isRequired()
                 );
                 newActions.add(newAction);
                 actionMap.put(newAction.getName(), newAction);
