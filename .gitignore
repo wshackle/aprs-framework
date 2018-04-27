@@ -1,4 +1,5 @@
 *.class
+addons.sccs
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
