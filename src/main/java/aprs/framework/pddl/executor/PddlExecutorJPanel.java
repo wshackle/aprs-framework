@@ -1170,11 +1170,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
             },
             new String [] {
-                "Holder Position Name", "Occupied", "Contents"
+                "Holder Position Name", "Contents", "Possible Contents", "Comment"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Boolean.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -3957,11 +3957,11 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                .stream()
-                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                .map(JointStatusType::getJointPosition)
-                .map(Objects::toString)
-                .collect(Collectors.joining(","));
+                        .stream()
+                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                        .map(JointStatusType::getJointPosition)
+                        .map(Objects::toString)
+                        .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -3984,13 +3984,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setForceFakeTakeFlag(jCheckBoxForceFakeTake.isSelected());
     }//GEN-LAST:event_jCheckBoxForceFakeTakeActionPerformed
 
-    @Nullable
-    private volatile PoseType toolChangerPose = null;
-    @Nullable
-    private volatile String toolChangerPoseName = null;
-    private final Map<String, PoseType> toolChangerPoseMap = new ConcurrentHashMap<>();
-    private final Map<String, PoseType> toolOffsetPoseMap = new ConcurrentHashMap<>();
-
+//    @Nullable
+//    private volatile PoseType toolChangerPose = null;
+//    @Nullable
+//    private volatile String toolChangerPoseName = null;
+//    private final Map<String, PoseType> toolChangerPoseMap = new ConcurrentHashMap<>();
+//    private final Map<String, PoseType> toolOffsetPoseMap = new ConcurrentHashMap<>();
     @Nullable
     private String toolChangerPoseMapFileName = null;
 
@@ -4007,7 +4006,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         pddlActionToCrclGenerator.clearToolChangerJointVals();
         DefaultTableModel dtm = (DefaultTableModel) jTableToolHolderPositions.getModel();
         dtm.setRowCount(0);
-        
+        ConcurrentHashMap<String, PoseType> toolHolderPoseMap
+                = pddlActionToCrclGenerator.getToolHolderPoseMap();
         try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
@@ -4079,7 +4079,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                         pddlActionToCrclGenerator.putToolChangerJointVals(name, jointVals);
                     }
                     if (!approach) {
-                        toolChangerPoseMap.put(name, pose);
+                        toolHolderPoseMap.put(name, pose);
                     }
                 } catch (Exception exception) {
                     LOGGER.log(Level.SEVERE, "rec=" + rec, exception);
@@ -4117,16 +4117,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         if (!f.exists()) {
             return;
         }
+        ConcurrentHashMap<String, PoseType> toolOffsetMap
+                = pddlActionToCrclGenerator.getToolOffsetMap();
         clearToolOffsetTableModelListener();
         int lineNumber = 0;
         DefaultTableModel dtm = (DefaultTableModel) jTableToolOffsets.getModel();
-        readCsvPoseFileToTableAndMap(dtm, f, "ToolName", toolOffsetPoseMap);
+        readCsvPoseFileToTableAndMap(dtm, f, "ToolName", toolOffsetMap);
         clearEmptyToolOffsetPoseRows();
         loadToolOffsetsTableToMap();
         setToolOffsetTableModelListener();
     }
 
-    
     private void loadTrayAttachOffsetMap() {
         if (null == propertiesFile || !propertiesFile.exists()) {
             return;
@@ -4143,7 +4144,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         loadTrayAttachOffsetsTableToMap();
         setTrayAttachOffsetTableModelListener();
     }
-    
+
     private void readCsvPoseFileToTableAndMap(DefaultTableModel dtm, File f, @Nullable String nameRecord, @Nullable Map<String, PoseType> map) {
         dtm.setRowCount(0);
         try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
@@ -4232,7 +4233,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     private void saveToolChangerPoseMap() {
         try {
             clearEmptyToolChangerPoseRows();
-            if (toolChangerPoseMap.isEmpty()) {
+
+            ConcurrentHashMap<String, PoseType> toolHolderPoseMap
+                    = pddlActionToCrclGenerator.getToolHolderPoseMap();
+            if (toolHolderPoseMap.isEmpty()) {
                 return;
             }
             if (null == propertiesFile || !propertiesFile.exists()) {
@@ -4323,7 +4327,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         return names.toArray(new String[names.size()]);
     }
 
-    public String queryUserForToolChangePosName(String qname) {
+    public String queryUserForToolHolderPosName(String qname) {
         return (String) JOptionPane.showInputDialog(
                 this, // parentComponent
                 "Tool Holder Pose Name?", // Object message
@@ -4397,22 +4401,24 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void jButtonRecordToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolHolderPoseActionPerformed
         try {
+            ConcurrentHashMap<String, PoseType> toolHolderPoseMap
+                    = pddlActionToCrclGenerator.getToolHolderPoseMap();
             PoseType pose = aprsJFrame.getCurrentPose();
             if (null == pose) {
                 JOptionPane.showMessageDialog(this, "Can not read current pose.");
                 return;
             }
-            toolChangerPoseName = queryUserForToolChangePosName("Record Pose");
-            if (null == toolChangerPoseName
-                    || toolChangerPoseName.length() < 1) {
-                toolChangerPoseName = "toolChangerPose" + (jTableToolHolderPositions.getRowCount() + 1);
+            String toolHolderPoseName = queryUserForToolHolderPosName("Record Pose");
+            if (null == toolHolderPoseName
+                    || toolHolderPoseName.length() < 1) {
+                toolHolderPoseName = "toolChangerPose" + (jTableToolHolderPositions.getRowCount() + 1);
             }
-            toolChangerPose = pose;
-            String name = toolChangerPoseName;
+//            toolChangerPose = pose;
+            String name = toolHolderPoseName;
             PmRpy rpy = CRCLPosemath.toPmRpy(pose);
             String jointString = getJointValsString();
             updateToolChangePose(name, false, pose, rpy, jointString);
-            toolChangerPoseMap.put(name, pose);
+            toolHolderPoseMap.put(name, pose);
             PoseType approachPose = pddlActionToCrclGenerator.approachPoseFromToolChangerPose(pose);
             updateToolChangePose(name, true, approachPose, rpy, null);
             pddlActionToCrclGenerator.removeToolChangerJointVals(name);
@@ -4511,17 +4517,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             clearAll();
             autoStart = true;
             cancelRunProgramFuture();
-            String name = queryUserForToolChangePosName("Goto Approach");
+            String name = queryUserForToolHolderPosName("Goto Approach");
             if (null == name) {
                 return;
             }
-            toolChangerPoseName = name;
-            PoseType pose = toolChangerPoseMap.get(name);
+//            toolChangerPoseName = name;
+            ConcurrentHashMap<String, PoseType> toolHolderPoseMap
+                    = pddlActionToCrclGenerator.getToolHolderPoseMap();
+            PoseType pose = toolHolderPoseMap.get(name);
             if (null == pose) {
-                JOptionPane.showMessageDialog(this, "no pose for " + name + " in " + toolChangerPoseMap);
+                JOptionPane.showMessageDialog(this, "no pose for " + name + " in " + toolHolderPoseMap);
                 return;
             }
-            toolChangerPose = pose;
+//            toolChangerPose = pose;
             runningProgramFuture = this.gotoToolChangerApproach(name, pose);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, null, e);
@@ -4540,17 +4548,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             clearAll();
             autoStart = true;
             cancelRunProgramFuture();
-            String name = queryUserForToolChangePosName("Goto Changer");
+            String name = queryUserForToolHolderPosName("Goto Changer");
             if (null == name) {
                 return;
             }
-            toolChangerPoseName = name;
-            PoseType pose = toolChangerPoseMap.get(name);
+            ConcurrentHashMap<String, PoseType> toolHolderPoseMap
+                    = pddlActionToCrclGenerator.getToolHolderPoseMap();
+//            toolChangerPoseName = name;
+            PoseType pose = toolHolderPoseMap.get(name);
             if (null == pose) {
-                JOptionPane.showMessageDialog(this, "no pose for " + name + " in " + toolChangerPoseMap);
+                JOptionPane.showMessageDialog(this, "no pose for " + name + " in " + toolHolderPoseMap);
                 return;
             }
-            toolChangerPose = pose;
+//            toolChangerPose = pose;
             runningProgramFuture = this.gotoToolChangerPose(name, pose);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, null, e);
@@ -4569,16 +4579,18 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             clearAll();
             autoStart = true;
             cancelRunProgramFuture();
-            toolChangerPoseName = queryUserForToolChangePosName("Drop Tool");
-            if (null == toolChangerPoseName || toolChangerPoseName.equals("Default") || toolChangerPoseName.length() < 1) {
+            String toolHolderPoseName = queryUserForToolHolderPosName("Drop Tool");
+            if (null == toolHolderPoseName || toolHolderPoseName.equals("Default") || toolHolderPoseName.length() < 1) {
                 return;
             }
-            toolChangerPose = toolChangerPoseMap.get(toolChangerPoseName);
-            if (null == toolChangerPose) {
-                JOptionPane.showMessageDialog(this, "No pose known for " + toolChangerPoseName);
+            ConcurrentHashMap<String, PoseType> toolHolderPoseMap
+                    = pddlActionToCrclGenerator.getToolHolderPoseMap();
+            PoseType toolHolderPose = toolHolderPoseMap.get(toolHolderPoseName);
+            if (null == toolHolderPose) {
+                JOptionPane.showMessageDialog(this, "No pose known for " + toolHolderPoseName + " in " + toolHolderPoseMap);
                 return;
             }
-            runningProgramFuture = this.dropTool(toolChangerPoseName, toolChangerPose);
+            runningProgramFuture = this.dropTool(toolHolderPoseName, toolHolderPose);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, null, e);
             showExceptionInProgram(e);
@@ -4596,7 +4608,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             clearAll();
             autoStart = true;
             cancelRunProgramFuture();
-            String holderPosName = queryUserForToolChangePosName("Pickup Tool: Which tool holder position? ");
+            String holderPosName = queryUserForToolHolderPosName("Pickup Tool: Which tool holder position? ");
             if (null == holderPosName || holderPosName.length() < 1) {
                 return;
             }
@@ -4604,10 +4616,12 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             if (null == newToolName || newToolName.length() < 1) {
                 return;
             }
-            toolChangerPoseName = holderPosName;
-            PoseType pose = toolChangerPoseMap.get(holderPosName);
+//            toolChangerPoseName = holderPosName;
+            ConcurrentHashMap<String, PoseType> toolHolderPoseMap
+                    = pddlActionToCrclGenerator.getToolHolderPoseMap();
+            PoseType pose = toolHolderPoseMap.get(holderPosName);
             if (null == pose) {
-                JOptionPane.showMessageDialog(this, "no pose for " + holderPosName + " in " + toolChangerPoseMap);
+                JOptionPane.showMessageDialog(this, "no pose for " + holderPosName + " in " + toolHolderPoseMap);
                 return;
             }
             runningProgramFuture = this.pickupTool(holderPosName, pose, newToolName);
@@ -4623,7 +4637,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
 
     private void jButtonDeleteToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteToolHolderPoseActionPerformed
         clearEmptyToolChangerPoseRows();
-        String nameToDelete = queryUserForToolChangePosName("Delete Pose");
+        String nameToDelete = queryUserForToolHolderPosName("Delete Pose");
         DefaultTableModel model = (DefaultTableModel) jTableToolHolderPositions.getModel();
         for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
             String nameFromTable = (String) jTableToolHolderPositions.getValueAt(i, 0);
@@ -4632,7 +4646,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 i--;
             }
         }
-        toolChangerPoseMap.remove(nameToDelete);
+        ConcurrentHashMap<String, PoseType> toolHolderPoseMap 
+                = pddlActionToCrclGenerator.getToolHolderPoseMap();
+        toolHolderPoseMap.remove(nameToDelete);
         clearEmptyToolChangerPoseRows();
         Utils.autoResizeTableColWidths(jTableToolHolderPositions);
     }//GEN-LAST:event_jButtonDeleteToolHolderPoseActionPerformed
@@ -4646,18 +4662,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 return;
             }
             String nameToAdd = JOptionPane.showInputDialog("New tool changer position name");
+            ConcurrentHashMap<String, PoseType> toolHolderPoseMap 
+                = pddlActionToCrclGenerator.getToolHolderPoseMap();
             if (nameToAdd != null && nameToAdd.length() > 0) {
-                if (toolChangerPoseMap.containsKey(nameToAdd) || Arrays.stream(getToolChangerNames()).anyMatch(x -> nameToAdd.equals(x))) {
+                if (toolHolderPoseMap.containsKey(nameToAdd) || Arrays.stream(getToolChangerNames()).anyMatch(x -> nameToAdd.equals(x))) {
                     JOptionPane.showMessageDialog(this, nameToAdd + " already added.");
                     return;
                 }
-
-                toolChangerPose = pose;
-                toolChangerPoseName = nameToAdd;
                 PmRpy rpy = CRCLPosemath.toPmRpy(pose);
                 String jointString = getJointValsString();
                 updateToolChangePose(nameToAdd, false, pose, rpy, jointString);
-                toolChangerPoseMap.put(nameToAdd, pose);
+                toolHolderPoseMap.put(nameToAdd, pose);
                 PoseType approachPose = pddlActionToCrclGenerator.approachPoseFromToolChangerPose(pose);
                 updateToolChangePose(nameToAdd, true, approachPose, rpy, null);
                 clearEmptyToolChangerPoseRows();
@@ -4676,17 +4691,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 JOptionPane.showMessageDialog(this, "Can not read current pose.");
                 return;
             }
-            String name = queryUserForToolChangePosName("Record Approach");
-            if (null == toolChangerPoseName
-                    || toolChangerPoseName.length() < 1) {
-                toolChangerPoseName = "toolChangerPose" + (jTableToolHolderPositions.getRowCount() + 1);
+            String toolHolderPoseName = queryUserForToolHolderPosName("Record Approach");
+            if (null == toolHolderPoseName
+                    || toolHolderPoseName.length() < 1) {
+                toolHolderPoseName = "toolChangerPose" + (jTableToolHolderPositions.getRowCount() + 1);
             }
 
             PmRpy rpy = CRCLPosemath.toPmRpy(pose);
             String jointString = getJointValsString();
-            updateToolChangePose(name, true, pose, rpy, jointString);
+            updateToolChangePose(toolHolderPoseName, true, pose, rpy, jointString);
             if (null != jointString) {
-                pddlActionToCrclGenerator.putToolChangerJointVals(name, jointString);
+                pddlActionToCrclGenerator.putToolChangerJointVals(toolHolderPoseName, jointString);
             }
             saveToolChangerPoseMap();
         } catch (Exception ex) {
@@ -4694,17 +4709,17 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         }
     }//GEN-LAST:event_jButtonRecordToolHolderApproachActionPerformed
 
-    private static double getDoubleValueAt(DefaultTableModel dtm,int row, int col) {
-       Object o = dtm.getValueAt(row, col);
-       if(o == null) {
-           throw new IllegalStateException("null value in table at "+row+","+col);
-       }
-       if(o instanceof  java.lang.Double) {
-           return ((java.lang.Double)o);
-       }
-       throw new IllegalStateException(" value in table at "+row+","+col+" is not of class Double : o="+o);
+    private static double getDoubleValueAt(DefaultTableModel dtm, int row, int col) {
+        Object o = dtm.getValueAt(row, col);
+        if (o == null) {
+            throw new IllegalStateException("null value in table at " + row + "," + col);
+        }
+        if (o instanceof java.lang.Double) {
+            return ((java.lang.Double) o);
+        }
+        throw new IllegalStateException(" value in table at " + row + "," + col + " is not of class Double : o=" + o);
     }
-    
+
     private void loadTrayAttachOffsetsTableToMap() {
         try {
             DefaultTableModel dtm = (DefaultTableModel) jTableTrayAttachOffsets.getModel();
@@ -4718,14 +4733,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     if (name.length() < 1) {
                         continue;
                     }
-                    double x = getDoubleValueAt(dtm,i, 1);
-                    double y = getDoubleValueAt(dtm,i, 2);
-                    double z = getDoubleValueAt(dtm,i, 3);
-                    double roll = getDoubleValueAt(dtm,i, 4);
+                    double x = getDoubleValueAt(dtm, i, 1);
+                    double y = getDoubleValueAt(dtm, i, 2);
+                    double z = getDoubleValueAt(dtm, i, 3);
+                    double roll = getDoubleValueAt(dtm, i, 4);
                     roll = Math.toRadians(roll);
-                    double pitch = getDoubleValueAt(dtm,i, 5);
+                    double pitch = getDoubleValueAt(dtm, i, 5);
                     pitch = Math.toRadians(pitch);
-                    double yaw = getDoubleValueAt(dtm,i, 6);
+                    double yaw = getDoubleValueAt(dtm, i, 6);
                     yaw = Math.toRadians(yaw);
                     PoseType pose = CRCLPosemath.toPoseType(new PmCartesian(x, y, z), new PmRpy(roll, pitch, yaw));
                     map.put(name, pose);
@@ -4749,14 +4764,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     if (name.length() < 1) {
                         continue;
                     }
-                    double x = getDoubleValueAt(dtm,i, 1);
-                    double y = getDoubleValueAt(dtm,i, 2);
-                    double z = getDoubleValueAt(dtm,i, 3);
-                    double roll = getDoubleValueAt(dtm,i, 4);
+                    double x = getDoubleValueAt(dtm, i, 1);
+                    double y = getDoubleValueAt(dtm, i, 2);
+                    double z = getDoubleValueAt(dtm, i, 3);
+                    double roll = getDoubleValueAt(dtm, i, 4);
                     roll = Math.toRadians(roll);
-                    double pitch = getDoubleValueAt(dtm,i, 5);
+                    double pitch = getDoubleValueAt(dtm, i, 5);
                     pitch = Math.toRadians(pitch);
-                    double yaw = getDoubleValueAt(dtm,i, 6);
+                    double yaw = getDoubleValueAt(dtm, i, 6);
                     yaw = Math.toRadians(yaw);
                     PoseType pose = CRCLPosemath.toPoseType(new PmCartesian(x, y, z), new PmRpy(roll, pitch, yaw));
                     map.put(name, pose);
@@ -5399,9 +5414,9 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                     PmRpy rpy;
                     try {
                         rpy = CRCLPosemath.toPmRpy(pose);
-                        model.addRow(new Object[]{entry.getKey(), point.getX(), point.getY(), point.getZ(),Math.toDegrees(rpy.r),Math.toDegrees(rpy.p),Math.toDegrees(rpy.y),""});
+                        model.addRow(new Object[]{entry.getKey(), point.getX(), point.getY(), point.getZ(), Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y), ""});
                     } catch (PmException ex) {
-                        model.addRow(new Object[]{entry.getKey(), point.getX(), point.getY(), point.getZ(),Double.NaN,Double.NaN,Double.NaN,ex.toString()});
+                        model.addRow(new Object[]{entry.getKey(), point.getX(), point.getY(), point.getZ(), Double.NaN, Double.NaN, Double.NaN, ex.toString()});
                         Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }

@@ -1965,7 +1965,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         }
         if (opActions.size() < 3) {
-            logger.warning("optimizePddlActionsWithOptaPlanner: small size of opActions list : opActions.size()=" + opActions.size()+", actions="+actions);
+            logger.warning("optimizePddlActionsWithOptaPlanner: small size of opActions list : opActions.size()=" + opActions.size() + ", actions=" + actions);
             return actions;
         }
         if (skippedActions > 0) {
@@ -4146,7 +4146,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return toolName;
     }
 
-    private ConcurrentHashMap<String, PoseType> trayAttachOffsetsMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, PoseType> trayAttachOffsetsMap = new ConcurrentHashMap<>();
 
     /**
      * Get the value of trayAttachOffsetsMap
@@ -4157,13 +4157,24 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         return trayAttachOffsetsMap;
     }
 
+    private ConcurrentHashMap<String, PoseType> toolHolderPoseMap = new ConcurrentHashMap<>();
+
     /**
-     * Set the value of trayAttachOffsetsMap
+     * Get the value of toolHolderPoseMap
      *
-     * @param trayAttachOffsetsMap new value of trayAttachOffsetsMap
+     * @return the value of toolHolderPoseMap
      */
-    public void setTrayAttachOffsetsMap(ConcurrentHashMap<String, PoseType> trayAttachOffsetsMap) {
-        this.trayAttachOffsetsMap = trayAttachOffsetsMap;
+    public ConcurrentHashMap<String, PoseType> getToolHolderPoseMap() {
+        return toolHolderPoseMap;
+    }
+
+    /**
+     * Set the value of toolHolderPoseMap
+     *
+     * @param toolHolderPoseMap new value of toolHolderPoseMap
+     */
+    public void setToolHolderPoseMap(ConcurrentHashMap<String, PoseType> toolHolderPoseMap) {
+        this.toolHolderPoseMap = toolHolderPoseMap;
     }
 
     /**
