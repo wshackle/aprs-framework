@@ -22,7 +22,6 @@
  */
 package aprs.framework.database;
 
-import com.vaadin.ui.Tree;
 import crcl.base.PoseType;
 import java.util.Collections;
 import java.util.List;

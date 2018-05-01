@@ -38,7 +38,7 @@ import aprs.framework.pddl.executor.PositionMapEntry;
 import aprs.framework.pddl.executor.PositionMapJPanel;
 import aprs.framework.process.launcher.ProcessLauncherJFrame;
 import aprs.framework.screensplash.SplashScreen;
-import com.google.gwt.thirdparty.guava.common.io.Files;
+
 import crcl.base.CRCLStatusType;
 import crcl.base.CommandStateEnumType;
 import crcl.base.PoseType;
@@ -73,6 +73,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
@@ -4482,7 +4483,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             System.out.println("tmpFile = " + tmpFile.getCanonicalPath());
             File[] files1 = {tmpFile};
 
-            Files.write(customCode.getBytes(), tmpFile);
+            Files.write(tmpFile.toPath(), customCode.getBytes());
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             if (null != compiler) {
                 ClassLoader cl = ClassLoader.getSystemClassLoader();

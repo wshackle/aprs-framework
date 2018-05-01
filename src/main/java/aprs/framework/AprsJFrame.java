@@ -2143,7 +2143,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jCheckBoxMenuItemStartupFanucCRCLServer.setSelected(false);
         jCheckBoxMenuItemStartupMotomanCRCLServer.setSelected(false);
         jCheckBoxMenuItemShowDatabaseSetup.setSelected(false);
-        jCheckBoxMenuItemStartupCRCLWebApp.setSelected(false);
+//        jCheckBoxMenuItemStartupCRCLWebApp.setSelected(false);
         jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(false);
         jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(false);
     }
@@ -2254,9 +2254,9 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
 //                pub.setDbSetup(dbSetup);
 //                pub.addDbSetupListener(toVisListener);
 //            }
-            if (this.jCheckBoxMenuItemStartupCRCLWebApp.isSelected()) {
-                startCrclWebApp();
-            }
+//            if (this.jCheckBoxMenuItemStartupCRCLWebApp.isSelected()) {
+//                startCrclWebApp();
+//            }
             setupWindowsMenu();
             if (jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()) {
                 startConnectDatabase();
@@ -2307,12 +2307,12 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             Logger.getLogger(AprsJFrame.class
                     .getName()).log(Level.SEVERE, null, exception);
         }
-        try {
-            stopCrclWebApp();
-        } catch (Exception exception) {
-            Logger.getLogger(AprsJFrame.class
-                    .getName()).log(Level.SEVERE, null, exception);
-        }
+//        try {
+//            stopCrclWebApp();
+//        } catch (Exception exception) {
+//            Logger.getLogger(AprsJFrame.class
+//                    .getName()).log(Level.SEVERE, null, exception);
+//        }
         if (null != connectDatabaseFuture) {
             connectDatabaseFuture.cancel(true);
             connectDatabaseFuture = null;
@@ -3051,7 +3051,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         jCheckBoxMenuItemConnectToDatabaseOnStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemConnectToVisionOnStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemExploreGraphDbStartup = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemStartupCRCLWebApp = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemKitInspectionStartup = new javax.swing.JCheckBoxMenuItem();
         jMenuWindow = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -3242,14 +3241,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             }
         });
         jMenu3.add(jCheckBoxMenuItemExploreGraphDbStartup);
-
-        jCheckBoxMenuItemStartupCRCLWebApp.setText("CRCL Web App");
-        jCheckBoxMenuItemStartupCRCLWebApp.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemStartupCRCLWebAppActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemStartupCRCLWebApp);
 
         jCheckBoxMenuItemKitInspectionStartup.setText("Kit Inspection");
         jCheckBoxMenuItemKitInspectionStartup.addActionListener(new java.awt.event.ActionListener() {
@@ -3623,40 +3614,24 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         }
     }//GEN-LAST:event_jCheckBoxMenuItemExploreGraphDbStartupActionPerformed
 
-    @Nullable
-    CRCLWebAppRunner crclWebAppRunner = null;
+//    @Nullable
+//    CRCLWebAppRunner crclWebAppRunner = null;
 
-    private void stopCrclWebApp() {
-        if (null != crclWebAppRunner) {
-            crclWebAppRunner.stop();
-            crclWebAppRunner = null;
-        }
-    }
-
-    private void startCrclWebApp() {
-        crclWebAppRunner = new CRCLWebAppRunner();
-        crclWebAppRunner.setHttpPort(crclWebServerHttpPort);
-        crclWebAppRunner.start();
-    }
+//    private void stopCrclWebApp() {
+//        if (null != crclWebAppRunner) {
+//            crclWebAppRunner.stop();
+//            crclWebAppRunner = null;
+//        }
+//    }
+//
+//    private void startCrclWebApp() {
+//        crclWebAppRunner = new CRCLWebAppRunner();
+//        crclWebAppRunner.setHttpPort(crclWebServerHttpPort);
+//        crclWebAppRunner.start();
+//    }
 
     private int crclWebServerHttpPort = 8081;
 
-
-    private void jCheckBoxMenuItemStartupCRCLWebAppActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupCRCLWebAppActionPerformed
-        try {
-            stopCrclWebApp();
-            if (jCheckBoxMenuItemStartupCRCLWebApp.isSelected()) {
-                String portString = JOptionPane.showInputDialog("Http Port?", crclWebServerHttpPort);
-                crclWebServerHttpPort = Integer.parseInt(portString);
-                startCrclWebApp();
-            }
-            saveProperties();
-
-        } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemStartupCRCLWebAppActionPerformed
 
     private void jCheckBoxMenuItemConnectDatabaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectDatabaseActionPerformed
         if (this.jCheckBoxMenuItemConnectDatabase.isSelected()) {
@@ -5759,10 +5734,10 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
             if (null != crclWebAppPortString) {
                 crclWebServerHttpPort = Integer.parseInt(crclWebAppPortString);
             }
-            String startCrclWebAppString = props.getProperty(STARTUPCRCLWEBAPP);
-            if (null != startCrclWebAppString) {
-                jCheckBoxMenuItemStartupCRCLWebApp.setSelected(Boolean.valueOf(startCrclWebAppString));
-            }
+//            String startCrclWebAppString = props.getProperty(STARTUPCRCLWEBAPP);
+//            if (null != startCrclWebAppString) {
+//                jCheckBoxMenuItemStartupCRCLWebApp.setSelected(Boolean.valueOf(startCrclWebAppString));
+//            }
             String startKitInspetion = props.getProperty(STARTUPKITINSPECTION);
             if (null != startKitInspetion) {
                 jCheckBoxMenuItemKitInspectionStartup.setSelected(Boolean.valueOf(startKitInspetion));
@@ -5964,7 +5939,7 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
         propsMap.put(STARTUPCONNECTDATABASE, Boolean.toString(jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()));
         propsMap.put(STARTUPCONNECTVISION, Boolean.toString(jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()));
         propsMap.put(STARTUPEXPLOREGRAPHDB, Boolean.toString(jCheckBoxMenuItemExploreGraphDbStartup.isSelected()));
-        propsMap.put(STARTUPCRCLWEBAPP, Boolean.toString(jCheckBoxMenuItemStartupCRCLWebApp.isSelected()));
+//        propsMap.put(STARTUPCRCLWEBAPP, Boolean.toString(jCheckBoxMenuItemStartupCRCLWebApp.isSelected()));
         propsMap.put(CRCLWEBAPPPORT, Integer.toString(crclWebServerHttpPort));
         propsMap.put(STARTUP_ACTIVE_WIN, activeWin.toString());
         propsMap.put(STARTUPKITINSPECTION, Boolean.toString(jCheckBoxMenuItemKitInspectionStartup.isSelected()));
@@ -6136,7 +6111,6 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemSnapshotImageSize;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupCRCLWebApp;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupFanucCRCLServer;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupMotomanCRCLServer;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObject2DView;

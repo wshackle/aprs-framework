@@ -12,7 +12,7 @@
         <main.class>aprs.framework.LauncherAprsJFrame</main.class>
         <exec.mainClass>${main.class}</exec.mainClass>
         <optiplanner.version>7.6.0.Final</optiplanner.version>
-        <crcl4java.version>1.7-1</crcl4java.version>
+        <crcl4java.version>1.8</crcl4java.version>
     </properties>
     <name>aprs-framework</name>
     <url>
@@ -101,12 +101,12 @@
             <artifactId>crcl4java-ui</artifactId>
             <version>${crcl4java.version}</version>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>crcl4java-vaadin-webapp</artifactId>
             <version>${crcl4java.version}</version>
             <classifier>classes</classifier>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>fanucCRCLServer</artifactId>
@@ -117,11 +117,11 @@
             <artifactId>jsch</artifactId>
             <version>0.1.54</version>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>com.bsb.common.vaadin</groupId>
             <artifactId>com.bsb.common.vaadin7.embed</artifactId>
             <version>0.6</version>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>crcl4java-motoman</artifactId>
