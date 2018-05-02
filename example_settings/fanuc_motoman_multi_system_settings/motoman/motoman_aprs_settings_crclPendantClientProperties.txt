@@ -55,7 +55,7 @@ int currentProgramLine=-1
 # could not invokegetCurrentProgramCommand
 # could not invokegetCrclClientErrorMessage
 # could not invokegetLastOpenedProgramFile
-java.util.Set recentPrograms=[C:\Users\shackle\MOVELGEAR_CRLC.xml]
+java.util.Set recentPrograms=[]
 int maxRecordCommandsCount=1000
 int programRow=0
 java.awt.Window outerWindow=APRS : Motoman(Disconnected) : Shared Table :  :  : 0
