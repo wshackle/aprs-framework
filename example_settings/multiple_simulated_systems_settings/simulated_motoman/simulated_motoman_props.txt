@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:5430
+#  Automatically saved by aprs.framework.AprsJFrame.saveProperties()
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 USETEACHTABLE=true
 aprs.robotName=Sim_Motoman
@@ -12,7 +12,6 @@ snapShotHeight=700
 snapShotWidth=900
 startup.connectdatabase=true
 startup.connectvision=true
-startup.crclWebApp=false
 startup.exploreGraphDb=false
 startup.kitinspection=false
 startup.pddl.executor=true

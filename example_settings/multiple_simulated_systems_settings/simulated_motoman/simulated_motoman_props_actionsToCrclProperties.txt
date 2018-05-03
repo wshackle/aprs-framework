@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:2040
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties()
 afterMoveToLookForDwellTime=0.5
 approachZOffset=50.0
 doInspectKit=true
@@ -14,7 +14,6 @@ lookForXYZ=0.0,0.0,0.0
 manualPartNames=[part_large_gear_in_kt_4, part_large_gear_in_kt_3, part_small_gear_in_kt_4, part_small_gear_in_kt_3, part_large_gear_in_kt_2, part_large_gear_in_kt_1, part_small_gear_in_kt_2, part_small_gear_in_kt_1, part_large_gear_in_pt_4, part_small_gear_in_pt_4, part_large_gear_in_pt_3, part_small_gear_in_pt_3, part_large_gear_in_pt_2, part_large_gear_in_pt_1, part_small_gear_in_pt_2, part_small_gear_in_pt_1]
 manualSlotNames=[empty_slot_for_large_gear_in_large_gear_vessel_4, empty_slot_for_large_gear_in_large_gear_vessel_3, empty_slot_for_small_gear_in_small_gear_vessel_4, empty_slot_for_small_gear_in_small_gear_vessel_3, empty_slot_for_large_gear_in_large_gear_vessel_2, empty_slot_for_large_gear_in_large_gear_vessel_1, empty_slot_for_small_gear_in_small_gear_vessel_2, empty_slot_for_small_gear_in_small_gear_vessel_1, empty_slot_1_for_large_gear_in_kit_s2l2_vessel_2, empty_slot_1_for_small_gear_in_kit_s2l2_vessel_2, empty_slot_2_for_large_gear_in_kit_s2l2_vessel_2, empty_slot_2_for_small_gear_in_kit_s2l2_vessel_2, empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1, empty_slot_1_for_large_gear_in_kit_s2l2_vessel_1, empty_slot_2_for_small_gear_in_kit_s2l2_vessel_1, empty_slot_1_for_small_gear_in_kit_s2l2_vessel_1]
 pauseInsteadOfRecover=true
-pddl.output=/tmp/aprs_logs_2018-02-20_105544.571/Shared-Table-run-213-Sim_Motoman/105620.984_actionList_5118762943165193613.txt
 pddl.reverse_output=../../../example_pddl/reverse_motoman_demo_actions.txt
 placePartSlotArgIndex=0
 placeZOffset=5.0

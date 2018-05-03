@@ -60,7 +60,6 @@ import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenuItem;
-import aprs.framework.tomcat.CRCLWebAppRunner;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
@@ -77,9 +76,7 @@ import crcl.base.MoveThroughToType;
 import crcl.base.MoveToType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
-import crcl.base.SetAngleUnitsType;
 import crcl.base.SetEndEffectorType;
-import crcl.base.SetLengthUnitsType;
 import crcl.ui.XFuture;
 import crcl.ui.client.PendantClientInner;
 import crcl.ui.client.PendantClientJPanel;
@@ -119,15 +116,12 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.bind.JAXBException;
-import javax.xml.parsers.ParserConfigurationException;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.xml.sax.SAXException;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.utils.CrclCommandWrapper;
 import java.io.FileWriter;
-import java.util.StringJoiner;
 import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
 import org.apache.commons.csv.CSVFormat;
@@ -5747,7 +5741,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                 this.pddlPlannerJInternalFrame.loadProperties();
             }
             if (null != this.pddlExecutorJInternalFrame1) {
-                XFuture.runAsync("loadProperties", () -> {
+                XFuture<Void> loadPropertiesFuture =
+                        XFuture.runAsync("loadProperties", () -> {
                     try {
                         if (null != this.pddlExecutorJInternalFrame1) {
                             this.pddlExecutorJInternalFrame1.loadProperties();
@@ -5755,7 +5750,8 @@ public class AprsJFrame extends javax.swing.JFrame implements DisplayInterface, 
                     } catch (IOException ex) {
                         Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                }, runProgramService).join();
+                }, runProgramService);
+                loadPropertiesFuture.join();
             }
 
             if (null != this.object2DViewJInternalFrame) {

@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:2040
+#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties()
 afterMoveToLookForDwellTime=0.5
 approachZOffset=50.0
 doInspectKit=true
@@ -14,7 +14,6 @@ lookForXYZ=200.0,200.0,-50.0
 manualPartNames=[part_large_gear_in_pt_2, part_medium_gear_in_pt_4, part_medium_gear_in_pt_3, part_large_gear_in_pt_1, part_medium_gear_in_pt_2, part_medium_gear_in_pt_1, null, null, null, null]
 manualSlotNames=[empty_slot_1_for_large_gear_in_kit_m2l1_vessel_2, empty_slot_2_for_medium_gear_in_kit_m2l1_vessel_2, empty_slot_1_for_medium_gear_in_kit_m2l1_vessel_2, empty_slot_1_for_large_gear_in_kit_m2l1_vessel_1, empty_slot_2_for_medium_gear_in_kit_m2l1_vessel_1, empty_slot_1_for_medium_gear_in_kit_m2l1_vessel_1, null, null, null, null]
 pauseInsteadOfRecover=true
-pddl.output=/tmp/aprs_logs_2018-02-20_105544.571/Fanuc-Cart-run-214-Sim_Fanuc/105621.039_actionList_9183241709806713623.txt
 pddl.reverse_output=../../../example_pddl/reverse_fanuc_demo_actions.txt
 placePartSlotArgIndex=0
 placeZOffset=5.0

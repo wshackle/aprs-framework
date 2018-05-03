@@ -112,12 +112,7 @@ import java.awt.event.MouseListener;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import java.awt.geom.Point2D;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.Set;
@@ -145,9 +140,8 @@ import rcs.posemath.PmRpy;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
+import java.io.FileNotFoundException;
+import java.io.FilterWriter;
 
 /**
  *
@@ -233,14 +227,85 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setTrayAttachOffsetTableModelListener();
     }
 
+    public String getSelectedToolName() {
+        return pddlActionToCrclGenerator.getToolName();
+    }
+
+    @Nullable private String selectedToolNameFileName = null;
+
+    /**
+     * Get the value of selectedToolNameFileName
+     *
+     * @return the value of selectedToolNameFileName
+     */
+    @Nullable public String getSelectedToolNameFileName() {
+        if(null == selectedToolNameFileName) {
+            try {
+                return getDefaultSelectedToolNameFile();
+            } catch (IOException ex) {
+                Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return selectedToolNameFileName;
+    }
+
+    /**
+     * Set the value of selectedToolNameFileName
+     *
+     * @param selectedToolNameFileName new value of selectedToolNameFileName
+     */
+    public void setSelectedToolNameFileName(String selectedToolNameFileName) {
+        this.selectedToolNameFileName = selectedToolNameFileName;
+    }
+
+    private String getDefaultSelectedToolNameFile() throws IOException {
+        return propertiesFile.getName() + ".selectedToolName.txt";
+    }
+
+    @Nullable private String readSelectedToolNameFile() throws IOException {
+        String filename = getSelectedToolNameFileName();
+        if (null == filename || filename.length() < 1) {
+            return null;
+        }
+        return readSelectedToolNameFile(filename);
+    }
+
+    @Nullable private String readSelectedToolNameFile(String filename) throws IOException {
+        if(null == filename) {
+            throw new IllegalArgumentException("filename == null");
+        }
+        File file = new File(propertiesFile.getParentFile(), filename);
+        if (!file.exists() || !file.canRead()) {
+            return null;
+        }
+        if (file.isDirectory()) {
+            throw new IllegalStateException(filename + " is a directory.");
+        }
+        return readSelectedToolNameFile(file);
+    }
+
+    private String readSelectedToolNameFile(File file) throws IOException {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while (null != (line = br.readLine())) {
+                line = line.trim();
+                if (line.length() > 1 && !line.startsWith("#")) {
+                    return line;
+                }
+            }
+        }
+        return "";
+    }
+
     public void setSelectedToolName(String newToolName) {
         try {
-            if (null != newToolName && newToolName.length() > 0) {
-                String currentToolName = pddlActionToCrclGenerator.getToolName();
-                if (!Objects.equals(currentToolName, newToolName)) {
-                    pddlActionToCrclGenerator.setToolName(newToolName);
-                }
-                jTextFieldCurrentToolName.setText(newToolName);
+            if (null == newToolName) {
+                return;
+            }
+            jTextFieldCurrentToolName.setText(newToolName);
+            String currentToolName = pddlActionToCrclGenerator.getToolName();
+            if (!Objects.equals(currentToolName, newToolName)) {
+                pddlActionToCrclGenerator.setToolName(newToolName);
             }
             PoseType newPose = pddlActionToCrclGenerator.getToolOffsetPose();
             if (null != newPose) {
@@ -251,6 +316,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                                 tran.x, tran.y, tran.z,
                                 Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y));
                 jTextFieldCurrentToolOffset.setText(offsetText);
+            }
+            String filename = getSelectedToolNameFileName();
+            if (null == filename) {
+                filename = getDefaultSelectedToolNameFile();
+                setSelectedToolNameFileName(filename);
+            }
+            String curSavedToolName = readSelectedToolNameFile(filename);
+            if (!Objects.equals(curSavedToolName, newToolName)) {
+                try (PrintWriter pw = new PrintWriter(new FileWriter(new File(propertiesFile.getParentFile(), filename)))) {
+                    pw.println(newToolName);
+                } catch (IOException ex) {
+                    Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, null, exception);
@@ -4646,7 +4724,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 i--;
             }
         }
-        ConcurrentHashMap<String, PoseType> toolHolderPoseMap 
+        ConcurrentHashMap<String, PoseType> toolHolderPoseMap
                 = pddlActionToCrclGenerator.getToolHolderPoseMap();
         toolHolderPoseMap.remove(nameToDelete);
         clearEmptyToolChangerPoseRows();
@@ -4662,8 +4740,8 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
                 return;
             }
             String nameToAdd = JOptionPane.showInputDialog("New tool changer position name");
-            ConcurrentHashMap<String, PoseType> toolHolderPoseMap 
-                = pddlActionToCrclGenerator.getToolHolderPoseMap();
+            ConcurrentHashMap<String, PoseType> toolHolderPoseMap
+                    = pddlActionToCrclGenerator.getToolHolderPoseMap();
             if (nameToAdd != null && nameToAdd.length() > 0) {
                 if (toolHolderPoseMap.containsKey(nameToAdd) || Arrays.stream(getToolChangerNames()).anyMatch(x -> nameToAdd.equals(x))) {
                     JOptionPane.showMessageDialog(this, nameToAdd + " already added.");
@@ -4850,18 +4928,19 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         try {
             String newToolName = queryUserForToolName("Which tool is currently in the robot? ");
             if (null != newToolName && newToolName.length() > 0) {
-                jTextFieldCurrentToolName.setText(newToolName);
-                PoseType newPose = pddlActionToCrclGenerator.getToolOffsetMap().get(newToolName);
-                if (null != newPose) {
-                    PmRpy rpy = CRCLPosemath.toPmRpy(newPose);
-                    PmCartesian tran = CRCLPosemath.toPmCartesian(newPose.getPoint());
-                    String offsetText
-                            = String.format("X=%.3f,Y=%.3f,Z=%.3f,roll=%.3f,pitch=%.3f,yaw=%.3f",
-                                    tran.x, tran.y, tran.z,
-                                    Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y));
-                    jTextFieldCurrentToolOffset.setText(offsetText);
-                    pddlActionToCrclGenerator.setToolOffsetPose(newPose);
-                }
+                pddlActionToCrclGenerator.setToolName(newToolName);
+//                jTextFieldCurrentToolName.setText(newToolName);
+//                PoseType newPose = pddlActionToCrclGenerator.getToolOffsetMap().get(newToolName);
+//                if (null != newPose) {
+//                    PmRpy rpy = CRCLPosemath.toPmRpy(newPose);
+//                    PmCartesian tran = CRCLPosemath.toPmCartesian(newPose.getPoint());
+//                    String offsetText
+//                            = String.format("X=%.3f,Y=%.3f,Z=%.3f,roll=%.3f,pitch=%.3f,yaw=%.3f",
+//                                    tran.x, tran.y, tran.z,
+//                                    Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y));
+//                    jTextFieldCurrentToolOffset.setText(offsetText);
+//                    pddlActionToCrclGenerator.setToolOffsetPose(newPose);
+//                }
             }
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, null, exception);
@@ -6270,6 +6349,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             loadToolChangerPoseMap();
             loadToolOffsetMap();
             loadTrayAttachOffsetMap();
+            String filename = getSelectedToolNameFileName();
+            if (null != filename && filename.length() > 1) {
+                setSelectedToolName(readSelectedToolNameFile(filename));
+            }
         }
     }
 

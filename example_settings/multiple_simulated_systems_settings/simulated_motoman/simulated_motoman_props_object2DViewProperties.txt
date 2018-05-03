@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties() at Object2DOuterJPanel.java:2378
+#  Automatically saved by aprs.framework.simview.Object2DOuterJPanel.saveProperties()
 --visionhost=agility
 --visionport=4001
 addPosNoise=true

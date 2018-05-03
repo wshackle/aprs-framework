@@ -509,7 +509,7 @@ public class Utils {
         StackTraceElement ste[] = Thread.currentThread().getStackTrace();
         try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
             if (ste.length > 2) {
-                pw.println("#  Automatically saved by " + ste[2].getClassName() + "." + ste[2].getMethodName() + "() at " + ste[2].getFileName() + ":" + ste[2].getLineNumber());
+                pw.println("#  Automatically saved by " + ste[2].getClassName() + "." + ste[2].getMethodName() + "()");
             }
             for (int i = 0; i < names.size(); i++) {
                 String name = names.get(i);
