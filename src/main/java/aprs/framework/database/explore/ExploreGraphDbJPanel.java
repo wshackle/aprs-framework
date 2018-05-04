@@ -22,7 +22,7 @@
  */
 package aprs.framework.database.explore;
 
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
 import aprs.framework.database.DbSetup;
@@ -1209,14 +1209,14 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     private javax.swing.JTextField jTextFieldSelectedNodeName;
     // End of variables declaration//GEN-END:variables
 
-    @MonotonicNonNull private AprsJFrame aprsJFrame = null;
+    @MonotonicNonNull private AprsSystemInterface aprsJFrame = null;
 
     /**
      * Get the value of aprsJFrame
      *
      * @return the value of aprsJFrame
      */
-    @Nullable public AprsJFrame getAprsJFrame() {
+    @Nullable public AprsSystemInterface getAprsSystemInterface() {
         return aprsJFrame;
     }
 
@@ -1225,7 +1225,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
      *
      * @param aprsJFrame new value of aprsJFrame
      */
-    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+    public void setAprsSystemInterface(AprsSystemInterface aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
     }
 

@@ -22,7 +22,7 @@
  */
 package aprs.framework.pddl.executor;
 
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.PddlAction;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.pddl.executor.PddlActionToCrclGenerator.PoseProvider;
@@ -330,13 +330,13 @@ public class PddlExecutorJInternalFrame extends javax.swing.JInternalFrame imple
     }
 
     @Override
-    public void setAprsJFrame(AprsJFrame aprsJFrame) {
-        actionsToCrclJPanel1.setAprsJFrame(aprsJFrame);
+    public void setAprsSystemInterface(AprsSystemInterface aprsJFrame) {
+        actionsToCrclJPanel1.setAprsSystemInterface(aprsJFrame);
     }
 
     @Override
-    public AprsJFrame getAprsJFrame() {
-        return actionsToCrclJPanel1.getAprsJFrame();
+    public AprsSystemInterface getAprsSystemInterface() {
+        return actionsToCrclJPanel1.getAprsSystemInterface();
     }
 
     public boolean readyForNewActionsList() {

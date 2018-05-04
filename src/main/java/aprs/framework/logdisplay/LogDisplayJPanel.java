@@ -22,7 +22,7 @@
  */
 package aprs.framework.logdisplay;
 
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.Utils;
 import java.awt.Component;
 import java.awt.Desktop;
@@ -131,14 +131,14 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     
-        private AprsJFrame aprsJFrame;
+        private AprsSystemInterface aprsJFrame;
 
     /**
      * Get the value of aprsJFrame
      *
      * @return the value of aprsJFrame
      */
-    public AprsJFrame getAprsJFrame() {
+    public AprsSystemInterface getAprsSystemInterface() {
         return aprsJFrame;
     }
 
@@ -147,7 +147,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
      *
      * @param aprsJFrame new value of aprsJFrame
      */
-    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+    public void setAprsSystemInterface(AprsSystemInterface aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
     }
 

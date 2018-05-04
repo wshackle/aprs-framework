@@ -22,11 +22,8 @@
  */
 package aprs.framework.pddl.executor;
 
-import aprs.framework.AprsJFrame;
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.DisplayInterface;
-import aprs.framework.DisplayInterface;
-import aprs.framework.PddlAction;
 import aprs.framework.PddlAction;
 import java.io.IOException;
 import java.util.List;
@@ -72,15 +69,15 @@ public interface PddlExecutorDisplayInterface extends DisplayInterface {
 
     
     /**
-     * Set the AprsJFrame 
+     * Set the AprsSystemInterface 
      * @param aprsJFrame new value of aprsJFrame.
      */
-    public void setAprsJFrame(AprsJFrame aprsJFrame);
+    public void setAprsSystemInterface(AprsSystemInterface aprsJFrame);
     
     /**
      * Get the current aprsJFrame
      * @return aprsJFrame
      */
-    public AprsJFrame getAprsJFrame();
+    public AprsSystemInterface getAprsSystemInterface();
 
 }

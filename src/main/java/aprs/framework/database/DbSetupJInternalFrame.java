@@ -22,7 +22,7 @@
  */
 package aprs.framework.database;
 
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import java.io.File;
 
 /**
@@ -51,8 +51,8 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
      *
      * @param aprsJframe new value of aprsJFrame
      */
-    public void setAprsJframe(AprsJFrame aprsJframe) {
-        dbSetupJPanel1.setAprsJFrame(aprsJframe);
+    public void setAprsSystemInterface(AprsSystemInterface aprsJframe) {
+        dbSetupJPanel1.setAprsSystemInterface(aprsJframe);
     }
 
     /**

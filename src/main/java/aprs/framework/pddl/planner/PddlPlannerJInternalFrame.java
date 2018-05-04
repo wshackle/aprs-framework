@@ -112,4 +112,9 @@ public class PddlPlannerJInternalFrame extends javax.swing.JInternalFrame implem
         pddlPlannerJPanel1.close();
         this.setVisible(false);
     }
+
+    @Override
+    public File getPropertiesFile() {
+        return pddlPlannerJPanel1.getPropertiesFile();
+    }
 }

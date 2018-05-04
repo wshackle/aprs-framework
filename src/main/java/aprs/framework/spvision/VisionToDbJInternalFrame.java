@@ -22,7 +22,7 @@
  */
 package aprs.framework.spvision;
 
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.database.DbType;
 import aprs.framework.database.PhysicalItem;
@@ -121,8 +121,8 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return Collections.emptyList();
     }
 
-    public void setAprsJFrame(AprsJFrame aprsJFrame) {
-        this.visionToDBJPanel.setAprsJFrame(aprsJFrame);
+    public void setAprsSystemInterface(AprsSystemInterface aprsJFrame) {
+        this.visionToDBJPanel.setAprsSystemInterface(aprsJFrame);
     }
 
 //    public XFuture<List<PhysicalItem>> getNextUpdate() {

@@ -23,7 +23,7 @@ package aprs.framework.pddl.executor;
 
 import aprs.framework.database.Slot;
 import aprs.framework.database.PartsTray;
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.PddlAction;
 import aprs.framework.Utils;
 import aprs.framework.database.DbSetup;
@@ -1221,8 +1221,8 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         assert (null != this.aprsJFrame) : "null == aprsJFrame";
         assert (null != gparams.options) : "null == gparams.options";
         assert (null != gparams.actions) : "null == gparams.actions";
-        AprsJFrame localAprsJFrame = this.aprsJFrame;
-        if (null == localAprsJFrame) {
+        AprsSystemInterface localAprsSystemInterface = this.aprsJFrame;
+        if (null == localAprsSystemInterface) {
             throw new IllegalStateException("aprsJframe is null");
         }
         final Thread curThread = Thread.currentThread();
@@ -1239,11 +1239,11 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
 
         this.startSafeAbortRequestCount = gparams.startSafeAbortRequestCount;
         checkDbReady();
-        if (localAprsJFrame.isRunningCrclProgram()) {
+        if (localAprsSystemInterface.isRunningCrclProgram()) {
             throw new IllegalStateException("already running crcl while trying to generate it");
         }
         List<MiddleCommandType> cmds = new ArrayList<>();
-        int blockingCount = localAprsJFrame.startBlockingCrclPrograms();
+        int blockingCount = localAprsSystemInterface.startBlockingCrclPrograms();
 
         ActionCallbackInfo acbi = lastAcbi.get();
         if (null != acbi && includeEndNormalActionMarker && includeEndProgramMarker && includeSkipNotifyMarkers) {
@@ -1255,7 +1255,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     String errString = "generate called with startingIndex=" + gparams.startingIndex + ",acbi.getActionsSize()=" + acbi.getActionsSize() + " and acbi.actionIndex=" + acbi.actionIndex + ", lastIndex=" + lastIndex + ", acbi.action.=" + acbi.action;
                     System.err.println(errString);
                     System.err.println("acbi = " + acbi);
-                    localAprsJFrame.setTitleErrorString(errString);
+                    localAprsSystemInterface.setTitleErrorString(errString);
                     throw new IllegalStateException(errString);
                 }
             }
@@ -1534,7 +1534,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     System.out.println("poseCache.keySet() = " + poseCache.keySet());
                 }
             }
-            if (localAprsJFrame.isRunningCrclProgram()) {
+            if (localAprsSystemInterface.isRunningCrclProgram()) {
                 throw new IllegalStateException("already running crcl while trying to generate it");
             }
         } catch (Exception ex) {
@@ -1552,7 +1552,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             System.err.println("");
             throw new IllegalStateException(ex);
         } finally {
-            localAprsJFrame.stopBlockingCrclPrograms(blockingCount);
+            localAprsSystemInterface.stopBlockingCrclPrograms(blockingCount);
         }
         return cmds;
     }
@@ -2271,7 +2271,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     for (KitToCheck kit : kitsToFix) {
                         for (KitToCheckInstanceInfo info : kit.instanceInfoMap.values()) {
                             if (null != info.failedAbsSlotPrpName && null != info.failedItemSkuName) {
-                                JOptionPane.showMessageDialog(this.aprsJFrame, kit.name + " needs " + kit.slotMap.get(info.failedAbsSlotPrpName) + " instead of " + info.failedItemSkuName + " in " + info.failedAbsSlotPrpName);
+//                                JOptionPane.showMessageDialog(this.aprsJFrame, kit.name + " needs " + kit.slotMap.get(info.failedAbsSlotPrpName) + " instead of " + info.failedItemSkuName + " in " + info.failedAbsSlotPrpName);
                                 break;
                             }
                         }
@@ -2739,7 +2739,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
     }
 
     @MonotonicNonNull
-    private AprsJFrame aprsJFrame;
+    private AprsSystemInterface aprsJFrame;
 
     /**
      * Get the value of aprsJFrame
@@ -2747,9 +2747,9 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      * @return the value of aprsJFrame
      */
     public @Nullable
-    AprsJFrame getAprsJFrame() {
+    AprsSystemInterface getAprsSystemInterface() {
         if (null == aprsJFrame && null != parentPddlExecutorJPanel) {
-            aprsJFrame = parentPddlExecutorJPanel.getAprsJFrame();
+            aprsJFrame = parentPddlExecutorJPanel.getAprsSystemInterface();
         }
         return aprsJFrame;
     }
@@ -2759,7 +2759,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      *
      * @param aprsJFrame new value of aprsJFrame
      */
-    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+    public void setAprsSystemInterface(AprsSystemInterface aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
     }
 
@@ -2783,7 +2783,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
      */
     public void setParentPddlExecutorJPanel(PddlExecutorJPanel parentPddlExecutorJPanel) {
         this.parentPddlExecutorJPanel = parentPddlExecutorJPanel;
-        setAprsJFrame(parentPddlExecutorJPanel.getAprsJFrame());
+        setAprsSystemInterface(parentPddlExecutorJPanel.getAprsSystemInterface());
     }
 
     /**
@@ -3894,7 +3894,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             throw new IllegalStateException("QuerySet for database not initialized.(null)");
         }
 
-        qs.setAprsJFrame(aprsJFrame);
+        qs.setAprsSystemInterface(aprsJFrame);
         PoseType pose = qs.getPose(posename, requireNewPoses, visionCycleNewDiffThreshold);
         return pose;
     }
@@ -4048,7 +4048,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         assert (aprsJFrame != null) : "aprsJFrame == null : @AssumeAssertion(nullness)";
 
         addOptionalOpenGripper(cmds, (CrclCommandWrapper ccw) -> {
-            AprsJFrame af = aprsJFrame;
+            AprsSystemInterface af = aprsJFrame;
             assert (af != null) : "af == null : @AssumeAssertion(nullness)";
             if (af.isObjectViewSimulated()) {
                 double distToPart = af.getClosestRobotPartDistance();
@@ -4235,7 +4235,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         addSettleDwell(cmds);
 
         addOptionalCloseGripper(cmds, (CrclCommandWrapper ccw) -> {
-            AprsJFrame af = aprsJFrame;
+            AprsSystemInterface af = aprsJFrame;
             assert (af != null) : "af == null : @AssumeAssertion(nullness)";
             if (af.isObjectViewSimulated()) {
                 double distToPart = af.getClosestRobotPartDistance();
@@ -4558,7 +4558,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
         origMessageCmd.setMessage("moveUpFromCurrent" + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
         addOptionalCommand(origMessageCmd, cmds, (CrclCommandWrapper wrapper) -> {
             MiddleCommandType cmd = wrapper.getWrappedCommand();
-            AprsJFrame af = aprsJFrame;
+            AprsSystemInterface af = aprsJFrame;
             assert (af != null) : "af == null : @AssumeAssertion(nullness)";
             PoseType pose = af.getCurrentPose();
             if (pose == null || pose.getPoint() == null || pose.getPoint().getZ() >= (limit - 1e-6)) {

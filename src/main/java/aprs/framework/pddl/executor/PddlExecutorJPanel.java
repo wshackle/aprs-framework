@@ -22,7 +22,7 @@
  */
 package aprs.framework.pddl.executor;
 
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.PddlAction;
 import aprs.framework.Utils;
 import aprs.framework.Utils.RunnableWithThrow;
@@ -140,8 +140,6 @@ import rcs.posemath.PmRpy;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
-import java.io.FileNotFoundException;
-import java.io.FilterWriter;
 
 /**
  *
@@ -2528,7 +2526,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class
+            Logger.getLogger(AprsSystemInterface.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonLoadPddlActionsFromFileActionPerformed
@@ -2538,7 +2536,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class
+            Logger.getLogger(AprsSystemInterface.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonLoadActionPerformed
@@ -2548,7 +2546,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class
+            Logger.getLogger(AprsSystemInterface.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jTextFieldPddlOutputActionsActionPerformed
@@ -2776,14 +2774,14 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     @Nullable
     private volatile CRCLProgramType unstartedProgram = null;
 
-    private AprsJFrame aprsJFrame;
+    private AprsSystemInterface aprsJFrame;
 
     /**
      * Get the value of aprsJFrame
      *
      * @return the value of aprsJFrame
      */
-    public AprsJFrame getAprsJFrame() {
+    public AprsSystemInterface getAprsSystemInterface() {
         return aprsJFrame;
     }
 
@@ -2792,10 +2790,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      *
      * @param aprsJFrame new value of aprsJFrame
      */
-    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+    public void setAprsSystemInterface(AprsSystemInterface aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
         if (null != pddlActionToCrclGenerator) {
-            pddlActionToCrclGenerator.setAprsJFrame(aprsJFrame);
+            pddlActionToCrclGenerator.setAprsSystemInterface(aprsJFrame);
         }
     }
 

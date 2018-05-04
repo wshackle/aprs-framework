@@ -22,7 +22,7 @@
  */
 package aprs.framework.database;
 
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.spvision.UpdateResults;
 import crcl.base.PointType;
 import crcl.base.PoseType;
@@ -671,13 +671,13 @@ public class QuerySet implements QuerySetInterface {
         return getPose(name, false, 0);
     }
 
-    @Nullable private AprsJFrame aprsJFrame = null;
+    @Nullable private AprsSystemInterface aprsJFrame = null;
 
-    @Nullable public AprsJFrame getAprsJFrame() {
+    @Nullable public AprsSystemInterface getAprsSystemInterface() {
         return aprsJFrame;
     }
 
-    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+    public void setAprsSystemInterface(AprsSystemInterface aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
     }
 

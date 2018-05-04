@@ -22,7 +22,7 @@
  */
 package aprs.framework.simview;
 
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.SlotOffsetProvider;
 import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
@@ -196,7 +196,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             saveFile(new File(csvDir, f.getName() + ".csv"));
             File xmlDir = new File(f.getParentFile(), "crclStatusXml");
             xmlDir.mkdirs();
-            AprsJFrame af = this.aprsJFrame;
+            AprsSystemInterface af = this.aprsJFrame;
             if (null != af) {
                 CRCLStatusType status = aprsJFrame.getCurrentStatus();
                 if (null != status) {
@@ -1993,14 +1993,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     double currentX = 0.0;
     double currentY = 0.0;
 
-    private AprsJFrame aprsJFrame;
+    private AprsSystemInterface aprsJFrame;
 
     /**
      * Get the value of aprsJFrame
      *
      * @return the value of aprsJFrame
      */
-    public AprsJFrame getAprsJFrame() {
+    public AprsSystemInterface getAprsSystemInterface() {
         return aprsJFrame;
     }
 
@@ -2009,9 +2009,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      *
      * @param aprsJFrame new value of aprsJFrame
      */
-    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+    public void setAprsSystemInterface(AprsSystemInterface aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
-        this.object2DJPanel1.setAprsJFrame(aprsJFrame);
+        this.object2DJPanel1.setAprsSystemInterface(aprsJFrame);
         setSlotOffsetProvider(aprsJFrame);
     }
 

@@ -22,7 +22,7 @@
  */
 package aprs.framework.spvision;
 
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
 import aprs.framework.database.AcquireEnum;
@@ -1533,7 +1533,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private File createTempFile(String prefix, String suffix) throws IOException {
-        AprsJFrame af = this.aprsJFrame;
+        AprsSystemInterface af = this.aprsJFrame;
         if (null != af) {
             return af.createTempFile(prefix, suffix);
         }
@@ -1541,7 +1541,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private File createTempFile(String prefix, String suffix, File dir) throws IOException {
-        AprsJFrame af = this.aprsJFrame;
+        AprsSystemInterface af = this.aprsJFrame;
         if (null != af) {
             return af.createTempFile(prefix, suffix, dir);
         }
@@ -1549,7 +1549,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
-        AprsJFrame af = this.aprsJFrame;
+        AprsSystemInterface af = this.aprsJFrame;
         if (null != af) {
             af.takeSimViewSnapshot(f, itemsToPaint);
         }
@@ -1861,7 +1861,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     @MonotonicNonNull
-    private AprsJFrame aprsJFrame = null;
+    private AprsSystemInterface aprsJFrame = null;
 
     /**
      * Get the value of aprsJFrame
@@ -1869,7 +1869,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      * @return the value of aprsJFrame
      */
     @Nullable
-    public AprsJFrame getAprsJFrame() {
+    public AprsSystemInterface getAprsSystemInterface() {
         return aprsJFrame;
     }
 
@@ -1878,7 +1878,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      *
      * @param aprsJFrame new value of aprsJFrame
      */
-    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+    public void setAprsSystemInterface(AprsSystemInterface aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
     }
 

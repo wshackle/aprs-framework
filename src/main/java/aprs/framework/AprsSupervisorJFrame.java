@@ -486,7 +486,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         .getResource("aprs.png")));
 
             } catch (Exception ex) {
-                Logger.getLogger(AprsJFrame.class
+                Logger.getLogger(AprsSupervisorJFrame.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
             updateRobotsTable();
@@ -618,7 +618,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         togglesAllowedXfuture = new AtomicReference<>(createFirstWaitForTogglesFuture(newWaitForTogglesFutures, newWaitForTogglesFutureCount));
     }
 
-    private final ConcurrentHashMap<String, AprsJFrame> slotProvidersMap
+    private final ConcurrentHashMap<String, AprsSystemInterface> slotProvidersMap
             = new ConcurrentHashMap<>();
 
     private class AprsSupervisorSlotOffsetProvider implements SlotOffsetProvider {
@@ -639,7 +639,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty) {
             for (int i = 0; i < aprsSystems.size(); i++) {
                 try {
-                    AprsJFrame sys = aprsSystems.get(i);
+                    AprsSystemInterface sys = aprsSystems.get(i);
                     List<Slot> l = sys.getSlotOffsets(name, true);
                     if (null != l && !l.isEmpty()) {
                         slotProvidersMap.put(name, sys);
@@ -655,7 +655,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         @Override
         @Nullable
         public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
-            AprsJFrame sys = slotProvidersMap.get(tray.origName);
+            AprsSystemInterface sys = slotProvidersMap.get(tray.origName);
             if (null != sys) {
                 return sys.absSlotFromTrayAndOffset(tray, offsetItem, 0);
             }
@@ -665,7 +665,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         @Override
         @Nullable
         public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
-            AprsJFrame sys = slotProvidersMap.get(tray.origName);
+            AprsSystemInterface sys = slotProvidersMap.get(tray.origName);
             if (null != sys) {
                 return sys.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
             }
@@ -724,7 +724,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         if (sindex > 0 && sindex < selectedFutureString.length()) {
             String selectedFutureStringBase = selectedFutureString.substring(0, sindex);
             String selectedFutureStringExt = selectedFutureString.substring(sindex + 1);
-            for (AprsJFrame sys : aprsSystems) {
+            for (AprsSystemInterface sys : aprsSystems) {
                 if (sys.getTaskName().equals(selectedFutureStringBase)) {
                     switch (selectedFutureStringExt) {
                         case "actions":
@@ -938,14 +938,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     JPanel blankPanel = new JPanel();
 
     @Nullable
-    private AprsJFrame posMapInSys = null;
+    private AprsSystemInterface posMapInSys = null;
     @Nullable
-    private AprsJFrame posMapOutSys = null;
+    private AprsSystemInterface posMapOutSys = null;
 
     @Nullable
-    private AprsJFrame findSystemWithRobot(String robot) {
+    private AprsSystemInterface findSystemWithRobot(String robot) {
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame aj = aprsSystems.get(i);
+            AprsSystemInterface aj = aprsSystems.get(i);
             String robotName = aj.getRobotName();
             if (robotName != null && robotName.equals(robot)) {
                 return aj;
@@ -1320,7 +1320,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private XFuture<Void> stealRobot(String robotName) throws IOException, PositionMap.BadErrorMapFormatException {
         Set<String> names = new HashSet<>();
         for (int i = 0; i < aprsSystems.size() - 1; i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             if (null != sys) {
                 String sysRobotName = sys.getRobotName();
                 if (null != sysRobotName) {
@@ -1366,7 +1366,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
         private final Callable<T> callable;
         private final String name;
-        private final AprsJFrame[] systems;
+        private final AprsSystemInterface[] systems;
 
         public Callable<T> getCallable() {
             return callable;
@@ -1376,11 +1376,11 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             return name;
         }
 
-        public AprsJFrame[] getSystems() {
+        public AprsSystemInterface[] getSystems() {
             return systems;
         }
 
-        public NamedCallable(Callable<T> r, String name, AprsJFrame... systems) {
+        public NamedCallable(Callable<T> r, String name, AprsSystemInterface... systems) {
             this.callable = r;
             this.name = name;
             this.systems = systems;
@@ -1401,7 +1401,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private final AtomicReference<@Nullable NamedCallable<XFuture<Void>>> returnRobotRunnable = new AtomicReference<>();
 
     @SuppressWarnings("unchecked")
-    private <T> NamedCallable<T> setReturnRobotRunnable(String name, Callable<T> r, AprsJFrame... systems) {
+    private <T> NamedCallable<T> setReturnRobotRunnable(String name, Callable<T> r, AprsSystemInterface... systems) {
         NamedCallable<T> namedR = new NamedCallable<>(r, name, systems);
         returnRobotRunnable.set((NamedCallable<XFuture<Void>>) namedR);
         return namedR;
@@ -1410,7 +1410,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private void checkRobotsUniquePorts() {
         Set<Integer> set = new HashSet<>();
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             if (sys.isConnected()) {
                 int port = sys.getRobotCrclPort();
                 if (set.contains(port)) {
@@ -1576,7 +1576,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private final AtomicInteger stealRobotNumber = new AtomicInteger();
     private final AtomicInteger reverseRobotTransferNumber = new AtomicInteger();
 
-    private XFuture<Void> stealRobot(AprsJFrame stealFrom, AprsJFrame stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
+    private XFuture<Void> stealRobot(AprsSystemInterface stealFrom, AprsSystemInterface stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
 
         String stealForRobotName = stealFor.getRobotName();
         if (null == stealForRobotName) {
@@ -1593,7 +1593,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return stealRobotsInternal(stealFrom, stealFor, stealForRobotName, stealFromRobotName, stealFromOrigCrclHost);
     }
 
-    private XFuture<Void> stealRobotsInternal(AprsJFrame stealFrom, AprsJFrame stealFor, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost) throws IOException, PositionMap.BadErrorMapFormatException {
+    private XFuture<Void> stealRobotsInternal(AprsSystemInterface stealFrom, AprsSystemInterface stealFor, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost) throws IOException, PositionMap.BadErrorMapFormatException {
         final int srn = stealRobotNumber.incrementAndGet();
         logEvent("Transferring " + stealFrom.getRobotName() + " to " + stealFor.getTaskName() + " : srn=" + srn);
         String blocker = "stealRobot" + srn;
@@ -1748,7 +1748,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 });
     }
 
-    private NamedCallable<XFuture<?>> setupReturnRobots(final int srn, AprsJFrame stealFor, AprsJFrame stealFrom, Map<String, String> stealForOptions, PositionMap pm) {
+    private NamedCallable<XFuture<?>> setupReturnRobots(final int srn, AprsSystemInterface stealFor, AprsSystemInterface stealFrom, Map<String, String> stealForOptions, PositionMap pm) {
         String stealFromOrigCrclHost = stealFrom.getRobotCrclHost();
         if (null == stealFromOrigCrclHost) {
             throw new IllegalStateException("null robotCrclHost in stealFrom =" + stealFrom);
@@ -1770,7 +1770,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return returnRobot;
     }
 
-    private NamedCallable<XFuture<?>> setupRobotReturnInternal(AprsJFrame stealFrom, AprsJFrame stealFor, final int srn, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost, Map<String, String> stealForOptions, PositionMap pm, String stealForOrigCrclHost) {
+    private NamedCallable<XFuture<?>> setupRobotReturnInternal(AprsSystemInterface stealFrom, AprsSystemInterface stealFor, final int srn, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost, Map<String, String> stealForOptions, PositionMap pm, String stealForOrigCrclHost) {
         int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
         int stealForOrigCrclPort = stealFor.getRobotCrclPort();
         String returnName = "Return  : srn=" + srn + " " + stealForRobotName + "-> " + stealFor.getTaskName() + " , " + stealFromRobotName + "->" + stealFrom.getTaskName();
@@ -1824,7 +1824,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return returnRobot;
     }
 
-    private void checkRunningOrDoingActions(AprsJFrame sys, int srn) throws IllegalStateException {
+    private void checkRunningOrDoingActions(AprsSystemInterface sys, int srn) throws IllegalStateException {
         if (sys.isRunningCrclProgram()) {
             String msg = sys.getTaskName() + " is running crcl program when trying to return robot" + " : srn=" + srn;
             logEvent(msg);
@@ -1837,13 +1837,13 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void setupUnstealRobots(final int srn, AprsJFrame stealFor, AprsJFrame stealFrom, String stealForRobotName, final GraphicsDevice gd) {
+    private void setupUnstealRobots(final int srn, AprsSystemInterface stealFor, AprsSystemInterface stealFrom, String stealForRobotName, final GraphicsDevice gd) {
         unStealRobotsSupplier.set(() -> {
             return executeUnstealRobots(srn, stealFor, stealFrom, stealForRobotName, gd);
         });
     }
 
-    private XFuture<Void> executeUnstealRobots(final int srn, AprsJFrame stealFor, AprsJFrame stealFrom, String stealForRobotName, final GraphicsDevice gd) {
+    private XFuture<Void> executeUnstealRobots(final int srn, AprsSystemInterface stealFor, AprsSystemInterface stealFrom, String stealForRobotName, final GraphicsDevice gd) {
         String revBlocker = "reverseRobotTransfer" + reverseRobotTransferNumber.incrementAndGet();
         logEvent("Reversing robot transfer after robot reenabled." + " : srn=" + srn);
         disallowToggles(revBlocker, stealFor, stealFrom);
@@ -1933,7 +1933,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return "";
     }
 
-    private void completeSystemsContinueIndFuture(AprsJFrame sys, boolean value) {
+    private void completeSystemsContinueIndFuture(AprsSystemInterface sys, boolean value) {
         assert (null != sys) : assertFail() + "sys == null : sys=" + sys;
         String sysRobotName = sys.getRobotName();
         assert (sysRobotName != null) : assertFail() + "sys.getRobotName() == null: sys=" + sys + " @AssumeAssertion(nullness)";
@@ -3122,7 +3122,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
             try {
                 File propertiesFile = chooser.getSelectedFile();
-                AprsJFrame aj = new AprsJFrame(propertiesFile);
+                AprsSystemInterface aj = new AprsJFrame(propertiesFile);
 //                aj.setPropertiesFile(propertiesFile);
                 addAprsSystem(aj);
                 saveCurrentSetup();
@@ -3137,7 +3137,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      *
      * @param sys system to add
      */
-    public void addAprsSystem(AprsJFrame sys) {
+    public void addAprsSystem(AprsSystemInterface sys) {
         sys.setPriority(aprsSystems.size() + 1);
         sys.setVisible(true);
         sys.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -3154,7 +3154,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         int selectedIndex = jTableTasks.getSelectedRow();
         if (selectedIndex >= 0 && selectedIndex < aprsSystems.size()) {
             try {
-                AprsJFrame aj = aprsSystems.remove(selectedIndex);
+                AprsSystemInterface aj = aprsSystems.remove(selectedIndex);
                 try {
                     aj.close();
 
@@ -3704,7 +3704,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         closeAllAprsSystems();
         if (null != aprsSystems) {
-            for (AprsJFrame sys : aprsSystems) {
+            for (AprsSystemInterface sys : aprsSystems) {
                 sys.forceClose();
             }
         }
@@ -3798,7 +3798,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void jMenuItemAddNewSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAddNewSystemActionPerformed
         try {
-            AprsJFrame aj = new AprsJFrame();
+            AprsSystemInterface aj = new AprsJFrame();
             aj.emptyInit();
             addAprsSystem(aj);
             aj.browseSavePropertiesFileAs();
@@ -3966,7 +3966,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         @SuppressWarnings("unchecked")
         XFuture<Void> allResetFutures[] = (XFuture<Void>[]) new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             allResetFutures[i] = sys.reset(reloadSimFiles);
             sys.setCorrectionMode(false);
         }
@@ -4393,7 +4393,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 setTeachSystemFilter(null);
             } else {
                 int id = Integer.parseInt(sysString.trim().split("[ \t:]+")[0]);
-                for (AprsJFrame sys : aprsSystems) {
+                for (AprsSystemInterface sys : aprsSystems) {
                     if (sys.getMyThreadId() == id) {
                         setTeachSystemFilter(sys);
                         break;
@@ -4412,8 +4412,8 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * @return system with given task
      */
     @Nullable
-    public AprsJFrame getSysByTask(String s) {
-        for (AprsJFrame sys : aprsSystems) {
+    public AprsSystemInterface getSysByTask(String s) {
+        for (AprsSystemInterface sys : aprsSystems) {
             if (sys.getTaskName().startsWith(s)) {
                 return sys;
             }
@@ -4572,7 +4572,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void setTeachSystemFilter(@Nullable AprsJFrame sys) {
+    private void setTeachSystemFilter(@Nullable AprsSystemInterface sys) {
         if (null == sys) {
             object2DOuterJPanel1.setForceOutputFlag(false);
             object2DOuterJPanel1.setShowOutputItems(false);
@@ -4609,7 +4609,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 .min().orElse(Double.POSITIVE_INFINITY);
     }
 
-    private List<PhysicalItem> filterForSystem(AprsJFrame sys, List<PhysicalItem> listIn) {
+    private List<PhysicalItem> filterForSystem(AprsSystemInterface sys, List<PhysicalItem> listIn) {
 
         Set<PhysicalItem> allTrays = listIn.stream()
                 .filter(x -> "KT".equals(x.getType()) || "PT".equals(x.getType()))
@@ -4640,7 +4640,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private XFuture<Void> lookForPartsAll() {
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame aprsSys = aprsSystems.get(i);
+            AprsSystemInterface aprsSys = aprsSystems.get(i);
             futures[i] = aprsSys.startLookForParts();
         }
         return XFuture.allOfWithName("lookForPartsAll", futures);
@@ -4649,7 +4649,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private XFuture<Void> clearReverseAll() {
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame aprsSys = aprsSystems.get(i);
+            AprsSystemInterface aprsSys = aprsSystems.get(i);
             if (aprsSys.isReverseFlag()) {
                 logEvent("Set reverse flag false for " + aprsSys);
                 futures[i] = aprsSys.startSetReverseFlag(false, false);
@@ -4666,7 +4666,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             teachItems = object2DOuterJPanel1.getItems();
         }
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame aprsSys = aprsSystems.get(i);
+            AprsSystemInterface aprsSys = aprsSystems.get(i);
             aprsSys.setCorrectionMode(false);
             if (jCheckBoxMenuItemUseTeachCamera.isSelected() && aprsSys.getUseTeachTable()) {
                 aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0);
@@ -4729,7 +4729,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                 }
             }
             for (int i = 0; i < aprsSystems.size(); i++) {
-                AprsJFrame aprsSys = aprsSystems.get(i);
+                AprsSystemInterface aprsSys = aprsSystems.get(i);
                 List<String> startingKitStrings = aprsSys.getLastCreateActionListFromVisionKitToCheckStrings();
                 aprsSys.setCorrectionMode(true);
                 if (jCheckBoxMenuItemUseTeachCamera.isSelected() && aprsSys.getUseTeachTable()) {
@@ -4999,20 +4999,20 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         returnRobotRunnable.set(null);
         XFuture<?> connectRet[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             connectRet[i] = sys.connectRobot(sys.getOrigRobotName(), sys.getOrigCrclRobotHost(), sys.getOrigCrclRobotPort());
         }
         return XFuture.allOf(connectRet);
     }
 
-    private void allowToggles(String blockerName, AprsJFrame... systems) {
+    private void allowToggles(String blockerName, AprsSystemInterface... systems) {
 
         if (closing) {
             return;
         }
         try {
             if (null != systems && systems.length > 0) {
-                for (AprsJFrame sys : systems) {
+                for (AprsSystemInterface sys : systems) {
                     if (!checkMaxCycles()) {
                         break;
                     } else if (sys.getRobotName() == null || !sys.isConnected() || sys.isAborting()) {
@@ -5099,7 +5099,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private final ConcurrentHashMap<String, LockInfo> toggleBlockerMap = new ConcurrentHashMap<>();
 
-    private LockInfo disallowToggles(String blockerName, AprsJFrame... systems) {
+    private LockInfo disallowToggles(String blockerName, AprsSystemInterface... systems) {
 
         disallowTogglesCount.incrementAndGet();
         LockInfo lockInfo = new LockInfo(blockerName);
@@ -5109,7 +5109,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         togglesAllowed = false;
         togglesAllowedXfuture.updateAndGet(this::createWaitForTogglesFuture);
         if (null != systems) {
-            for (AprsJFrame sys : systems) {
+            for (AprsSystemInterface sys : systems) {
                 addFinishBlocker(sys.getMyThreadId(), lockInfo.getFuture());
             }
         }
@@ -5179,7 +5179,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private boolean allSystemsOk() {
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             CRCLStatusType status = sys.getCurrentStatus();
             if (status != null
                     && status.getCommandStatus() != null
@@ -5314,7 +5314,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         @SuppressWarnings("rawtypes")
         XFuture fa[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             if (sys.isReverseFlag() != reverseFlag) {
                 logEvent("setting reverseFlag for " + sys + " to " + reverseFlag);
                 fa[i] = sys.startSetReverseFlag(reverseFlag);
@@ -5337,7 +5337,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     public void disconnectAll() {
         logEvent("disconnectAll");
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             if (sys.isConnected()) {
                 logEvent("Disconnecting " + sys);
                 sys.setConnected(false);
@@ -5379,7 +5379,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         logEvent("Start continous scan and run");
         connectAll();
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame aprsSys = aprsSystems.get(i);
+            AprsSystemInterface aprsSys = aprsSystems.get(i);
             aprsSys.setLastCreateActionListFromVisionKitToCheckStrings(Collections.emptyList());
         }
         continousDemoFuture
@@ -5543,7 +5543,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             return ret;
         }
         String blockerName = "start continueContinousDemo" + continousDemoCycle.get();
-        AprsJFrame sysArray[] = getAprsSystems().toArray(new AprsJFrame[getAprsSystems().size()]);
+        AprsSystemInterface sysArray[] = getAprsSystems().toArray(new AprsSystemInterface[getAprsSystems().size()]);
         disallowToggles(blockerName, sysArray);
         return continousDemoSetup()
                 .thenCompose("continouseDemo.part2", x2 -> {
@@ -5621,7 +5621,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     public XFuture<Void> startReverseActions() {
         logEvent("startReverseActions");
         String blockerName = "start startReverseActions" + continousDemoCycle.get();
-        AprsJFrame sysArray[] = getAprsSystems().toArray(new AprsJFrame[getAprsSystems().size()]);
+        AprsSystemInterface sysArray[] = getAprsSystems().toArray(new AprsSystemInterface[getAprsSystems().size()]);
         disallowToggles(blockerName, sysArray);
         setAllReverseFlag(true);
         if (debugStartReverseActions) {
@@ -5728,7 +5728,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     public XFuture<Boolean> startCheckAndEnableAllRobots() {
 
         String blockerName = "startCheckAndEnableAllRobots" + enableAndCheckAllRobotsCount.incrementAndGet();
-        AprsJFrame sysArray[] = getAprsSystems().toArray(new AprsJFrame[getAprsSystems().size()]);
+        AprsSystemInterface sysArray[] = getAprsSystems().toArray(new AprsSystemInterface[getAprsSystems().size()]);
         disallowToggles(blockerName, sysArray);
         Utils.SwingFuture<Void> step1Future = Utils.runOnDispatchThread(() -> {
             DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
@@ -5785,7 +5785,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         @SuppressWarnings("unchecked")
         XFuture<Boolean> futures[] = (XFuture<Boolean>[]) new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             futures[i] = sys.startCheckEnabled()
                     .thenApplyAsync(x -> {
                         logEvent(sys.getRobotName() + " checkEnabled returned " + x);
@@ -5830,7 +5830,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             jCheckBoxMenuItemPause.setSelected(true);
         }
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame aprsSys = aprsSystems.get(i);
+            AprsSystemInterface aprsSys = aprsSystems.get(i);
             if (aprsSys.isConnected() && !aprsSys.isPaused()) {
                 aprsSys.pause();
             }
@@ -5872,14 +5872,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             jCheckBoxMenuItemPause.setSelected(false);
         }
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame aprsSys = aprsSystems.get(i);
+            AprsSystemInterface aprsSys = aprsSystems.get(i);
             if (aprsSys.isPaused()) {
                 aprsSys.resume();
             }
         }
         completeResumeFuture();
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame aprsSys = aprsSystems.get(i);
+            AprsSystemInterface aprsSys = aprsSystems.get(i);
             if (aprsSys.isPaused()) {
                 throw new IllegalStateException(aprsSys + " is still paused after resume");
             }
@@ -5891,7 +5891,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
     private final ConcurrentHashMap<Integer, XFuture<Boolean>> systemContinueMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, XFuture<Void>> debugSystemContinueMap = new ConcurrentHashMap<>();
 
-    private XFuture<Void> continueSingleContinousDemo(AprsJFrame sys, int recurseNum) {
+    private XFuture<Void> continueSingleContinousDemo(AprsSystemInterface sys, int recurseNum) {
         XFuture<Void> ret = debugSystemContinueMap.compute(sys.getMyThreadId(),
                 (k, v) -> {
                     return continueSingleContinousDemoInner(sys, recurseNum);
@@ -5910,7 +5910,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         assert (i == futures.length) : "futures=" + futures + ",keySet=" + keySet + ",i=" + i;
         for (int j = 0; j < aprsSystems.size(); j++) {
-            AprsJFrame sysTemp = aprsSystems.get(j);
+            AprsSystemInterface sysTemp = aprsSystems.get(j);
             if (debugSystemContinueMap.containsKey(sysTemp.getMyThreadId())) {
                 tasksNames.append(sysTemp.getTaskName()).append(',');
             }
@@ -5922,7 +5922,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         return ret;
     }
 
-    private XFuture<Void> continueSingleContinousDemoInner(AprsJFrame sys, int recurseNum) {
+    private XFuture<Void> continueSingleContinousDemoInner(AprsSystemInterface sys, int recurseNum) {
         String toggleLockName = "continueSingleContinousDemoInner" + recurseNum + "_" + sys.getMyThreadId();
         return systemContinueMap.computeIfAbsent(sys.getMyThreadId(), k -> {
             return new XFuture<>("continueSingleContinousDemo.holder " + sys);
@@ -5951,7 +5951,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         StringBuilder tasksNames = new StringBuilder();
         boolean revFirst = jCheckBoxMenuItemContDemoReverseFirstOption.isSelected();
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             logEvent("startContinousDemo(reverseFirst=false) for " + sys);
             futures[i] = sys.startContinousDemo("startAllIndContinousDemo", revFirst)
                     .thenCompose(x -> continueSingleContinousDemo(sys, 1));
@@ -5972,7 +5972,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         StringBuilder tasksNames = new StringBuilder();
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             int sysThreadId = sys.getMyThreadId();
             logEvent("startActions for " + sys);
             futures[i] = sys.startActions("startAllActions" + saaNumber)
@@ -6081,7 +6081,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
     }
 
-    private XFuture<Void> finishAction(AprsJFrame sys) {
+    private XFuture<Void> finishAction(AprsSystemInterface sys) {
         return finishAction(sys.getMyThreadId());
     }
 
@@ -6090,7 +6090,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         StringBuilder tasksNames = new StringBuilder();
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             int sysThreadId = sys.getMyThreadId();
             logEvent("Continue actions for " + sys.getTaskName() + " with " + sys.getRobotName());
             futures[i] = aprsSystems.get(i).continueActionList("continueAllActions")
@@ -6272,7 +6272,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
 
     private void restoreRobotNames() {
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame aprsSys = aprsSystems.get(i);
+            AprsSystemInterface aprsSys = aprsSystems.get(i);
             if (aprsSys.isConnected()) {
                 continue;
             }
@@ -6297,7 +6297,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         }
         boolean globalPause = jCheckBoxMenuItemPause.isSelected();
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame aprsSys = aprsSystems.get(i);
+            AprsSystemInterface aprsSys = aprsSystems.get(i);
             if (!aprsSys.isConnected()) {
                 aprsSys.setConnected(true);
             }
@@ -6323,7 +6323,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         XFuture<?> prevLastFuture = lastFutureReturned;
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame sys = aprsSystems.get(i);
+            AprsSystemInterface sys = aprsSystems.get(i);
             futures[i] = sys.startSafeAbort("safeAbortAll")
                     .thenRun(() -> logEvent("safeAbort completed for " + sys + " (part of safeAbortAll)"));
         }
@@ -6683,14 +6683,14 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         saveLastTeachPropsFile(f);
     }
 
-    private final List<AprsJFrame> aprsSystems = new ArrayList<>();
+    private final List<AprsSystemInterface> aprsSystems = new ArrayList<>();
 
     /**
      * Get the value of aprsSystems
      *
      * @return the value of aprsSystems
      */
-    public List<AprsJFrame> getAprsSystems() {
+    public List<AprsSystemInterface> getAprsSystems() {
         return Collections.unmodifiableList(aprsSystems);
     }
 
@@ -6698,7 +6698,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
      * Close all systems.
      */
     public void closeAllAprsSystems() {
-        for (AprsJFrame aprsJframe : aprsSystems) {
+        for (AprsSystemInterface aprsJframe : aprsSystems) {
             try {
                 aprsJframe.close();
 
@@ -6743,7 +6743,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
                         propertiesFile = altPropFile;
                     }
                 }
-                AprsJFrame aj = new AprsJFrame(propertiesFile);
+                AprsSystemInterface aj = new AprsJFrame(propertiesFile);
                 aj.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 aj.setPriority(priority);
                 aj.setTaskName(csvRecord.get(1));
@@ -6762,7 +6762,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             }
         }
         Collections.sort(aprsSystems,
-                (AprsJFrame o1, AprsJFrame o2) -> Integer.compare(o1.getPriority(), o2.getPriority()));
+                (AprsSystemInterface o1, AprsSystemInterface o2) -> Integer.compare(o1.getPriority(), o2.getPriority()));
         updateTasksTable();
         updateRobotsTable();
 
@@ -6787,7 +6787,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
             needSetJListFuturesModel = true;
         }
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsJFrame aprsJframe = aprsSystems.get(i);
+            AprsSystemInterface aprsJframe = aprsSystems.get(i);
             String taskName = aprsJframe.getTaskName();
             if (null != lastUpdateTaskTableTaskNames) {
                 if (!Objects.equals(taskName, lastUpdateTaskTableTaskNames[i])) {
@@ -6833,7 +6833,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         listModel.addElement("continousDemo");
         listModel.addElement("stealAbort");
         listModel.addElement("unstealAbort");
-        for (AprsJFrame aprsJframe : aprsSystems) {
+        for (AprsSystemInterface aprsJframe : aprsSystems) {
             listModel.addElement(aprsJframe.getTaskName() + "/actions");
             listModel.addElement(aprsJframe.getTaskName() + "/abort");
             listModel.addElement(aprsJframe.getTaskName() + "/resume");
@@ -7006,7 +7006,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(future);
         if (depth >= XFUTURE_MAX_DEPTH) {
             if (!firstDepthOverOccured) {
-                Logger.getLogger(AprsJFrame.class
+                Logger.getLogger(AprsSystemInterface.class
                         .getName()).log(Level.SEVERE, "xfutureToNode : depth >= XFUTURE_MAX_DEPTH");
                 firstDepthOverOccured = true;
             }
@@ -7042,7 +7042,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         if (closing) {
             return;
         }
-        Map<String, AprsJFrame> robotMap = new HashMap<>();
+        Map<String, AprsSystemInterface> robotMap = new HashMap<>();
         robotEnableMap.clear();
         DefaultTableModel tm = (DefaultTableModel) jTableRobots.getModel();
         DefaultComboBoxModel<String> cbmModel = (DefaultComboBoxModel<String>) jComboBoxTeachSystemView.getModel();
@@ -7050,7 +7050,7 @@ public class AprsSupervisorJFrame extends javax.swing.JFrame {
         cbmModel.addElement("All");
         cbmModel.setSelectedItem("All");
         tm.setRowCount(0);
-        for (AprsJFrame aprsJframe : aprsSystems) {
+        for (AprsSystemInterface aprsJframe : aprsSystems) {
             String robotname = aprsJframe.getRobotName();
             if (null != robotname) {
                 robotMap.put(robotname, aprsJframe);

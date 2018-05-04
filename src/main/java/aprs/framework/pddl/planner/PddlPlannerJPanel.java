@@ -23,7 +23,7 @@
 package aprs.framework.pddl.planner;
 
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.DisplayInterface;
 import aprs.framework.PddlAction;
 import aprs.framework.Utils;
@@ -456,7 +456,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         try {
             browseProgramExecutable();
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonPlannerProgramExecutableBrowseActionPerformed
 
@@ -468,7 +468,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         try {
             browsePddlDomain();
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonPddlDomainBrowseActionPerformed
 
@@ -476,7 +476,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         try {
             browsePddlProblem();
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonPddlProblemBrowseActionPerformed
 
@@ -484,7 +484,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         try {
             runPddlPlannerOnce();
         } catch (IOException ex) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonRunOnceActionPerformed
 
@@ -898,7 +898,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                                 });
                             }
                         } catch (IOException ex) {
-                            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }
@@ -938,7 +938,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                     }
                     processActions();
                 } catch (IOException ex) {
-                    Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
@@ -1012,7 +1012,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                 pddlProcess = null;
             }
         } catch (InterruptedException interruptedException) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, interruptedException);
+            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, interruptedException);
         }
         try {
             if (null != ppdlInputStreamFuture) {
@@ -1020,7 +1020,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                 ppdlInputStreamFuture = null;
             }
         } catch (Exception e) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, e);
         }
         try {
             if (null != ppdlErrorStreamFuture) {
@@ -1028,7 +1028,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                 ppdlErrorStreamFuture = null;
             }
         } catch (Exception e) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, e);
         }
         try {
             if (null != pddlInputStream) {
@@ -1036,7 +1036,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                 pddlInputStream = null;
             }
         } catch (IOException iOException) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, iOException);
+            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, iOException);
         }
         try {
             if (null != pddlErrorStream) {
@@ -1044,7 +1044,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                 pddlErrorStream = null;
             }
         } catch (IOException iOException) {
-            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, iOException);
+            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, iOException);
         }
         closing = orig_closing;
     }
@@ -1064,5 +1064,10 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
             session = null;
         }
         jsch = null;
+    }
+
+    @Override
+    public File getPropertiesFile() {
+       return propertiesFile;
     }
 }

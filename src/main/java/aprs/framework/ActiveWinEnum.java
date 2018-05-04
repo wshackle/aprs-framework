@@ -22,40 +22,18 @@
  */
 package aprs.framework;
 
-import java.io.File;
-import java.io.IOException;
-
 /**
- * Common Interface implemented by the JInternalFrame of each submodule.
- * 
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface DisplayInterface {
-   
-    /**
-     * Set the properties file   
-     * @param propertiesFile new value of propertiesFile
-     */
-    public void setPropertiesFile(File propertiesFile);
-    
-    public File getPropertiesFile();
-    
-
-    /**
-     * Write current settings to the properties file.
-     * @throws IOException if writing file fails
-     */
-    public void saveProperties() throws IOException;
-
-    /**
-     * Read settings from the current properties file.
-     * @throws IOException if reading file fails.
-     */
-    public void loadProperties() throws IOException;
-    
-    /**
-     * Close the Frame/Window associated with this interface.
-     * @throws Exception if underlying system fails to close
-     */
-    public void close() throws Exception;
+public enum ActiveWinEnum {
+    CRCL_CLIENT_WINDOW,
+        PDDL_EXECUTOR_WINDOW,
+        PDDL_PLANNER_WINDOW,
+        SIMVIEW_WINDOW,
+        DATABASE_SETUP_WINDOW,
+        VISION_TO_DB_WINDOW,
+        ERRLOG_WINDOW,
+        KIT_INSPECTION_WINDOW,
+        OTHER
 }

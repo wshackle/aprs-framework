@@ -22,7 +22,7 @@
  */
 package aprs.framework.database;
 
-import aprs.framework.AprsJFrame;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.spvision.VisionToDBJPanel;
 import aprs.framework.DisplayInterface;
 import aprs.framework.Utils;
@@ -487,7 +487,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }//GEN-LAST:event_jComboBoxDbTypeActionPerformed
 
     @MonotonicNonNull
-    private AprsJFrame aprsJFrame = null;
+    private AprsSystemInterface aprsJFrame = null;
 
     /**
      * Get the value of aprsJFrame
@@ -495,7 +495,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      * @return the value of aprsJFrame
      */
     @Nullable
-    public AprsJFrame getAprsJFrame() {
+    public AprsSystemInterface getAprsSystemInterface() {
         return aprsJFrame;
     }
 
@@ -504,18 +504,18 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      *
      * @param aprsJFrame new value of aprsJFrame
      */
-    public void setAprsJFrame(AprsJFrame aprsJFrame) {
+    public void setAprsSystemInterface(AprsSystemInterface aprsJFrame) {
         this.aprsJFrame = aprsJFrame;
     }
 
     private void jButtonConnectDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectDBActionPerformed
         try {
-            AprsJFrame parentFrame = this.aprsJFrame;
+            AprsSystemInterface parentFrame = this.aprsJFrame;
             if (null == parentFrame) {
                 System.err.println(" this.aprsJFrame == null");
                 return;
             }
-            AprsJFrame checkedParentFrame = parentFrame;
+            AprsSystemInterface checkedParentFrame = parentFrame;
             connected = true;
             DbSetup setup = this.getDbSetup();
             final StackTraceElement stackTraceElemArray[] = Thread.currentThread().getStackTrace();
@@ -1041,11 +1041,11 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     @Override
     public List<Future<?>> notifyAllDbSetupListeners() {
         boolean cancelWarnGiven = false;
-        AprsJFrame parentFrame = this.aprsJFrame;
+        AprsSystemInterface parentFrame = this.aprsJFrame;
         if (null == parentFrame) {
             throw new IllegalStateException("this.aprsJFrame == null");
         }
-        AprsJFrame checkedParentFrame = parentFrame;
+        AprsSystemInterface checkedParentFrame = parentFrame;
         List<Future<?>> origFutures = this.futures;
         if (null != origFutures) {
             for (Future<?> f : origFutures) {

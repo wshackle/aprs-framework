@@ -22,8 +22,9 @@
  */
 package aprs.framework.learninggoals;
 
+import aprs.framework.ActiveWinEnum;
 import aprs.framework.AprsJFrame;
-import aprs.framework.AprsJFrame.ActiveWinEnum;
+import aprs.framework.AprsSystemInterface;
 import aprs.framework.PddlAction;
 import aprs.framework.SlotOffsetProvider;
 import aprs.framework.database.KitTray;
@@ -146,7 +147,7 @@ public class GoalLearnerTest {
         addList(tray3, s32, "large_gear", sop, testData);
 
         javax.swing.SwingUtilities.invokeLater(() -> {
-            AprsJFrame aFrame = createSimpleSimViewer(sop, testData);
+            AprsSystemInterface aFrame = createSimpleSimViewer(sop, testData);
             aFrame.startActionsList(actions);
         });
     }
@@ -250,8 +251,8 @@ public class GoalLearnerTest {
         }
     }
 
-    private static AprsJFrame createSimpleSimViewer(SlotOffsetProvider sop, List<PhysicalItem> testData) {
-        AprsJFrame aFrame = new AprsJFrame();
+    private static AprsSystemInterface createSimpleSimViewer(SlotOffsetProvider sop, List<PhysicalItem> testData) {
+        AprsSystemInterface aFrame = new AprsJFrame();
         aFrame.emptyInit();
         aFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         aFrame.setExternalSlotOffsetProvider(sop);
