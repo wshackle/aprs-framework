@@ -203,11 +203,7 @@ For Windows:
 
 Or directly with:
 
-<<<<<<< HEAD
     java -jar target/aprs-framework-1.1-SNAPSHOT-jar-with-dependencies.jar
-=======
-     java -jar target/aprs-framework-1.1.dev.branch-SNAPSHOT-jar-with-dependencies.jar
->>>>>>> dev-branch
 
 
 To run with the simulated Fanuc/Motoman demo add the arguments "--openMulti example_settings/multiple_simulated_systems_settings/multisim9.csv"
