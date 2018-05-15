@@ -3,7 +3,8 @@ system. Each line represents a frame of data and each 6 fields a different
 object detected in that frame.
 
 
-data1.csv was received on Friday September 16,2016 using the command
+vision_data_2018.csv was received on Tuesday May 15, 2018 using the command
 
-telnet ultraman.el.nist.gov 5001
+telnet agility.el.nist.gov 5001 > vision_data_2018.csv
+
 
