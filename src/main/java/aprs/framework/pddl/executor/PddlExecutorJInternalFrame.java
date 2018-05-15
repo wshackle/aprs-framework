@@ -22,8 +22,7 @@
  */
 package aprs.framework.pddl.executor;
 
-import aprs.framework.AprsSystemInterface;
-import aprs.framework.PddlAction;
+import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.database.DbSetupPublisher;
 import aprs.framework.pddl.executor.PddlActionToCrclGenerator.PoseProvider;
 import crcl.base.CRCLProgramType;

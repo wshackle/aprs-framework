@@ -114,7 +114,7 @@ public class PddlPlannerJInternalFrame extends javax.swing.JInternalFrame implem
     }
 
     @Override
-    public File getPropertiesFile() {
+    @Nullable public File getPropertiesFile() {
         return pddlPlannerJPanel1.getPropertiesFile();
     }
 }

@@ -24,6 +24,7 @@ package aprs.framework;
 
 import java.io.File;
 import java.io.IOException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Common Interface implemented by the JInternalFrame of each submodule.
@@ -38,7 +39,7 @@ public interface DisplayInterface {
      */
     public void setPropertiesFile(File propertiesFile);
     
-    public File getPropertiesFile();
+    @Nullable public File getPropertiesFile();
     
 
     /**

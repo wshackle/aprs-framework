@@ -20,7 +20,7 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework;
+package aprs.framework.pddl.executor;
 
 import java.util.Arrays;
 import java.util.Objects;

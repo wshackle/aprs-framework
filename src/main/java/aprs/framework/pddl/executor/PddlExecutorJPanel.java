@@ -22,8 +22,7 @@
  */
 package aprs.framework.pddl.executor;
 
-import aprs.framework.AprsSystemInterface;
-import aprs.framework.PddlAction;
+import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.Utils;
 import aprs.framework.Utils.RunnableWithThrow;
 import static aprs.framework.Utils.autoResizeTableColWidths;
@@ -225,7 +224,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
         setTrayAttachOffsetTableModelListener();
     }
 
-    public String getSelectedToolName() {
+    @Nullable public String getSelectedToolName() {
         return pddlActionToCrclGenerator.getToolName();
     }
 
@@ -237,7 +236,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
      * @return the value of selectedToolNameFileName
      */
     @Nullable public String getSelectedToolNameFileName() {
-        if(null == selectedToolNameFileName) {
+        if (null == selectedToolNameFileName) {
             try {
                 return getDefaultSelectedToolNameFile();
             } catch (IOException ex) {
@@ -269,7 +268,7 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
     }
 
     @Nullable private String readSelectedToolNameFile(String filename) throws IOException {
-        if(null == filename) {
+        if (null == filename) {
             throw new IllegalArgumentException("filename == null");
         }
         File file = new File(propertiesFile.getParentFile(), filename);
@@ -6349,7 +6348,10 @@ public class PddlExecutorJPanel extends javax.swing.JPanel implements PddlExecut
             loadTrayAttachOffsetMap();
             String filename = getSelectedToolNameFileName();
             if (null != filename && filename.length() > 1) {
-                setSelectedToolName(readSelectedToolNameFile(filename));
+                String selectedTool = readSelectedToolNameFile(filename);
+                if (null != selectedTool) {
+                    setSelectedToolName(selectedTool);
+                }
             }
         }
     }

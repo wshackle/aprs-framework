@@ -22,7 +22,7 @@
  */
 package aprs.framework.database;
 
-import aprs.framework.AprsSystemInterface;
+import aprs.framework.system.AprsSystemInterface;
 import java.io.File;
 
 /**

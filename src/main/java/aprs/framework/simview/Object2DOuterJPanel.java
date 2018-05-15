@@ -22,7 +22,7 @@
  */
 package aprs.framework.simview;
 
-import aprs.framework.AprsSystemInterface;
+import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.SlotOffsetProvider;
 import aprs.framework.Utils;
 import static aprs.framework.Utils.autoResizeTableColWidths;
@@ -2816,6 +2816,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             this.dist = dist;
             this.index = index;
         }
+
+        @Override
+        public String toString() {
+            return "DistIndex{" + "dist=" + dist + ", index=" + index + '}';
+        }
+        
     }
 
     public double getClosestRobotPartDistance() {
@@ -2875,7 +2881,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         @Override
         public String toString() {
-            return "\nPoseUpdateHistoryItem{" + "pose=" + pose + ", stat=" + CRCLSocket.statusToPrettyString(stat) + ", cmd=" + CRCLSocket.commandToSimpleString(cmd) + ", isHoldingObjectExpected=" + isHoldingObjectExpected + ", time=" + (time - poseUpdateHistoryTime) + '}';
+            return "\nPoseUpdateHistoryItem{" + "pose=" + CRCLPosemath.toString(pose)  + ", cmd=" + CRCLSocket.commandToSimpleString(cmd) + ", isHoldingObjectExpected=" + isHoldingObjectExpected + ", time=" + (time - poseUpdateHistoryTime)+ ", stat=" + CRCLSocket.statusToPrettyString(stat) + '}';
         }
 
     }
@@ -2973,9 +2979,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 } else {
                     try {
-                        System.out.println("poseUpdateHistory = " + poseUpdateHistory);
-                        System.out.println("pose = " + pose);
-                        System.out.println("stat = " + CRCLSocket.statusToPrettyString(stat));
+                        System.out.println("di = " + di);
+                        if(null != di && di.index >= 0 && di.index < l.size()) {
+                            PhysicalItem closestItem = l.get(di.index);
+                            System.out.println("closestItem = " + closestItem);
+                            System.out.println("closestItem.getFullName() = " + closestItem.getFullName());
+                            System.out.println("closestItem.(x,y) = " + closestItem.x+","+closestItem.y);
+                        }
+                        System.out.println("poseUpdateHistory = \n" + poseUpdateHistory);
+                        System.out.println("stat = \n" + CRCLSocket.statusToPrettyString(stat));
+                        System.out.println("pose = " + CRCLPosemath.toString(pose));
                         System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
                         if (takeSnapshots) {
                             takeSnapshot(createTempFile("failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
@@ -3000,9 +3013,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
                 if (captured_item_index < 0) {
 
-                    System.out.println("poseUpdateHistory = " + poseUpdateHistory);
-                    System.out.println("pose = " + pose);
-                    System.out.println("stat = " + CRCLSocket.statusToPrettyString(stat));
+                    System.out.println("poseUpdateHistory = \n" + poseUpdateHistory);
+                    System.out.println("stat = \n" + CRCLSocket.statusToPrettyString(stat));
+                    System.out.println("pose = " + CRCLPosemath.toString(pose));
                     System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
                     System.out.println("lastDropUpdate = " + lastDropUpdate);
                     this.aprsJFrame.setTitleErrorString("Should be dropping item but no item captured");

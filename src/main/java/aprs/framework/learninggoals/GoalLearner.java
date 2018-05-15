@@ -22,7 +22,7 @@
  */
 package aprs.framework.learninggoals;
 
-import aprs.framework.PddlAction;
+import aprs.framework.pddl.executor.PddlAction;
 import aprs.framework.SlotOffsetProvider;
 import aprs.framework.database.PhysicalItem;
 import aprs.framework.database.Slot;

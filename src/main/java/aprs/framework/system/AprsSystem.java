@@ -20,8 +20,13 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework;
+package aprs.framework.system;
 
+import aprs.framework.LauncherAprsJFrame;
+import aprs.framework.SlotOffsetProvider;
+import aprs.framework.Utils;
+import aprs.framework.misc.ActiveWinEnum;
+import aprs.framework.pddl.executor.PddlAction;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupJInternalFrame;
@@ -45,8 +50,6 @@ import aprs.framework.simview.Object2DJPanel;
 import aprs.framework.simview.Object2DViewJInternalFrame;
 import aprs.framework.spvision.UpdateResults;
 import aprs.framework.spvision.VisionToDbJInternalFrame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -57,9 +60,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
-import javax.swing.JMenuItem;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
@@ -111,16 +112,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
-import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.bind.JAXBException;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.utils.CrclCommandWrapper;
+import java.awt.Toolkit;
 import java.io.FileWriter;
 import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
@@ -137,7 +136,10 @@ import org.apache.commons.csv.CSVPrinter;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsSystemInterface {
+public class AprsSystem implements AprsSystemInterface {
+
+    @MonotonicNonNull
+    private final AprsSystemDisplayJFrame aprsSystemDisplayJFrame;
 
     @MonotonicNonNull
     private VisionToDbJInternalFrame visionToDbJInternalFrame = null;
@@ -175,6 +177,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     private final AtomicLong effectiveStartRunTime = new AtomicLong(-1);
     private final AtomicLong effectiveStopRunTime = new AtomicLong(-1);
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private volatile boolean snapshotsEnabled = false;
 
     /**
      * Check if the user has selected a check box asking for snapshot files to
@@ -183,11 +186,19 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @return Has user enabled snapshots?
      */
     public boolean isSnapshotsEnabled() {
-        return jCheckBoxMenuItemSnapshotImageSize.isSelected();
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = aprsSystemDisplayJFrame.isSnapshotsEnabled();
+            this.snapshotsEnabled = ret;
+            return ret;
+        }
+        return snapshotsEnabled;
     }
 
     public void setSnapshotsEnabled(boolean enable) {
-        jCheckBoxMenuItemSnapshotImageSize.setSelected(enable);
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setSnapshotsEnabled(enable);
+        }
+        this.snapshotsEnabled = enable;
     }
 
     private void setStartRunTime() {
@@ -527,6 +538,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     public void pauseCrclProgram() {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.pauseCrclProgram();
+            LauncherAprsJFrame.PlayAlert2();
         }
     }
 
@@ -725,7 +737,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                     crclClientJInternalFrame.connectCurrent();
                 }
             } catch (Exception e) {
-                Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, e);
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, e);
             }
             if (!crclClientJInternalFrame.isConnected()) {
                 return null;
@@ -794,10 +806,23 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             }
         }
         takeSnapshots("setConnected_" + connected);
-        Utils.runOnDispatchThread(() -> {
-            jCheckBoxMenuItemConnectedRobot.setSelected(isConnected());
-            jCheckBoxMenuItemConnectedRobot.setText("Robot (CRCL " + robotName + " " + getRobotCrclHost() + ":" + getRobotCrclPort() + " )");
-        });
+        updateConnectedRobotDisplay();
+    }
+
+    public void updateConnectedRobotDisplay() {
+        if (null != this.aprsSystemDisplayJFrame) {
+            updateConnectedRobotDisplay(isConnected(), getRobotName(), getRobotCrclHost(), getRobotCrclPort());
+        }
+    }
+
+    public void updateConnectedRobotDisplay(boolean connected, @Nullable String robotName, @Nullable String crclHost, int crclPort) {
+        AprsSystemDisplayJFrame displayFrame = this.aprsSystemDisplayJFrame;
+        if (null != displayFrame) {
+            final AprsSystemDisplayJFrame displayFrameFinal = displayFrame;
+            Utils.runOnDispatchThread(() -> {
+                displayFrameFinal.updateConnectedRobotDisplay(connected, robotName, crclHost, crclPort);
+            });
+        }
     }
 
     /**
@@ -1040,7 +1065,11 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         }
         this.setRobotName(null);
         System.out.println("disconnectRobot completed");
-        Utils.runOnDispatchThread(() -> jCheckBoxMenuItemConnectedRobot.setSelected(isConnected()));
+        AprsSystemDisplayJFrame displayFrame = this.aprsSystemDisplayJFrame;
+        if (null != displayFrame) {
+            final AprsSystemDisplayJFrame displayFrameFinal = displayFrame;
+            Utils.runOnDispatchThread(() -> displayFrameFinal.setConnectedRobotCheckBox(isConnected()));
+        }
     }
 
     private void startingCheckEnabledCheck() throws IllegalStateException {
@@ -1094,10 +1123,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                 && Objects.equals(robotName, robotName)
                 && Objects.equals(this.getRobotCrclHost(), host)
                 && this.getRobotCrclPort() == port) {
-            Utils.runOnDispatchThread(() -> {
-                jCheckBoxMenuItemConnectedRobot.setSelected(isConnected());
-                jCheckBoxMenuItemConnectedRobot.setText("Robot (CRCL " + robotName + " " + host + ":" + port + " )");
-            });
+            updateConnectedRobotDisplay(isConnected(), robotName, host, port);
             return XFuture.completedFuture(null);
         }
         logEvent("connectRobot", robotName + " -> " + host + ":" + port);
@@ -1133,10 +1159,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         }
         maybeSetOrigCrclRobotHost(getRobotCrclHost());
         maybeSetOrigCrclRobotPort(getRobotCrclPort());
-        Utils.runOnDispatchThread(() -> {
-            jCheckBoxMenuItemConnectedRobot.setSelected(isConnected());
-            jCheckBoxMenuItemConnectedRobot.setText("Robot (CRCL " + robotName + " " + host + ":" + port + " )");
-        });
+        updateConnectedRobotDisplay(isConnected(), robotName, host, port);
     }
 
     /**
@@ -1166,7 +1189,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
 
     final ConcurrentLinkedDeque<XFuture<@Nullable ?>> futuresToCompleteOnUnPause = new ConcurrentLinkedDeque<>();
 
-    private void notifyPauseFutures() {
+    public void notifyPauseFutures() {
         for (XFuture<@Nullable ?> f : futuresToCompleteOnUnPause) {
             f.complete(null);
         }
@@ -1323,12 +1346,22 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         }
     }
 
+    private volatile boolean useTeachTable = false;
+
     public boolean getUseTeachTable() {
-        return jCheckBoxMenuItemUseTeachTable.isSelected();
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = aprsSystemDisplayJFrame.getUseTeachTable();
+            this.useTeachTable = ret;
+            return ret;
+        }
+        return useTeachTable;
     }
 
     public void setUseTeachTable(boolean useTeachTable) {
-        jCheckBoxMenuItemUseTeachTable.setSelected(useTeachTable);
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setUseTeachTable(useTeachTable);
+        }
+        this.useTeachTable = useTeachTable;
     }
 
     private void checkReadyToDisconnect() throws IllegalStateException {
@@ -1392,6 +1425,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @param ptIn pose to reverse correction
      * @return pose in original vision/database coordinates
      */
+    @Override
     public PointType reverseCorrectPoint(PointType ptIn) {
         if (null != pddlExecutorJInternalFrame1) {
             return pddlExecutorJInternalFrame1.reverseCorrectPoint(ptIn);
@@ -1616,7 +1650,9 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             lastStartCheckEnabledFuture2.cancelAll(true);
             lastStartCheckEnabledFuture2 = null;
         }
-        jCheckBoxMenuItemContinuousDemo.setSelected(false);
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setContinousDemoCheckbox(false);
+        }
     }
 
     /**
@@ -1675,8 +1711,8 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append(", ");
         boolean connected = (null != crclClientJInternalFrame && crclClientJInternalFrame.isConnected());
         sb.append("connected=").append(connected).append(", ");
-        sb.append("reverseFlag=").append(jCheckBoxMenuItemReverse.isSelected()).append(", ");
-        sb.append("paused=").append(jCheckBoxMenuItemPause.isSelected()).append("\r\n");
+        sb.append("reverseFlag=").append(isReverseFlag()).append(", ");
+        sb.append("paused=").append(isPaused()).append("\r\n");
         sb.append("run_name=").append(this.getRunName()).append("\r\n");
         CRCLProgramType crclProgram = this.getCrclProgram();
 
@@ -1724,6 +1760,20 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     private PrintStream origOut = null;
     @Nullable
     private PrintStream origErr = null;
+
+    @Override
+    public void setVisible(boolean visible) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setVisible(visible);
+        }
+    }
+
+    @Override
+    public void setDefaultCloseOperation(int operation) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setDefaultCloseOperation(operation);
+        }
+    }
 
     static private class MyPrintStream extends PrintStream {
 
@@ -1775,7 +1825,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     private boolean fanucPreferRNN = false;
     private String fanucRobotHost = System.getProperty("fanucRobotHost", "192.168.1.34");// "129.6.78.111"; // FIXME hard-coded default
 
-    private void startFanucCrclServer() {
+    public void startFanucCrclServer() {
         try {
             FanucCRCLMain newFanucCrclMain = new FanucCRCLMain();
             if (null == fanucCRCLServerJInternalFrame) {
@@ -1787,7 +1837,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             newFanucCrclMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort);
             this.fanucCRCLMain = newFanucCrclMain;
         } catch (CRCLException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -1869,7 +1919,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         this.asString = getTitle();
     }
 
-    private void startMotomanCrclServer() {
+    public void startMotomanCrclServer() {
         try {
             if (null == motomanCrclServerJInternalFrame) {
                 MotomanCrclServerJInternalFrame newMotomanCrclServerJInternalFrame = new MotomanCrclServerJInternalFrame();
@@ -1881,7 +1931,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             }
             addInternalFrame(motomanCrclServerJInternalFrame);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             setTitleErrorString("Error starting motoman crcl server:" + ex.getMessage());
             if (null != motomanCrclServerJInternalFrame) {
                 motomanCrclServerJInternalFrame.setVisible(true);
@@ -1893,11 +1943,16 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     private void addInternalFrame(JInternalFrame internalFrame) {
         internalFrame.pack();
         internalFrame.setVisible(true);
-        jDesktopPane1.add(internalFrame, JLayeredPane.DEFAULT_LAYER);
+        addToDesktopPane(internalFrame);
         internalFrame.getDesktopPane().getDesktopManager().maximizeFrame(internalFrame);
         setupWindowsMenu();
     }
 
+    public void addToDesktopPane(JInternalFrame internalFrame) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.addToDesktopPane(internalFrame);
+        }
+    }
     final static private AtomicInteger runProgramThreadCount = new AtomicInteger();
 
     private final int myThreadId = runProgramThreadCount.incrementAndGet();
@@ -1948,7 +2003,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             if (closing) {
                 return -1;
             }
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             return -1;
         }
     }
@@ -2009,7 +2064,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         return runProgramService;
     }
 
-    private XFuture<Boolean> startConnectDatabase() {
+    public XFuture<Boolean> startConnectDatabase() {
         assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
         XFuture<Boolean> f = waitDbConnected();
         if (closing) {
@@ -2059,17 +2114,17 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             futures = dbSetupPublisher.notifyAllDbSetupListeners();
             for (Future<?> f : futures) {
-                if (!jCheckBoxMenuItemConnectDatabase.isSelected()) {
+                if (!isConnectDatabaseCheckboxSelected()) {
                     return;
                 }
                 if (!f.isDone() && !f.isCancelled()) {
                     f.get();
                 }
             }
-            jCheckBoxMenuItemConnectDatabase.setEnabled(true);
+            setConnectDatabaseCheckboxEnabled(true);
             System.out.println("Finished connect to database.");
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             if (null != futures) {
                 for (Future<?> f : futures) {
                     f.cancel(true);
@@ -2078,7 +2133,30 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         }
     }
 
-    private void connectVision() {
+    public File getPropertiesDirectory() {
+        return propertiesDirectory;
+    }
+    
+    public void setConnectDatabaseCheckboxEnabled(boolean enable) {
+        if (null != this.aprsSystemDisplayJFrame) {
+            this.aprsSystemDisplayJFrame.setConnectDatabaseCheckboxEnabled(enable);
+        } else {
+            throw new IllegalStateException("aprsSystemDisplayJFrame ==null, this=" + this);
+        }
+    }
+
+    public void stopSimUpdateTimer() {
+        if(null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.stopSimUpdateTimer();
+        }
+    }
+    
+    public boolean isConnectDatabaseCheckboxSelected() {
+        return aprsSystemDisplayJFrame == null
+                || aprsSystemDisplayJFrame.isConnectDatabaseCheckboxSelected();
+    }
+
+    public void connectVision() {
         if (closing) {
             throw new IllegalStateException("Attempt to start connect vision when already closing.");
         }
@@ -2087,7 +2165,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         }
     }
 
-    private void disconnectVision() {
+    public void disconnectVision() {
         if (null != visionToDbJInternalFrame) {
             Utils.runOnDispatchThread(visionToDbJInternalFrame::disconnectVision);
         }
@@ -2095,16 +2173,41 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
 
     /**
      * Creates new AprsJFrame using a default properties file.
+     *
+     * @param aprsSystemDisplayJFrame1 swing gui to show edit properties
      */
     @SuppressWarnings("initialization")
-    public AprsSystemDisplayJFrame() {
+    public AprsSystem() {
+        this(null);
+    }
+
+    /**
+     * Creates new AprsJFrame using a default properties file.
+     *
+     * @param aprsSystemDisplayJFrame1 swing gui to show edit properties
+     */
+    @SuppressWarnings("initialization")
+    private AprsSystem(@Nullable AprsSystemDisplayJFrame aprsSystemDisplayJFrame1) {
+        this.aprsSystemDisplayJFrame = aprsSystemDisplayJFrame1;
         try {
             initPropertiesFileInfo();
-            initComponents();
             this.asString = getTitle();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void setTitle(String newTitle) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setTitle(newTitle);
+        }
+    }
+
+    private String getTitle() {
+        if (null != aprsSystemDisplayJFrame) {
+            return aprsSystemDisplayJFrame.getTitle();
+        }
+        return "";
     }
 
     /**
@@ -2120,26 +2223,15 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                 saveProperties();
             }
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
         commonInit();
     }
 
     private void clearStartCheckBoxes() {
-        jCheckBoxMenuItemKitInspectionStartup.setSelected(false);
-        jCheckBoxMenuItemStartupPDDLPlanner.setSelected(false);
-        jCheckBoxMenuItemStartupPDDLExecutor.setSelected(false);
-        jCheckBoxMenuItemStartupObjectSP.setSelected(false);
-        jCheckBoxMenuItemStartupObject2DView.setSelected(false);
-        jCheckBoxMenuItemStartupRobotCrclGUI.setSelected(false);
-        jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(false);
-        jCheckBoxMenuItemExploreGraphDbStartup.setSelected(false);
-        jCheckBoxMenuItemStartupFanucCRCLServer.setSelected(false);
-        jCheckBoxMenuItemStartupMotomanCRCLServer.setSelected(false);
-        jCheckBoxMenuItemShowDatabaseSetup.setSelected(false);
-//        jCheckBoxMenuItemStartupCRCLWebApp.setSelected(false);
-        jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(false);
-        jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(false);
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.clearStartCheckBoxes();
+        }
     }
 
     /**
@@ -2152,18 +2244,28 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         commonInit();
     }
 
+    public static AprsSystem createAprsSystemWithSwingDisplay() {
+        AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
+        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1);
+        aprsSystemDisplayJFrame1.setAprsSystem(system);
+        return system;
+    }
+    
+    public static AprsSystem createAprsSystemWithSwingDisplay(File propertiesFile) {
+        AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
+        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1,propertiesFile);
+        aprsSystemDisplayJFrame1.setAprsSystem(system);
+        return system;
+    }
+    
     /**
      * Creates new AprsJFrame using a specified properties file.
      *
      * @param propertiesFile properties file to be read for initial settings
      */
     @SuppressWarnings("initialization")
-    public AprsSystemDisplayJFrame(File propertiesFile) {
-        try {
-            initComponents();
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    private AprsSystem(@Nullable AprsSystemDisplayJFrame aprsSystemDisplayJFrame1, File propertiesFile) {
+        this.aprsSystemDisplayJFrame = aprsSystemDisplayJFrame1;
         initLoggerWindow();
         try {
             setPropertiesFile(propertiesFile);
@@ -2174,7 +2276,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                 saveProperties();
             }
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
         commonInit();
         this.asString = getTitle();
@@ -2185,15 +2287,17 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     private void commonInit() {
         startWindowsFromMenuCheckboxes();
 
-        try {
-            URL aprsPngUrl = AprsSystemDisplayJFrame.class.getResource("aprs.png");
-            if (null != aprsPngUrl) {
-                setIconImage(ImageIO.read(aprsPngUrl));
-            } else {
-                Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.WARNING, "getResource(\"aprs.png\") returned null");
+        if (null != aprsSystemDisplayJFrame) {
+            try {
+                URL aprsPngUrl = AprsSystem.class.getResource("aprs.png");
+                if (null != aprsPngUrl) {
+                    setIconImage(ImageIO.read(aprsPngUrl));
+                } else {
+                    Logger.getLogger(AprsSystem.class.getName()).log(Level.WARNING, "getResource(\"aprs.png\") returned null");
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (null != logDisplayJInternalFrame) {
             activateInternalFrame(logDisplayJInternalFrame);
@@ -2202,69 +2306,301 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         updateTitle("", "");
     }
 
-    private void startWindowsFromMenuCheckboxes() {
-        try {
-            if (jCheckBoxMenuItemKitInspectionStartup.isSelected()) {
-                startKitInspection();
-            }
-            if (jCheckBoxMenuItemStartupPDDLPlanner.isSelected()) {
-                startPddlPlanner();
-            }
-            if (jCheckBoxMenuItemStartupPDDLExecutor.isSelected()) {
-                startExecutorJInternalFrame();
-            }
-            if (jCheckBoxMenuItemStartupObjectSP.isSelected()) {
-                startVisionToDbJinternalFrame();
-            }
-            if (jCheckBoxMenuItemStartupObject2DView.isSelected()) {
-                startObject2DJinternalFrame();
-            }
-            if (jCheckBoxMenuItemStartupRobotCrclGUI.isSelected()) {
-                startCrclClientJInternalFrame();
-            }
-            if (jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected()) {
-                startSimServerJInternalFrame();
-            }
-            if (jCheckBoxMenuItemExploreGraphDbStartup.isSelected()) {
-                startExploreGraphDb();
-            }
-            if (jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()) {
-                startFanucCrclServer();
-            }
-            if (jCheckBoxMenuItemStartupMotomanCRCLServer.isSelected()) {
-                startMotomanCrclServer();
-            }
-            if (!skipCreateDbSetupFrame || jCheckBoxMenuItemShowDatabaseSetup.isSelected()) {
-                createDbSetupFrame();
-            }
-            if (jCheckBoxMenuItemShowDatabaseSetup.isSelected()) {
-                showDatabaseSetupWindow();
-            } else {
-                jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(false);
-            }
-            updateSubPropertiesFiles();
-//            DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
-//            if (null != pub) {
-//                pub.setDbSetup(dbSetup);
-//                pub.addDbSetupListener(toVisListener);
-//            }
-//            if (this.jCheckBoxMenuItemStartupCRCLWebApp.isSelected()) {
-//                startCrclWebApp();
-//            }
-            setupWindowsMenu();
-            if (jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()) {
-                startConnectDatabase();
-            }
-            if (jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()) {
-                connectVision();
-            }
-            System.out.println("Constructor for AprsJframe complete.");
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+    private void setIconImage(Image image) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setIconImage(image);
         }
     }
 
-    private void initLoggerWindow() {
+    private volatile boolean kitInspectionStartupSelected = false;
+
+    public boolean isKitInspectionStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isKitInspectionStartupSelected();
+            kitInspectionStartupSelected = ret;
+            return ret;
+        }
+        return kitInspectionStartupSelected;
+    }
+
+    public void setKitInspectionStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setKitInspectionStartupSelected(selected);
+        }
+        this.kitInspectionStartupSelected = selected;
+    }
+
+    private volatile boolean pddlPlannerStartupSelected = false;
+
+    public boolean isPddlPlannerStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isPddlPlannerStartupSelected();
+            pddlPlannerStartupSelected = ret;
+            return ret;
+        }
+        return pddlPlannerStartupSelected;
+    }
+
+    public void setPddlPlannerStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setPddlPlannerStartupSelected(selected);
+        }
+        this.pddlPlannerStartupSelected = selected;
+    }
+
+    private volatile boolean pddlExecutorStartupSelected = false;
+
+    public boolean isPddlExecutorStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isPddlExecutorStartupSelected();
+            pddlExecutorStartupSelected = ret;
+            return ret;
+        }
+        return pddlExecutorStartupSelected;
+    }
+
+    public void setPddlExecutorStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setPddlExecutorStartupSelected(selected);
+        }
+        this.pddlExecutorStartupSelected = selected;
+    }
+
+    private volatile boolean objectSpStartupSelected = false;
+
+    public boolean isObjectSpStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isObjectSpStartupSelected();
+            objectSpStartupSelected = ret;
+            return ret;
+        }
+        return objectSpStartupSelected;
+    }
+
+    public void setObjectSpStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setObjectSpStartupSelected(selected);
+        }
+        this.objectSpStartupSelected = selected;
+    }
+
+    private volatile boolean object2DViewStartupSelected = false;
+
+    public boolean isObject2DViewStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isObject2DViewStartupSelected();
+            object2DViewStartupSelected = ret;
+            return ret;
+        }
+        return object2DViewStartupSelected;
+    }
+
+    public void setObject2DViewStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setObject2DViewStartupSelected(selected);
+        }
+        this.object2DViewStartupSelected = selected;
+    }
+
+    private volatile boolean robotCrclGUIStartupSelected = false;
+
+    public boolean isRobotCrclGUIStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclGUIStartupSelected();
+            robotCrclGUIStartupSelected = ret;
+            return ret;
+        }
+        return robotCrclGUIStartupSelected;
+    }
+
+    public void setRobotCrclGUIStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setRobotCrclGUIStartupSelected(selected);
+        }
+        this.robotCrclGUIStartupSelected = selected;
+    }
+
+    private volatile boolean robotCrclSimServerStartupSelected = false;
+
+    public boolean isRobotCrclSimServerStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclSimServerStartupSelected();
+            robotCrclSimServerStartupSelected = ret;
+            return ret;
+        }
+        return robotCrclSimServerStartupSelected;
+    }
+
+    public void setRobotCrclSimServerStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setRobotCrclSimServerStartupSelected(selected);
+        }
+        this.robotCrclSimServerStartupSelected = selected;
+    }
+
+    private volatile boolean robotCrclFanucServerStartupSelected = false;
+
+    public boolean isRobotCrclFanucServerStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclFanucServerStartupSelected();
+            robotCrclFanucServerStartupSelected = ret;
+            return ret;
+        }
+        return robotCrclFanucServerStartupSelected;
+    }
+
+    public void setRobotCrclFanucServerStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setRobotCrclFanucServerStartupSelected(selected);
+        }
+        this.robotCrclFanucServerStartupSelected = selected;
+    }
+
+    private volatile boolean robotCrclMotomanServerStartupSelected = false;
+
+    public boolean isRobotCrclMotomanServerStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclMotomanServerStartupSelected();
+            robotCrclMotomanServerStartupSelected = ret;
+            return ret;
+        }
+        return robotCrclMotomanServerStartupSelected;
+    }
+
+    public void setRobotCrclMotomanServerStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setRobotCrclMotomanServerStartupSelected(selected);
+        }
+        this.robotCrclMotomanServerStartupSelected = selected;
+    }
+
+    private volatile boolean exploreGraphDBStartupSelected = false;
+
+    public boolean isExploreGraphDBStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isExploreGraphDBStartupSelected();
+            exploreGraphDBStartupSelected = ret;
+            return ret;
+        }
+        return exploreGraphDBStartupSelected;
+    }
+
+    public void setExploreGraphDBStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setExploreGraphDBStartupSelected(selected);
+        }
+        this.exploreGraphDBStartupSelected = selected;
+    }
+
+    private volatile boolean showDatabaseSetupStartupSelected = false;
+
+    public boolean isShowDatabaseSetupStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isShowDatabaseSetupStartupSelected();
+            showDatabaseSetupStartupSelected = ret;
+            return ret;
+        }
+        return showDatabaseSetupStartupSelected;
+    }
+
+    public void setShowDatabaseSetupStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setShowDatabaseSetupStartupSelected(selected);
+        }
+        this.showDatabaseSetupStartupSelected = selected;
+    }
+
+    private volatile boolean connectDatabaseOnSetupStartupSelected = false;
+
+    public boolean isConnectDatabaseOnSetupStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isConnectDatabaseOnSetupStartupSelected();
+            connectDatabaseOnSetupStartupSelected = ret;
+            return ret;
+        }
+        return connectDatabaseOnSetupStartupSelected;
+    }
+
+    public void setConnectDatabaseOnSetupStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setConnectDatabaseOnSetupStartupSelected(selected);
+        }
+        this.connectDatabaseOnSetupStartupSelected = selected;
+    }
+
+    private volatile boolean connectVisionOnSetupStartupSelected = false;
+
+    public boolean isConnectVisionOnSetupStartupSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = this.aprsSystemDisplayJFrame.isConnectVisionOnSetupStartupSelected();
+            connectVisionOnSetupStartupSelected = ret;
+            return ret;
+        }
+        return connectVisionOnSetupStartupSelected;
+    }
+
+    public void setConnectVisionOnSetupStartupSelected(boolean selected) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setConnectVisionOnSetupStartupSelected(selected);
+        }
+        this.connectVisionOnSetupStartupSelected = selected;
+    }
+
+    private void startWindowsFromMenuCheckboxes() {
+        try {
+            if (isKitInspectionStartupSelected()) {
+                startKitInspection();
+            }
+            if (isPddlPlannerStartupSelected()) {
+                startPddlPlanner();
+            }
+            if (isPddlExecutorStartupSelected()) {
+                startActionListExecutor();
+            }
+            if (isObjectSpStartupSelected()) {
+                startVisionToDbJinternalFrame();
+            }
+            if (isObject2DViewStartupSelected()) {
+                startObject2DJinternalFrame();
+            }
+            if (isRobotCrclGUIStartupSelected()) {
+                startCrclClientJInternalFrame();
+            }
+            if (isRobotCrclSimServerStartupSelected()) {
+                startSimServerJInternalFrame();
+            }
+            if (isExploreGraphDBStartupSelected()) {
+                startExploreGraphDb();
+            }
+            if (isRobotCrclFanucServerStartupSelected()) {
+                startFanucCrclServer();
+            }
+            if (isRobotCrclMotomanServerStartupSelected()) {
+                startMotomanCrclServer();
+            }
+            if (!skipCreateDbSetupFrame || isShowDatabaseSetupStartupSelected()) {
+                createDbSetupFrame();
+            }
+            if (isShowDatabaseSetupStartupSelected()) {
+                showDatabaseSetupWindow();
+            } else {
+                setConnectDatabaseOnSetupStartupSelected(false);
+            }
+            updateSubPropertiesFiles();
+            setupWindowsMenu();
+            if (isConnectDatabaseOnSetupStartupSelected()) {
+                startConnectDatabase();
+            }
+            if (isConnectVisionOnSetupStartupSelected()) {
+                connectVision();
+            }
+            System.out.println("Constructor for AprsSystem complete.");
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void initLoggerWindow() {
         try {
             if (null == logDisplayJInternalFrame) {
                 logDisplayJInternalFrame = new LogDisplayJInternalFrame();
@@ -2273,13 +2609,19 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             LogDisplayJInternalFrame logFrame = this.logDisplayJInternalFrame;
             if (null != logFrame) {
                 logFrame.setVisible(true);
-                jDesktopPane1.add(logFrame, JLayeredPane.DEFAULT_LAYER);
+                addToDesktopPane(logFrame);
                 System.setOut(new MyPrintStream(System.out, logFrame));
                 System.setErr(new MyPrintStream(System.err, logFrame));
                 activateInternalFrame(logFrame);
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void closeAllInternalFrames() {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.closeAllInternalFrames();
         }
     }
 
@@ -2291,14 +2633,14 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         try {
             closePddlPlanner();
         } catch (Exception exception) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, exception);
         }
         try {
-            closeActionsToCrclJInternalFrame();
+            closeActionsListExcecutor();
 
         } catch (Exception exception) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, exception);
         }
 //        try {
@@ -2332,7 +2674,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             ex.printStackTrace();
         }
         try {
-            jCheckBoxMenuItemConnectDatabase.setEnabled(false);
+            setConnectDatabaseCheckboxEnabled(false);
             if (null != connectDatabaseFuture) {
                 connectDatabaseFuture.cancel(true);
                 connectDatabaseFuture = null;
@@ -2364,11 +2706,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                 dbSetupFrame.shutDownNotifyService();
                 dbSetupFrame.dispose();
             }
-            JInternalFrame frames[] = jDesktopPane1.getAllFrames();
-            for (JInternalFrame f : frames) {
-                jDesktopPane1.getDesktopManager().closeFrame(f);
-                jDesktopPane1.remove(f);
-            }
+            closeAllInternalFrames();
             if (null != this.exploreGraphDbJInternalFrame) {
                 this.exploreGraphDbJInternalFrame.setVisible(false);
                 this.exploreGraphDbJInternalFrame.dispose();
@@ -2407,54 +2745,53 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         }
     }
 
-    private void showDatabaseSetupWindow() {
+    public void showDatabaseSetupWindow() {
         createDbSetupFrame();
         DbSetupJInternalFrame dbSetupFrame = this.dbSetupJInternalFrame;
         if (null != dbSetupFrame) {
             dbSetupFrame.setPropertiesFile(propertiesFile);
-            dbSetupFrame.setVisible(true);
-            if (checkInternalFrame(dbSetupFrame)) {
-                jDesktopPane1.getDesktopManager().deiconifyFrame(dbSetupFrame);
-                jDesktopPane1.getDesktopManager().activateFrame(dbSetupFrame);
-                jDesktopPane1.getDesktopManager().maximizeFrame(dbSetupFrame);
-            }
+            checkDeiconifyActivateAndMaximize(dbSetupFrame);
         }
 
         setupWindowsMenu();
     }
 
-    private boolean checkInternalFrame(JInternalFrame frm) {
-        try {
-            if (frm == null) {
-                return false;
-            }
-            for (JInternalFrame f : jDesktopPane1.getAllFrames()) {
-                if (f == frm) {
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void checkDeiconifyActivateAndMaximize(JInternalFrame internalFrame) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.checkDeiconifyActivateAndMaximize(internalFrame);
         }
-        System.err.println("checkInteralFrame(" + frm + ") failed.");
+    }
+
+    private boolean checkInternalFrame(JInternalFrame frm) {
+        if (null != aprsSystemDisplayJFrame) {
+            return aprsSystemDisplayJFrame.checkInternalFrame(frm);
+        }
         return false;
     }
 
-    private void hideDatabaseSetupWindow() {
+    public void hideDatabaseSetupWindow() {
         if (null != dbSetupJInternalFrame) {
             dbSetupJInternalFrame.setVisible(false);
-            if (checkInternalFrame(dbSetupJInternalFrame)) {
-                jDesktopPane1.getDesktopManager().iconifyFrame(dbSetupJInternalFrame);
-                jDesktopPane1.getDesktopManager().deactivateFrame(dbSetupJInternalFrame);
-            }
+            checkIconifyAndDeactivate(dbSetupJInternalFrame);
+        }
+    }
+
+    public void checkIconifyAndDeactivate(JInternalFrame internalFrame) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.checkIconifyAndDeactivate(internalFrame);
+        }
+    }
+
+    public void deiconifyAndActivate(final JInternalFrame frameToShow) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.deiconifyAndActivate(frameToShow);
         }
     }
 
     private void activateFrame(final JInternalFrame frameToShow) {
         frameToShow.setVisible(true);
         if (checkInternalFrame(frameToShow)) {
-            jDesktopPane1.getDesktopManager().deiconifyFrame(frameToShow);
-            jDesktopPane1.getDesktopManager().activateFrame(frameToShow);
+            deiconifyAndActivate(frameToShow);
             frameToShow.moveToFront();
             activeWin = stringToWin(frameToShow.getTitle());
         } else {
@@ -2463,49 +2800,12 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     }
 
     private void setupWindowsMenu() {
-//        jMenuWindow.removeAll();
-
-        if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
-            return;
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setupWindowsMenu();
         }
-        if (jMenuWindow.isSelected()) {
-            return;
-        }
-        int count = 1;
-        ArrayList<JInternalFrame> framesList = new ArrayList<>();
-        framesList.addAll(Arrays.asList(jDesktopPane1.getAllFrames()));
-        Collections.sort(framesList, Comparator.comparing(JInternalFrame::getTitle));
-        List<JMenuItem> menuItems = new ArrayList<>();
-        int framesListSize = framesList.size();
-        for (JInternalFrame f : framesList) {
-            JMenuItem menuItem = new JMenuItem(count + " " + f.getTitle());
-            final JInternalFrame frameToShow = f;
-            menuItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    activateFrame(frameToShow);
-                }
-            });
-//            jMenuWindow.add(menuItem);
-            count++;
-            menuItems.add(menuItem);
-        }
-        jMenuWindow.removeAll();
-        for (JMenuItem menuItem : menuItems) {
-            jMenuWindow.add(menuItem);
-        }
-        assert (framesListSize == menuItems.size()) :
-                ("menuItems = " + menuItems + " does not match framesList = " + framesList);
-
-        int menuItemCount = jMenuWindow.getItemCount();
-        assert (framesListSize == menuItemCount) :
-                ("framesListSize = " + framesListSize + " does not match menuItemCount = " + menuItemCount
-                + "with framesList=" + framesList + ", menuItems=" + menuItems);
-
     }
 
     private ActiveWinEnum activeWin = ActiveWinEnum.OTHER;
-
 
     private ActiveWinEnum stringToWin(String str) {
         if (str.startsWith("CRCL Client")) {
@@ -2600,9 +2900,9 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      */
     public void startObject2DJinternalFrame() {
         try {
-            boolean alreadySelected = jCheckBoxMenuItemStartupObject2DView.isSelected();
+            boolean alreadySelected = isObject2DViewStartupSelected();
             if (!alreadySelected) {
-                jCheckBoxMenuItemStartupObject2DView.setSelected(true);
+                setObject2DViewStartupSelected(true);
             }
             object2DViewJInternalFrame = new Object2DViewJInternalFrame();
             updateSubPropertiesFiles();
@@ -2613,13 +2913,13 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             object2DViewJInternalFrame.loadProperties();
             object2DViewJInternalFrame.pack();
             object2DViewJInternalFrame.setVisible(true);
-            jDesktopPane1.add(object2DViewJInternalFrame, JLayeredPane.DEFAULT_LAYER);
+            addToDesktopPane(object2DViewJInternalFrame);
             object2DViewJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(object2DViewJInternalFrame);
             if (!alreadySelected) {
                 setupWindowsMenu();
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -2762,9 +3062,9 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      */
     public void startCrclClientJInternalFrame() {
         try {
-            boolean alreadySelected = jCheckBoxMenuItemStartupRobotCrclGUI.isSelected();
+            boolean alreadySelected = isRobotCrclGUIStartupSelected();
             if (!alreadySelected) {
-                jCheckBoxMenuItemStartupRobotCrclGUI.setSelected(true);
+                setRobotCrclGUIStartupSelected(true);
             }
             crclClientJInternalFrame = new PendantClientJInternalFrame();
             crclClientJInternalFrame.setRunProgramService(runProgramService);
@@ -2773,14 +3073,13 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             crclClientJInternalFrame.loadProperties();
             crclClientJInternalFrame.pack();
             crclClientJInternalFrame.setVisible(true);
-            jDesktopPane1.add(crclClientJInternalFrame, JLayeredPane.DEFAULT_LAYER);
+            addToDesktopPane(crclClientJInternalFrame);
             crclClientJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(crclClientJInternalFrame);
             crclClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
                 @Override
                 public void titleChanged(CommandStatusType ccst, Container container, String stateString, String stateDescription) {
                     updateTitle(stateString, stateDescription);
                 }
-
             });
             if (null != unaddedPoseListeners) {
                 List<PendantClientJPanel.CurrentPoseListener> tempList = new ArrayList<>();
@@ -2791,7 +3090,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                 }
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -2802,9 +3101,9 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     public void startSimServerJInternalFrame() {
         try {
             if (null == simServerJInternalFrame) {
-                boolean alreadySelected = jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected();
+                boolean alreadySelected = isRobotCrclSimServerStartupSelected();
                 if (!alreadySelected) {
-                    jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(true);
+                    setRobotCrclSimServerStartupSelected(true);
                 }
                 simServerJInternalFrame = new SimServerJInternalFrame(false);
                 updateSubPropertiesFiles();
@@ -2812,12 +3111,12 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                 simServerJInternalFrame.pack();
                 simServerJInternalFrame.setVisible(true);
                 simServerJInternalFrame.restartServer();
-                jDesktopPane1.add(simServerJInternalFrame, JLayeredPane.DEFAULT_LAYER);
+                addToDesktopPane(simServerJInternalFrame);
                 simServerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(simServerJInternalFrame);
 
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -2835,7 +3134,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
 
     private void updateDbConnectedCheckBox(DbSetup setup) {
         dbConnected = setup.isConnected();
-        jCheckBoxMenuItemConnectDatabase.setSelected(setup.isConnected());
+        setConnectDatabaseCheckboxEnabled(true);
         XFuture<Boolean> f = dbConnectedWaiters.poll();
         while (f != null) {
             f.complete(dbConnected);
@@ -2856,7 +3155,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             dbSetupJInternalFrame.setAprsSystemInterface(this);
             dbSetupJInternalFrame.pack();
             dbSetupJInternalFrame.loadRecentSettings();
-            jDesktopPane1.add(dbSetupJInternalFrame, JLayeredPane.DEFAULT_LAYER);
+            addToDesktopPane(dbSetupJInternalFrame);
             dbSetupJInternalFrame.getDbSetupPublisher().addDbSetupListener(dbSetupListener);
             DbSetup dbs = this.dbSetup;
             if (null != dbs) {
@@ -2868,6 +3167,8 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         }
     }
 
+    private volatile boolean showVisionConnected;
+
     /**
      * Set the menu checkbox item to reflect the val of the whether the vision
      * system is connected. This will not cause the system to connect/disconnect
@@ -2876,10 +3177,13 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @param val of vision systems connected status to show
      */
     public void setShowVisionConnected(boolean val) {
-        jCheckBoxMenuItemConnectVision.setSelected(val);
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setShowVisionConnected(val);
+        }
+        this.showVisionConnected = val;
     }
 
-    private void startVisionToDbJinternalFrame() {
+    public void startVisionToDbJinternalFrame() {
         try {
             visionToDbJInternalFrame = new VisionToDbJInternalFrame();
             visionToDbJInternalFrame.setAprsSystemInterface(this);
@@ -2888,10 +3192,10 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             visionToDbJInternalFrame.pack();
             visionToDbJInternalFrame.setVisible(true);
             visionToDbJInternalFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
-            jDesktopPane1.add(visionToDbJInternalFrame, JLayeredPane.DEFAULT_LAYER);
+            addToDesktopPane(visionToDbJInternalFrame);
             visionToDbJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(visionToDbJInternalFrame);
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -2904,14 +3208,14 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * Start the PDDL Executor (aka Actions to CRCL) and create and display the
      * window for displaying its output.
      */
-    public void startExecutorJInternalFrame() {
+    public void startActionListExecutor() {
         try {
             Utils.runAndWaitOnDispatchThread("startActionsToCrclJInternalFrame",
                     () -> {
                         try {
-                            boolean alreadySelected = jCheckBoxMenuItemStartupPDDLExecutor.isSelected();
+                            boolean alreadySelected = isPddlExecutorStartupSelected();
                             if (!alreadySelected) {
-                                jCheckBoxMenuItemStartupPDDLExecutor.setSelected(true);
+                                setPddlExecutorStartupSelected(true);
                             }
                             if (null == pddlExecutorJInternalFrame1) {
                                 pddlExecutorJInternalFrame1 = new PddlExecutorJInternalFrame();
@@ -2921,7 +3225,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                             assert (null != execFrame) : "";
                             execFrame.setAprsSystemInterface(this);
                             execFrame.setVisible(true);
-                            jDesktopPane1.add(execFrame, JLayeredPane.DEFAULT_LAYER);
+                            addToDesktopPane(execFrame);
                             execFrame.getDesktopPane().getDesktopManager().maximizeFrame(execFrame);
                             updateSubPropertiesFiles();
                             execFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
@@ -2932,7 +3236,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                                 try {
                                     execFrame.loadProperties();
                                 } catch (IOException ex) {
-                                    Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
                                 }
                             }, runProgramService);
                             xf2 = xf1
@@ -2945,16 +3249,16 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                                     });
 
                         } catch (IOException ex) {
-                            Logger.getLogger(AprsSystemDisplayJFrame.class
+                            Logger.getLogger(AprsSystem.class
                                     .getName()).log(Level.SEVERE, null, ex);
                         }
                     });
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private void startPddlPlanner() {
+    public void startPddlPlanner() {
         try {
             //        jDesktopPane1.setDesktopManager(d);
             if (pddlPlannerJInternalFrame == null) {
@@ -2963,19 +3267,19 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             }
             updateSubPropertiesFiles();
             pddlPlannerJInternalFrame.setVisible(true);
-            jDesktopPane1.add(pddlPlannerJInternalFrame, JLayeredPane.DEFAULT_LAYER);
+            addToDesktopPane(pddlPlannerJInternalFrame);
             pddlPlannerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(pddlPlannerJInternalFrame);
 //            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
             pddlPlannerJInternalFrame.loadProperties();
             pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private void startKitInspection() {
+    public void startKitInspection() {
         try {
             //        jDesktopPane1.setDesktopManager(d);
             if (kitInspectionJInternalFrame == null) {
@@ -2984,818 +3288,87 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             }
             updateSubPropertiesFiles();
             kitInspectionJInternalFrame.setVisible(true);
-            jDesktopPane1.add(kitInspectionJInternalFrame, JLayeredPane.DEFAULT_LAYER);
+            addToDesktopPane(kitInspectionJInternalFrame);
             kitInspectionJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(kitInspectionJInternalFrame);
 //            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
             kitInspectionJInternalFrame.loadProperties();
             //kitInspectionJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
-
-        jDesktopPane1 = new javax.swing.JDesktopPane();
-        jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu1 = new javax.swing.JMenu();
-        jMenuItemLoadProperties = new javax.swing.JMenuItem();
-        jMenuItemSaveProperties = new javax.swing.JMenuItem();
-        jMenuItemSavePropsAs = new javax.swing.JMenuItem();
-        jMenuItemLoadPropertiesFile = new javax.swing.JMenuItem();
-        jSeparator1 = new javax.swing.JPopupMenu.Separator();
-        jCheckBoxMenuItemReverse = new javax.swing.JCheckBoxMenuItem();
-        jMenuItemExit = new javax.swing.JMenuItem();
-        jMenu3 = new javax.swing.JMenu();
-        jCheckBoxMenuItemStartupPDDLPlanner = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemStartupPDDLExecutor = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemStartupObjectSP = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemStartupObject2DView = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemStartupRobotCrclGUI = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemShowDatabaseSetup = new javax.swing.JCheckBoxMenuItem();
-        jSeparator2 = new javax.swing.JPopupMenu.Separator();
-        jCheckBoxMenuItemStartupRobtCRCLSimServer = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemStartupFanucCRCLServer = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemStartupMotomanCRCLServer = new javax.swing.JCheckBoxMenuItem();
-        jSeparator3 = new javax.swing.JPopupMenu.Separator();
-        jCheckBoxMenuItemConnectToDatabaseOnStartup = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemConnectToVisionOnStartup = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemExploreGraphDbStartup = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemKitInspectionStartup = new javax.swing.JCheckBoxMenuItem();
-        jMenuWindow = new javax.swing.JMenu();
-        jMenu2 = new javax.swing.JMenu();
-        jCheckBoxMenuItemConnectDatabase = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemConnectVision = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemConnectedRobot = new javax.swing.JCheckBoxMenuItem();
-        jMenu4 = new javax.swing.JMenu();
-        jCheckBoxMenuItemEnableDebugDumpstacks = new javax.swing.JCheckBoxMenuItem();
-        jMenuItemSetPoseMaxLimits = new javax.swing.JMenuItem();
-        jMenuItemSetPoseMinLimits = new javax.swing.JMenuItem();
-        jCheckBoxMenuItemSnapshotImageSize = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemReloadSimFilesOnReverse = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemUseTeachTable = new javax.swing.JCheckBoxMenuItem();
-        jMenuExecute = new javax.swing.JMenu();
-        jMenuItemStartActionList = new javax.swing.JMenuItem();
-        jMenuItemImmediateAbort = new javax.swing.JMenuItem();
-        jMenuItemContinueActionList = new javax.swing.JMenuItem();
-        jMenuItemReset = new javax.swing.JMenuItem();
-        jCheckBoxMenuItemContinuousDemo = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemPause = new javax.swing.JCheckBoxMenuItem();
-        jMenuItemDebugAction = new javax.swing.JMenuItem();
-        jCheckBoxMenuItemForceFakeTake = new javax.swing.JCheckBoxMenuItem();
-        jMenuItemCreateActionListFromVision = new javax.swing.JMenuItem();
-        jMenuItemLookFor = new javax.swing.JMenuItem();
-        jMenuItemClearErrors = new javax.swing.JMenuItem();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("APRS");
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosed(java.awt.event.WindowEvent evt) {
-                formWindowClosed(evt);
-            }
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                formWindowClosing(evt);
-            }
-        });
-
-        jMenu1.setText("File");
-
-        jMenuItemLoadProperties.setText("Reload Property Settings");
-        jMenuItemLoadProperties.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemLoadPropertiesActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItemLoadProperties);
-
-        jMenuItemSaveProperties.setText("Save Properties");
-        jMenuItemSaveProperties.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemSavePropertiesActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItemSaveProperties);
-
-        jMenuItemSavePropsAs.setText("Save Properties As ...");
-        jMenuItemSavePropsAs.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemSavePropsAsActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItemSavePropsAs);
-
-        jMenuItemLoadPropertiesFile.setText("Load Properties File ...");
-        jMenuItemLoadPropertiesFile.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemLoadPropertiesFileActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItemLoadPropertiesFile);
-        jMenu1.add(jSeparator1);
-
-        jCheckBoxMenuItemReverse.setText("Reverse");
-        jCheckBoxMenuItemReverse.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemReverseActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jCheckBoxMenuItemReverse);
-
-        jMenuItemExit.setText("Exit");
-        jMenuItemExit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemExitActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItemExit);
-
-        jMenuBar1.add(jMenu1);
-
-        jMenu3.setText("Startup");
-
-        jCheckBoxMenuItemStartupPDDLPlanner.setSelected(true);
-        jCheckBoxMenuItemStartupPDDLPlanner.setText("PDDL Planner");
-        jCheckBoxMenuItemStartupPDDLPlanner.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemStartupPDDLPlannerActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemStartupPDDLPlanner);
-
-        jCheckBoxMenuItemStartupPDDLExecutor.setSelected(true);
-        jCheckBoxMenuItemStartupPDDLExecutor.setText("PDDL Executor");
-        jCheckBoxMenuItemStartupPDDLExecutor.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemStartupPDDLExecutorActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemStartupPDDLExecutor);
-
-        jCheckBoxMenuItemStartupObjectSP.setSelected(true);
-        jCheckBoxMenuItemStartupObjectSP.setText("Object SP");
-        jCheckBoxMenuItemStartupObjectSP.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemStartupObjectSPActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemStartupObjectSP);
-
-        jCheckBoxMenuItemStartupObject2DView.setSelected(true);
-        jCheckBoxMenuItemStartupObject2DView.setText("Object 2D View/Simulate");
-        jCheckBoxMenuItemStartupObject2DView.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemStartupObject2DViewActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemStartupObject2DView);
-
-        jCheckBoxMenuItemStartupRobotCrclGUI.setSelected(true);
-        jCheckBoxMenuItemStartupRobotCrclGUI.setText("Robot CRCL Client Gui");
-        jCheckBoxMenuItemStartupRobotCrclGUI.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemStartupRobotCrclGUI);
-
-        jCheckBoxMenuItemShowDatabaseSetup.setSelected(true);
-        jCheckBoxMenuItemShowDatabaseSetup.setText("Database Setup");
-        jCheckBoxMenuItemShowDatabaseSetup.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemShowDatabaseSetupActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemShowDatabaseSetup);
-        jMenu3.add(jSeparator2);
-
-        jCheckBoxMenuItemStartupRobtCRCLSimServer.setText("Robot CRCL SimServer");
-        jCheckBoxMenuItemStartupRobtCRCLSimServer.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemStartupRobtCRCLSimServer);
-
-        jCheckBoxMenuItemStartupFanucCRCLServer.setText("Fanuc CRCL Server");
-        jCheckBoxMenuItemStartupFanucCRCLServer.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemStartupFanucCRCLServerActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemStartupFanucCRCLServer);
-
-        jCheckBoxMenuItemStartupMotomanCRCLServer.setText("Motoman CRCL Server");
-        jCheckBoxMenuItemStartupMotomanCRCLServer.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemStartupMotomanCRCLServer);
-        jMenu3.add(jSeparator3);
-
-        jCheckBoxMenuItemConnectToDatabaseOnStartup.setText("Connect To Database On Startup");
-        jCheckBoxMenuItemConnectToDatabaseOnStartup.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemConnectToDatabaseOnStartup);
-
-        jCheckBoxMenuItemConnectToVisionOnStartup.setText("Connect To Vision On Startup");
-        jMenu3.add(jCheckBoxMenuItemConnectToVisionOnStartup);
-
-        jCheckBoxMenuItemExploreGraphDbStartup.setText("Explore Graph Database");
-        jCheckBoxMenuItemExploreGraphDbStartup.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemExploreGraphDbStartupActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemExploreGraphDbStartup);
-
-        jCheckBoxMenuItemKitInspectionStartup.setText("Kit Inspection");
-        jCheckBoxMenuItemKitInspectionStartup.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemKitInspectionStartupActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemKitInspectionStartup);
-
-        jMenuBar1.add(jMenu3);
-
-        jMenuWindow.setText("Window");
-        jMenuBar1.add(jMenuWindow);
-
-        jMenu2.setText("Connections");
-
-        jCheckBoxMenuItemConnectDatabase.setText("Database");
-        jCheckBoxMenuItemConnectDatabase.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemConnectDatabaseActionPerformed(evt);
-            }
-        });
-        jMenu2.add(jCheckBoxMenuItemConnectDatabase);
-
-        jCheckBoxMenuItemConnectVision.setText("Vision");
-        jCheckBoxMenuItemConnectVision.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemConnectVisionActionPerformed(evt);
-            }
-        });
-        jMenu2.add(jCheckBoxMenuItemConnectVision);
-
-        jCheckBoxMenuItemConnectedRobot.setText("Robot (CRCL ... )");
-        jCheckBoxMenuItemConnectedRobot.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemConnectedRobotActionPerformed(evt);
-            }
-        });
-        jMenu2.add(jCheckBoxMenuItemConnectedRobot);
-
-        jMenuBar1.add(jMenu2);
-
-        jMenu4.setText("Options");
-
-        jCheckBoxMenuItemEnableDebugDumpstacks.setText("Enable Debug DumpStacks");
-        jCheckBoxMenuItemEnableDebugDumpstacks.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed(evt);
-            }
-        });
-        jMenu4.add(jCheckBoxMenuItemEnableDebugDumpstacks);
-
-        jMenuItemSetPoseMaxLimits.setText("Set Pose Max Limits ... (+10000,+10000,+10000)    ...");
-        jMenuItemSetPoseMaxLimits.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemSetPoseMaxLimitsActionPerformed(evt);
-            }
-        });
-        jMenu4.add(jMenuItemSetPoseMaxLimits);
-
-        jMenuItemSetPoseMinLimits.setText("Set Pose Min Limits ... (-10000,-10000,-10000)    ...");
-        jMenuItemSetPoseMinLimits.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemSetPoseMinLimitsActionPerformed(evt);
-            }
-        });
-        jMenu4.add(jMenuItemSetPoseMinLimits);
-
-        jCheckBoxMenuItemSnapshotImageSize.setText("Snapshot Image size (800 x 600 )");
-        jCheckBoxMenuItemSnapshotImageSize.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemSnapshotImageSizeActionPerformed(evt);
-            }
-        });
-        jMenu4.add(jCheckBoxMenuItemSnapshotImageSize);
-
-        jCheckBoxMenuItemReloadSimFilesOnReverse.setText("Reload Sim Files on Reverse");
-        jMenu4.add(jCheckBoxMenuItemReloadSimFilesOnReverse);
-
-        jCheckBoxMenuItemUseTeachTable.setText("Use Teach Table");
-        jMenu4.add(jCheckBoxMenuItemUseTeachTable);
-
-        jMenuBar1.add(jMenu4);
-
-        jMenuExecute.setText("Execute");
-
-        jMenuItemStartActionList.setText("Start Action List");
-        jMenuItemStartActionList.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemStartActionListActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jMenuItemStartActionList);
-
-        jMenuItemImmediateAbort.setText("Immediate Abort");
-        jMenuItemImmediateAbort.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemImmediateAbortActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jMenuItemImmediateAbort);
-
-        jMenuItemContinueActionList.setText("Continue Action List");
-        jMenuItemContinueActionList.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemContinueActionListActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jMenuItemContinueActionList);
-
-        jMenuItemReset.setText("Reset");
-        jMenuItemReset.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemResetActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jMenuItemReset);
-
-        jCheckBoxMenuItemContinuousDemo.setText("Continuous Demo");
-        jCheckBoxMenuItemContinuousDemo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemContinuousDemoActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jCheckBoxMenuItemContinuousDemo);
-
-        jCheckBoxMenuItemPause.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PAUSE, 0));
-        jCheckBoxMenuItemPause.setText("Pause");
-        jCheckBoxMenuItemPause.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemPauseActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jCheckBoxMenuItemPause);
-
-        jMenuItemDebugAction.setText("Debug Action");
-        jMenuItemDebugAction.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemDebugActionActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jMenuItemDebugAction);
-
-        jCheckBoxMenuItemForceFakeTake.setText("Force Fake Take");
-        jCheckBoxMenuItemForceFakeTake.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemForceFakeTakeActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jCheckBoxMenuItemForceFakeTake);
-
-        jMenuItemCreateActionListFromVision.setText("Create Action List From Vision");
-        jMenuItemCreateActionListFromVision.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemCreateActionListFromVisionActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jMenuItemCreateActionListFromVision);
-
-        jMenuItemLookFor.setText("Look For");
-        jMenuItemLookFor.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemLookForActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jMenuItemLookFor);
-
-        jMenuItemClearErrors.setText("Clear Errors");
-        jMenuItemClearErrors.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemClearErrorsActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jMenuItemClearErrors);
-
-        jMenuBar1.add(jMenuExecute);
-
-        setJMenuBar(jMenuBar1);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jDesktopPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1058, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jDesktopPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 725, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
-
-    private void jCheckBoxMenuItemStartupPDDLPlannerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupPDDLPlannerActionPerformed
-        try {
-            if (jCheckBoxMenuItemStartupPDDLPlanner.isSelected()) {
-                startPddlPlanner();
-            } else {
-                closePddlPlanner();
-            }
-            setupWindowsMenu();
-            saveProperties();
-
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemStartupPDDLPlannerActionPerformed
-
-    private void jCheckBoxMenuItemStartupPDDLExecutorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupPDDLExecutorActionPerformed
-        try {
-            if (jCheckBoxMenuItemStartupPDDLExecutor.isSelected()) {
-                startExecutorJInternalFrame();
-            } else {
-                closeActionsToCrclJInternalFrame();
-            }
-            setupWindowsMenu();
-            saveProperties();
-
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemStartupPDDLExecutorActionPerformed
-
-    private void jCheckBoxMenuItemStartupObjectSPActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupObjectSPActionPerformed
-        try {
-            if (jCheckBoxMenuItemStartupObjectSP.isSelected()) {
-                startVisionToDbJinternalFrame();
-            }
-            setupWindowsMenu();
-            saveProperties();
-
-        } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemStartupObjectSPActionPerformed
-
-    private void jCheckBoxMenuItemStartupObject2DViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupObject2DViewActionPerformed
-        try {
-            if (jCheckBoxMenuItemStartupObject2DView.isSelected()) {
-                startObject2DJinternalFrame();
-            }
-            setupWindowsMenu();
-            saveProperties();
-
-        } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemStartupObject2DViewActionPerformed
-
-    private void jMenuItemLoadPropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadPropertiesActionPerformed
-        try {
-            this.loadProperties();
-
-        } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jMenuItemLoadPropertiesActionPerformed
-
-    private void jMenuItemSavePropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePropertiesActionPerformed
-        try {
-            this.saveProperties();
-
-        } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jMenuItemSavePropertiesActionPerformed
-
-    private void jMenuItemLoadPropertiesFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadPropertiesFileActionPerformed
-        browseOpenPropertiesFile();
-    }//GEN-LAST:event_jMenuItemLoadPropertiesFileActionPerformed
-
+    public int getSnapShotWidth() {
+        return snapShotWidth;
+    }
+    
+    public void setSnapShotWidth(int width) {
+        this.snapShotWidth = width;
+    }
+    
+    public int getSnapShotHeight() {
+        return snapShotHeight;
+    }
+    
+    public void setSnapShotHeight(int height) {
+        this.snapShotHeight = height;
+    }
+    
     /**
      * Query the user to select a properties file to open.
      */
     public void browseOpenPropertiesFile() {
-        JFileChooser chooser = new JFileChooser(propertiesDirectory);
-        FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
-        chooser.addChoosableFileFilter(filter);
-        chooser.setFileFilter(filter);
-        chooser.setDialogTitle("Open APRS System properties file.");
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try {
-                closeAllWindows();
-                setPropertiesFile(chooser.getSelectedFile());
-                loadProperties();
-//                initPropertiesFile();
+        if (null != aprsSystemDisplayJFrame) {
+            File selectedFile = aprsSystemDisplayJFrame.choosePropertiesFileToOpen();
+            if (null != selectedFile) {
+                try {
+                    loadSelectedPropertiesFile(selectedFile);
 
-            } catch (IOException ex) {
-                Logger.getLogger(AprsSystemDisplayJFrame.class
-                        .getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(AprsSystemDisplayJFrame.class
+                            .getName()).log(Level.SEVERE, null, ex);
+                }
+                this.initLoggerWindow();
+                this.commonInit();
             }
-            this.initLoggerWindow();
-            this.commonInit();
+        } else {
+            throw new IllegalStateException("can't browse for files when aprsSystemDisplayJFrame == null");
         }
-
     }
 
-
-    private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
-        try {
-            close();
-
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-        System.exit(0);
-    }//GEN-LAST:event_jMenuItemExitActionPerformed
-
-    private void jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed
-        try {
-            if (jCheckBoxMenuItemStartupRobotCrclGUI.isSelected()) {
-                startCrclClientJInternalFrame();
-            } else {
-//                closePddlPlanner();
-            }
-            setupWindowsMenu();
-            saveProperties();
-
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed
-
-    private void jCheckBoxMenuItemShowDatabaseSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemShowDatabaseSetupActionPerformed
-        try {
-            if (jCheckBoxMenuItemShowDatabaseSetup.isSelected()) {
-                showDatabaseSetupWindow();
-            } else {
-                hideDatabaseSetupWindow();
-            }
-            setupWindowsMenu();
-            saveProperties();
-
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemShowDatabaseSetupActionPerformed
-
-    private void jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed
-        if (jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected()) {
-            startSimServerJInternalFrame();
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed
-
-    private void jCheckBoxMenuItemStartupFanucCRCLServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupFanucCRCLServerActionPerformed
-        if (jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()) {
-            startFanucCrclServer();
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemStartupFanucCRCLServerActionPerformed
-
-    private void jCheckBoxMenuItemExploreGraphDbStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemExploreGraphDbStartupActionPerformed
-        if (this.jCheckBoxMenuItemExploreGraphDbStartup.isSelected()) {
-            startExploreGraphDb();
-        } else {
-            closeExploreGraphDb();
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemExploreGraphDbStartupActionPerformed
-
-//    @Nullable
-//    CRCLWebAppRunner crclWebAppRunner = null;
-
-//    private void stopCrclWebApp() {
-//        if (null != crclWebAppRunner) {
-//            crclWebAppRunner.stop();
-//            crclWebAppRunner = null;
-//        }
-//    }
-//
-//    private void startCrclWebApp() {
-//        crclWebAppRunner = new CRCLWebAppRunner();
-//        crclWebAppRunner.setHttpPort(crclWebServerHttpPort);
-//        crclWebAppRunner.start();
-//    }
+    public void loadSelectedPropertiesFile(File selectedFile) throws IOException {
+        closeAllWindows();
+        setPropertiesFile(selectedFile);
+        loadProperties();
+    }
 
     private int crclWebServerHttpPort = 8081;
-
-
-    private void jCheckBoxMenuItemConnectDatabaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectDatabaseActionPerformed
-        if (this.jCheckBoxMenuItemConnectDatabase.isSelected()) {
-            startConnectDatabase();
-        } else {
-            startDisconnectDatabase();
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemConnectDatabaseActionPerformed
-
-    private void jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed
-        try {
-            saveProperties();
-
-        } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed
-
-    private void jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed
-        if (jCheckBoxMenuItemStartupMotomanCRCLServer.isSelected()) {
-            startMotomanCrclServer();
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed
-
-    private void jMenuItemSavePropsAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePropsAsActionPerformed
-        browseSavePropertiesFileAs();
-    }//GEN-LAST:event_jMenuItemSavePropsAsActionPerformed
 
     /**
      * Query the user to select a properties file to save.
      */
     public void browseSavePropertiesFileAs() {
-        JFileChooser chooser = new JFileChooser(propertiesDirectory);
-        FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
-        chooser.addChoosableFileFilter(filter);
-        chooser.setFileFilter(filter);
-        chooser.setDialogTitle("Choose new APRS System properties file to create (save as).");
-        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try {
-                setPropertiesFile(chooser.getSelectedFile());
-                this.saveProperties();
-            } catch (IOException ex) {
-                Logger.getLogger(AprsSystemDisplayJFrame.class
-                        .getName()).log(Level.SEVERE, null, ex);
+        if (null != aprsSystemDisplayJFrame) {
+            File selectedFile = aprsSystemDisplayJFrame.choosePropertiesFileToOpen();
+            if (null != selectedFile) {
+                try {
+                    setPropertiesFile(selectedFile);
+                    this.saveProperties();
+                } catch (IOException ex) {
+                    Logger.getLogger(AprsSystem.class
+                            .getName()).log(Level.SEVERE, null, ex);
+                }
             }
+        } else {
+            throw new IllegalStateException("can't browse for files when aprsSystemDisplayJFrame == null");
         }
     }
 
-    private void jMenuItemImmediateAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImmediateAbortActionPerformed
-        this.immediateAbort();
-    }//GEN-LAST:event_jMenuItemImmediateAbortActionPerformed
-
-    private void jMenuItemStartActionListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartActionListActionPerformed
-        setTitleErrorString(null);
-        jCheckBoxMenuItemPause.setSelected(false);
-        notifyPauseFutures();
-        this.startActions("user");
-    }//GEN-LAST:event_jMenuItemStartActionListActionPerformed
-
-    private void jCheckBoxMenuItemConnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectVisionActionPerformed
-        if (jCheckBoxMenuItemConnectVision.isSelected()) {
-            connectVision();
-        } else {
-            disconnectVision();
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemConnectVisionActionPerformed
-
-    private void jCheckBoxMenuItemKitInspectionStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
-        this.showKitInspection();
-    }//GEN-LAST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
-
-    private void jMenuItemResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemResetActionPerformed
-        reset();
-    }//GEN-LAST:event_jMenuItemResetActionPerformed
-
-    private void jCheckBoxMenuItemReverseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemReverseActionPerformed
-        boolean reverseFlag = jCheckBoxMenuItemReverse.isSelected();
-        startSetReverseFlag(reverseFlag);
-    }//GEN-LAST:event_jCheckBoxMenuItemReverseActionPerformed
-
-    private void jCheckBoxMenuItemContinuousDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinuousDemoActionPerformed
-        boolean start = jCheckBoxMenuItemContinuousDemo.isSelected();
-        boolean reverseFlag = jCheckBoxMenuItemReverse.isSelected();
-        setTitleErrorString(null);
-        immediateAbort();
-        if (start) {
-            if (!jCheckBoxMenuItemContinuousDemo.isSelected()) {
-                jCheckBoxMenuItemContinuousDemo.setSelected(true);
-            }
-            continuousDemoFuture = startContinousDemo("user", reverseFlag);
-        } else {
-            immediateAbort();
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemContinuousDemoActionPerformed
-
-    private void jCheckBoxMenuItemPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseActionPerformed
-        System.out.println("jCheckBoxMenuItemPause.isSelected() = " + jCheckBoxMenuItemPause.isSelected());
-        XFuture<Boolean> cdf = this.continuousDemoFuture;
-        if (null != cdf) {
-            System.out.println("continousDemoFuture.isDone() = " + cdf.isDone());
-            System.out.println("continousDemoFuture.isCancelled() = " + cdf.isCancelled());
-        }
-        if (jCheckBoxMenuItemPause.isSelected()) {
-            pause();
-        } else {
-            clearErrors();
-            resume();
-        }
-        cdf = this.continuousDemoFuture;
-        if (null != cdf) {
-            System.out.println("continousDemoFuture.isDone() = " + cdf.isDone());
-            System.out.println("continousDemoFuture.isCancelled() = " + cdf.isCancelled());
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemPauseActionPerformed
-
-    private void jMenuItemDebugActionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemDebugActionActionPerformed
-        debugAction();
-    }//GEN-LAST:event_jMenuItemDebugActionActionPerformed
-
-    private void jCheckBoxMenuItemForceFakeTakeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemForceFakeTakeActionPerformed
-        if (pddlExecutorJInternalFrame1 != null) {
-            boolean val = jCheckBoxMenuItemForceFakeTake.isSelected();
-            if (pddlExecutorJInternalFrame1.getForceFakeTakeFlag() != val) {
-                pddlExecutorJInternalFrame1.setForceFakeTakeFlag(val);
-            }
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemForceFakeTakeActionPerformed
-
-    private void jMenuItemContinueActionListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemContinueActionListActionPerformed
-        continueActionList("user");
-    }//GEN-LAST:event_jMenuItemContinueActionListActionPerformed
-
-    private void jMenuItemCreateActionListFromVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCreateActionListFromVisionActionPerformed
-        createActionListFromVision();
-    }//GEN-LAST:event_jMenuItemCreateActionListFromVisionActionPerformed
-
-    private void jMenuItemSetPoseMinLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPoseMinLimitsActionPerformed
-        String newMinLimitsString = JOptionPane.showInputDialog(this, "New Min Pose Limits",
-                String.format("%+.3f,%.3f,%+.3f", minLimit.x, minLimit.y, minLimit.z));
-        if (newMinLimitsString != null && newMinLimitsString.length() > 0) {
-            PmCartesian cart = PmCartesian.valueOf(newMinLimitsString);
-            setMinLimit(cart);
-        }
-    }//GEN-LAST:event_jMenuItemSetPoseMinLimitsActionPerformed
-
-    private void jMenuItemSetPoseMaxLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPoseMaxLimitsActionPerformed
-        String newMaxLimitsString = JOptionPane.showInputDialog(this, "New Max Pose Limits",
-                String.format("%+.3f,%.3f,%+.3f", maxLimit.x, maxLimit.y, maxLimit.z));
-        if (newMaxLimitsString != null && newMaxLimitsString.length() > 0) {
-            PmCartesian cart = PmCartesian.valueOf(newMaxLimitsString);
-            setMaxLimit(cart);
-        }
-    }//GEN-LAST:event_jMenuItemSetPoseMaxLimitsActionPerformed
-
-    private void jCheckBoxMenuItemSnapshotImageSizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemSnapshotImageSizeActionPerformed
-        if (jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
-            String newSnapshotImageSize = JOptionPane.showInputDialog(this, "New Snapshot Image Size",
-                    String.format("%d x %d ", snapShotWidth, snapShotHeight));
-            if (newSnapshotImageSize != null && newSnapshotImageSize.length() > 0) {
-                String sa[] = newSnapshotImageSize.split("[ \tx,]+");
-                if (sa.length == 2) {
-                    snapShotWidth = Integer.parseInt(sa[0]);
-                    snapShotHeight = Integer.parseInt(sa[1]);
-                    setImageSizeMenuText();
-                }
-            }
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemSnapshotImageSizeActionPerformed
-
-    private void jMenuItemLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLookForActionPerformed
-        startLookForParts();
-    }//GEN-LAST:event_jMenuItemLookForActionPerformed
-
-    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        windowClosing();
-    }//GEN-LAST:event_formWindowClosing
-
-    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
-        windowClosed();
-    }//GEN-LAST:event_formWindowClosed
-
     private void windowClosed() {
-        if (isVisible()) {
-            setVisible(false);
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setVisible(false);
         }
         disconnectVision();
         if (null != object2DViewJInternalFrame) {
@@ -3803,7 +3376,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         }
     }
 
-    private void windowClosing() {
+    public void windowClosing() {
         startingCheckEnabled = false;
         try {
             immediateAbort();
@@ -3858,53 +3431,11 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             windowClosed();
         } catch (Throwable t) {
         }
-        super.removeAll();
-        super.dispose();
-    }
-
-    private void jCheckBoxMenuItemConnectedRobotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
-        boolean selected = jCheckBoxMenuItemConnectedRobot.isSelected();
-        if (selected) {
-            String name = robotName;
-            if (name == null || name.length() < 1) {
-                name = JOptionPane.showInputDialog("Robot name?", origRobotName);
-            }
-            String host = this.getRobotCrclHost();
-            if (host == null || host.length() < 1) {
-                host = JOptionPane.showInputDialog("Robot host?", origCrclRobotHost);
-            }
-            int port = this.getRobotCrclPort();
-            if (port < 1) {
-                String portString = JOptionPane.showInputDialog("Robot port?", origCrclRobotPort);
-                port = Integer.parseInt(portString);
-            }
-            clearErrors();
-            resume();
-            jCheckBoxMenuItemPause.setSelected(false);
-            this.connectRobot(name, host, port)
-                    .thenCompose(x -> startCheckEnabled())
-                    .thenApply(success -> {
-                        if (!success) {
-                            jCheckBoxMenuItemConnectedRobot.setSelected(false);
-                        }
-                        return success;
-                    })
-                    .exceptionally(x -> {
-                        jCheckBoxMenuItemConnectedRobot.setSelected(false);
-                        return false;
-                    });
-        } else {
-            this.disconnectRobot();
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.removeAll();
+            aprsSystemDisplayJFrame.dispose();
         }
-    }//GEN-LAST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
-
-    private void jMenuItemClearErrorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemClearErrorsActionPerformed
-        this.clearErrors();
-    }//GEN-LAST:event_jMenuItemClearErrorsActionPerformed
-
-    private void jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed
-        this.debug = jCheckBoxMenuItemConnectDatabase.isSelected();
-    }//GEN-LAST:event_jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed
+    }
 
     /**
      * Start a sequence of actions to move the robot out of the way so the
@@ -3934,9 +3465,20 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     }
 
     private void setImageSizeMenuText() {
-        jCheckBoxMenuItemSnapshotImageSize.setText(String.format("Snapshot Image size (%d x %d )", snapShotWidth, snapShotHeight));
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setImageSizeMenuText(snapShotWidth,snapShotHeight);
+        }
     }
 
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+    
+    public boolean getDebug() {
+        return debug;
+    }
+    
+    
     private boolean isWithinMaxLimits(PmCartesian cart) {
         return cart != null
                 && cart.x <= maxLimit.x
@@ -3977,12 +3519,6 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      */
     public void setMinLimit(PmCartesian minLimit) {
         this.minLimit = minLimit;
-        String menuString = String.format("Set Pose Min Limits ... (%+.3f,%.3f,%+.3f)    ...", minLimit.x, minLimit.y, minLimit.z);
-        Utils.runOnDispatchThread(() -> {
-            if (!jMenuItemSetPoseMinLimits.getText().equals(menuString)) {
-                jMenuItemSetPoseMinLimits.setText(menuString);
-            }
-        });
     }
 
     private volatile PmCartesian maxLimit = new PmCartesian(10000, 10000, 10000);
@@ -4003,12 +3539,6 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      */
     public void setMaxLimit(PmCartesian maxLimit) {
         this.maxLimit = maxLimit;
-        String menuString = String.format("Set Pose Max Limits ... (%+.3f,%.3f,%+.3f)    ...", maxLimit.x, maxLimit.y, maxLimit.z);
-        Utils.runOnDispatchThread(() -> {
-            if (!jMenuItemSetPoseMaxLimits.getText().equals(menuString)) {
-                jMenuItemSetPoseMaxLimits.setText(menuString);
-            }
-        });
     }
 
     @Nullable
@@ -4069,7 +3599,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
             createActionListFromVision(requiredItems, teachItems, false, 0);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
         }
     }
@@ -4154,8 +3684,9 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     private boolean checkKitTrays(List<PhysicalItem> kitTrays) {
         if (kitTrays.isEmpty()) {
             Thread.dumpStack();
-            if (JOptionPane.YES_OPTION
-                    != JOptionPane.showConfirmDialog(this, "Create action list with no kit trays?")) {
+            if (null == aprsSystemDisplayJFrame
+                    || JOptionPane.YES_OPTION
+                    != JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame, "Create action list with no kit trays?")) {
                 setTitleErrorString("createActionListFromVision: No kit trays");
                 throw new IllegalStateException("No kit trays");
             }
@@ -4237,8 +3768,9 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                     System.out.println("requiredItems = " + requiredItems);
                     System.out.println("teachItems = " + teachItems);
                     Thread.dumpStack();
-                    if (JOptionPane.YES_OPTION
-                            != JOptionPane.showConfirmDialog(this, "Load action list with all trays empty?")) {
+                    if (null == aprsSystemDisplayJFrame
+                            || JOptionPane.YES_OPTION
+                            != JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame, "Load action list with all trays empty?")) {
                         setTitleErrorString("createActionListFromVision: All kit trays empty");
                         throw new IllegalStateException("All kit trays empty");
                     }
@@ -4253,9 +3785,10 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             List<String> endingList = goalLearner.getLastCreateActionListFromVisionKitToCheckStrings();
             boolean equal = GoalLearner.kitToCheckStringsEqual(startingList, endingList);
             if (null != pddlExecutorJInternalFrame1 && (!equal || !goalLearner.isCorrectionMode())) {
+                boolean startingReverseFlag = isReverseFlag();
                 pddlExecutorJInternalFrame1.setReverseFlag(false);
                 pddlExecutorJInternalFrame1.loadActionsFile(f);
-                pddlExecutorJInternalFrame1.setReverseFlag(jCheckBoxMenuItemReverse.isSelected());
+                pddlExecutorJInternalFrame1.setReverseFlag(startingReverseFlag);
             }
             if (requiredItems != teachItems) {
                 if (overrideRotation) {
@@ -4273,7 +3806,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                                 .collect(Collectors.joining("\n")));
             }
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
         }
         long t2 = System.currentTimeMillis();
@@ -4294,6 +3827,13 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         throw new IllegalStateException("object2DViewJInternalFrame is null");
     }
 
+    public boolean getForceFakeTakeFlag() {
+        if (pddlExecutorJInternalFrame1 != null) {
+            return pddlExecutorJInternalFrame1.getForceFakeTakeFlag();
+        }
+        return false;
+    }
+    
     /**
      * Set the menu checkbox setting to force take operations to be faked so
      * that the gripper will not close, useful for testing.
@@ -4301,8 +3841,8 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @param val true if take operations should be faked
      */
     public void setForceFakeTakeFlag(boolean val) {
-        if (val != jCheckBoxMenuItemForceFakeTake.isSelected()) {
-            jCheckBoxMenuItemForceFakeTake.setSelected(val);
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setForceFakeTakeFlag(val);
         }
         if (pddlExecutorJInternalFrame1 != null) {
             if (pddlExecutorJInternalFrame1.getForceFakeTakeFlag() != val) {
@@ -4318,6 +3858,24 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     private volatile Thread resumingThread = null;
     private volatile StackTraceElement resumingTrace @Nullable []  = null;
     private volatile boolean resuming = false;
+
+    private volatile boolean pauseCheckboxSelected = false;
+
+    public boolean isPauseCheckboxSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = aprsSystemDisplayJFrame.isPauseCheckboxSelected();
+            this.pauseCheckboxSelected = ret;
+            return ret;
+        }
+        return pauseCheckboxSelected;
+    }
+
+    public void setPauseCheckboxSelected(boolean val) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setPauseCheckboxSelected(val);
+        }
+        this.pauseCheckboxSelected = val;
+    }
 
     /**
      * Continue operations that were previously paused.
@@ -4337,8 +3895,8 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             if (crclClientErrString != null && crclClientErrString.length() > 0) {
                 throw new IllegalStateException("Can't resume when crclClientErrString set to " + crclClientErrString);
             }
-            if (jCheckBoxMenuItemPause.isSelected()) {
-                jCheckBoxMenuItemPause.setSelected(false);
+            if (isPauseCheckboxSelected()) {
+                setPauseCheckboxSelected(false);
             }
             badState = badState || pausing;
             clearErrors();
@@ -4386,8 +3944,26 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         return null != visionToDbJInternalFrame && visionToDbJInternalFrame.isDbConnected();
     }
 
+    private volatile boolean snapshotCheckboxSelected = false;
+
+    public boolean isSnapshotCheckboxSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = aprsSystemDisplayJFrame.isSnapshotCheckboxSelected();
+            this.snapshotCheckboxSelected = ret;
+            return ret;
+        }
+        return snapshotCheckboxSelected;
+    }
+
+    public void setSnapshotCheckboxSelected(boolean val) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setSnapshotCheckboxSelected(val);
+        }
+        this.snapshotCheckboxSelected = val;
+    }
+
     public boolean snapshotsEnabled() {
-        return null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected();
+        return null != object2DViewJInternalFrame && isSnapshotCheckboxSelected();
     }
 
     /**
@@ -4534,7 +4110,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                     @Override
                     public Boolean call() throws Exception {
                         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-                        AprsSystemDisplayJFrame.this.setReverseFlag(reverseFirst, true);
+                        AprsSystem.this.setReverseFlag(reverseFirst, true);
                         boolean r0 = pddlExecutorJInternalFrame1.readyForNewActionsList();
                         if (!r0) {
                             System.err.println("starting continous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + cdCur);
@@ -4688,6 +4264,28 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         return continuousDemoFuture;
     }
 
+    @Nullable public XFuture<Boolean> getContinousDemoFuture() {
+        return continuousDemoFuture;
+    }
+    
+    private volatile boolean reverseCheckboxSelected = false;
+
+    public boolean isReverseCheckboxSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = aprsSystemDisplayJFrame.isReverseCheckboxSelected();
+            this.reverseCheckboxSelected = ret;
+            return ret;
+        }
+        return this.reverseCheckboxSelected;
+    }
+
+    public void setReverseCheckboxSelected(boolean val) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setReverseCheckboxSelected(val);
+        }
+        this.reverseCheckboxSelected = val;
+    }
+
     /**
      * Get the state of the reverse flag. It is set to indicate that an
      * alternative set of actions that empty rather than fill the kit trays is
@@ -4696,7 +4294,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @return reverse flag
      */
     public boolean isReverseFlag() {
-        return jCheckBoxMenuItemReverse.isSelected();
+        return isReverseCheckboxSelected();
     }
 
     /**
@@ -4732,20 +4330,38 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                 runProgramService).always(() -> logEvent("finished startSetReverseFlag", reverseFlag));
     }
 
+    private volatile boolean reloadSimFilesOnReverse = false;
+
+    public boolean isReloadSimFilesOnReverseCheckboxSelected() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = aprsSystemDisplayJFrame.isReloadSimFilesOnReverseCheckboxSelected();
+            this.reloadSimFilesOnReverse = ret;
+            return ret;
+        }
+        return this.reloadSimFilesOnReverse;
+    }
+
+    public void setReloadSimFilesOnReverseCheckboxSelected(boolean val) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setReloadSimFilesOnReverseCheckboxSelected(val);
+        }
+        this.reloadSimFilesOnReverse = val;
+    }
+
     private void setReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
-        if (jCheckBoxMenuItemReverse.isSelected() != reverseFlag) {
-            jCheckBoxMenuItemReverse.setSelected(reverseFlag);
+        if (isReverseCheckboxSelected() != reverseFlag) {
+            setReverseCheckboxSelected(reverseFlag);
         }
         if (null != object2DViewJInternalFrame) {
             try {
                 object2DViewJInternalFrame.setReverseFlag(reverseFlag);
-                if (reloadSimFiles && jCheckBoxMenuItemReloadSimFilesOnReverse.isSelected()) {
+                if (reloadSimFiles && isReloadSimFilesOnReverseCheckboxSelected()) {
                     if (object2DViewJInternalFrame.isSimulated() || !object2DViewJInternalFrame.isConnected()) {
                         object2DViewJInternalFrame.reloadDataFile();
                     }
                 }
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         if (null != pddlExecutorJInternalFrame1) {
@@ -4753,7 +4369,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                 pddlExecutorJInternalFrame1.setReverseFlag(reverseFlag);
                 pddlExecutorJInternalFrame1.reloadActionsFile();
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -4764,7 +4380,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @return paused state
      */
     public boolean isPaused() {
-        return jCheckBoxMenuItemPause.isSelected();
+        return isPauseCheckboxSelected();
     }
 
     /**
@@ -4772,6 +4388,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * cause future actions to wait until resume is called.
      */
     public void pause() {
+        LauncherAprsJFrame.PlayAlert2();
         boolean badState = resuming;
         pauseInternal();
         badState = badState || resuming;
@@ -4796,8 +4413,8 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         pausing = true;
         boolean badState = resuming;
         try {
-            if (!jCheckBoxMenuItemPause.isSelected()) {
-                jCheckBoxMenuItemPause.setSelected(true);
+            if (!isPauseCheckboxSelected()) {
+                setPauseCheckboxSelected(true);
             }
             badState = badState || resuming;
             if (null != crclClientJInternalFrame && titleErrorString != null && titleErrorString.length() > 0) {
@@ -4910,7 +4527,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         }
     }
 
-    private void clearCrclClientErrorMessage() {
+    public void clearCrclClientErrorMessage() {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.clearCrclClientErrorMessage();
         }
@@ -5026,7 +4643,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             enableCheckedAlready = progRunRet;
             return progRunRet;
         } catch (JAXBException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
         }
     }
@@ -5141,7 +4758,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         lastContinueStartAbortCount = startAbortCount;
         if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.refresh(jCheckBoxMenuItemReloadSimFilesOnReverse.isSelected());
+            object2DViewJInternalFrame.refresh(isReloadSimFilesOnReverseCheckboxSelected());
         }
         if (null != motomanCrclServerJInternalFrame) {
             String robotName = getRobotName();
@@ -5151,7 +4768,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                         try {
                             motomanCrclServerJInternalFrame.connectCrclMotoplus();
                         } catch (IOException ex) {
-                            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                     if (!motomanCrclServerJInternalFrame.isCrclMotoplusConnected()) {
@@ -5213,11 +4830,8 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         return pddlExecutorJInternalFrame1.isDoingActions();
     }
 
-    private void showKitInspection() {
 
-    }
-
-    private void startExploreGraphDb() {
+    public void startExploreGraphDb() {
         assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
         try {
             if (null == this.exploreGraphDbJInternalFrame) {
@@ -5231,12 +4845,12 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             activateInternalFrame(this.exploreGraphDbJInternalFrame);
 
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private void closeExploreGraphDb() {
+    public void closeExploreGraphDb() {
         try {
             if (null != this.exploreGraphDbJInternalFrame) {
                 // FIXME decide what to do later
@@ -5244,7 +4858,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             saveProperties();
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -5311,7 +4925,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                         }
                     }
                 } catch (IOException ex) {
-                    Logger.getLogger(AprsSystemDisplayJFrame.class
+                    Logger.getLogger(AprsSystem.class
                             .getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -5379,7 +4993,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, pose, label, snapShotWidth, snapShotHeight);
         }
     }
@@ -5394,7 +5008,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, PointType point, String label) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
         }
     }
@@ -5409,7 +5023,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
         }
     }
@@ -5424,7 +5038,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pose, poseLabel, snapShotWidth, snapShotHeight);
         }
     }
@@ -5439,7 +5053,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String pointLabel) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, snapShotWidth, snapShotHeight);
         }
     }
@@ -5454,7 +5068,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, snapShotWidth, snapShotHeight);
         }
     }
@@ -5466,7 +5080,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @param itemsToPaint list of items to paint
      */
     public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, snapShotWidth, snapShotHeight);
         }
     }
@@ -5480,7 +5094,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws java.io.IOException problem writing to the file
      */
     public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             this.object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), itemsToPaint, snapShotWidth, snapShotHeight);
         }
     }
@@ -5497,7 +5111,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, pose, label, w, h);
         }
     }
@@ -5514,7 +5128,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, PointType point, String label, int w, int h) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         }
     }
@@ -5531,7 +5145,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         }
     }
@@ -5548,7 +5162,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pose, poseLabel, w, h);
         }
     }
@@ -5565,7 +5179,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, w, h);
         }
     }
@@ -5582,7 +5196,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) throws IOException {
-        if (null != object2DViewJInternalFrame && jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, w, h);
         }
     }
@@ -5631,13 +5245,22 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                         loadPropertiesInternal(exA);
                     });
         } catch (InterruptedException | InvocationTargetException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (null != exA[0]) {
             throw new IOException(exA[0]);
         }
     }
 
+//    private volatile boolean useTeachTable = false;
+//    
+//    public boolean isUseTeachTableCheckboxSelected() {
+//        return jCheckBoxMenuItemUseTeachTable.isSelected();
+//    }
+//    
+//    public void setUseTeachTableCheckboxSelected(boolean val) {
+//        jCheckBoxMenuItemUseTeachTable.setSelected(val);
+//    }
     private void loadPropertiesInternal(IOException exA[]) {
         try {
             Properties props = new Properties();
@@ -5647,36 +5270,36 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             }
             String useTeachTableString = props.getProperty(USETEACHTABLE);
             if (null != useTeachTableString) {
-                jCheckBoxMenuItemUseTeachTable.setSelected(Boolean.valueOf(useTeachTableString));
+                setUseTeachTable(Boolean.valueOf(useTeachTableString));
             }
             String startPddlPlannerString = props.getProperty(STARTUPPDDLPLANNER);
             if (null != startPddlPlannerString) {
-                jCheckBoxMenuItemStartupPDDLPlanner.setSelected(Boolean.valueOf(startPddlPlannerString));
+                setPddlPlannerStartupSelected(Boolean.valueOf(startPddlPlannerString));
             }
             String startPddlExecutorString = props.getProperty(STARTUPPDDLEXECUTOR);
             if (null != startPddlExecutorString) {
-                jCheckBoxMenuItemStartupPDDLExecutor.setSelected(Boolean.valueOf(startPddlExecutorString));
+                setPddlExecutorStartupSelected(Boolean.valueOf(startPddlExecutorString));
             }
             String startObjectSpString = props.getProperty(STARTUPPDDLOBJECTSP);
             if (null != startObjectSpString) {
-                jCheckBoxMenuItemStartupObjectSP.setSelected(Boolean.valueOf(startObjectSpString));
+                setObjectSpStartupSelected(Boolean.valueOf(startObjectSpString));
             }
 
             String startObjectViewString = props.getProperty(STARTUPPDDLOBJECTVIEW);
             if (null != startObjectViewString) {
-                jCheckBoxMenuItemStartupObject2DView.setSelected(Boolean.valueOf(startObjectViewString));
+                setObject2DViewStartupSelected(Boolean.valueOf(startObjectViewString));
             }
             String startCRCLClientString = props.getProperty(STARTUPROBOTCRCLCLIENT);
             if (null != startCRCLClientString) {
-                jCheckBoxMenuItemStartupRobotCrclGUI.setSelected(Boolean.valueOf(startCRCLClientString));
+                setRobotCrclGUIStartupSelected(Boolean.valueOf(startCRCLClientString));
             }
             String startCRCLSimServerString = props.getProperty(STARTUPROBOTCRCLSIMSERVER);
             if (null != startCRCLSimServerString) {
-                jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(Boolean.valueOf(startCRCLSimServerString));
+                setRobotCrclSimServerStartupSelected(Boolean.valueOf(startCRCLSimServerString));
             }
             String startCRCLFanucServerString = props.getProperty(STARTUPROBOTCRCLFANUCSERVER);
             if (null != startCRCLFanucServerString) {
-                jCheckBoxMenuItemStartupFanucCRCLServer.setSelected(Boolean.valueOf(startCRCLFanucServerString));
+                setRobotCrclFanucServerStartupSelected(Boolean.valueOf(startCRCLFanucServerString));
             }
             String fanucCrclLocalPortString = props.getProperty(FANUC_CRCL_LOCAL_PORT);
             if (null != fanucCrclLocalPortString) {
@@ -5689,25 +5312,34 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
 
             String startCRCLMotomanServerString = props.getProperty(STARTUPROBOTCRCLMOTOMANSERVER);
             if (null != startCRCLMotomanServerString) {
-                jCheckBoxMenuItemStartupMotomanCRCLServer.setSelected(Boolean.valueOf(startCRCLMotomanServerString));
+                setRobotCrclMotomanServerStartupSelected(Boolean.valueOf(startCRCLMotomanServerString));
             }
             String startConnectDBString = props.getProperty(STARTUPCONNECTDATABASE);
             if (null != startConnectDBString) {
-                jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(Boolean.valueOf(startConnectDBString));
-                if (jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()) {
-                    jCheckBoxMenuItemShowDatabaseSetup.setSelected(true);
+                setConnectDatabaseOnSetupStartupSelected(Boolean.valueOf(startConnectDBString));
+                if (isConnectDatabaseOnSetupStartupSelected()) {
+                    setShowDatabaseSetupStartupSelected(true);
                 }
+//                jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(Boolean.valueOf(startConnectDBString));
+//                if (jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()) {
+//                    jCheckBoxMenuItemShowDatabaseSetup.setSelected(true);
+//                }
             }
             String startConnectVisionString = props.getProperty(STARTUPCONNECTVISION);
             if (null != startConnectVisionString) {
-                jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(Boolean.valueOf(startConnectVisionString));
-                if (jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()) {
-                    jCheckBoxMenuItemStartupObjectSP.setSelected(true);
+                setConnectVisionOnSetupStartupSelected(Boolean.valueOf(startConnectVisionString));
+                if (isConnectVisionOnSetupStartupSelected()) {
+                    setObjectSpStartupSelected(true);
                 }
+//                jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(Boolean.valueOf(startConnectVisionString));
+//                if (jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()) {
+//                    jCheckBoxMenuItemStartupObjectSP.setSelected(true);
+//                }
             }
             String startExploreGraphDbString = props.getProperty(STARTUPEXPLOREGRAPHDB);
             if (null != startExploreGraphDbString) {
-                jCheckBoxMenuItemExploreGraphDbStartup.setSelected(Boolean.valueOf(startExploreGraphDbString));
+                setExploreGraphDBStartupSelected(Boolean.valueOf(startExploreGraphDbString));
+//                jCheckBoxMenuItemExploreGraphDbStartup.setSelected(Boolean.valueOf(startExploreGraphDbString));
             }
             String crclWebAppPortString = props.getProperty(CRCLWEBAPPPORT);
             if (null != crclWebAppPortString) {
@@ -5719,23 +5351,24 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
 //            }
             String startKitInspetion = props.getProperty(STARTUPKITINSPECTION);
             if (null != startKitInspetion) {
-                jCheckBoxMenuItemKitInspectionStartup.setSelected(Boolean.valueOf(startKitInspetion));
+                setKitInspectionStartupSelected(Boolean.valueOf(startKitInspetion));
+//                jCheckBoxMenuItemKitInspectionStartup.setSelected(Boolean.valueOf(startKitInspetion));
             }
             this.updateSubPropertiesFiles();
             if (null != this.pddlPlannerJInternalFrame) {
                 this.pddlPlannerJInternalFrame.loadProperties();
             }
             if (null != this.pddlExecutorJInternalFrame1) {
-                XFuture<Void> loadPropertiesFuture =
-                        XFuture.runAsync("loadProperties", () -> {
-                    try {
-                        if (null != this.pddlExecutorJInternalFrame1) {
-                            this.pddlExecutorJInternalFrame1.loadProperties();
-                        }
-                    } catch (IOException ex) {
-                        Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }, runProgramService);
+                XFuture<Void> loadPropertiesFuture
+                        = XFuture.runAsync("loadProperties", () -> {
+                            try {
+                                if (null != this.pddlExecutorJInternalFrame1) {
+                                    this.pddlExecutorJInternalFrame1.loadProperties();
+                                }
+                            } catch (IOException ex) {
+                                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }, runProgramService);
                 loadPropertiesFuture.join();
             }
 
@@ -5792,11 +5425,11 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
 
             String reloadSimFilesOnReverseString = props.getProperty(RELOAD_SIM_FILES_ON_REVERSE_PROP);
             if (null != reloadSimFilesOnReverseString && reloadSimFilesOnReverseString.trim().length() > 0) {
-                jCheckBoxMenuItemSnapshotImageSize.setSelected(Boolean.valueOf(reloadSimFilesOnReverseString));
+                setReloadSimFilesOnReverseCheckboxSelected(Boolean.valueOf(reloadSimFilesOnReverseString));
             }
             String snapShotEnableString = props.getProperty(SNAP_SHOT_ENABLE_PROP);
             if (null != snapShotEnableString && snapShotEnableString.trim().length() > 0) {
-                jCheckBoxMenuItemSnapshotImageSize.setSelected(Boolean.valueOf(snapShotEnableString));
+                setSnapshotCheckboxSelected(Boolean.valueOf(snapShotEnableString));
             }
             String snapShotWidthString = props.getProperty(SNAP_SHOT_WIDTH_PROP);
             if (null != snapShotWidthString && snapShotWidthString.trim().length() > 0) {
@@ -5817,10 +5450,10 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                 showActiveWin();
             }
         } catch (IOException exception) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, exception);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, exception);
             exA[0] = exception;
         } catch (Exception exception) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, exception);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, exception);
         }
     }
 
@@ -5908,28 +5541,28 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         }
         Map<String, String> propsMap = new HashMap<>();
 
-        propsMap.put(USETEACHTABLE, Boolean.toString(jCheckBoxMenuItemUseTeachTable.isSelected()));
-        propsMap.put(STARTUPPDDLPLANNER, Boolean.toString(jCheckBoxMenuItemStartupPDDLPlanner.isSelected()));
-        propsMap.put(STARTUPPDDLEXECUTOR, Boolean.toString(jCheckBoxMenuItemStartupPDDLExecutor.isSelected()));
-        propsMap.put(STARTUPPDDLOBJECTSP, Boolean.toString(jCheckBoxMenuItemStartupObjectSP.isSelected()));
-        propsMap.put(STARTUPPDDLOBJECTVIEW, Boolean.toString(jCheckBoxMenuItemStartupObject2DView.isSelected()));
-        propsMap.put(STARTUPROBOTCRCLCLIENT, Boolean.toString(jCheckBoxMenuItemStartupRobotCrclGUI.isSelected()));
-        propsMap.put(STARTUPROBOTCRCLSIMSERVER, Boolean.toString(jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected()));
-        propsMap.put(STARTUPROBOTCRCLFANUCSERVER, Boolean.toString(jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()));
-        propsMap.put(STARTUPROBOTCRCLMOTOMANSERVER, Boolean.toString(jCheckBoxMenuItemStartupMotomanCRCLServer.isSelected()));
-        propsMap.put(STARTUPCONNECTDATABASE, Boolean.toString(jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()));
-        propsMap.put(STARTUPCONNECTVISION, Boolean.toString(jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()));
-        propsMap.put(STARTUPEXPLOREGRAPHDB, Boolean.toString(jCheckBoxMenuItemExploreGraphDbStartup.isSelected()));
+        propsMap.put(USETEACHTABLE, Boolean.toString(getUseTeachTable()));
+        propsMap.put(STARTUPPDDLPLANNER, Boolean.toString(isPddlPlannerStartupSelected()));
+        propsMap.put(STARTUPPDDLEXECUTOR, Boolean.toString(isPddlExecutorStartupSelected()));
+        propsMap.put(STARTUPPDDLOBJECTSP, Boolean.toString(isObjectSpStartupSelected()));
+        propsMap.put(STARTUPPDDLOBJECTVIEW, Boolean.toString(isObject2DViewStartupSelected()));
+        propsMap.put(STARTUPROBOTCRCLCLIENT, Boolean.toString(isRobotCrclGUIStartupSelected()));
+        propsMap.put(STARTUPROBOTCRCLSIMSERVER, Boolean.toString(isRobotCrclSimServerStartupSelected()));
+        propsMap.put(STARTUPROBOTCRCLFANUCSERVER, Boolean.toString(isRobotCrclFanucServerStartupSelected()));
+        propsMap.put(STARTUPROBOTCRCLMOTOMANSERVER, Boolean.toString(isRobotCrclMotomanServerStartupSelected()));
+        propsMap.put(STARTUPCONNECTDATABASE, Boolean.toString(isConnectDatabaseCheckboxSelected()));
+        propsMap.put(STARTUPCONNECTVISION, Boolean.toString(isConnectVisionOnSetupStartupSelected()));
+        propsMap.put(STARTUPEXPLOREGRAPHDB, Boolean.toString(isExploreGraphDBStartupSelected()));
 //        propsMap.put(STARTUPCRCLWEBAPP, Boolean.toString(jCheckBoxMenuItemStartupCRCLWebApp.isSelected()));
         propsMap.put(CRCLWEBAPPPORT, Integer.toString(crclWebServerHttpPort));
         propsMap.put(STARTUP_ACTIVE_WIN, activeWin.toString());
-        propsMap.put(STARTUPKITINSPECTION, Boolean.toString(jCheckBoxMenuItemKitInspectionStartup.isSelected()));
+        propsMap.put(STARTUPKITINSPECTION, Boolean.toString(isKitInspectionStartupSelected()));
         propsMap.put(MAX_LIMIT_PROP, maxLimit.toString());
         propsMap.put(MIN_LIMIT_PROP, minLimit.toString());
-        propsMap.put(SNAP_SHOT_ENABLE_PROP, Boolean.toString(jCheckBoxMenuItemSnapshotImageSize.isSelected()));
+        propsMap.put(SNAP_SHOT_ENABLE_PROP, Boolean.toString(isSnapshotCheckboxSelected()));
         propsMap.put(SNAP_SHOT_WIDTH_PROP, Integer.toString(snapShotWidth));
         propsMap.put(SNAP_SHOT_HEIGHT_PROP, Integer.toString(snapShotHeight));
-        propsMap.put(RELOAD_SIM_FILES_ON_REVERSE_PROP, Boolean.toString(jCheckBoxMenuItemReloadSimFilesOnReverse.isSelected()));
+        propsMap.put(RELOAD_SIM_FILES_ON_REVERSE_PROP, Boolean.toString(isReloadSimFilesOnReverseCheckboxSelected()));
         setDefaultRobotName();
         if (null != robotName) {
             propsMap.put(APRSROBOT_PROPERTY_NAME, robotName);
@@ -6010,11 +5643,11 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                 setRobotName("Motoman");
             } else if (simServerJInternalFrame != null) {
                 setRobotName("Simulated");
-            } else if (jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()) {
+            } else if (isRobotCrclFanucServerStartupSelected()) {
                 setRobotName("Fanuc");
-            } else if (jCheckBoxMenuItemStartupMotomanCRCLServer.isSelected()) {
+            } else if (isRobotCrclMotomanServerStartupSelected()) {
                 setRobotName("Motoman");
-            } else if (jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected()) {
+            } else if (isRobotCrclSimServerStartupSelected()) {
                 setRobotName("Simulated");
             }
         }
@@ -6060,7 +5693,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                     }
                 }
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-                java.util.logging.Logger.getLogger(AprsSystemDisplayJFrame.class
+                java.util.logging.Logger.getLogger(AprsSystem.class
                         .getName()).log(java.util.logging.Level.SEVERE, null, ex);
 
             }
@@ -6069,65 +5702,12 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                AprsSystemDisplayJFrame aFrame = new AprsSystemDisplayJFrame();
+                AprsSystem aFrame = new AprsSystem();
                 aFrame.defaultInit();
                 aFrame.setVisible(true);
             }
         });
     }
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectDatabase;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToDatabaseOnStartup;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToVisionOnStartup;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVision;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectedRobot;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinuousDemo;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemEnableDebugDumpstacks;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemForceFakeTake;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKitInspectionStartup;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReloadSimFilesOnReverse;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReverse;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemSnapshotImageSize;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupFanucCRCLServer;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupMotomanCRCLServer;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObject2DView;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObjectSP;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupPDDLExecutor;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupPDDLPlanner;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobotCrclGUI;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobtCRCLSimServer;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseTeachTable;
-    private javax.swing.JDesktopPane jDesktopPane1;
-    private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
-    private javax.swing.JMenu jMenu3;
-    private javax.swing.JMenu jMenu4;
-    private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenu jMenuExecute;
-    private javax.swing.JMenuItem jMenuItemClearErrors;
-    private javax.swing.JMenuItem jMenuItemContinueActionList;
-    private javax.swing.JMenuItem jMenuItemCreateActionListFromVision;
-    private javax.swing.JMenuItem jMenuItemDebugAction;
-    private javax.swing.JMenuItem jMenuItemExit;
-    private javax.swing.JMenuItem jMenuItemImmediateAbort;
-    private javax.swing.JMenuItem jMenuItemLoadProperties;
-    private javax.swing.JMenuItem jMenuItemLoadPropertiesFile;
-    private javax.swing.JMenuItem jMenuItemLookFor;
-    private javax.swing.JMenuItem jMenuItemReset;
-    private javax.swing.JMenuItem jMenuItemSaveProperties;
-    private javax.swing.JMenuItem jMenuItemSavePropsAs;
-    private javax.swing.JMenuItem jMenuItemSetPoseMaxLimits;
-    private javax.swing.JMenuItem jMenuItemSetPoseMinLimits;
-    private javax.swing.JMenuItem jMenuItemStartActionList;
-    private javax.swing.JMenu jMenuWindow;
-    private javax.swing.JPopupMenu.Separator jSeparator1;
-    private javax.swing.JPopupMenu.Separator jSeparator2;
-    private javax.swing.JPopupMenu.Separator jSeparator3;
-    // End of variables declaration//GEN-END:variables
 
     /**
      * Get the file where properties are read from and written to.
@@ -6161,7 +5741,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                 propertiesDirectory.mkdirs();
 
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystemDisplayJFrame.class
+                Logger.getLogger(AprsSystem.class
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -6169,7 +5749,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             updateSubPropertiesFiles();
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
         updateTitle("", "");
@@ -6229,8 +5809,8 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
     @Nullable
     Future<?> disconnectDatabaseFuture = null;
 
-    private void startDisconnectDatabase() {
-        jCheckBoxMenuItemConnectDatabase.setEnabled(false);
+    public void startDisconnectDatabase() {
+        setConnectDatabaseCheckboxEnabled(false);
         if (null != connectDatabaseFuture) {
             connectDatabaseFuture.cancel(true);
             connectDatabaseFuture = null;
@@ -6240,7 +5820,10 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
 
     private void disconnectDatabase() {
 
-        assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
+        if(null == dbSetupJInternalFrame) {
+            return;
+        }
+//        assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
         try {
             dbConnected = false;
             if (null != connectDatabaseFuture) {
@@ -6257,7 +5840,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
                         f.get(100, TimeUnit.MILLISECONDS);
 
                     } catch (CancellationException | InterruptedException | ExecutionException | TimeoutException ex) {
-                        Logger.getLogger(AprsSystemDisplayJFrame.class
+                        Logger.getLogger(AprsSystem.class
                                 .getName()).log(Level.FINE, null, ex);
                     }
                 }
@@ -6265,7 +5848,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             System.out.println("Finished disconnect from database.");
 
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -6299,18 +5882,20 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
             try {
                 eventLogPrinter.close();
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
             eventLogPrinter = null;
         }
         System.out.println("AprsJFrame.close()");
         closeAllWindows();
         connectService.shutdownNow();
-        this.setVisible(false);
-        this.dispose();
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setVisible(false);
+            aprsSystemDisplayJFrame.dispose();
+        }
     }
 
-    private void closeActionsToCrclJInternalFrame() throws Exception {
+    public void closeActionsListExcecutor() throws Exception {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.close();
             pddlExecutorJInternalFrame1.setVisible(false);
@@ -6320,7 +5905,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame implements AprsS
         }
     }
 
-    private void closePddlPlanner() throws Exception {
+    public void closePddlPlanner() throws Exception {
         if (null != pddlPlannerJInternalFrame) {
             pddlPlannerJInternalFrame.close();
             pddlPlannerJInternalFrame.setVisible(false);

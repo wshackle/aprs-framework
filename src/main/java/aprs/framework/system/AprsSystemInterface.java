@@ -20,8 +20,12 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.framework;
+package aprs.framework.system;
 
+import aprs.framework.DisplayInterface;
+import aprs.framework.SlotOffsetProvider;
+import aprs.framework.misc.ActiveWinEnum;
+import aprs.framework.pddl.executor.PddlAction;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupJInternalFrame;
@@ -898,7 +902,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * Start the PDDL Executor (aka Actions to CRCL) and create and display the
      * window for displaying its output.
      */
-    public void startExecutorJInternalFrame();
+    public void startActionListExecutor();
 
     /**
      * Query the user to select a properties file to open.

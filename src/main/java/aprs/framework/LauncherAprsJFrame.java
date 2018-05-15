@@ -22,19 +22,27 @@
  */
 package aprs.framework;
 
+import aprs.framework.supervisor.Supervisor;
+import static aprs.framework.supervisor.Supervisor.createAprsSupervisorWithSwingDisplay;
 import static aprs.framework.Utils.copyOfRangeNonNullsOnly;
 import static aprs.framework.Utils.readFirstLine;
 import aprs.framework.learninggoals.GoalLearnerTest;
 import aprs.framework.optaplanner.OptaplannerTest;
 import aprs.framework.process.launcher.ProcessLauncherJFrame;
 import crcl.ui.XFuture;
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import org.apache.commons.csv.CSVFormat;
@@ -366,7 +374,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }
 
     private static void prevMulti(@Nullable File launchFile) {
-        AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
+        Supervisor amsFrame = createAprsSupervisorWithSwingDisplay();
         if (null != launchFile) {
             try {
                 ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
@@ -384,13 +392,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-    private static void completePrevMulti(AprsSupervisorJFrame amsFrame) {
+    private static void completePrevMulti(Supervisor amsFrame) {
         amsFrame.startColorTextReader();
         amsFrame.loadPrevSetup();
         amsFrame.loadPrevPosMapFile();
         amsFrame.loadPrevSimTeach();
         amsFrame.loadPrevTeachProperties();
         amsFrame.setVisible(true);
+        PlayAlert();
     }
 
     private void jButtonNewMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonNewMultiActionPerformed
@@ -400,7 +409,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonNewMultiActionPerformed
 
     private static void newMulti() {
-        AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
+        Supervisor amsFrame = createAprsSupervisorWithSwingDisplay();
         amsFrame.startColorTextReader();
         amsFrame.setVisible(true);
         amsFrame.browseSaveSetupAs();
@@ -417,7 +426,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonOpenMultiActionPerformed
 
     private static void openMulti(String args @Nullable []) throws IOException {
-        AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
+        Supervisor amsFrame = createAprsSupervisorWithSwingDisplay();
         if (null != args && args.length > 1) {
             try {
                 ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
@@ -436,6 +445,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                                 amsFrame.loadPrevPosMapFile();
                                 amsFrame.loadPrevSimTeach();
                                 amsFrame.loadPrevTeachProperties();
+                                PlayAlert();
                             } catch (IOException iOException) {
                                 iOException.printStackTrace();
                             }
@@ -454,6 +464,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             amsFrame.loadPrevPosMapFile();
             amsFrame.loadPrevSimTeach();
             amsFrame.loadPrevTeachProperties();
+            PlayAlert();
         }
     }
 
@@ -513,7 +524,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private static void tenCycleTestNoDisables() {
         long startTime = System.currentTimeMillis();
-        AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
+        Supervisor amsFrame = createAprsSupervisorWithSwingDisplay();
         completePrevMulti(amsFrame);
 
         amsFrame.setShowFullScreenMessages(false);
@@ -580,9 +591,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                     Utils.runOnDispatchThread(() -> {
 
                         System.out.println("timeDiff = " + timeDiff);
-                        JOptionPane.showMessageDialog(amsFrame,
-                                String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
-                                        (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count));
+                        LauncherAprsJFrame.PlayAlert();
+                        String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
+                                (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count);
+                        System.out.println(msg);
+//                        JOptionPane.showMessageDialog(amsFrame,msg);
                         amsFrame.close();
                         System.exit(0);
                     });
@@ -591,7 +604,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private static void tenCycleTest(@Nullable File launchFile) {
         long startTime = System.currentTimeMillis();
-        final AprsSupervisorJFrame amsFrame = new AprsSupervisorJFrame();
+        final Supervisor amsFrame = createAprsSupervisorWithSwingDisplay();
 
         if (null != launchFile) {
             try {
@@ -610,7 +623,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-    private static void completeTenCycleTest(final AprsSupervisorJFrame amsFrame, long startTime) {
+    private static void completeTenCycleTest(final Supervisor amsFrame, long startTime) {
         completePrevMulti(amsFrame);
         amsFrame.setShowFullScreenMessages(false);
         amsFrame.setMax_cycles(10);
@@ -676,9 +689,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                     Utils.runOnDispatchThread(() -> {
 
                         System.out.println("timeDiff = " + timeDiff);
-                        JOptionPane.showMessageDialog(amsFrame,
-                                String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
-                                        (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count));
+                        LauncherAprsJFrame.PlayAlert();
+                        String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
+                                (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count);
+                        System.out.println(msg);
+//                        JOptionPane.showMessageDialog(amsFrame,msg);
                         amsFrame.close();
                         System.exit(0);
                     });
@@ -752,7 +767,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
         f = null;
         try {
-            f = AprsSupervisorJFrame.getLastSetupFile();
+            f = Supervisor.getLastSetupFile();
         } catch (IOException ex) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -777,6 +792,45 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
+    static public void PlayAlert(String resourceName) {
+        try {
+            Toolkit.getDefaultToolkit().beep();
+            System.out.println("beep");
+            Thread.sleep(100);
+            URL url = LauncherAprsJFrame.class.getResource(resourceName);
+            System.out.println("url = " + url);
+            if (null != url) {
+                Clip clip = AudioSystem.getClip();
+                InputStream inputStream
+                        = LauncherAprsJFrame.class.getResourceAsStream(resourceName);
+                if (null != inputStream) {
+                    System.out.println("inputStream = " + inputStream);
+                    System.out.println("inputStream.available() = " + inputStream.available());
+                    AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream);
+                    clip.open(audioInputStream);
+                    clip.start();
+                    System.out.println("clip = " + clip);
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    static public void PlayAlert() {
+        PlayAlert("alert.wav");
+    }
+
+    static public void PlayAlert2() {
+        PlayAlert("alert2.wav");
+    }
+
+//    static public void PlayBeep() {
+//        URL url = LauncherAprsJFrame.class.getResource("alert.wav");
+//        System.out.println("url = " + url);
+//        AudioClip clip = Applet.newAudioClip(url);
+//        clip.play();
+//    }
     /**
      * @param args the command line arguments
      */

@@ -22,10 +22,10 @@
  */
 package aprs.framework.learninggoals;
 
-import aprs.framework.ActiveWinEnum;
+import aprs.framework.misc.ActiveWinEnum;
 import aprs.framework.AprsJFrame;
-import aprs.framework.AprsSystemInterface;
-import aprs.framework.PddlAction;
+import aprs.framework.system.AprsSystemInterface;
+import aprs.framework.pddl.executor.PddlAction;
 import aprs.framework.SlotOffsetProvider;
 import aprs.framework.database.KitTray;
 import aprs.framework.database.Part;
@@ -256,7 +256,7 @@ public class GoalLearnerTest {
         aFrame.emptyInit();
         aFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         aFrame.setExternalSlotOffsetProvider(sop);
-        aFrame.startExecutorJInternalFrame();
+        aFrame.startActionListExecutor();
         aFrame.startObject2DJinternalFrame();
         PoseProvider poseProvider = new PoseProvider() {
 

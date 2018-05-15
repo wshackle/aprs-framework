@@ -22,7 +22,7 @@
  */
 package aprs.framework.database;
 
-import aprs.framework.AprsSystemInterface;
+import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.spvision.UpdateResults;
 import crcl.base.PointType;
 import crcl.base.PoseType;

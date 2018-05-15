@@ -228,8 +228,6 @@
                     <include>**/*.properties</include>
                     <include>**/*.xml</include>
                     <include>**/*.txt</include>
-                    <include>**/*.jpeg</include>
-                    <include>**/*.png</include>
                 </includes>
             </resource>
             <resource>
@@ -239,7 +237,9 @@
                     <include>**/*.scss</include>
                     <include>**/*.jpg</include>
                     <include>**/*.png</include>
+                    <include>**/*.wav</include>
                     <include>**/*.ico</include>
+                    <include>**/*.jpeg</include>
                 </includes>
             </resource>
         </resources>

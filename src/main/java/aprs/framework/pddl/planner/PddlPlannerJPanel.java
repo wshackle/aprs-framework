@@ -23,9 +23,9 @@
 package aprs.framework.pddl.planner;
 
 import aprs.framework.pddl.executor.PddlExecutorJInternalFrame;
-import aprs.framework.AprsSystemInterface;
+import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.DisplayInterface;
-import aprs.framework.PddlAction;
+import aprs.framework.pddl.executor.PddlAction;
 import aprs.framework.Utils;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
@@ -1067,7 +1067,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     }
 
     @Override
-    public File getPropertiesFile() {
+    @Nullable public File getPropertiesFile() {
        return propertiesFile;
     }
 }

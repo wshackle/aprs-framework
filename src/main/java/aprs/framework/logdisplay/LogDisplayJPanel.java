@@ -22,7 +22,7 @@
  */
 package aprs.framework.logdisplay;
 
-import aprs.framework.AprsSystemInterface;
+import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.Utils;
 import java.awt.Component;
 import java.awt.Desktop;

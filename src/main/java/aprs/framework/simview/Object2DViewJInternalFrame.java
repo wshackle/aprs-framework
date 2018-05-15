@@ -22,7 +22,7 @@
  */
 package aprs.framework.simview;
 
-import aprs.framework.AprsSystemInterface;
+import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.SlotOffsetProvider;
 import aprs.framework.database.PhysicalItem;
 import crcl.base.PointType;

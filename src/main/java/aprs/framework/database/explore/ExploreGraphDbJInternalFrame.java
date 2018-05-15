@@ -22,7 +22,7 @@
  */
 package aprs.framework.database.explore;
 
-import aprs.framework.AprsSystemInterface;
+import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupListener;
 import java.sql.SQLException;

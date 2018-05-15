@@ -23,8 +23,7 @@ package aprs.framework.pddl.executor;
 
 import aprs.framework.database.Slot;
 import aprs.framework.database.PartsTray;
-import aprs.framework.AprsSystemInterface;
-import aprs.framework.PddlAction;
+import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.Utils;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
@@ -2271,12 +2270,14 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
                     for (KitToCheck kit : kitsToFix) {
                         for (KitToCheckInstanceInfo info : kit.instanceInfoMap.values()) {
                             if (null != info.failedAbsSlotPrpName && null != info.failedItemSkuName) {
-//                                JOptionPane.showMessageDialog(this.aprsJFrame, kit.name + " needs " + kit.slotMap.get(info.failedAbsSlotPrpName) + " instead of " + info.failedItemSkuName + " in " + info.failedAbsSlotPrpName);
-                                break;
+                                String errmsg = kit.name + " needs " + kit.slotMap.get(info.failedAbsSlotPrpName) + " instead of " + info.failedItemSkuName + " in " + info.failedAbsSlotPrpName;
+                                logger.log(Level.SEVERE, errmsg);
+//                                JOptionPane.showMessageDialog(this.aprsJFrame,errmsg); 
+                                throw new IllegalStateException(errmsg);
                             }
                         }
                     }
-                    pause(action, cmds);
+                    checkedPause();
                 } else {
                     Map<String, Integer> prefixCountMap = new HashMap<>();
                     Map<String, List<String>> itemsNameMap = new HashMap<>();
@@ -2438,6 +2439,7 @@ public class PddlActionToCrclGenerator implements DbSetupListener, AutoCloseable
             }
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
         }
     }
 

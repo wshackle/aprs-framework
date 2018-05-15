@@ -22,7 +22,7 @@
  */
 package aprs.framework.database;
 
-import aprs.framework.AprsSystemInterface;
+import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.spvision.VisionToDBJPanel;
 import aprs.framework.DisplayInterface;
 import aprs.framework.Utils;

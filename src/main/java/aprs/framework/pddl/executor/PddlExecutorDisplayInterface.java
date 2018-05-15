@@ -22,9 +22,8 @@
  */
 package aprs.framework.pddl.executor;
 
-import aprs.framework.AprsSystemInterface;
+import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.DisplayInterface;
-import aprs.framework.PddlAction;
 import java.io.IOException;
 import java.util.List;
 

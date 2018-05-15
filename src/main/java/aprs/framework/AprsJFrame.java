@@ -22,6 +22,9 @@
  */
 package aprs.framework;
 
+import aprs.framework.system.AprsSystemInterface;
+import aprs.framework.misc.ActiveWinEnum;
+import aprs.framework.pddl.executor.PddlAction;
 import aprs.framework.database.DbSetup;
 import aprs.framework.database.DbSetupBuilder;
 import aprs.framework.database.DbSetupJInternalFrame;
@@ -121,6 +124,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.utils.CrclCommandWrapper;
+import java.awt.Toolkit;
 import java.io.FileWriter;
 import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
@@ -527,6 +531,7 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
     public void pauseCrclProgram() {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.pauseCrclProgram();
+            LauncherAprsJFrame.PlayAlert2();
         }
     }
 
@@ -1725,7 +1730,6 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
     @Nullable
     private PrintStream origErr = null;
 
-
     static private class MyPrintStream extends PrintStream {
 
         final private PrintStream ps;
@@ -2212,7 +2216,7 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
                 startPddlPlanner();
             }
             if (jCheckBoxMenuItemStartupPDDLExecutor.isSelected()) {
-                startExecutorJInternalFrame();
+                startActionListExecutor();
             }
             if (jCheckBoxMenuItemStartupObjectSP.isSelected()) {
                 startVisionToDbJinternalFrame();
@@ -2506,7 +2510,6 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
     }
 
     private ActiveWinEnum activeWin = ActiveWinEnum.OTHER;
-
 
     private ActiveWinEnum stringToWin(String str) {
         if (str.startsWith("CRCL Client")) {
@@ -2905,7 +2908,7 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
      * Start the PDDL Executor (aka Actions to CRCL) and create and display the
      * window for displaying its output.
      */
-    public void startExecutorJInternalFrame() {
+    public void startActionListExecutor() {
         try {
             Utils.runAndWaitOnDispatchThread("startActionsToCrclJInternalFrame",
                     () -> {
@@ -3439,7 +3442,7 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
     private void jCheckBoxMenuItemStartupPDDLExecutorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupPDDLExecutorActionPerformed
         try {
             if (jCheckBoxMenuItemStartupPDDLExecutor.isSelected()) {
-                startExecutorJInternalFrame();
+                startActionListExecutor();
             } else {
                 closeActionsToCrclJInternalFrame();
             }
@@ -3596,7 +3599,6 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
 
 //    @Nullable
 //    CRCLWebAppRunner crclWebAppRunner = null;
-
 //    private void stopCrclWebApp() {
 //        if (null != crclWebAppRunner) {
 //            crclWebAppRunner.stop();
@@ -3609,7 +3611,6 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
 //        crclWebAppRunner.setHttpPort(crclWebServerHttpPort);
 //        crclWebAppRunner.start();
 //    }
-
     private int crclWebServerHttpPort = 8081;
 
 
@@ -4773,6 +4774,7 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
      * cause future actions to wait until resume is called.
      */
     public void pause() {
+        LauncherAprsJFrame.PlayAlert2();
         boolean badState = resuming;
         pauseInternal();
         badState = badState || resuming;
@@ -5727,16 +5729,16 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
                 this.pddlPlannerJInternalFrame.loadProperties();
             }
             if (null != this.pddlExecutorJInternalFrame1) {
-                XFuture<Void> loadPropertiesFuture =
-                        XFuture.runAsync("loadProperties", () -> {
-                    try {
-                        if (null != this.pddlExecutorJInternalFrame1) {
-                            this.pddlExecutorJInternalFrame1.loadProperties();
-                        }
-                    } catch (IOException ex) {
-                        Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }, runProgramService);
+                XFuture<Void> loadPropertiesFuture
+                        = XFuture.runAsync("loadProperties", () -> {
+                            try {
+                                if (null != this.pddlExecutorJInternalFrame1) {
+                                    this.pddlExecutorJInternalFrame1.loadProperties();
+                                }
+                            } catch (IOException ex) {
+                                Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }, runProgramService);
                 loadPropertiesFuture.join();
             }
 
@@ -6241,7 +6243,10 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
 
     private void disconnectDatabase() {
 
-        assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
+        if(null == dbSetupJInternalFrame) {
+            return;
+        }
+//        assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
         try {
             dbConnected = false;
             if (null != connectDatabaseFuture) {

@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.AprsJFrame.saveProperties()
+#  Automatically saved by aprs.framework.system.AprsSystem.saveProperties()
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 USETEACHTABLE=true
 aprs.robotName=Sim_Fanuc
