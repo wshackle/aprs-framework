@@ -1,7 +1,0 @@
-#  Automatically saved by aprs.framework.pddl.planner.PddlPlannerJPanel.saveProperties() at PddlPlannerJPanel.java:1122
-pddl.addargs=-I -n
-pddl.domain=domain-kitting.pddl
-pddl.planner.host=localhost
-pddl.planner.ssh=false
-pddl.problem=problem-a2b1c1.pddl
-program.executable=popf3-clp
