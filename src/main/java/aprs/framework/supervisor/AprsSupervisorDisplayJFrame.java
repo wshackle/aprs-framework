@@ -37,13 +37,10 @@ import aprs.framework.colortextdisplay.ColorTextJPanel;
 import aprs.framework.database.PhysicalItem;
 import aprs.framework.pddl.executor.PositionMap;
 import aprs.framework.pddl.executor.PositionMapEntry;
-import aprs.framework.pddl.executor.PositionMapJPanel;
 import aprs.framework.process.launcher.ProcessLauncherJFrame;
 import aprs.framework.screensplash.SplashScreen;
 import aprs.framework.simview.Object2DOuterJPanel;
 
-import crcl.base.CRCLStatusType;
-import crcl.base.CommandStateEnumType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import crcl.ui.misc.MultiLineStringJPanel;
@@ -61,7 +58,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -81,7 +77,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Deque;
 import java.util.EventObject;
 import java.util.HashMap;
 import java.util.List;
@@ -96,9 +91,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -2774,7 +2767,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         prepAndFinishOnDispatch(() -> {
             immediateAbortAll("jCheckBoxMenuItemContinousDemoActionPerformed");
-            clearEventLog();
+            privateClearEventLog();
             clearAllErrors();
             connectAll();
             setAllReverseFlag(false);
@@ -2800,8 +2793,12 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemPauseActionPerformed
 
+    
     public void clearEventLog() {
         ((DefaultTableModel) jTableEvents.getModel()).setRowCount(0);
+    }
+    
+    private void privateClearEventLog() {    
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -2819,7 +2816,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private void jCheckBoxMenuItemRandomTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemRandomTestActionPerformed
         prepAndFinishOnDispatch(() -> {
             immediateAbortAll("jCheckBoxMenuItemRandomTestActionPerformed");
-            clearEventLog();
+            privateClearEventLog();
             clearAllErrors();
             connectAll();
             setAllReverseFlag(false);
@@ -3150,7 +3147,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             jCheckBoxMenuItemContinousDemo.setSelected(false);
             prepAndFinishOnDispatch(() -> {
                 immediateAbortAll("jCheckBoxMenuItemIndContinousDemoActionPerformed");
-                clearEventLog();
+                privateClearEventLog();
                 clearAllErrors();
                 connectAll();
                 setAllReverseFlag(jCheckBoxMenuItemContDemoReverseFirstOption.isSelected());
@@ -3195,7 +3192,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         prepAndFinishOnDispatch(() -> {
             immediateAbortAll("jCheckBoxMenuItemIndRandomToggleTestActionPerformed", true)
                     .thenRun(() -> {
-                        clearEventLog();
+                        privateClearEventLog();
                         clearAllErrors();
                         connectAll();
                         setAllReverseFlag(false);
@@ -3361,8 +3358,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private void jMenuItemStartContinousScanAndRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartContinousScanAndRunActionPerformed
         jCheckBoxMenuItemContinousDemoRevFirst.setSelected(false);
         prepAndFinishOnDispatch(() -> {
-            immediateAbortAll("jCheckBoxMenuItemContinousDemoActionPerformed");
-            clearEventLog();
+            immediateAbortAll("jMenuItemStartContinousScanAndRunActionPerformed");
+            privateClearEventLog();
             clearAllErrors();
             connectAll();
             setAllReverseFlag(false);
