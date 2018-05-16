@@ -49,8 +49,6 @@ import crcl.ui.misc.MultiLineStringJPanel;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.GraphicsDevice;
 import java.awt.HeadlessException;
 import java.awt.Image;
@@ -117,13 +115,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
-import javax.swing.JTree;
 import javax.swing.Timer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -141,6 +136,10 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jcodec.api.awt.AWTSequenceEncoder;
+import org.jcodec.common.io.NIOUtils;
+import org.jcodec.common.io.SeekableByteChannel;
+import org.jcodec.common.model.Rational;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -163,7 +162,7 @@ public class Supervisor {
         return slotProvidersMap;
     }
 
-    public AprsSupervisorSlotOffsetProvider getSlotOffsetProvider() {
+    public final SlotOffsetProvider getSlotOffsetProvider() {
         return slotOffsetProvider;
     }
 
@@ -172,8 +171,6 @@ public class Supervisor {
      */
     @SuppressWarnings("initialization")
     private Supervisor(@Nullable AprsSupervisorDisplayJFrame displayJFrame) {
-
-//        TableCellEditor tce = jTableRobots.getCellEditor();
         this.displayJFrame = displayJFrame;
         this.object2DOuterJPanel1 = (displayJFrame != null)
                 ? displayJFrame.getObject2DOuterJPanel1()
@@ -202,6 +199,8 @@ public class Supervisor {
         togglesAllowedXfuture = new AtomicReference<>(createFirstWaitForTogglesFuture(newWaitForTogglesFutures, newWaitForTogglesFutureCount));
         if (null != displayJFrame) {
             displayJFrame.setRobotEnableMap(robotEnableMap);
+            displayJFrame.setRecordLiveImageMovieSelected(recordLiveImageMovieSelected);
+            object2DOuterJPanel1.setSlotOffsetProvider(this.getSlotOffsetProvider());
         }
     }
 
@@ -924,7 +923,7 @@ public class Supervisor {
         }
     }
 
-    public XFuture<Void> getStealAbortFuture() {
+    @Nullable public XFuture<Void> getStealAbortFuture() {
         return stealAbortFuture;
     }
 
@@ -932,7 +931,7 @@ public class Supervisor {
         this.stealAbortFuture = stealAbortFuture;
     }
 
-    public XFuture<Void> getUnstealAbortFuture() {
+    @Nullable public XFuture<Void> getUnstealAbortFuture() {
         return unstealAbortFuture;
     }
 
@@ -1218,6 +1217,25 @@ public class Supervisor {
         } else {
             return XFutureVoid.completedFutureWithName("showMessageFullScreen " + message);
         }
+    }
+
+    @MonotonicNonNull private AprsSystemInterface posMapInSys = null;
+    @MonotonicNonNull private AprsSystemInterface posMapOutSys = null;
+
+    @Nullable public AprsSystemInterface getPosMapInSys() {
+        return posMapInSys;
+    }
+
+    public void setPosMapInSys(AprsSystemInterface posMapInSys) {
+        this.posMapInSys = posMapInSys;
+    }
+
+    @Nullable public AprsSystemInterface getPosMapOutSys() {
+        return posMapOutSys;
+    }
+
+    public void setPosMapOutSys(AprsSystemInterface posMapOutSys) {
+        this.posMapOutSys = posMapOutSys;
     }
 
     private final AtomicInteger stealRobotNumber = new AtomicInteger();
@@ -1957,7 +1975,7 @@ public class Supervisor {
 
     private final AtomicBoolean ignoreTitleErrors = new AtomicBoolean(false);
 
-    public XFuture<Void> getLastSafeAbortAllFuture() {
+    @Nullable public XFuture<Void> getLastSafeAbortAllFuture() {
         return lastSafeAbortAllFuture;
     }
 
@@ -1965,7 +1983,7 @@ public class Supervisor {
         this.lastSafeAbortAllFuture = lastSafeAbortAllFuture;
     }
 
-    public XFuture<Void> getLastSafeAbortAllFuture2() {
+    @Nullable public XFuture<Void> getLastSafeAbortAllFuture2() {
         return lastSafeAbortAllFuture2;
     }
 
@@ -2034,7 +2052,7 @@ public class Supervisor {
         }
     }
 
-    public NamedCallable<XFuture<Void>> getReturnRobotNamedCallable() {
+    @Nullable public NamedCallable<XFuture<Void>> getReturnRobotNamedCallable() {
         return returnRobotRunnable.get();
     }
 
@@ -2059,8 +2077,8 @@ public class Supervisor {
         System.out.println("continousDemoFuture = " + continousDemoFuture);
         printStatus(continousDemoFuture, System.out);
 
-        System.out.println("randomTest = " + randomTest);
-        printStatus(randomTest, System.out);
+        System.out.println("randomTest = " + randomTestFuture);
+        printStatus(randomTestFuture, System.out);
 
         System.out.println("togglesAllowedXfuture = " + togglesAllowedXfuture);
         printStatus(togglesAllowedXfuture, System.out);
@@ -2130,6 +2148,11 @@ public class Supervisor {
 
     public void close() {
         closing = true;
+        try {
+            finishEncodingLiveImageMovie();
+        } catch (Exception ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+        }
         if (null != runTimeTimer) {
             runTimeTimer.stop();
             runTimeTimer = null;
@@ -2201,8 +2224,8 @@ public class Supervisor {
         if (null != mainFuture) {
             mainFuture.cancelAll(true);
         }
-        if (null != randomTest) {
-            randomTest.cancelAll(true);
+        if (null != randomTestFuture) {
+            randomTestFuture.cancelAll(true);
         }
 
         this.setVisible(false);
@@ -2261,7 +2284,15 @@ public class Supervisor {
     private final AtomicReference<@Nullable XFuture<Void>> resumeFuture = new AtomicReference<>(null);
 
     @Nullable
-    private volatile XFuture<Void> randomTest = null;
+    private volatile XFuture<Void> randomTestFuture = null;
+
+    @Nullable public XFuture<Void> getRandomTestFuture() {
+        return randomTestFuture;
+    }
+
+    public void setRandomTestFuture(@Nullable XFuture<Void> randomTestFuture) {
+        this.randomTestFuture = randomTestFuture;
+    }
 
     public void clearEventLog() {
         abortEventTime = -1;
@@ -2284,9 +2315,9 @@ public class Supervisor {
             lastFutureReturned.cancelAll(true);
             lastFutureReturned = null;
         }
-        if (null != randomTest) {
-            randomTest.cancelAll(true);
-            randomTest = null;
+        if (null != randomTestFuture) {
+            randomTestFuture.cancelAll(true);
+            randomTestFuture = null;
         }
         if (null != continousDemoFuture) {
             continousDemoFuture.cancelAll(true);
@@ -2312,34 +2343,34 @@ public class Supervisor {
     public void resetMainPauseTestFuture() {
         resetMainPauseCount++;
         if (null == continousDemoFuture) {
-            if (null == randomTest) {
-                if (null == pauseTest) {
+            if (null == randomTestFuture) {
+                if (null == pauseTestFuture) {
                     mainFuture = (XFuture<?>) XFuture.completedFutureWithName("resetMainPauseTestFuture" + resetMainPauseCount, null);
                     return;
                 }
-                mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, pauseTest);
+                mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, pauseTestFuture);
                 return;
             }
-            if (null == pauseTest) {
-                mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, randomTest);
+            if (null == pauseTestFuture) {
+                mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, randomTestFuture);
                 return;
             }
-            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, randomTest, pauseTest);
+            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, randomTestFuture, pauseTestFuture);
             return;
         }
-        if (null == randomTest) {
-            if (null == pauseTest) {
+        if (null == randomTestFuture) {
+            if (null == pauseTestFuture) {
                 mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture);
                 return;
             }
-            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, pauseTest);
+            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, pauseTestFuture);
             return;
         }
-        if (null == pauseTest) {
-            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, randomTest);
+        if (null == pauseTestFuture) {
+            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, randomTestFuture);
             return;
         }
-        mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, randomTest, pauseTest);
+        mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, randomTestFuture, pauseTestFuture);
     }
 
     public XFuture<Void> startContinuousDemoRevFirst() {
@@ -2381,7 +2412,7 @@ public class Supervisor {
                                                 setAllReverseFlag(true);
                                                 enableAllRobots();
                                                 continousDemoCycle.set(0);
-                                                randomTestCount.set(0);
+                                                clearRandomTestCount();
                                                 setContinousDemoRevFirstSelected(true);
                                                 setRandomTestSelected(true);
                                                 lastFutureReturned = null;
@@ -2422,9 +2453,9 @@ public class Supervisor {
 //        assert (randomTest != null) : "(randomTest == null) :  @AssumeAssertion(nullness)";
 //        assert (continousDemoFuture != null) : "(continousDemoFuture == null)  :  @AssumeAssertion(nullness)";
 
-        if (null != randomTest && null != continousDemoFuture) {
+        if (null != randomTestFuture && null != continousDemoFuture) {
             resetMainRandomTestCount++;
-            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainRandomTestFuture" + resetMainRandomTestCount, randomTest, continousDemoFuture);
+            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainRandomTestFuture" + resetMainRandomTestCount, randomTestFuture, continousDemoFuture);
             mainFuture.exceptionally((thrown) -> {
                 if (thrown != null) {
                     log(Level.SEVERE, "", thrown);
@@ -2438,6 +2469,14 @@ public class Supervisor {
     }
 
     private int randomTestSeed = 959;
+
+    public int getRandomTestSeed() {
+        return randomTestSeed;
+    }
+
+    public void setRandomTestSeed(int randomTestSeed) {
+        this.randomTestSeed = randomTestSeed;
+    }
 
     private static String getDirNameOrHome(@Nullable File f) throws IOException {
         if (f != null) {
@@ -2925,7 +2964,7 @@ public class Supervisor {
         continousDemoFuture = f1;
         setContinousDemoSelected(true);
         XFuture<Void> f2 = continueRandomTest();
-        randomTest = f2;
+        randomTestFuture = f2;
         resetMainRandomTestFuture();
         return XFuture.allOfWithName("startRandomTestStep2.allOff" + c, f2, f1);
     }
@@ -2935,12 +2974,20 @@ public class Supervisor {
         continousDemoFuture = f1;
         setContinousDemoSelected(true);
         XFuture<Void> f2 = continueRandomTest();
-        randomTest = f2;
+        randomTestFuture = f2;
         resetMainRandomTestFuture();
         return XFuture.allOfWithName("startRandomTestStep2.allOff", f1, f2);
     }
 
     private Random random = new Random(System.currentTimeMillis());
+
+    public Random getRandom() {
+        return random;
+    }
+
+    public void setRandom(Random random) {
+        this.random = random;
+    }
 
     private XFuture<Void> startRandomDelay(String name, final int millis, final int min_millis) {
         final long val = random.nextInt(millis) + 10 + min_millis;
@@ -3124,7 +3171,7 @@ public class Supervisor {
     private static final String MOTOMAN_NAME = "motoman";
     private static final String SIM_MOTOMAN_NAME = "sim_motoman";
     private static final Set<String> robotsThatCanBeDisabled
-            = new HashSet<>(Arrays.asList(MOTOMAN_NAME,SIM_MOTOMAN_NAME));
+            = new HashSet<>(Arrays.asList(MOTOMAN_NAME, SIM_MOTOMAN_NAME));
 
     public XFuture<Boolean> toggleRobotEnabled() {
         if (isPauseSelected()) {
@@ -3158,16 +3205,20 @@ public class Supervisor {
 
     private final AtomicInteger randomTestCount = new AtomicInteger();
 
+    public void clearRandomTestCount() {
+        randomTestCount.set(0);
+    }
+
     private XFuture<Void> updateRandomTestCount() {
+        int count = randomTestCount.incrementAndGet();
         XFuture<Void> xf
-                = Utils.runOnDispatchThread("updateRandomTest.runOnDispatchThread" + randomTestCount.get(),
+                = Utils.runOnDispatchThread("updateRandomTest.runOnDispatchThread" + count,
                         () -> {
-                            int count = randomTestCount.incrementAndGet();
                             System.out.println("updateRandomTestCount count = " + count);
                         });
         if (null != displayJFrame) {
             final AprsSupervisorDisplayJFrame jfrm = displayJFrame;
-            return xf.thenCompose(x -> jfrm.updateRandomTestCount());
+            return xf.thenCompose(x -> jfrm.updateRandomTestCount(count));
         }
         return xf;
     }
@@ -3202,7 +3253,15 @@ public class Supervisor {
     }
 
     @Nullable
-    private volatile XFuture<Void> pauseTest = null;
+    private volatile XFuture<Void> pauseTestFuture = null;
+
+    @Nullable public XFuture<Void> getPauseTestFuture() {
+        return pauseTestFuture;
+    }
+
+    public void setPauseTestFuture(@Nullable XFuture<Void> pauseTestFuture) {
+        this.pauseTestFuture = pauseTestFuture;
+    }
 
     public XFuture<Void> continuePauseTest() {
         if (!allSystemsOk()) {
@@ -3231,12 +3290,12 @@ public class Supervisor {
                 .thenCompose(x -> startRandomDelay("pauseTest", 1000, 1000))
                 .thenCompose("pauseTest.resume" + pauseCount.get(),
                         x -> Utils.runOnDispatchThread(this::resume));
-        pauseTest = ret;
+        pauseTestFuture = ret;
         resetMainPauseTestFuture();
         ret
                 .thenCompose("pauseTest.recurse" + pauseCount.get(),
                         x -> continuePauseTest());
-        pauseTest = ret;
+        pauseTestFuture = ret;
         return ret;
     }
 
@@ -3281,7 +3340,7 @@ public class Supervisor {
                     }
                 })
                 .thenComposeAsync("continueRandomTest.recurse" + randomTestCount.get(), x -> continueRandomTest(), randomDelayExecutorService);
-        randomTest = ret;
+        randomTestFuture = ret;
         resetMainRandomTestFuture();
         return ret;
     }
@@ -3419,7 +3478,7 @@ public class Supervisor {
                 = startCheckAndEnableAllRobots()
                         .thenCompose("startIndContinousDemo", ok -> checkOkElse(ok, this::startAllIndContinousDemo, this::showCheckEnabledErrorSplash));
         continousDemoFuture = ret;
-        if (null != randomTest && isIndRandomToggleTestSelected()) {
+        if (null != randomTestFuture && isIndRandomToggleTestSelected()) {
             resetMainRandomTestFuture();
         }
         return ret;
@@ -3521,7 +3580,7 @@ public class Supervisor {
                                     .thenComposeAsync("continueContinousScanAndRun.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
                                     .thenComposeAsync("continueContinousScanAndRun.recurse" + continousDemoCycle.get(), ok -> checkOkElse(ok && checkMaxCycles(), this::continueContinousScanAndRun, this::showCheckEnabledErrorSplash), supervisorExecutorService);
                     continousDemoFuture = ret;
-                    if (null != randomTest) {
+                    if (null != randomTestFuture) {
                         if (isRandomTestSelected()) {
                             resetMainRandomTestFuture();
                         } else if (isRandomTestSelected()) {
@@ -3570,7 +3629,7 @@ public class Supervisor {
                                     .thenComposeAsync("continueContinousDemo.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
                                     .thenComposeAsync("continueContinousDemo.recurse" + continousDemoCycle.get(), ok -> checkOkElse(ok && checkMaxCycles(), this::continueContinousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
                     continousDemoFuture = ret;
-                    if (null != randomTest) {
+                    if (null != randomTestFuture) {
                         if (isRandomTestSelected()) {
                             resetMainRandomTestFuture();
                         } else if (isRandomTestSelected()) {
@@ -3930,7 +3989,7 @@ public class Supervisor {
             }
         }
         continousDemoFuture = XFuture.allOfWithName("continueSingleContinousDemo.allOf(" + tasksNames.toString() + ").recurseNum=" + recurseNum, futures);
-        if (null != randomTest) {
+        if (null != randomTestFuture) {
             resetMainRandomTestFuture();
         }
         return ret;
@@ -4142,7 +4201,7 @@ public class Supervisor {
     public boolean isResuming() {
         return resuming;
     }
-    
+
     public XFuture<?> continueAll() {
         logEvent("Continoue All : " + continousDemoCycle.get());
         stealingRobots = false;
@@ -4256,9 +4315,9 @@ public class Supervisor {
             unstealAbortFuture = null;
         }
         cancelAllStealUnsteal(mayInterrupt);
-        if (null != randomTest) {
-            randomTest.cancelAll(mayInterrupt);
-            randomTest = null;
+        if (null != randomTestFuture) {
+            randomTestFuture.cancelAll(mayInterrupt);
+            randomTestFuture = null;
         }
     }
 
@@ -4355,7 +4414,7 @@ public class Supervisor {
                 });
     }
 
-    public NamedCallable<XFuture<Void>> getSafeAbortReturnRobot() {
+    @Nullable public NamedCallable<XFuture<Void>> getSafeAbortReturnRobot() {
         return safeAbortReturnRobot;
     }
 
@@ -4740,7 +4799,7 @@ public class Supervisor {
             }, getSupervisorExecutorService()).thenCompose(x -> showAllTasksCompleteDisplay());
         });
     }
-    
+
     public void performRemoveSelectedSystemAction(int selectedIndex) {
         if (selectedIndex >= 0 && selectedIndex < aprsSystems.size()) {
             try {
@@ -4761,10 +4820,9 @@ public class Supervisor {
 
     public void performSafeAbortAllAction() {
         incrementAndGetAbortCount();
-        NamedCallable<XFuture<Void>> safeAbortReturnRobot = getReturnRobotNamedCallable();
-        setSafeAbortReturnRobot(safeAbortReturnRobot);
+        safeAbortReturnRobot = getReturnRobotNamedCallable();
         logEvent("User requested safeAbortAll : safeAbortReturnRobot=" + safeAbortReturnRobot);
-        XFuture<Void> rf = randomTest;
+        XFuture<Void> rf = randomTestFuture;
         if (null != rf) {
             rf.cancelAll(false);
         }
@@ -4806,7 +4864,7 @@ public class Supervisor {
         }
     }
 
-    private void saveTeachProps(File f) throws IOException {
+    public void saveTeachProps(File f) throws IOException {
         object2DOuterJPanel1.setPropertiesFile(f);
         object2DOuterJPanel1.saveProperties();
         saveLastTeachPropsFile(f);
@@ -4911,6 +4969,121 @@ public class Supervisor {
 
     private final ConcurrentHashMap<Integer, String> titleErrorMap = new ConcurrentHashMap<>();
 
+    private volatile long liveImageStartTime = 0;
+    private volatile long liveImageLastTime = 0;
+    private volatile int liveImageFrameCount = 0;
+    private volatile int lastLiveImageFrameCount = 0;
+    private volatile @Nullable SeekableByteChannel liveImageMovieByteChannel = null;
+    private volatile @Nullable AWTSequenceEncoder liveImageMovieEncoder = null;
+    private volatile @Nullable File liveImageMovieFile = null;
+    private volatile @Nullable File lastLiveImageMovieFile = null;
+
+    public synchronized void startEncodingLiveImageMovie(BufferedImage image) {
+
+        try {
+            if (null == image) {
+                throw new IllegalArgumentException("null == image");
+            }
+            liveImageStartTime = System.currentTimeMillis();
+            File movieFile = Utils.createTempFile("liveImage", ".mp4");
+            if (null == movieFile) {
+                throw new IllegalStateException("null == liveImageMovieFile");
+            }
+            liveImageMovieFile = movieFile;
+            System.out.println("startEncodingLiveImageMovie: liveImageMovieFile = " + movieFile);
+            SeekableByteChannel byteChannel = NIOUtils.writableChannel(movieFile);
+            this.liveImageMovieByteChannel = byteChannel;
+            liveImageMovieEncoder = new AWTSequenceEncoder(byteChannel, Rational.R(25, 1));
+            liveImageMovieEncoder.encodeImage(image);
+            liveImageFrameCount = 1;
+        } catch (IOException ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+            finishEncodingLiveImageMovie();
+        }
+    }
+
+    private boolean recordLiveImageMovieSelected = Boolean.getBoolean("recordLiveImageMovie");
+
+    /**
+     * Get the value of recordLiveImageMovieSelected
+     *
+     * @return the value of recordLiveImageMovieSelected
+     */
+    public boolean isRecordLiveImageMovieSelected() {
+        if (null != displayJFrame) {
+            boolean ret = displayJFrame.isRecordLiveImageMovieSelected();
+            recordLiveImageMovieSelected = ret;
+            return ret;
+        }
+        return recordLiveImageMovieSelected;
+    }
+
+    /**
+     * Set the value of recordLiveImageMovieSelected
+     *
+     * @param recordLiveImageMovieSelected new value of
+     * recordLiveImageMovieSelected
+     */
+    public void setRecordLiveImageMovieSelected(boolean recordLiveImageMovieSelected) {
+        if (null != displayJFrame) {
+            displayJFrame.setRecordLiveImageMovieSelected(recordLiveImageMovieSelected);
+        }
+        this.recordLiveImageMovieSelected = recordLiveImageMovieSelected;
+    }
+
+    private final int MAX_LIVE_IMAGE_MOVIE_FRAMES = 6000;
+
+    public synchronized void continueEncodingLiveImageMovie(BufferedImage image) {
+        try {
+            if (null == liveImageMovieFile) {
+                throw new IllegalStateException("null == liveImageMovieFile");
+            }
+            if (null == liveImageMovieEncoder) {
+                throw new IllegalStateException("null == liveImageMovieEncoder");
+            }
+            if (liveImageFrameCount > MAX_LIVE_IMAGE_MOVIE_FRAMES) {
+                finishEncodingLiveImageMovie();
+                startEncodingLiveImageMovie(image);
+                return;
+            }
+            liveImageMovieEncoder.encodeImage(image);
+            liveImageFrameCount++;
+            liveImageLastTime = System.currentTimeMillis();
+        } catch (IOException ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+            finishEncodingLiveImageMovie();
+        }
+    }
+
+    public synchronized void finishEncodingLiveImageMovie() {
+        try {
+            if (null != liveImageMovieEncoder) {
+                liveImageMovieEncoder.finish();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if (null != liveImageMovieByteChannel) {
+                NIOUtils.closeQuietly(liveImageMovieByteChannel);
+                liveImageMovieByteChannel = null;
+            }
+            liveImageMovieEncoder = null;
+            lastLiveImageMovieFile = liveImageMovieFile;
+            System.out.println("liveImageStartTime = " + liveImageStartTime);
+            System.out.println("liveImageLastTime = " + liveImageStartTime);
+            int secs = (int) (500+ liveImageLastTime - liveImageStartTime) / 1000;
+            System.out.println("secs = " + secs);
+            System.out.println("liveImageFrameCount = " + liveImageFrameCount);
+            if (secs > 0) {
+                System.out.println("(liveImageFrameCount/secs) = " + (liveImageFrameCount / secs));
+            }
+            System.out.println("finishEncodingLiveImageMovie: lastLiveImageMovieFile = " + lastLiveImageMovieFile);
+            liveImageMovieFile = null;
+            lastLiveImageFrameCount = liveImageFrameCount;
+            liveImageFrameCount = 0;
+        }
+    }
+
     private void updateTasksTable() {
         if (closing) {
             return;
@@ -4923,6 +5096,8 @@ public class Supervisor {
             lastUpdateTaskTableTaskNames = new String[aprsSystems.size()];
             needSetJListFuturesModel = true;
         }
+        BufferedImage liveImages[] = new BufferedImage[aprsSystems.size()];
+        boolean newImage = false;
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystemInterface aprsJframe = aprsSystems.get(i);
             String taskName = aprsJframe.getTaskName();
@@ -4945,37 +5120,41 @@ public class Supervisor {
                     pause();
                 }
             }
-            tm.addRow(new Object[]{aprsJframe.getPriority(), taskName, aprsJframe.getRobotName(), aprsJframe.getScanImage(), aprsJframe.getLiveImage(), aprsJframe.getDetailsString(), aprsJframe.getPropertiesFile()});
+            BufferedImage liveImage = aprsJframe.getLiveImage();
+            if (null != liveImage) {
+                liveImages[i] = liveImage;
+                newImage = true;
+            }
+            tm.addRow(new Object[]{aprsJframe.getPriority(), taskName, aprsJframe.getRobotName(), aprsJframe.getScanImage(), liveImage, aprsJframe.getDetailsString(), aprsJframe.getPropertiesFile()});
+        }
+        if (isRecordLiveImageMovieSelected()) {
+            combineAndEncodeLiveImages(newImage, liveImages);
         }
         completeUpdateTasksTable(needSetJListFuturesModel);
     }
 
-    public XFuture<Void> getResumeFuture() {
+    private synchronized void combineAndEncodeLiveImages(boolean newImage, BufferedImage[] liveImages) {
+        long t = System.currentTimeMillis();
+        if (newImage && (t - liveImageLastTime) > 40 && null != liveImages[0]) {
+            BufferedImage combinedImage = new BufferedImage(liveImages[0].getWidth(), liveImages[0].getHeight() * liveImages.length, liveImages[0].getType());
+            for (int i = 0; i < liveImages.length; i++) {
+                combinedImage.getGraphics().drawImage(liveImages[i], 0, i * liveImages[0].getHeight(), null);
+            }
+            if (liveImageFrameCount == 0) {
+                startEncodingLiveImageMovie(combinedImage);
+            } else {
+                continueEncodingLiveImageMovie(combinedImage);
+            }
+        }
+    }
+
+    @Nullable public XFuture<Void> getResumeFuture() {
         return resumeFuture.get();
     }
 
-    
     private void completeUpdateTasksTable(boolean needSetJListFuturesModel) {
         if (null != displayJFrame) {
             displayJFrame.completeUpdateTasksTable(needSetJListFuturesModel);
-        }
-    }
-
-    private volatile Supplier<@Nullable XFuture<?>> futureToDisplaySupplier = () -> mainFuture;
-
-    private static final int MAX_EXPAND_NODE_COUNT = 2000;
-    private static final int MAX_RECURSE_DEPTH = 100;
-
-    private static void expandAllNodes(JTree tree, int startingIndex, int rowCount, int startExpandCount, int recurseDepth) {
-        if (recurseDepth > MAX_RECURSE_DEPTH) {
-            return;
-        }
-        for (int i = startingIndex; i < rowCount; ++i) {
-            tree.expandRow(i);
-        }
-
-        if (tree.getRowCount() != rowCount && startExpandCount < MAX_EXPAND_NODE_COUNT) {
-            expandAllNodes(tree, rowCount, tree.getRowCount(), startExpandCount + (rowCount > startingIndex ? (rowCount - startingIndex) : 0), recurseDepth + 1);
         }
     }
 
@@ -5007,11 +5186,16 @@ public class Supervisor {
         } catch (NoSuchFieldException ex) {
             try {
                 f = clss.getField(name);
+
             } catch (NoSuchFieldException | SecurityException ex1) {
-                Logger.getLogger(Supervisor.class.getName()).log(Level.WARNING, null, ex1);
+                Logger.getLogger(Supervisor.class
+                        .getName()).log(Level.WARNING, null, ex1);
+
             }
         } catch (SecurityException ex) {
-            Logger.getLogger(Supervisor.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(Supervisor.class
+                    .getName()).log(Level.WARNING, null, ex);
+
         }
         if (f == null && clss.getSuperclass() != null && !Objects.equals(clss.getSuperclass(), Object.class
         )) {
@@ -5100,6 +5284,7 @@ public class Supervisor {
 
     static private DefaultMutableTreeNode xfutureToNode(XFuture<?> future, boolean showDoneFutures, boolean showUnnamedFutures, int depth) {
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(future);
+
         if (depth >= XFUTURE_MAX_DEPTH) {
             if (!firstDepthOverOccured) {
                 Logger.getLogger(AprsSystemInterface.class

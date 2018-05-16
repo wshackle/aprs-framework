@@ -125,6 +125,7 @@ import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.utils.CrclCommandWrapper;
 import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.FileWriter;
 import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
@@ -4089,7 +4090,7 @@ public class AprsJFrame extends javax.swing.JFrame implements AprsSystemInterfac
     }
 
     @Nullable
-    public Image getLiveImage() {
+    public BufferedImage getLiveImage() {
         if (!isConnected()) {
             return null;
         }
