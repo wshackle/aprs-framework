@@ -162,10 +162,10 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     }
 
     private static abstract class LineConsumer implements Consumer<String> {
-        
+
         public abstract boolean isFinished();
     };
-    
+
     static private class LogDisplayPanelOutputStream extends OutputStream {
 
         final private LogDisplayJPanel logDisplayJPanel;
@@ -175,7 +175,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             if (null == logDisplayJInternalFrame) {
                 throw new IllegalArgumentException("logDisplayJInteralFrame may not be null");
             }
-            this.lineConsumers =  new ArrayList<>(lineConsumers);
+            this.lineConsumers = new ArrayList<>(lineConsumers);
         }
 
         private StringBuffer sb = new StringBuffer();
@@ -187,7 +187,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 //            System.out.println("lineConsumers = " + lineConsumers);
             for (int i = 0; i < lineConsumers.size(); i++) {
                 LineConsumer consumer = lineConsumers.get(i);
-                if(consumer.isFinished()) {
+                if (consumer.isFinished()) {
                     lineConsumers.remove(consumer);
                 }
             }
@@ -196,7 +196,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             }
             for (int i = 0; i < lineConsumers.size(); i++) {
                 LineConsumer consumer = lineConsumers.get(i);
-                if(consumer.isFinished()) {
+                if (consumer.isFinished()) {
                     lineConsumers.remove(consumer);
                 }
             }
@@ -266,23 +266,58 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     public WrappedProcess addProcess(File directory, String... command) throws IOException {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
-        String cmdLine = String.join(" ", command);
+        String [] command2 = replaceDotDir(directory, command);
+        String cmdLine = String.join(" ", command2);
         this.jTabbedPaneProcesses.add(cmdLine, logPanel);
         OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
         lineConsumers = new ArrayList<>();
-        WrappedProcess wrappedProcess = new WrappedProcess(directory, errPrintStream, errPrintStream, command);
+        WrappedProcess wrappedProcess = new WrappedProcess(directory, errPrintStream, errPrintStream, command2);
         wrappedProcess.setDisplayComponent(logPanel);
         processes.add(wrappedProcess);
         return wrappedProcess;
     }
 
+    public static String replaceDotDir(File dir, String in) throws IOException {
+        if(!in.startsWith(".")) {
+            return in;
+        }
+        if(in.startsWith("./") || in.startsWith(".\\")) {
+            return dir.toString()+in.substring(1);
+        }
+        String tmpIn = in;
+        File parentFile = dir;
+        while((tmpIn.startsWith("../")  || tmpIn.startsWith("..\\")) && parentFile!=null) {
+            tmpIn = tmpIn.substring(3);
+            parentFile = parentFile.getParentFile();
+        }
+        if(null != parentFile && tmpIn.length() >0 && tmpIn.length() < in.length()) {
+            return parentFile.toString()+File.separator+tmpIn;
+        }
+        return in;
+    }
+    
+    public static String []replaceDotDir(File dir, String in[]) throws IOException {
+        for (int i = 0; i < in.length; i++) {
+            in[i]  = replaceDotDir(dir, in[i]);
+        }
+        return in;
+    }
+    
+    public static List<String> replaceDotDir(File dir, List<String> in) throws IOException {
+        for (int i = 0; i < in.size(); i++) {
+            in.set(i, replaceDotDir(dir, in.get(i)));
+        }
+        return in;
+    }
+    
     public WrappedProcess addProcess(File directory, List<String> command) throws IOException {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
-        String cmdLine = String.join(" ", command);
+        List<String> command2 = replaceDotDir(directory, command);
+        String cmdLine = String.join(" ", command2);
         this.jTabbedPaneProcesses.add(cmdLine, logPanel);
         OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
         lineConsumers = new ArrayList<>();
-        WrappedProcess wrappedProcess = new WrappedProcess(directory, errPrintStream, errPrintStream, command);
+        WrappedProcess wrappedProcess = new WrappedProcess(directory, errPrintStream, errPrintStream, command2);
         wrappedProcess.setDisplayComponent(logPanel);
         processes.add(wrappedProcess);
         return wrappedProcess;
@@ -374,6 +409,13 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         if (line.length() < 1) {
             return null;
         }
+        line = replaceVarsInLine(line, "%", "%");
+        line = replaceVarsInLine(line, "${", "}");
+        line = replaceVarsInLine(line, "$", " ");
+        line = replaceVarsInLine(line, "$", "\n");
+        line = replaceVarsInLine(line, "$", "\r");
+        line = replaceVarsInLine(line, "$", null);
+
         if (!line.startsWith("#")) {
             errorLineConsumers = new ArrayList<>();
             waitForFuture = null;
@@ -389,15 +431,16 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 String text = line.substring("#!recoverWaitFor".length()).trim();
                 final List<LineConsumer> containingList = errorLineConsumers;
                 LineConsumer consumer = new LineConsumer() {
-                    
+
                     private volatile boolean finished = false;
+
                     @Override
                     public void accept(String s) {
                         if (s.contains(text)) {
                             if (null != currentWaitForFuture) {
                                 currentWaitForFuture.complete();
                             }
-                            finished=true;
+                            finished = true;
                         }
                     }
 
@@ -414,8 +457,9 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 String text = line.substring("#!checkfail".length()).trim();
                 final List<LineConsumer> containingList = lineConsumers;
                 LineConsumer consumer = new LineConsumer() {
-                    
-                    private volatile boolean finished = false; 
+
+                    private volatile boolean finished = false;
+
                     @Override
                     public void accept(String s) {
                         if (s.contains(text)) {
@@ -454,19 +498,20 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 XFutureVoid xf = new XFutureVoid("#!waitfor " + text);
                 final List<LineConsumer> containingList = lineConsumers;
                 LineConsumer consumer = new LineConsumer() {
-                    
+
                     private volatile boolean finished = false;
+
                     @Override
                     public void accept(String s) {
                         if (s.contains(text)) {
                             xf.complete();
-                            finished=true;
+                            finished = true;
                         }
                     }
 
                     @Override
                     public boolean isFinished() {
-                       return finished;
+                        return finished;
                     }
                 };
                 containingList.add(consumer);
@@ -488,11 +533,54 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         return null;
     }
 
+    public String replaceVarsInLine(String line, String startString, @Nullable String endString) {
+        int varStartIndex = line.indexOf(startString);
+        int endStringLength = (null != endString) ? endString.length():0;
+        int startStringLength = startString.length();
+        while (varStartIndex >= 0) {
+
+            int varEndIndex
+                    = (endString != null)
+                            ? line.indexOf(endString, varStartIndex + startStringLength)
+                            : line.length();
+            if (varEndIndex <= varStartIndex) {
+                break;
+            }
+            String substring = line.substring(varStartIndex + startStringLength, varEndIndex);
+            boolean isidentifier = true;
+            for (int i = 0; i < substring.length(); i++) {
+                char c = substring.charAt(i);
+                if (i == 0 && !Character.isLetter(c)) {
+                    isidentifier = false;
+                    break;
+                }
+                if (c != '.' && c != '_' && !Character.isLetterOrDigit(c)) {
+                    isidentifier = false;
+                    break;
+                }
+            }
+            if (isidentifier) {
+                String env = System.getenv(substring);
+                if (null == env) {
+                    env = System.getProperty(substring);
+                }
+                if (null != env && env.length() > 0) {
+                    String linestart = line.substring(0, varStartIndex);
+                    String lineend = line.substring(varEndIndex + endStringLength);
+                    line = linestart + env + lineend;
+                    varEndIndex = linestart.length() + env.length();
+                }
+            }
+            varStartIndex = line.indexOf(startString, varEndIndex + 1);
+        }
+        return line;
+    }
+
     @SuppressWarnings({"unchecked", "raw_types"})
     public XFuture<Void> run(File f) throws IOException {
         List<XFutureVoid> futures = new ArrayList<>();
         stopLineSeen = false;
-        processLaunchDirectory = null;
+        processLaunchDirectory = f.getParentFile();
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while (null != (line = br.readLine())) {
@@ -539,12 +627,10 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     private void completeClose() {
         List<WrappedProcess> stopProcesses = new ArrayList<>();
-//        System.out.println("stopLines = " + stopLines);
         List<XFutureVoid> futures = new ArrayList<>();
         stopLineSeen = false;
         processLaunchDirectory = null;
         for (String line : stopLines) {
-//            System.out.println("line = " + line);
             try {
                 WrappedProcess p = parseLaunchFileLine(line, futures);
                 if (null != p) {
@@ -556,7 +642,6 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-//        System.out.println("stopProcesses = " + stopProcesses);
         for (WrappedProcess p : stopProcesses) {
             try {
                 if (!p.waitFor(5, TimeUnit.SECONDS)) {
@@ -568,7 +653,6 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                         .getName()).log(Level.SEVERE, null, ex);
             }
         }
-//        System.out.println("this.processes = " + this.processes);
         for (WrappedProcess wp : this.processes) {
             wp.close();
         }

@@ -119,7 +119,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.utils.CrclCommandWrapper;
-import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.FileWriter;
 import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
@@ -3591,6 +3591,7 @@ public class AprsSystem implements AprsSystemInterface {
      * match. Load this list into the PDDL executor.
      *
      */
+    @Override
     public void createActionListFromVision() {
         try {
             List<PhysicalItem> requiredItems = getObjectViewItems();
@@ -3617,7 +3618,7 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     @Nullable
-    public Image getLiveImage() {
+    public BufferedImage getLiveImage() {
         if (!isConnected()) {
             return null;
         }

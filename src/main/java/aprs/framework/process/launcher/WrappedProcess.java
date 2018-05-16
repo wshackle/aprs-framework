@@ -27,6 +27,7 @@ import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,8 +48,8 @@ public class WrappedProcess {
 
     private final Thread outputReaderThread;
     private final Thread errorReaderThread;
-    private final OutputStream outputPrintStream;
-    private final OutputStream errorPrintStream;
+    private final PrintStream outputPrintStream;
+    private final PrintStream errorPrintStream;
     private volatile Process process;
     private volatile boolean closed = false;
     private final XFuture<Process> xf;
@@ -123,6 +124,15 @@ public class WrappedProcess {
         errorReaderThread.start();
     }
 
+    private Process internalStart(ProcessBuilder pb) {
+        try {
+            return pb.start();
+        } catch (Exception ex) {
+            ex.printStackTrace(errorPrintStream);
+            throw new RuntimeException(ex);
+        }
+    }
+
     @SuppressWarnings("initialization")
     private WrappedProcess(ProcessBuilder pb, String cmdLine,
             OutputStream outputPrintStream, OutputStream errorPrintStream) {
@@ -130,13 +140,19 @@ public class WrappedProcess {
         this.cmdLine = cmdLine;
         pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
         pb.redirectError(ProcessBuilder.Redirect.PIPE);
-        this.errorPrintStream = errorPrintStream;
-        this.outputPrintStream = outputPrintStream;
+        this.errorPrintStream
+                = (errorPrintStream instanceof PrintStream)
+                        ? (PrintStream) errorPrintStream
+                        : new PrintStream(errorPrintStream);
+        this.outputPrintStream
+                = (outputPrintStream instanceof PrintStream)
+                        ? (PrintStream) outputPrintStream
+                        : new PrintStream(outputPrintStream);
         outputReaderThread = new Thread(this::readOutputStream, "outputReader:" + myNum + cmdLine);
         outputReaderThread.setDaemon(true);
         errorReaderThread = new Thread(this::readErrorStream, "errorReader:" + myNum + cmdLine);
         errorReaderThread.setDaemon(true);
-        xf = XFuture.supplyAsync(cmdLine, pb::start, processStarterService);
+        xf = XFuture.supplyAsync(cmdLine, ()->internalStart(pb), processStarterService);
         xf.thenAccept(this::setProcess);
     }
 
@@ -170,10 +186,10 @@ public class WrappedProcess {
 
     public boolean waitFor(long timeout,
             TimeUnit unit) throws InterruptedException {
-        System.out.println("waiting For cmdLine="+cmdLine+ ", process="+process+" ...");
+        System.out.println("waiting For cmdLine=" + cmdLine + ", process=" + process + " ...");
         if (null != process) {
-            boolean ret =  process.waitFor(timeout, unit);
-            System.out.println("waitFor cmdLine="+cmdLine+ " returning "+ret);
+            boolean ret = process.waitFor(timeout, unit);
+            System.out.println("waitFor cmdLine=" + cmdLine + " returning " + ret);
             return ret;
         }
         return true;
@@ -210,12 +226,12 @@ public class WrappedProcess {
         }
         try {
             outputPrintStream.close();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
             errorPrintStream.close();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

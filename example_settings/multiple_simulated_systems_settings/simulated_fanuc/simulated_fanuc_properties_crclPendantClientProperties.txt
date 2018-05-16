@@ -50,7 +50,7 @@ crcl.base.MiddleCommandType currentProgramCommand=CrclCommandWrapper{wrappedComm
 java.util.Optional currentState=Optional[CRCL_DONE]
 # could not invokegetLastOpenedProgramFile
 crcl.utils.outer.interfaces.PendantClientMenuOuter menuOuter=crcl.ui.client.PendantClientJInternalFrame[,0,0,1058x725,invalid,layout=javax.swing.plaf.basic.BasicInternalFrameUI$Handler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@76fe4b4,flags=264,maximumSize=,minimumSize=,preferredSize=,closable=false,defaultCloseOperation=DISPOSE_ON_CLOSE,desktopIcon=javax.swing.JInternalFrame$JDesktopIcon[,0,0,42x26,invalid,layout=java.awt.BorderLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@62d71b80,flags=0,maximumSize=,minimumSize=,preferredSize=],frameIcon=,iconable=true,isClosed=false,isIcon=false,isMaximum=false,isSelected=false,maximizable=true,opened=true,resizable=true,rootPane=javax.swing.JRootPane[,6,25,1046x694,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@2cf43353,flags=457,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true,title=CRCL Client: DONE]
-java.util.Set recentPrograms=[/home/shackle/Probing_test_20170507.xml]
+java.util.Set recentPrograms=[]
 int maxRecordCommandsCount=1000
 int programRow=14
 crcl.utils.ProgramPlotter sideProgramPlotter=crcl.utils.ProgramPlotter@55a17f56
