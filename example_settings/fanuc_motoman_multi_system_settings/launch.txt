@@ -1,11 +1,7 @@
 #!killNeo4J
 #!waitfor Remote interface ready
-C:\Users\shackle\neo4j-community-2.3.11-motoman\bin\Neo4j.bat
+..\..\..\neo4j-community-2.3.11-motoman\bin\Neo4j.bat
 #!waitfor Remote interface ready
-C:\Users\shackle\neo4j-community-2.3.11-fanuc\bin\Neo4j.bat
-#C:\Users\Public\Documents\APRS_AntVision_2018_03_27\VideoTeachTable.exe
-#C:\Users\Public\Documents\APRS_AntVision_2018_03_06\VideoTeachTable.exe
-# !cd C:\Users\Public\Documents\APRS_AntVision_2018_03_28
-#C:\Users\Public\Documents\APRS_AntVision_2018_03_28\VideoTeachTable.exe
+..\..\..\neo4j-community-2.3.11-fanuc\bin\Neo4j.bat
 #!stop
 #!killNeo4J
