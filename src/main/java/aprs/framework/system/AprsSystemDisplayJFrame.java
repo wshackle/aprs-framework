@@ -1753,13 +1753,6 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemReverse.setSelected(val);
     }
 
-    public boolean isUseTeachTableCheckboxSelected() {
-        return jCheckBoxMenuItemUseTeachTable.isSelected();
-    }
-
-    public void setUseTeachTableCheckboxSelected(boolean val) {
-        jCheckBoxMenuItemUseTeachTable.setSelected(val);
-    }
 
     public boolean isReloadSimFilesOnReverseCheckboxSelected() {
         return jCheckBoxMenuItemReloadSimFilesOnReverse.isSelected();

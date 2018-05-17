@@ -25,7 +25,6 @@ package aprs.framework.supervisor;
 import aprs.framework.LauncherAprsJFrame;
 import aprs.framework.system.AprsSystemInterface;
 import aprs.framework.Utils;
-import static aprs.framework.system.AprsSystem.createAprsSystemWithSwingDisplay;
 import aprs.framework.misc.MultiFileDialogJPanel;
 import static aprs.framework.Utils.runTimeToString;
 import static aprs.framework.Utils.tableHeaders;
@@ -40,6 +39,7 @@ import aprs.framework.pddl.executor.PositionMapEntry;
 import aprs.framework.process.launcher.ProcessLauncherJFrame;
 import aprs.framework.screensplash.SplashScreen;
 import aprs.framework.simview.Object2DOuterJPanel;
+import aprs.framework.system.AprsSystem;
 
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
@@ -154,7 +154,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     public void setSupervisor(Supervisor supervisor) {
         this.supervisor = supervisor;
-       
+
     }
 
     private ExecutorService getSupervisorExecutorService() {
@@ -194,21 +194,24 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                 XFuture.runAsync(() -> {
                                     if (isTogglesAllowed()) {
                                         setRobotEnabled(robotName, enabled);
+                                        flushTableRobotEventDeque(true);
                                     } else {
                                         javax.swing.SwingUtilities.invokeLater(() -> {
                                             logEvent("Attempt to toggle robot enabled ignored.");
                                             jTableRobots.setValueAt(wasEnabled, fi, 1);
+                                            flushTableRobotEventDeque(false);
                                         });
                                     }
                                 }, getSupervisorExecutorService());
                             } else {
                                 logEvent("Attempt to toggle robot enabled ignored.");
                                 jTableRobots.setValueAt(wasEnabled, fi, 1);
+                                flushTableRobotEventDeque(false);
                             }
                             break;
                         }
                     }
-
+                    flushTableRobotEventDeque(false);
                 } catch (Exception exception) {
                     log(Level.SEVERE, null, exception);
                 }
@@ -540,6 +543,13 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 return robotsEnableCelRendererComponent;
             }
         });
+    }
+
+    private void flushTableRobotEventDeque(boolean val) {
+        SetTableRobotEnabledEvent setTableRobotEnabledEvent = null;
+        while (null != (setTableRobotEnabledEvent = setTableRobotEnabledEventDeque.pollFirst())) {
+            setTableRobotEnabledEvent.getFuture().complete(val);
+        }
     }
 
     public void setDefaultIconImage() {
@@ -1204,12 +1214,21 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.logEvent(s);
     }
 
-    private void initColorTextSocket() throws IOException {
+    public void initColorTextSocket() throws IOException {
         if (null == colorTextSocket) {
             colorTextSocket = new Socket("localhost", ColorTextJPanel.COLORTEXT_SOCKET_PORT);
         }
     }
 
+    public void writeToColorTextSocket(byte[] bytes) {
+        if (null != colorTextSocket) {
+            try {
+                colorTextSocket.getOutputStream().write(bytes);
+            } catch (Exception ex) {
+                log(Level.SEVERE, null, ex);
+            }
+        }
+    }
     private @MonotonicNonNull Map<String, Boolean> robotEnableMap;
 
     @Nullable public Map<String, Boolean> getRobotEnableMap() {
@@ -2270,7 +2289,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (chosenFile != null) {
             try {
                 File propertiesFile = chosenFile;
-                AprsSystemInterface aj = createAprsSystemWithSwingDisplay(propertiesFile);
+                AprsSystemInterface aj = AprsSystem.createSystem(propertiesFile);
                 addAprsSystem(aj);
                 saveCurrentSetup();
             } catch (Exception ex) {
@@ -2746,7 +2765,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private void jMenuItemAddNewSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAddNewSystemActionPerformed
         try {
-            AprsSystemInterface aj = createAprsSystemWithSwingDisplay();
+            AprsSystemInterface aj = AprsSystem.createSystem();
             aj.emptyInit();
             addAprsSystem(aj);
             aj.browseSavePropertiesFileAs();
@@ -2793,12 +2812,11 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemPauseActionPerformed
 
-    
     public void clearEventLog() {
         ((DefaultTableModel) jTableEvents.getModel()).setRowCount(0);
     }
-    
-    private void privateClearEventLog() {    
+
+    private void privateClearEventLog() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -3127,7 +3145,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBoxShowDoneFuturesActionPerformed
 
     private void jButtonFuturesCancelAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonFuturesCancelAllActionPerformed
-        if(null == futureToDisplaySupplier) {
+        if (null == futureToDisplaySupplier) {
             return;
         }
         XFuture<?> future = futureToDisplaySupplier.get();
@@ -3795,7 +3813,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private void clearPosTable() {
-        if(null == robotEnableMap) {
+        if (null == robotEnableMap) {
             throw new IllegalStateException("null == robotEnableMap");
         }
         DefaultTableModel tm = (DefaultTableModel) jTablePositionMappings.getModel();
@@ -3839,7 +3857,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      * the robots table are potentially changed.)
      */
     private void enableAllRobots() {
-        if(null == robotEnableMap) {
+        if (null == robotEnableMap) {
             throw new IllegalStateException("null == robotEnableMap");
         }
         if (null != supervisor) {
@@ -3851,16 +3869,16 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         } catch (IOException ex) {
             log(Level.SEVERE, null, ex);
         }
-        DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            String robotName = (String) jTableRobots.getValueAt(i, 0);
-            if (null != robotName) {
-                robotEnableMap.put(robotName, true);
-                model.setValueAt(true, i, 1);
-                model.setValueAt(getRobotDisableCount(robotName), i, 4);
-                model.setValueAt(runTimeToString(getRobotDisableTotalTime(robotName)), i, 5);
-            }
-        }
+//        DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
+//        for (int i = 0; i < model.getRowCount(); i++) {
+//            String robotName = (String) jTableRobots.getValueAt(i, 0);
+//            if (null != robotName) {
+//                robotEnableMap.put(robotName, true);
+//                model.setValueAt(true, i, 1);
+//                model.setValueAt(getRobotDisableCount(robotName), i, 4);
+//                model.setValueAt(runTimeToString(getRobotDisableTotalTime(robotName)), i, 5);
+//            }
+//        }
         Utils.autoResizeTableColWidths(jTableRobots);
     }
 
@@ -3988,7 +4006,6 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
         supervisor.connectAll();
     }
-
 
     /**
      * Get the value of setupFile
@@ -4289,6 +4306,44 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private static final int MAX_EXPAND_NODE_COUNT = 2000;
     private static final int MAX_RECURSE_DEPTH = 100;
 
+    public void loadRobotsTableFromSystemsList(List<AprsSystemInterface> aprsSystems) {
+        if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
+            throw new IllegalThreadStateException("call me from AWT event thread.");
+        }
+        synchronized (jTableRobots) {
+            DefaultTableModel tm = (DefaultTableModel) jTableRobots.getModel();
+            tm.setRowCount(0);
+            for (AprsSystemInterface aprsSys : aprsSystems) {
+                String robotname = aprsSys.getRobotName();
+                tm.addRow(new Object[]{
+                    robotname,
+                    true,
+                    aprsSys.getRobotCrclHost(),
+                    aprsSys.getRobotCrclPort(),
+                    getRobotDisableCount(robotname),
+                    runTimeToString(getRobotDisableTotalTime(robotname))
+                });
+            }
+        }
+    }
+
+    public void updateRobotsTableFromMapsAndEnableAll(Map<String, Integer> robotDisableCountMap, Map<String, Long> robotDisableTotalTimeMap) {
+        if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
+            throw new IllegalThreadStateException("call me from AWT event thread.");
+        }
+
+        DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
+        for (int i = 0; i < model.getRowCount(); i++) {
+            String robotName = (String) jTableRobots.getValueAt(i, 0);
+            if (null != robotName) {
+                model.setValueAt(true, i, 1);
+                model.setValueAt(robotDisableCountMap.getOrDefault(robotName, 0), i, 4);
+                model.setValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
+            }
+        }
+        Utils.autoResizeTableColWidths(jTableRobots);
+    }
+
     private static void expandAllNodes(JTree tree, int startingIndex, int rowCount, int startExpandCount, int recurseDepth) {
         if (recurseDepth > MAX_RECURSE_DEPTH) {
             return;
@@ -4466,35 +4521,65 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 });
     }
 
+    private static class SetTableRobotEnabledEvent {
+
+        private final boolean enable;
+        private final String robotName;
+        private final XFuture<Boolean> future;
+
+        public SetTableRobotEnabledEvent(boolean enable, String robotName, XFuture<Boolean> future) {
+            this.enable = enable;
+            this.robotName = robotName;
+            this.future = future;
+        }
+
+        public boolean isEnable() {
+            return enable;
+        }
+
+        public String getRobotName() {
+            return robotName;
+        }
+
+        public XFuture<Boolean> getFuture() {
+            return future;
+        }
+
+    };
+
+    private final ConcurrentLinkedDeque<SetTableRobotEnabledEvent> setTableRobotEnabledEventDeque = new ConcurrentLinkedDeque<>();
+
+    public XFuture<Boolean> setTableRobotEnabled(String robotName, boolean enable) {
+        XFuture<Boolean> f1 = new XFuture<>("setTableRobotEnabled");
+        SetTableRobotEnabledEvent setTableRobotEnabledEvent
+                = new SetTableRobotEnabledEvent(enable, robotName, f1);
+        XFuture<Boolean> f2 = Utils.supplyOnDispatchThread(() -> {
+            if (isTogglesAllowed()) {
+                for (int i = 0; i < jTableRobots.getRowCount(); i++) {
+                    String tableRobotName = (String) jTableRobots.getValueAt(i, 0);
+                    if (null != tableRobotName && Objects.equals(tableRobotName, robotName)) {
+
+//                    Boolean enabled = (Boolean) jTableRobots.getValueAt(i, 1);
+//                        Boolean wasEnabled = robotEnableMap.get(robotName);
+                        setTableRobotEnabledEventDeque.add(setTableRobotEnabledEvent);
+                        jTableRobots.setValueAt(enable, i, 1);
+                        return true;
+                    }
+                }
+            }
+            f1.complete(false);
+            return false;
+        });
+        return f2.thenCompose(x -> f1);
+    }
+
     public void updateRobotsTable() {
         if (closing) {
             return;
         }
-        Map<String, AprsSystemInterface> robotMap = new HashMap<>();
-        DefaultTableModel tm = (DefaultTableModel) jTableRobots.getModel();
-        DefaultComboBoxModel<String> cbmModel = (DefaultComboBoxModel<String>) jComboBoxTeachSystemView.getModel();
-        cbmModel.removeAllElements();
-        cbmModel.addElement("All");
-        cbmModel.setSelectedItem("All");
-        tm.setRowCount(0);
         List<AprsSystemInterface> aprsSystems = getAprsSystems();
-        for (AprsSystemInterface aprsJframe : aprsSystems) {
-            String robotname = aprsJframe.getRobotName();
-            if (null != robotname) {
-                robotMap.put(robotname, aprsJframe);
-            }
-            cbmModel.addElement(aprsJframe.getMyThreadId() + " : " + aprsJframe.toString());
-        }
-        robotMap.forEach((robotName, aprs) -> {
-            tm.addRow(new Object[]{
-                robotName,
-                true,
-                aprs.getRobotCrclHost(),
-                aprs.getRobotCrclPort(),
-                getRobotDisableCount(robotName),
-                runTimeToString(getRobotDisableTotalTime(robotName))
-            });
-        });
+        updateTeachSystemsComboBoxFromSystemsList(aprsSystems);
+//        loadRobotsTableFromSystemsList(aprsSystems);
         Utils.autoResizeTableColWidths(jTableRobots);
         if (aprsSystems.size() >= 2) {
             String robot0Name = aprsSystems.get(0).getRobotName();
@@ -4515,6 +4600,16 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     null,
                     "",
                     null);
+        }
+    }
+
+    public void updateTeachSystemsComboBoxFromSystemsList(List<AprsSystemInterface> aprsSystems) {
+        DefaultComboBoxModel<String> cbmModel = (DefaultComboBoxModel<String>) jComboBoxTeachSystemView.getModel();
+        cbmModel.removeAllElements();
+        cbmModel.addElement("All");
+        cbmModel.setSelectedItem("All");
+        for (AprsSystemInterface aprsJframe : aprsSystems) {
+            cbmModel.addElement(aprsJframe.getMyThreadId() + " : " + aprsJframe.toString());
         }
     }
 

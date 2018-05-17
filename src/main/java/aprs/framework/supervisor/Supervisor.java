@@ -40,6 +40,7 @@ import aprs.framework.pddl.executor.PositionMapJPanel;
 import aprs.framework.process.launcher.ProcessLauncherJFrame;
 import aprs.framework.screensplash.SplashScreen;
 import aprs.framework.simview.Object2DOuterJPanel;
+import aprs.framework.system.AprsSystem;
 
 import crcl.base.CRCLStatusType;
 import crcl.base.CommandStateEnumType;
@@ -50,6 +51,7 @@ import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.Point;
@@ -153,7 +155,7 @@ public class Supervisor {
     }
 
     private final Object2DOuterJPanel object2DOuterJPanel1;
-    private final JTable jTableRobots;
+    //private final JTable jTableRobots;
     private final JTable jTableSelectedPosMapFile;
     private final JTable jTablePositionMappings;
     private final JTable jTableTasks;
@@ -188,9 +190,9 @@ public class Supervisor {
                 ? displayJFrame.getSelectedPosMapFileTable()
                 : new JTable();
 
-        this.jTableRobots = (displayJFrame != null)
-                ? displayJFrame.getRobotsTable()
-                : new JTable();
+//        this.jTableRobots = (displayJFrame != null)
+//                ? displayJFrame.getRobotsTable()
+//                : new JTable();
 
         AtomicInteger newWaitForTogglesFutureCount = new AtomicInteger();
         waitForTogglesFutureCount = newWaitForTogglesFutureCount;
@@ -1040,7 +1042,7 @@ public class Supervisor {
         return this.continousDemoSelected;
     }
 
-    private volatile boolean useTeachCameraSelected = false;
+    private volatile boolean useTeachCameraSelected = true;
 
     public void setUseTeachCameraSelected(boolean selected) {
         if (null != displayJFrame) {
@@ -1258,6 +1260,12 @@ public class Supervisor {
         return stealRobotsInternal(stealFrom, stealFor, stealForRobotName, stealFromRobotName, stealFromOrigCrclHost);
     }
 
+    private void writeToColorTextSocket(byte[] bytes) {
+        if (null != displayJFrame) {
+            displayJFrame.writeToColorTextSocket(bytes);
+        }
+    }
+
     private XFuture<Void> stealRobotsInternal(AprsSystemInterface stealFrom, AprsSystemInterface stealFor, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost) throws IOException, PositionMap.BadErrorMapFormatException {
         final int srn = stealRobotNumber.incrementAndGet();
         logEvent("Transferring " + stealFrom.getRobotName() + " to " + stealFor.getTaskName() + " : srn=" + srn);
@@ -1304,13 +1312,7 @@ public class Supervisor {
                         .thenComposeAsync("showDisabledMessage." + stealForRobotName,
                                 x -> {
                                     logEvent("Safe abort and disconnect completed for " + stealFor + ", " + stealForRobotName + " being disabled. " + " : srn=" + srn);
-                                    if (null != colorTextSocket) {
-                                        try {
-                                            colorTextSocket.getOutputStream().write("0xFF0000, 0x00FF00\r\n".getBytes());
-                                        } catch (IOException ex) {
-                                            log(Level.SEVERE, null, ex);
-                                        }
-                                    }
+                                    writeToColorTextSocket("0xFF0000, 0x00FF00\r\n".getBytes());
                                     if (null != gd) {
                                         return showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
                                                 SplashScreen.getDisableImageImage(),
@@ -1534,13 +1536,7 @@ public class Supervisor {
                                 boolean doubleCheck = stealFor.isAborting();
                                 throw new IllegalStateException(msg);
                             }
-                            if (null != colorTextSocket) {
-                                try {
-                                    colorTextSocket.getOutputStream().write("0x00FF00, 0x00FF00\r\n".getBytes());
-                                } catch (IOException ex) {
-                                    log(Level.SEVERE, null, ex);
-                                }
-                            }
+                            writeToColorTextSocket("0x00FF00, 0x00FF00\r\n".getBytes());
                             return showMessageFullScreen(stealForRobotName + "\n Enabled", 80.0f,
                                     SplashScreen.getDisableImageImage(),
                                     SplashScreen.getBlueWhiteGreenColorList(), gd);
@@ -1743,8 +1739,8 @@ public class Supervisor {
     }
 
     private void initColorTextSocket() throws IOException {
-        if (null == colorTextSocket) {
-            colorTextSocket = new Socket("localhost", ColorTextJPanel.COLORTEXT_SOCKET_PORT);
+        if (null != displayJFrame) {
+            displayJFrame.initColorTextSocket();
         }
     }
 
@@ -2133,11 +2129,6 @@ public class Supervisor {
 
     }
 
-    @Nullable
-    private Socket colorTextSocket = null;
-    @Nullable
-    private ColorTextJFrame colorTextJFrame = null;
-
     private volatile boolean closing = false;
 
     public void setVisible(boolean visible) {
@@ -2158,18 +2149,6 @@ public class Supervisor {
             runTimeTimer = null;
         }
         stopColorTextReader();
-        if (null != colorTextJFrame) {
-            colorTextJFrame.setVisible(false);
-            colorTextJFrame = null;
-        }
-        if (null != colorTextSocket) {
-            try {
-                colorTextSocket.close();
-            } catch (IOException ex) {
-                log(Level.SEVERE, null, ex);
-            }
-            colorTextSocket = null;
-        }
         closeAllAprsSystems();
         if (null != aprsSystems) {
             for (AprsSystemInterface sys : aprsSystems) {
@@ -3173,34 +3152,44 @@ public class Supervisor {
     private static final Set<String> robotsThatCanBeDisabled
             = new HashSet<>(Arrays.asList(MOTOMAN_NAME, SIM_MOTOMAN_NAME));
 
+    public XFuture<Boolean> toggleRobotEnabled(String robotName, boolean wasEnabled) {
+        XFuture<Boolean> future
+                = (null != displayJFrame)
+                        ? displayJFrame.setTableRobotEnabled(robotName, !wasEnabled)
+                        : noDisplayToggleRobotEnable(robotName, wasEnabled);
+        return future;
+    }
+
+    private XFuture<Boolean> noDisplayToggleRobotEnable(String robotName, boolean wasEnabled) {
+        return XFuture.supplyAsync("completeToggleRobotEnable",
+                () -> {
+                    if (isTogglesAllowed()) {
+                        setRobotEnabled(robotName, !wasEnabled);
+                        return true;
+                    }
+                    return false;
+                },
+                supervisorExecutorService);
+    }
+
     public XFuture<Boolean> toggleRobotEnabled() {
         if (isPauseSelected()) {
             return waitResume().thenApply(x -> false);
         }
-        return Utils.supplyOnDispatchThread(() -> {
-            if (!isPauseSelected()) {
-                if (togglesAllowed) {
-                    for (int i = 0; i < jTableRobots.getRowCount(); i++) {
-                        String robotName = (String) jTableRobots.getValueAt(i, 0);
-                        if (null != robotName) {
-                            if (robotsThatCanBeDisabled.contains(robotName.toLowerCase())) {
-                                Boolean enabled = (Boolean) jTableRobots.getValueAt(i, 1);
-                                Boolean wasEnabled = robotEnableMap.get(robotName);
-                                if (null != wasEnabled) {
-                                    jTableRobots.setValueAt(!wasEnabled, i, 1);
-                                } else {
-                                    jTableRobots.setValueAt(true, i, 1);
-                                }
-                                return true;
-                            }
-                        }
-                    }
-                } else {
-                    logEvent("Attempt to toggle robot enabled ignored.");
-                }
+        if (!togglesAllowed) {
+            return XFuture.completedFutureWithName("!togglesAllowd", false);
+        }
+        for (Map.Entry<String, Boolean> robotEnableEntry : robotEnableMap.entrySet()) {
+            String robotName = robotEnableEntry.getKey();
+            Boolean wasEnabled = robotEnableEntry.getValue();
+            if (null == wasEnabled) {
+                throw new IllegalStateException("wasEnabled ==null for " + robotName);
             }
-            return false;
-        });
+            if (robotsThatCanBeDisabled.contains(robotName.toLowerCase())) {
+                return toggleRobotEnabled(robotName, wasEnabled);
+            }
+        }
+        throw new IllegalStateException("no robot that can be disabled found in " + robotEnableMap.keySet() + " and in " + robotsThatCanBeDisabled);
     }
 
     private final AtomicInteger randomTestCount = new AtomicInteger();
@@ -3762,22 +3751,14 @@ public class Supervisor {
      */
     public void enableAllRobots() {
         cancelAllStealUnsteal(false);
-        try {
-            initColorTextSocket();
-        } catch (IOException ex) {
-            log(Level.SEVERE, null, ex);
-        }
-        DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            String robotName = (String) jTableRobots.getValueAt(i, 0);
-            if (null != robotName) {
-                robotEnableMap.put(robotName, true);
-                model.setValueAt(true, i, 1);
-                model.setValueAt(robotDisableCountMap.getOrDefault(robotName, 0), i, 4);
-                model.setValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
+        if (null != displayJFrame) {
+            try {
+                displayJFrame.initColorTextSocket();
+            } catch (IOException ex) {
+                log(Level.SEVERE, null, ex);
             }
+            displayJFrame.updateRobotsTableFromMapsAndEnableAll(robotDisableCountMap, robotDisableTotalTimeMap);
         }
-        Utils.autoResizeTableColWidths(jTableRobots);
     }
 
     private final AtomicInteger enableAndCheckAllRobotsCount = new AtomicInteger();
@@ -3798,17 +3779,7 @@ public class Supervisor {
         AprsSystemInterface sysArray[] = getAprsSystems().toArray(new AprsSystemInterface[getAprsSystems().size()]);
         disallowToggles(blockerName, sysArray);
         Utils.SwingFuture<Void> step1Future = Utils.runOnDispatchThread(() -> {
-            DefaultTableModel model = (DefaultTableModel) jTableRobots.getModel();
-            for (int i = 0; i < model.getRowCount(); i++) {
-                String robotName = (String) jTableRobots.getValueAt(i, 0);
-                if (null != robotName) {
-                    robotEnableMap.put(robotName, true);
-                    model.setValueAt(true, i, 1);
-                    model.setValueAt(robotDisableCountMap.computeIfAbsent(robotName, (k) -> 0), i, 4);
-                    model.setValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
-                }
-            }
-            Utils.autoResizeTableColWidths(jTableRobots);
+            updateRobotsTableFromMapsAndEnableAll();
         });
         boolean KeepAndDisplayXFutureProfilesSelected = isKeepAndDisplayXFutureProfilesSelected();
         step1Future.setKeepOldProfileStrings(KeepAndDisplayXFutureProfilesSelected);
@@ -3816,12 +3787,7 @@ public class Supervisor {
                 .thenRunAsync("sendEnableToColorTextSocket", () -> {
                     try {
                         initColorTextSocket();
-                        Socket socket = colorTextSocket;
-                        if (null != socket) {
-                            OutputStream outputStream = socket.getOutputStream();
-                            outputStream.write("0x00FF00, 0x00FF000\r\n".getBytes());
-                            outputStream.flush();
-                        }
+                        writeToColorTextSocket("0x00FF00, 0x00FF000\r\n".getBytes());
                     } catch (IOException ex) {
                         log(Level.SEVERE, null, ex);
                     }
@@ -3840,6 +3806,12 @@ public class Supervisor {
                     allowToggles(blockerName, sysArray);
                 }, supervisorExecutorService)
                 .always(this::logStartCheckAndEnableAllRobotsComplete);
+    }
+
+    private void updateRobotsTableFromMapsAndEnableAll() {
+        if (null != displayJFrame) {
+            displayJFrame.updateRobotsTableFromMapsAndEnableAll(robotDisableCountMap, robotDisableTotalTimeMap);
+        }
     }
 
     private void logStartCheckAndEnableAllRobotsComplete() {
@@ -4898,6 +4870,14 @@ public class Supervisor {
         updateRobotsTable();
     }
 
+    public static Supervisor createSupervisor() {
+        final Supervisor supervisor
+                = GraphicsEnvironment.isHeadless()
+                ? new Supervisor()
+                : createAprsSupervisorWithSwingDisplay();
+        return supervisor;
+    }
+
     /**
      * Load the given setup file.
      *
@@ -4930,7 +4910,7 @@ public class Supervisor {
                         propertiesFile = altPropFile;
                     }
                 }
-                AprsSystemInterface aj = createAprsSystemWithSwingDisplay(propertiesFile);
+                AprsSystemInterface aj = AprsSystem.createSystem(propertiesFile);
                 aj.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 aj.setPriority(priority);
                 aj.setTaskName(csvRecord.get(1));
@@ -5071,7 +5051,7 @@ public class Supervisor {
             lastLiveImageMovieFile = liveImageMovieFile;
             System.out.println("liveImageStartTime = " + liveImageStartTime);
             System.out.println("liveImageLastTime = " + liveImageStartTime);
-            int secs = (int) (500+ liveImageLastTime - liveImageStartTime) / 1000;
+            int secs = (int) (500 + liveImageLastTime - liveImageStartTime) / 1000;
             System.out.println("secs = " + secs);
             System.out.println("liveImageFrameCount = " + liveImageFrameCount);
             if (secs > 0) {
@@ -5329,8 +5309,15 @@ public class Supervisor {
                 robotEnableMap.put(robotname, true);
             }
         }
+        loadRobotsTableFromSystemsList(aprsSystems);
         if (null != displayJFrame) {
             displayJFrame.updateRobotsTable();
+        }
+    }
+
+    public void loadRobotsTableFromSystemsList(List<AprsSystemInterface> aprsSystems) {
+        if(null != displayJFrame) {
+            displayJFrame.loadRobotsTableFromSystemsList(aprsSystems);
         }
     }
 

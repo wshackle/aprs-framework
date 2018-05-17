@@ -30,6 +30,7 @@ import aprs.framework.learninggoals.GoalLearnerTest;
 import aprs.framework.optaplanner.OptaplannerTest;
 import aprs.framework.process.launcher.ProcessLauncherJFrame;
 import crcl.ui.XFuture;
+import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileWriter;
@@ -604,7 +605,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private static void tenCycleTest(@Nullable File launchFile) {
         long startTime = System.currentTimeMillis();
-        final Supervisor amsFrame = createAprsSupervisorWithSwingDisplay();
+        Supervisor supervisor = Supervisor.createSupervisor();
 
         if (null != launchFile) {
             try {
@@ -612,16 +613,18 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 processLauncher.setVisible(true);
                 processLauncher.run(launchFile)
                         .thenRun(() -> {
-                            amsFrame.setProcessLauncher(processLauncher);
-                            Utils.runOnDispatchThread(() -> completeTenCycleTest(amsFrame, startTime));
+                            supervisor.setProcessLauncher(processLauncher);
+                            Utils.runOnDispatchThread(() -> completeTenCycleTest(supervisor, startTime));
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
-            completeTenCycleTest(amsFrame, startTime);
+            completeTenCycleTest(supervisor, startTime);
         }
     }
+
+    
 
     private static void completeTenCycleTest(final Supervisor amsFrame, long startTime) {
         completePrevMulti(amsFrame);
@@ -921,9 +924,13 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-                LauncherAprsJFrame lFrame = new LauncherAprsJFrame();
-                lFrame.checkFiles();
-                lFrame.setVisible(true);
+                if (!GraphicsEnvironment.isHeadless()) {
+                    LauncherAprsJFrame lFrame = new LauncherAprsJFrame();
+                    lFrame.checkFiles();
+                    lFrame.setVisible(true);
+                } else{
+                    System.err.println("Can't launch interactive launcher in headless environment!!!");
+                }
             }
         });
     }

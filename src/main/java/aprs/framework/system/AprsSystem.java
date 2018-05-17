@@ -119,10 +119,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.utils.CrclCommandWrapper;
+import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.FileWriter;
 import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
+import javax.swing.DesktopManager;
+import javax.swing.JDesktopPane;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
@@ -1944,7 +1947,7 @@ public class AprsSystem implements AprsSystemInterface {
         internalFrame.pack();
         internalFrame.setVisible(true);
         addToDesktopPane(internalFrame);
-        internalFrame.getDesktopPane().getDesktopManager().maximizeFrame(internalFrame);
+        maximizeJInteralFrame(internalFrame);
         setupWindowsMenu();
     }
 
@@ -2136,21 +2139,22 @@ public class AprsSystem implements AprsSystemInterface {
     public File getPropertiesDirectory() {
         return propertiesDirectory;
     }
-    
+
+    private volatile boolean connectDatabaseCheckboxEnabled = false;
+
     public void setConnectDatabaseCheckboxEnabled(boolean enable) {
         if (null != this.aprsSystemDisplayJFrame) {
             this.aprsSystemDisplayJFrame.setConnectDatabaseCheckboxEnabled(enable);
-        } else {
-            throw new IllegalStateException("aprsSystemDisplayJFrame ==null, this=" + this);
         }
+        connectDatabaseCheckboxEnabled = enable;
     }
 
     public void stopSimUpdateTimer() {
-        if(null != object2DViewJInternalFrame) {
+        if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.stopSimUpdateTimer();
         }
     }
-    
+
     public boolean isConnectDatabaseCheckboxSelected() {
         return aprsSystemDisplayJFrame == null
                 || aprsSystemDisplayJFrame.isConnectDatabaseCheckboxSelected();
@@ -2244,20 +2248,36 @@ public class AprsSystem implements AprsSystemInterface {
         commonInit();
     }
 
+    public static AprsSystem createSystem(File propertiesFile) {
+        final AprsSystem system
+                = GraphicsEnvironment.isHeadless()
+                ? new AprsSystem(null, propertiesFile)
+                : createAprsSystemWithSwingDisplay(propertiesFile);
+        return system;
+    }
+
+    public static AprsSystem createSystem() {
+        final AprsSystem system
+                = GraphicsEnvironment.isHeadless()
+                ? new AprsSystem()
+                : createAprsSystemWithSwingDisplay();
+        return system;
+    }
+
     public static AprsSystem createAprsSystemWithSwingDisplay() {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
         AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1);
         aprsSystemDisplayJFrame1.setAprsSystem(system);
         return system;
     }
-    
+
     public static AprsSystem createAprsSystemWithSwingDisplay(File propertiesFile) {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
-        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1,propertiesFile);
+        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1, propertiesFile);
         aprsSystemDisplayJFrame1.setAprsSystem(system);
         return system;
     }
-    
+
     /**
      * Creates new AprsJFrame using a specified properties file.
      *
@@ -2737,7 +2757,7 @@ public class AprsSystem implements AprsSystemInterface {
                     && null != internalFrame.getDesktopPane().getDesktopManager()) {
                 internalFrame.getDesktopPane().getDesktopManager().deiconifyFrame(internalFrame);
                 internalFrame.getDesktopPane().getDesktopManager().activateFrame(internalFrame);
-                internalFrame.getDesktopPane().getDesktopManager().maximizeFrame(internalFrame);
+                maximizeJInteralFrame(internalFrame);
             }
             internalFrame.moveToFront();
         } catch (Exception e) {
@@ -2914,7 +2934,7 @@ public class AprsSystem implements AprsSystemInterface {
             object2DViewJInternalFrame.pack();
             object2DViewJInternalFrame.setVisible(true);
             addToDesktopPane(object2DViewJInternalFrame);
-            object2DViewJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(object2DViewJInternalFrame);
+            maximizeJInteralFrame(object2DViewJInternalFrame);
             if (!alreadySelected) {
                 setupWindowsMenu();
             }
@@ -3074,7 +3094,7 @@ public class AprsSystem implements AprsSystemInterface {
             crclClientJInternalFrame.pack();
             crclClientJInternalFrame.setVisible(true);
             addToDesktopPane(crclClientJInternalFrame);
-            crclClientJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(crclClientJInternalFrame);
+            maximizeJInteralFrame(crclClientJInternalFrame);
             crclClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
                 @Override
                 public void titleChanged(CommandStatusType ccst, Container container, String stateString, String stateDescription) {
@@ -3112,7 +3132,7 @@ public class AprsSystem implements AprsSystemInterface {
                 simServerJInternalFrame.setVisible(true);
                 simServerJInternalFrame.restartServer();
                 addToDesktopPane(simServerJInternalFrame);
-                simServerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(simServerJInternalFrame);
+                maximizeJInteralFrame(simServerJInternalFrame);
 
             }
         } catch (Exception ex) {
@@ -3193,7 +3213,7 @@ public class AprsSystem implements AprsSystemInterface {
             visionToDbJInternalFrame.setVisible(true);
             visionToDbJInternalFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
             addToDesktopPane(visionToDbJInternalFrame);
-            visionToDbJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(visionToDbJInternalFrame);
+            maximizeJInteralFrame(visionToDbJInternalFrame);
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -3226,7 +3246,7 @@ public class AprsSystem implements AprsSystemInterface {
                             execFrame.setAprsSystemInterface(this);
                             execFrame.setVisible(true);
                             addToDesktopPane(execFrame);
-                            execFrame.getDesktopPane().getDesktopManager().maximizeFrame(execFrame);
+                            maximizeJInteralFrame(execFrame);
                             updateSubPropertiesFiles();
                             execFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
                             if (null != pddlPlannerJInternalFrame) {
@@ -3268,7 +3288,7 @@ public class AprsSystem implements AprsSystemInterface {
             updateSubPropertiesFiles();
             pddlPlannerJInternalFrame.setVisible(true);
             addToDesktopPane(pddlPlannerJInternalFrame);
-            pddlPlannerJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(pddlPlannerJInternalFrame);
+            maximizePddlPlannerJInternalFrame();
 //            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
             pddlPlannerJInternalFrame.loadProperties();
             pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
@@ -3276,6 +3296,28 @@ public class AprsSystem implements AprsSystemInterface {
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void maximizePddlPlannerJInternalFrame() {
+        JInternalFrame internalFrame = pddlPlannerJInternalFrame;
+        maximizeJInteralFrame(internalFrame);
+    }
+
+    private void maximizeJInteralFrame(JInternalFrame internalFrame) {
+        try {
+            if (null != internalFrame && !GraphicsEnvironment.isHeadless()) {
+                JDesktopPane desktopPane = internalFrame.getDesktopPane();
+                if (null != desktopPane) {
+                    DesktopManager desktopManager = desktopPane.getDesktopManager();
+                    if (null != desktopManager) {
+                        desktopManager.maximizeFrame(internalFrame);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, e);
         }
     }
 
@@ -3289,7 +3331,7 @@ public class AprsSystem implements AprsSystemInterface {
             updateSubPropertiesFiles();
             kitInspectionJInternalFrame.setVisible(true);
             addToDesktopPane(kitInspectionJInternalFrame);
-            kitInspectionJInternalFrame.getDesktopPane().getDesktopManager().maximizeFrame(kitInspectionJInternalFrame);
+            maximizeJInteralFrame(kitInspectionJInternalFrame);
 //            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
             kitInspectionJInternalFrame.loadProperties();
             //kitInspectionJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
@@ -3303,19 +3345,19 @@ public class AprsSystem implements AprsSystemInterface {
     public int getSnapShotWidth() {
         return snapShotWidth;
     }
-    
+
     public void setSnapShotWidth(int width) {
         this.snapShotWidth = width;
     }
-    
+
     public int getSnapShotHeight() {
         return snapShotHeight;
     }
-    
+
     public void setSnapShotHeight(int height) {
         this.snapShotHeight = height;
     }
-    
+
     /**
      * Query the user to select a properties file to open.
      */
@@ -3466,19 +3508,18 @@ public class AprsSystem implements AprsSystemInterface {
 
     private void setImageSizeMenuText() {
         if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setImageSizeMenuText(snapShotWidth,snapShotHeight);
+            aprsSystemDisplayJFrame.setImageSizeMenuText(snapShotWidth, snapShotHeight);
         }
     }
 
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
-    
+
     public boolean getDebug() {
         return debug;
     }
-    
-    
+
     private boolean isWithinMaxLimits(PmCartesian cart) {
         return cart != null
                 && cart.x <= maxLimit.x
@@ -3834,7 +3875,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
         return false;
     }
-    
+
     /**
      * Set the menu checkbox setting to force take operations to be faked so
      * that the gripper will not close, useful for testing.
@@ -4268,7 +4309,7 @@ public class AprsSystem implements AprsSystemInterface {
     @Nullable public XFuture<Boolean> getContinousDemoFuture() {
         return continuousDemoFuture;
     }
-    
+
     private volatile boolean reverseCheckboxSelected = false;
 
     public boolean isReverseCheckboxSelected() {
@@ -4830,7 +4871,6 @@ public class AprsSystem implements AprsSystemInterface {
         }
         return pddlExecutorJInternalFrame1.isDoingActions();
     }
-
 
     public void startExploreGraphDb() {
         assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
@@ -5821,7 +5861,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private void disconnectDatabase() {
 
-        if(null == dbSetupJInternalFrame) {
+        if (null == dbSetupJInternalFrame) {
             return;
         }
 //        assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
