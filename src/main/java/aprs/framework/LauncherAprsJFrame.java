@@ -341,7 +341,6 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, e);
             JOptionPane.showMessageDialog(this, "Exception caught: " + e);
         }
-
     }//GEN-LAST:event_jButtonPrevMultiActionPerformed
 
     private final static File lastLaunchFileFile = new File(System.getProperty("aprsLastLaunchFile", System.getProperty("user.home") + File.separator + ".lastAprsLaunchFile.txt"));
