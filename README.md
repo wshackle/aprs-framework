@@ -244,7 +244,7 @@ to the front.
 
 Code for this should be in following subdirectory:
 
-    src/main/java/aprs/framework/
+    src/main/java/aprs/
 
 
 Log/Error Display View
@@ -260,7 +260,7 @@ here can help determine if those systems could be connected to as expected.
 
 Code for this should be in following subdirectory:
 
-    src/main/java/aprs/framework/logdisplay/  
+    src/main/java/aprs/logdisplay/  
 
 
 
@@ -292,7 +292,7 @@ file to save or load from for easy switching.
 
 Code for this should be in following subdirectory:
 
-    src/main/java/aprs/framework/database/  
+    src/main/java/aprs/database/  
 
 
 
@@ -324,7 +324,7 @@ any relationship into for from any other node.
 
 Code for this should be in following subdirectory:
 
-    src/main/java/aprs/framework/database/explore/  
+    src/main/java/aprs/database/explore/  
 
 
 
@@ -369,7 +369,7 @@ display.
 
 Code for this should be in following subdirectory:
 
-    src/main/java/aprs/framework/simview/  
+    src/main/java/aprs/simview/  
 
 
 [Object SP] Vision To Database
@@ -400,7 +400,7 @@ database entries.
 
 Code for this should be in following subdirectory:
 
-    src/main/java/aprs/framework/spvision/
+    src/main/java/aprs/database/vision/
 
 
 PDDL Planner
@@ -425,7 +425,7 @@ be installed locally it can be run remotely through SSH.
 
 Code for this should be in following subdirectory:
 
-     src/main/java/aprs/framework/pddl/planner/  
+     src/main/java/aprs/pddl_planner/  
 
 
 PDDL Executor
@@ -460,7 +460,7 @@ lookForXYZ option in the options table in the middle.
 
 Code for this should be in following subdirectory:
 
-     src/main/java/aprs/framework/pddl/executor/  
+     src/main/java/aprs/actions/executor/  
 
 
 CRCL Client
