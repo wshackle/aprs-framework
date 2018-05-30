@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.spvision.VisionToDBJPanel.saveProperties()
+#  Automatically saved 
 --acquirestate=ON
 --commandport=4001
 --dbhost=localhost
