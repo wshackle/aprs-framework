@@ -4075,6 +4075,14 @@ public class AprsSystem implements AprsSystemInterface {
         }
         this.pauseCheckboxSelected = val;
     }
+    
+    private boolean isCrclClientJInternalFramePaused() {
+        if(crclClientJInternalFrame == null) {
+            return false;
+        }
+        return crclClientJInternalFrame.isPaused();
+    }
+    
 
     /**
      * Continue operations that were previously paused.
@@ -4120,7 +4128,8 @@ public class AprsSystem implements AprsSystemInterface {
                 pddlExecutorJInternalFrame1.showPaused(false);
             }
             if (isPaused()) {
-                throw new IllegalStateException("Still paused after resume.");
+                throw new IllegalStateException("Still paused after resume. crclClientJInternalFrame.isPaused()="
+                        +isCrclClientJInternalFramePaused());
             }
         } finally {
             resuming = false;

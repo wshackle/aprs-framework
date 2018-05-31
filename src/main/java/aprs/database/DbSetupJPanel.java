@@ -458,29 +458,32 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void updateSettingsFileName() {
-        if (null != propertiesFile && propertiesFile.exists()) {
-            return;
-        }
-        String settingsFileStart = jComboBoxDbType.getSelectedItem().toString();
-        if (!propertiesFile.getName().startsWith(settingsFileStart)) {
-            if (Objects.toString(jComboBoxPropertiesFiles.getSelectedItem()).startsWith(settingsFileStart)) {
-                return;
-            }
-            for (int i = 0; i < jComboBoxPropertiesFiles.getItemCount(); i++) {
-                String fname = Objects.toString(jComboBoxPropertiesFiles.getItemAt(i));
-                if (fname.startsWith(settingsFileStart)) {
-                    jComboBoxPropertiesFiles.setSelectedIndex(i);
-                    return;
-                }
-            }
-        }
-        setPropertiesFile(new File(propertiesFile.getParentFile(), settingsFileStart + ".dbsettings.txt"));
-    }
+//    private void updateSettingsFileName() {
+//        if(null == propertiesFile) {
+//            return;
+//        }
+//        if (propertiesFile.exists()) {
+//            return;
+//        }
+//        String settingsFileStart = jComboBoxDbType.getSelectedItem().toString();
+//        if (!propertiesFile.getName().startsWith(settingsFileStart)) {
+//            if (Objects.toString(jComboBoxPropertiesFiles.getSelectedItem()).startsWith(settingsFileStart)) {
+//                return;
+//            }
+//            for (int i = 0; i < jComboBoxPropertiesFiles.getItemCount(); i++) {
+//                String fname = Objects.toString(jComboBoxPropertiesFiles.getItemAt(i));
+//                if (fname.startsWith(settingsFileStart)) {
+//                    jComboBoxPropertiesFiles.setSelectedIndex(i);
+//                    return;
+//                }
+//            }
+//        }
+//        setPropertiesFile(new File(propertiesFile.getParentFile(), settingsFileStart + ".dbsettings.txt"));
+//    }
 
 
     private void jComboBoxDbTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxDbTypeActionPerformed
-        updateSettingsFileName();
+//        updateSettingsFileName();
         if (!updatingFromDbSetup) {
             notifyAllDbSetupListeners(null);
         }
@@ -1131,7 +1134,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }
     private File recentSettingsFile = new File(System.getProperty("user.home"), ".dbsetup_recent.txt");
-    private File propertiesFile = new File(System.getProperty("user.home"), ".dbsetup_properties.txt");
+    @MonotonicNonNull private File propertiesFile = null;
 
     @Override
     public void setPropertiesFile(File f) {
