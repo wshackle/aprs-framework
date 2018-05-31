@@ -1838,7 +1838,7 @@ public class AprsSystem implements AprsSystemInterface {
     private boolean fanucPreferRNN = false;
     private String fanucRobotHost = System.getProperty("fanucRobotHost", "192.168.1.34");// "129.6.78.111"; // FIXME hard-coded default
 
-    public void startFanucCrclServer() {
+    public XFutureVoid startFanucCrclServer() {
         try {
             FanucCRCLMain newFanucCrclMain = new FanucCRCLMain();
             if (null == fanucCRCLServerJInternalFrame) {
@@ -1846,11 +1846,14 @@ public class AprsSystem implements AprsSystemInterface {
                 addInternalFrame(fanucCRCLServerJInternalFrame);
             }
             newFanucCrclMain.setDisplayInterface(fanucCRCLServerJInternalFrame);
-            newFanucCrclMain.startDisplayInterface();
-            newFanucCrclMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort);
-            this.fanucCRCLMain = newFanucCrclMain;
+            return newFanucCrclMain.startDisplayInterface()
+                    .thenCompose(()-> newFanucCrclMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort))
+                    .thenRun(() -> {
+                         this.fanucCRCLMain = newFanucCrclMain;
+                    });
         } catch (CRCLException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
         }
     }
 
@@ -2700,7 +2703,8 @@ public class AprsSystem implements AprsSystemInterface {
                 startExploreGraphDb();
             }
             if (isRobotCrclFanucServerStartupSelected()) {
-                startFanucCrclServer();
+                XFutureVoid startFanucFuture = startFanucCrclServer();
+                futures.add(startFanucFuture);
             }
             if (isRobotCrclMotomanServerStartupSelected()) {
                 startMotomanCrclServer();
@@ -4051,6 +4055,12 @@ public class AprsSystem implements AprsSystemInterface {
     private volatile boolean pauseCheckboxSelected = false;
 
     public boolean isPauseCheckboxSelected() {
+        if(null != crclClientJInternalFrame){
+            if(crclClientJInternalFrame.isPaused()) {
+                setPauseCheckboxSelected(true);
+                return true;
+            }
+        }
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = aprsSystemDisplayJFrame.isPauseCheckboxSelected();
             this.pauseCheckboxSelected = ret;
@@ -4755,8 +4765,14 @@ public class AprsSystem implements AprsSystemInterface {
             throw new IllegalStateException("null == startRobotName");
         }
         final String checkedRobotName = startRobotName;
+        String startTaskName = this.taskName;
+        if (null == startTaskName) {
+            throw new IllegalStateException("null == startTaskName");
+        }
+        final String checkedTaskName = startTaskName;
         startingCheckEnabled = true;
-        long t0 = logEvent("startCheckEnabled", null);
+        String logString ="startCheckEnabled robotName="+checkedRobotName+",task="+checkedTaskName;
+        long t0 = logEvent(logString, null);
         setStartRunTime();
         if (enableCheckedAlready) {
             logEvent("startCheckEnabled enableCheckedAlready", null);
@@ -4764,33 +4780,13 @@ public class AprsSystem implements AprsSystemInterface {
             return XFuture.completedFutureWithName("startCheckEnabled.enableCheckedAlready", true);
         }
 
-        XFuture<Boolean> xf1 = XFuture.supplyAsync("startCheckEnabled", () -> this.doCheckEnabled(startAbortCount, checkedRobotName), runProgramService);
+        XFuture<Boolean> xf1 = XFuture.supplyAsync(logString, () -> this.doCheckEnabled(startAbortCount, checkedRobotName), runProgramService);
         this.lastStartCheckEnabledFuture1 = xf1;
         XFuture<Boolean> xf2
                 = xf1
-                        .always(() -> logEvent("finished startCheckEnabled", (System.currentTimeMillis() - t0)));
+                        .always(() -> logEvent("finished "+logString, (System.currentTimeMillis() - t0)));
         this.lastStartCheckEnabledFuture2 = xf2;
         return xf2;
-//        try {
-//            System.out.println("startCheckEnabled called.");
-//            if (!isConnected()) {
-//                setConnected(true);
-//            }
-//            CRCLProgramType emptyProgram = createEmptyProgram();
-//            setCommandID(emptyProgram.getInitCanon());
-//            setCommandID(emptyProgram.getEndCanon());
-//            emptyProgram.setName("checkEnabled." + checkEnabledCount.incrementAndGet());
-//            return startCRCLProgram(emptyProgram)
-//                    .thenApply("startCheckEnabled.finish." + robotName + "." + taskName,
-//                            x -> {
-//                                System.out.println("startCheckEnabled finishing with " + x);
-//                                enableCheckedAlready = x;
-//                                return x;
-//                            });
-//        } catch (JAXBException ex) {
-//            Logger.getLogger(AprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
-//            throw new RuntimeException(ex);
-//        }
     }
 
     private boolean doCheckEnabled(int startAbortCount, String startRobotName) {

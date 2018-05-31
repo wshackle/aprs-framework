@@ -1,4 +1,3 @@
 ToolName,X (mm),Y (mm),Z (mm),Rx (deg),Ry (deg),Rz (deg),Comment
-ToolName,X (mm),Y (mm),Z (mm),Rx (deg),Ry (deg),Rz (deg),Comment
 vacuum,0.0,0.0,18.0,0.0,0.0,0.0,
-tool2,0.0,0.0,0.0,0.0,0.0,0.0,
+pincher,0.0,0.0,0.0,0.0,0.0,0.0,
