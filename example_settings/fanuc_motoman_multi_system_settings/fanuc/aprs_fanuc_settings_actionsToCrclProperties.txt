@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:2176
+#  Automatically saved 
 afterMoveToLookForDwellTime=0.1
 approachZOffset=50.0
 defaultDwellTime=0.1
@@ -17,6 +17,7 @@ lookForXYZ=150,80,180
 manualPartNames=[part_large_gear_in_pt_2, part_medium_gear_in_pt_4, part_medium_gear_in_pt_3, part_large_gear_in_kt_2, part_medium_gear_in_kt_4, part_medium_gear_in_kt_3, part_large_gear_in_kt_1, part_medium_gear_in_kt_2, part_medium_gear_in_kt_1, part_large_gear_in_pt_1, part_medium_gear_in_pt_2, part_medium_gear_in_pt_1, empty_slot_for_large_gear_in_kit_m2l1_vessel_1, empty_slot_for_large_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m2, empty_slot_for_medium_gear_in_kit_m2l1_vessel, kit_lg1med2_1_slot_m1, medium_gear_1, sku_part_medium_gear, sku_part_large_gear]
 manualSlotNames=[empty_slot_2_for_medium_gear_in_kit_m2l1_vessel_2, empty_slot_1_for_medium_gear_in_kit_m2l1_vessel_2, empty_slot_for_large_gear_in_large_gear_vessel_2, empty_slot_for_medium_gear_in_medium_gear_vessel_4, empty_slot_for_medium_gear_in_medium_gear_vessel_3, empty_slot_1_for_large_gear_in_kit_m2l1_vessel_2, empty_slot_for_large_gear_in_large_gear_vessel_1, empty_slot_for_medium_gear_in_medium_gear_vessel_2, empty_slot_for_medium_gear_in_medium_gear_vessel_1, empty_slot_1_for_large_gear_in_kit_m2l1_vessel_1, empty_slot_2_for_medium_gear_in_kit_m2l1_vessel_1, empty_slot_1_for_medium_gear_in_kit_m2l1_vessel_1]
 pauseInsteadOfRecover=false
+pddl.output=C:\\Users\\shackle\\AppData\\Local\\Temp\\1\\aprs_logs_2018-05-31_141333.907\\Fanuc-Cart-run-041-Fanuc\\141451.070_actionList_5798961447369799972.txt
 pddl.reverse_output=..\\..\\..\\example_pddl\\reverse_fanuc_demo_actions.txt
 placePartSlotArgIndex=0
 placeZOffset=5.0
@@ -34,5 +35,6 @@ takeSnapshots=false
 takeZOffset=0.0
 testTransSpeed=50.0
 useJointLookFor=true
+useJointMovesForToolHolderApproach=true
 verySlowTransSpeed=25
 visionCycleNewDiffThreshold=5
