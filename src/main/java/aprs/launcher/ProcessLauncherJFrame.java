@@ -22,6 +22,7 @@
  */
 package aprs.launcher;
 
+import static aprs.launcher.Neo4JKiller.JPS_COMMAND_FILENAME_STRING;
 import aprs.misc.Utils;
 import aprs.logdisplay.LogDisplayJPanel;
 import crcl.ui.XFuture;
@@ -581,6 +582,10 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         List<XFutureVoid> futures = new ArrayList<>();
         stopLineSeen = false;
         processLaunchDirectory = f.getParentFile();
+        File jpsCommandFile = Neo4JKiller.getJpsCommandFile();
+                if(null == jpsCommandFile) {
+                    jpsCommandFile = new File(processLaunchDirectory,JPS_COMMAND_FILENAME_STRING);
+                }
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while (null != (line = br.readLine())) {

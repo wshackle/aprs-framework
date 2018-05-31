@@ -2604,7 +2604,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private File propertiesFile = new File(System.getProperty("user.home"), ".visiontodb_properties.txt");
+    @MonotonicNonNull private File propertiesFile = null;
 
     public void setPropertiesFile(File f) {
         propertiesFile = f;

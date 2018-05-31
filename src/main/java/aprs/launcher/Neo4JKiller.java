@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 /**
  *
@@ -40,19 +41,33 @@ import java.util.logging.Logger;
  */
 public class Neo4JKiller {
 
+    @MonotonicNonNull
+    private static File jpsCommandFile;
+
+    public static void setJpsCommandFile(File f) {
+        jpsCommandFile = f;
+    }
+
+    public static File getJpsCommandFile() {
+        return jpsCommandFile;
+    }
+
+    public static final String JPS_COMMAND_FILENAME_STRING = "jpsCommand.txt";
+    
     public static String getJpsCommand() throws IOException {
         String jpsCommandProperty = System.getProperty("jps.command");
         if (null != jpsCommandProperty && jpsCommandProperty.length() > 0) {
             return jpsCommandProperty;
         }
-        File jpsCommandFile = new File(System.getProperty("user.home"), "jpsCommand.txt");
-        if (jpsCommandFile.exists()) {
-            try (BufferedReader br = new BufferedReader(new FileReader(jpsCommandFile))) {
-                String line;
-                while (null != (line = br.readLine())) {
-                    String trimmed = line.trim();
-                    if (trimmed.length() > 0) {
-                        return trimmed;
+        if (null != jpsCommandFile) {
+            if (jpsCommandFile.exists()) {
+                try (BufferedReader br = new BufferedReader(new FileReader(jpsCommandFile))) {
+                    String line;
+                    while (null != (line = br.readLine())) {
+                        String trimmed = line.trim();
+                        if (trimmed.length() > 0) {
+                            return trimmed;
+                        }
                     }
                 }
             }
@@ -63,7 +78,11 @@ public class Neo4JKiller {
             jpsCmd = DEFAULT_WINDOWS_JPS_COMMAND;
         }
         System.out.println("Using command \"" + jpsCmd + "\" to run jps to find the neo4j processes, if you need to use a different command on your system put the text for that command in:");
-        System.out.println(jpsCommandFile.getCanonicalPath());
+        if(null != jpsCommandFile) {
+            System.out.println(jpsCommandFile.getCanonicalPath());
+        } else {
+            System.out.println(JPS_COMMAND_FILENAME_STRING+" in the directory with the launch.txt file");
+        }
         System.out.println(" or set the property jps.command");
         return jpsCmd;
     }
@@ -89,7 +108,7 @@ public class Neo4JKiller {
         }
         return pids;
     }
-    private static final String DEFAULT_WINDOWS_JPS_COMMAND = "c:\\Program Files\\Java\\jdk1.8.0_92\\bin\\jps";
+    private static final String DEFAULT_WINDOWS_JPS_COMMAND = "C:\\Program Files\\Java\\jdk1.8.0_92\\bin\\jps";
 
     private static void killPIDsWindows(Iterable<Integer> pids) throws IOException {
         List<Process> processes = new ArrayList<>();
