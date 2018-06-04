@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.AprsJFrame.saveProperties() at AprsJFrame.java:5976
+#  Automatically saved 
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 USETEACHTABLE=true
 aprs.robotName=Motoman
