@@ -2675,6 +2675,7 @@ public class AprsSystem implements AprsSystemInterface {
         this.connectVisionOnSetupStartupSelected = selected;
     }
 
+    @SuppressWarnings({"unchecked","rawtypes"})
     private XFutureVoid startWindowsFromMenuCheckboxes() {
         try {
             List<XFuture<?>> futures = new ArrayList<>();
@@ -3436,8 +3437,10 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     private void maximizePddlPlannerJInternalFrame() {
-        JInternalFrame internalFrame = pddlPlannerJInternalFrame;
-        maximizeJInteralFrame(internalFrame);
+        if(null != pddlPlannerJInternalFrame) {
+            JInternalFrame internalFrame = pddlPlannerJInternalFrame;
+            maximizeJInteralFrame(internalFrame);
+        }
     }
 
     private void maximizeJInteralFrame(JInternalFrame internalFrame) {

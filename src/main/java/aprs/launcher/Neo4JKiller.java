@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -48,13 +49,14 @@ public class Neo4JKiller {
         jpsCommandFile = f;
     }
 
-    public static File getJpsCommandFile() {
+    @Nullable
+    static File getJpsCommandFile() {
         return jpsCommandFile;
     }
 
-    public static final String JPS_COMMAND_FILENAME_STRING = "jpsCommand.txt";
+    static final String JPS_COMMAND_FILENAME_STRING = "jpsCommand.txt";
     
-    public static String getJpsCommand() throws IOException {
+    private static String getJpsCommand() throws IOException {
         String jpsCommandProperty = System.getProperty("jps.command");
         if (null != jpsCommandProperty && jpsCommandProperty.length() > 0) {
             return jpsCommandProperty;
@@ -87,7 +89,7 @@ public class Neo4JKiller {
         return jpsCmd;
     }
 
-    public static List<Integer> getNeo4JPIDs() throws IOException {
+    private static List<Integer> getNeo4JPIDs() throws IOException {
 
         ProcessBuilder pb = new ProcessBuilder(getJpsCommand(), "-l");
         pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
@@ -146,7 +148,7 @@ public class Neo4JKiller {
         }
     }
 
-    public static void killPIDs(Iterable<Integer> pids) throws IOException {
+    private static void killPIDs(Iterable<Integer> pids) throws IOException {
         if (isWindowsOs()) {
             killPIDsWindows(pids);
         } else {
@@ -158,7 +160,7 @@ public class Neo4JKiller {
         return System.getProperty("os.name").startsWith("Windows");
     }
 
-    public static void killNeo4J() throws IOException {
+    static void killNeo4J() throws IOException {
         List<Integer> pids = getNeo4JPIDs();
         System.out.println("killNeo4J: pids = " + pids);
         killPIDs(pids);

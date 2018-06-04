@@ -114,7 +114,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param viewDetails new value of viewDetails
      */
-    public void setViewDetails(boolean viewDetails) {
+    void setViewDetails(boolean viewDetails) {
         this.viewDetails = viewDetails;
         this.repaint();
     }
@@ -139,8 +139,7 @@ public class Object2DJPanel extends JPanel {
         if (null == url) {
             throw new IllegalArgumentException("ClassLoader.getSystemResource(" + resName + ") returned null");
         }
-        BufferedImage image = ImageIO.read(url);
-        return image;
+        return ImageIO.read(url);
     }
 
     /**
@@ -148,7 +147,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @return the value of displayAxis
      */
-    public DisplayAxis getDisplayAxis() {
+    DisplayAxis getDisplayAxis() {
         return displayAxis;
     }
 
@@ -157,11 +156,11 @@ public class Object2DJPanel extends JPanel {
      *
      * @param displayAxis new value of displayAxis
      */
-    public void setDisplayAxis(DisplayAxis displayAxis) {
+    void setDisplayAxis(DisplayAxis displayAxis) {
         this.displayAxis = displayAxis;
         this.repaint();
     }
-    public static final List<PhysicalItem> EXAMPLES_ITEMS_LIST = Arrays.asList(// PhysicalItem(String slotMaxDistExpansion, double rotation, double x, double y, double score, String type)
+    static final List<PhysicalItem> EXAMPLES_ITEMS_LIST = Arrays.asList(// PhysicalItem(String slotMaxDistExpansion, double rotation, double x, double y, double score, String type)
             newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", 0.10, 700.45, -140.82, 0.99, "P"),
             newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", 0.79, 528.60, -122.51, 0.95, "P"),
             newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", -0.60, 529.98, 213.96, 0.94, "P"),
@@ -208,7 +207,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @return the value of showOutputItems
      */
-    public boolean isShowOutputItems() {
+    boolean isShowOutputItems() {
         return showOutputItems;
     }
 
@@ -229,7 +228,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @return the value of outputItems
      */
-    public List<PhysicalItem> getOutputItems() {
+    List<PhysicalItem> getOutputItems() {
         if (null != outputItems) {
             return Collections.unmodifiableList(outputItems);
         }
@@ -290,7 +289,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @return the value of itemsWithAddedExtras
      */
-    public List<PhysicalItem> getItemsWithAddedExtras() {
+    List<PhysicalItem> getItemsWithAddedExtras() {
         return itemsWithAddedExtras;
     }
 
@@ -503,20 +502,20 @@ public class Object2DJPanel extends JPanel {
         public int w;
         public int h;
         public double rotationOffset;
-        public boolean scale_set;
+        boolean scale_set;
         public double scale;
-        public boolean paintingComponent;
+        boolean paintingComponent;
     }
 
-    public BufferedImage createSnapshotImage() {
+    BufferedImage createSnapshotImage() {
         return createSnapshotImage(null);
     }
 
-    public BufferedImage createSnapshotImage(@Nullable ViewOptions opts) {
+    BufferedImage createSnapshotImage(@Nullable ViewOptions opts) {
         return createSnapshotImage(opts, items);
     }
 
-    public BufferedImage createSnapshotImage(@Nullable ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+    BufferedImage createSnapshotImage(@Nullable ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
 
         Dimension dim = this.getSize();
         int w = (opts != null) ? opts.w : dim.width;
@@ -543,7 +542,7 @@ public class Object2DJPanel extends JPanel {
         return img;
     }
 
-    public void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, @Nullable PhysicalItem selectedItem, Graphics2D g2d, @Nullable ViewOptions opts) {
+    private void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, @Nullable PhysicalItem selectedItem, Graphics2D g2d, @Nullable ViewOptions opts) {
         try {
             if (itemsToPaint.isEmpty()) {
                 return;
@@ -557,7 +556,7 @@ public class Object2DJPanel extends JPanel {
             double minY = Double.POSITIVE_INFINITY;
             double maxY = Double.NEGATIVE_INFINITY;
 
-            if (this.showCurrentXY && (null == opts || opts.disableShowCurrent == false)) {
+            if (this.showCurrentXY && (null == opts || !opts.disableShowCurrent)) {
                 minX = currentX;
                 maxX = currentX;
                 minY = currentY;
@@ -602,11 +601,11 @@ public class Object2DJPanel extends JPanel {
         paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, minX, minY, maxX, maxY, w, h, currentScale, origTransform);
     }
 
-    public void paintHighlightedPose(@Nullable PmCartesian point, Graphics2D g2d, @Nullable String label, double minX, double minY, double maxX, double maxY,
-            int width,
-            int height,
-            double currentScale,
-            AffineTransform origTransform) {
+    private void paintHighlightedPose(@Nullable PmCartesian point, Graphics2D g2d, @Nullable String label, double minX, double minY, double maxX, double maxY,
+                                      int width,
+                                      int height,
+                                      double currentScale,
+                                      AffineTransform origTransform) {
         if (null != point) {
             if (label == null) {
                 label = "(null)";
@@ -718,7 +717,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param autoscale new value of autoscale
      */
-    public void setAutoscale(boolean autoscale) {
+    void setAutoscale(boolean autoscale) {
         this.autoscale = autoscale;
         this.scale_set = false;
         this.repaint();
@@ -731,7 +730,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @return the value of selectedItemIndex
      */
-    public int getSelectedItemIndex() {
+    int getSelectedItemIndex() {
         return selectedItemIndex;
     }
 
@@ -751,7 +750,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param viewRotationsAndImages new value of viewRotationsAndImages
      */
-    public void setViewRotationsAndImages(boolean viewRotationsAndImages) {
+    void setViewRotationsAndImages(boolean viewRotationsAndImages) {
         this.viewRotationsAndImages = viewRotationsAndImages;
         this.repaint();
     }
@@ -761,7 +760,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param newsSelectedItemIndex new value of selectedItemIndex
      */
-    public void setSelectedItemIndex(int newsSelectedItemIndex) {
+    void setSelectedItemIndex(int newsSelectedItemIndex) {
         int oldSelectedItemIndex = this.selectedItemIndex;
         if (oldSelectedItemIndex != newsSelectedItemIndex) {
             this.selectedItemIndex = newsSelectedItemIndex;
@@ -857,7 +856,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param endEffectorClosed new value of endEffectorClosed
      */
-    public void setEndEffectorClosed(boolean endEffectorClosed) {
+    void setEndEffectorClosed(boolean endEffectorClosed) {
         this.endEffectorClosed = endEffectorClosed;
     }
 
@@ -877,7 +876,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param currentX new value of currentX
      */
-    public void setCurrentX(double currentX) {
+    void setCurrentX(double currentX) {
         this.currentX = currentX;
         this.repaint();
     }
@@ -898,7 +897,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param currentY new value of currentY
      */
-    public void setCurrentY(double currentY) {
+    void setCurrentY(double currentY) {
         this.currentY = currentY;
         this.repaint();
     }
@@ -919,7 +918,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param showCurrentXY new value of showCurrentXY
      */
-    public void setShowCurrentXY(boolean showCurrentXY) {
+    void setShowCurrentXY(boolean showCurrentXY) {
         this.showCurrentXY = showCurrentXY;
         this.repaint();
     }
@@ -940,7 +939,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param useSeparateNames new value of useSeparateNames
      */
-    public void setUseSeparateNames(boolean useSeparateNames) {
+    void setUseSeparateNames(boolean useSeparateNames) {
         this.useSeparateNames = useSeparateNames;
         this.repaint();
     }
@@ -1065,7 +1064,7 @@ public class Object2DJPanel extends JPanel {
      * @param showAddedToolsAndToolHolders new value of
      * showAddedToolsAndToolHolders
      */
-    public void setShowAddedToolsAndToolHolders(boolean showAddedToolsAndToolHolders) {
+    void setShowAddedToolsAndToolHolders(boolean showAddedToolsAndToolHolders) {
         this.showAddedToolsAndToolHolders = showAddedToolsAndToolHolders;
     }
 
@@ -1076,7 +1075,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @return the value of showAddedSlotPositions
      */
-    public boolean isShowAddedSlotPositions() {
+    boolean isShowAddedSlotPositions() {
         return showAddedSlotPositions;
     }
 
@@ -1085,13 +1084,16 @@ public class Object2DJPanel extends JPanel {
      *
      * @param showAddedSlotPositions new value of showAddedSlotPositions
      */
-    public void setShowAddedSlotPositions(boolean showAddedSlotPositions) {
+    void setShowAddedSlotPositions(boolean showAddedSlotPositions) {
         this.showAddedSlotPositions = showAddedSlotPositions;
         updateAddedExtras();
         repaint();
     }
 
     private List<PhysicalItem> getAvailableToolHolders() {
+        if(null == aprsSysInterface) {
+            throw new IllegalStateException("null == aprsSysInterface");
+        }
         return aprsSysInterface.getAvailableToolHolders();
     }
 
@@ -1145,7 +1147,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    public List<PhysicalItem> computeAbsSlotPositions(List<PhysicalItem> l) {
+    List<PhysicalItem> computeAbsSlotPositions(List<PhysicalItem> l) {
         List<PhysicalItem> absSlotList = new ArrayList<>();
         for (PhysicalItem item : l) {
             if (null != slotOffsetProvider && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
@@ -1167,7 +1169,7 @@ public class Object2DJPanel extends JPanel {
         this.slotOffsetProvider = slotOffsetProvider;
     }
 
-    public List<PhysicalItem> computeSlotPositions(PhysicalItem item) {
+    private List<PhysicalItem> computeSlotPositions(PhysicalItem item) {
         if (null == slotOffsetProvider) {
             throw new IllegalStateException("slotOffsetProvider is null");
         }
@@ -1197,7 +1199,7 @@ public class Object2DJPanel extends JPanel {
         double scale;
         Image scaledImage;
 
-        public PartImageInfo(BufferedImage image, double ratio, double width) {
+        PartImageInfo(BufferedImage image, double ratio, double width) {
             this.image = image;
             this.ratio = ratio;
             this.width = width;
@@ -1205,7 +1207,7 @@ public class Object2DJPanel extends JPanel {
             scaledImage = image.getScaledInstance(image.getWidth(), image.getHeight(), Image.SCALE_DEFAULT);
         }
 
-        public Image getScaledImage(double scale) {
+        Image getScaledImage(double scale) {
             int old_w = (int) (ratio * this.scale * image.getWidth());
             int old_h = (int) (ratio * this.scale * image.getHeight());
             int new_w = (int) (ratio * scale * image.getWidth());
@@ -1258,7 +1260,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param capturedPartPoint new value of capturedPartPoint
      */
-    public void setCapturedPartPoint(Point2D.@Nullable Double capturedPartPoint) {
+    void setCapturedPartPoint(Point2D.@Nullable Double capturedPartPoint) {
         this.capturedPartPoint = capturedPartPoint;
     }
 
@@ -1284,14 +1286,14 @@ public class Object2DJPanel extends JPanel {
         this.viewLimitsLine = viewLimitsLine;
     }
 
-    public void paintItems(Graphics2D g2d,
-            Collection<? extends PhysicalItem> itemsToPaint,
-            @Nullable PhysicalItem selectedItem,
-            double minX,
-            double minY,
-            double maxX,
-            double maxY,
-            @Nullable ViewOptions opts) {
+    private void paintItems(Graphics2D g2d,
+                            Collection<? extends PhysicalItem> itemsToPaint,
+                            @Nullable PhysicalItem selectedItem,
+                            double minX,
+                            double minY,
+                            double maxX,
+                            double maxY,
+                            @Nullable ViewOptions opts) {
         try {
             if (itemsToPaint.isEmpty()) {
                 return;
@@ -1364,7 +1366,7 @@ public class Object2DJPanel extends JPanel {
                     displayMaxY = (0 - 20) / new_scale + minY;
                     break;
             }
-            if (viewLimitsLine && (null == opts || opts.disableLimitsLine == false)) {
+            if (viewLimitsLine && (null == opts || !opts.disableLimitsLine)) {
                 g2d.drawString(String.format("MinX,MinY = (%.2f,%.2f), MaxX,MaxY= (%.2f,%.2f), scale=%.2f", minX, minY, maxX, maxY, new_scale), 10, height - 10);
             }
             Collection<? extends PhysicalItem> displayItems = itemsToPaint;
@@ -1373,17 +1375,17 @@ public class Object2DJPanel extends JPanel {
                 displayItems = displayItemsList;
                 switch (displayAxis) {
                     case POS_X_POS_Y:
-                        Collections.sort(displayItemsList, Comparator.comparing((PhysicalItem item) -> item.y));
+                        displayItemsList.sort(Comparator.comparing((PhysicalItem item) -> item.y));
                         break;
                     case NEG_X_NEG_Y:
-                        Collections.sort(displayItemsList, Comparator.comparing((PhysicalItem item) -> -item.y));
+                        displayItemsList.sort(Comparator.comparing((PhysicalItem item) -> -item.y));
                         break;
 
                     case POS_Y_NEG_X:
-                        Collections.sort(displayItemsList, Comparator.comparing((PhysicalItem item) -> item.x));
+                        displayItemsList.sort(Comparator.comparing((PhysicalItem item) -> item.x));
                         break;
                     case NEG_Y_POS_X:
-                        Collections.sort(displayItemsList, Comparator.comparing((PhysicalItem item) -> -item.x));
+                        displayItemsList.sort(Comparator.comparing((PhysicalItem item) -> -item.x));
                         break;
                 }
             }
@@ -1632,7 +1634,7 @@ public class Object2DJPanel extends JPanel {
                 }
                 g2d.setTransform(origTransform);
             }
-            if (this.showCurrentXY && (null == opts || opts.disableShowCurrent == false)) {
+            if (this.showCurrentXY && (null == opts || !opts.disableShowCurrent)) {
                 Color origColor = g2d.getColor();
                 Point2D.Double fromPoint = capturedPartPoint;
                 if (null != fromPoint) {
@@ -1737,11 +1739,10 @@ public class Object2DJPanel extends JPanel {
     }
 
     private boolean checkImageShown(PhysicalItem item) {
-        boolean imageShown = viewRotationsAndImages
+        return viewRotationsAndImages
                 && null != partImageMap
                 && !partImageMap.isEmpty()
                 && null != getPartImageInfo(item);
-        return imageShown;
     }
 
     private void paintPartImage(Graphics2D g2d, double minX, double minY, double maxX, double maxY, PhysicalItem item, double rotationOffsetParam, double currentScale) {
@@ -1765,8 +1766,6 @@ public class Object2DJPanel extends JPanel {
             }
             g2d.setColor(Color.BLACK);
 
-        } else {
-//            System.out.println("no image for " + item.getName());
         }
     }
 
@@ -1870,9 +1869,9 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    public double slotMaxDistExpansion = 1.5;
+    private double slotMaxDistExpansion = 1.5;
 
-    public double getSlotMaxDistExpansion() {
+    double getSlotMaxDistExpansion() {
         return slotMaxDistExpansion;
     }
 

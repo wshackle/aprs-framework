@@ -22,6 +22,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
@@ -38,7 +41,7 @@ public class OpAction implements OpActionInterface {
 
     private final static AtomicInteger idCounter = new AtomicInteger();
 
-    @MonotonicNonNull private final ActionType executorActionType;
+    @Nullable private final ActionType executorActionType;
     private final String[] executorArgs;
     private String name;
 
@@ -56,11 +59,11 @@ public class OpAction implements OpActionInterface {
      *
      * @return the value of executorActionType
      */
-    public ActionType getExecutorActionType() {
+    @Nullable public ActionType getExecutorActionType() {
         return executorActionType;
     }
 
-    public static OpActionType executorActionToOpAction(ActionType at) {
+    private static OpActionType executorActionToOpAction(ActionType at) {
         switch (at) {
             case TAKE_PART:
                 return PICKUP;
@@ -92,8 +95,7 @@ public class OpAction implements OpActionInterface {
         int dindex = name.indexOf("-[");
         if (dindex > 0) {
             String type = name.substring(0, dindex);
-            String args[] = name.substring(dindex + 2).split("[,{}\\-\\[\\]]+");
-            return args;
+            return name.substring(dindex + 2).split("[,{}\\-\\[\\]]+");
         }
         return new String[]{};
     }
@@ -220,7 +222,7 @@ public class OpAction implements OpActionInterface {
         this.next = next;
     }
 
-    public boolean actionRequired() {
+    private boolean actionRequired() {
         return Objects.equals(trayType, "KT");
     }
 
@@ -252,7 +254,7 @@ public class OpAction implements OpActionInterface {
 
     private int maxNextEffectiveCount = 0;
 
-    public void addPossibleNextActions(List<? extends OpActionInterface> allActions) {
+    void addPossibleNextActions(List<? extends OpActionInterface> allActions) {
         maxNextEffectiveCount = allActions.size();
         for (OpActionInterface action : allActions) {
             if (checkNextAction(action)) {
@@ -266,7 +268,7 @@ public class OpAction implements OpActionInterface {
         }
     }
 
-    @Nullable private String trayType = null;
+    @Nullable private String trayType;
 
     @Nullable @Override
     public String getTrayType() {
@@ -433,6 +435,7 @@ public class OpAction implements OpActionInterface {
         try {
             effNext = effectiveNext(true);
         } catch (Exception e) {
+            Logger.getLogger(OpAction.class.getName()).log(Level.SEVERE,"",e);
         }
         if (effNext != next && null != effNext) {
             effNextString = "(effectiveNext=" + effNext.getName() + ")";
@@ -454,6 +457,7 @@ public class OpAction implements OpActionInterface {
                 try {
                     dist = distance(true);
                 } catch (Exception e) {
+                    Logger.getLogger(OpAction.class.getName()).log(Level.SEVERE,"",e);
                 }
                 return name + infoString + " -> " + ((OpAction) localNext).name + "(cost=" + String.format("%.3f", dist) + ")";
             } else {
@@ -465,7 +469,7 @@ public class OpAction implements OpActionInterface {
         return name + "-> null";
     }
 
-    final int id;
+    private final int id;
 
     @Override
     public int getId() {
@@ -503,10 +507,7 @@ public class OpAction implements OpActionInterface {
         if (!Objects.equals(this.location, other.location)) {
             return false;
         }
-        if (this.opActionType != other.opActionType) {
-            return false;
-        }
-        return true;
+        return this.opActionType == other.opActionType;
     }
 
     @Override

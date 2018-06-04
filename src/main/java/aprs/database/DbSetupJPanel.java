@@ -92,7 +92,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 //        viewAreas = new ArrayList<>();
         setupMultiLineTable(jTableQueries, 1, editTableArea);
         jTextFieldDBLoginTimeout.setText(Integer.toString(DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT));
-        ((DefaultTableModel) jTableQueries.getModel()).addTableModelListener(queriesTableModelListener);
+        jTableQueries.getModel().addTableModelListener(queriesTableModelListener);
     }
 
     @SuppressWarnings("initialization")
@@ -102,25 +102,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         mapUpToDate = false;
     }
 
-//    private static List<String> getClasspathEntriesByPath(String path) throws IOException {
-//        InputStream is = DbMain.class.getClassLoader().getResourceAsStream(path);
-//        if(null == is) {
-//            return null;
-//        }
-//        StringBuilder sb = new StringBuilder();
-//        while (is.available() > 0) {
-//            byte[] buffer = new byte[1024];
-//            sb.append(new String(buffer, Charset.defaultCharset()));
-//        }
-//
-//        return Arrays
-//                .asList(sb.toString().split("\n")) // Convert StringBuilder to individual lines
-//                .stream() // Stream the list
-//                .filter(line -> line.trim().length() > 0) // Filter out empty lines
-//                .collect(Collectors.toList());              // Collect remaining lines into a List again
-//    }
     private JTextArea editTableArea;
-//    private List<JTextArea> viewAreas;
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -570,6 +553,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     private void jButtonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveActionPerformed
         JFileChooser chooser = new JFileChooser();
+        if(null == propertiesFile) {
+            throw new IllegalStateException("null == propertiesFile");
+        }
         File parentFile = propertiesFile.getParentFile();
         if (null != parentFile) {
             chooser.setCurrentDirectory(parentFile);
@@ -583,6 +569,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }//GEN-LAST:event_jButtonSaveActionPerformed
 
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
+        if(null == propertiesFile) {
+            throw new IllegalStateException("null == propertiesFile");
+        }
         this.setPropertiesFile(new File(jComboBoxPropertiesFiles.getSelectedItem().toString()));
         DbSetup newSetup = DbSetupBuilder.loadFromPropertiesFile(propertiesFile).build();
         this.setDbSetup(newSetup);
@@ -590,6 +579,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }//GEN-LAST:event_jButtonLoadActionPerformed
 
     private void jButtonBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBrowseActionPerformed
+        if(null == propertiesFile) {
+            throw new IllegalStateException("null == propertiesFile");
+        }
         JFileChooser chooser = new JFileChooser();
         File parentFile = propertiesFile.getParentFile();
         if (null != parentFile) {
@@ -1040,7 +1032,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      * notified.
      */
     @Override
-    public List<Future<?>> notifyAllDbSetupListeners(ExecutorService notifyService) {
+    public List<Future<?>> notifyAllDbSetupListeners(@Nullable ExecutorService notifyService) {
         boolean cancelWarnGiven = false;
         AprsSystemInterface parentFrame = this.aprsSystemInterface;
         if (null == parentFrame) {
@@ -1167,7 +1159,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      *
      * @return properties file
      */
-    public File getPropertiesFile() {
+    @Nullable public File getPropertiesFile() {
         return propertiesFile;
     }
     private volatile boolean savingProperties = false;
@@ -1179,6 +1171,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
 
     private void saveProperties(DbType dbtype, String host, int port) {
+        if(null == propertiesFile) {
+            throw new IllegalStateException("null == propertiesFile");
+        }
         try {
             savingProperties = true;
             File parentFile = propertiesFile.getParentFile();

@@ -245,7 +245,7 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
         this.visionToDBJPanel.setPropertiesFile(f);
     }
 
-    public File getPropertiesFile() {
+    @Nullable public File getPropertiesFile() {
         return this.visionToDBJPanel.getPropertiesFile();
     }
 
