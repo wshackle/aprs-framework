@@ -177,7 +177,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return partName;
     }
 
-    public List<Action> opActionsToPddlActions(OpActionPlan plan, int start) {
+    private List<Action> opActionsToPddlActions(OpActionPlan plan, int start) {
         List<? extends OpAction> listIn = plan.getEffectiveOrderedList(false);
         List<Action> ret = new ArrayList<>();
         double accelleration = 100.0;
@@ -206,7 +206,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     && listIn.get(i + 1).getOpActionType() == FAKE_DROPOFF) {
                 continue;
             }
-            ret.add(new Action(opa.getExecutorActionType(), opa.getExecutorArgs(), opa.cost(plan)));
+            ActionType executorActionType = opa.getExecutorActionType();
+            if(null != executorActionType) {
+                ret.add(new Action(executorActionType, opa.getExecutorArgs(), opa.cost(plan)));
+            }
         }
         return ret;
     }
@@ -262,13 +265,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 this::getPose);
     }
 
-    private static interface GetPoseFunction {
+    private interface GetPoseFunction {
 
-        @Nullable
-        public PoseType apply(String name, boolean ignoreNull) throws SQLException;
+        @Nullable PoseType apply(String name, boolean ignoreNull) throws SQLException;
     }
 
-    boolean inKitTrayByName(String name) {
+    private boolean inKitTrayByName(String name) {
         return !name.endsWith("_in_pt") && !name.contains("_in_pt_")
                 && (name.contains("_in_kit_") || name.contains("_in_kt_") || name.endsWith("in_kt"));
     }
@@ -444,11 +446,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String failedItemSkuName;
         int failedSlots;
 
-        public int getFailedSlots() {
+        int getFailedSlots() {
             return failedSlots;
         }
 
-        public KitToCheckInstanceInfo(String instanceName, List<Slot> absSlots) {
+        KitToCheckInstanceInfo(String instanceName, List<Slot> absSlots) {
             this.instanceName = instanceName;
             this.absSlots = absSlots;
             closestItemMap = new HashMap<>();
@@ -472,7 +474,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         Map<String, KitToCheckInstanceInfo> instanceInfoMap = Collections.emptyMap();
 
-        public KitToCheck(String name, Map<String, String> slotMap) {
+        KitToCheck(String name, Map<String, String> slotMap) {
             this.name = name;
             this.slotMap = slotMap;
         }
@@ -567,14 +569,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.positionMaps = errorMap;
     }
 
-    public static interface PoseProvider {
+    public interface PoseProvider {
 
-        public List<PhysicalItem> getNewPhysicalItems();
+        List<PhysicalItem> getNewPhysicalItems();
 
-        @Nullable
-        public PoseType getPose(String name);
+        @Nullable PoseType getPose(String name);
 
-        public List<String> getInstanceNames(String skuName);
+        List<String> getInstanceNames(String skuName);
     }
 
     private @Nullable
@@ -621,10 +622,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (dbConnection != qs.getDbConnection()) {
                 return false;
             }
-            if (!qs.isConnected()) {
-                return false;
-            }
-            return true;
+            return qs.isConnected();
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
@@ -672,7 +670,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      *
      * @param dbConnection new database connection to use
      */
-    public synchronized void setDbConnection(java.sql.@Nullable Connection dbConnection) {
+    private synchronized void setDbConnection(java.sql.@Nullable Connection dbConnection) {
         try {
             if (null != this.dbConnection && dbConnection != this.dbConnection && closeDbConnection) {
                 try {
@@ -694,8 +692,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             } else if (qs != null) {
                 qs.close();
             }
-        } catch (SQLException ex) {
-            logger.log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
         }
@@ -752,7 +748,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                     for (int i = 0; i < stackTraceElemArray.length; i++) {
                                         System.err.println(stackTraceElemArray[i]);
                                     }
-                                    System.err.println("");
+                                    System.err.println();
                                     System.err.println("Exception handled at ");
                                     if (null != aprsSystemInterface) {
                                         setTitleErrorString("Database error: " + ex.toString());
@@ -1069,8 +1065,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return;
         }
         long cmd0Id = cmds.get(0).getCommandID();
-        for (int i = 0; i < cmds.size(); i++) {
-            MiddleCommandType cmd = cmds.get(i);
+        for (MiddleCommandType cmd : cmds) {
             if (cmd instanceof SetLengthUnitsType) {
                 continue;
             }
@@ -1129,7 +1124,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         boolean newItemsRecieved;
         final int startingVisionUpdateCount;
 
-        public GenerateParams() {
+        GenerateParams() {
             this.startingVisionUpdateCount = visionUpdateCount.get();
         }
     }
@@ -1542,8 +1537,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
             }
             Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("");
-            System.err.println("");
+            System.out.println();
+            System.err.println();
             throw new IllegalStateException(ex);
         } finally {
             localAprsSystemInterface.stopBlockingCrclPrograms(blockingCount);
@@ -1612,7 +1607,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.includeSkipNotifyMarkers = includeSkipNotifyMarkers;
     }
 
-    public void addNotifyMarker(List<MiddleCommandType> cmds, String end_action_string, final int idx, Action action, final List<Action> fixedActionsCopy, @Nullable List<Action> fixedOrigActionsCopy) {
+    private void addNotifyMarker(List<MiddleCommandType> cmds, String end_action_string, final int idx, Action action, final List<Action> fixedActionsCopy, @Nullable List<Action> fixedOrigActionsCopy) {
         addMarkerCommand(cmds, end_action_string,
                 (CrclCommandWrapper wrapper) -> {
                     notifyActionCompletedListeners(idx, action, wrapper, fixedActionsCopy, fixedOrigActionsCopy);
@@ -1874,7 +1869,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private List<Action> optimizePddlActionsWithOptaPlanner(
             List<Action> actions,
             int startingIndex,
-            List<PhysicalItem> items) throws SQLException, InterruptedException, ExecutionException {
+            List<PhysicalItem> items) throws SQLException {
         assert (null != this.aprsSystemInterface) : "null == aprsSystemInterface";
         Solver<OpActionPlan> solverToRun = this.solver;
         if (null == solverToRun) {
@@ -2224,7 +2219,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (debug) {
                     System.out.println("matchedKitInstanceNames = " + matchedKitInstanceNames);
                     System.out.println("kitsToFix = " + kitsToFix);
-                    System.out.println("");
+                    System.out.println();
                 }
             }
 
@@ -2252,11 +2247,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 } else {
                     Map<String, Integer> prefixCountMap = new HashMap<>();
                     Map<String, List<String>> itemsNameMap = new HashMap<>();
-                    Collections.sort(kitsToFix, Comparators.byIntFunction(KitToCheck::getMaxDiffFailedSlots));
+                    kitsToFix.sort(Comparators.byIntFunction(KitToCheck::getMaxDiffFailedSlots));
                     List<Action> correctiveActions = new ArrayList<>();
                     for (KitToCheck kit : kitsToFix) {
                         List<KitToCheckInstanceInfo> infoList = new ArrayList<>(kit.instanceInfoMap.values());
-                        Collections.sort(infoList, Comparators.byIntFunction(KitToCheckInstanceInfo::getFailedSlots));
+                        infoList.sort(Comparators.byIntFunction(KitToCheckInstanceInfo::getFailedSlots));
                         for (KitToCheckInstanceInfo info : infoList) {
                             String kitInstanceName = info.instanceName;
                             if (matchedKitInstanceNames.contains(kitInstanceName)) {
@@ -2312,7 +2307,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                         k -> partNamesListForShortSkuName(newItems, k));
                                         System.out.println("checkKits: partNames = " + partNames);
                                         if (partNames.isEmpty()) {
-                                            System.out.println("");
+                                            System.out.println();
                                             System.out.println("No partnames for finalShortSkuName=" + finalShortSkuName);
                                             System.out.println("newItems = " + newItems);
                                             List<String> newItemsFullNames = newItems
@@ -2376,7 +2371,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         }
                         System.out.println("matchedKitInstanceNames = " + matchedKitInstanceNames);
                         System.out.println("kitsToFix = " + kitsToFix);
-                        System.out.println("");
+                        System.out.println();
                     }
                     List<Action> optimizedCorrectiveActions
                             = optimizePddlActionsWithOptaPlanner(correctiveActions, 0, newItems);
@@ -2415,20 +2410,18 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
-        List<String> partNames
-                = newItems.stream()
-                        .filter(item -> item.getType().equals("P"))
-                        .flatMap(item -> {
-                            String fullName = item.getFullName();
-                            if (null != fullName) {
-                                return Stream.of(fullName);
-                            }
-                            return Stream.empty();
-                        })
-                        .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
-                        .sorted()
-                        .collect(Collectors.toList());
-        return partNames;
+        return newItems.stream()
+                .filter(item -> item.getType().equals("P"))
+                .flatMap(item -> {
+                    String fullName = item.getFullName();
+                    if (null != fullName) {
+                        return Stream.of(fullName);
+                    }
+                    return Stream.empty();
+                })
+                .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     private void printLastOptoInfo() {
@@ -2683,7 +2676,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param poseIn the pose to correct or transform
      * @return pose after being corrected by all currently added position maps
      */
-    public PoseType visionToRobotPose(PoseType poseIn) {
+    private PoseType visionToRobotPose(PoseType poseIn) {
         PoseType pout = poseIn;
         List<PositionMap> lpm = getPositionMaps();
         if (null != lpm) {
@@ -2854,7 +2847,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param f file to save snapshot image to
      * @throws IOException if writing the file fails
      */
-    public void takeDatabaseViewSnapshot(File f) throws IOException {
+    private void takeDatabaseViewSnapshot(File f) {
         if (null != aprsSystemInterface) {
             aprsSystemInterface.startVisionToDbNewItemsImageSave(f);
         }
@@ -2878,8 +2871,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * (used for catching some potential concurrency problems)
      *
      */
-    public void addTakeSnapshots(List<MiddleCommandType> out,
-            String title, @Nullable PoseType pose, @Nullable String label, int crclNumber) {
+    private void addTakeSnapshots(List<MiddleCommandType> out,
+                                  String title, @Nullable PoseType pose, @Nullable String label, int crclNumber) {
         if (snapshotsEnabled()) {
             addMarkerCommand(out, title, x -> {
                 final int curCrclNumber = CrclGenerator.this.crclNumber.get();
@@ -2923,7 +2916,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @return run prefix
      */
     public String getRunPrefix() {
-        return getRunName() + Utils.getDateTimeString() + "_" + String.format("%03d", crclNumber) + "action-" + String.format("%03d", lastIndex);
+        return getRunName() + Utils.getDateTimeString() + "_" + String.format("%03d", crclNumber.get()) + "action-" + String.format("%03d", lastIndex.get());
     }
 
     private final AtomicLong commandId = new AtomicLong(100 * (System.currentTimeMillis() % 200));
@@ -2965,7 +2958,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         Utils.setCommandID(cmd, incrementAndGetCommandId());
     }
 
-    public void setCorrectKitImage() {
+    private void setCorrectKitImage() {
         if (null != kitInspectionJInternalFrame) {
             String kitinspectionImageKitPath = kitInspectionJInternalFrame.getKitinspectionImageKitPath();
             String kitImage = kitInspectionJInternalFrame.getKitImage();
@@ -3073,7 +3066,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, null, ex);
             }
-            EmptySlotSet = new HashSet<Slot>();
+            EmptySlotSet = new HashSet<>();
             int numberOfPartsInKit = 0;
 
             System.out.println("\n\n---Inspecting kit tray " + tray.getPartsTrayName());
@@ -3418,7 +3411,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private String getKitResultImage(Set<Slot> list) {
-        String kitResultImage = "";
+        StringBuilder kitResultImage = new StringBuilder();
         List<Integer> idList = new ArrayList<>();
         for (Slot slot : list) {
             int id = slot.getID();
@@ -3430,13 +3423,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             System.out.println("idList is empty");
         }
         for (Integer s : idList) {
-            kitResultImage += s;
+            kitResultImage.append(s);
         }
 
-        return kitResultImage;
+        return kitResultImage.toString();
     }
 
-    public double normAngle(double angleIn) {
+    private double normAngle(double angleIn) {
         double angleOut = angleIn;
         if (angleOut > Math.PI) {
             angleOut -= 2 * Math.PI * ((int) (angleIn / Math.PI));
@@ -3446,7 +3439,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return angleOut;
     }
 
-    private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException, BadLocationException {
+    private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException {
         int nbOfOccupiedSlots = 0;
         int counter = 0;
         List<String> allPartsInKt = new ArrayList<>();
@@ -3636,7 +3629,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return baseName.substring(0, lastCharIndex + 1);
     }
 
-    public void takePartByName(String partName, @Nullable Action nextPlacePartAction, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
+    private void takePartByName(String partName, @Nullable Action nextPlacePartAction, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
         PoseType pose = getPose(partName);
         PoseType pose1 = pose;
         if (takeSnapshots) {
@@ -3689,11 +3682,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private void recordSkipTakePart(String partName, @Nullable PoseType pose) throws IllegalStateException, SQLException {
+    private void recordSkipTakePart(String partName, @Nullable PoseType pose) throws IllegalStateException {
         lastTakenPart = null;
         takeSnapshots("plan", "skipping-take-part-" + partName + "", pose, partName);
-//        PoseType poseCheck = getPose(partName);
-//        System.out.println("poseCheck = " + poseCheck);
     }
 
     /**
@@ -4131,14 +4122,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return toolOffsetMap;
     }
 
-    @Nullable private String currentToolName;
+    private String currentToolName="empty";
 
     /**
      * Get the value of currentToolName
      *
      * @return the value of currentToolName
      */
-    @Nullable public String getCurrentToolName() {
+    public String getCurrentToolName() {
         return currentToolName;
     }
 
@@ -5062,7 +5053,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return approachPose;
     }
 
-    private String expectedToolName;
+    private String expectedToolName="empty";
 
     /**
      * Get the value of expectedToolName
@@ -5107,7 +5098,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (isEmptyTool(toolInRobot)) {
             throw new IllegalStateException("planning to drop tool when robot expected to be holding " + toolInRobot);
         }
-        String toolInHolder = expectedToolHolderContentsMap.get(toolHolderName);
+        String toolInHolder = getExpectedToolHolderContents(toolHolderName);
         if (!isEmptyTool(toolInHolder)) {
             throw new IllegalStateException("planning to drop tool when holder expected to be holding " + toolInHolder);
         }
@@ -5118,7 +5109,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     if (isEmptyTool(currentToolInRobot)) {
                         throw new IllegalStateException("dropping tool when robot holding " + currentToolInRobot);
                     }
-                    String currentToolInHolder = currentToolHolderContentsMap.get(toolHolderName);
+                    String currentToolInHolder = getCurrentToolHolderContents(toolHolderName);
                     if (!isEmptyTool(currentToolInHolder)) {
                         throw new IllegalStateException("dropping tool when holder holding " + currentToolInHolder);
                     }
@@ -5127,7 +5118,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
         );
         setExpectedToolName("empty");
-        expectedToolHolderContentsMap.put(toolHolderName, toolInHolder);
+        expectedToolHolderContentsMap.put(toolHolderName, toolInRobot);
         gotoToolChangerApproachByPose(pose, out);
     }
 
@@ -5155,7 +5146,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (!isEmptyTool(toolInRobot)) {
             throw new IllegalStateException("planning to pickup tool when tool robot expected to be holding = " + toolInRobot);
         }
-        String toolInHolder = expectedToolHolderContentsMap.get(toolHolderName);
+        String toolInHolder = getExpectedToolHolderContents(toolHolderName);
         if (isEmptyTool(toolInHolder)) {
             throw new IllegalStateException("planning to pukup tool when tool holder expected to contain is " + toolInHolder);
         }
@@ -5166,7 +5157,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     if (!isEmptyTool(prevRobotTool)) {
                         throw new IllegalStateException("pickup tool when currentTool = " + prevRobotTool);
                     }
-                    String prevHolderTool = currentToolHolderContentsMap.get(toolHolderName);
+                    String prevHolderTool = getCurrentToolHolderContents(toolHolderName);
                     if (isEmptyTool(prevHolderTool)) {
                         throw new IllegalStateException("pickup tool when currentTool = " + prevHolderTool);
                     }
@@ -5180,7 +5171,24 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         gotoToolChangerApproachByPose(pose, out);
     }
 
-    private static boolean isEmptyTool(String toolName) {
+    private String getExpectedToolHolderContents(String toolHolderName) {
+        String toolName = expectedToolHolderContentsMap.get(toolHolderName);
+        if(null == toolName) {
+            throw new IllegalStateException("expectedToolHolderContentsMap contains no entry for "+toolHolderName);
+        }
+        return toolName;
+    }
+
+    private String getCurrentToolHolderContents(String toolHolderName) {
+        String toolName =  currentToolHolderContentsMap.get(toolHolderName);
+        if(null == toolName) {
+            throw new IllegalStateException("currentToolHolderContentsMap has no entry for "+toolHolderName);
+        }
+        return toolName;
+    }
+
+
+    private static boolean isEmptyTool(@Nullable String toolName) {
         return toolName == null || toolName.length() < 1  || "empty".equals(toolName);
     }
 

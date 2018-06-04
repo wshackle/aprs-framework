@@ -79,14 +79,14 @@ public class Utils {
     /**
      * A Runnable that may throw a checked exception.
      */
-    public static interface RunnableWithThrow {
+    public interface RunnableWithThrow {
 
         /**
          * Run method to implement.
          *
          * @throws Exception exception occurred
          */
-        public void run() throws Exception;
+        void run() throws Exception;
     }
 
     @Nullable
@@ -110,7 +110,7 @@ public class Utils {
          *
          * @param name optional name for tracking futures
          */
-        public SwingFuture(String name) {
+        SwingFuture(String name) {
             super(name);
         }
 
@@ -167,7 +167,7 @@ public class Utils {
             return null;
         }
 
-        public File getLogFileDir() throws IOException {
+        File getLogFileDir() throws IOException {
             if (null != logFileDir) {
                 return logFileDir;
             }
@@ -409,8 +409,9 @@ public class Utils {
         if (javax.swing.SwingUtilities.isEventDispatchThread()) {
             return s.get();
         } else {
+
             javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
-            return ret.thenApply(f -> unwrap(f));
+            return ret.thenApply(Utils::unwrap);
         }
     }
 
@@ -500,7 +501,7 @@ public class Utils {
      * @param props properties to save
      */
     public static void saveProperties(File file, Properties props) {
-        List<String> names = new ArrayList<String>();
+        List<String> names = new ArrayList<>();
         for (Object key : props.keySet()) {
             names.add(key.toString());
         }
@@ -510,8 +511,7 @@ public class Utils {
             if (ste.length > 2) {
                 pw.println("#  Automatically saved ");
             }
-            for (int i = 0; i < names.size(); i++) {
-                String name = names.get(i);
+            for (String name : names) {
                 String value = props.getProperty(name);
                 if (null != value) {
                     value = value.replaceAll("\\\\", Matcher.quoteReplacement("\\\\"));
@@ -544,7 +544,7 @@ public class Utils {
         for (int i = 0; i < tm.getColumnCount(); i++) {
             colNameList.add(tm.getColumnName(i));
         }
-        return colNameList.toArray(new String[colNameList.size()]);
+        return colNameList.toArray(new String[0]);
     }
 
     /**
@@ -560,13 +560,13 @@ public class Utils {
             if (colIndex == null) {
                 throw new IllegalArgumentException("columnIndexe contains null : " + columnIndexes);
             }
-            int i = (int) colIndex;
+            int i = colIndex;
             if (i < 0 || i > tm.getColumnCount()) {
                 throw new IllegalArgumentException("columnIndexes contains " + i + " outside range 0 to " + tm.getColumnCount() + " : " + columnIndexes);
             }
             colNameList.add(tm.getColumnName(i));
         }
-        return colNameList.toArray(new String[colNameList.size()]);
+        return colNameList.toArray(new String[0]);
     }
 
     /**
@@ -622,8 +622,11 @@ public class Utils {
         long runningTimeHours = runningTimeSecondsTotal / 3600;
         long runningTimeMinutes = (runningTimeSecondsTotal % 3600) / 60;
         long runningTimeSeconds = (runningTimeSecondsTotal % 60);
-        String s = String.format("%02d:%02d:%02d", runningTimeHours, runningTimeMinutes, runningTimeSeconds) + " (" + runningTimeSecondsTotal + " Total Seconds)";
-        return s;
+        return String.format("%02d:%02d:%02d",
+                runningTimeHours,
+                runningTimeMinutes,
+                runningTimeSeconds)
+                + " (" + runningTimeSecondsTotal + " Total Seconds)";
     }
 
     /**

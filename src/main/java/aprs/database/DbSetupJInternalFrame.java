@@ -23,6 +23,8 @@
 package aprs.database;
 
 import aprs.system.AprsSystemInterface;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.io.File;
 
 /**
@@ -119,7 +121,7 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
      * Get the current properties file.
      * @return properties file
      */
-    public File getPropertiesFile() {
+    @Nullable public File getPropertiesFile() {
         return dbSetupJPanel1.getPropertiesFile();
     }
 

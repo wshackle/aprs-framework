@@ -179,7 +179,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         @Override
         public void tableChanged(TableModelEvent e) {
             try {
-                handleRobotTableChange(e.getFirstRow(), e.getLastRow(), e.getColumn(), e.getType(),e.getSource());
+                handleRobotTableChange(e.getFirstRow(), e.getLastRow(), e.getColumn(), e.getType(), e.getSource());
             } catch (Exception exception) {
                 log(Level.SEVERE, null, exception);
             }
@@ -191,6 +191,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private void handleRobotTableChange(int firstRow, int lastRow, int col, int type, Object source) {
 
+        if (null == robotEnableMap) {
+            throw new IllegalStateException("null == robotEnableMap");
+        }
         System.out.println("source = " + source);
         if (jTableRobots.getRowCount() > 0) {
             System.out.println("handleRobotTableChange: firstRow=" + firstRow + ",lastRow=" + lastRow + ",jTableRobots.getValueAt(" + firstRow + ",1) = " + jTableRobots.getValueAt(firstRow, 1));
@@ -204,6 +207,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (ignoreRobotTableChanges) {
             ignoreRobotTableChangesCount++;
             System.out.println("ignoreRobotTableChangesCount = " + ignoreRobotTableChangesCount);
+//            flushTableRobotEventDeque(false);
             return;
         }
         handleRobotTableChangesCount++;
@@ -212,23 +216,27 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         disableRobotTableModelListener();
         for (int i = firstRow; i < jTableRobots.getRowCount() && i <= lastRow; i++) {
             String robotName = (String) jTableRobots.getValueAt(i, 0);
-            Boolean enabled = (Boolean) jTableRobots.getValueAt(i, 1);
-            Boolean wasEnabled = robotEnableMap.getOrDefault(robotName, enabled);
+            if (null == robotName) {
+                throw new IllegalStateException("null == robotName : jTableRobots.getValueAt(" + i + ", 0)");
+            }
+            boolean enabled = getEnableFromRobotsTable(i);
+            boolean wasEnabled = robotEnableMap.getOrDefault(robotName, enabled);
+            final String checkedRobotName = robotName;
             System.out.println("handleRobotTableChange: i=" + i + ",robotName=" + robotName + ",enabled=" + enabled + ",wasEnabled=" + wasEnabled);
-            if (!Objects.equals(enabled, wasEnabled)) {
+            if (enabled != wasEnabled) {
                 final int fi = i;
                 if (isTogglesAllowed()) {
                     XFuture.runAsync(() -> {
                         if (isTogglesAllowed()) {
-                            setRobotEnabled(robotName, enabled);
-                            flushTableRobotEventDeque(true);
+                            setRobotEnabled(checkedRobotName, enabled);
+//                            flushTableRobotEventDeque(true);
                         } else {
                             javax.swing.SwingUtilities.invokeLater(() -> {
                                 logEvent("Attempt to toggle robot enabled ignored.");
                                 disableRobotTableModelListener();
                                 System.out.println("handleRobotTableChange calling jTableRobots.setValueAt(" + wasEnabled + "," + fi + ", 1)");
                                 jTableRobots.setValueAt(wasEnabled, fi, 1);
-                                flushTableRobotEventDeque(false);
+//                                flushTableRobotEventDeque(false);
                                 enableRobotTableModelListener();
                             });
                         }
@@ -238,7 +246,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     disableRobotTableModelListener();
                     System.out.println("handleRobotTableChange calling jTableRobots.setValueAt(" + wasEnabled + "," + fi + ", 1)");
                     jTableRobots.setValueAt(wasEnabled, fi, 1);
-                    flushTableRobotEventDeque(false);
+//                    flushTableRobotEventDeque(false);
                     enableRobotTableModelListener();
                 }
                 break;
@@ -246,7 +254,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 System.err.println("event triggered no change.");
             }
         }
-        flushTableRobotEventDeque(false);
+//        flushTableRobotEventDeque(false);
         enableRobotTableModelListener();
     }
 
@@ -591,16 +599,16 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 if (value instanceof Boolean) {
-                    while(robotsEnableCelRendererComponentList.size() < row+1) {
+                    while (robotsEnableCelRendererComponentList.size() < row + 1) {
                         JCheckBox chkboxToAdd = new JCheckBox();
-                         
+
                         chkboxToAdd.setSelected(true);
                         robotsEnableCelRendererComponentList.add(chkboxToAdd);
                     }
                     JCheckBox chkbox = robotsEnableCelRendererComponentList.get(row);
                     boolean val = (value instanceof Boolean)
-                                 ?(Boolean)value
-                                 :true;
+                            ? (Boolean) value
+                            : true;
                     chkbox.setSelected(val);
                     return chkbox;
                 } else {
@@ -617,13 +625,12 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         //jTableRobots.getModel().addTableModelListener(robotTableModelListener);
     }
 
-    private void flushTableRobotEventDeque(boolean val) {
-        SetTableRobotEnabledEvent setTableRobotEnabledEvent = null;
-        while (null != (setTableRobotEnabledEvent = setTableRobotEnabledEventDeque.pollFirst())) {
-            setTableRobotEnabledEvent.getFuture().complete(val);
-        }
-    }
-
+//    private void flushTableRobotEventDeque(boolean val) {
+//        SetTableRobotEnabledEvent setTableRobotEnabledEvent = null;
+//        while (null != (setTableRobotEnabledEvent = setTableRobotEnabledEventDeque.pollFirst())) {
+//            setTableRobotEnabledEvent.getFuture().complete(val);
+//        }
+//    }
     public void setDefaultIconImage() {
         try {
             URL url = LauncherAprsJFrame.class
@@ -992,7 +999,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             String robotName = (String) jTableRobots.getValueAt(i, 0);
             if (null != robotName) {
                 boolean enabledInMap = robotEnableMap.getOrDefault(robotName, true);
-                boolean enabledInTable = (Boolean) jTableRobots.getValueAt(i, 1);
+                boolean enabledInTable = getEnableFromRobotsTable(i);
                 if (enabledInMap != enabledInTable) {
                     System.out.println("refreshRobotTable setValueAt(" + enabledInMap + "," + i + ",1) robotName=" + robotName);
                     disableRobotTableModelListener();
@@ -1000,7 +1007,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     enableRobotTableModelListener();
                 }
                 int mapDisableCount = robotDisableCountMap.getOrDefault(robotName, 0);
-                int tableDisableCount = (Integer) jTableRobots.getValueAt(i, 4);
+                int tableDisableCount = getDisableCountFromRobotsTable(i);
                 if (mapDisableCount != tableDisableCount) {
                     System.out.println("refreshRobotTable setValueAt(" + mapDisableCount + "," + i + ",4) robotName=" + robotName);
                     disableRobotTableModelListener();
@@ -1015,6 +1022,24 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         }
         Utils.autoResizeTableColWidths(jTableRobots);
+    }
+
+    private int getDisableCountFromRobotsTable(int row) {
+        Object o = jTableRobots.getValueAt(row, 4);
+        if(o instanceof  Integer) {
+            return (Integer) o;
+        } else {
+            throw new IllegalStateException("jTableRobots.getValueAt("+row+", 4) contains " + o);
+        }
+    }
+
+    private boolean getEnableFromRobotsTable(int row) {
+        Object o = jTableRobots.getValueAt(row, 1);
+        if(!(o instanceof Boolean)) {
+            throw new IllegalStateException("jTableRobots.getValueAt("+row+", 1) returned "+o);
+        }
+        boolean enabledInTable = (Boolean) o;
+        return enabledInTable;
     }
 
     private void setAbortTimeCurrent() {
@@ -1320,8 +1345,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         }
     }
-    private @MonotonicNonNull
-    Map<String, Boolean> robotEnableMap;
+    @MonotonicNonNull private Map<String, Boolean> robotEnableMap;
 
     @Nullable
     public Map<String, Boolean> getRobotEnableMap() {
@@ -3141,8 +3165,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (jCheckBoxMenuItemContinousDemo.isSelected()) {
                 continousDemoFuture
                         = continueAllXF
-                        .thenCompose("jMenuItemContinueAllActionPerformed.continueAllActions",
-                                x -> continueAllActions());
+                                .thenCompose("jMenuItemContinueAllActionPerformed.continueAllActions",
+                                        x -> continueAllActions());
                 setMainFuture(continousDemoFuture);
             }
         });
@@ -3203,33 +3227,33 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     immediateAbortAll("jMenuItemRandomTestReverseFirstActionPerformed");
                     XFuture<Void> outerRet
                             = resetAll(false)
-                            .thenCompose(x -> {
-                                XFuture<Void> innerRet = Utils.supplyOnDispatchThread(() -> {
-                                    try {
-                                        clearAllErrors();
-                                        connectAll();
-                                        jCheckBoxMenuItemPause.setSelected(false);
-                                        resume();
-                                        setAllReverseFlag(true);
-                                        enableAllRobots();
-                                        clearContinousDemoCycle();
-                                        clearRandomTestCount();
-                                        jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(true);
-                                        jCheckBoxMenuItemRandomTest.setSelected(true);
-                                        lastFutureReturned = null;
-                                        XFuture<Void> ret = startRandomTest();
-                                        setMainFuture(ret);
-                                        return ret;
-                                    } catch (Exception e) {
-                                        Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, e);
-                                        JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
-                                        XFuture<Void> ret = new XFuture<>("internal startRandomTestFirstActionReversed with exception " + e);
-                                        ret.completeExceptionally(e);
-                                        return ret;
-                                    }
-                                }).thenCompose(x3 -> x3);
-                                return innerRet;
-                            });
+                                    .thenCompose(x -> {
+                                        XFuture<Void> innerRet = Utils.supplyOnDispatchThread(() -> {
+                                            try {
+                                                clearAllErrors();
+                                                connectAll();
+                                                jCheckBoxMenuItemPause.setSelected(false);
+                                                resume();
+                                                setAllReverseFlag(true);
+                                                enableAllRobots();
+                                                clearContinousDemoCycle();
+                                                clearRandomTestCount();
+                                                jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(true);
+                                                jCheckBoxMenuItemRandomTest.setSelected(true);
+                                                lastFutureReturned = null;
+                                                XFuture<Void> ret = startRandomTest();
+                                                setMainFuture(ret);
+                                                return ret;
+                                            } catch (Exception e) {
+                                                Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, e);
+                                                JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+                                                XFuture<Void> ret = new XFuture<>("internal startRandomTestFirstActionReversed with exception " + e);
+                                                ret.completeExceptionally(e);
+                                                return ret;
+                                            }
+                                        }).thenCompose(x3 -> x3);
+                                        return innerRet;
+                                    });
                     return outerRet;
                 } catch (Exception e) {
                     Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, e);
@@ -3757,7 +3781,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        for(JCheckBox chkbox : robotsEnableCelEditorCheckboxList) {
 //            chkbox.setEnabled(enabled);
 //        }
-        for(JCheckBox chkbox : robotsEnableCelRendererComponentList) {
+        for (JCheckBox chkbox : robotsEnableCelRendererComponentList) {
             chkbox.setEnabled(enabled);
         }
 //        jTableRobots.getColumnModel().getColumn(1).getCellEditor().
@@ -4213,7 +4237,11 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             l.add(o);
                         }
                     } else {
-                        l.add(o);
+                        if(o == null) {
+                            l.add("");
+                        } else {
+                            l.add(o);
+                        }
                     }
                 }
                 printer.printRecord(l);
@@ -4243,7 +4271,11 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             l.add(o);
                         }
                     } else {
-                        l.add(o);
+                        if(null != o) {
+                            l.add(o);
+                        } else {
+                            l.add("");
+                        }
                     }
                 }
                 printer.printRecord(l);
@@ -4461,13 +4493,13 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         disableRobotTableModelListener();
         for (int i = 0; i < jTableRobots.getRowCount(); i++) {
             String robotName = (String) jTableRobots.getValueAt(i, 0);
-            boolean enableFromTable = (Boolean) jTableRobots.getValueAt(i, 1);
+            boolean enableFromTable = getEnableFromRobotsTable(i);
             if (!enableFromTable) {
                 System.out.println("updateRobotsTableFromMapsAndEnableAll jTableRobots.setValueAt(true," + i + ", 1)");
                 jTableRobots.setValueAt(true, i, 1);
             }
             if (null != robotName) {
-                int countFromTable = (Integer) jTableRobots.getValueAt(i, 4);
+                int countFromTable = getDisableCountFromRobotsTable(i);
                 int countFromMap = robotDisableCountMap.getOrDefault(robotName, 0);
                 if (countFromTable != countFromMap) {
                     System.out.println("updateRobotsTableFromMapsAndEnableAll jTableRobots.setValueAt(" + countFromMap + "," + i + ", 4)");
@@ -4695,38 +4727,36 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     };
 
-    private final ConcurrentLinkedDeque<SetTableRobotEnabledEvent> setTableRobotEnabledEventDeque = new ConcurrentLinkedDeque<>();
-
-    public XFuture<Boolean> setTableRobotEnabled(String robotName, boolean enable) {
-        XFuture<Boolean> f1 = new XFuture<>("setTableRobotEnabled");
-        SetTableRobotEnabledEvent setTableRobotEnabledEvent
-                = new SetTableRobotEnabledEvent(enable, robotName, f1);
-        XFuture<Boolean> f2 = Utils.supplyOnDispatchThread(() -> {
-            if (isTogglesAllowed()) {
-                for (int i = 0; i < jTableRobots.getRowCount(); i++) {
-                    String tableRobotName = (String) jTableRobots.getValueAt(i, 0);
-                    if (null != tableRobotName && Objects.equals(tableRobotName, robotName)) {
-
-//                    Boolean enabled = (Boolean) jTableRobots.getValueAt(i, 1);
-//                        Boolean wasEnabled = robotEnableMap.get(robotName);
-                        setTableRobotEnabledEventDeque.add(setTableRobotEnabledEvent);
-                        boolean enableFromTable = (Boolean) jTableRobots.getValueAt(i, 1);
-                        if (enableFromTable != enable) {
-                            disableRobotTableModelListener();
-                            System.out.println("setTableRobotEnabled(" + robotName + "," + enable + ") calling jTableRobots.setValueAt(" + enable + "," + i + ", 1)");
-                            jTableRobots.setValueAt(enable, i, 1);
-                            enableRobotTableModelListener();
-                        }
-                        return true;
-                    }
-                }
-            }
-            f1.complete(false);
-            return false;
-        });
-        return f2.thenCompose(x -> f1);
-    }
-
+//    private final ConcurrentLinkedDeque<SetTableRobotEnabledEvent> setTableRobotEnabledEventDeque = new ConcurrentLinkedDeque<>();
+//    public XFuture<Boolean> setTableRobotEnabled(String robotName, boolean enable) {
+//        XFuture<Boolean> f1 = new XFuture<>("setTableRobotEnabled");
+//        SetTableRobotEnabledEvent setTableRobotEnabledEvent
+//                = new SetTableRobotEnabledEvent(enable, robotName, f1);
+//        XFuture<Boolean> f2 = Utils.supplyOnDispatchThread(() -> {
+//            if (isTogglesAllowed()) {
+//                for (int i = 0; i < jTableRobots.getRowCount(); i++) {
+//                    String tableRobotName = (String) jTableRobots.getValueAt(i, 0);
+//                    if (null != tableRobotName && Objects.equals(tableRobotName, robotName)) {
+//
+////                    Boolean enabled = (Boolean) jTableRobots.getValueAt(i, 1);
+////                        Boolean wasEnabled = robotEnableMap.get(robotName);
+//                        setTableRobotEnabledEventDeque.add(setTableRobotEnabledEvent);
+//                        boolean enableFromTable = (Boolean) jTableRobots.getValueAt(i, 1);
+//                        if (enableFromTable != enable) {
+//                            disableRobotTableModelListener();
+//                            System.out.println("setTableRobotEnabled(" + robotName + "," + enable + ") calling jTableRobots.setValueAt(" + enable + "," + i + ", 1)");
+//                            jTableRobots.setValueAt(enable, i, 1);
+//                            enableRobotTableModelListener();
+//                        }
+//                        return true;
+//                    }
+//                }
+//            }
+//            f1.complete(false);
+//            return false;
+//        });
+//        return f2.thenCompose(x -> f1);
+//    }
     public void updateRobotsTable() {
         if (closing) {
             return;

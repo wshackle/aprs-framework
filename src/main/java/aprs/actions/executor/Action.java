@@ -44,8 +44,8 @@ public class Action {
     public boolean getExecuted() {
         return executed;
     }
-
-    public void setExecTime() {
+            
+    void setExecTime() {
         executed = true;
         execTime = System.currentTimeMillis();
     }
@@ -54,7 +54,7 @@ public class Action {
         return execTime;
     }
 
-    public void setPlanTime() {
+    void setPlanTime() {
         planTime = System.currentTimeMillis();
     }
 
@@ -65,7 +65,7 @@ public class Action {
     /**
      * Create an instance from the required parameters.
      *
-     * @param actionType
+     * @param actionType enumerated type of action
      * @param arg single argument for the action
      */
     public Action(ActionType actionType, String arg) {
@@ -75,7 +75,7 @@ public class Action {
     /**
      * Create an instance from the required parameters.
      *
-     * @param actionType type of action
+     * @param actionType enumerated type of action
      * @param args arguments for the action
      */
     public Action(ActionType actionType, String []args) {
@@ -123,15 +123,14 @@ public class Action {
         this.label = label;
         this.type = type;
         int nonnullArgsCount = 0;
-        for (int i = 0; i < args.length; i++) {
-            if (args[i] != null) {
+        for (String arg1 : args) {
+            if (arg1 != null) {
                 nonnullArgsCount++;
             }
         }
         this.args = new String[nonnullArgsCount];
         int j = 0;
-        for (int i = 0; i < args.length; i++) {
-            String arg = args[i];
+        for (String arg : args) {
             if (arg != null) {
                 this.args[j] = arg;
                 j++;
@@ -171,10 +170,7 @@ public class Action {
         if (!Objects.equals(this.cost, other.cost)) {
             return false;
         }
-        if (!Arrays.deepEquals(this.args, other.args)) {
-            return false;
-        }
-        return true;
+        return Arrays.deepEquals(this.args, other.args);
     }
 
     private final String label;

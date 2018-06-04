@@ -6676,7 +6676,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return positionMapJPanel1.getReversePositionMaps();
     }
 
-    private volatile List<PhysicalItem> availableToolHolders = null;
+    private volatile List<PhysicalItem> availableToolHolders = Collections.emptyList();
 
     public List<PhysicalItem> getAvailableToolHolders() {
         if (null == availableToolHolders) {

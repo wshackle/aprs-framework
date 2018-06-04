@@ -255,7 +255,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         this.visionToDBJPanel.setPropertiesFile(f);
     }
 
-    public File getPropertiesFile() {
+    @Nullable public File getPropertiesFile() {
         return this.visionToDBJPanel.getPropertiesFile();
     }
 
