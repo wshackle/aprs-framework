@@ -1,4 +1,4 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties() at PddlExecutorJPanel.java:2176
+#  Automatically saved 
 afterMoveToLookForDwellTime=0.1
 approachZOffset=50.0
 defaultDwellTime=0.5
@@ -34,5 +34,6 @@ takeSnapshots=false
 takeZOffset=0.0
 testTransSpeed=50.0
 useJointLookFor=true
+useJointMovesForToolHolderApproach=true
 verySlowTransSpeed=25
 visionCycleNewDiffThreshold=5

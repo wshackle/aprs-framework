@@ -1,0 +1,5 @@
+Holder Position Name,Contents,Possible Contents,Comment
+big_gripper_holder,empty,,,
+big_vacuum_holder,big_vacuum,,,
+shared_with_fanuc_holder,small_vacuum,,,
+small_private_holder,empty,,,
