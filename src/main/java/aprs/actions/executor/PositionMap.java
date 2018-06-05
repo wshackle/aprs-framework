@@ -87,12 +87,12 @@ public class PositionMap {
 
     public static class BadErrorMapFormatException extends Exception {
 
-        public BadErrorMapFormatException(String message) {
+        BadErrorMapFormatException(String message) {
             super(message);
         }
     }
 
-    public static final String DEFAULT_COLUMN_HEADERS[] = new String[]{"X", "Y", "Z", "Offset_X", "Offset_Y", "Offset_Z"};
+    private static final String[] DEFAULT_COLUMN_HEADERS = new String[]{"X", "Y", "Z", "Offset_X", "Offset_Y", "Offset_Z"};
 
     private PositionMap() {
         errmapList = Collections.emptyList();
@@ -300,7 +300,8 @@ public class PositionMap {
         );
     }
 
-    @Nullable static public PositionMapEntry combineX(@Nullable PositionMapEntry e1, @Nullable PositionMapEntry e2, double x) {
+    @Nullable
+    private static PositionMapEntry combineX(@Nullable PositionMapEntry e1, @Nullable PositionMapEntry e2, double x) {
         if (null == e1) {
             if (null != e2 && Math.abs(e2.getRobotX() - x) < 1e-6) {
                 return e2;
@@ -351,7 +352,8 @@ public class PositionMap {
         );
     }
 
-    @Nullable static public PositionMapEntry combineY(PositionMapEntry e1, PositionMapEntry e2, double y) {
+    @Nullable
+    private static PositionMapEntry combineY(PositionMapEntry e1, PositionMapEntry e2, double y) {
         if (null == e1) {
             if (null != e2 && Math.abs(e2.getRobotY() - y) < 1e-6) {
                 return e2;

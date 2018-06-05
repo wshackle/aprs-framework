@@ -40,7 +40,7 @@ public class LogDisplayJInternalFrame extends javax.swing.JInternalFrame {
         logDisplayJPanel1.appendText(s);
     }
 
-    public void clearText() {
+    private void clearText() {
         logDisplayJPanel1.clearText();
     }
 

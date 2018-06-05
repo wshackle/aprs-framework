@@ -651,7 +651,7 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="jButtonContRandomTest">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Continous Random Test"/>
+                        <Property name="text" type="java.lang.String" value="Continuous Random Test"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonContRandomTestActionPerformed"/>

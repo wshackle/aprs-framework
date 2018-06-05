@@ -67,7 +67,7 @@ public class SocketLineReader {
 //        @Nullable volatile BufferedReader br;
 //        @Nullable volatile PrintStream ps;
 
-        public void close() {
+        void close() {
             try {
                 if (null != thread) {
                     thread.interrupt();
@@ -158,7 +158,7 @@ public class SocketLineReader {
                 @Override
                 public void run() {
                     try (BufferedReader brl = new BufferedReader(new InputStreamReader(finalSocket.getInputStream()));
-                            PrintStream psl = new PrintStream(finalSocket.getOutputStream());) {
+                            PrintStream psl = new PrintStream(finalSocket.getOutputStream())) {
                         String line = null;
                         while (null != (line = brl.readLine()) && !Thread.currentThread().isInterrupted()) {
                             _cb.call(line, psl);
@@ -191,7 +191,7 @@ public class SocketLineReader {
                                 @Override
                                 public void run() {
                                     try (BufferedReader lcbr = new BufferedReader(new InputStreamReader(lcs.getInputStream()));
-                                            PrintStream lcps = new PrintStream(lcs.getOutputStream());) {
+                                            PrintStream lcps = new PrintStream(lcs.getOutputStream())) {
                                         String line = null;
                                         while (null != (line = lcbr.readLine()) && !Thread.currentThread().isInterrupted() && !closing) {
                                             _cb.call(line, lcps);

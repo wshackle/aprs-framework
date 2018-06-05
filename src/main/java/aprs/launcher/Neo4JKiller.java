@@ -40,7 +40,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author shackle
  */
-public class Neo4JKiller {
+class Neo4JKiller {
 
     @MonotonicNonNull
     private static File jpsCommandFile;

@@ -40,7 +40,7 @@ public class ColorTextJFrame extends javax.swing.JFrame {
     /**
      * Start the color text reader for the internal ColorTextJPanel.
      */
-    public void startColorTextReader() {
+    private void startColorTextReader() {
         colorTextJPanel1.startReader();
     }
 

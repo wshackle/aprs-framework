@@ -111,14 +111,14 @@ public class ColorTextJPanel extends javax.swing.JPanel {
      * @param name name of the robot
      * @return icon
      */
-    @Nullable public static BufferedImage getRobotImage(String name) throws IllegalStateException, IOException {
+    @Nullable public static BufferedImage getRobotImage(String name) throws IllegalStateException {
         if (name == null || name.length() < 1) {
             return null;
         }
         return robotImageMap.computeIfAbsent(name, ColorTextJPanel::getRobotImageNew);
     }
 
-    public static BufferedImage getRobotImageNew(String name) {
+    private static BufferedImage getRobotImageNew(String name) {
         try {
             if (name.toUpperCase().contains("MOTOMAN")) {
                 return getClassResourceImage("/aprs/supervisor/screensplash/motoman_small.png");
@@ -140,7 +140,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         return ImageIO.read(url);
     }
 
-    public static URL getClassResourceURL(String resourcePath) throws IllegalStateException {
+    private static URL getClassResourceURL(String resourcePath) throws IllegalStateException {
         URL url = THIS_CLASS.getResource(resourcePath);
         if (url == null) {
             throw new IllegalStateException("getResource(\"" + resourcePath + "\") returned null");

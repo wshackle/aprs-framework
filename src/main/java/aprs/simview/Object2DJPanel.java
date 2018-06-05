@@ -361,7 +361,7 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, point, label, w, h);
     }
 
-    public void takeSnapshot(File f, PoseType pose, String label, final int w, final int h) {
+    private void takeSnapshot(File f, PoseType pose, String label, final int w, final int h) {
         if (null != pose) {
             takeSnapshot(f, pose.getPoint(), label, w, h);
         } else {
@@ -370,7 +370,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    public void takeSnapshot(File f, PointType point, String label, final int w, final int h) {
+    private void takeSnapshot(File f, PointType point, String label, final int w, final int h) {
         if (null != point) {
             takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label, w, h);
         } else {
@@ -503,7 +503,7 @@ public class Object2DJPanel extends JPanel {
         public int h;
         public double rotationOffset;
         boolean scale_set;
-        public double scale;
+        double scale;
         boolean paintingComponent;
     }
 
@@ -1016,7 +1016,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    private static Color labelColors[] = new Color[]{
+    private static final Color[] labelColors = new Color[]{
         Color.BLACK,
         Color.MAGENTA.darker(),
         Color.BLUE.darker(),
@@ -1304,7 +1304,7 @@ public class Object2DJPanel extends JPanel {
                 currentRotationOffset = opts.rotationOffset;
             }
             int maxNameLength
-                    = StreamSupport.stream(itemsToPaint.spliterator(), false)
+                    = itemsToPaint.stream()
                             .mapToInt((PhysicalItem item) -> item.getName().length())
                             .max().orElse(1);
 

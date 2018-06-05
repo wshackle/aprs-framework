@@ -30,7 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface QuerySetInterface extends AutoCloseable{
+interface QuerySetInterface extends AutoCloseable{
     
     @Nullable PoseType getPose(String name) throws SQLException;
     

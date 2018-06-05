@@ -36,7 +36,7 @@ public enum AcquireEnum {
     ONCE,
 
     /**
-     * Continously aquire data indefinitely.
+     * Continuously aquire data indefinitely.
      */
     ON,
     

@@ -90,7 +90,7 @@ public class PddlPlannerJInternalFrame extends javax.swing.JInternalFrame implem
     }
 
     @Override
-    public void saveProperties() throws IOException {
+    public void saveProperties() {
         pddlPlannerJPanel1.saveProperties();
     }
 
@@ -107,8 +107,9 @@ public class PddlPlannerJInternalFrame extends javax.swing.JInternalFrame implem
         this.pddlPlannerJPanel1.setActionsToCrclJInternalFrame1(actionsToCrclJInternalFrame1);
     }
     
+    @SuppressWarnings("RedundantThrows")
     @Override
-    public void close() throws Exception {
+    public void close() {
         pddlPlannerJPanel1.close();
         this.setVisible(false);
     }

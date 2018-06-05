@@ -35,13 +35,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("CanBeFinal")
 public class DetectedItemJPanel extends javax.swing.JPanel {
 
     /**
      * Creates new form DetectedItemJPanel
      */
     @SuppressWarnings("initialization")
-    public DetectedItemJPanel() {
+    private DetectedItemJPanel() {
         initComponents();
     }
 

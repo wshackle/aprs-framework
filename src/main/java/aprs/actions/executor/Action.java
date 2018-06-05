@@ -58,6 +58,7 @@ public class Action {
         planTime = System.currentTimeMillis();
     }
 
+    @SuppressWarnings("unused")
     public long getPlanTime() {
         return planTime;
     }

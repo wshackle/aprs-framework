@@ -30,7 +30,7 @@ package aprs.database;
  */
 public enum DbType {
     NONE,
-    MYSQL, NEO4J
-    , NEO4J_BOLT
-    ;
+    MYSQL,
+    NEO4J,
+    NEO4J_BOLT
 }

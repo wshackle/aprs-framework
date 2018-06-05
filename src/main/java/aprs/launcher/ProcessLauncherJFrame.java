@@ -162,16 +162,17 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         });
     }
 
+    @SuppressWarnings("WeakerAccess")
     private static abstract class LineConsumer implements Consumer<String> {
 
         public abstract boolean isFinished();
-    };
+    }
 
     static private class LogDisplayPanelOutputStream extends OutputStream {
 
         final private LogDisplayJPanel logDisplayJPanel;
 
-        public LogDisplayPanelOutputStream(LogDisplayJPanel logDisplayJInternalFrame, List<LineConsumer> lineConsumers) {
+        LogDisplayPanelOutputStream(LogDisplayJPanel logDisplayJInternalFrame, List<LineConsumer> lineConsumers) {
             this.logDisplayJPanel = logDisplayJInternalFrame;
             if (null == logDisplayJInternalFrame) {
                 throw new IllegalArgumentException("logDisplayJInteralFrame may not be null");
@@ -241,7 +242,8 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     private volatile List<LineConsumer> lineConsumers = new ArrayList<>();
     private volatile List<LineConsumer> errorLineConsumers = new ArrayList<>();
 
-    public WrappedProcess addProcess(String... command) throws IOException {
+    @SuppressWarnings("UnusedReturnValue")
+    private WrappedProcess addProcess(String... command) {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String cmdLine = String.join(" ", command);
         this.jTabbedPaneProcesses.add(cmdLine, logPanel);
@@ -253,7 +255,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         return wrappedProcess;
     }
 
-    public WrappedProcess addProcess(List<String> command) throws IOException {
+    private WrappedProcess addProcess(List<String> command) {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String cmdLine = String.join(" ", command);
         this.jTabbedPaneProcesses.add(cmdLine, logPanel);
@@ -265,7 +267,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         return wrappedProcess;
     }
 
-    public WrappedProcess addProcess(File directory, String... command) throws IOException {
+    public WrappedProcess addProcess(File directory, String... command) {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String [] command2 = replaceDotDir(directory, command);
         String cmdLine = String.join(" ", command2);
@@ -278,7 +280,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         return wrappedProcess;
     }
 
-    public static String replaceDotDir(File dir, String in) throws IOException {
+    private static String replaceDotDir(File dir, String in) {
         if(!in.startsWith(".")) {
             return in;
         }
@@ -297,21 +299,21 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         return in;
     }
     
-    public static String []replaceDotDir(File dir, String in[]) throws IOException {
+    private static String []replaceDotDir(File dir, String in[]) {
         for (int i = 0; i < in.length; i++) {
             in[i]  = replaceDotDir(dir, in[i]);
         }
         return in;
     }
     
-    public static List<String> replaceDotDir(File dir, List<String> in) throws IOException {
+    private static List<String> replaceDotDir(File dir, List<String> in) {
         for (int i = 0; i < in.size(); i++) {
             in.set(i, replaceDotDir(dir, in.get(i)));
         }
         return in;
     }
     
-    public WrappedProcess addProcess(File directory, List<String> command) throws IOException {
+    private WrappedProcess addProcess(File directory, List<String> command) {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         List<String> command2 = replaceDotDir(directory, command);
         String cmdLine = String.join(" ", command2);
@@ -329,7 +331,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         return args.toArray(new String[args.size()]);
     }
 
-    public static List<String> parseCommandLine(String line) {
+    private static List<String> parseCommandLine(String line) {
         List<String> args = new ArrayList<>();
         int dquotes = 0;
         int squotes = 0;
@@ -534,7 +536,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         return null;
     }
 
-    public String replaceVarsInLine(String line, String startString, @Nullable String endString) {
+    private String replaceVarsInLine(String line, String startString, @Nullable String endString) {
         int varStartIndex = line.indexOf(startString);
         int endStringLength = (null != endString) ? endString.length():0;
         int startStringLength = startString.length();
@@ -607,6 +609,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     private final AtomicBoolean closing = new AtomicBoolean();
 
+    @SuppressWarnings("CanBeFinal")
     private volatile XFuture<Void> closingFuture = new XFuture<Void>("processLauncherClosingFuture");
 
     public XFuture<Void> close() {

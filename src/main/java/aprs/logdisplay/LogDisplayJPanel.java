@@ -42,7 +42,7 @@ import javax.swing.TransferHandler;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("initialization")
+@SuppressWarnings({"initialization", "CanBeFinal"})
 public class LogDisplayJPanel extends javax.swing.JPanel {
 
     /**
@@ -177,7 +177,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         popMenu.setVisible(false);
     }
 
-    public void showPopup(Component comp, int x, int y) {
+    private void showPopup(Component comp, int x, int y) {
         popMenu.show(comp, x, y);
     }
 
@@ -199,7 +199,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_jTextArea1MouseClicked
 
-    List<String> logLines = new ArrayList<>();
+    private List<String> logLines = new ArrayList<>();
 
     private void appendLine(String l) {
         int maxLines = 100;

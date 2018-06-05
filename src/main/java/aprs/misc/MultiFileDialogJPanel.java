@@ -39,6 +39,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings({"WeakerAccess", "CanBeFinal"})
 public class MultiFileDialogJPanel extends javax.swing.JPanel {
 
     /**

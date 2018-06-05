@@ -81,7 +81,7 @@ public class DbSetupBuilder {
      *
      * @throws IOException directory doesn't exist etc.
      */
-    public static Map<DbQueryEnum, DbQueryInfo> readRelResourceQueriesDirectory(String resDir) throws IOException {
+    private static Map<DbQueryEnum, DbQueryInfo> readRelResourceQueriesDirectory(String resDir) throws IOException {
         if (BASE_RESOURCE_DIR.endsWith("/") && resDir.startsWith("/")) {
             resDir = resDir.substring(1);
         }
@@ -733,7 +733,7 @@ public class DbSetupBuilder {
      * @param host database host
      * @param port database port
      */
-    public static void savePropertiesFile(File propertiesFile, DbSetup setup, DbType dbtype, String host, int port) {
+    private static void savePropertiesFile(File propertiesFile, DbSetup setup, DbType dbtype, String host, int port) {
         if (null == propertiesFile) {
             throw new IllegalArgumentException("propertiesFile == null");
         }

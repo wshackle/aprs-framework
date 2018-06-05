@@ -102,7 +102,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         mapUpToDate = false;
     }
 
-    private JTextArea editTableArea;
+    private final JTextArea editTableArea;
 
 
     /**
@@ -237,10 +237,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 "Type", "Text"
             }
         ) {
-            Class[] types = new Class [] {
+            final Class[] types = new Class [] {
                 java.lang.String.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
+            final boolean[] canEdit = new boolean [] {
                 false, true
             };
 
@@ -675,6 +675,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      *
      * @param setup object to read properties from
      */
+    @SuppressWarnings("DoubleNegation")
     @Override
     public void setDbSetup(DbSetup setup) {
         try {
@@ -819,7 +820,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         });
         jTable.getColumnModel().getColumn(multiLineColumnIndex).setCellEditor(new TableCellEditor() {
 
-            private List<CellEditorListener> listeners = new ArrayList<>();
+            private final List<CellEditorListener> listeners = new ArrayList<>();
 
             @Override
             public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
@@ -894,7 +895,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }
 
-    public Map<DbQueryEnum, DbQueryInfo> getQueriesMap() {
+    private Map<DbQueryEnum, DbQueryInfo> getQueriesMap() {
         if (disconnecting) {
             if (map == null) {
                 return Collections.emptyMap();
@@ -958,7 +959,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      *
      * @return queries directory
      */
-    public String getQueriesDir() {
+    private String getQueriesDir() {
         if (jRadioButtonResourceDir.isSelected()) {
             return jComboBoxResourceDir.getSelectedItem().toString();
         }
@@ -1125,7 +1126,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, iOException);
         }
     }
-    private File recentSettingsFile = new File(System.getProperty("user.home"), ".dbsetup_recent.txt");
+    private final File recentSettingsFile = new File(System.getProperty("user.home"), ".dbsetup_recent.txt");
     @MonotonicNonNull private File propertiesFile = null;
 
     @Override
@@ -1225,7 +1226,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     private final Map<String, String> argsMap = DbSetupBuilder.getDefaultArgsMap();
 
-    public Map<String, String> updateArgsMap(DbType dbtype) {
+    private Map<String, String> updateArgsMap(DbType dbtype) {
         DbSetup curSetup = this.getDbSetup();
         argsMap.put("--dbhost", curSetup.getHost());
         argsMap.put("--dbport", Integer.toString(curSetup.getPort()));
@@ -1258,7 +1259,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 //            restoringProperties = false;
 //        }
 //    }
-    public void addLogMessage(Exception e) {
+private void addLogMessage(Exception e) {
         e.printStackTrace();
     }
 
@@ -1266,7 +1267,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         System.err.println(msg);
     }
 
-    public DbType getDbType() {
+    private DbType getDbType() {
         return (DbType) jComboBoxDbType.getSelectedItem();
     }
 
@@ -1342,9 +1343,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }
 
-    final String RESOURCE_BASE = "aprs/database";
+    private final String RESOURCE_BASE = "aprs/database";
 
-    public void updateFromArgs(Map<String, String> _argsMap) {
+    private void updateFromArgs(Map<String, String> _argsMap) {
         try {
             updatingFromArgs = true;
             String host = checkedArgsMapGet(_argsMap, "--dbhost");
@@ -1433,7 +1434,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }
 
-    public void autoResizeTableRowHeights(JTable table) {
+    private void autoResizeTableRowHeights(JTable table) {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         for (int rowIndex = 0; rowIndex < table.getRowCount(); rowIndex++) {
@@ -1492,10 +1493,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
     }
 
-    Set<DbSetupListener> dbSetupListeners = new HashSet<>();
+    private final Set<DbSetupListener> dbSetupListeners = new HashSet<>();
 
     @Override
     public void addDbSetupListener(DbSetupListener listener) {
@@ -1514,7 +1515,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     private final DefaultComboBoxModel<DbType> dbTypeComboModel = new DefaultComboBoxModel<>(DbType.values());
 
-    public DefaultComboBoxModel<DbType> getDbTypeComboModel() {
+    private DefaultComboBoxModel<DbType> getDbTypeComboModel() {
         return dbTypeComboModel;
     }
 

@@ -48,5 +48,4 @@ public enum DbQueryEnum {
     GET_SLOTS,
     GET_TRAY_SLOTS_FROM_KIT_SKU,
     GET_ALL_NEW_POSE
-    ;
 }

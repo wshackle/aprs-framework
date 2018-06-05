@@ -87,7 +87,8 @@ public class ColorTextOptionsJPanel extends javax.swing.JPanel {
      * 
      * @return options selected by user or null if user chose to cancel.
      */
-    @Nullable public ColorTextOptions getOptions() {
+    @Nullable
+    private ColorTextOptions getOptions() {
         if (cancelled) {
             return null;
         }
@@ -122,7 +123,7 @@ public class ColorTextOptionsJPanel extends javax.swing.JPanel {
     /**
      * Creates new form ColorTexOptionsJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"initialization", "WeakerAccess"})
     public ColorTextOptionsJPanel() {
         initComponents();
     }

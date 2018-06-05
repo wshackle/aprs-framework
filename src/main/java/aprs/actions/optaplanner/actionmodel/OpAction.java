@@ -78,7 +78,8 @@ public class OpAction implements OpActionInterface {
         }
     }
 
-    @Nullable public static ActionType opActionToExecutorAction(OpActionType opAction) {
+    @Nullable
+    private static ActionType opActionToExecutorAction(OpActionType opAction) {
         switch (opAction) {
             case PICKUP:
                 return TAKE_PART;

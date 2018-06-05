@@ -336,7 +336,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    public void browseProgramExecutable() throws IOException {
+    private void browseProgramExecutable() throws IOException {
 
         JFileChooser chooser = null;
         String curText = jTextFieldPlannerProgramExecutable.getText();
@@ -357,7 +357,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         }
     }
 
-    public void browsePddlDomain() throws IOException {
+    private void browsePddlDomain() throws IOException {
         String domainFileName = jTextFieldPddlDomainFile.getText();
         JFileChooser chooser = new JFileChooser();
         File dir = new File(domainFileName).getParentFile();
@@ -371,7 +371,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         }
     }
 
-    public void browsePddlProblem() throws IOException {
+    private void browsePddlProblem() throws IOException {
         String problemFileName = jTextFieldPddlProblem.getText();
         JFileChooser chooser = new JFileChooser();
         File dir = new File(problemFileName).getParentFile();
@@ -582,7 +582,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     @Nullable private Future<?> ppdlErrorStreamFuture = null;
 
     @SuppressWarnings("nullness")
-    private UserInfo sshUserInfo = new UserInfo() {
+    private final UserInfo sshUserInfo = new UserInfo() {
         
         @Override
         public String getPassphrase() {
@@ -642,7 +642,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
 
     private boolean lastMessageBlank = false;
 
-    List<String> logLines = new ArrayList<>();
+    private final List<String> logLines = new ArrayList<>();
 
     private void appendLine(String l) {
         int maxLines = 100;
@@ -690,7 +690,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         }
     }
 
-    public void appendText(String text) {
+    private void appendText(String text) {
         String txt2 = text.replace("\r\n", "\n");
         String lines[] = txt2.split("\n");
         if (lines.length <= 1 || (lines.length == 2) && lines[1].length() < 1) {
@@ -716,7 +716,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         lastMessageBlank = msgIsBlank;
     }
 
-    private void scp(Session session, String host, String rfile, String lfile) throws FileNotFoundException, JSchException, IOException, Exception {
+    private void scp(Session session, String host, String rfile, String lfile) throws Exception {
         FileInputStream fis = null;
         printMessage("Copying local file \"" + lfile + "\" to remote host " + host + " as remote file \"" + rfile + "\" ...");
         boolean ptimestamp = false;
@@ -781,7 +781,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         printMessage("Finished copy of local file \"" + lfile + "\" to remote host " + host + " as remote file \"" + rfile + "\".");
     }
 
-    static int checkAck(InputStream in) throws IOException, Exception {
+    private static int checkAck(InputStream in) throws IOException, Exception {
         int b = in.read();
         // b may be 0 for success,
         //          1 for error,
@@ -851,7 +851,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         }
     }
 
-    public void runPddlPlannerOnce() throws IOException {
+    private void runPddlPlannerOnce() throws IOException {
 
         clearActionsList();
         if (this.jCheckBoxSsh.isSelected()) {
@@ -976,7 +976,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
     // End of variables declaration//GEN-END:variables
 
     @Override
-    public void saveProperties() throws IOException {
+    public void saveProperties() {
         if (null == propertiesFile) {
             throw new IllegalStateException("propertiesFile not set");
         }

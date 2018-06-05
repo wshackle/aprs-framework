@@ -44,6 +44,7 @@ import rcs.posemath.Posemath;
  *
  * @author shackle
  */
+@SuppressWarnings("WeakerAccess")
 public class PositionMapTest {
 
     public PositionMapTest() {

@@ -29,7 +29,7 @@ import crcl.ui.XFuture;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class LockInfo {
+class LockInfo {
 
     private final long startTime;
     private final XFuture<Void> future;

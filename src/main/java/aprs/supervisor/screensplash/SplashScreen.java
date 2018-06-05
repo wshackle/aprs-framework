@@ -52,15 +52,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("SameReturnValue")
 public class SplashScreen extends JFrame {
 
-    final SplashPanel panel;
+    private final SplashPanel panel;
 
     private static class SplashPanel extends JPanel {
 
         private final Font font;
 
-        public SplashPanel(String message, float fontSize, @Nullable Image image) {
+        SplashPanel(String message, float fontSize, @Nullable Image image) {
             this.messageLines = message.split("[\r\n]+");
             this.fontSize = fontSize;
             font = super.getFont().deriveFont(fontSize);
@@ -90,7 +91,7 @@ public class SplashScreen extends JFrame {
         final Image image;
     }
 
-    public SplashScreen(String message, float fontSize, @Nullable Image image) {
+    private SplashScreen(String message, float fontSize, @Nullable Image image) {
         super.setUndecorated(true);
         this.panel = new SplashPanel(message, fontSize, image);
         super.add(panel);
@@ -111,7 +112,7 @@ public class SplashScreen extends JFrame {
     private static class RobotArmImageHider {
 
         @Nullable
-        public static final BufferedImage ROBOT_ARM_IMAGE = readImageOrNull("robot-arm.jpeg");
+        static final BufferedImage ROBOT_ARM_IMAGE = readImageOrNull("robot-arm.jpeg");
 
     }
 
@@ -138,7 +139,7 @@ public class SplashScreen extends JFrame {
     private static class DisableImageHider {
 
         @Nullable
-        public static final BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobotHalf.jpg");
+        static final BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobotHalf.jpg");
 
     }
 
@@ -149,13 +150,13 @@ public class SplashScreen extends JFrame {
 
     private static class ListHider {
 
-        public static List<Color> RED_YELLOW_COLOR_LIST
+        static final List<Color> RED_YELLOW_COLOR_LIST
                 = Arrays.asList(Color.red, Color.yellow, Color.red, Color.yellow, Color.red, Color.yellow);
 
-        public static List<Color> BLUE_WHITE_GREEN_COLOR_LIST
+        static final List<Color> BLUE_WHITE_GREEN_COLOR_LIST
                 = Arrays.asList(Color.blue, Color.white, Color.green, Color.blue, Color.white, Color.green);
 
-    };
+    }
 
     public static List<Color> getRedYellowColorList() {
         return ListHider.RED_YELLOW_COLOR_LIST;
@@ -229,7 +230,7 @@ public class SplashScreen extends JFrame {
         return returnFuture;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         showMessageFullScreen("my \nmessage", 80.0f,
                 getRobotArmImage(),
                 getBlueWhiteGreenColorList(), null);

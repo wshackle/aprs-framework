@@ -34,7 +34,7 @@ public enum DisplayAxis {
     
     private final String displayOption;
 
-    private DisplayAxis(String displayOption) {
+    DisplayAxis(String displayOption) {
         this.displayOption = displayOption;
     }
 

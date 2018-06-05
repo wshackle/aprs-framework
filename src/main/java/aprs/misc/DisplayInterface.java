@@ -58,5 +58,5 @@ public interface DisplayInterface {
      * Close the Frame/Window associated with this interface.
      * @throws Exception if underlying system fails to close
      */
-    public void close() throws Exception;
+    public void close();
 }

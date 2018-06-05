@@ -71,6 +71,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
 public class Utils {
 
     private Utils() {
@@ -150,7 +151,8 @@ public class Utils {
 
     private static class LogFileDirGetter {
 
-        private static @Nullable File logFileDir = createLogFileDir();
+        private static @Nullable
+        final File logFileDir = createLogFileDir();
         private static @Nullable IOException createLogFileException = null;
 
         @Nullable private static File createLogFileDir() {

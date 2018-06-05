@@ -156,28 +156,28 @@ public class WrappedProcess {
         xf.thenAccept(this::setProcess);
     }
 
-    public WrappedProcess(OutputStream outputPrintStream, OutputStream errorPrintStream, List<String> command) throws IOException {
+    public WrappedProcess(OutputStream outputPrintStream, OutputStream errorPrintStream, List<String> command) {
         this(new ProcessBuilder(command),
                 command.stream().collect(Collectors.joining(" ")),
                 outputPrintStream,
                 errorPrintStream);
     }
 
-    public WrappedProcess(OutputStream outputPrintStream, OutputStream errorPrintStream, String... command) throws IOException {
+    public WrappedProcess(OutputStream outputPrintStream, OutputStream errorPrintStream, String... command) {
         this(new ProcessBuilder(command),
                 String.join(" ", command),
                 outputPrintStream,
                 errorPrintStream);
     }
 
-    public WrappedProcess(File directory, OutputStream outputPrintStream, OutputStream errorPrintStream, String... command) throws IOException {
+    public WrappedProcess(File directory, OutputStream outputPrintStream, OutputStream errorPrintStream, String... command) {
         this(new ProcessBuilder(command).directory(directory),
                 String.join(" ", command),
                 outputPrintStream,
                 errorPrintStream);
     }
 
-    public WrappedProcess(File directory, OutputStream outputPrintStream, OutputStream errorPrintStream, List<String> command) throws IOException {
+    public WrappedProcess(File directory, OutputStream outputPrintStream, OutputStream errorPrintStream, List<String> command) {
         this(new ProcessBuilder(command).directory(directory),
                 command.stream().collect(Collectors.joining(" ")),
                 outputPrintStream,

@@ -42,7 +42,7 @@ public class KitTray extends Tray {
         super(PartsTrayName,0.0,0.0,0.0,1.0,"KT");
     }
 
-    public KitTray(String name, double rotation, double x, double y) {
+    private KitTray(String name, double rotation, double x, double y) {
         super(name, rotation, x, y,1.0,"KT");
     }
 

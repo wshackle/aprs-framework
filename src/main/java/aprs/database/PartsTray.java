@@ -31,6 +31,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author zeid
  */
+@SuppressWarnings("WeakerAccess")
 public class PartsTray extends Tray {
 
     private int NodeID;

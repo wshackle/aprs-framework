@@ -68,6 +68,7 @@ import java.awt.image.BufferedImage;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("UnusedReturnValue")
 public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, SlotOffsetProvider {
 
     /**
@@ -641,7 +642,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @throws JAXBException a command within the program violates a constraint
      * in the schema
      */
-    public XFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException;
+    public XFuture<Boolean> startCRCLProgram(CRCLProgramType program);
 
     public void processWrapperCommands(List<MiddleCommandType> cmds);
 
@@ -995,7 +996,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @return future that can be used to add actions if the demo is canceled or
      * fails.
      */
-    public XFuture<Boolean> startContinousDemo(String comment, boolean reverseFirst);
+    public XFuture<Boolean> startContinuousDemo(String comment, boolean reverseFirst);
 
     /**
      * Get the value of supervisorEventLogger
@@ -1025,7 +1026,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @return future that can be used to add actions if the demo is canceled or
      * fails.
      */
-    public XFuture<Boolean> startPreCheckedContinousDemo(String comment, boolean reverseFirst);
+    public XFuture<Boolean> startPreCheckedContinuousDemo(String comment, boolean reverseFirst);
 
     /**
      * Get the state of the reverse flag. It is set to indicate that an
@@ -1190,7 +1191,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param label optional label for pose or null
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) throws IOException ;
+    public void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label);
 
     /**
      * Take a snapshot of the view of objects positions and save it in the
@@ -1201,7 +1202,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param label optional label for pose or null
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, PointType point, String label) throws IOException ;
+    public void takeSimViewSnapshot(File f, PointType point, String label);
 
     /**
      * Take a snapshot of the view of objects positions and save it in the
@@ -1212,7 +1213,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param label optional label for pose or null
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) throws IOException ;
+    public void takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label);
 
     /**
      * Take a snapshot of the view of objects positions and save it in the
@@ -1276,7 +1277,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) throws IOException;
+    public void takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h);
 
     /**
      * Take a snapshot of the view of objects positions and save it in the
@@ -1289,7 +1290,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, PointType point, String label, int w, int h) throws IOException;
+    public void takeSimViewSnapshot(File f, PointType point, String label, int w, int h);
 
     /**
      * Take a snapshot of the view of objects positions and save it in the
@@ -1302,7 +1303,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) throws IOException;
+    public void takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h);
 
     /**
      * Take a snapshot of the view of objects positions and save it in the
@@ -1352,7 +1353,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException;
+    public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h);
 
     /**
      ** Take a snapshot of the view of objects positions passed in the list.

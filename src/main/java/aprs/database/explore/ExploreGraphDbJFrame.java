@@ -35,7 +35,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class ExploreGraphDbJFrame extends javax.swing.JFrame {
+class ExploreGraphDbJFrame extends javax.swing.JFrame {
 
     /**
      * Creates new form ExplortGraphDbJFrame
@@ -45,7 +45,7 @@ public class ExploreGraphDbJFrame extends javax.swing.JFrame {
         initComponents();
     }
     
-    public void setConnection(Connection connection) {
+    private void setConnection(Connection connection) {
         explorteGraphDbJPanel1.setConnection(connection);
     }
     

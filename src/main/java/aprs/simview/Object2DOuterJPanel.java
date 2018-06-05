@@ -89,6 +89,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("CanBeFinal")
 public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener, PendantClientJPanel.CurrentPoseListener {
 
     public static List<PhysicalItem> showAndModifyData(List<PhysicalItem> itemsIn, SlotOffsetProvider sop, double minX, double minY, double maxX, double maxY) {
@@ -121,7 +122,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return object2DJPanel1.getItems();
     }
 
-    public List<PhysicalItem> getOutputItems() {
+    private List<PhysicalItem> getOutputItems() {
         return object2DJPanel1.getOutputItems();
     }
 
@@ -288,7 +289,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile @Nullable
     Map<String, Integer> origNamesMap = null;
 
-    public void setItems(List<PhysicalItem> items, boolean publish) {
+    private void setItems(List<PhysicalItem> items, boolean publish) {
         settingItems = true;
 //        for (PhysicalItem item : items) {
 //            if (item.x < 100 || item.y > 300) {
@@ -1359,7 +1360,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      *
      * @param posNoise new value of posNoise
      */
-    public void setPosNoise(double posNoise) {
+    private void setPosNoise(double posNoise) {
         updateTextFieldDouble(posNoise, jTextFieldPosNoise, 0.01);
         this.posNoise = posNoise;
     }
@@ -1386,7 +1387,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      *
      * @param rotNoise new value of rotNoise
      */
-    public void setRotNoise(double rotNoise) {
+    private void setRotNoise(double rotNoise) {
         updateTextFieldDouble(rotNoise, jTextFieldRotNoise, 0.01);
         this.rotNoise = rotNoise;
     }
@@ -1543,7 +1544,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      *
      * @param simulatedDropRate new value of simulatedDropRate
      */
-    public void setSimulatedDropRate(double simulatedDropRate) {
+    private void setSimulatedDropRate(double simulatedDropRate) {
         if (simulatedDropRate > 1.0 || simulatedDropRate < -Double.MIN_VALUE) {
             throw new IllegalArgumentException("simulatedDropRate must be between 0 and 1.0 but was " + simulatedDropRate);
         }
@@ -1829,7 +1830,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
     }
 
-    public void setMaxXMaxYText(String txt) throws NumberFormatException {
+    private void setMaxXMaxYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
             double newMaxX = Double.parseDouble(vals[0]);
@@ -1882,7 +1883,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setDisplayAxis((DisplayAxis) jComboBoxDisplayAxis.getSelectedItem());
     }//GEN-LAST:event_jComboBoxDisplayAxisActionPerformed
 
-    public File createTempFile(String prefix, String suffix) throws IOException {
+    private File createTempFile(String prefix, String suffix) throws IOException {
         if (null == aprsSystemInterface) {
             return Utils.createTempFile(prefix, suffix);
         }
@@ -2001,8 +2002,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextFieldCurrentXYActionPerformed
 
-    double currentX = 0.0;
-    double currentY = 0.0;
+    private double currentX = 0.0;
+    private double currentY = 0.0;
 
     private AprsSystemInterface aprsSystemInterface;
 
@@ -2039,13 +2040,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.object2DJPanel1.setSlotOffsetProvider(slotOffsetProvider);
     }
 
-    public void connectCurrentPosition() {
+    private void connectCurrentPosition() {
         if (null != aprsSystemInterface) {
             aprsSystemInterface.addCurrentPoseListener(this);
         }
     }
 
-    public void disconnectCurrentPosition() {
+    private void disconnectCurrentPosition() {
         if (null != aprsSystemInterface) {
             aprsSystemInterface.removeCurrentPoseListener(this);
         }
@@ -2073,7 +2074,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
     }//GEN-LAST:event_jCheckBoxAutoscaleActionPerformed
 
-    PmCartesian getMinOffset() {
+    private PmCartesian getMinOffset() {
         PmCartesian minDiffCart = new PmCartesian();
         PointType current = aprsSystemInterface.getCurrentPosePoint();
         double min_diff = Double.POSITIVE_INFINITY;
@@ -2195,7 +2196,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         refresh(false);
     }//GEN-LAST:event_jCheckBoxToolsActionPerformed
 
-    javax.swing.@Nullable Timer simUpdateTimer = null;
+    private javax.swing.@Nullable Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
 
@@ -2213,7 +2214,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      *
      * @param simRefreshMillis new value of simRefreshMillis
      */
-    public void setSimRefreshMillis(int simRefreshMillis) {
+    private void setSimRefreshMillis(int simRefreshMillis) {
         if (Integer.parseInt(jTextFieldSimulationUpdateTime.getText().trim()) != simRefreshMillis) {
             jTextFieldSimulationUpdateTime.setText(Integer.toString(simRefreshMillis));
         }
@@ -2291,7 +2292,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
-    public void setMinXMinYText(String txt) throws NumberFormatException {
+    private void setMinXMinYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
             double newMinX = Double.parseDouble(vals[0]);
@@ -2412,7 +2413,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return str;
     }
 
-    public void saveProperties() throws IOException {
+    public void saveProperties() {
         if (null != propertiesFile) {
             File parentFile = propertiesFile.getParentFile();
             if (null != parentFile) {
@@ -2671,11 +2672,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile String loadedDataFileString = null;
 
     @Nullable
-    public String getCurrentDataFileString() {
+    private String getCurrentDataFileString() {
         return reverseFlag ? this.reverseDataFileString : this.dataFileString;
     }
 
-    public boolean needReloadDataFile() {
+    private boolean needReloadDataFile() {
         String currentDataFileString = getCurrentDataFileString();
         if (null == currentDataFileString) {
             return false;
@@ -2798,7 +2799,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      *
      * @param pickupDist new value of pickupDist
      */
-    public void setPickupDist(double pickupDist) {
+    private void setPickupDist(double pickupDist) {
         updateTextFieldDouble(pickupDist, jTextFieldPickupDist, 0.005);
         this.pickupDist = pickupDist;
     }
@@ -2819,17 +2820,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      *
      * @param dropOffThreshold new value of dropOffThreshold
      */
-    public void setDropOffThreshold(double dropOffThreshold) {
+    private void setDropOffThreshold(double dropOffThreshold) {
         updateTextFieldDouble(pickupDist, jTextFieldDropOffThreshold, 0.005);
         this.dropOffThreshold = dropOffThreshold;
     }
 
-    public static class DistIndex {
+    static class DistIndex {
 
-        public double dist;
-        public int index;
+        double dist;
+        int index;
 
-        public DistIndex(double dist, int index) {
+        DistIndex(double dist, int index) {
             this.dist = dist;
             this.index = index;
         }
@@ -2852,7 +2853,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return getClosestUncorrectedDistance(currentPoint);
     }
 
-    public double getClosestUncorrectedDistance(PointType ptIn) {
+    private double getClosestUncorrectedDistance(PointType ptIn) {
         PointType uncorrectedPoint = aprsSystemInterface.reverseCorrectPoint(ptIn);
         List<PhysicalItem> l = new ArrayList<>();
         l.addAll(getItems());
@@ -2888,7 +2889,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         final boolean isHoldingObjectExpected;
         final long time;
 
-        public PoseUpdateHistoryItem(PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected, long time) {
+        PoseUpdateHistoryItem(PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected, long time) {
             this.pose = pose;
             this.stat = stat;
             this.isHoldingObjectExpected = isHoldingObjectExpected;
@@ -3064,7 +3065,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         private PhysicalItem closestItem;
         private int minIndex;
 
-        public ClosestItemInfo(int x, int y, int minIndex) {
+        ClosestItemInfo(int x, int y, int minIndex) {
             this.x = x;
             this.y = y;
             this.minIndex = minIndex;
@@ -3099,12 +3100,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             this.closestItem = localClosestItem;
         }
 
-        @Nullable
-        public PhysicalItem getClosestItem() {
+        @Nullable PhysicalItem getClosestItem() {
             return closestItem;
         }
 
-        public int getMinIndex() {
+        int getMinIndex() {
             return minIndex;
         }
     }

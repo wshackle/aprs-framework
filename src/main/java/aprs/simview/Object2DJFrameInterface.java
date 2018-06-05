@@ -34,7 +34,7 @@ import rcs.posemath.PmCartesian;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface Object2DJFrameInterface {
+interface Object2DJFrameInterface {
     
     public List<PhysicalItem> getItems();
     

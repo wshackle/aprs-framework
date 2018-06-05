@@ -32,12 +32,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class ImagePanel extends JPanel {
+class ImagePanel extends JPanel {
 
         @Nullable
+        private
         BufferedImage image = null;
 
         @Nullable
+        private
         String label = null;
 
         public ImagePanel(BufferedImage image) {

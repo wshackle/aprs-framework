@@ -50,7 +50,7 @@ import aprs.simview.Object2DJPanel;
 import aprs.simview.Object2DViewJInternalFrame;
 import aprs.database.vision.UpdateResults;
 import aprs.database.vision.VisionToDbJInternalFrame;
-import aprs.misc.Utils.SwingFuture;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -141,6 +141,7 @@ import org.apache.commons.csv.CSVPrinter;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("SameReturnValue")
 public class AprsSystem implements AprsSystemInterface {
 
     @MonotonicNonNull
@@ -320,6 +321,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private String printListToString(List<String> l, int itemsPerLine) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < l.size(); i += itemsPerLine) {
@@ -814,13 +816,13 @@ public class AprsSystem implements AprsSystemInterface {
         updateConnectedRobotDisplay();
     }
 
-    public void updateConnectedRobotDisplay() {
+    private void updateConnectedRobotDisplay() {
         if (null != this.aprsSystemDisplayJFrame) {
             updateConnectedRobotDisplay(isConnected(), getRobotName(), getRobotCrclHost(), getRobotCrclPort());
         }
     }
 
-    public void updateConnectedRobotDisplay(boolean connected, @Nullable String robotName, @Nullable String crclHost, int crclPort) {
+    private void updateConnectedRobotDisplay(boolean connected, @Nullable String robotName, @Nullable String crclHost, int crclPort) {
         AprsSystemDisplayJFrame displayFrame = this.aprsSystemDisplayJFrame;
         if (null != displayFrame) {
             final AprsSystemDisplayJFrame displayFrameFinal = displayFrame;
@@ -966,9 +968,9 @@ public class AprsSystem implements AprsSystemInterface {
                 safeAbortAndDisconnectFuture
                         = localSafeAbortFuture
                                 .thenRun(() -> {
-//                                    if (null != continousDemoFuture) {
-//                                        continousDemoFuture.cancelAll(true);
-//                                        continousDemoFuture = null;
+//                                    if (null != ContinuousDemoFuture) {
+//                                        ContinuousDemoFuture.cancelAll(true);
+//                                        ContinuousDemoFuture = null;
 //                                    }
                                     setStopRunTime();
                                 })
@@ -1057,8 +1059,8 @@ public class AprsSystem implements AprsSystemInterface {
         }
         enableCheckedAlready = false;
         disconnectRobotCount.incrementAndGet();
-//        if (null != continousDemoFuture) {
-//            continousDemoFuture.cancelAll(true);
+//        if (null != ContinuousDemoFuture) {
+//            ContinuousDemoFuture.cancelAll(true);
 //        }
         setStopRunTime();
         setThreadName();
@@ -1192,7 +1194,7 @@ public class AprsSystem implements AprsSystemInterface {
         return -1;
     }
 
-    final ConcurrentLinkedDeque<XFuture<@Nullable ?>> futuresToCompleteOnUnPause = new ConcurrentLinkedDeque<>();
+    private final ConcurrentLinkedDeque<XFuture<@Nullable ?>> futuresToCompleteOnUnPause = new ConcurrentLinkedDeque<>();
 
     public void notifyPauseFutures() {
         for (XFuture<@Nullable ?> f : futuresToCompleteOnUnPause) {
@@ -1497,7 +1499,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @throws JAXBException a command within the program violates a constraint
      * in the schema
      */
-    public XFuture<Boolean> startCRCLProgram(CRCLProgramType program) throws JAXBException {
+    public XFuture<Boolean> startCRCLProgram(CRCLProgramType program) {
         setStartRunTime();
         if (null != crclClientJInternalFrame) {
             lastRunProgramFuture
@@ -1524,6 +1526,7 @@ public class AprsSystem implements AprsSystemInterface {
         return crclClientJInternalFrame.runCurrentProgram();
     }
 
+    @SuppressWarnings("RedundantIfStatement")
     private boolean isMove(MiddleCommandType midCmd) {
         if (midCmd instanceof MoveToType) {
             return true;
@@ -1656,7 +1659,7 @@ public class AprsSystem implements AprsSystemInterface {
             lastStartCheckEnabledFuture2 = null;
         }
         if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setContinousDemoCheckbox(false);
+            aprsSystemDisplayJFrame.setContinuousDemoCheckbox(false);
         }
     }
 
@@ -1793,7 +1796,7 @@ public class AprsSystem implements AprsSystemInterface {
         final private PrintStream ps;
         final private LogDisplayJInternalFrame logDisplayJInternalFrame;
 
-        public MyPrintStream(PrintStream ps, LogDisplayJInternalFrame logDisplayJInternalFrame) {
+        MyPrintStream(PrintStream ps, LogDisplayJInternalFrame logDisplayJInternalFrame) {
             super(ps, true);
             this.ps = ps;
             this.logDisplayJInternalFrame = logDisplayJInternalFrame;
@@ -1834,8 +1837,8 @@ public class AprsSystem implements AprsSystemInterface {
 
     private int fanucCrclPort = CRCLSocket.DEFAULT_PORT;
     private int motomanCrclPort = CRCLSocket.DEFAULT_PORT;
-    private String fanucNeighborhoodName = "AgilityLabLRMate200iD"; // FIXME hard-coded default
-    private boolean fanucPreferRNN = false;
+    private final String fanucNeighborhoodName = "AgilityLabLRMate200iD"; // FIXME hard-coded default
+    private final boolean fanucPreferRNN = false;
     private String fanucRobotHost = System.getProperty("fanucRobotHost", "192.168.1.34");// "129.6.78.111"; // FIXME hard-coded default
 
     public XFutureVoid startFanucCrclServer() {
@@ -1964,7 +1967,7 @@ public class AprsSystem implements AprsSystemInterface {
         setupWindowsMenu();
     }
 
-    public void addToDesktopPane(JInternalFrame internalFrame) {
+    private void addToDesktopPane(JInternalFrame internalFrame) {
         try {
             if (null != aprsSystemDisplayJFrame) {
                 aprsSystemDisplayJFrame.addToDesktopPane(internalFrame);
@@ -2073,8 +2076,8 @@ public class AprsSystem implements AprsSystemInterface {
                 }
             });
 
-    private ExecutorService runProgramService = defaultRunProgramService;
-    private ExecutorService connectService = defaultRunProgramService;
+    private final ExecutorService runProgramService = defaultRunProgramService;
+    private final ExecutorService connectService = defaultRunProgramService;
     @Nullable
     private XFutureVoid connectDatabaseFuture = null;
 
@@ -2165,7 +2168,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean connectDatabaseCheckboxEnabled = false;
 
-    public void setConnectDatabaseCheckboxEnabled(boolean enable) {
+    private void setConnectDatabaseCheckboxEnabled(boolean enable) {
         if (null != this.aprsSystemDisplayJFrame) {
             this.aprsSystemDisplayJFrame.setConnectDatabaseCheckboxEnabled(enable);
         }
@@ -2181,7 +2184,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean connectDatabaseCheckboxSelected = false;
     
-    public boolean isConnectDatabaseCheckboxSelected() {
+    private boolean isConnectDatabaseCheckboxSelected() {
         if(null != aprsSystemDisplayJFrame) {
                 boolean ret =  aprsSystemDisplayJFrame.isConnectDatabaseCheckboxSelected();
                 this.connectDatabaseCheckboxSelected = ret;
@@ -2190,7 +2193,7 @@ public class AprsSystem implements AprsSystemInterface {
         return connectDatabaseCheckboxSelected;
     }
     
-    public void setConnectDatabaseCheckboxSelected(boolean selected) {
+    private void setConnectDatabaseCheckboxSelected(boolean selected) {
         if(null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setConnectDatabaseCheckboxSelected(selected);
         }
@@ -2219,7 +2222,7 @@ public class AprsSystem implements AprsSystemInterface {
      *
      */
     @SuppressWarnings("initialization")
-    public AprsSystem() {
+    private AprsSystem() {
         this(null);
     }
 
@@ -2255,7 +2258,7 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Initialize the frame with the previously saved settings if available.
      */
-    final public XFutureVoid defaultInit() {
+    private XFutureVoid defaultInit() {
         initLoggerWindow();
         try {
 //            initPropertiesFile();
@@ -2279,7 +2282,7 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Initialize the frame ignoring any previously saved settings.
      */
-    final private XFutureVoid emptyInit() {
+    private XFutureVoid emptyInit() {
         skipCreateDbSetupFrame = true;
         clearStartCheckBoxes();
         initLoggerWindow();
@@ -2443,7 +2446,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean kitInspectionStartupSelected = false;
 
-    public boolean isKitInspectionStartupSelected() {
+    private boolean isKitInspectionStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isKitInspectionStartupSelected();
             kitInspectionStartupSelected = ret;
@@ -2452,7 +2455,7 @@ public class AprsSystem implements AprsSystemInterface {
         return kitInspectionStartupSelected;
     }
 
-    public void setKitInspectionStartupSelected(boolean selected) {
+    private void setKitInspectionStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setKitInspectionStartupSelected(selected);
         }
@@ -2461,7 +2464,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean pddlPlannerStartupSelected = false;
 
-    public boolean isPddlPlannerStartupSelected() {
+    private boolean isPddlPlannerStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isPddlPlannerStartupSelected();
             pddlPlannerStartupSelected = ret;
@@ -2470,7 +2473,7 @@ public class AprsSystem implements AprsSystemInterface {
         return pddlPlannerStartupSelected;
     }
 
-    public void setPddlPlannerStartupSelected(boolean selected) {
+    private void setPddlPlannerStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setPddlPlannerStartupSelected(selected);
         }
@@ -2479,7 +2482,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean pddlExecutorStartupSelected = false;
 
-    public boolean isExecutorStartupSelected() {
+    private boolean isExecutorStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isExecutorStartupSelected();
             pddlExecutorStartupSelected = ret;
@@ -2488,7 +2491,7 @@ public class AprsSystem implements AprsSystemInterface {
         return pddlExecutorStartupSelected;
     }
 
-    public void setExecutorStartupSelected(boolean selected) {
+    private void setExecutorStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setExecutorStartupSelected(selected);
         }
@@ -2497,7 +2500,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean objectSpStartupSelected = false;
 
-    public boolean isObjectSpStartupSelected() {
+    private boolean isObjectSpStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isObjectSpStartupSelected();
             objectSpStartupSelected = ret;
@@ -2506,7 +2509,7 @@ public class AprsSystem implements AprsSystemInterface {
         return objectSpStartupSelected;
     }
 
-    public void setObjectSpStartupSelected(boolean selected) {
+    private void setObjectSpStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setObjectSpStartupSelected(selected);
         }
@@ -2515,7 +2518,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean object2DViewStartupSelected = false;
 
-    public boolean isObject2DViewStartupSelected() {
+    private boolean isObject2DViewStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isObject2DViewStartupSelected();
             object2DViewStartupSelected = ret;
@@ -2524,7 +2527,7 @@ public class AprsSystem implements AprsSystemInterface {
         return object2DViewStartupSelected;
     }
 
-    public void setObject2DViewStartupSelected(boolean selected) {
+    private void setObject2DViewStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setObject2DViewStartupSelected(selected);
         }
@@ -2533,7 +2536,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean robotCrclGUIStartupSelected = false;
 
-    public boolean isRobotCrclGUIStartupSelected() {
+    private boolean isRobotCrclGUIStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclGUIStartupSelected();
             robotCrclGUIStartupSelected = ret;
@@ -2542,7 +2545,7 @@ public class AprsSystem implements AprsSystemInterface {
         return robotCrclGUIStartupSelected;
     }
 
-    public void setRobotCrclGUIStartupSelected(boolean selected) {
+    private void setRobotCrclGUIStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setRobotCrclGUIStartupSelected(selected);
         }
@@ -2551,7 +2554,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean robotCrclSimServerStartupSelected = false;
 
-    public boolean isRobotCrclSimServerStartupSelected() {
+    private boolean isRobotCrclSimServerStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclSimServerStartupSelected();
             robotCrclSimServerStartupSelected = ret;
@@ -2560,7 +2563,7 @@ public class AprsSystem implements AprsSystemInterface {
         return robotCrclSimServerStartupSelected;
     }
 
-    public void setRobotCrclSimServerStartupSelected(boolean selected) {
+    private void setRobotCrclSimServerStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setRobotCrclSimServerStartupSelected(selected);
         }
@@ -2569,7 +2572,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean robotCrclFanucServerStartupSelected = false;
 
-    public boolean isRobotCrclFanucServerStartupSelected() {
+    private boolean isRobotCrclFanucServerStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclFanucServerStartupSelected();
             robotCrclFanucServerStartupSelected = ret;
@@ -2578,7 +2581,7 @@ public class AprsSystem implements AprsSystemInterface {
         return robotCrclFanucServerStartupSelected;
     }
 
-    public void setRobotCrclFanucServerStartupSelected(boolean selected) {
+    private void setRobotCrclFanucServerStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setRobotCrclFanucServerStartupSelected(selected);
         }
@@ -2587,7 +2590,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean robotCrclMotomanServerStartupSelected = false;
 
-    public boolean isRobotCrclMotomanServerStartupSelected() {
+    private boolean isRobotCrclMotomanServerStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclMotomanServerStartupSelected();
             robotCrclMotomanServerStartupSelected = ret;
@@ -2596,7 +2599,7 @@ public class AprsSystem implements AprsSystemInterface {
         return robotCrclMotomanServerStartupSelected;
     }
 
-    public void setRobotCrclMotomanServerStartupSelected(boolean selected) {
+    private void setRobotCrclMotomanServerStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setRobotCrclMotomanServerStartupSelected(selected);
         }
@@ -2605,7 +2608,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean exploreGraphDBStartupSelected = false;
 
-    public boolean isExploreGraphDBStartupSelected() {
+    private boolean isExploreGraphDBStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isExploreGraphDBStartupSelected();
             exploreGraphDBStartupSelected = ret;
@@ -2614,7 +2617,7 @@ public class AprsSystem implements AprsSystemInterface {
         return exploreGraphDBStartupSelected;
     }
 
-    public void setExploreGraphDBStartupSelected(boolean selected) {
+    private void setExploreGraphDBStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setExploreGraphDBStartupSelected(selected);
         }
@@ -2623,7 +2626,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean showDatabaseSetupStartupSelected = false;
 
-    public boolean isShowDatabaseSetupStartupSelected() {
+    private boolean isShowDatabaseSetupStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isShowDatabaseSetupSelected();
             showDatabaseSetupStartupSelected = ret;
@@ -2632,7 +2635,7 @@ public class AprsSystem implements AprsSystemInterface {
         return showDatabaseSetupStartupSelected;
     }
 
-    public void setShowDatabaseSetupStartupSelected(boolean selected) {
+    private void setShowDatabaseSetupStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setShowDatabaseSetupSelected(selected);
         }
@@ -2641,7 +2644,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean connectDatabaseOnSetupStartupSelected = false;
 
-    public boolean isConnectDatabaseOnSetupStartupSelected() {
+    private boolean isConnectDatabaseOnSetupStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isConnectDatabaseOnStartupSelected();
             connectDatabaseOnSetupStartupSelected = ret;
@@ -2650,7 +2653,7 @@ public class AprsSystem implements AprsSystemInterface {
         return connectDatabaseOnSetupStartupSelected;
     }
 
-    public void setConnectDatabaseOnStartupSelected(boolean selected) {
+    private void setConnectDatabaseOnStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setConnectDatabaseOnStartupSelected(selected);
         }
@@ -2659,7 +2662,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean connectVisionOnSetupStartupSelected = false;
 
-    public boolean isConnectVisionOnStartupSelected() {
+    private boolean isConnectVisionOnStartupSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = this.aprsSystemDisplayJFrame.isConnectVisionOnStartupSelected();
             connectVisionOnSetupStartupSelected = ret;
@@ -2668,7 +2671,7 @@ public class AprsSystem implements AprsSystemInterface {
         return connectVisionOnSetupStartupSelected;
     }
 
-    public void setConnectVisionOnStartupSelected(boolean selected) {
+    private void setConnectVisionOnStartupSelected(boolean selected) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setConnectVisionOnStartupSelected(selected);
         }
@@ -2777,7 +2780,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-    public void closeAllInternalFrames() {
+    private void closeAllInternalFrames() {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.closeAllInternalFrames();
         }
@@ -2913,7 +2916,7 @@ public class AprsSystem implements AprsSystemInterface {
         setupWindowsMenu();
     }
 
-    public void checkDeiconifyActivateAndMaximize(JInternalFrame internalFrame) {
+    private void checkDeiconifyActivateAndMaximize(JInternalFrame internalFrame) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.checkDeiconifyActivateAndMaximize(internalFrame);
         }
@@ -2933,13 +2936,13 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-    public void checkIconifyAndDeactivate(JInternalFrame internalFrame) {
+    private void checkIconifyAndDeactivate(JInternalFrame internalFrame) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.checkIconifyAndDeactivate(internalFrame);
         }
     }
 
-    public void deiconifyAndActivate(final JInternalFrame frameToShow) {
+    private void deiconifyAndActivate(final JInternalFrame frameToShow) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.deiconifyAndActivate(frameToShow);
         }
@@ -3280,7 +3283,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private final Callable<DbSetupPublisher> dbSetupPublisherSupplier = new Callable<DbSetupPublisher>() {
         @Override
-        public DbSetupPublisher call() throws Exception {
+        public DbSetupPublisher call() {
             createDbSetupFrame();
             assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
             return dbSetupJInternalFrame.getDbSetupPublisher();
@@ -3806,6 +3809,7 @@ public class AprsSystem implements AprsSystemInterface {
         });
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void updateScanImageWithRotationOffset(List<PhysicalItem> requiredItems, boolean autoScale, double rotationOffset) {
         Utils.runOnDispatchThread(() -> {
             updateScanImageWithRotationOffsetInternal(requiredItems, autoScale, rotationOffset);
@@ -3877,6 +3881,7 @@ public class AprsSystem implements AprsSystemInterface {
         this.goalLearner = goalLearner;
     }
 
+    @SuppressWarnings("SameReturnValue")
     private boolean checkKitTrays(List<PhysicalItem> kitTrays) {
         if (kitTrays.isEmpty()) {
             Thread.dumpStack();
@@ -4057,7 +4062,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean pauseCheckboxSelected = false;
 
-    public boolean isPauseCheckboxSelected() {
+    private boolean isPauseCheckboxSelected() {
         if(null != crclClientJInternalFrame){
             if(crclClientJInternalFrame.isPaused()) {
                 setPauseCheckboxSelected(true);
@@ -4072,7 +4077,7 @@ public class AprsSystem implements AprsSystemInterface {
         return pauseCheckboxSelected;
     }
 
-    public void setPauseCheckboxSelected(boolean val) {
+    private void setPauseCheckboxSelected(boolean val) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setPauseCheckboxSelected(val);
         }
@@ -4157,7 +4162,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean snapshotCheckboxSelected = false;
 
-    public boolean isSnapshotCheckboxSelected() {
+    private boolean isSnapshotCheckboxSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = aprsSystemDisplayJFrame.isSnapshotCheckboxSelected();
             this.snapshotCheckboxSelected = ret;
@@ -4166,7 +4171,7 @@ public class AprsSystem implements AprsSystemInterface {
         return snapshotCheckboxSelected;
     }
 
-    public void setSnapshotCheckboxSelected(boolean val) {
+    private void setSnapshotCheckboxSelected(boolean val) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setSnapshotCheckboxSelected(val);
         }
@@ -4215,7 +4220,7 @@ public class AprsSystem implements AprsSystemInterface {
         if (null != lastStartActionsFuture) {
             lastStartActionsFuture.printStatus(System.out);
         }
-        System.out.println("continousDemoFuture = " + continuousDemoFuture);
+        System.out.println("ContinuousDemoFuture = " + continuousDemoFuture);
         if (null != continuousDemoFuture) {
             continuousDemoFuture.printStatus(System.out);
         }
@@ -4289,62 +4294,62 @@ public class AprsSystem implements AprsSystemInterface {
      * @return future that can be used to add actions if the demo is canceled or
      * fails.
      */
-    public XFuture<Boolean> startContinousDemo(String comment, boolean reverseFirst) {
+    public XFuture<Boolean> startContinuousDemo(String comment, boolean reverseFirst) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-        logEvent("startContinousDemo", null);
+        logEvent("startContinuousDemo", null);
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         int startDisconnectCount = disconnectRobotCount.get();
-        continuousDemoFuture = startContinousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart.incrementAndGet(), 1);
-        return continuousDemoFuture.always(() -> logEvent("finished startContinousDemo", null));
+        continuousDemoFuture = startContinuousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart.incrementAndGet());
+        return continuousDemoFuture.always(() -> logEvent("finished startContinuousDemo", null));
     }
 
-    private XFuture<Boolean> startContinousDemo(String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart, int cdCur) {
+    private XFuture<Boolean> startContinuousDemo(String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
-            System.err.println("starting continous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + cdCur);
+            System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + 1);
         }
         if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount()) {
             return XFuture.completedFuture(false);
         }
         setStartRunTime();
-        String logLabel = "startContinousDemo(task=" + getTaskName() + ")." + comment + "." + startAbortCount + "." + startDisconnectCount + "." + cdStart + "." + cdCur;
+        String logLabel = "startContinuousDemo(task=" + getTaskName() + ")." + comment + "." + startAbortCount + "." + startDisconnectCount + "." + cdStart + "." + 1;
         logToSuper(logLabel);
         takeSnapshots(logLabel);
         String startRobotName = this.robotName;
         if (null == startRobotName) {
-            throw new IllegalStateException("startContinousDemo with robotName ==null");
+            throw new IllegalStateException("startContinuousDemo with robotName ==null");
         }
         final String checkedRobotName = startRobotName;
         continuousDemoFuture
-                = XFuture.supplyAsync("startContinousDemo(task=" + getTaskName() + ") comment=" + comment,
+                = XFuture.supplyAsync("startContinuousDemo(task=" + getTaskName() + ") comment=" + comment,
                         new Callable<Boolean>() {
                     @Override
-                    public Boolean call() throws Exception {
+                    public Boolean call() {
                         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
                         AprsSystem.this.setReverseFlag(reverseFirst, true);
                         boolean r0 = pddlExecutorJInternalFrame1.readyForNewActionsList();
                         if (!r0) {
-                            System.err.println("starting continous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + cdCur);
+                            System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart );
                         }
                         boolean enabledOk = doCheckEnabled(startAbortCount, checkedRobotName);
                         boolean r1 = pddlExecutorJInternalFrame1.readyForNewActionsList();
                         if (!r1) {
-                            System.err.println("starting continous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + cdCur);
+                            System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart );
                         }
-                        return repeatDoActionWithReverse(enabledOk, comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart, cdCur);
+                        return repeatDoActionWithReverse(enabledOk, comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart);
                     }
                 },
                         runProgramService);
         return continuousDemoFuture;
     }
 
-    private boolean repeatDoActionWithReverse(Boolean x, String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart, int cdCur) throws IllegalStateException {
+    private boolean repeatDoActionWithReverse(Boolean x, String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart) throws IllegalStateException {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-        int cdCurLocal = cdCur;
+        int cdCurLocal = 1;
         while (x && !isAborting()
                 && pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount
                 && startDisconnectCount == disconnectRobotCount.get()) {
-            String logLabel2 = "startContinousDemo(task=" + getTaskName() + ")." + comment + "." + startAbortCount + "." + startDisconnectCount + "." + cdStart + "." + cdCurLocal;
+            String logLabel2 = "startContinuousDemo(task=" + getTaskName() + ")." + comment + "." + startAbortCount + "." + startDisconnectCount + "." + cdStart + "." + cdCurLocal;
             logToSuper(logLabel2);
             takeSnapshots("doActions." + logLabel2);
             boolean doActionWithReverseOk = doActionsWithReverse(comment, x, reverseFirst, startAbortCount, startDisconnectCount);
@@ -4437,30 +4442,30 @@ public class AprsSystem implements AprsSystemInterface {
      * @return future that can be used to add actions if the demo is canceled or
      * fails.
      */
-    public XFuture<Boolean> startPreCheckedContinousDemo(String comment, boolean reverseFirst) {
+    public XFuture<Boolean> startPreCheckedContinuousDemo(String comment, boolean reverseFirst) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         int startDisconnectCount = disconnectRobotCount.get();
-        continuousDemoFuture = startPreCheckedContinousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount);
+        continuousDemoFuture = startPreCheckedContinuousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount);
         return continuousDemoFuture;
     }
 
-    private XFuture<Boolean> startPreCheckedContinousDemo(String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount) {
+    private XFuture<Boolean> startPreCheckedContinuousDemo(String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         int safeAbortRequestCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         if (startAbortCount != safeAbortRequestCount || isAborting()) {
-            continuousDemoFuture = XFuture.completedFutureWithName("startPreCheckedContinousDemo(" + reverseFirst + "," + startAbortCount + ").safeAbortRequestCount=" + safeAbortRequestCount, false);
+            continuousDemoFuture = XFuture.completedFutureWithName("startPreCheckedContinuousDemo(" + reverseFirst + "," + startAbortCount + ").safeAbortRequestCount=" + safeAbortRequestCount, false);
             return continuousDemoFuture;
         }
         setStartRunTime();
         if (!enableCheckedAlready) {
-            continuousDemoFuture = XFuture.completedFutureWithName("startPreCheckedContinousDemo(" + reverseFirst + "," + startAbortCount + ").!enableCheckedAlready", false);
+            continuousDemoFuture = XFuture.completedFutureWithName("startPreCheckedContinuousDemo(" + reverseFirst + "," + startAbortCount + ").!enableCheckedAlready", false);
             return continuousDemoFuture;
         }
         if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
-            System.err.println("Call to startPreCheckedContinousDemo when not ready");
+            System.err.println("Call to startPreCheckedContinuousDemo when not ready");
         }
-        continuousDemoFuture = XFuture.supplyAsync("startPreCheckedContinousDemo(task=" + getTaskName() + ")",
+        continuousDemoFuture = XFuture.supplyAsync("startPreCheckedContinuousDemo(task=" + getTaskName() + ")",
                 () -> {
                     assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
                     this.setReverseFlag(reverseFirst, true);
@@ -4469,19 +4474,19 @@ public class AprsSystem implements AprsSystemInterface {
                     }
                     return doActionsWithReverse(comment, true, reverseFirst, startAbortCount, startDisconnectCount);
                 }, runProgramService)
-                .thenComposeAsync("startPreCheckedContinousDemo(task=" + getTaskName() + ").recurse",
-                        x2 -> x2 ? startPreCheckedContinousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount) : XFuture.completedFutureWithName("startContinousDemo.completedFutureWithName", false),
+                .thenComposeAsync("startPreCheckedContinuousDemo(task=" + getTaskName() + ").recurse",
+                        x2 -> x2 ? startPreCheckedContinuousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount) : XFuture.completedFutureWithName("startContinuousDemo.completedFutureWithName", false),
                         runProgramService);
         return continuousDemoFuture;
     }
 
-    @Nullable public XFuture<Boolean> getContinousDemoFuture() {
+    @Nullable public XFuture<Boolean> getContinuousDemoFuture() {
         return continuousDemoFuture;
     }
 
     private volatile boolean reverseCheckboxSelected = false;
 
-    public boolean isReverseCheckboxSelected() {
+    private boolean isReverseCheckboxSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = aprsSystemDisplayJFrame.isReverseCheckboxSelected();
             this.reverseCheckboxSelected = ret;
@@ -4490,7 +4495,7 @@ public class AprsSystem implements AprsSystemInterface {
         return this.reverseCheckboxSelected;
     }
 
-    public void setReverseCheckboxSelected(boolean val) {
+    private void setReverseCheckboxSelected(boolean val) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setReverseCheckboxSelected(val);
         }
@@ -4543,7 +4548,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean reloadSimFilesOnReverse = false;
 
-    public boolean isReloadSimFilesOnReverseCheckboxSelected() {
+    private boolean isReloadSimFilesOnReverseCheckboxSelected() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = aprsSystemDisplayJFrame.isReloadSimFilesOnReverseCheckboxSelected();
             this.reloadSimFilesOnReverse = ret;
@@ -4552,7 +4557,7 @@ public class AprsSystem implements AprsSystemInterface {
         return this.reloadSimFilesOnReverse;
     }
 
-    public void setReloadSimFilesOnReverseCheckboxSelected(boolean val) {
+    private void setReloadSimFilesOnReverseCheckboxSelected(boolean val) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setReloadSimFilesOnReverseCheckboxSelected(val);
         }
@@ -4738,7 +4743,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-    public void clearCrclClientErrorMessage() {
+    private void clearCrclClientErrorMessage() {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.clearCrclClientErrorMessage();
         }
@@ -5081,19 +5086,19 @@ public class AprsSystem implements AprsSystemInterface {
 
         private static final AprsSystemPropDefaults single = new AprsSystemPropDefaults();
 
-        public static AprsSystemPropDefaults getSingle() {
+        static AprsSystemPropDefaults getSingle() {
             return single;
         }
 
-        public File getPropDir() {
+        File getPropDir() {
             return propDir;
         }
 
-        public File getPropFile() {
+        File getPropFile() {
             return propFile;
         }
 
-        public File getLastAprsPropertiesFileFile() {
+        File getLastAprsPropertiesFileFile() {
             return lastAprsPropertiesFileFile;
         }
 
@@ -5159,7 +5164,7 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return last file location
      */
-    public static File getDefaultLastPropertiesFileFile() {
+    private static File getDefaultLastPropertiesFileFile() {
         return AprsSystemPropDefaults.getSingle().getLastAprsPropertiesFileFile();
     }
 
@@ -5187,7 +5192,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @param label optional label for pose or null
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) throws IOException {
+    public void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, pose, label, snapShotWidth, snapShotHeight);
         }
@@ -5202,7 +5207,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @param label optional label for pose or null
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, PointType point, String label) throws IOException {
+    public void takeSimViewSnapshot(File f, PointType point, String label) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
         }
@@ -5217,7 +5222,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @param label optional label for pose or null
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) throws IOException {
+    public void takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
         }
@@ -5305,7 +5310,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) throws IOException {
+    public void takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, pose, label, w, h);
         }
@@ -5322,7 +5327,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, PointType point, String label, int w, int h) throws IOException {
+    public void takeSimViewSnapshot(File f, PointType point, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         }
@@ -5339,7 +5344,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) throws IOException {
+    public void takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         }
@@ -5405,7 +5410,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException {
+    public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
         if (null != object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, w, h);
         }
@@ -5428,6 +5433,7 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     @MonotonicNonNull
+    private
     DbSetup dbSetup = null;
 
     @Override
@@ -6100,7 +6106,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-    private volatile boolean lastContinueCrclProgramResult = false;
+    private final boolean lastContinueCrclProgramResult = false;
 
     /**
      * Continue or start executing the currently loaded CRCL program.
