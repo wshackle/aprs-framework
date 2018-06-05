@@ -41,7 +41,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author zeid
  */
-@SuppressWarnings("nullness")
+@SuppressWarnings({"nullness", "CanBeFinal"})
 public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
 
     /**
@@ -274,7 +274,7 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
         }
     }
     
-    public void saveProperties() throws IOException {
+    public void saveProperties() {
         Properties props = new Properties();
         props.put(IMAGE_KIT_PATH, kitinspectionImageKitPath);
         props.put(IMAGE_EMPTY_KIT,"123.png");

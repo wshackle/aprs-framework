@@ -72,6 +72,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("CanBeFinal")
 public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener {
 
     private final TableModelListener nodeTableModelListener;

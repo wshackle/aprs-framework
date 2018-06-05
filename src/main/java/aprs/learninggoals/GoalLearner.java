@@ -101,7 +101,7 @@ public class GoalLearner {
         this.kitTrayListPredicate = kitTrayListPredicate;
     }
 
-    boolean checkKitTrays(List<PhysicalItem> kitTrays) {
+    private boolean checkKitTrays(List<PhysicalItem> kitTrays) {
         if (kitTrayListPredicate == null) {
             return (null != kitTrays && !kitTrays.isEmpty());
         }

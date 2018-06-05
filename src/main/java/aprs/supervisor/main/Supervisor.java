@@ -141,12 +141,13 @@ import org.jcodec.common.model.Rational;
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("SameReturnValue")
 public class Supervisor {
 
     @MonotonicNonNull
     private final AprsSupervisorDisplayJFrame displayJFrame;
 
-    public Supervisor() {
+    private Supervisor() {
         this(null);
     }
 
@@ -160,7 +161,7 @@ public class Supervisor {
         return slotProvidersMap;
     }
 
-    private final SlotOffsetProvider getSlotOffsetProvider() {
+    private SlotOffsetProvider getSlotOffsetProvider() {
         return slotOffsetProvider;
     }
 
@@ -469,7 +470,7 @@ public class Supervisor {
         return null;
     }
 
-    private List<List<PositionMapJPanel>> positionMapJPanels = new ArrayList<>();
+    private final List<List<PositionMapJPanel>> positionMapJPanels = new ArrayList<>();
 
     private List<PositionMapJPanel> getPositionMapRow(int row) {
         while (positionMapJPanels.size() <= row) {
@@ -513,7 +514,7 @@ public class Supervisor {
         }
     }
 
-    private List<XFuture<?>> oldLfrs = new ArrayList<>();
+    private final List<XFuture<?>> oldLfrs = new ArrayList<>();
 
     public List<XFuture<?>> getOldLfrs() {
         return oldLfrs;
@@ -588,7 +589,7 @@ public class Supervisor {
                 .stream().mapToInt(x -> x).sum();
     }
 
-    public void showMessageDialog(Object msg) {
+    private void showMessageDialog(Object msg) {
         if (null != displayJFrame) {
             Component component = displayJFrame;
             Utils.runOnDispatchThread(() -> JOptionPane.showMessageDialog(component, msg));
@@ -893,7 +894,7 @@ public class Supervisor {
         return returnRobotsDirect(returnRobotRunnable.getAndSet(null), comment);
     }
 
-    private AtomicInteger returnRobotsNumber = new AtomicInteger();
+    private final AtomicInteger returnRobotsNumber = new AtomicInteger();
 
     private XFutureVoid returnRobots(@Nullable NamedCallable<XFutureVoid> r, String comment) {
         checkRobotsUniquePorts();
@@ -1018,22 +1019,22 @@ public class Supervisor {
         return this.pauseAllForOneSelected;
     }
 
-    private volatile boolean continousDemoSelected = false;
+    private volatile boolean ContinuousDemoSelected = false;
 
-    private void setContinousDemoSelected(boolean selected) {
+    private void setContinuousDemoSelected(boolean selected) {
         if (null != displayJFrame) {
-            displayJFrame.setContinousDemoSelected(selected);
+            displayJFrame.setContinuousDemoSelected(selected);
         }
-        this.continousDemoSelected = selected;
+        this.ContinuousDemoSelected = selected;
     }
 
-    private boolean isContinousDemoSelected() {
+    private boolean isContinuousDemoSelected() {
         if (null != displayJFrame) {
-            boolean ret = displayJFrame.isContinousDemoSelected();
-            this.continousDemoSelected = ret;
+            boolean ret = displayJFrame.isContinuousDemoSelected();
+            this.ContinuousDemoSelected = ret;
             return ret;
         }
-        return this.continousDemoSelected;
+        return this.ContinuousDemoSelected;
     }
 
     private volatile boolean useTeachCameraSelected = true;
@@ -1054,22 +1055,22 @@ public class Supervisor {
         return this.useTeachCameraSelected;
     }
 
-    private volatile boolean indContinousDemoSelected = false;
+    private volatile boolean indContinuousDemoSelected = false;
 
-    public void setIndContinousDemoSelected(boolean selected) {
+    private void setIndContinuousDemoSelected(boolean selected) {
         if (null != displayJFrame) {
-            displayJFrame.setIndContinousDemoSelected(selected);
+            displayJFrame.setIndContinuousDemoSelected(selected);
         }
-        this.indContinousDemoSelected = selected;
+        this.indContinuousDemoSelected = selected;
     }
 
-    private boolean isIndContinousDemoSelected() {
+    private boolean isIndContinuousDemoSelected() {
         if (null != displayJFrame) {
-            boolean ret = displayJFrame.isIndContinousDemoSelected();
-            this.indContinousDemoSelected = ret;
+            boolean ret = displayJFrame.isIndContinuousDemoSelected();
+            this.indContinuousDemoSelected = ret;
             return ret;
         }
-        return this.indContinousDemoSelected;
+        return this.indContinuousDemoSelected;
     }
 
     private volatile boolean indRandomToggleTestSelected = false;
@@ -1092,7 +1093,7 @@ public class Supervisor {
 
     private volatile boolean randomTestSelected = false;
 
-    public void setRandomTestSelected(boolean selected) {
+    private void setRandomTestSelected(boolean selected) {
         if (null != displayJFrame) {
             displayJFrame.setRandomTestSelected(selected);
         }
@@ -1127,22 +1128,22 @@ public class Supervisor {
     }
 
     //jCheckBoxMenuItemKeepAndDisplayXFutureProfiles
-    private volatile boolean continousDemoRevFirstSelected = false;
+    private volatile boolean ContinuousDemoRevFirstSelected = false;
 
-    private void setContinousDemoRevFirstSelected(boolean selected) {
+    private void setContinuousDemoRevFirstSelected(boolean selected) {
         if (null != displayJFrame) {
-            displayJFrame.setContinousDemoRevFirstSelected(selected);
+            displayJFrame.setContinuousDemoRevFirstSelected(selected);
         }
-        this.continousDemoRevFirstSelected = selected;
+        this.ContinuousDemoRevFirstSelected = selected;
     }
 
-    private boolean isContinousDemoRevFirstSelected() {
+    private boolean isContinuousDemoRevFirstSelected() {
         if (null != displayJFrame) {
-            boolean ret = displayJFrame.isContinousDemoRevFirstSelected();
-            this.continousDemoRevFirstSelected = ret;
+            boolean ret = displayJFrame.isContinuousDemoRevFirstSelected();
+            this.ContinuousDemoRevFirstSelected = ret;
             return ret;
         }
-        return this.continousDemoRevFirstSelected;
+        return this.ContinuousDemoRevFirstSelected;
     }
 
     private volatile boolean keepAndDisplayXFutureProfilesSelected = false;
@@ -1167,11 +1168,11 @@ public class Supervisor {
 
         return showErrorSplash("Not all robots\n could be enabled.")
                 .thenRun(() -> Utils.runOnDispatchThread(() -> {
-                    setContinousDemoSelected(false);
-                    setContinousDemoRevFirstSelected(false);
-                    if (null != continousDemoFuture) {
-                        continousDemoFuture.cancelAll(true);
-                        continousDemoFuture = null;
+                    setContinuousDemoSelected(false);
+                    setContinuousDemoRevFirstSelected(false);
+                    if (null != ContinuousDemoFuture) {
+                        ContinuousDemoFuture.cancelAll(true);
+                        ContinuousDemoFuture = null;
                     }
                 }));
     }
@@ -1364,7 +1365,7 @@ public class Supervisor {
                 }, supervisorExecutorService
                 );
 
-        if (isIndContinousDemoSelected()
+        if (isIndContinuousDemoSelected()
                 || isIndRandomToggleTestSelected()) {
             return part1
                     .thenRunAsync("stealRobot :  Checking systemContinueMap " + " : srn=" + srn,
@@ -1620,7 +1621,7 @@ public class Supervisor {
      * @param ms timestamp in milliseconds
      * @return formatted string
      */
-    public static String getTimeString(long ms) {
+    private static String getTimeString(long ms) {
         Date date = new Date(ms);
         return timeFormat.format(date);
     }
@@ -1844,6 +1845,7 @@ public class Supervisor {
     @Nullable
     private volatile XFuture<?> lastFutureReturned = null;
 
+    @SuppressWarnings("UnusedReturnValue")
     private XFuture<Void> prepAndFinishOnDispatch(Runnable r) {
 
         return prepActions()
@@ -2021,9 +2023,9 @@ public class Supervisor {
         if (null != displayJFrame) {
             displayJFrame.clearCheckBoxes();
         }
-        setContinousDemoSelected(false);
-        setContinousDemoRevFirstSelected(false);
-        setIndContinousDemoSelected(false);
+        setContinuousDemoSelected(false);
+        setContinuousDemoRevFirstSelected(false);
+        setIndContinuousDemoSelected(false);
         setIndRandomToggleTestSelected(false);
         setPauseSelected(false);
         setRandomTestSelected(false);
@@ -2065,8 +2067,8 @@ public class Supervisor {
 
         System.out.println("lastFutureReturned = " + lastFutureReturned);
         printStatus(lastFutureReturned, System.out);
-        System.out.println("continousDemoFuture = " + continousDemoFuture);
-        printStatus(continousDemoFuture, System.out);
+        System.out.println("ContinuousDemoFuture = " + ContinuousDemoFuture);
+        printStatus(ContinuousDemoFuture, System.out);
 
         System.out.println("randomTest = " + randomTestFuture);
         printStatus(randomTestFuture, System.out);
@@ -2156,8 +2158,8 @@ public class Supervisor {
         for (XFuture<Void> xf : waitForTogglesFutures) {
             xf.cancelAll(true);
         }
-        if (null != continousDemoFuture) {
-            continousDemoFuture.cancelAll(true);
+        if (null != ContinuousDemoFuture) {
+            ContinuousDemoFuture.cancelAll(true);
         }
         if (null != togglesAllowedXfuture) {
             XFuture<Void> xf = togglesAllowedXfuture.get();
@@ -2235,17 +2237,17 @@ public class Supervisor {
     }
 
     @Nullable
-    private volatile XFuture<Void> continousDemoFuture = null;
+    private volatile XFuture<Void> ContinuousDemoFuture = null;
     @Nullable
     private volatile XFuture<?> mainFuture = null;
 
-    public void setContinousDemoFuture(XFuture<Void> continousDemoFuture) {
-        this.continousDemoFuture = continousDemoFuture;
+    public void setContinuousDemoFuture(XFuture<Void> ContinuousDemoFuture) {
+        this.ContinuousDemoFuture = ContinuousDemoFuture;
     }
 
     @Nullable
-    public XFuture<Void> getContinousDemoFuture() {
-        return continousDemoFuture;
+    public XFuture<Void> getContinuousDemoFuture() {
+        return ContinuousDemoFuture;
     }
 
     @Nullable XFuture<?> getMainFuture() {
@@ -2294,9 +2296,9 @@ public class Supervisor {
             randomTestFuture.cancelAll(true);
             randomTestFuture = null;
         }
-        if (null != continousDemoFuture) {
-            continousDemoFuture.cancelAll(true);
-            continousDemoFuture = null;
+        if (null != ContinuousDemoFuture) {
+            ContinuousDemoFuture.cancelAll(true);
+            ContinuousDemoFuture = null;
         }
         immediateAbortAll("resetAll");
         clearCheckBoxes();
@@ -2317,7 +2319,7 @@ public class Supervisor {
 
     void resetMainPauseTestFuture() {
         resetMainPauseCount++;
-        if (null == continousDemoFuture) {
+        if (null == ContinuousDemoFuture) {
             if (null == randomTestFuture) {
                 if (null == pauseTestFuture) {
                     mainFuture = (XFuture<?>) XFuture.completedFutureWithName("resetMainPauseTestFuture" + resetMainPauseCount, null);
@@ -2335,21 +2337,21 @@ public class Supervisor {
         }
         if (null == randomTestFuture) {
             if (null == pauseTestFuture) {
-                mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture);
+                mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, ContinuousDemoFuture);
                 return;
             }
-            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, pauseTestFuture);
+            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, ContinuousDemoFuture, pauseTestFuture);
             return;
         }
         if (null == pauseTestFuture) {
-            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, randomTestFuture);
+            mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, ContinuousDemoFuture, randomTestFuture);
             return;
         }
-        mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, continousDemoFuture, randomTestFuture, pauseTestFuture);
+        mainFuture = (XFuture<?>) XFuture.allOfWithName("resetMainPauseTestFuture" + resetMainPauseCount, ContinuousDemoFuture, randomTestFuture, pauseTestFuture);
     }
 
     public XFuture<Void> startContinuousDemoRevFirst() {
-        setContinousDemoSelected(false);
+        setContinuousDemoSelected(false);
         return prepAndFinishOnDispatch(this::startContinuousDemoRevFirstFinish);
     }
 
@@ -2360,19 +2362,19 @@ public class Supervisor {
         connectAll();
         setAllReverseFlag(false);
         enableAllRobots();
-        continousDemoCycle.set(0);
-        if (!isContinousDemoRevFirstSelected()) {
-            setContinousDemoRevFirstSelected(true);
+        ContinuousDemoCycle.set(0);
+        if (!isContinuousDemoRevFirstSelected()) {
+            setContinuousDemoRevFirstSelected(true);
         }
         XFuture<Void> ret = startPrivateContinuousDemoRevFirst();
-        continousDemoFuture = ret;
-        mainFuture = continousDemoFuture;
+        ContinuousDemoFuture = ret;
+        mainFuture = ContinuousDemoFuture;
         return ret;
     }
 
     public XFuture<Void> startRandomTestFirstActionReversed() {
         try {
-            setContinousDemoRevFirstSelected(true);
+            setContinuousDemoRevFirstSelected(true);
             setRandomTestSelected(true);
             return prepAndFinishOnDispatch(() -> {
                 try {
@@ -2386,9 +2388,9 @@ public class Supervisor {
                                         connectAll();
                                         setAllReverseFlag(true);
                                         enableAllRobots();
-                                        continousDemoCycle.set(0);
+                                        ContinuousDemoCycle.set(0);
                                         clearRandomTestCount();
-                                        setContinousDemoRevFirstSelected(true);
+                                        setContinuousDemoRevFirstSelected(true);
                                         setRandomTestSelected(true);
                                         lastFutureReturned = null;
                                         XFuture<Void> ret = startRandomTest();
@@ -2426,11 +2428,11 @@ public class Supervisor {
 
     private void resetMainRandomTestFuture() {
 //        assert (randomTest != null) : "(randomTest == null) :  @AssumeAssertion(nullness)";
-//        assert (continousDemoFuture != null) : "(continousDemoFuture == null)  :  @AssumeAssertion(nullness)";
+//        assert (ContinuousDemoFuture != null) : "(ContinuousDemoFuture == null)  :  @AssumeAssertion(nullness)";
 
-        if (null != randomTestFuture && null != continousDemoFuture) {
+        if (null != randomTestFuture && null != ContinuousDemoFuture) {
             resetMainRandomTestCount++;
-            mainFuture = XFuture.allOfWithName("resetMainRandomTestFuture" + resetMainRandomTestCount, randomTestFuture, continousDemoFuture);
+            mainFuture = XFuture.allOfWithName("resetMainRandomTestFuture" + resetMainRandomTestCount, randomTestFuture, ContinuousDemoFuture);
             mainFuture.exceptionally((thrown) -> {
                 if (thrown != null) {
                     log(Level.SEVERE, "", thrown);
@@ -2723,7 +2725,7 @@ public class Supervisor {
         OUTER_WHILE:
         while (!anyChanged
                 && abortCount.get() == startingAbortCount
-                && isContinousDemoSelected()
+                && isContinuousDemoSelected()
                 && !closing) {
             cycles++;
             List<PhysicalItem> teachItems = Collections.emptyList();
@@ -2906,7 +2908,7 @@ public class Supervisor {
     private final AtomicInteger srtCount = new AtomicInteger();
 
     /**
-     * Perform a test of the continous demo where the motoman robot will be
+     * Perform a test of the Continuous demo where the motoman robot will be
      * randomly enabled and disabled.
      *
      * @return a future that can be used to determine if the test failed or was
@@ -2930,13 +2932,13 @@ public class Supervisor {
         }
         logEvent("Start Random Test Step 2 :" + c);
         XFuture<Void> f1;
-        if (!isContinousDemoRevFirstSelected()) {
-            f1 = startContinousDemo();
+        if (!isContinuousDemoRevFirstSelected()) {
+            f1 = startContinuousDemo();
         } else {
             f1 = startPrivateContinuousDemoRevFirst();
         }
-        continousDemoFuture = f1;
-        setContinousDemoSelected(true);
+        ContinuousDemoFuture = f1;
+        setContinuousDemoSelected(true);
         XFuture<Void> f2 = continueRandomTest();
         randomTestFuture = f2;
         resetMainRandomTestFuture();
@@ -2944,9 +2946,9 @@ public class Supervisor {
     }
 
     private XFuture<Void> startIndRandomTestStep2() {
-        XFuture<Void> f1 = startAllIndContinousDemo();
-        continousDemoFuture = f1;
-        setContinousDemoSelected(true);
+        XFuture<Void> f1 = startAllIndContinuousDemo();
+        ContinuousDemoFuture = f1;
+        setContinuousDemoSelected(true);
         XFuture<Void> f2 = continueRandomTest();
         randomTestFuture = f2;
         resetMainRandomTestFuture();
@@ -3128,6 +3130,7 @@ public class Supervisor {
     private final AtomicInteger disallowTogglesCount = new AtomicInteger();
     private final ConcurrentHashMap<String, LockInfo> toggleBlockerMap = new ConcurrentHashMap<>();
 
+    @SuppressWarnings("UnusedReturnValue")
     private LockInfo disallowToggles(String blockerName, AprsSystemInterface... systems) {
 
         disallowTogglesCount.incrementAndGet();
@@ -3263,21 +3266,21 @@ public class Supervisor {
             logEventErr("allSystemsOk returned false forcing quitRandomTest");
             return quitRandomTest("allSystemsOk returned false forcing quitRandomTest");
         }
-        if (!isContinousDemoSelected() && !isContinousDemoRevFirstSelected()) {
-            logEventErr("isContinousDemoSelected() returned false forcing quitRandomTest");
-            return quitRandomTest("isContinousDemoSelected() returned false forcing quitRandomTest");
+        if (!isContinuousDemoSelected() && !isContinuousDemoRevFirstSelected()) {
+            logEventErr("isContinuousDemoSelected() returned false forcing quitRandomTest");
+            return quitRandomTest("isContinuousDemoSelected() returned false forcing quitRandomTest");
         }
         if (!isRandomTestSelected()) {
             logEventErr("isRandomTestSelected().isSelected() returned false forcing quitRandomTest");
             return quitRandomTest("isRandomTestSelected().isSelected() returned false forcing quitRandomTest");
         }
-        if (null == continousDemoFuture
-                || continousDemoFuture.isCancelled()
-                || continousDemoFuture.isDone()
-                || continousDemoFuture.isCompletedExceptionally()) {
-            System.out.println("continousDemoCycle = " + continousDemoCycle + " forcing quitRandomTest");
-            printStatus(continousDemoFuture, System.out);
-            return quitRandomTest("continousDemoCycle = " + continousDemoCycle + " forcing quitRandomTest");
+        if (null == ContinuousDemoFuture
+                || ContinuousDemoFuture.isCancelled()
+                || ContinuousDemoFuture.isDone()
+                || ContinuousDemoFuture.isCompletedExceptionally()) {
+            System.out.println("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
+            printStatus(ContinuousDemoFuture, System.out);
+            return quitRandomTest("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
         }
         XFuture<Void> ret = startRandomDelay("pauseTest", 30000, 20000)
                 .thenCompose("pauseTest.pause" + pauseCount.get(),
@@ -3302,26 +3305,26 @@ public class Supervisor {
             logEventErr("allSystemsOk returned false forcing quitRandomTest");
             return quitRandomTest("allSystemsOk returned false forcing quitRandomTest");
         }
-        if (!isContinousDemoSelected()
-                && !isContinousDemoRevFirstSelected()
-                && !isIndContinousDemoSelected()
+        if (!isContinuousDemoSelected()
+                && !isContinuousDemoRevFirstSelected()
+                && !isIndContinuousDemoSelected()
                 && !isIndRandomToggleTestSelected()) {
-            logEventErr("isContinousDemoSelected() returned false forcing quitRandomTest");
-            return quitRandomTest("isContinousDemoSelected() returned false forcing quitRandomTest");
+            logEventErr("isContinuousDemoSelected() returned false forcing quitRandomTest");
+            return quitRandomTest("isContinuousDemoSelected() returned false forcing quitRandomTest");
         }
         if (!isRandomTestSelected()
                 && !isIndRandomToggleTestSelected()) {
             logEventErr("isRandomTestSelected().isSelected() returned false forcing quitRandomTest");
             return quitRandomTest("isRandomTestSelected().isSelected() returned false forcing quitRandomTest");
         }
-        XFuture<?> currentContinousDemoFuture = this.continousDemoFuture;
-        if (null == currentContinousDemoFuture
-                || currentContinousDemoFuture.isCancelled()
-                || currentContinousDemoFuture.isDone()
-                || currentContinousDemoFuture.isCompletedExceptionally()) {
-            System.out.println("continousDemoCycle = " + continousDemoCycle + " forcing quitRandomTest");
-            printStatus(currentContinousDemoFuture, System.out);
-            return quitRandomTest("continousDemoCycle = " + continousDemoCycle + " forcing quitRandomTest");
+        XFuture<?> currentContinuousDemoFuture = this.ContinuousDemoFuture;
+        if (null == currentContinuousDemoFuture
+                || currentContinuousDemoFuture.isCancelled()
+                || currentContinuousDemoFuture.isDone()
+                || currentContinuousDemoFuture.isCompletedExceptionally()) {
+            System.out.println("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
+            printStatus(currentContinuousDemoFuture, System.out);
+            return quitRandomTest("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
         }
         XFuture<Void> ret = startRandomDelay("enableTest", 20000, 5000)
                 .thenCompose("checkForWaitResume1", x -> this.waitResume())
@@ -3345,8 +3348,8 @@ public class Supervisor {
         XFuture<Void> xf = new XFuture<>("quitRandomTest : " + cause);
         xf.cancel(false);
         System.out.println("continueRandomTest quit");
-        setContinousDemoSelected(false);
-        setContinousDemoRevFirstSelected(false);
+        setContinuousDemoSelected(false);
+        setContinuousDemoRevFirstSelected(false);
         setRandomTestSelected(false);
         immediateAbortAll("quitRandomTest : " + cause);
         return xf;
@@ -3363,7 +3366,7 @@ public class Supervisor {
      * @return a future which can be used to determine when the all reverse
      * flags and related actions are complete.
      */
-    public XFuture<Void> startSetAllReverseFlag(boolean reverseFlag) {
+    private XFuture<Void> startSetAllReverseFlag(boolean reverseFlag) {
         logEvent("setAllReverseFlag(" + reverseFlag + ")");
         @SuppressWarnings("rawtypes")
         XFuture fa[] = new XFuture[aprsSystems.size()];
@@ -3408,17 +3411,17 @@ public class Supervisor {
      */
     private XFuture<Void> startPrivateContinuousDemoRevFirst() {
         int c = scdrfCount.incrementAndGet();
-        logEvent("Start Continous Demo (Reverse First) : " + c);
+        logEvent("Start Continuous Demo (Reverse First) : " + c);
         connectAll();
         final XFuture<?> lfr = this.lastFutureReturned;
-        continousDemoFuture
+        ContinuousDemoFuture
                 = startCheckAndEnableAllRobots()
-                .thenComposeAsync("startContinousDemoRevFirst.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                .thenComposeAsync("startContinousDemoRevFirst.startReverseActions", x -> startReverseActions(), supervisorExecutorService)
-                .thenComposeAsync("startContinousDemoRevFirst.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                .thenComposeAsync("startContinousDemoRevFirst.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
-                .thenComposeAsync("startContinousDemoRevFirst", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
-        return continousDemoFuture;
+                .thenComposeAsync("startContinuousDemoRevFirst.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                .thenComposeAsync("startContinuousDemoRevFirst.startReverseActions", x -> startReverseActions(), supervisorExecutorService)
+                .thenComposeAsync("startContinuousDemoRevFirst.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                .thenComposeAsync("startContinuousDemoRevFirst.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
+                .thenComposeAsync("startContinuousDemoRevFirst", ok -> checkOkElse(ok, this::continueContinuousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
+        return ContinuousDemoFuture;
     }
 
     /**
@@ -3428,16 +3431,16 @@ public class Supervisor {
      *
      * @return future that can be used to determine if it fails or is cancelled
      */
-    XFuture<Void> startContinousScanAndRun() {
-        logEvent("Start continous scan and run");
+    XFuture<Void> startContinuousScanAndRun() {
+        logEvent("Start Continuous scan and run");
         connectAll();
         for (AprsSystemInterface aprsSys : aprsSystems) {
             aprsSys.setLastCreateActionListFromVisionKitToCheckStrings(Collections.emptyList());
         }
-        continousDemoFuture
+        ContinuousDemoFuture
                 = startCheckAndEnableAllRobots()
-                .thenCompose("startContinousScanAndRun", ok -> checkOkElse(ok, this::continueContinousScanAndRun, this::showCheckEnabledErrorSplash));
-        return continousDemoFuture;
+                .thenCompose("startContinuousScanAndRun", ok -> checkOkElse(ok, this::continueContinuousScanAndRun, this::showCheckEnabledErrorSplash));
+        return ContinuousDemoFuture;
     }
 
     /**
@@ -3447,13 +3450,13 @@ public class Supervisor {
      *
      * @return future that can be used to determine if it fails or is cancelled
      */
-    public XFuture<Void> startContinousDemo() {
-        logEvent("Start continous demo");
+    public XFuture<Void> startContinuousDemo() {
+        logEvent("Start Continuous demo");
         connectAll();
-        continousDemoFuture
+        ContinuousDemoFuture
                 = startCheckAndEnableAllRobots()
-                .thenCompose("startContinousDemo", ok -> checkOkElse(ok, this::continueContinousDemo, this::showCheckEnabledErrorSplash));
-        return continousDemoFuture;
+                .thenCompose("startContinuousDemo", ok -> checkOkElse(ok, this::continueContinuousDemo, this::showCheckEnabledErrorSplash));
+        return ContinuousDemoFuture;
     }
 
     /**
@@ -3464,13 +3467,13 @@ public class Supervisor {
      *
      * @return future that can be used to determine if it fails or is canceled
      */
-    XFuture<Void> startIndependentContinousDemo() {
-        logEvent("Start continous demo");
+    XFuture<Void> startIndependentContinuousDemo() {
+        logEvent("Start Continuous demo");
         connectAll();
         XFuture<Void> ret
                 = startCheckAndEnableAllRobots()
-                .thenCompose("startIndContinousDemo", ok -> checkOkElse(ok, this::startAllIndContinousDemo, this::showCheckEnabledErrorSplash));
-        continousDemoFuture = ret;
+                .thenCompose("startIndContinuousDemo", ok -> checkOkElse(ok, this::startAllIndContinuousDemo, this::showCheckEnabledErrorSplash));
+        ContinuousDemoFuture = ret;
         if (null != randomTestFuture && isIndRandomToggleTestSelected()) {
             resetMainRandomTestFuture();
         }
@@ -3486,18 +3489,18 @@ public class Supervisor {
      *
      * @return future that can be used to determine if it fails or is canceled
      */
-    XFuture<Void> startRandomEnableToggleIndependentContinousDemo() {
+    XFuture<Void> startRandomEnableToggleIndependentContinuousDemo() {
         logEvent("Start Independent Random  Enable Toggle Test");
         connectAll();
         return startCheckAndEnableAllRobots()
-                .thenCompose("startRandomEnableToggleIndependentContinousDemo.checkOk",
+                .thenCompose("startRandomEnableToggleIndependentContinuousDemo.checkOk",
                         ok -> checkOkElse(ok, this::startIndRandomTestStep2, this::showCheckEnabledErrorSplash));
     }
 
-    private final AtomicInteger continousDemoCycle = new AtomicInteger(0);
+    private final AtomicInteger ContinuousDemoCycle = new AtomicInteger(0);
 
     public int getContiousDemoCycleCount() {
-        return continousDemoCycle.get();
+        return ContinuousDemoCycle.get();
     }
 
     ExecutorService getSupervisorExecutorService() {
@@ -3508,13 +3511,13 @@ public class Supervisor {
         return randomDelayExecutorService;
     }
 
-    private XFuture<Void> incrementContinousDemoCycle() {
-        final int c = continousDemoCycle.incrementAndGet();
-        System.out.println("incrementContinousDemoCycle : " + c);
+    private XFuture<Void> incrementContinuousDemoCycle() {
+        final int c = ContinuousDemoCycle.incrementAndGet();
+        System.out.println("incrementContinuousDemoCycle : " + c);
         if (null != displayJFrame) {
-            return displayJFrame.incrementContinousDemoCycle();
+            return displayJFrame.incrementContinuousDemoCycle();
         } else {
-            return XFutureVoid.completedFutureWithName("incrementContinousDemoCycle" + c);
+            return XFutureVoid.completedFutureWithName("incrementContinuousDemoCycle" + c);
         }
     }
 
@@ -3532,7 +3535,7 @@ public class Supervisor {
                 }
             });
 
-    private ExecutorService supervisorExecutorService = defaultSupervisorExecutorService;
+    private final ExecutorService supervisorExecutorService = defaultSupervisorExecutorService;
 
     private final ExecutorService defaultRandomDelayExecutorService
             = Executors.newCachedThreadPool(new ThreadFactory() {
@@ -3548,7 +3551,7 @@ public class Supervisor {
                 }
             });
 
-    private ExecutorService randomDelayExecutorService = defaultRandomDelayExecutorService;
+    private final ExecutorService randomDelayExecutorService = defaultRandomDelayExecutorService;
 
     int getMax_cycles() {
         return max_cycles;
@@ -3558,21 +3561,21 @@ public class Supervisor {
         this.max_cycles = max_cycles;
     }
 
-    private XFuture<Void> continueContinousScanAndRun() {
-        logEvent("Continue Continous Scan and Run : " + continousDemoCycle.get());
-        return continousDemoSetup()
-                .thenCompose("continueContinousScanAndRun.part2", x2 -> {
+    private XFuture<Void> continueContinuousScanAndRun() {
+        logEvent("Continue Continuous Scan and Run : " + ContinuousDemoCycle.get());
+        return ContinuousDemoSetup()
+                .thenCompose("continueContinuousScanAndRun.part2", x2 -> {
                     final XFuture<?> lfr = this.lastFutureReturned;
                     XFuture<Void> ret
                             = startCheckAndEnableAllRobots()
-                            .thenComposeAsync("continueContinousScanAndRun.scanAllInternal", x -> scanTillNewInternal(), supervisorExecutorService)
-                            .thenComposeAsync("continueContinousScanAndRun.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                            .thenComposeAsync("continueContinousScanAndRun.startAllActions1", x -> startAllActions(), supervisorExecutorService)
-                            .thenComposeAsync("continueContinousScanAndRun.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                            .thenCompose("continueContinousScanAndRun.incrementContinousDemoCycle", x -> incrementContinousDemoCycle())
-                            .thenComposeAsync("continueContinousScanAndRun.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
-                            .thenComposeAsync("continueContinousScanAndRun.recurse" + continousDemoCycle.get(), ok -> checkOkElse(ok && checkMaxCycles(), this::continueContinousScanAndRun, this::showCheckEnabledErrorSplash), supervisorExecutorService);
-                    continousDemoFuture = ret;
+                            .thenComposeAsync("continueContinuousScanAndRun.scanAllInternal", x -> scanTillNewInternal(), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousScanAndRun.startAllActions1", x -> startAllActions(), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                            .thenCompose("continueContinuousScanAndRun.incrementContinuousDemoCycle", x -> incrementContinuousDemoCycle())
+                            .thenComposeAsync("continueContinuousScanAndRun.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousScanAndRun.recurse" + ContinuousDemoCycle.get(), ok -> checkOkElse(ok && checkMaxCycles(), this::continueContinuousScanAndRun, this::showCheckEnabledErrorSplash), supervisorExecutorService);
+                    ContinuousDemoFuture = ret;
                     if (null != randomTestFuture) {
                         if (isRandomTestSelected()) {
                             resetMainRandomTestFuture();
@@ -3584,42 +3587,42 @@ public class Supervisor {
                 });
     }
 
-    private XFuture<Void> startContinousDemoReversActions() {
-        if (!isContinousDemoSelected() && !isContinousDemoRevFirstSelected()) {
-            String msg = "startContinousDemoReversActions : " + continousDemoCycle.get() + " quiting because checkbox not set";
+    private XFuture<Void> startContinuousDemoReversActions() {
+        if (!isContinuousDemoSelected() && !isContinuousDemoRevFirstSelected()) {
+            String msg = "startContinuousDemoReversActions : " + ContinuousDemoCycle.get() + " quiting because checkbox not set";
             logEvent(msg);
             return XFutureVoid.completedFutureWithName(msg);
         }
         return startReverseActions();
     }
 
-    private XFuture<Void> continueContinousDemo() {
-        logEvent("Continue Continous Demo : " + continousDemoCycle.get());
-        if (!isContinousDemoSelected() && !isContinousDemoRevFirstSelected()) {
-            String msg = "Continue Continous Demo : " + continousDemoCycle.get() + " quiting because checkbox not set";
+    private XFuture<Void> continueContinuousDemo() {
+        logEvent("Continue Continuous Demo : " + ContinuousDemoCycle.get());
+        if (!isContinuousDemoSelected() && !isContinuousDemoRevFirstSelected()) {
+            String msg = "Continue Continuous Demo : " + ContinuousDemoCycle.get() + " quiting because checkbox not set";
             logEvent(msg);
             return XFutureVoid.completedFutureWithName(msg);
         }
-        String blockerName = "start continueContinousDemo" + continousDemoCycle.get();
+        String blockerName = "start continueContinuousDemo" + ContinuousDemoCycle.get();
         AprsSystemInterface sysArray[] = getAprsSystems().toArray(new AprsSystemInterface[0]);
         disallowToggles(blockerName, sysArray);
-        return continousDemoSetup()
-                .thenCompose("continouseDemo.part2", x2 -> {
+        return ContinuousDemoSetup()
+                .thenCompose("ContinuouseDemo.part2", x2 -> {
                     final XFuture<?> lfr = this.lastFutureReturned;
                     XFuture<Void> ret
                             = startCheckAndEnableAllRobots()
-                            .thenComposeAsync("continueContinousDemo.startAllActions1", x -> {
+                            .thenComposeAsync("continueContinuousDemo.startAllActions1", x -> {
                                 XFuture<Void> startAllActionsRet = startAllActions();
                                 allowToggles(blockerName, sysArray);
                                 return startAllActionsRet;
                             }, supervisorExecutorService)
-                            .thenComposeAsync("continueContinousDemo.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                            .thenComposeAsync("continueContinousDemo.startReverseActions", x -> startContinousDemoReversActions(), supervisorExecutorService)
-                            .thenComposeAsync("continueContinousDemo.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                            .thenCompose("continueContinousDemo.incrementContinousDemoCycle", x -> incrementContinousDemoCycle())
-                            .thenComposeAsync("continueContinousDemo.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
-                            .thenComposeAsync("continueContinousDemo.recurse" + continousDemoCycle.get(), ok -> checkOkElse(ok && checkMaxCycles(), this::continueContinousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
-                    continousDemoFuture = ret;
+                            .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousDemo.startReverseActions", x -> startContinuousDemoReversActions(), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                            .thenCompose("continueContinuousDemo.incrementContinuousDemoCycle", x -> incrementContinuousDemoCycle())
+                            .thenComposeAsync("continueContinuousDemo.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousDemo.recurse" + ContinuousDemoCycle.get(), ok -> checkOkElse(ok && checkMaxCycles(), this::continueContinuousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
+                    ContinuousDemoFuture = ret;
                     if (null != randomTestFuture) {
                         if (isRandomTestSelected()) {
                             resetMainRandomTestFuture();
@@ -3635,14 +3638,14 @@ public class Supervisor {
         if (max_cycles < 1) {
             return true;
         }
-        boolean ret = max_cycles > continousDemoCycle.get();
+        boolean ret = max_cycles > ContinuousDemoCycle.get();
         if (!ret) {
             System.err.println("max_cycles limit hit");
         }
         return ret;
     }
 
-    private XFuture<@Nullable Void> continousDemoSetup() {
+    private XFuture<@Nullable Void> ContinuousDemoSetup() {
         return XFuture
                 .runAsync("contiousDemoSetup", () -> {
                     System.out.println("stealingRobots = " + stealingRobots);
@@ -3678,7 +3681,7 @@ public class Supervisor {
      */
     XFuture<Void> startReverseActions() {
         logEvent("startReverseActions");
-        String blockerName = "start startReverseActions" + continousDemoCycle.get();
+        String blockerName = "start startReverseActions" + ContinuousDemoCycle.get();
         AprsSystemInterface sysArray[] = getAprsSystems().toArray(new AprsSystemInterface[getAprsSystems().size()]);
         disallowToggles(blockerName, sysArray);
         setAllReverseFlag(true);
@@ -3731,7 +3734,7 @@ public class Supervisor {
     }
 
     @Nullable
-    private JPopupMenu posTablePopupMenu = null;
+    private final JPopupMenu posTablePopupMenu = null;
 
     /**
      * Enable all robots. (Note: no check is made if the robot is physically in
@@ -3851,7 +3854,7 @@ public class Supervisor {
         });
     }
 
-    private AtomicInteger pauseCount = new AtomicInteger();
+    private final AtomicInteger pauseCount = new AtomicInteger();
 
     private void setPauseCount(int count) {
         if (null != displayJFrame) {
@@ -3931,10 +3934,10 @@ public class Supervisor {
     private final ConcurrentHashMap<Integer, XFuture<Boolean>> systemContinueMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, XFuture<Void>> debugSystemContinueMap = new ConcurrentHashMap<>();
 
-    private XFuture<Void> continueSingleContinousDemo(AprsSystemInterface sys, int recurseNum) {
+    private XFuture<Void> continueSingleContinuousDemo(AprsSystemInterface sys, int recurseNum) {
         XFuture<Void> ret = debugSystemContinueMap.compute(sys.getMyThreadId(),
                 (k, v) -> {
-                    return continueSingleContinousDemoInner(sys, recurseNum);
+                    return continueSingleContinuousDemoInner(sys, recurseNum);
                 });
         StringBuilder tasksNames = new StringBuilder();
         Set<Integer> keySet = debugSystemContinueMap.keySet();
@@ -3955,52 +3958,52 @@ public class Supervisor {
                 tasksNames.append(sysTemp.getTaskName()).append(',');
             }
         }
-        continousDemoFuture = XFuture.allOfWithName("continueSingleContinousDemo.allOf(" + tasksNames.toString() + ").recurseNum=" + recurseNum, futures);
+        ContinuousDemoFuture = XFuture.allOfWithName("continueSingleContinuousDemo.allOf(" + tasksNames.toString() + ").recurseNum=" + recurseNum, futures);
         if (null != randomTestFuture) {
             resetMainRandomTestFuture();
         }
         return ret;
     }
 
-    private XFuture<Void> continueSingleContinousDemoInner(AprsSystemInterface sys, int recurseNum) {
-        String toggleLockName = "continueSingleContinousDemoInner" + recurseNum + "_" + sys.getMyThreadId();
+    private XFuture<Void> continueSingleContinuousDemoInner(AprsSystemInterface sys, int recurseNum) {
+        String toggleLockName = "continueSingleContinuousDemoInner" + recurseNum + "_" + sys.getMyThreadId();
         return systemContinueMap.computeIfAbsent(sys.getMyThreadId(), k -> {
-            return new XFuture<>("continueSingleContinousDemo.holder " + sys);
+            return new XFuture<>("continueSingleContinuousDemo.holder " + sys);
         })
-                .thenCompose("continueSingleContinousDemo.continuing: " + recurseNum + " " + sys,
+                .thenCompose("continueSingleContinuousDemo.continuing: " + recurseNum + " " + sys,
                         x -> {
                             logEvent("startCheckEnabled(recurseNum=" + recurseNum + ") for " + sys);
                             disallowToggles(toggleLockName, sys);
                             return sys.startCheckEnabled().thenApply(y -> x);
                         })
-                .thenComposeAsync("continueSingleContinousDemo.continuing: " + recurseNum + " " + sys,
+                .thenComposeAsync("continueSingleContinuousDemo.continuing: " + recurseNum + " " + sys,
                         x -> {
-                            XFuture<Boolean> ret = sys.startPreCheckedContinousDemo("continueSingleContinousDemoInner" + sys, x);
-                            logEvent("startPreCheckedContinousDemo(recurseNum=" + recurseNum + ",reverseFirst=" + x + ") for " + sys);
+                            XFuture<Boolean> ret = sys.startPreCheckedContinuousDemo("continueSingleContinuousDemoInner" + sys, x);
+                            logEvent("startPreCheckedContinuousDemo(recurseNum=" + recurseNum + ",reverseFirst=" + x + ") for " + sys);
                             allowToggles(toggleLockName, sys);
                             return ret;
                         }, supervisorExecutorService)
-                .thenCompose("continueSingleContinousDemo.recurse " + recurseNum + " " + sys,
-                        x -> continueSingleContinousDemo(sys, (recurseNum + 1)));
+                .thenCompose("continueSingleContinuousDemo.recurse " + recurseNum + " " + sys,
+                        x -> continueSingleContinuousDemo(sys, (recurseNum + 1)));
     }
 
-    private XFuture<Void> startAllIndContinousDemo() {
-        logEvent("startAllIndContinousDemo");
+    private XFuture<Void> startAllIndContinuousDemo() {
+        logEvent("startAllIndContinuousDemo");
         @SuppressWarnings("unchecked")
         XFuture<Void> futures[] = (XFuture<Void>[]) new XFuture<?>[aprsSystems.size()];
         StringBuilder tasksNames = new StringBuilder();
-        boolean revFirst = isContinousDemoRevFirstSelected();
+        boolean revFirst = isContinuousDemoRevFirstSelected();
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystemInterface sys = aprsSystems.get(i);
-            logEvent("startContinousDemo(reverseFirst=false) for " + sys);
-            futures[i] = sys.startContinousDemo("startAllIndContinousDemo", revFirst)
-                    .thenCompose(x -> continueSingleContinousDemo(sys, 1));
+            logEvent("startContinuousDemo(reverseFirst=false) for " + sys);
+            futures[i] = sys.startContinuousDemo("startAllIndContinuousDemo", revFirst)
+                    .thenCompose(x -> continueSingleContinuousDemo(sys, 1));
             tasksNames.append(aprsSystems.get(i).getTaskName());
             tasksNames.append(",");
         }
         lastStartAllActionsArray = futures;
 //        allowToggles();
-        return XFuture.allOfWithName("startAllIndContinousDemo.allOf(" + tasksNames.toString() + ")", futures);
+        return XFuture.allOfWithName("startAllIndContinuousDemo.allOf(" + tasksNames.toString() + ")", futures);
     }
 
     private final AtomicInteger startAllActionsCount = new AtomicInteger();
@@ -4080,7 +4083,7 @@ public class Supervisor {
      * @param msg message to show
      * @param thrown exception causing this event
      */
-    public void log(Level level, @Nullable String msg, Throwable thrown) {
+    private void log(Level level, @Nullable String msg, Throwable thrown) {
         getLogger().log(level, msg, thrown);
         logEvent("Exception thrown : msg=" + msg + ",thrown=" + thrown + ", trace=" + shortTrace(thrown.getStackTrace()));
     }
@@ -4170,10 +4173,10 @@ public class Supervisor {
     }
 
     XFuture<?> continueAll() {
-        logEvent("Continoue All : " + continousDemoCycle.get());
+        logEvent("Continoue All : " + ContinuousDemoCycle.get());
         stealingRobots = false;
         return startCheckAndEnableAllRobots()
-                .thenCompose("continueAll.recurse" + continousDemoCycle.get(),
+                .thenCompose("continueAll.recurse" + ContinuousDemoCycle.get(),
                         ok -> checkOkElse(ok, this::continueAllActions, this::showCheckEnabledErrorSplash));
     }
 
@@ -4263,9 +4266,9 @@ public class Supervisor {
     }
 
     public void cancelAll(boolean mayInterrupt) {
-        if (null != continousDemoFuture) {
-            continousDemoFuture.cancelAll(mayInterrupt);
-            continousDemoFuture = null;
+        if (null != ContinuousDemoFuture) {
+            ContinuousDemoFuture.cancelAll(mayInterrupt);
+            ContinuousDemoFuture = null;
         }
         if (null != lastFutureReturned) {
             lastFutureReturned.cancelAll(mayInterrupt);
@@ -4388,6 +4391,7 @@ public class Supervisor {
         this.safeAbortReturnRobot = safeAbortReturnRobot;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private int incrementAndGetAbortCount() {
         return abortCount.incrementAndGet();
     }
@@ -4554,7 +4558,7 @@ public class Supervisor {
         saveLastPosMapFile(f);
     }
 
-    private Map<String, Map<String, File>> posMaps = new HashMap<>();
+    private final Map<String, Map<String, File>> posMaps = new HashMap<>();
 
     /**
      * Get the file location where data is stored for converting positions from
@@ -4842,6 +4846,7 @@ public class Supervisor {
     /**
      * Close all systems.
      */
+    @SuppressWarnings("UnusedReturnValue")
     private XFutureVoid closeAllAprsSystems() {
         if(aprsSystems.isEmpty()) {
             return XFutureVoid.completedFutureWithName("closeAllAprsSystems.aprsSystems="+aprsSystems);
@@ -4960,12 +4965,12 @@ public class Supervisor {
         }
     }
 
-    int incrementAndGetContinousDemoCycle() {
-        return continousDemoCycle.incrementAndGet();
+    int incrementAndGetContinuousDemoCycle() {
+        return ContinuousDemoCycle.incrementAndGet();
     }
 
-    void clearContinousDemoCycle() {
-        continousDemoCycle.set(0);
+    void clearContinuousDemoCycle() {
+        ContinuousDemoCycle.set(0);
     }
 
     private String lastUpdateTaskTableTaskNames @Nullable []  = null;

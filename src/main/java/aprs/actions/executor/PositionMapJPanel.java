@@ -40,6 +40,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("CanBeFinal")
 public class PositionMapJPanel extends javax.swing.JPanel {
 
     /**
@@ -197,11 +198,12 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         return Collections.unmodifiableList(reversePositionMaps);
     }
 
-    @Nullable public PositionMap getPositionMap(int index) {
+    @Nullable
+    private PositionMap getPositionMap(int index) {
         return positionMaps.get(index);
     }
 
-    public void setPositionMap(int index,PositionMap positionMap) {
+    private void setPositionMap(int index, PositionMap positionMap) {
         reversePositionMaps = null;
         while (positionMaps.size() < index) {
             positionMaps.add(new PositionMap(Collections.emptyList()));

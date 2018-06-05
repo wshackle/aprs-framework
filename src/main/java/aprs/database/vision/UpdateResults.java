@@ -23,11 +23,10 @@
 package aprs.database.vision;
 
 import aprs.database.PhysicalItem;
-import java.sql.ResultSet;
+
 import java.util.List;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.dataflow.qual.SideEffectFree;
 
 /**
  *
@@ -175,9 +174,8 @@ public class UpdateResults {
         return statementExecutionCount;
     }
 
-    public int incrementStatementExecutionCount() {
+    public void incrementStatementExecutionCount() {
         statementExecutionCount++;
-        return statementExecutionCount;
     }
 
     /**

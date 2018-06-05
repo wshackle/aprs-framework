@@ -359,6 +359,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         throw new IllegalStateException("no query string for " + key);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static Map<DbParamTypeEnum, String> getQueryResultsMap(Map<DbQueryEnum, DbQueryInfo> queriesMap, DbQueryEnum key) {
         DbQueryInfo info = queriesMap.get(key);
         if (null != info) {
@@ -434,7 +435,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         getSingleParamTypes = getQueryParams(queriesMap, DbQueryEnum.GET_SINGLE_POSE);
     }
 
-    private XFuture<Void> setupConnection(String host, int port, String db, String username, String password, boolean debug) throws SQLException {
+    private XFuture<Void> setupConnection(String host, int port, String db, String username, String password, boolean debug) {
         closed = false;
         switch (dbtype) {
             case MYSQL:
@@ -502,7 +503,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             String password,
             DbType dbtype,
             DbSetup dbsetup,
-            boolean debug) throws SQLException {
+            boolean debug) {
         this.dbtype = dbtype;
         sharedConnection = false;
         this.dbsetup = dbsetup;
@@ -891,7 +892,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return getSlotOffsets(new Tray(name), ignoreEmpty);
     }
 
-    public List<Slot> getSlotOffsets(Tray tray, boolean ignoreEmpty) {
+    private List<Slot> getSlotOffsets(Tray tray, boolean ignoreEmpty) {
         if (null == getTraySlotsParamTypes) {
             throw new IllegalArgumentException("getTraySlotsParamTypes is null");
         }
@@ -915,15 +916,15 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
         private final Map<K, String> map;
 
-        public Map<K, String> getMap() {
+        Map<K, String> getMap() {
             return map;
         }
 
-        public CheckedStringMap(Map<K, String> map) {
+        CheckedStringMap(Map<K, String> map) {
             this.map = map;
         }
 
-        public String get(K key) {
+        String get(K key) {
             String value = map.get(key);
             if (value == null) {
                 throw new IllegalStateException("no entry for " + key + " in " + map.toString());
@@ -931,7 +932,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             return value;
         }
 
-        public void put(K key, String value) {
+        void put(K key, String value) {
             map.put(key, value);
         }
     }
@@ -941,7 +942,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     private final ConcurrentHashMap<String, Integer> failuresMap = new ConcurrentHashMap<>();
     private static final List<Slot> failedSlotOffsets = Collections.emptyList();
 
-    public List<Slot> getSlotOffsetsNew(PhysicalItem tray, boolean ignoreEmpty) {
+    private List<Slot> getSlotOffsetsNew(PhysicalItem tray, boolean ignoreEmpty) {
         if (null == getTraySlotsParamTypes) {
             throw new IllegalStateException("getTraySlotsParamTypes is null");
         }
@@ -1069,7 +1070,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return Collections.unmodifiableList(ret);
     }
 
-    public double normAngle(double angleIn) {
+    private double normAngle(double angleIn) {
         if (!Double.isFinite(angleIn) || angleIn > 10.0 || angleIn < -10.0) {
             throw new IllegalArgumentException("angleIn=" + angleIn + " (must be in radians)");
         }
@@ -1150,7 +1151,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.WARNING, string, args);
     }
 
-    public static List<Slot> getSlots(Tray tray, SlotOffsetProvider sop) {
+    private static List<Slot> getSlots(Tray tray, SlotOffsetProvider sop) {
         List<Slot> offsets = sop.getSlotOffsets(tray.getName(), false);
         List<Slot> ret = new ArrayList<>();
         String tray_name = tray.getName();
@@ -1226,7 +1227,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return ret;
     }
 
-    public static double closestDist(PhysicalItem subject, List<PhysicalItem> l) {
+    private static double closestDist(PhysicalItem subject, List<PhysicalItem> l) {
         return l.stream()
                 .mapToDouble(item -> subject.distFromXY(item))
                 .min()
@@ -1235,7 +1236,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
     private final ArrayList<PhysicalItem> prevParts = new ArrayList<>();
 
-    public static List<Slot> findEmptySlots(List<Slot> slots, List<PhysicalItem> parts, @Nullable List<PhysicalItem> prevParts) {
+    private static List<Slot> findEmptySlots(List<Slot> slots, List<PhysicalItem> parts, @Nullable List<PhysicalItem> prevParts) {
         final long timestamp = System.currentTimeMillis();
 
         List<PhysicalItem> newPrevParts
@@ -1254,7 +1255,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 .collect(Collectors.toList());
     }
 
-    public static List<Slot> findAllEmptyTraySlots(List<Tray> trays, List<PhysicalItem> parts, SlotOffsetProvider sop, @Nullable List<PhysicalItem> prevParts) {
+    private static List<Slot> findAllEmptyTraySlots(List<Tray> trays, List<PhysicalItem> parts, SlotOffsetProvider sop, @Nullable List<PhysicalItem> prevParts) {
         List<Slot> emptySlots = new ArrayList<>();
         ConcurrentHashMap<String, Integer> nameCountMap = new ConcurrentHashMap<>();
         for (Tray tray : trays) {
@@ -1288,7 +1289,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return slotItemTray.getKitTrayNum() == mnzt;
     }
 
-    public static List<Slot> findBestEmptyTraySlots(
+    private static List<Slot> findBestEmptyTraySlots(
             List<Tray> kitTrays,
             List<PhysicalItem> parts,
             SlotOffsetProvider sop,
@@ -1327,13 +1328,14 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return orderedEmptySlots;
     }
 
+    @SuppressWarnings("CanBeFinal")
     private boolean doPrefEmptySlotsFiltering = true;
 
     public List<PhysicalItem> addEmptyTraySlots(List<PhysicalItem> itemList) {
         return addEmptyTraySlots(itemList, this, prevParts);
     }
 
-    public static List<PhysicalItem> addEmptyTraySlots(
+    private static List<PhysicalItem> addEmptyTraySlots(
             Iterable<? extends PhysicalItem> inputItems,
             SlotOffsetProvider sop,
             @Nullable List<PhysicalItem> prevParts) {
@@ -1376,7 +1378,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         }
     }
 
-    static public int bestIndex(PhysicalItem item, List<PhysicalItem> slotList) {
+    private static int bestIndex(PhysicalItem item, List<PhysicalItem> slotList) {
         int bestIndexRet = Integer.MAX_VALUE;
         double minDist = Double.POSITIVE_INFINITY;
         for (int i = 0; i < slotList.size(); i++) {
@@ -1775,11 +1777,11 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return DatabasePoseUpdater.preProcessItemList(listWithEmptySlots);
     }
 
-    static public List<PhysicalItem> preProcessItemList(Iterable<? extends PhysicalItem> inputItems) {
+    private static List<PhysicalItem> preProcessItemList(Iterable<? extends PhysicalItem> inputItems) {
         return preProcessItemList(inputItems, true, false, true, true, null);
     }
 
-    static public List<PhysicalItem> preProcessItemList(Iterable<? extends PhysicalItem> inputItems, boolean keepNames, boolean keepFullNames, boolean doPrefEmptySlotsFiltering, boolean addRepeatCountsToName, @Nullable List<PartsTray> partsTrayList) {
+    private static List<PhysicalItem> preProcessItemList(Iterable<? extends PhysicalItem> inputItems, boolean keepNames, boolean keepFullNames, boolean doPrefEmptySlotsFiltering, boolean addRepeatCountsToName, @Nullable List<PartsTray> partsTrayList) {
         List<Tray> partsTrays
                 = StreamSupport.stream(inputItems.spliterator(), false)
                 .filter((PhysicalItem item) -> "PT".equals(item.getType()))
@@ -1829,7 +1831,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return outList;
     }
 
-    static public void normalizeNames(
+    private static void normalizeNames(
             Iterable<? extends PhysicalItem> inputItems,
             List<Tray> kitTrays,
             boolean keepNames,
@@ -1876,7 +1878,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         }
     }
 
-    static public List<PhysicalItem> filterEmptySlots(Iterable<? extends PhysicalItem> inputItems, List<Tray> kitTrays, List<Tray> partsTrays, @Nullable List<PartsTray> partsTrayOutList) {
+    private static List<PhysicalItem> filterEmptySlots(Iterable<? extends PhysicalItem> inputItems, List<Tray> kitTrays, List<Tray> partsTrays, @Nullable List<PartsTray> partsTrayOutList) {
         List<PhysicalItem> parts
                 = StreamSupport.stream(inputItems.spliterator(), false)
                 .filter((PhysicalItem item) -> "P".equals(item.getType()))
@@ -2038,7 +2040,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return queryInfo.getResults();
     }
 
-    public void verifyVisionList(List<PhysicalItem> list, boolean addRepeatCountsToName) {
+    private void verifyVisionList(List<PhysicalItem> list, boolean addRepeatCountsToName) {
         try {
             if (null == get_single_statement) {
                 return;

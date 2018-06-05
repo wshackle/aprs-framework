@@ -34,6 +34,7 @@ import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("WeakerAccess")
 @PlanningSolution(solutionCloner = OpActionPlanCloner.class)
 public class OpActionPlan {
 

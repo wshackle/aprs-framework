@@ -290,7 +290,7 @@ public class QuerySet implements QuerySetInterface {
     private String createExpectedQueryString(
             DbQueryInfo queryInfo,
             Map<Integer, Object> map
-    ) throws SQLException {
+    ) {
         String queryFormat = getQueryFormat();
         DbParamTypeEnum paramTypes[] = queryInfo.getParams();
         String qString = queryInfo.getQuery();
@@ -567,7 +567,7 @@ public class QuerySet implements QuerySetInterface {
         return list;
     }
 
-    public List<Slot> getSlots(String name) throws SQLException {
+    private List<Slot> getSlots(String name) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }

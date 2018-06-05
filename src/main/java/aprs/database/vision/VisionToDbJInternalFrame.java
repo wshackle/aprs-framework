@@ -289,7 +289,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     }
 
     @Override
-    public void setSqlConnection(Connection connection, DbType dbtype) throws SQLException {
+    public void setSqlConnection(Connection connection, DbType dbtype) {
         visionToDBJPanel.setSqlConnection(connection, dbtype);
     }
 

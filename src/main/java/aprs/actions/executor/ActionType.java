@@ -42,5 +42,4 @@ public enum ActionType {
     ADD_KIT_TO_CHECK,
     CHECK_KITS,
     END_PROGRAM
-    ;
 }

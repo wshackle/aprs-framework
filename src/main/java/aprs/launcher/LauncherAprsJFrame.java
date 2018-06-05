@@ -356,7 +356,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
      * @throws IOException setup files location can not be read
      */
     @Nullable
-    public static File getLastLaunchFile() throws IOException {
+    private static File getLastLaunchFile() throws IOException {
         if (lastLaunchFileFile.exists()) {
             String firstLine = readFirstLine(lastLaunchFileFile);
             if (null != firstLine && firstLine.length() > 0) {
@@ -735,7 +735,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemSetLaunchFileActionPerformed
 
-    private static void openSingle(String args @Nullable []) throws IOException {
+    private static void openSingle(String args @Nullable []) {
         AprsSystem.createEmptySystem()
                 .thenAccept((AprsSystem sys) -> openSingleStep2(sys, args));
     }
@@ -795,6 +795,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     static public void PlayAlert(String resourceName) {
         try {
             Toolkit.getDefaultToolkit().beep();
@@ -820,6 +821,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     static public void PlayAlert() {
         PlayAlert("alert.wav");
     }

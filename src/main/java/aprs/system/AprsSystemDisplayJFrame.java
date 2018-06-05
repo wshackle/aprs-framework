@@ -60,7 +60,7 @@ import javax.swing.DesktopManager;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class AprsSystemDisplayJFrame extends javax.swing.JFrame {
+class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     @MonotonicNonNull private AprsSystem aprsSystem = null;
 
@@ -103,7 +103,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemUseTeachTable.setSelected(useTeachTable);
     }
 
-    public void setContinousDemoCheckbox(boolean selected) {
+    public void setContinuousDemoCheckbox(boolean selected) {
         jCheckBoxMenuItemContinuousDemo.setSelected(selected);
     }
 
@@ -1228,7 +1228,8 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         browseSavePropertiesFileAs();
     }//GEN-LAST:event_jMenuItemSavePropsAsActionPerformed
 
-    @Nullable public File choosePropertiesFileToSaveAs() {
+    @Nullable
+    private File choosePropertiesFileToSaveAs() {
         JFileChooser chooser = new JFileChooser(getPropertiesDirectory());
         FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
         chooser.addChoosableFileFilter(filter);
@@ -1288,6 +1289,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void startActions(String label) {
         if (null != aprsSystem) {
             aprsSystem.startActions(label);
@@ -1359,9 +1361,10 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         startSetReverseFlag(reverseFlag);
     }//GEN-LAST:event_jCheckBoxMenuItemReverseActionPerformed
 
-    private XFuture<Boolean> startContinousDemo(String label, boolean reverseFlag) {
+    @SuppressWarnings("SameParameterValue")
+    private XFuture<Boolean> startContinuousDemo(String label, boolean reverseFlag) {
         if (null != aprsSystem) {
-            return aprsSystem.startContinousDemo(label, reverseFlag);
+            return aprsSystem.startContinuousDemo(label, reverseFlag);
         } else {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
@@ -1376,15 +1379,15 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             if (!jCheckBoxMenuItemContinuousDemo.isSelected()) {
                 jCheckBoxMenuItemContinuousDemo.setSelected(true);
             }
-            XFuture<Boolean> future = startContinousDemo("user", reverseFlag);
+            XFuture<Boolean> future = startContinuousDemo("user", reverseFlag);
         } else {
             immediateAbort();
         }
     }//GEN-LAST:event_jCheckBoxMenuItemContinuousDemoActionPerformed
 
-    @Nullable private XFuture<Boolean> getContinousDemoFuture() {
+    @Nullable private XFuture<Boolean> getContinuousDemoFuture() {
         if (null != aprsSystem) {
-            return aprsSystem.getContinousDemoFuture();
+            return aprsSystem.getContinuousDemoFuture();
         } else {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
@@ -1416,10 +1419,10 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     private void jCheckBoxMenuItemPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseActionPerformed
         System.out.println("jCheckBoxMenuItemPause.isSelected() = " + jCheckBoxMenuItemPause.isSelected());
-        XFuture<Boolean> cdf = getContinousDemoFuture();
+        XFuture<Boolean> cdf = getContinuousDemoFuture();
         if (null != cdf) {
-            System.out.println("continousDemoFuture.isDone() = " + cdf.isDone());
-            System.out.println("continousDemoFuture.isCancelled() = " + cdf.isCancelled());
+            System.out.println("ContinuousDemoFuture.isDone() = " + cdf.isDone());
+            System.out.println("ContinuousDemoFuture.isCancelled() = " + cdf.isCancelled());
         }
         if (jCheckBoxMenuItemPause.isSelected()) {
             pause();
@@ -1427,10 +1430,10 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             clearErrors();
             resume();
         }
-        cdf = getContinousDemoFuture();
+        cdf = getContinuousDemoFuture();
         if (null != cdf) {
-            System.out.println("continousDemoFuture.isDone() = " + cdf.isDone());
-            System.out.println("continousDemoFuture.isCancelled() = " + cdf.isCancelled());
+            System.out.println("ContinuousDemoFuture.isDone() = " + cdf.isDone());
+            System.out.println("ContinuousDemoFuture.isCancelled() = " + cdf.isCancelled());
         }
     }//GEN-LAST:event_jCheckBoxMenuItemPauseActionPerformed
 
@@ -1455,6 +1458,7 @@ public class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemForceFakeTakeActionPerformed
 
+    @SuppressWarnings("SameParameterValue")
     private void continueActionList(String label) {
         if (null != aprsSystem) {
             aprsSystem.continueActionList(label);

@@ -165,7 +165,7 @@ public class GoalLearnerTest {
 
         final Map<String, List<Slot>> map;
 
-        public HashMapSlotOffsetProvider(Map<String, List<Slot>> map) {
+        HashMapSlotOffsetProvider(Map<String, List<Slot>> map) {
             this.map = map;
         }
 

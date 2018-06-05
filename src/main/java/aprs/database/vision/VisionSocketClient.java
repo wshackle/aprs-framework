@@ -44,6 +44,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("WeakerAccess")
 public class VisionSocketClient implements AutoCloseable {
 
     @Nullable
@@ -176,8 +177,8 @@ public class VisionSocketClient implements AutoCloseable {
         return visionSlr.getHost();
     }
 
-    private AtomicInteger skippedLineCount = new AtomicInteger();
-    private AtomicInteger lineCount = new AtomicInteger();
+    private final AtomicInteger skippedLineCount = new AtomicInteger();
+    private final AtomicInteger lineCount = new AtomicInteger();
 
     public int getSkippedLineCount() {
         return skippedLineCount.get();

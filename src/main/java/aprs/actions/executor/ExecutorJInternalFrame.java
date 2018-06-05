@@ -276,7 +276,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
 
     @Override
-    public void saveProperties() throws IOException {
+    public void saveProperties() {
         this.executorJPanel1.saveProperties();
     }
 
@@ -316,7 +316,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         executorJPanel1.close();
         this.setVisible(false);
     }

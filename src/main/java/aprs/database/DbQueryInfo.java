@@ -50,10 +50,10 @@ public class DbQueryInfo {
      * @param results results map parsed from resource file 
      * @param origText complete original text from the file (for display only)
      */
-    public DbQueryInfo(String query,
-            DbParamTypeEnum[] params,
-            Map<DbParamTypeEnum, String> results,
-            String origText) {
+    private DbQueryInfo(String query,
+                        DbParamTypeEnum[] params,
+                        Map<DbParamTypeEnum, String> results,
+                        String origText) {
         this.query = query;
         this.params = params;
         this.results = results;

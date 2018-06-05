@@ -31,7 +31,7 @@ import java.util.List;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public interface ExecutorDisplayInterface extends DisplayInterface {
+interface ExecutorDisplayInterface extends DisplayInterface {
 
     /**
      * Show File chooser to select a new actions file and load it.

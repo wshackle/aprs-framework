@@ -148,7 +148,7 @@ public class OpDisplayJPanel extends JPanel {
     @MonotonicNonNull
     private JPopupMenu popupMenu = null;
 
-    public void replan() {
+    private void replan() {
         if (null != opActionPlan) {
             List<OpAction> origActions = opActionPlan.getActions();
             if (null != origActions) {
@@ -281,7 +281,7 @@ public class OpDisplayJPanel extends JPanel {
      *
      * @param opActionPlan plan to show
      */
-    public OpDisplayJPanel(OpActionPlan opActionPlan) {
+    private OpDisplayJPanel(OpActionPlan opActionPlan) {
         this.opActionPlan = opActionPlan;
         privateInit();
     }
@@ -358,7 +358,7 @@ public class OpDisplayJPanel extends JPanel {
 
     private static final ConcurrentHashMap<String, Color> partsColorsMap = new ConcurrentHashMap<>();
 
-    private static Color[] colors = new Color[]{
+    private static final Color[] colors = new Color[]{
         Color.BLUE,
         Color.CYAN,
         Color.GREEN,
@@ -494,9 +494,9 @@ public class OpDisplayJPanel extends JPanel {
         }
     }
 
-    private JCheckBoxMenuItem showPossibleNextMenuItem = new JCheckBoxMenuItem("Show Possible Next(s)", false);
-    private JCheckBoxMenuItem showSkippableNextMenuItem = new JCheckBoxMenuItem("Show Skippable Next(s)", false);
-    private JCheckBoxMenuItem showFakeActionsMenuItem = new JCheckBoxMenuItem("Show Fake Actions(s)", false);
+    private final JCheckBoxMenuItem showPossibleNextMenuItem = new JCheckBoxMenuItem("Show Possible Next(s)", false);
+    private final JCheckBoxMenuItem showSkippableNextMenuItem = new JCheckBoxMenuItem("Show Skippable Next(s)", false);
+    private final JCheckBoxMenuItem showFakeActionsMenuItem = new JCheckBoxMenuItem("Show Fake Actions(s)", false);
     private final ConcurrentHashMap<String, Point2D.Double> fakeLocationsMap = new ConcurrentHashMap<>();
     private final Random locRandom = new Random();
 
@@ -750,7 +750,7 @@ public class OpDisplayJPanel extends JPanel {
      *
      * @param keyWidth new value of keyWidth
      */
-    public void setKeyWidth(int keyWidth) {
+    private void setKeyWidth(int keyWidth) {
         this.keyWidth = keyWidth;
     }
 
@@ -801,7 +801,7 @@ public class OpDisplayJPanel extends JPanel {
         g2d.drawString(typeLetterString, x, y);
     }
 
-    private Shape arrowHead = new Polygon(new int[]{-10, 0, 10}, new int[]{0, 10, 0}, 3);
+    private final Shape arrowHead = new Polygon(new int[]{-10, 0, 10}, new int[]{0, 10, 0}, 3);
 
     private final Arc2D.Double centerLetterShape
             = new Arc2D.Double(4, 4, 12, 12, 0, 360, Arc2D.OPEN);
@@ -832,11 +832,11 @@ public class OpDisplayJPanel extends JPanel {
 
     private Stroke carryStroke = new BasicStroke(4f);
 
-    private Stroke emptyStroke = new BasicStroke(3f);
+    private final Stroke emptyStroke = new BasicStroke(3f);
 
-    private Stroke nextStroke = new BasicStroke(2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1f, new float[]{0.5f, 0.5f}, 0f);
+    private final Stroke nextStroke = new BasicStroke(2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1f, new float[]{0.5f, 0.5f}, 0f);
 
-    private Stroke possibleNextStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1f, new float[]{0.5f, 0.5f}, 0f);
+    private final Stroke possibleNextStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1f, new float[]{0.5f, 0.5f}, 0f);
 
     /**
      * Get the value of carryStroke

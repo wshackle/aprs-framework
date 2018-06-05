@@ -291,7 +291,7 @@ public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionTo
     }
 
     @Override
-    public void setSqlConnection(Connection connection, DbType dbtype) throws SQLException {
+    public void setSqlConnection(Connection connection, DbType dbtype) {
         visionToDBJPanel.setSqlConnection(connection, dbtype);
     }
 

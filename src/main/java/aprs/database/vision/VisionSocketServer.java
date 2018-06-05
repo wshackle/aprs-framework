@@ -58,7 +58,7 @@ public class VisionSocketServer implements AutoCloseable {
 
     private static class DaemonThreadFactory implements ThreadFactory {
 
-        private static AtomicInteger tnum = new AtomicInteger();
+        private static final AtomicInteger tnum = new AtomicInteger();
 
         @Override
         public Thread newThread(Runnable r) {
@@ -69,9 +69,9 @@ public class VisionSocketServer implements AutoCloseable {
         }
 
     }
-    private static DaemonThreadFactory daemonThreadFactory = new DaemonThreadFactory();
+    private static final DaemonThreadFactory daemonThreadFactory = new DaemonThreadFactory();
 
-    public VisionSocketServer(ServerSocket serverSocket, ExecutorService executorService, boolean shutdownServiceOnClose) {
+    private VisionSocketServer(ServerSocket serverSocket, ExecutorService executorService, boolean shutdownServiceOnClose) {
         this.serverSocket = serverSocket;
         this.executorService = executorService;
         this.shutdownServiceOnClose = shutdownServiceOnClose;
@@ -79,6 +79,7 @@ public class VisionSocketServer implements AutoCloseable {
         start();
     }
 
+    @SuppressWarnings("WeakerAccess")
     public VisionSocketServer(int port, int backlog, InetAddress bindAddr) throws IOException {
         try {
             this.shutdownServiceOnClose = true;
@@ -106,7 +107,8 @@ public class VisionSocketServer implements AutoCloseable {
 
     private final List<Socket> clients = Collections.synchronizedList(new ArrayList<Socket>());
 
-    private void start( 
+    @SuppressWarnings("DefaultAnnotationParam")
+    private void start(
          
          
          

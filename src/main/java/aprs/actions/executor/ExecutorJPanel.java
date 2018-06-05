@@ -153,6 +153,7 @@ import java.util.Map.Entry;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings({"CanBeFinal", "UnusedReturnValue"})
 public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDisplayInterface, PendantClientJPanel.ProgramLineListener {
 
     public static List<Action> showActionsList(List<Action> actionsIn) {
@@ -244,11 +245,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      *
      * @return the value of selectedToolNameFileName
      */
-    @Nullable public String getSelectedToolNameFileName() {
+    @Nullable
+    private String getSelectedToolNameFileName() {
         if (null == selectedToolNameFileName) {
             try {
                 return getDefaultSelectedToolNameFile();
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -260,11 +262,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      *
      * @param selectedToolNameFileName new value of selectedToolNameFileName
      */
-    public void setSelectedToolNameFileName(String selectedToolNameFileName) {
+    private void setSelectedToolNameFileName(String selectedToolNameFileName) {
         this.selectedToolNameFileName = selectedToolNameFileName;
     }
 
-    private String getDefaultSelectedToolNameFile() throws IOException {
+    private String getDefaultSelectedToolNameFile() {
         return propertiesFile.getName() + ".selectedToolName.txt";
     }
 
@@ -343,7 +345,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public void setObtionsTableEntry(String key, String value) {
+    private void setObtionsTableEntry(String key, String value) {
         DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
             Object keyFromTable = model.getValueAt(i, 0);
@@ -537,7 +539,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public void updateSelectionInterval() {
+    private void updateSelectionInterval() {
         int startIndex = Math.max(0, currentActionIndex);
         int endIndex = Math.max(startIndex, getReplanFromIndex() - 1);
         jTablePddlOutput.getSelectionModel().setSelectionInterval(startIndex, endIndex);
@@ -927,7 +929,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jTextFieldTestPose.setEditable(false);
         jTextFieldTestPose.setText("0,0,0");
 
-        jButtonContRandomTest.setText("Continous Random Test");
+        jButtonContRandomTest.setText("Continuous Random Test");
         jButtonContRandomTest.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonContRandomTestActionPerformed(evt);
@@ -2185,7 +2187,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private static final String REVERSE_PDDLOUTPUT = "pddl.reverse_output";
     private static final String PDDLCRCLAUTOSTART = "pddl.crcl.autostart";
 
-    public String[] getComboPartNames(int maxlen) {
+    private String[] getComboPartNames(int maxlen) {
         DefaultComboBoxModel<String> cbm
                 = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
         String ret[] = new String[max(maxlen, cbm.getSize())];
@@ -2195,7 +2197,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return ret;
     }
 
-    public String[] getComboSlotNames(int maxlen) {
+    private String[] getComboSlotNames(int maxlen) {
         DefaultComboBoxModel<String> cbm
                 = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
         String ret[] = new String[max(maxlen, cbm.getSize())];
@@ -2234,7 +2236,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @Nullable
     private String reverseActionsFileString = null;
 
-    public void saveProperties() throws IOException {
+    public void saveProperties() {
         Map<String, String> propsMap = new HashMap<>();
         updateActionFileStrings();
         if (reverseActionsFileString != null && reverseActionsFileString.length() > 0) {
@@ -2622,7 +2624,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
 //    List<JTextArea> crclAreas = new ArrayList<>();
-    JTextArea editTableArea = new JTextArea();
+private JTextArea editTableArea = new JTextArea();
 
     private String trimXml(String in) {
         int start = in.indexOf("?>");
@@ -2840,7 +2842,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      *
      * @param crclProgram new value of crclProgram
      */
-    public void setCrclProgram(CRCLProgramType crclProgram) {
+    private void setCrclProgram(CRCLProgramType crclProgram) {
         try {
             this.crclProgram = crclProgram;
             unstartedProgram = crclProgram;
@@ -2857,7 +2859,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public XFuture<Boolean> continueCurrentCrclProgram() {
+    private XFuture<Boolean> continueCurrentCrclProgram() {
         return aprsSystemInterface.continueCrclProgram();
     }
 
@@ -2877,7 +2879,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * @return future that can be used to monitor, cancel or extend the
      * underlying task
      */
-    public XFuture<Boolean> startCrclProgram(CRCLProgramType crclProgram) {
+    private XFuture<Boolean> startCrclProgram(CRCLProgramType crclProgram) {
         try {
             prepCrclProgram(crclProgram);
             return aprsSystemInterface.startCRCLProgram(crclProgram);
@@ -2905,7 +2907,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public boolean runCrclProgram(CRCLProgramType crclProgram) throws JAXBException {
+    private boolean runCrclProgram(CRCLProgramType crclProgram) throws JAXBException {
         prepCrclProgram(crclProgram);
         boolean ret = aprsSystemInterface.runCRCLProgram(crclProgram);
         try {
@@ -3010,7 +3012,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private final AtomicInteger clearAllCount = new AtomicInteger(0);
     private volatile long clearAllTime = 0;
 
-    public void clearAll() {
+    private void clearAll() {
         warnIfNewActionsNotReady();
         clearAllCount.incrementAndGet();
         clearAllTime = System.currentTimeMillis();
@@ -3055,7 +3057,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         abortProgramCount.incrementAndGet();
     }
 
-    public void completeSafeAbort() {
+    private void completeSafeAbort() {
         Runnable r;
         while (null != (r = safeAbortRunnablesVector.pollFirst())) {
             r.run();
@@ -3093,7 +3095,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     @Nullable
-    public String getComboPart() {
+    private String getComboPart() {
         Object object = jComboBoxManualObjectName.getSelectedItem();
         if (null == object) {
             return null;
@@ -3175,7 +3177,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public String getComboSlot() {
+    private String getComboSlot() {
         String slot = jComboBoxManualSlotName.getSelectedItem().toString();
         DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
         boolean partfound = false;
@@ -3237,7 +3239,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }//GEN-LAST:event_jButtonReturnActionPerformed
 
-    int randomDropOffCount = 0;
+    private int randomDropOffCount = 0;
 
     private void jButtonRandDropOffActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRandDropOffActionPerformed
         randomDropOffCount++;
@@ -3250,9 +3252,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         System.out.println("randomDropOffCount = " + randomDropOffCount);
     }//GEN-LAST:event_jButtonRandDropOffActionPerformed
 
-    int randomPickupCount = 0;
+    private int randomPickupCount = 0;
 
-    public void writeCorrectionCsv(String filename, String line) throws IOException {
+    private void writeCorrectionCsv(String filename, String line) throws IOException {
         File f = new File(filename);
         System.out.println("f.getCanonicalPath() = " + f.getCanonicalPath());
         boolean newFile = !f.exists();
@@ -3314,7 +3316,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         startRandomTest();
     }//GEN-LAST:event_jButtonContRandomTestActionPerformed
 
-    public XFuture<Boolean> startRandomTest() {
+    private XFuture<Boolean> startRandomTest() {
 //        try {
         clearAll();
         queryLogFileName();
@@ -3360,7 +3362,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 //        }
     }
 
-    public void startGridTest() throws HeadlessException {
+    private void startGridTest() throws HeadlessException {
 
         try {
             clearAll();
@@ -3453,7 +3455,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         }
     }
-    int recordFailCount = 0;
+    private int recordFailCount = 0;
     private void jButtonRecordFailActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordFailActionPerformed
         recordFailCount++;
         jTextFieldRecordFailCount.setText(Integer.toString(recordFailCount));
@@ -3480,7 +3482,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }//GEN-LAST:event_jButtonRecordFailActionPerformed
 
-    int recordSuccessCount = 0;
+    private int recordSuccessCount = 0;
     private void jButtonRecordSuccessActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordSuccessActionPerformed
         recordSuccessCount++;
         jTextFieldRecordSuccessCount.setText(Integer.toString(recordSuccessCount));
@@ -3602,7 +3604,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public void setExternalControlPortEnabled(boolean on) throws IOException {
+    private void setExternalControlPortEnabled(boolean on) throws IOException {
         closeExternalControlService();
         externalControlSocket = new ServerSocket(Integer.parseInt(jTextFieldExternalControlPort.getText()));
         externalControlClientSockets.clear();
@@ -4387,7 +4389,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return (String) jTableToolHolderPositions.getValueAt(r, 0);
     }
 
-    public String[] getToolChangerNames() {
+    private String[] getToolChangerNames() {
         Set<String> names = new TreeSet<>();
         names.add("");
         for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
@@ -4402,7 +4404,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return names.toArray(new String[names.size()]);
     }
 
-    public String[] getToolNames() {
+    private String[] getToolNames() {
         Set<String> names = new TreeSet<>();
         names.add("");
         names.add("empty");
@@ -4418,7 +4420,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return names.toArray(new String[names.size()]);
     }
 
-    public String queryUserForToolHolderPosName(String qname) {
+    private String queryUserForToolHolderPosName(String qname) {
         return (String) JOptionPane.showInputDialog(
                 this, // parentComponent
                 "Tool Holder Pose Name?", // Object message
@@ -4430,7 +4432,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         );
     }
 
-    public String queryUserForToolName(String qname) {
+    private String queryUserForToolName(String qname) {
         return (String) JOptionPane.showInputDialog(
                 this, // parentComponent
                 "Tool Name?", // Object message
@@ -4442,7 +4444,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         );
     }
 
-    public int getToolChangerRow(String name, boolean approach) {
+    private int getToolChangerRow(String name, boolean approach) {
         for (int j = 0; j < jTableToolHolderPositions.getColumnCount(); j++) {
             System.out.println("j = " + j);
             String colName = jTableToolHolderPositions.getColumnName(j);
@@ -4465,7 +4467,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return -1;
     }
 
-    public int getHolderContentsRow(String name) {
+    private int getHolderContentsRow(String name) {
         for (int i = 0; i < jTableHolderContents.getRowCount(); i++) {
             String entryName = (String) jTableHolderContents.getValueAt(i, 0);
             if (null != entryName && entryName.equals(name)) {
@@ -4843,7 +4845,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             map.clear();
             for (int i = 0; i < dtm.getRowCount(); i++) {
                 Object v0 = dtm.getValueAt(i, 0);
-                if (null != v0 && v0 instanceof String) {
+                if (v0 instanceof String) {
                     String name = (String) v0;
                     name = name.trim();
                     if (name.length() < 1) {
@@ -4874,7 +4876,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             map.clear();
             for (int i = 0; i < dtm.getRowCount(); i++) {
                 Object v0 = dtm.getValueAt(i, 0);
-                if (null != v0 && v0 instanceof String) {
+                if (v0 instanceof String) {
                     String name = (String) v0;
                     name = name.trim();
                     if (name.length() < 1) {
@@ -5031,7 +5033,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private int @Nullable [] crclIndexes = null;
 
-    public void setCrclIndexes(int indexes[]) {
+    private void setCrclIndexes(int indexes[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < indexes.length; i++) {
             if (i >= model.getRowCount()) {
@@ -5044,7 +5046,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.crclIndexes = indexes;
     }
 
-    public void setPddlLabelss(String labels[]) {
+    private void setPddlLabelss(String labels[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < labels.length; i++) {
             if (i >= model.getRowCount()) {
@@ -5058,7 +5060,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public void setPddlTakenParts(@Nullable String parts[]) {
+    private void setPddlTakenParts(@Nullable String parts[]) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < parts.length; i++) {
             if (i >= model.getRowCount()) {
@@ -5072,7 +5074,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public void reloadPddlActions(List<Action> l) {
+    private void reloadPddlActions(List<Action> l) {
         DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < l.size(); i++) {
             if (i >= model.getRowCount()) {
@@ -5091,7 +5093,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    boolean started = false;
+    private boolean started = false;
 
     private final ConcurrentLinkedDeque<Runnable> safeAbortRunnablesVector = new ConcurrentLinkedDeque<>();
 
@@ -5158,7 +5160,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private final List<Runnable> programCompleteRunnablesList = new ArrayList<>();
 
-    public void addProgramCompleteRunnable(Runnable r) {
+    private void addProgramCompleteRunnable(Runnable r) {
         synchronized (programCompleteRunnablesList) {
             programCompleteRunnablesList.add(r);
         }
@@ -5220,7 +5222,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private volatile boolean lastCheckAbortSafeAbortRequested = false;
     private volatile long lastCheckSafeAbortTime = 0;
 
-    public XFuture<Boolean> checkSafeAbortAsync(Supplier<XFuture<Boolean>> supplier, int startSafeAbortRequestCount) {
+    private XFuture<Boolean> checkSafeAbortAsync(Supplier<XFuture<Boolean>> supplier, int startSafeAbortRequestCount) {
 
         if (aprsSystemInterface.isRunningCrclProgram()) {
             System.err.println("crclProgramStill Running");
@@ -5283,7 +5285,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private boolean generateCrcl(String comment, int startSafeAbortRequestCount)
-            throws IOException, IllegalStateException, SQLException, JAXBException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
+            throws IllegalStateException, SQLException, JAXBException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
         boolean doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
         if (doSafeAbort) {
             return atLastAction();
@@ -5399,7 +5401,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     }
 
-    private XFuture<Boolean> generateCrclAsync() throws IOException, IllegalStateException, SQLException {
+    private XFuture<Boolean> generateCrclAsync() throws IllegalStateException {
 
         int startSafeAbortRequestCount = safeAbortRequestCount.get();
 
@@ -5427,7 +5429,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         );
     }
 
-    private CRCLProgramType pddlActionSectionToCrcl(int sectionNumber) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, ExecutionException, ExecutionException, IOException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
+    private CRCLProgramType pddlActionSectionToCrcl(int sectionNumber) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
         Map<String, String> options = getTableOptions();
         final int rpi = getReplanFromIndex();
         if (rpi < 0 || rpi > actionsList.size()) {
@@ -5583,7 +5585,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private volatile long runProgramCompleteRunnablesTime = 0;
 
-    public void runProgramCompleteRunnables(int startSafeAbortRequestCount) {
+    private void runProgramCompleteRunnables(int startSafeAbortRequestCount) {
         checkSafeAbortAsync(() -> XFuture.completedFuture(false), startSafeAbortRequestCount);
         List<Runnable> runnables = new ArrayList<>();
         synchronized (this) {
@@ -5597,7 +5599,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public XFuture<Boolean> placePartSlot(String part, String slot) throws IOException, IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
+    private XFuture<Boolean> placePartSlot(String part, String slot) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
         crclGenerator.partialReset();
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
@@ -5622,7 +5624,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return ret;
     }
 
-    public XFuture<Boolean> testPartPosition(String part) throws IOException, IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
+    private XFuture<Boolean> testPartPosition(String part) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
         clearAll();
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
@@ -5671,7 +5673,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return startCrclProgram(program);
     }
 
-    public XFuture<Boolean> takePart(String part) throws IOException, IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
+    private XFuture<Boolean> takePart(String part) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
         crclGenerator.partialReset();
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
@@ -5721,7 +5723,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return startCrclProgram(program);
     }
 
-    public XFuture<Boolean> returnPart(String part) throws IOException {
+    private XFuture<Boolean> returnPart(String part) {
         clearAll();
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
@@ -5738,8 +5740,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return startCrclProgram(program);
     }
 
-    Random random = new Random();
-    PoseType testDropOffPose;
+    private Random random = new Random();
+    private PoseType testDropOffPose;
 
     public PoseType getTestDropOffPose() {
         return testDropOffPose;
@@ -5822,7 +5824,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return pout;
     }
 
-    public XFuture<Boolean> randomDropOff() {
+    private XFuture<Boolean> randomDropOff() {
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
         List<MiddleCommandType> cmds = new ArrayList<>();
@@ -5879,7 +5881,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return out;
     }
 
-    public void gridDropOff() throws IOException {
+    private void gridDropOff() {
         if (gridTestCurrentY > gridTestMaxY + 0.001) {
             this.clearAll();
             return;
@@ -5929,7 +5931,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         replanStarted.set(false);
     }
 
-    public XFuture<Boolean> randomPickup() throws CRCLException, PmException {
+    private XFuture<Boolean> randomPickup() throws CRCLException, PmException {
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
         List<MiddleCommandType> cmds = new ArrayList<>();
@@ -5965,7 +5967,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public CRCLProgramType createLookForPartsProgramInternal() throws ExecutionException, IOException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, SQLException, IllegalStateException, CRCLException, PmException {
+    private CRCLProgramType createLookForPartsProgramInternal() throws ExecutionException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, SQLException, IllegalStateException, CRCLException, PmException {
         checkDbSupplierPublisher();
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
@@ -5988,7 +5990,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return program;
     }
 
-    public XFuture<Boolean> gotoToolChangerApproach(String poseName, PoseType pose) {
+    private XFuture<Boolean> gotoToolChangerApproach(String poseName, PoseType pose) {
         try {
             Map<String, String> options = getTableOptions();
             setReplanFromIndex(0);
@@ -6012,7 +6014,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public XFuture<Boolean> gotoToolChangerPose(String poseName, PoseType pose) {
+    private XFuture<Boolean> gotoToolChangerPose(String poseName, PoseType pose) {
         try {
             Map<String, String> options = getTableOptions();
             setReplanFromIndex(0);
@@ -6050,7 +6052,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public XFuture<Boolean> dropTool(String poseName) {
+    private XFuture<Boolean> dropTool(String poseName) {
         try {
             Map<String, String> options = getTableOptions();
             setReplanFromIndex(0);
@@ -6072,7 +6074,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private XFuture<Boolean> executeActions(List<Action> actionsList, Map<String, String> options) throws Exception {
+    private XFuture<Boolean> executeActions(List<Action> actionsList, Map<String, String> options) {
         ExecutorService service = this.generateCrclService;
         if (null == service) {
             service = aprsSystemInterface.getRunProgramService();
@@ -6099,7 +6101,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public XFuture<Boolean> pickupTool(String holderName) {
+    private XFuture<Boolean> pickupTool(String holderName) {
         try {
             Map<String, String> options = getTableOptions();
             setReplanFromIndex(0);
@@ -6122,7 +6124,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private volatile List<Future<?>> checkDbSupplierPublisherFuturesList = Collections.emptyList();
 
-    private void checkDbSupplierPublisher() throws IOException {
+    private void checkDbSupplierPublisher() {
         assert (null != crclGenerator) : "null == pddlActionToCrclGenerator";
         assert (null != dbSetupSupplier) : "null == dbSetupSupplier";
         if (crclGenerator.isConnected()) {
@@ -6154,7 +6156,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return con.getMetaData().getURL();
     }
 
-    private XFuture<Void> checkDbSupplierPublisherAsync() throws IOException {
+    private XFuture<Void> checkDbSupplierPublisherAsync() {
         if (null == this.crclGenerator) {
             XFuture<Void> ret = new XFuture<Void>("checkDbSupplierPublisher(null==pddlActionToCrclGenerator)");
             ret.completeExceptionally(new IllegalStateException("checkDbSupplierPublisher(null==pddlActionToCrclGenerator)"));
@@ -6524,10 +6526,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
     }
 
-    final ConcurrentLinkedDeque<XFuture<Void>> newDbSetupFutures = new ConcurrentLinkedDeque<>();
+    private final ConcurrentLinkedDeque<XFuture<Void>> newDbSetupFutures = new ConcurrentLinkedDeque<>();
 
     private void handleNewDbSetup(DbSetup setup) {
         if (null != crclGenerator) {
@@ -6546,7 +6548,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private final AtomicInteger replanFromIndex = new AtomicInteger(-1);
     private final AtomicBoolean replanStarted = new AtomicBoolean();
 
-    javax.swing.@Nullable Timer replanActionTimer = null;
+    private javax.swing.@Nullable Timer replanActionTimer = null;
     private final Runnable defaultReplanRunnable = new Runnable() {
         @Override
         public void run() {
@@ -6615,7 +6617,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      *
      * @param debug new value of debug
      */
-    public void setDebug(boolean debug) {
+    private void setDebug(boolean debug) {
         this.debug = debug;
         this.crclGenerator.setDebug(debug);
     }
@@ -6668,11 +6670,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     /**
      * @return the errorMap
      */
-    public List<PositionMap> getPositionMaps() {
+    private List<PositionMap> getPositionMaps() {
         return positionMapJPanel1.getPositionMaps();
     }
 
-    public List<PositionMap> getReversePositionMaps() {
+    private List<PositionMap> getReversePositionMaps() {
         return positionMapJPanel1.getReversePositionMaps();
     }
 

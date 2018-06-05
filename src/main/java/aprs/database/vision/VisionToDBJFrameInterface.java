@@ -70,7 +70,7 @@ public interface VisionToDBJFrameInterface extends SlotOffsetProvider {
     
     public DbType getDbType();
     
-    public void setSqlConnection(java.sql.Connection connection, DbType dbtype) throws java.sql.SQLException;
+    public void setSqlConnection(java.sql.Connection connection, DbType dbtype);
     
     @Nullable public Callable<DbSetupPublisher> getDbSetupSupplier();
 

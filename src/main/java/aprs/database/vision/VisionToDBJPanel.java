@@ -100,6 +100,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings({"CanBeFinal", "UnusedReturnValue"})
 public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJFrameInterface, DbSetupListener, VisionSocketClient.VisionSocketClientListener {
 
     private DbSetupPublisher dbSetupPublisher;
@@ -942,7 +943,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         disconnectVision();
     }//GEN-LAST:event_jButtonDisconnectVisionActionPerformed
 
-    public void setTitleErrorString(String errString) {
+    private void setTitleErrorString(String errString) {
         if (null != aprsSystemInterface) {
             aprsSystemInterface.setTitleErrorString(errString);
         }
@@ -1250,7 +1251,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.jTextFieldAcquire.setText(s);
     }
 
-    public void connectDB(DbSetup dbSetup) {
+    private void connectDB(DbSetup dbSetup) {
         try {
             Map<String, String> argsMap = updateArgsMap();
             closeDB();
@@ -1464,7 +1465,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      *
      * @param requiredParts new value of requiredParts
      */
-    public void setRequiredParts(@Nullable Map<String, Integer> requiredParts) {
+    private void setRequiredParts(@Nullable Map<String, Integer> requiredParts) {
 
         if ((null == requiredParts || requiredParts.isEmpty())
                 && (null == this.requiredParts || this.requiredParts.isEmpty())) {
@@ -2582,7 +2583,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         saveProperties(setup.getDbType(), setup.getHost(), setup.getPort());
     }
 
-    public void saveProperties(DbType dbtype, String host, int port) {
+    private void saveProperties(DbType dbtype, String host, int port) {
         try {
             savingProperties = true;
             if(null == propertiesFile) {
@@ -2635,7 +2636,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //    }
     private volatile boolean restoringProperties = false;
 
-    private final void restoreProperties(DbType dbtype) {
+    private void restoreProperties(DbType dbtype) {
         try {
             restoringProperties = true;
             if (null != propertiesFile && propertiesFile.exists()) {

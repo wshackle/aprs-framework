@@ -164,7 +164,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
        return object2DOuterJPanel1.getPropertiesFile();
     }
 
-    public void saveProperties() throws IOException {
+    public void saveProperties() {
        object2DOuterJPanel1.saveProperties();
     }
 
