@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -39,7 +39,6 @@ import java.awt.Container;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
@@ -60,6 +59,7 @@ import javax.swing.DesktopManager;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("unused")
 class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     @MonotonicNonNull private AprsSystem aprsSystem = null;
@@ -109,14 +109,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     public void addToDesktopPane(JInternalFrame internalFrame) {
         JInternalFrame[] prevFrames =jDesktopPane1.getAllFramesInLayer(JLayeredPane.DEFAULT_LAYER);
-        for (int i = 0; i < prevFrames.length; i++) {
-            if(internalFrame == prevFrames[i]) {
-                throw new IllegalStateException("internalFrame="+internalFrame+" already in prevFrames="+Arrays.toString(prevFrames)+" of jDesktopPane1="+jDesktopPane1);
+        for (JInternalFrame prevFrame : prevFrames) {
+            if (internalFrame == prevFrame) {
+                throw new IllegalStateException("internalFrame=" + internalFrame + " already in prevFrames=" + Arrays.toString(prevFrames) + " of jDesktopPane1=" + jDesktopPane1);
             }
         }
         Container internalFrameParent = internalFrame.getParent();
         if(internalFrameParent != null) {
-                throw new IllegalStateException("internalFrame="+internalFrame+" already hasParent="+internalFrameParent+"  ((jDesktopPane1="+jDesktopPane1+")==internalFramParent) ="+(jDesktopPane1==internalFrameParent));
+                throw new IllegalStateException("internalFrame="+internalFrame+" already hasParent="+internalFrameParent+"  ((jDesktopPane1="+jDesktopPane1+")==internalFrameParent) ="+(jDesktopPane1==internalFrameParent));
         }
         jDesktopPane1.add(internalFrame, JLayeredPane.DEFAULT_LAYER);
     }
@@ -131,13 +131,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-
-    /**
-     * Initialize the frame with the previously saved settings if available.
-     */
-    final public void defaultInit() {
-        commonInit();
     }
 
     public void clearStartCheckBoxes() {
@@ -283,21 +276,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void activateInternalFrame(JInternalFrame internalFrame) {
-        try {
-            internalFrame.setVisible(true);
-            if (null != internalFrame.getDesktopPane()
-                    && null != internalFrame.getDesktopPane().getDesktopManager()) {
-                internalFrame.getDesktopPane().getDesktopManager().deiconifyFrame(internalFrame);
-                internalFrame.getDesktopPane().getDesktopManager().activateFrame(internalFrame);
-                internalFrame.getDesktopPane().getDesktopManager().maximizeFrame(internalFrame);
-            }
-            internalFrame.moveToFront();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public void checkDeiconifyActivateAndMaximize(JInternalFrame internalFrame) {
         internalFrame.setVisible(true);
         if (checkInternalFrame(internalFrame)) {
@@ -360,9 +338,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             return;
         }
         int count = 1;
-        ArrayList<JInternalFrame> framesList = new ArrayList<>();
-        framesList.addAll(Arrays.asList(jDesktopPane1.getAllFrames()));
-        Collections.sort(framesList, Comparator.comparing(JInternalFrame::getTitle));
+        ArrayList<JInternalFrame> framesList = new ArrayList<>(Arrays.asList(jDesktopPane1.getAllFrames()));
+        framesList.sort(Comparator.comparing(JInternalFrame::getTitle));
         List<JMenuItem> menuItems = new ArrayList<>();
         int framesListSize = framesList.size();
         for (JInternalFrame f : framesList) {
@@ -873,7 +850,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void closePddlPlanner() throws Exception {
+    private void closePddlPlanner() {
         if(null != aprsSystem) {
             aprsSystem.closePddlPlanner();
         } else {
@@ -903,7 +880,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void closeActionsListExcecutor() throws Exception {
+    private void closeActionsListExcecutor() {
         if (null != aprsSystem) {
             aprsSystem.closeActionsListExcecutor();
         } else {
@@ -1085,8 +1062,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         try {
             if (jCheckBoxMenuItemStartupRobotCrclGUI.isSelected()) {
                 startCrclClientJInternalFrame();
-            } else {
-//                closePddlPlanner();
             }
             setupWindowsMenu();
             saveProperties();
@@ -1577,10 +1552,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         startLookForParts();
     }//GEN-LAST:event_jMenuItemLookForActionPerformed
 
+    @SuppressWarnings("unused")
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         windowClosing();
     }//GEN-LAST:event_formWindowClosing
 
+    @SuppressWarnings("unused")
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
         windowClosed();
     }//GEN-LAST:event_formWindowClosed
@@ -1604,19 +1581,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-    }
-
-    public void forceClose() {
-        try {
-            windowClosing();
-        } catch (Throwable t) {
-        }
-        try {
-            windowClosed();
-        } catch (Throwable t) {
-        }
-        super.removeAll();
-        super.dispose();
     }
 
     private void disconnectRobot() {

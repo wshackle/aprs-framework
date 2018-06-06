@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -51,7 +51,6 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.HeadlessException;
 import java.awt.Image;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -112,7 +111,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
@@ -235,6 +233,7 @@ public class Supervisor {
          *
          * @return list of slots with relative position offsets.
          */
+        @SuppressWarnings("WeakerAccess")
         @Override
         public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty) {
             for (AprsSystemInterface aprsSystem : aprsSystems) {
@@ -263,8 +262,7 @@ public class Supervisor {
         }
 
         @Override
-        @Nullable
-        public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
+        @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
             AprsSystemInterface sys = slotProvidersMap.get(tray.origName);
             if (null != sys) {
                 return sys.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
@@ -1536,7 +1534,7 @@ public class Supervisor {
                 .thenComposeAsync("unsteal.returnRobots1" + " : srn=" + srn, x -> {
                     return returnRobotsDirect("unsteal.returnRobots1" + " : srn=" + srn);
                 }, supervisorExecutorService)
-                .thenRun("unsteal.connectAll" + " : srn=" + srn, () -> connectAll())
+                .thenRun("unsteal.connectAll" + " : srn=" + srn, this::connectAll)
                 .alwaysAsync(() -> {
                     allowToggles(revBlocker, stealFor, stealFrom);
                 }, supervisorExecutorService)
@@ -2701,8 +2699,7 @@ public class Supervisor {
         if (isUseTeachCameraSelected()) {
             teachItems = object2DOuterJPanel1.getItems();
         }
-        for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface aprsSys = aprsSystems.get(i);
+        for (AprsSystemInterface aprsSys : aprsSystems) {
             aprsSys.setCorrectionMode(false);
             if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
                 aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0);
@@ -3227,8 +3224,7 @@ public class Supervisor {
     }
 
     private boolean allSystemsOk() {
-        for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface sys = aprsSystems.get(i);
+        for (AprsSystemInterface sys : aprsSystems) {
             CRCLStatusType status = sys.getCurrentStatus();
             if (status != null
                     && status.getCommandStatus() != null
@@ -3682,7 +3678,7 @@ public class Supervisor {
     XFuture<Void> startReverseActions() {
         logEvent("startReverseActions");
         String blockerName = "start startReverseActions" + ContinuousDemoCycle.get();
-        AprsSystemInterface sysArray[] = getAprsSystems().toArray(new AprsSystemInterface[getAprsSystems().size()]);
+        AprsSystemInterface sysArray[] = getAprsSystems().toArray(new AprsSystemInterface[0]);
         disallowToggles(blockerName, sysArray);
         setAllReverseFlag(true);
         if (debugStartReverseActions) {
@@ -3915,8 +3911,7 @@ public class Supervisor {
         if (isPauseSelected()) {
             setPauseSelected(false);
         }
-        for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface aprsSys = aprsSystems.get(i);
+        for (AprsSystemInterface aprsSys : aprsSystems) {
             if (aprsSys.isPaused()) {
                 aprsSys.resume();
             }
@@ -3952,8 +3947,7 @@ public class Supervisor {
             }
         }
         assert (i == futures.length) : "futures=" + Arrays.toString(futures) + ",keySet=" + keySet + ",i=" + i;
-        for (int j = 0; j < aprsSystems.size(); j++) {
-            AprsSystemInterface sysTemp = aprsSystems.get(j);
+        for (AprsSystemInterface sysTemp : aprsSystems) {
             if (debugSystemContinueMap.containsKey(sysTemp.getMyThreadId())) {
                 tasksNames.append(sysTemp.getTaskName()).append(',');
             }
@@ -4314,8 +4308,7 @@ public class Supervisor {
     }
 
     void restoreRobotNames() {
-        for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface aprsSys = aprsSystems.get(i);
+        for (AprsSystemInterface aprsSys : aprsSystems) {
             if (aprsSys.isConnected()) {
                 continue;
             }

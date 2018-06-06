@@ -1,24 +1,24 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
- * 
+ * Software Copyright/Warranty Disclaimer
+ *
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
  * official duties. Pursuant to title 17 Section 105 of the United States
  * Code this software is not subject to copyright protection and is in the
  * public domain.
- * 
- * This software is experimental. NIST assumes no responsibility whatsoever 
- * for its use by other parties, and makes no guarantees, expressed or 
- * implied, about its quality, reliability, or any other characteristic. 
- * We would appreciate acknowledgement if the software is used. 
- * This software can be redistributed and/or modified freely provided 
- * that any derivative works bear some notice that they are derived from it, 
+ *
+ * This software is experimental. NIST assumes no responsibility whatsoever
+ * for its use by other parties, and makes no guarantees, expressed or
+ * implied, about its quality, reliability, or any other characteristic.
+ * We would appreciate acknowledgement if the software is used.
+ * This software can be redistributed and/or modified freely provided
+ * that any derivative works bear some notice that they are derived from it,
  * and any modified versions bear some notice that they have been modified.
- * 
+ *
  *  See http://www.copyright.gov/title17/92chap1.html#105
- * 
+ *
  */
 package aprs.system;
 
@@ -62,6 +62,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JInternalFrame;
+
 import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
 import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
@@ -89,6 +90,7 @@ import crcl.utils.CRCLException;
 import crcl.utils.CRCLPosemath;
 import crcl.utils.CRCLSocket;
 import crcl.utils.outer.interfaces.ProgramRunData;
+
 import java.awt.Container;
 import java.awt.Image;
 import java.io.FileOutputStream;
@@ -99,7 +101,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -116,11 +117,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import javax.swing.JOptionPane;
 import javax.xml.bind.JAXBException;
+
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.utils.CrclCommandWrapper;
+
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.FileWriter;
@@ -128,13 +131,14 @@ import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
 import javax.swing.DesktopManager;
 import javax.swing.JDesktopPane;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
 /**
  * AprsSystem is the container for one robotic system in the APRS (Agility
  * Performance of Robotic Systems) framework.
- *
+ * <p>
  * Internal windows are used to represent each of the modules within the system.
  * Vision, Sensor Processing, Planning, Execution, and the CRCL (Canonical Robot
  * Command Language) client and server.
@@ -191,6 +195,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return Has user enabled snapshots?
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isSnapshotsEnabled() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = aprsSystemDisplayJFrame.isSnapshotsEnabled();
@@ -200,6 +206,8 @@ public class AprsSystem implements AprsSystemInterface {
         return snapshotsEnabled;
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setSnapshotsEnabled(boolean enable) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setSnapshotsEnabled(enable);
@@ -241,6 +249,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return image of most recent scan
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public Image getScanImage() {
         return scanImage;
     }
@@ -251,6 +261,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return the value of externalGetPoseFunction
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public PoseProvider getPddlExecExternalPoseProvider() {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         return pddlExecutorJInternalFrame1.getExternalPoseProvider();
@@ -261,6 +273,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param externalPoseProvider new value of externalGetPoseFunction
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setPddlExecExternalPoseProvider(PoseProvider externalPoseProvider) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1  ";
         this.pddlExecutorJInternalFrame1.setExternalPoseProvider(externalPoseProvider);
@@ -282,8 +296,10 @@ public class AprsSystem implements AprsSystemInterface {
      * state.
      *
      * @return duration in milliseconds or 0 if it has not been started and
-     * stopped atleast once.
+     * stopped at least once.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public long getRunDuration() {
         long t = effectiveStartRunTime.get();
         if (t < 0) {
@@ -304,8 +320,10 @@ public class AprsSystem implements AprsSystemInterface {
      * state.
      *
      * @return duration in milliseconds or 0 if it has not been started and
-     * stopped atleast once.
+     * stopped at least once.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public long getStopDuration() {
         long t = effectiveStopRunTime.get();
         if (t < 0) {
@@ -344,6 +362,7 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
 //    private volatile StackTraceElement lastGetSingleVisionToDbUpdateStackTrace[] = null;
+
     /**
      * Asynchronously get a list of PhysicalItems updated in one frame from the
      * vision system. The list will not be available until after the next frame
@@ -352,32 +371,31 @@ public class AprsSystem implements AprsSystemInterface {
      * @return future with list of items updated in the next frame from the
      * vision
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<List<PhysicalItem>> getSingleVisionToDbUpdate() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
-//        if(null != lastLogEvent && lastLogEvent.endsWith("getSingleVisionToDbUpdate")) {
-//            for(StackTraceElement ste : lastGetSingleVisionToDbUpdateStackTrace) {
-//                System.err.println(ste.toString());
-//            }
-//            System.err.println("getSingleVisionToDbUpdate called twice");
-//        }
         long startTime = logEvent("start getSingleVisionToDbUpdate", null);
-//        lastGetSingleVisionToDbUpdateStackTrace = Thread.currentThread().getStackTrace();
         XFuture<List<PhysicalItem>> ret = visionToDbJInternalFrame.getSingleUpdate();
         return ret.thenApply(x -> {
             logEvent("end getSingleVisionToDbUpdate",
                     printListToString(x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList()), 8)
-                    + "\n started at" + startTime
-                    + "\n timeDiff=" + (startTime - System.currentTimeMillis())
+                            + "\n started at" + startTime
+                            + "\n timeDiff=" + (startTime - System.currentTimeMillis())
             );
             return x;
         });
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public long getLastSingleVisionToDbUpdateTime() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getLastUpdateTime();
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public long getSingleVisionToDbNotifySingleUpdateListenersTime() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getNotifySingleUpdateListenersTime();
@@ -391,6 +409,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return list of trays
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public List<PartsTray> getPartsTrayList() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getPartsTrayList();
@@ -400,12 +420,16 @@ public class AprsSystem implements AprsSystemInterface {
      * Force the Object 2D Simulation View to refresh, this method has no effect
      * if the view is not visible or is not in simulation mode.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void refreshSimView() {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(false);
         }
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public long getLastSimViewRefreshTime() {
         if (null == object2DViewJInternalFrame) {
             return -1;
@@ -413,6 +437,17 @@ public class AprsSystem implements AprsSystemInterface {
         return object2DViewJInternalFrame.getLastRefreshTime();
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
+    public long getLastSimViewPublishTime() {
+        if (null == object2DViewJInternalFrame) {
+            return -1;
+        }
+        return object2DViewJInternalFrame.getLastPublishTime();
+    }
+
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public int getSimViewRefreshCount() {
         if (null == object2DViewJInternalFrame) {
             return -1;
@@ -420,6 +455,8 @@ public class AprsSystem implements AprsSystemInterface {
         return object2DViewJInternalFrame.getRefreshCount();
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public long getSimViewLastPublishTime() {
         if (null == object2DViewJInternalFrame) {
             return -1;
@@ -427,6 +464,8 @@ public class AprsSystem implements AprsSystemInterface {
         return object2DViewJInternalFrame.getLastPublishTime();
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public int getSimViewPublishCount() {
         if (null == object2DViewJInternalFrame) {
             return -1;
@@ -443,6 +482,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return the value of externalSlotOffsetProvider
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public SlotOffsetProvider getExternalSlotOffsetProvider() {
         return externalSlotOffsetProvider;
     }
@@ -452,6 +493,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param externalSlotOffsetProvider new value of externalSlotOffsetProvider
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setExternalSlotOffsetProvider(SlotOffsetProvider externalSlotOffsetProvider) {
         this.externalSlotOffsetProvider = externalSlotOffsetProvider;
     }
@@ -460,14 +503,14 @@ public class AprsSystem implements AprsSystemInterface {
      * Get a list of slots with names and relative position offsets for a given
      * kit or parts tray name.
      *
-     * @param name name of the type of kit or slot tray
+     * @param name        name of the type of kit or slot tray
      * @param ignoreEmpty if false no slots being found logs a verbose error
-     * message and throws IllegalStateException (good for fail fast) or if true
-     * simply returns an empty list (good or display or when multiple will be
-     * checked.
-     *
+     *                    message and throws IllegalStateException (good for fail fast) or if true
+     *                    simply returns an empty list (good or display or when multiple will be
+     *                    checked.
      * @return list of slots with relative position offsets.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty) {
         if (null != externalSlotOffsetProvider) {
@@ -484,6 +527,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @param f file to save
      * @return future with information on when the operation is complete.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Void> startVisionToDbNewItemsImageSave(File f) {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return this.visionToDbJInternalFrame.startNewItemsImageSave(f);
@@ -495,6 +540,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @param tray tray to obtain list of slots
      * @return list of slots
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public List<Slot> getSlots(Tray tray, boolean ignoreEmpty) {
         if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.getSlotOffsets(tray.getName(), ignoreEmpty);
@@ -509,6 +556,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param v should the position be displayed.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setSimViewTrackCurrentPos(boolean v) {
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
         this.object2DViewJInternalFrame.setTrackCurrentPos(v);
@@ -517,8 +566,9 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Set the simulation view to simulation mode and disconnect from any vision
      * data socket.
-     *
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void simViewSimulateAndDisconnect() {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setSimulatedAndDisconnect();
@@ -531,6 +581,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return rotational offset in radians
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public double getVisionToDBRotationOffset() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return this.visionToDbJInternalFrame.getRotationOffset();
@@ -538,10 +590,12 @@ public class AprsSystem implements AprsSystemInterface {
 
     /**
      * Pause a currently executing CRCL program.
-     *
+     * <p>
      * No action is taken if the CRCL Client has not been started and connected
      * or not program was currently running.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void pauseCrclProgram() {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.pauseCrclProgram();
@@ -555,11 +609,13 @@ public class AprsSystem implements AprsSystemInterface {
      * @return Kit Inspection InternalJFrame
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public KitInspectionJInternalFrame getKitInspectionJInternalFrame() {
         return kitInspectionJInternalFrame;
     }
 
-    private volatile int runNumber = (int) ((System.currentTimeMillis() / 10000) % 1000);
+    private final AtomicLong runNumber = new AtomicLong((System.currentTimeMillis() / 10000) % 1000);
 
     /**
      * Return the user's preference on whether the stack trace be dumped for
@@ -567,7 +623,9 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return current setting of menu item
      */
-    public boolean isEnableDebugDumpstacks() {
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
+    public boolean isEnableDebugDumpStacks() {
         return debug;
     }
 
@@ -578,8 +636,10 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return current run name.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public String getRunName() {
-        return ((this.taskName != null) ? this.taskName.replace(" ", "-") : "") + "-run-" + String.format("%03d", runNumber) + "-"
+        return ((this.taskName != null) ? this.taskName.replace(" ", "-") : "") + "-run-" + String.format("%03d", runNumber.get()) + "-"
                 + ((this.robotName != null) ? this.robotName : "") + (isReverseFlag() ? "-Reverse" : "");
     }
 
@@ -589,6 +649,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return whether a program is paused
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isCrclProgramPaused() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.isPaused();
@@ -603,6 +665,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return thread
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public Thread getCrclRunProgramThread() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getRunProgramThread();
@@ -617,6 +681,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return future or null if no program is running
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Boolean> getCrclRunProgramFuture() {
         assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
         return crclClientJInternalFrame.getRunProgramFuture();
@@ -627,6 +693,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return whether a CRCL program is running.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isRunningCrclProgram() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.isRunningProgram();
@@ -640,6 +708,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return count to pass to stopBlockingCrclProgram when running crcl
      * programs should again be allowed.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public int startBlockingCrclPrograms() {
         if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("pendantClientJInternalFrame is null");
@@ -652,10 +722,9 @@ public class AprsSystem implements AprsSystemInterface {
      * startBlockingCrclPrograms
      *
      * @param count obtained from previous call to startBlockingCrclPrograms
-     * @throws
-     * crcl.ui.client.PendantClientInner.ConcurrentBlockProgramsException if
-     * another call to has occurred start/stopBlockingCrclPrograms since the
-     * corresponding call to startBlockingCrclProgram
+     * @throws crcl.ui.client.PendantClientInner.ConcurrentBlockProgramsException if
+     *                                                                            another call to has occurred start/stopBlockingCrclPrograms since the
+     *                                                                            corresponding call to startBlockingCrclProgram
      */
     public void stopBlockingCrclPrograms(int count) throws PendantClientInner.ConcurrentBlockProgramsException {
         if (null == crclClientJInternalFrame) {
@@ -670,6 +739,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return current CRCL program or null if no program is loaded.
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public CRCLProgramType getCrclProgram() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getProgram();
@@ -682,6 +753,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return the current executor options.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public Map<String, String> getExecutorOptions() {
         if (null == pddlExecutorJInternalFrame1) {
             return Collections.emptyMap();
@@ -692,9 +765,11 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Set an executor option.
      *
-     * @param key name of option to set
+     * @param key   name of option to set
      * @param value value option should be set to
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setExecutorOption(String key, String value) {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.setOption(key, value);
@@ -703,7 +778,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     /**
      * Add a position map.
-     *
+     * <p>
      * The position map is similar to a transform in that it may offset
      * positions output by the executor but may also be used to change scaling
      * or correct for non uniform distortions from the sensor system or
@@ -712,6 +787,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param pm position map to be added
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void addPositionMap(PositionMap pm) {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.addPositionMap(pm);
@@ -724,6 +801,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param pm position map to be removed.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void removePositionMap(PositionMap pm) {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.removePositionMap(pm);
@@ -736,6 +815,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return current pose of the robot.
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public PoseType getCurrentPose() {
 
         if (null != crclClientJInternalFrame) {
@@ -760,6 +841,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return current point(translation only) from current pose of the robot.
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public PointType getCurrentPosePoint() {
         PoseType pose = getCurrentPose();
         if (null != pose) {
@@ -774,6 +857,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return if the CRCL client is connected to the server.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isConnected() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.isConnected();
@@ -784,15 +869,17 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Attempt to connect or disconnect the CRCL client from the CRCL server by
      * opening or closed the appropriate socket.
-     *
+     * <p>
      * NOTE: for setConnected(true) to succeed the robot port and host name must
      * have previously been set or read from the property file.
-     *
+     * <p>
      * NOTE: disconnectRobot() is the same as setConnected(false) except it also
      * sets the robot name to null.
      *
      * @param connected the new desired connected state.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setConnected(boolean connected) {
         logEvent("setConnected", connected);
         if (!connected || robotName == null || !isConnected()) {
@@ -837,6 +924,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return the value of taskName
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public String getTaskName() {
         return taskName;
     }
@@ -848,6 +937,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return future or null if no safe abort requested
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Void> getSafeAbortFuture() {
         return safeAbortFuture;
     }
@@ -859,6 +950,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return future or null if no safe abort requested
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Boolean> getLastRunProgramFuture() {
         return lastRunProgramFuture;
     }
@@ -870,6 +963,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return future or null if no resume requested
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Boolean> getLastResumeFuture() {
         return lastResumeFuture;
     }
@@ -885,16 +980,18 @@ public class AprsSystem implements AprsSystemInterface {
      * sensor. If the robot currently has a part in the gripper the program will
      * continue until the part is placed and the robot is moved out of the way
      * of the vision system.
-     *
+     * <p>
      * The abort will occur asynchronously in another thread after this method
      * returns. The status of this action can be monitored with the returned
      * future.
      *
      * @param comment optional comment is used when debugging to track which
-     * future was created by which caller and to improve log messages
+     *                future was created by which caller and to improve log messages
      * @return a future that can be tested or used to wait until the abort is
      * completed.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Void> startSafeAbort(String comment) {
 
         if (isAborting()) {
@@ -923,26 +1020,33 @@ public class AprsSystem implements AprsSystemInterface {
     @Nullable
     private volatile Thread startSafeAbortAndDisconnectThread = null;
     private volatile long startSafeAbortAndDisconnectTime = -1;
-    private volatile StackTraceElement startSafeAbortAndDisconnectStackTrace @Nullable []  = null;
+    private volatile StackTraceElement startSafeAbortAndDisconnectStackTrace@Nullable[] = null;
 
     @Nullable
+    @SuppressWarnings({"unused"})
     private volatile Thread startSafeAbortThread = null;
+
+    @SuppressWarnings({"unused"})
     private volatile long startSafeAbortTime = -1;
-    private volatile StackTraceElement startSafeAbortStackTrace @Nullable []  = null;
+
+    @SuppressWarnings({"unused"})
+    private volatile StackTraceElement startSafeAbortStackTrace@Nullable[] = null;
 
     /**
      * Safely abort the current CRCL program and then disconnect from the
      * robot's CRCL server.
-     *
+     * <p>
      * The abort will occur asynchronously in another thread after this method
      * returns. The status of this action can be monitored with the returned
      * future. * @return a future that can be tested or used to wait until the
      * abort and disconnect is completed.
      *
      * @param comment optional comment is used when debugging to track which
-     * future was created by which caller and to improve log messages
+     *                future was created by which caller and to improve log messages
      * @return future providing info on when complete
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Void> startSafeAbortAndDisconnect(String comment) {
 
         startingCheckEnabledCheck();
@@ -965,18 +1069,16 @@ public class AprsSystem implements AprsSystemInterface {
                 safeAbortFuture
                         = localSafeAbortFuture;
 
-                safeAbortAndDisconnectFuture
-                        = localSafeAbortFuture
-                                .thenRun(() -> {
-//                                    if (null != ContinuousDemoFuture) {
+                //                                    if (null != ContinuousDemoFuture) {
 //                                        ContinuousDemoFuture.cancelAll(true);
 //                                        ContinuousDemoFuture = null;
 //                                    }
-                                    setStopRunTime();
-                                })
-                                .thenCompose(x -> waitAllLastFutures())
-                                .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
-                                .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
+                safeAbortAndDisconnectFuture
+                        = localSafeAbortFuture
+                        .thenRun(this::setStopRunTime)
+                        .thenCompose(x -> waitAllLastFutures())
+                        .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
+                        .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
             } else {
                 safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected", null);
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -991,7 +1093,7 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     @SuppressWarnings({"unchecked", "nullness"})
-    private XFuture<Void> wait(@Nullable XFuture< ?> f) {
+    private XFuture<Void> wait(@Nullable XFuture<?> f) {
         if (null == f || f.isCancelled() || f.isCompletedExceptionally() || f.isDone()) {
             return XFuture.completedFutureWithName("waitReady f=" + f, null);
         } else {
@@ -1008,11 +1110,13 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Get a map of updates that were attempted the last time data was received
      * from the vision system.
-     *
+     * <p>
      * Only useful for debugging.
      *
      * @return map of results
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public Map<String, UpdateResults> getDbUpdatesResultMap() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getUpdatesResultMap();
@@ -1025,7 +1129,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     /**
      * Disconnect from the robot's crcl server and set robotName to null.
-     *
+     * <p>
      * Note: setConnected(false) also disconnects from the crcl server but
      * leaves the robotName unchanged.
      *
@@ -1048,6 +1152,8 @@ public class AprsSystem implements AprsSystemInterface {
 
     private final AtomicInteger disconnectRobotCount = new AtomicInteger();
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isClosing() {
         return closing;
     }
@@ -1116,8 +1222,8 @@ public class AprsSystem implements AprsSystemInterface {
      * TCP port.
      *
      * @param robotName name of the robot
-     * @param host host running robot's CRCL server
-     * @param port (TCP) port robot's CRCL server is bound to
+     * @param host      host running robot's CRCL server
+     * @param port      (TCP) port robot's CRCL server is bound to
      * @return future providing info on when complete
      */
     public XFuture<Void> connectRobot(String robotName, String host, int port) {
@@ -1226,22 +1332,24 @@ public class AprsSystem implements AprsSystemInterface {
 
     @Nullable
     private volatile XFuture<Boolean> lastContinueActionListFuture = null;
+
     @Nullable
+    @SuppressWarnings({"unused"})
     private volatile String lastContinueActionListFutureComment = null;
+
+    @SuppressWarnings({"unused"})
     private volatile int lastContinueStartAbortCount = -1;
 
     /**
      * Continue or start executing the currently loaded set of PDDL actions.
-     *
+     * <p>
      * The actions will be executed in another thread after this method returns.
      * The task can be monitored or canceled using the returned future.
      *
      * @param comment optional comment for why continueActionList is needed used
-     * for logs, and/or snapshots
-     *
+     *                for logs, and/or snapshots
      * @return a future that can be used to monitor, extend or cancel the
      * underlying task.
-     *
      */
     public XFuture<Boolean> continueActionList(String comment) {
         setStartRunTime();
@@ -1252,17 +1360,17 @@ public class AprsSystem implements AprsSystemInterface {
         logEvent("continueActionList", comment);
         lastContinueActionListFuture
                 = waitForPause()
-                        .thenApplyAsync("AprsSystem.continueActionList" + comment,
-                                x -> {
-                                    setThreadName();
-                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                                    assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                .thenApplyAsync("AprsSystem.continueActionList" + comment,
+                        x -> {
+                            setThreadName();
+                            takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
+                            assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
-                                    }
-                                    return false;
-                                }, runProgramService);
+                            }
+                            return false;
+                        }, runProgramService);
         return lastContinueActionListFuture.always(() -> logEvent("finished continueActionList", comment));
     }
 
@@ -1271,6 +1379,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return closest distance
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public double getClosestRobotPartDistance() {
         assert (null != object2DViewJInternalFrame) : "null == object2DViewJInternalFrame ";
         return this.object2DViewJInternalFrame.getClosestRobotPartDistance();
@@ -1281,6 +1391,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return if object view is simulated
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isObjectViewSimulated() {
         assert (null != object2DViewJInternalFrame) : "null == object2DViewJInternalFrame ";
         return this.object2DViewJInternalFrame.isSimulated();
@@ -1311,11 +1423,11 @@ public class AprsSystem implements AprsSystemInterface {
 
     @Nullable
     private volatile Thread setRobotNameNullThread = null;
-    private volatile StackTraceElement setRobotNameNullStackTrace @Nullable []  = null;
+    private volatile StackTraceElement setRobotNameNullStackTrace@Nullable[] = null;
     private volatile long setRobotNameNullThreadTime = -1;
     @Nullable
     private volatile Thread setRobotNameNonNullThread = null;
-    private volatile StackTraceElement setRobotNameNonNullStackTrace @Nullable []  = null;
+    private volatile StackTraceElement setRobotNameNonNullStackTrace@Nullable[] = null;
     private volatile long setRobotNameNonNullThreadTime = -1;
 
     /**
@@ -1355,6 +1467,8 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean useTeachTable = false;
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean getUseTeachTable() {
         if (null != aprsSystemDisplayJFrame) {
             boolean ret = aprsSystemDisplayJFrame.getUseTeachTable();
@@ -1364,6 +1478,8 @@ public class AprsSystem implements AprsSystemInterface {
         return useTeachTable;
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setUseTeachTable(boolean useTeachTable) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setUseTeachTable(useTeachTable);
@@ -1371,6 +1487,7 @@ public class AprsSystem implements AprsSystemInterface {
         this.useTeachTable = useTeachTable;
     }
 
+    @SuppressWarnings("unused")
     private void checkReadyToDisconnect() throws IllegalStateException {
         if (closing) {
             return;
@@ -1395,6 +1512,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param l listener to be registered
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.addProgramLineListener(l);
@@ -1406,6 +1525,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param l listener to be removed
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void removeProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.removeProgramLineListener(l);
@@ -1419,6 +1540,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @param poseIn the pose to correct or transform
      * @return pose after being corrected by all currently added position maps
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public PoseType correctPose(PoseType poseIn) {
         if (null != pddlExecutorJInternalFrame1) {
             return pddlExecutorJInternalFrame1.correctPose(poseIn);
@@ -1432,6 +1555,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @param ptIn pose to reverse correction
      * @return pose in original vision/database coordinates
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     public PointType reverseCorrectPoint(PointType ptIn) {
         if (null != pddlExecutorJInternalFrame1) {
@@ -1447,6 +1571,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param l listener to register
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void addCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.addCurrentPoseListener(l);
@@ -1460,6 +1586,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param l listener to be removed
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void removeCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.removeCurrentPoseListener(l);
@@ -1470,14 +1598,13 @@ public class AprsSystem implements AprsSystemInterface {
      * Set the currently loaded CRCL program
      *
      * @param program CRCL program to load.
-     * @throws JAXBException a command within the program violates a constraint
-     * in the schema
+     *                       in the schema
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public synchronized void setCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (null != crclClientJInternalFrame) {
-            synchronized (crclClientJInternalFrame) {
-                setProgram(program);
-            }
+            setProgram(program);
         }
     }
 
@@ -1486,7 +1613,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     /**
      * Load the given program an begin running it.
-     *
+     * <p>
      * The program will be run asynchronously in another thread after this
      * method has returned. The task can be modified, canceled or extended with
      * the returned future. The boolean contained within the future will be true
@@ -1496,21 +1623,21 @@ public class AprsSystem implements AprsSystemInterface {
      * @param program program to be loaded
      * @return future that can be used to monitor, cancel or extend the
      * underlying task
-     * @throws JAXBException a command within the program violates a constraint
-     * in the schema
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Boolean> startCRCLProgram(CRCLProgramType program) {
         setStartRunTime();
         if (null != crclClientJInternalFrame) {
             lastRunProgramFuture
                     = waitForPause()
-                            .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
-                                try {
-                                    return runCrclProgram(program);
-                                } catch (JAXBException ex) {
-                                    throw new RuntimeException(ex);
-                                }
-                            }, runProgramService);
+                    .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
+                        try {
+                            return runCrclProgram(program);
+                        } catch (JAXBException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }, runProgramService);
             return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
@@ -1543,8 +1670,8 @@ public class AprsSystem implements AprsSystemInterface {
         return false;
     }
 
-    private boolean checkNoMoves(CRCLProgramType prog) {
-        for (MiddleCommandType midCmd : prog.getMiddleCommand()) {
+    private boolean checkNoMoves(CRCLProgramType program) {
+        for (MiddleCommandType midCmd : program.getMiddleCommand()) {
             if (isMove(midCmd)) {
                 return false;
             }
@@ -1563,9 +1690,10 @@ public class AprsSystem implements AprsSystemInterface {
         processWrapperCommands(cmds);
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void processWrapperCommands(List<MiddleCommandType> cmds) {
-        for (int i = 0; i < cmds.size(); i++) {
-            MiddleCommandType cmd = cmds.get(i);
+        for (MiddleCommandType cmd : cmds) {
             if (cmd instanceof CrclCommandWrapper) {
                 CrclCommandWrapper wrapper = (CrclCommandWrapper) cmd;
                 wrapper.notifyOnStartListeners();
@@ -1581,6 +1709,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return whether the program completed successfully
      * @throws JAXBException the program did not meet schema requirements
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean runCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (enableCheckedAlready && checkNoMoves(program)) {
             logEvent("skipping runCrclProgram", programToString(program));
@@ -1593,8 +1723,8 @@ public class AprsSystem implements AprsSystemInterface {
         boolean ret = crclClientJInternalFrame.runCurrentProgram();
         logEvent("end runCrclProgram",
                 "(" + crclClientJInternalFrame.getCurrentProgramLine() + "/" + program.getMiddleCommand().size() + ")"
-                + "\n started at" + startTime
-                + "\n timeDiff=" + (startTime - System.currentTimeMillis())
+                        + "\n started at" + startTime
+                        + "\n timeDiff=" + (startTime - System.currentTimeMillis())
         );
         return ret;
     }
@@ -1602,10 +1732,9 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Immediately abort the currently running CRCL program and PDDL action
      * list.
-     *
+     * <p>
      * NOTE: This may leave the robot in a state with the part held in the
      * gripper or with the robot obstructing the view of the vision system.
-     *
      */
     public void immediateAbort() {
         if (null != this.continuousDemoFuture) {
@@ -1668,6 +1797,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return details string
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public String getDetailsString() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.toString()).append("\r\n");
@@ -1758,6 +1889,8 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Abort the current CRCL program.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void abortCrclProgram() {
         if (null != crclClientJInternalFrame && crclClientJInternalFrame.isConnected()) {
             crclClientJInternalFrame.abortProgram();
@@ -1769,6 +1902,7 @@ public class AprsSystem implements AprsSystemInterface {
     @Nullable
     private PrintStream origErr = null;
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     public void setVisible(boolean visible) {
         if (null != aprsSystemDisplayJFrame) {
@@ -1776,6 +1910,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     public void setDefaultCloseOperation(int operation) {
         if (null != aprsSystemDisplayJFrame) {
@@ -1783,6 +1918,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     public List<PhysicalItem> getAvailableToolHolders() {
         if (null == pddlExecutorJInternalFrame1) {
@@ -1810,7 +1946,8 @@ public class AprsSystem implements AprsSystemInterface {
 
         private StringBuffer sb = new StringBuffer();
 
-        @Override
+        @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
         public void write(byte[] buf, int off, int len) {
             super.write(buf, off, len);
             if (null != logDisplayJInternalFrame) {
@@ -1823,7 +1960,8 @@ public class AprsSystem implements AprsSystemInterface {
                     } else {
 
                         javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                            @Override
+                            @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
                             public void run() {
                                 logDisplayJInternalFrame.appendText(fullString);
                             }
@@ -1850,9 +1988,9 @@ public class AprsSystem implements AprsSystemInterface {
             }
             newFanucCrclMain.setDisplayInterface(fanucCRCLServerJInternalFrame);
             return newFanucCrclMain.startDisplayInterface()
-                    .thenCompose(()-> newFanucCrclMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort))
+                    .thenCompose(() -> newFanucCrclMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort))
                     .thenRun(() -> {
-                         this.fanucCRCLMain = newFanucCrclMain;
+                        this.fanucCRCLMain = newFanucCrclMain;
                     });
         } catch (CRCLException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
@@ -1871,6 +2009,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return title error string
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public String getTitleErrorString() {
         return titleErrorString;
     }
@@ -1881,13 +2021,15 @@ public class AprsSystem implements AprsSystemInterface {
     @Nullable
     private volatile String lastNewTitleErrorString = null;
 
-    private volatile StackTraceElement setTitleErrorStringTrace @Nullable []  = null;
+    private volatile StackTraceElement setTitleErrorStringTrace@Nullable[] = null;
 
     /**
      * Get the stack trace the last time the title error was set.
      *
      * @return stack trace or null if no error has been set.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public StackTraceElement @Nullable [] getSetTitleErrorStringTrace() {
         return setTitleErrorStringTrace;
     }
@@ -1979,6 +2121,7 @@ public class AprsSystem implements AprsSystemInterface {
             throw new RuntimeException(e);
         }
     }
+
     final static private AtomicInteger runProgramThreadCount = new AtomicInteger();
 
     private final int myThreadId = runProgramThreadCount.incrementAndGet();
@@ -1992,6 +2135,7 @@ public class AprsSystem implements AprsSystemInterface {
     @Nullable
     private volatile String lastLogEvent = null;
 
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     public long logEvent(String s, @Nullable Object arg) {
         try {
             if (closing) {
@@ -2052,6 +2196,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return thread id
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public int getMyThreadId() {
         return myThreadId;
     }
@@ -2068,13 +2214,14 @@ public class AprsSystem implements AprsSystemInterface {
 
     private final ExecutorService defaultRunProgramService
             = Executors.newSingleThreadExecutor(new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable r) {
-                    Thread thread = new Thread(r, getThreadName());
-                    thread.setDaemon(true);
-                    return thread;
-                }
-            });
+        @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r, getThreadName());
+            thread.setDaemon(true);
+            return thread;
+        }
+    });
 
     private final ExecutorService runProgramService = defaultRunProgramService;
     private final ExecutorService connectService = defaultRunProgramService;
@@ -2086,6 +2233,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return run program service
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public ExecutorService getRunProgramService() {
         return runProgramService;
     }
@@ -2108,7 +2257,7 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     private XFutureVoid connectDatabase() {
-        List<Future<?>> futures = null;
+        List<XFutureVoid> futures = null;
         try {
 //            if (!isConnectDatabaseCheckboxSelected()) {
 //                XFutureVoid xf = new XFutureVoid("connectDatabase!isConnectDatabaseCheckboxSelected()");
@@ -2119,19 +2268,19 @@ public class AprsSystem implements AprsSystemInterface {
             DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
             String startScript = dbSetupJInternalFrame.getStartScript();
             if (null != startScript && startScript.length() > 0) {
-                System.out.println("");
-                System.err.println("");
+                System.out.println();
+                System.err.println();
                 System.out.flush();
                 System.err.flush();
                 System.out.println("Excecuting Database startScript=\r\n\"" + startScript + "\"");
-                System.out.println("");
-                System.err.println("");
+                System.out.println();
+                System.err.println();
                 System.out.flush();
                 System.err.flush();
                 ProcessBuilder pb = new ProcessBuilder(startScript.split("[ ]+"));
                 pb.inheritIO().start().waitFor();
-                System.out.println("");
-                System.err.println("");
+                System.out.println();
+                System.err.println();
                 System.out.flush();
                 System.err.flush();
             }
@@ -2144,7 +2293,7 @@ public class AprsSystem implements AprsSystemInterface {
             }
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             futures = dbSetupPublisher.notifyAllDbSetupListeners(null);
-            XFutureVoid futuresArray[] = futures.toArray(new XFutureVoid[futures.size()]);
+            XFutureVoid futuresArray[] = futures.toArray(new XFutureVoid[0]);
             XFutureVoid xfAll = XFutureVoid.allOf(futuresArray);
             return xfAll.thenRun(() -> {
                 setConnectDatabaseCheckboxSelected(true);
@@ -2166,15 +2315,12 @@ public class AprsSystem implements AprsSystemInterface {
         return propertiesDirectory;
     }
 
-    private volatile boolean connectDatabaseCheckboxEnabled = false;
-
     private void setConnectDatabaseCheckboxEnabled(boolean enable) {
         if (null != this.aprsSystemDisplayJFrame) {
             this.aprsSystemDisplayJFrame.setConnectDatabaseCheckboxEnabled(enable);
         }
-        connectDatabaseCheckboxEnabled = enable;
     }
-    
+
 
     public void stopSimUpdateTimer() {
         if (null != object2DViewJInternalFrame) {
@@ -2183,18 +2329,18 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     private volatile boolean connectDatabaseCheckboxSelected = false;
-    
+
     private boolean isConnectDatabaseCheckboxSelected() {
-        if(null != aprsSystemDisplayJFrame) {
-                boolean ret =  aprsSystemDisplayJFrame.isConnectDatabaseCheckboxSelected();
-                this.connectDatabaseCheckboxSelected = ret;
-                return ret;
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = aprsSystemDisplayJFrame.isConnectDatabaseCheckboxSelected();
+            this.connectDatabaseCheckboxSelected = ret;
+            return ret;
         }
         return connectDatabaseCheckboxSelected;
     }
-    
+
     private void setConnectDatabaseCheckboxSelected(boolean selected) {
-        if(null != aprsSystemDisplayJFrame) {
+        if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setConnectDatabaseCheckboxSelected(selected);
         }
         this.connectDatabaseCheckboxSelected = selected;
@@ -2219,7 +2365,6 @@ public class AprsSystem implements AprsSystemInterface {
 
     /**
      * Creates new AprsSystem using a default properties file.
-     *
      */
     @SuppressWarnings("initialization")
     private AprsSystem() {
@@ -2678,7 +2823,7 @@ public class AprsSystem implements AprsSystemInterface {
         this.connectVisionOnSetupStartupSelected = selected;
     }
 
-    @SuppressWarnings({"unchecked","rawtypes"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private XFutureVoid startWindowsFromMenuCheckboxes() {
         try {
             List<XFuture<?>> futures = new ArrayList<>();
@@ -2737,7 +2882,7 @@ public class AprsSystem implements AprsSystemInterface {
             if (futures.isEmpty()) {
                 return XFutureVoid.completedFutureWithName("startWindowsFromMenuCheckboxes");
             } else {
-                XFuture<?> futuresArray[] = futures.toArray(new XFuture[futures.size()]);
+                XFuture<?> futuresArray[] = futures.toArray(new XFuture[0]);
                 return XFutureVoid.allOfWithName("startWindowsFromMenuCheckboxes", futuresArray);
             }
         } catch (Exception ex) {
@@ -2746,8 +2891,10 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-    @MonotonicNonNull private volatile MyPrintStream outLogStream = null;
-    @MonotonicNonNull private volatile MyPrintStream errLogStream = null;
+    @MonotonicNonNull
+    private volatile MyPrintStream outLogStream = null;
+    @MonotonicNonNull
+    private volatile MyPrintStream errLogStream = null;
 
     public final void initLoggerWindow() {
         try {
@@ -2891,7 +3038,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-//    private void activateInternalFrame(JInternalFrame internalFrame) {
+    //    private void activateInternalFrame(JInternalFrame internalFrame) {
 //        try {
 //            internalFrame.setVisible(true);
 //            if (null != internalFrame.getDesktopPane()
@@ -3002,10 +3149,10 @@ public class AprsSystem implements AprsSystemInterface {
      * Get a list of items with names and poses from the simulation.
      *
      * @return list of items as generated by the simulation
-     *
      * @throws IllegalStateException Object 2D view was not opened.
-     *
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public List<PhysicalItem> getSimItemsData() throws IllegalStateException {
         if (null == object2DViewJInternalFrame) {
             throw new IllegalStateException("null == object2DViewJInternalFrame)");
@@ -3015,12 +3162,14 @@ public class AprsSystem implements AprsSystemInterface {
 
     /**
      * Set a list of items with names and poses to be used by the simulation.
-     *
+     * <p>
      * This has no effect if the Object 2D view has not been opened or it is not
      * in simulation mode.
      *
      * @param items list of items to use
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setSimItemsData(List<PhysicalItem> items) {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setItems(items);
@@ -3035,6 +3184,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @param y y coordinate
      * @param z z coordinate
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setLookForXYZ(double x, double y, double z) {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.setLookForXYZ(x, y, z);
@@ -3049,6 +3200,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @param maxX maximum X
      * @param maxY maximum Y
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setViewLimits(double minX, double minY, double maxX, double maxY) {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setViewLimits(minX, minY, maxX, maxY);
@@ -3100,6 +3253,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return error string or null if no error has occurred.
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public String getCrclClientErrorString() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getCrclClientErrorMessage();
@@ -3112,6 +3267,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return aborting status
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isAborting() {
         return (null != safeAbortAndDisconnectFuture && !safeAbortAndDisconnectFuture.isDone())
                 || (null != safeAbortFuture && !safeAbortFuture.isDone());
@@ -3169,6 +3326,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return current status or null
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public CRCLStatusType getCurrentStatus() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getCurrentStatus().orElse(null);
@@ -3179,6 +3338,8 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Update the title based on the current state.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void updateTitle() {
         Utils.runOnDispatchThread(this::updateTitleInternal);
     }
@@ -3187,7 +3348,7 @@ public class AprsSystem implements AprsSystemInterface {
     private CommandStatusType getCommandStatus() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getCurrentStatus()
-                    .map(x -> x.getCommandStatus())
+                    .map(CRCLStatusType::getCommandStatus)
                     .map(CRCLPosemath::copy)
                     .orElse(null);
         }
@@ -3197,7 +3358,7 @@ public class AprsSystem implements AprsSystemInterface {
     private void updateTitleInternal() {
         if (null != crclClientJInternalFrame) {
             CommandStatusType cs = crclClientJInternalFrame.getCurrentStatus()
-                    .map(x -> x.getCommandStatus())
+                    .map(CRCLStatusType::getCommandStatus)
                     .orElse(null);
             if (null == cs || null == cs.getCommandState()) {
                 updateTitle("", "");
@@ -3236,14 +3397,14 @@ public class AprsSystem implements AprsSystemInterface {
             addToDesktopPane(crclClientJInternalFrame);
             maximizeJInteralFrame(crclClientJInternalFrame);
             crclClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
-                @Override
+                @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
                 public void titleChanged(CommandStatusType ccst, Container container, String stateString, String stateDescription) {
                     updateTitle(stateString, stateDescription);
                 }
             });
             if (null != unaddedPoseListeners) {
-                List<PendantClientJPanel.CurrentPoseListener> tempList = new ArrayList<>();
-                tempList.addAll(unaddedPoseListeners);
+                List<PendantClientJPanel.CurrentPoseListener> tempList = new ArrayList<>(unaddedPoseListeners);
                 unaddedPoseListeners.clear();
                 for (PendantClientJPanel.CurrentPoseListener l : tempList) {
                     crclClientJInternalFrame.addCurrentPoseListener(l);
@@ -3282,7 +3443,8 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     private final Callable<DbSetupPublisher> dbSetupPublisherSupplier = new Callable<DbSetupPublisher>() {
-        @Override
+        @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
         public DbSetupPublisher call() {
             createDbSetupFrame();
             assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
@@ -3302,12 +3464,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-    private final DbSetupListener dbSetupListener = new DbSetupListener() {
-        @Override
-        public void accept(DbSetup setup) {
-            updateDbConnectedCheckBox(setup);
-        }
-    };
+    private final DbSetupListener dbSetupListener = this::updateDbConnectedCheckBox;
 
     private void createDbSetupFrame() {
         if (null == dbSetupJInternalFrame) {
@@ -3336,6 +3493,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param val of vision systems connected status to show
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setShowVisionConnected(boolean val) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setShowVisionConnected(val);
@@ -3360,9 +3519,12 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-    @Nullable private volatile XFuture<?> xf1 = null;
-    @Nullable private volatile XFuture<?> xf2 = null;
-    @Nullable private volatile XFutureVoid xf3 = null;
+    @Nullable
+    private volatile XFuture<?> xf1 = null;
+    @Nullable
+    private volatile XFuture<?> xf2 = null;
+    @Nullable
+    private volatile XFutureVoid xf3 = null;
 
     /**
      * Start the PDDL Executor (aka Actions to CRCL) and create and display the
@@ -3440,7 +3602,7 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     private void maximizePddlPlannerJInternalFrame() {
-        if(null != pddlPlannerJInternalFrame) {
+        if (null != pddlPlannerJInternalFrame) {
             JInternalFrame internalFrame = pddlPlannerJInternalFrame;
             maximizeJInteralFrame(internalFrame);
         }
@@ -3511,7 +3673,7 @@ public class AprsSystem implements AprsSystemInterface {
                     loadSelectedPropertiesFile(selectedFile);
 
                 } catch (IOException ex) {
-                    Logger.getLogger(AprsSystemDisplayJFrame.class
+                    Logger.getLogger(AprsSystem.class
                             .getName()).log(Level.SEVERE, null, ex);
                 }
                 this.initLoggerWindow();
@@ -3598,7 +3760,7 @@ public class AprsSystem implements AprsSystemInterface {
             try {
                 this.runProgramService.shutdownNow();
                 this.runProgramService.awaitTermination(100, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException interruptedException) {
+            } catch (InterruptedException ignored) {
             }
             this.close();
         } catch (Exception ex) {
@@ -3606,14 +3768,16 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void forceClose() {
         try {
             windowClosing();
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
         try {
             windowClosed();
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.removeAll();
@@ -3673,6 +3837,7 @@ public class AprsSystem implements AprsSystemInterface {
         this.debug = debug;
     }
 
+    @SuppressWarnings("unused")
     public boolean getDebug() {
         return debug;
     }
@@ -3693,10 +3858,6 @@ public class AprsSystem implements AprsSystemInterface {
 
     private boolean isWithinLimits(PmCartesian cart) {
         return isWithinMaxLimits(cart) && isWithinMinLimits(cart);
-    }
-
-    private boolean isWithinLimits(PointType point) {
-        return null != point && isWithinLimits(CRCLPosemath.toPmCartesian(point));
     }
 
     private volatile PmCartesian minLimit = new PmCartesian(-10000, -10000, -10000);
@@ -3739,22 +3900,15 @@ public class AprsSystem implements AprsSystemInterface {
         this.maxLimit = maxLimit;
     }
 
-    @Nullable
-    private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
-        return items.stream()
-                .filter(x -> x.getType().equals("P"))
-                .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
-                .orElse(null);
-    }
-
     /**
      * Get a Slot with an absolute position from the slot offset and a tray.
      *
-     * @param tray slot is within
+     * @param tray       slot is within
      * @param offsetItem slot with relative position offset for this type of
-     * tray
+     *                   tray
      * @return slot with absolute position
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     @Nullable
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
@@ -3768,11 +3922,12 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Get a Slot with an absolute position from the slot offset and a tray.
      *
-     * @param tray slot is within
+     * @param tray       slot is within
      * @param offsetItem slot with relative position offset for this type of
-     * tray
+     *                   tray
      * @return slot with absolute position
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     @Nullable
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
@@ -3787,8 +3942,8 @@ public class AprsSystem implements AprsSystemInterface {
      * Get a list of items seen by the vision system or simulated in the
      * Object2D view and create a set of actions that will fill empty trays to
      * match. Load this list into the PDDL executor.
-     *
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     public void createActionListFromVision() {
         try {
@@ -3817,6 +3972,8 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public BufferedImage getLiveImage() {
         if (!isConnected()) {
             return null;
@@ -3868,6 +4025,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return the value of goalLearner
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public GoalLearner getGoalLearner() {
         return goalLearner;
     }
@@ -3877,6 +4036,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param goalLearner new value of goalLearner
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setGoalLearner(GoalLearner goalLearner) {
         this.goalLearner = goalLearner;
     }
@@ -3895,6 +4056,8 @@ public class AprsSystem implements AprsSystemInterface {
         return true;
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public List<String> getLastCreateActionListFromVisionKitToCheckStrings() {
         if (null == goalLearner) {
             return Collections.emptyList();
@@ -3902,6 +4065,8 @@ public class AprsSystem implements AprsSystemInterface {
         return goalLearner.getLastCreateActionListFromVisionKitToCheckStrings();
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setLastCreateActionListFromVisionKitToCheckStrings(List<String> strings) {
         if (null == goalLearner) {
             goalLearner = new GoalLearner();
@@ -3914,6 +4079,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return the value of correctionMode
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isCorrectionMode() {
         return (null != goalLearner && goalLearner.isCorrectionMode());
     }
@@ -3923,6 +4090,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param correctionMode new value of correctionMode
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setCorrectionMode(boolean correctionMode) {
         if (goalLearner == null) {
             goalLearner = new GoalLearner();
@@ -3935,10 +4104,11 @@ public class AprsSystem implements AprsSystemInterface {
      * empty trays to match.Load this list into the PDDL executor.
      *
      * @param requiredItems list of items that have to be seen before the robot
-     * can begin
-     * @param teachItems list of trays and items in the trays as they should be
-     * when complete.
+     *                      can begin
+     * @param teachItems    list of trays and items in the trays as they should be
+     *                      when complete.
      */
+    @SuppressWarnings("unused")
     public void createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam) {
 
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
@@ -3979,6 +4149,7 @@ public class AprsSystem implements AprsSystemInterface {
             }
             File f = createTempFile("actionList", ".txt");
             try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
+                assert actions != null;
                 for (Action act : actions) {
                     ps.println(act.asPddlLine());
                 }
@@ -4002,7 +4173,7 @@ public class AprsSystem implements AprsSystemInterface {
             if (!equal || !"createActionListFromVision".equals(lastLogEvent)) {
                 logEvent("createActionListFromVision",
                         equal + "\n"
-                        + endingList
+                                + endingList
                                 .stream()
                                 .collect(Collectors.joining("\n")));
             }
@@ -4021,6 +4192,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return list of items displayed in the Object 2D view
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public List<PhysicalItem> getObjectViewItems() {
         if (null != object2DViewJInternalFrame) {
             return object2DViewJInternalFrame.getItems();
@@ -4057,14 +4230,14 @@ public class AprsSystem implements AprsSystemInterface {
 
     @Nullable
     private volatile Thread resumingThread = null;
-    private volatile StackTraceElement resumingTrace @Nullable []  = null;
+    private volatile StackTraceElement resumingTrace@Nullable[] = null;
     private volatile boolean resuming = false;
 
     private volatile boolean pauseCheckboxSelected = false;
 
     private boolean isPauseCheckboxSelected() {
-        if(null != crclClientJInternalFrame){
-            if(crclClientJInternalFrame.isPaused()) {
+        if (null != crclClientJInternalFrame) {
+            if (crclClientJInternalFrame.isPaused()) {
                 setPauseCheckboxSelected(true);
                 return true;
             }
@@ -4083,14 +4256,14 @@ public class AprsSystem implements AprsSystemInterface {
         }
         this.pauseCheckboxSelected = val;
     }
-    
+
     private boolean isCrclClientJInternalFramePaused() {
-        if(crclClientJInternalFrame == null) {
+        if (crclClientJInternalFrame == null) {
             return false;
         }
         return crclClientJInternalFrame.isPaused();
     }
-    
+
 
     /**
      * Continue operations that were previously paused.
@@ -4137,7 +4310,7 @@ public class AprsSystem implements AprsSystemInterface {
             }
             if (isPaused()) {
                 throw new IllegalStateException("Still paused after resume. crclClientJInternalFrame.isPaused()="
-                        +isCrclClientJInternalFramePaused());
+                        + isCrclClientJInternalFramePaused());
             }
         } finally {
             resuming = false;
@@ -4156,6 +4329,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return is vision to database system currently connected to the database
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isVisionToDbConnected() {
         return null != visionToDbJInternalFrame && visionToDbJInternalFrame.isDbConnected();
     }
@@ -4178,6 +4353,8 @@ public class AprsSystem implements AprsSystemInterface {
         this.snapshotCheckboxSelected = val;
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean snapshotsEnabled() {
         return null != object2DViewJInternalFrame && isSnapshotCheckboxSelected();
     }
@@ -4189,6 +4366,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param comment comment name to include in filename for later analysis
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void takeSnapshots(String comment) {
         try {
             if (snapshotsEnabled()) {
@@ -4209,8 +4388,8 @@ public class AprsSystem implements AprsSystemInterface {
      */
     public void debugAction() {
 
-        System.out.println("");
-        System.err.println("");
+        System.out.println();
+        System.err.println();
         int count = debugActionCount.incrementAndGet();
         System.out.println("Begin AprsSystem.debugAction()" + count);
         String details = getDetailsString();
@@ -4254,8 +4433,8 @@ public class AprsSystem implements AprsSystemInterface {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.debugAction();
         }
-        System.out.println("");
-        System.err.println("");
+        System.out.println();
+        System.err.println();
         System.out.println("Begin AprsSystem.debugAction()" + count);
 
         printNameSetInfo();
@@ -4288,8 +4467,8 @@ public class AprsSystem implements AprsSystemInterface {
      * robot can be enabled first. (This may cause a second or two of delay and
      * break clicking sound.)
      *
-     * @param comment optional string used for logging/debugging or tracing
-     * which caller started the demo.
+     * @param comment      optional string used for logging/debugging or tracing
+     *                     which caller started the demo.
      * @param reverseFirst begin by emptying the kits
      * @return future that can be used to add actions if the demo is canceled or
      * fails.
@@ -4322,24 +4501,25 @@ public class AprsSystem implements AprsSystemInterface {
         final String checkedRobotName = startRobotName;
         continuousDemoFuture
                 = XFuture.supplyAsync("startContinuousDemo(task=" + getTaskName() + ") comment=" + comment,
-                        new Callable<Boolean>() {
-                    @Override
+                new Callable<Boolean>() {
+                    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
                     public Boolean call() {
                         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
                         AprsSystem.this.setReverseFlag(reverseFirst, true);
                         boolean r0 = pddlExecutorJInternalFrame1.readyForNewActionsList();
                         if (!r0) {
-                            System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart );
+                            System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart);
                         }
                         boolean enabledOk = doCheckEnabled(startAbortCount, checkedRobotName);
                         boolean r1 = pddlExecutorJInternalFrame1.readyForNewActionsList();
                         if (!r1) {
-                            System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart );
+                            System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart);
                         }
                         return repeatDoActionWithReverse(enabledOk, comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart);
                     }
                 },
-                        runProgramService);
+                runProgramService);
         return continuousDemoFuture;
     }
 
@@ -4370,6 +4550,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return the value of supervisorEventLogger
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public Consumer<String> getSupervisorEventLogger() {
         return supervisorEventLogger;
     }
@@ -4436,12 +4618,14 @@ public class AprsSystem implements AprsSystemInterface {
      * break clicking sound but mean that if it can't be enabled the error
      * display may be less clear.)
      *
-     * @param comment optional string used for logging/debugging or tracing
-     * which caller started the demo.
+     * @param comment      optional string used for logging/debugging or tracing
+     *                     which caller started the demo.
      * @param reverseFirst begin by emptying the kits
      * @return future that can be used to add actions if the demo is canceled or
      * fails.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Boolean> startPreCheckedContinuousDemo(String comment, boolean reverseFirst) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
@@ -4480,7 +4664,8 @@ public class AprsSystem implements AprsSystemInterface {
         return continuousDemoFuture;
     }
 
-    @Nullable public XFuture<Boolean> getContinuousDemoFuture() {
+    @Nullable
+    public XFuture<Boolean> getContinuousDemoFuture() {
         return continuousDemoFuture;
     }
 
@@ -4509,6 +4694,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return reverse flag
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isReverseFlag() {
         return isReverseCheckboxSelected();
     }
@@ -4531,12 +4718,14 @@ public class AprsSystem implements AprsSystemInterface {
      * alternative set of actions that empty rather than fill the kit trays is
      * in use. Optionally reload the simulated object positions.
      *
-     * @param reverseFlag new value for reverse flag
+     * @param reverseFlag    new value for reverse flag
      * @param reloadSimFiles whether to load simulated object position files
-     * first
+     *                       first
      * @return a future object that can be used to determine when setting the
      * reverse flag and all related actions is complete.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Void> startSetReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
         logEvent("startSetReverseFlag", reverseFlag);
         return XFuture.runAsync("startSetReverseFlag(" + reverseFlag + "," + reloadSimFiles + ")",
@@ -4595,6 +4784,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return paused state
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isPaused() {
         return isPauseCheckboxSelected();
     }
@@ -4620,7 +4811,7 @@ public class AprsSystem implements AprsSystemInterface {
     private volatile boolean pausing = false;
     @Nullable
     private volatile Thread pauseThread = null;
-    private volatile StackTraceElement pauseTrace @Nullable []  = null;
+    private volatile StackTraceElement pauseTrace@Nullable[] = null;
 
     private void pauseInternal() {
         logEvent("pause", null);
@@ -4682,10 +4873,11 @@ public class AprsSystem implements AprsSystemInterface {
      * Reset errors and optionally reload simulation files
      *
      * @param reloadSimFiles whether to reload simulation files
-     *
      * @return a future object that can be used to determine when setting the
      * reset and all related actions is complete.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Void> reset(boolean reloadSimFiles) {
         return XFuture.runAsync("reset",
                 () -> {
@@ -4761,7 +4953,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     /**
      * Test that the robot can be connected by running an empty program.
-     *
+     * <p>
      * The actions will be executed in another thread after this method returns.
      * The returned future can be used to monitor, cancel or extend the
      * underlying task. The boolean contained in the future will be true only if
@@ -4788,7 +4980,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
         final String checkedTaskName = startTaskName;
         startingCheckEnabled = true;
-        String logString ="startCheckEnabled robotName="+checkedRobotName+",task="+checkedTaskName;
+        String logString = "startCheckEnabled robotName=" + checkedRobotName + ",task=" + checkedTaskName;
         long t0 = logEvent(logString, null);
         setStartRunTime();
         if (enableCheckedAlready) {
@@ -4801,7 +4993,7 @@ public class AprsSystem implements AprsSystemInterface {
         this.lastStartCheckEnabledFuture1 = xf1;
         XFuture<Boolean> xf2
                 = xf1
-                        .always(() -> logEvent("finished "+logString, (System.currentTimeMillis() - t0)));
+                .always(() -> logEvent("finished " + logString, (System.currentTimeMillis() - t0)));
         this.lastStartCheckEnabledFuture2 = xf2;
         return xf2;
     }
@@ -4850,22 +5042,26 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-    private volatile int emptyProgramCount = 0;
-    private volatile int consecutiveEmptyProgramCount = 0;
+    private final AtomicInteger emptyProgramCount = new AtomicInteger();
+    private final AtomicInteger consecutiveEmptyProgramCount = new AtomicInteger();
 
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     private void setProgram(CRCLProgramType program) throws JAXBException {
         assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
-        if (program.getMiddleCommand().isEmpty()) {
-            emptyProgramCount++;
-            consecutiveEmptyProgramCount++;
-            if (consecutiveEmptyProgramCount > 1 && debug) {
-                System.out.println("emptyProgramCount=" + emptyProgramCount);
-                System.out.println("consecutiveEmptyProgramCount=" + consecutiveEmptyProgramCount);
+        PendantClientJInternalFrame clntJiF = crclClientJInternalFrame;
+        synchronized (clntJiF) {
+            if (program.getMiddleCommand().isEmpty()) {
+                emptyProgramCount.incrementAndGet();
+                int cepCount = consecutiveEmptyProgramCount.incrementAndGet();
+                if (cepCount > 1 && debug) {
+                    System.out.println("emptyProgramCount=" + emptyProgramCount);
+                    System.out.println("consecutiveEmptyProgramCount=" + cepCount);
+                }
+            } else {
+                consecutiveEmptyProgramCount.set(0);
             }
-        } else {
-            consecutiveEmptyProgramCount = 0;
+            clntJiF.setProgram(program);
         }
-        crclClientJInternalFrame.setProgram(program);
     }
 
     private final ConcurrentLinkedDeque<XFuture<Boolean>> dbConnectedWaiters = new ConcurrentLinkedDeque<>();
@@ -4886,6 +5082,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return future or null if no startActions request has been made.
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Boolean> getLastStartActionsFuture() {
         return lastStartActionsFuture;
     }
@@ -4897,6 +5095,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @return future or null if no continueActions request has been made.
      */
     @Nullable
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Boolean> getContinueActionListFuture() {
         return lastContinueActionListFuture;
     }
@@ -4910,7 +5110,7 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Start the PDDL actions currently loaded in the executor from the
      * beginning.
-     *
+     * <p>
      * The actions will be executed in another thread after this method returns.
      * The returned future can be used to monitor, cancel or extend the
      * underlying task. The boolean contained in the future will be true only if
@@ -4931,6 +5131,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return is executor ready for new actions.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean readyForNewActionsList() {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         return pddlExecutorJInternalFrame1.readyForNewActionsList();
@@ -4939,23 +5141,21 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Start the PDDL actions currently loaded in the executor from the
      * beginning.
-     *
+     * <p>
      * The actions will be executed in another thread after this method returns.
      * The returned future can be used to monitor, cancel or extend the
      * underlying task. The boolean contained in the future will be true only if
      * all actions appear to succeed.
      *
      * @param comment comment used for tracking/logging tasks starting the
-     * actions
-     *
+     *                actions
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startActions(String comment) {
 
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         setStartRunTime();
-        runNumber++;
-        int startRunNumber = runNumber;
+        long startRunNumber = runNumber.incrementAndGet();
         startActionsStartComments.add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + runNumber);
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         lastContinueStartAbortCount = startAbortCount;
@@ -4986,23 +5186,24 @@ public class AprsSystem implements AprsSystemInterface {
                 }, runProgramService)
                 .thenCompose("startActions.pauseCheck.comment=" + comment + ", startRunNumber" + startRunNumber, x -> waitForPause())
                 .thenApplyAsync(taskName, x -> {
-                    assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-                    if (runNumber != startRunNumber) {
-                        throw new IllegalStateException("runNumbeChanged");
-                    }
-                    if (runNumber != startRunNumber
-                            || pddlExecutorJInternalFrame1.getSafeAbortRequestCount() != startAbortCount) {
-                        return false;
-                    }
-                    boolean ret = pddlExecutorJInternalFrame1.doActions("startActions." + comment + ", startRunNumber" + startRunNumber, startAbortCount);
-                    startActionsFinishComments.add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + runNumber);
-                    if (runNumber != startRunNumber) {
-                        System.err.println("startActionsStartComments=" + startActionsStartComments);
-                        System.err.println("startActionsFinishComments=" + startActionsFinishComments);
-                        throw new IllegalStateException("runNumbeChanged");
-                    }
-                    return ret;
-                }, runProgramService
+                            assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+                            long currentRunNumber = runNumber.get();
+                            if (currentRunNumber != startRunNumber) {
+                                throw new IllegalStateException("runNumbeChanged");
+                            }
+                            if (currentRunNumber != startRunNumber
+                                    || pddlExecutorJInternalFrame1.getSafeAbortRequestCount() != startAbortCount) {
+                                return false;
+                            }
+                            boolean ret = pddlExecutorJInternalFrame1.doActions("startActions." + comment + ", startRunNumber" + startRunNumber, startAbortCount);
+                            startActionsFinishComments.add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + currentRunNumber);
+                            if (currentRunNumber != startRunNumber) {
+                                System.err.println("startActionsStartComments=" + startActionsStartComments);
+                                System.err.println("startActionsFinishComments=" + startActionsFinishComments);
+                                throw new IllegalStateException("runNumbeChanged");
+                            }
+                            return ret;
+                        }, runProgramService
                 );
         return lastStartActionsFuture;
     }
@@ -5025,6 +5226,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return current state
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isDoingActions() {
         if (null == pddlExecutorJInternalFrame1) {
             return false;
@@ -5053,7 +5256,7 @@ public class AprsSystem implements AprsSystemInterface {
     public void closeExploreGraphDb() {
         try {
             if (null != this.exploreGraphDbJInternalFrame) {
-                // FIXME decide what to do later
+                exploreGraphDbJInternalFrame.setVisible(false);
             }
             saveProperties();
 
@@ -5068,6 +5271,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return current line
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public int getCrclProgramLine() {
         assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
         return this.crclClientJInternalFrame.getCurrentProgramLine();
@@ -5174,12 +5379,6 @@ public class AprsSystem implements AprsSystemInterface {
         lastAprsPropertiesFileFile = getDefaultLastPropertiesFileFile();
     }
 
-    private void publishDbSetup(DbSetupPublisher pub, DbSetup setup) {
-        if (null != pub && setup.getDbType() != DbType.NONE && setup.getDbType() != null) {
-            pub.setDbSetup(setup);
-        }
-    }
-
     private int snapShotWidth = 800;
     private int snapShotHeight = 600;
 
@@ -5187,10 +5386,9 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param f file to save snapshot image to
-     * @param pose optional pose to mark or null
+     * @param f     file to save snapshot image to
+     * @param pose  optional pose to mark or null
      * @param label optional label for pose or null
-     * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
@@ -5202,10 +5400,9 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param f file to save snapshot image to
+     * @param f     file to save snapshot image to
      * @param point optional point to mark or null
      * @param label optional label for pose or null
-     * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, PointType point, String label) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
@@ -5217,11 +5414,12 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param f file to save snapshot image to
+     * @param f     file to save snapshot image to
      * @param point optional point to mark or null
      * @param label optional label for pose or null
-     * @throws IOException if writing the file fails
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
@@ -5232,8 +5430,8 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param imgLabel string that will be included in the image file name
-     * @param pose optional pose to mark or null
+     * @param imgLabel  string that will be included in the image file name
+     * @param pose      optional pose to mark or null
      * @param poseLabel optional label for pose or null
      * @throws IOException if writing the file fails
      */
@@ -5247,8 +5445,8 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param imgLabel string that will be included in the image file name
-     * @param pt optional point to mark or null
+     * @param imgLabel   string that will be included in the image file name
+     * @param pt         optional point to mark or null
      * @param pointLabel optional label for point or null
      * @throws IOException if writing the file fails
      */
@@ -5262,8 +5460,8 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param imgLabel string that will be included in the image file name
-     * @param pt optional point to mark or null
+     * @param imgLabel   string that will be included in the image file name
+     * @param pt         optional point to mark or null
      * @param pointLabel optional label for point or null
      * @throws IOException if writing the file fails
      */
@@ -5274,9 +5472,9 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     /**
-     ** Take a snapshot of the view of objects positions passed in the list.
+     * * Take a snapshot of the view of objects positions passed in the list.
      *
-     * @param f file to save snapshot image to
+     * @param f            file to save snapshot image to
      * @param itemsToPaint list of items to paint
      */
     public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
@@ -5286,13 +5484,15 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     /**
-     ** Take a snapshot of the view of objects positions passed in the list.
+     * * Take a snapshot of the view of objects positions passed in the list.
      *
-     * @param imgLabel string that will be added to the filename along with
-     * timestamp and extention
+     * @param imgLabel     string that will be added to the filename along with
+     *                     timestamp and extention
      * @param itemsToPaint list of items to paint
      * @throws java.io.IOException problem writing to the file
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
             this.object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), itemsToPaint, snapShotWidth, snapShotHeight);
@@ -5303,12 +5503,11 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param f file to save snapshot image to
-     * @param pose optional pose to mark or null
+     * @param f     file to save snapshot image to
+     * @param pose  optional pose to mark or null
      * @param label optional label for pose or null
-     * @param w width of snapshot image
-     * @param h height of snapshot image
-     * @throws IOException if writing the file fails
+     * @param w     width of snapshot image
+     * @param h     height of snapshot image
      */
     public void takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
@@ -5320,12 +5519,11 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param f file to save snapshot image to
+     * @param f     file to save snapshot image to
      * @param point optional point to mark or null
      * @param label optional label for pose or null
-     * @param w width of snapshot image
-     * @param h height of snapshot image
-     * @throws IOException if writing the file fails
+     * @param w     width of snapshot image
+     * @param h     height of snapshot image
      */
     public void takeSimViewSnapshot(File f, PointType point, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
@@ -5337,12 +5535,11 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param f file to save snapshot image to
+     * @param f     file to save snapshot image to
      * @param point optional point to mark or null
      * @param label optional label for pose or null
-     * @param w width of snapshot image
-     * @param h height of snapshot image
-     * @throws IOException if writing the file fails
+     * @param w     width of snapshot image
+     * @param h     height of snapshot image
      */
     public void takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
@@ -5354,11 +5551,11 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param imgLabel label to included in filename
-     * @param pose optional pose to mark or null
+     * @param imgLabel  label to included in filename
+     * @param pose      optional pose to mark or null
      * @param poseLabel optional label for pose or null
-     * @param w width of snapshot image
-     * @param h height of snapshot image
+     * @param w         width of snapshot image
+     * @param h         height of snapshot image
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) throws IOException {
@@ -5371,11 +5568,11 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param imgLabel label to included in filename
-     * @param pt optional point to mark or null
+     * @param imgLabel   label to included in filename
+     * @param pt         optional point to mark or null
      * @param pointLabel optional label for point or null
-     * @param w width of snapshot image
-     * @param h height of snapshot image
+     * @param w          width of snapshot image
+     * @param h          height of snapshot image
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) throws IOException {
@@ -5388,11 +5585,11 @@ public class AprsSystem implements AprsSystemInterface {
      * Take a snapshot of the view of objects positions and save it in the
      * specified file, optionally highlighting a pose with a label.
      *
-     * @param imgLabel label to included in filename
-     * @param pt optional point to mark or null
+     * @param imgLabel   label to included in filename
+     * @param pt         optional point to mark or null
      * @param pointLabel optional label for point or null
-     * @param w width of snapshot image
-     * @param h height of snapshot image
+     * @param w          width of snapshot image
+     * @param h          height of snapshot image
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) throws IOException {
@@ -5402,13 +5599,12 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     /**
-     ** Take a snapshot of the view of objects positions passed in the list.
+     * * Take a snapshot of the view of objects positions passed in the list.
      *
-     * @param f file to save snapshot image to
+     * @param f            file to save snapshot image to
      * @param itemsToPaint list of items to paint
-     * @param w width of snapshot image
-     * @param h height of snapshot image
-     * @throws IOException if writing the file fails
+     * @param w            width of snapshot image
+     * @param h            height of snapshot image
      */
     public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
         if (null != object2DViewJInternalFrame) {
@@ -5417,13 +5613,13 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     /**
-     ** Take a snapshot of the view of objects positions passed in the list.
+     * * Take a snapshot of the view of objects positions passed in the list.
      *
-     * @param imgLabel string that will be added to the filename along with
-     * timestamp and extention
+     * @param imgLabel     string that will be added to the filename along with
+     *                     timestamp and extention
      * @param itemsToPaint list of items to paint
-     * @param w width of image to create
-     * @param h height of image to create
+     * @param w            width of image to create
+     * @param h            height of image to create
      * @throws java.io.IOException problem writing to the file
      */
     public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException {
@@ -5436,6 +5632,7 @@ public class AprsSystem implements AprsSystemInterface {
     private
     DbSetup dbSetup = null;
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     public final void loadProperties() throws IOException {
 
@@ -5512,10 +5709,6 @@ public class AprsSystem implements AprsSystemInterface {
                 if (isConnectDatabaseOnSetupStartupSelected()) {
                     setShowDatabaseSetupStartupSelected(true);
                 }
-//                jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(Boolean.valueOf(startConnectDBString));
-//                if (jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected()) {
-//                    jCheckBoxMenuItemShowDatabaseSetup.setSelected(true);
-//                }
             }
             String startConnectVisionString = props.getProperty(STARTUPCONNECTVISION);
             if (null != startConnectVisionString) {
@@ -5523,28 +5716,19 @@ public class AprsSystem implements AprsSystemInterface {
                 if (isConnectVisionOnStartupSelected()) {
                     setObjectSpStartupSelected(true);
                 }
-//                jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(Boolean.valueOf(startConnectVisionString));
-//                if (jCheckBoxMenuItemConnectToVisionOnStartup.isSelected()) {
-//                    jCheckBoxMenuItemStartupObjectSP.setSelected(true);
-//                }
             }
             String startExploreGraphDbString = props.getProperty(STARTUPEXPLOREGRAPHDB);
             if (null != startExploreGraphDbString) {
                 setExploreGraphDBStartupSelected(Boolean.valueOf(startExploreGraphDbString));
-//                jCheckBoxMenuItemExploreGraphDbStartup.setSelected(Boolean.valueOf(startExploreGraphDbString));
             }
             String crclWebAppPortString = props.getProperty(CRCLWEBAPPPORT);
             if (null != crclWebAppPortString) {
                 crclWebServerHttpPort = Integer.parseInt(crclWebAppPortString);
             }
-//            String startCrclWebAppString = props.getProperty(STARTUPCRCLWEBAPP);
-//            if (null != startCrclWebAppString) {
-//                jCheckBoxMenuItemStartupCRCLWebApp.setSelected(Boolean.valueOf(startCrclWebAppString));
-//            }
+
             String startKitInspetion = props.getProperty(STARTUPKITINSPECTION);
             if (null != startKitInspetion) {
                 setKitInspectionStartupSelected(Boolean.valueOf(startKitInspetion));
-//                jCheckBoxMenuItemKitInspectionStartup.setSelected(Boolean.valueOf(startKitInspetion));
             }
             this.updateSubPropertiesFiles();
             if (null != this.pddlPlannerJInternalFrame) {
@@ -5552,15 +5736,16 @@ public class AprsSystem implements AprsSystemInterface {
             }
             if (null != this.pddlExecutorJInternalFrame1) {
                 XFuture<Void> loadPropertiesFuture
-                        = XFuture.runAsync("loadProperties", () -> {
-                            try {
-                                if (null != this.pddlExecutorJInternalFrame1) {
-                                    this.pddlExecutorJInternalFrame1.loadProperties();
-                                }
-                            } catch (IOException ex) {
-                                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }, runProgramService);
+                        = XFuture.runAsync("loadProperties",
+                        () -> {
+                    try {
+                        if (null != this.pddlExecutorJInternalFrame1) {
+                            this.pddlExecutorJInternalFrame1.loadProperties();
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }, runProgramService);
                 loadPropertiesFuture.join();
             }
 
@@ -5706,6 +5891,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return active window
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public ActiveWinEnum getActiveWin() {
         return activeWin;
     }
@@ -5713,13 +5900,16 @@ public class AprsSystem implements AprsSystemInterface {
     /**
      * Select a window (InternalJFrame)to be shown on top.
      *
-     * @param activeWin
+     * @param activeWin enumerated window to make active
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setActiveWin(ActiveWinEnum activeWin) {
         this.activeWin = activeWin;
         showActiveWin();
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     public void saveProperties() throws IOException {
         File propsParent = propertiesFile.getParentFile();
@@ -5816,6 +6006,7 @@ public class AprsSystem implements AprsSystemInterface {
             DbSetupBuilder.savePropertiesFile(dbPropsFile, dbSetup);
         }
     }
+
     private static final String USETEACHTABLE = "USETEACHTABLE";
     private static final String RELOAD_SIM_FILES_ON_REVERSE_PROP = "reloadSimFilesOnReverse";
     private static final String SNAP_SHOT_HEIGHT_PROP = "snapShotHeight";
@@ -5857,7 +6048,6 @@ public class AprsSystem implements AprsSystemInterface {
     private static final String STARTUPCONNECTDATABASE = "startup.connectdatabase";
     private static final String STARTUPCONNECTVISION = "startup.connectvision";
     private static final String STARTUPEXPLOREGRAPHDB = "startup.exploreGraphDb";
-    private static final String STARTUPCRCLWEBAPP = "startup.crclWebApp";
     private static final String CRCLWEBAPPPORT = "crclWebApp.httpPort";
     private static final String FANUC_CRCL_LOCAL_PORT = "fanuc.crclLocalPort";
     private static final String FANUC_ROBOT_HOST = "fanuc.robotHost";
@@ -5873,7 +6063,7 @@ public class AprsSystem implements AprsSystemInterface {
 
         if (prefLaf != null) {
             /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+             * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
              */
             try {
                 for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -5906,10 +6096,13 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return properties file
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public File getPropertiesFile() {
         return propertiesFile;
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     public final void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
@@ -5998,7 +6191,8 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-    @Nullable private volatile XFuture<?> disconnectDatabaseFuture = null;
+    @Nullable
+    private volatile XFuture<?> disconnectDatabaseFuture = null;
 
     public XFuture<?> startDisconnectDatabase() {
         setConnectDatabaseCheckboxEnabled(false);
@@ -6027,7 +6221,7 @@ public class AprsSystem implements AprsSystemInterface {
             DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
             //dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(false).build());
             dbSetupPublisher.disconnect();
-            List<Future<?>> futures = dbSetupPublisher.notifyAllDbSetupListeners(null);
+            List<XFutureVoid> futures = dbSetupPublisher.notifyAllDbSetupListeners(null);
             for (Future<?> f : futures) {
                 if (!f.isDone() && !f.isCancelled()) {
                     try {
@@ -6054,6 +6248,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return the value of priority
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public int getPriority() {
         return priority;
     }
@@ -6069,6 +6265,7 @@ public class AprsSystem implements AprsSystemInterface {
 
     private volatile boolean closing = false;
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     public void close() {
         closing = true;
@@ -6089,7 +6286,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-    public void closeActionsListExcecutor() throws Exception {
+    public void closeActionsListExcecutor() {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.close();
             pddlExecutorJInternalFrame1.setVisible(false);
@@ -6099,7 +6296,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
-    public void closePddlPlanner() throws Exception {
+    public void closePddlPlanner() {
         if (null != pddlPlannerJInternalFrame) {
             pddlPlannerJInternalFrame.close();
             pddlPlannerJInternalFrame.setVisible(false);
@@ -6110,14 +6307,15 @@ public class AprsSystem implements AprsSystemInterface {
 
     /**
      * Continue or start executing the currently loaded CRCL program.
-     *
+     * <p>
      * The actions will be executed in another thread after this method returns.
      * The task can be monitored or canceled using the returned future.
      *
      * @return a future that can be used to monitor, extend or cancel the
      * underlying task.
-     *
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public XFuture<Boolean> continueCrclProgram() {
         setStartRunTime();
         if (null != crclClientJInternalFrame) {
@@ -6132,6 +6330,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return current setting for enableDatabaseUpdates
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public boolean isEnableVisionToDatabaseUpdates() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.isEnableDatabaseUpdates();
@@ -6141,9 +6341,11 @@ public class AprsSystem implements AprsSystemInterface {
      * Set the value of enableDatabaseUpdates
      *
      * @param enableDatabaseUpdates new value of enableDatabaseUpdates
-     * @param requiredParts map of part names to required number of each part
-     * type
+     * @param requiredParts         map of part names to required number of each part
+     *                              type
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void setEnableVisionToDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         visionToDbJInternalFrame.setEnableDatabaseUpdates(enableDatabaseUpdates, requiredParts);
@@ -6157,8 +6359,10 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return log files directory
      * @throws java.io.IOException file can not be created ie default log
-     * directory does not exist.
+     *                             directory does not exist.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public File getlogFileDir() throws IOException {
         File f = new File(Utils.getlogFileDir(), getRunName());
         f.mkdirs();
@@ -6185,12 +6389,12 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param prefix string filename will begin with
      * @param suffix string filename will end with (typically an extention eg
-     * ".csv")
-     *
+     *               ".csv")
      * @return reference to created file
      * @throws IOException directory doesn't exist etc.
-     *
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public File createTempFile(String prefix, String suffix) throws IOException {
         if (suffix.endsWith(".PNG")) {
             System.out.println("suffix = " + suffix);
@@ -6204,20 +6408,20 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @param prefix string filename will begin with
      * @param suffix string filename will end with (typically an extention eg
-     * ".csv")
-     *
-     *
-     * @param dir directory to create file in
+     *               ".csv")
+     * @param dir    directory to create file in
      * @return reference to created file
-     *
      * @throws IOException directory doesn't exist etc.
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public File createTempFile(String prefix, String suffix, File dir) throws IOException {
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, dir);
     }
 
     private volatile String asString = "";
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     @Override
     public String toString() {
         return asString;
@@ -6229,6 +6433,8 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return run data for last program
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public List<ProgramRunData> getLastProgRunDataList() {
         if (null == crclClientJInternalFrame) {
             return Collections.emptyList();
@@ -6240,10 +6446,12 @@ public class AprsSystem implements AprsSystemInterface {
      * Save the given run data which contains information on how a given program
      * run went to a CSV file.
      *
-     * @param f file to save
+     * @param f    file to save
      * @param list data to write to file
      * @throws IOException file does not exist or not writeable etc
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void saveProgramRunDataListToCsv(File f, List<ProgramRunData> list) throws IOException {
         if (null == crclClientJInternalFrame) {
             return;
@@ -6258,6 +6466,8 @@ public class AprsSystem implements AprsSystemInterface {
      * @param f file to save
      * @throws IOException file does not exist or not writeable etc
      */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @Override
     public void saveLastProgramRunDataListToCsv(File f) throws IOException {
         if (null == crclClientJInternalFrame) {
             return;

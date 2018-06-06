@@ -478,6 +478,7 @@
                         <version>3.0.2</version>
                         <configuration>
                             <archive>
+                                <!--suppress  MavenModelInspection -->
                                 <manifestEntries>
                                     <Specification-Title>${project.name}</Specification-Title>
                                     <Specification-Version>${project.version}</Specification-Version>

@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -199,13 +199,13 @@ public class DbQueryInfo {
         String parmString = line.substring(startindex, endindex);
         Map<DbParamTypeEnum, String> results = new EnumMap<>(DbParamTypeEnum.class);
         String pa[] = parmString.split(",");
-        for (int i = 0; i < pa.length; i++) {
-            int eqindex = pa[i].indexOf('=');
+        for (String aPa : pa) {
+            int eqindex = aPa.indexOf('=');
             if (eqindex < 1) {
                 continue;
             }
-            String name = pa[i].substring(0, eqindex).trim();
-            String value = pa[i].substring(eqindex + 1).trim();
+            String name = aPa.substring(0, eqindex).trim();
+            String value = aPa.substring(eqindex + 1).trim();
             DbParamTypeEnum type = DbParamTypeEnum.valueOf(name);
             results.put(type, value);
         }

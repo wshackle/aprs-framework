@@ -63,8 +63,6 @@ public class OpActionPlanCloner implements SolutionCloner<OpActionPlan> {
                         throw new IllegalStateException("actionMap.get(" + origNextAction.getName() + ") returned null");
                     }
                     newAction.setNext(nxtAction);
-                } else {
-//                System.out.println("origActon = " + origAction);
                 }
             }
 

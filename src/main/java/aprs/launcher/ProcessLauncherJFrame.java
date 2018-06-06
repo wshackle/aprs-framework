@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -40,13 +40,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JFrame;
+import javax.swing.*;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
  * @author shackle
  */
+@SuppressWarnings("unused")
 public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     /**
@@ -123,13 +125,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | javax.swing.UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException ex) {
             java.util.logging.Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
@@ -139,7 +135,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             public void run() {
                 try {
                     ProcessLauncherJFrame frm = new ProcessLauncherJFrame();
-                    frm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    frm.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                     frm.addProcess("C:\\Users\\Public\\Documents\\APRS_AntVision_2018_03_06\\VideoTeachTable.exe");
 //                    frm.addProcess("C:\\Users\\shackle\\neo4j-community-2.3.11-motoman\\bin\\Neo4j.bat");
                     frm.addProcess("C:\\Users\\shackle\\neo4j-community-2.3.11-fanuc\\bin\\Neo4j.bat");
@@ -155,7 +151,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
 //                            "C:\\Program Files\\Java\\jdk1.8.0_92\\jre\\bin\\java.exe","-DworkingDir=C:\\Users\\shackle\\neo4j-community-2.3.11-fanuc\\bin\\..","-DconfigFile=conf\\neo4j-wrapper.conf","-DserverClasspath=lib/*.jar;system/lib/","..");
                     frm.setVisible(true);
-                } catch (IOException ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -328,7 +324,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     public static String[] parseCommandLineToArray(String line) {
         List<String> args = parseCommandLine(line);
-        return args.toArray(new String[args.size()]);
+        return args.toArray(new String[0]);
     }
 
     private static List<String> parseCommandLine(String line) {
@@ -480,7 +476,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                                         } else {
                                             addProcess(parseCommandLine(lineToParse));
                                         }
-                                    } catch (IOException ex) {
+                                    } catch (Exception ex) {
                                         Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
                                     }
                                     lineConsumers = origLineConsumers;
@@ -594,7 +590,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 parseLaunchFileLine(line, futures);
             }
         }
-        return XFuture.allOf(futures.toArray(new XFuture<?>[futures.size()]));
+        return XFuture.allOf(futures.toArray(new XFuture<?>[0]));
     }
 
     private final ConcurrentLinkedDeque<Runnable> onCloseRunnables = new ConcurrentLinkedDeque<>();
@@ -610,7 +606,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     private final AtomicBoolean closing = new AtomicBoolean();
 
     @SuppressWarnings("CanBeFinal")
-    private volatile XFuture<Void> closingFuture = new XFuture<Void>("processLauncherClosingFuture");
+    private volatile XFuture<Void> closingFuture = new XFuture<>("processLauncherClosingFuture");
 
     public XFuture<Void> close() {
         boolean wasClosing = closing.getAndSet(true);

@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -29,15 +29,11 @@ import static crcl.utils.CRCLPosemath.pose;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import static crcl.utils.CRCLPosemath.point;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.function.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
@@ -208,8 +204,7 @@ public class PositionMap {
     public void saveFile(File f) throws IOException {
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             pw.println("X,Y,Z,Offset_X,Offset_Y,Offset_Z");
-            for (int i = 0; i < this.errmapList.size(); i++) {
-                PositionMapEntry entry = this.errmapList.get(i);
+            for (PositionMapEntry entry : this.errmapList) {
                 pw.println(entry.getRobotX() + "," + entry.getRobotY() + "," + entry.getRobotZ() + "," + entry.getOffsetX() + "," + entry.getOffsetY() + "," + entry.getOffsetZ());
             }
         }
@@ -418,9 +413,8 @@ public class PositionMap {
         PositionMapEntry e12 = findXCombo(robotY -> robotY <= y, x, y, z);
         PositionMapEntry e34 = findXCombo(robotY -> robotY >= y, x, y, z);
         if (null == e12 || null == e34) {
-            List<PositionMapEntry> sortedList = new ArrayList<>();
-            sortedList.addAll(errmapList);
-            Collections.sort(sortedList, (em1, em2) -> Double.compare(dist(em1, x, y), dist(em2, x, y)));
+            List<PositionMapEntry> sortedList = new ArrayList<>(errmapList);
+            sortedList.sort(Comparator.comparingDouble(em -> dist(em, x, y)));
             e12 = null;
             e34 = null;
             ILOOP:
@@ -499,6 +493,7 @@ public class PositionMap {
         return findXCombo(yFilteredList, x, y, z);
     }
 
+    @SuppressWarnings("unused")
     @Nullable private PositionMapEntry findXCombo(List<PositionMapEntry> yFilteredList, double x, double y, double z) {
         if (yFilteredList.size() < 2) {
             if (yFilteredList.size() == 1 && Math.abs(yFilteredList.get(0).getRobotX() - x) < 1e-6) {
@@ -533,7 +528,7 @@ public class PositionMap {
     @Nullable private PositionMapEntry findEntry(Predicate<Double> predx, List<PositionMapEntry> yfilteredList, double x, double y) {
         PositionMapEntry e1 = yfilteredList.stream()
                 .filter(e -> predx.test(e.getRobotX()))
-                .min((em1, em2) -> Double.compare(dist(em1, x, y), dist(em2, x, y)))
+                .min(Comparator.comparingDouble(em -> dist(em, x, y)))
                 .orElse(null);
         return e1;
     }

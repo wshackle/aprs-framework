@@ -114,6 +114,7 @@ public class OpActionPlan {
         this.actions = actions;
     }
 
+    @SuppressWarnings("unused")
     public void initNextActions() {
 
         if (null == actions) {
@@ -125,8 +126,7 @@ public class OpActionPlan {
         if (debug) {
             System.out.println("origActions = " + origActions);
         }
-        for (int i = 0; i < tmpActions.size(); i++) {
-            OpAction act = tmpActions.get(i);
+        for (OpAction act : tmpActions) {
             if (act.getOpActionType() == FAKE_PICKUP || act.getOpActionType() == FAKE_DROPOFF) {
                 throw new IllegalStateException("input list should not have fake actions : act =" + act + ",\norigActions=" + origActions);
             }
@@ -134,7 +134,7 @@ public class OpActionPlan {
         MutableMultimap<String, OpAction> multimapWithList
                 = Lists.mutable.ofAll(tmpActions)
                         .select(a -> a.getOpActionType() == PICKUP || a.getOpActionType() == DROPOFF)
-                        .groupBy(a -> a.getPartType());
+                        .groupBy(OpAction::getPartType);
         for (String partType : multimapWithList.keySet()) {
             MutableCollection<OpAction> theseActions = multimapWithList.get(partType);
             long pickupCount = theseActions.count(a -> a.getOpActionType() == PICKUP);
@@ -167,7 +167,7 @@ public class OpActionPlan {
         }
         for (OpAction act : tmpActions) {
             boolean actRequired = act.isRequired();
-            Collections.sort(act.getPossibleNextActions(), new Comparator<OpActionInterface>() {
+            act.getPossibleNextActions().sort(new Comparator<OpActionInterface>() {
                 @Override
                 public int compare(OpActionInterface o1, OpActionInterface o2) {
                     return Integer.compare(o1.getPriority(actRequired), o2.getPriority(actRequired));

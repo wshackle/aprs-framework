@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -34,10 +34,6 @@ public class NamedCallable<T> implements Callable<T> {
     private final Callable<T> callable;
     private final String name;
     private final AprsSystemInterface[] systems;
-
-    public Callable<T> getCallable() {
-        return callable;
-    }
 
     public String getName() {
         return name;

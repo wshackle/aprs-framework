@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -24,8 +24,8 @@ package aprs.supervisor.colortextdisplay;
 
 import aprs.misc.Utils;
 import aprs.database.SocketLineReader;
-import java.awt.Color;
-import java.awt.Image;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -42,6 +42,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author shackle
  */
+@SuppressWarnings("MagicConstant")
 public class ColorTextJPanel extends javax.swing.JPanel {
 
     /**
@@ -219,7 +220,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         jPanelLeft.setBackground(new java.awt.Color(204, 204, 255));
         jPanelLeft.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        jLabelRobotTextLeft.setFont(new java.awt.Font("DejaVu Sans", 0, 36)); // NOI18N
+        jLabelRobotTextLeft.setFont(new java.awt.Font("DejaVu Sans", Font.PLAIN, 36)); // NOI18N
         jLabelRobotTextLeft.setText("Motoman");
 
         jLabelRobotIconLeft.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aprs/supervisor/screensplash/motoman_small.png"))); // NOI18N

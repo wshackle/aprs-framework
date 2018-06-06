@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -22,7 +22,6 @@
  */
 package aprs.logdisplay;
 
-import aprs.system.AprsSystemInterface;
 import aprs.misc.Utils;
 import java.awt.Component;
 import java.awt.Desktop;
@@ -130,27 +129,8 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    
-        private AprsSystemInterface aprsSystemInterface;
 
-    /**
-     * Get the value of aprsSystemInterface
-     *
-     * @return the value of aprsSystemInterface
-     */
-    public AprsSystemInterface getAprsSystemInterface() {
-        return aprsSystemInterface;
-    }
-
-    /**
-     * Set the value of aprsSystemInterface
-     *
-     * @param aprsSystemInterface new value of aprsSystemInterface
-     */
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
-        this.aprsSystemInterface = aprsSystemInterface;
-    }
-
+    @SuppressWarnings("unused")
     private void jButtonToExternalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonToExternalActionPerformed
         try {
             File f = Utils.createTempFile("log", ".txt");
@@ -212,7 +192,9 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
                 jSpinnerMaxLines.setValue(1);
                 maxLines = 1;
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
+            Logger.getLogger(LogDisplayJPanel.class
+                    .getName()).log(Level.SEVERE, null, exception);
         }
         if (logLines.size() < maxLines) {
             addLogLine(l);
@@ -225,8 +207,8 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
             }
             addLogLine(l);
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < logLines.size(); i++) {
-                sb.append(logLines.get(i));
+            for (String logLine : logLines) {
+                sb.append(logLine);
             }
             if (!jCheckBoxPauseOutput.isSelected()) {
                 jTextArea1.setText(sb.toString());

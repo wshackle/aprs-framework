@@ -8,7 +8,7 @@ package aprs.actions.optaplanner.actionmodel.score;
 import aprs.actions.optaplanner.actionmodel.OpAction;
 import aprs.actions.optaplanner.actionmodel.OpActionPlan;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.END;
-import static aprs.actions.optaplanner.actionmodel.OpActionType.START;
+
 import java.util.HashSet;
 import java.util.Set;
 import org.optaplanner.core.impl.score.director.easy.EasyScoreCalculator;
@@ -20,6 +20,7 @@ import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("unused")
 public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpActionPlan> {
 
     private int lastScoreEnds = 0;
@@ -56,20 +57,18 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
 
             Set<String> orderedVisited = new HashSet<>();
             List<OpAction> orderedActionsList = solution.getOrderedList(false);
-            for (int i = 0; i < orderedActionsList.size(); i++) {
-                OpAction orderedAct = orderedActionsList.get(i);
+            for (OpAction orderedAct : orderedActionsList) {
                 String orderedActName = orderedAct.getName();
-                if(orderedVisited.contains(orderedActName)) {
+                if (orderedVisited.contains(orderedActName)) {
                     repeats++;
                 }
                 orderedVisited.add(orderedActName);
             }
             Set<String> effectiveOrderedVisited = new HashSet<>();
             List<OpAction> effectiveOrderedActionsList = solution.getEffectiveOrderedList(false);
-            for (int i = 0; i < effectiveOrderedActionsList.size(); i++) {
-                OpAction orderedAct = effectiveOrderedActionsList.get(i);
+            for (OpAction orderedAct : effectiveOrderedActionsList) {
                 String orderedActName = orderedAct.getName();
-                if(effectiveOrderedVisited.contains(orderedActName)) {
+                if (effectiveOrderedVisited.contains(orderedActName)) {
                     repeats++;
                 }
                 effectiveOrderedVisited.add(orderedActName);

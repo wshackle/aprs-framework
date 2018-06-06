@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -36,6 +36,7 @@ import aprs.database.PoseQueryElem;
 import aprs.database.PartsTray;
 import aprs.database.Slot;
 import aprs.database.Tray;
+import aprs.system.AprsSystem;
 import crcl.ui.XFuture;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -64,18 +65,20 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.ToLongFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("unused")
 public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
     public boolean isConnected() {
@@ -487,7 +490,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                                 }
                                 return dpu;
                             });
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(DatabasePoseUpdater.class.getName()).log(Level.SEVERE, null, ex);
             XFuture<@Nullable DatabasePoseUpdater> xf = new XFuture<>("createDatabasePoseUpdaterExeption");
             xf.completeExceptionally(ex);
@@ -610,7 +613,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     }
 
     private List<PoseQueryElem> getJdbcDirectPoseList() {
-        List<PoseQueryElem> l = new ArrayList<PoseQueryElem>();
+        List<PoseQueryElem> l = new ArrayList<>();
         if (null != displayInterface) {
             debug = displayInterface.isDebug();
             if (debug && null != queryAllString) {
@@ -746,8 +749,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 System.err.println("rowCount=\n" + rowCount);
                 System.err.println("queryAllNewString=\n" + queryAllNewString);
                 System.err.println("logMsg=" + logMsg);
-                System.err.println("");
-                System.out.println("");
+                System.err.println();
+                System.out.println();
             }
         }
         return l;
@@ -771,7 +774,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     }
 
     public String getDetailString() {
-        return "DatabasePoseUpdater{" + "con=" + con + ", dbtype=" + dbtype + ", useBatch=" + useBatch + ", verify=" + verify + ", totalUpdateTimeMillis=" + totalUpdateTimeMillis + ", maxUpdateTimeMillis=" + maxUpdateTimeMillis + ", totalUpdateTimeNanos=" + totalUpdateTimeNanos + ", maxUpdateTimeNanos=" + maxUpdateTimeNanos + ", totalUpdates=" + totalUpdates + ", totalListUpdates=" + totalListUpdates + ", sharedConnection=" + sharedConnection + ", queryAllString=" + queryAllString + ", querySingleString=" + querySingleString + ", mergeStatementString=" + updateStatementString + ", updateParamTypes=" + updateParamTypes + ", getSingleParamTypes=" + getSingleParamTypes + ", debug=" + debug + '}';
+        return "DatabasePoseUpdater{" + "con=" + con + ", dbtype=" + dbtype + ", useBatch=" + useBatch + ", verify=" + verify + ", totalUpdateTimeMillis=" + totalUpdateTimeMillis + ", maxUpdateTimeMillis=" + maxUpdateTimeMillis + ", totalUpdateTimeNanos=" + totalUpdateTimeNanos + ", maxUpdateTimeNanos=" + maxUpdateTimeNanos + ", totalUpdates=" + totalUpdates + ", totalListUpdates=" + totalListUpdates + ", sharedConnection=" + sharedConnection + ", queryAllString=" + queryAllString + ", querySingleString=" + querySingleString + ", mergeStatementString=" + updateStatementString + ", updateParamTypes=" + Arrays.toString(updateParamTypes) + ", getSingleParamTypes=" + Arrays.toString(getSingleParamTypes) + ", debug=" + debug + '}';
     }
 
     private volatile boolean closed = false;
@@ -834,7 +837,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         }
     }
 
-    public static volatile int poses_updated = 0;
+    public static final AtomicInteger poses_updated = new AtomicInteger();
 
     private final Map<String, UpdateResults> updateResultsMap = new ConcurrentHashMap<>();
 
@@ -942,6 +945,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     private final ConcurrentHashMap<String, Integer> failuresMap = new ConcurrentHashMap<>();
     private static final List<Slot> failedSlotOffsets = Collections.emptyList();
 
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     private List<Slot> getSlotOffsetsNew(PhysicalItem tray, boolean ignoreEmpty) {
         if (null == getTraySlotsParamTypes) {
             throw new IllegalStateException("getTraySlotsParamTypes is null");
@@ -990,7 +994,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         List<Map<String, String>> resultSetMapList = new ArrayList<>();
                         while (rs.next()) {
                             ResultSetMetaData meta = rs.getMetaData();
-                            CheckedStringMap<String> resultMap = new CheckedStringMap<>(new LinkedHashMap<String, String>());
+                            CheckedStringMap<String> resultMap = new CheckedStringMap<>(new LinkedHashMap<>());
                             if (null != displayInterface && displayInterface.isDebug()) {
                                 displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
                             }
@@ -1047,13 +1051,13 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     if (ignoreEmpty) {
                         return failedSlotOffsets;
                     }
-                    System.err.println("");
+                    System.err.println();
                     System.err.println("Can't get items for tray " + tray);
                     System.err.println("getTraySlotsQueryStringFilled=");
                     System.err.println(getTraySlotsQueryStringFilled);
                     System.err.println("Returned 0 items.");
                     System.err.println("url=" + getURL());
-                    System.err.println("");
+                    System.err.println();
                     int failures = failuresMap.compute(tray.getName(), (name, count) -> (count == null) ? 1 : (count + 1));
                     if (failures < 2) {
                         throw new IllegalStateException("Can't get items for tray" + tray + " url=" + getURL() + " getTraySlotsQueryStringFilled=\n" + getTraySlotsQueryStringFilled);
@@ -1229,7 +1233,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
     private static double closestDist(PhysicalItem subject, List<PhysicalItem> l) {
         return l.stream()
-                .mapToDouble(item -> subject.distFromXY(item))
+                .mapToDouble(subject::distFromXY)
                 .min()
                 .orElse(Double.POSITIVE_INFINITY);
     }
@@ -1244,7 +1248,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         : prevParts.stream()
                         .filter((PhysicalItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
                         .filter((PhysicalItem prevPart) -> closestDist(prevPart, parts) < 25.0)
-                        .collect(Collectors.toCollection(() -> new ArrayList<PhysicalItem>()));
+                        .collect(Collectors.toCollection(ArrayList::new));
         newPrevParts.addAll(parts);
         if (null != prevParts) {
             prevParts.clear();
@@ -1302,7 +1306,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     .collect(Collectors.toList()));
             kitTrayItem.setEmptySlotsCount(kitTrayItem.getEmptySlotsList().size());
         }
-        kitTrays.sort((PhysicalItem tray1, PhysicalItem tray2) -> Long.compare(tray1.getEmptySlotsCount(), tray2.getEmptySlotsCount()));
+        kitTrays.sort(Comparator.comparingLong((ToLongFunction<PhysicalItem>) PhysicalItem::getEmptySlotsCount));
         int min_non_zero_tray = 0;
         for (int i = 0; i < kitTrays.size(); i++) {
             PhysicalItem kitTray = kitTrays.get(i);
@@ -1618,9 +1622,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 }
                 int updatedCount = -1;
                 List<String> skippedUpdates = new ArrayList<>();
-                Map<String, Integer> repeatsMap = new HashMap<String, Integer>();
-                for (int i = 0; i < list.size(); i++) {
-                    PhysicalItem ci = list.get(i);
+                Map<String, Integer> repeatsMap = new HashMap<>();
+                for (PhysicalItem ci : list) {
                     if (null == ci || ci.getName().compareTo("*") == 0) {
                         continue;
                     }
@@ -1710,7 +1713,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         ur.setTotalUpdateCount(ur.getUpdateCount() + ur.getTotalUpdateCount());
                         updateResultsMap.put(ur.name, ur);
                     }
-                    poses_updated += updates;
+                    poses_updated.addAndGet(updates);
                 }
             }
             if (!edu) {
@@ -1744,7 +1747,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 e.printStackTrace();
             }
             totalListUpdates++;
-            totalUpdates = poses_updated;
+            totalUpdates = poses_updated.get();
             if (null != displayInterface && displayInterface.isDebug()) {
 
                 displayInterface.addLogMessage("poses_updated=" + poses_updated);
@@ -1765,8 +1768,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 displayInterface.updateResultsMap(updateResultsMap);
             }
         }
-        List<PhysicalItem> lcopy = new ArrayList<>();
-        lcopy.addAll(returnedList);
+        List<PhysicalItem> lcopy = new ArrayList<>(returnedList);
         lastEnabledUpdateList = lcopy;
         return returnedList;
     }
@@ -1806,9 +1808,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             }
         }
 
-        Map<String, Integer> repeatsMap = new HashMap<String, Integer>();
-        for (int i = 0; i < outList.size(); i++) {
-            PhysicalItem ci = outList.get(i);
+        Map<String, Integer> repeatsMap = new HashMap<>();
+        for (PhysicalItem ci : outList) {
             if (null == ci || ci.getName().compareTo("*") == 0) {
                 continue;
             }
@@ -1890,14 +1891,13 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         Comparator<PhysicalItem> kitComparator
                 = comparingLong((PhysicalItem kt) -> (kt.getEmptySlotsCount() < 1) ? Long.MAX_VALUE : kt.getEmptySlotsCount());
         kitTrays.sort(kitComparator);
-        List<PhysicalItem> firstSortParts = new ArrayList<>();
-        firstSortParts.addAll(parts);
+        List<PhysicalItem> firstSortParts = new ArrayList<>(parts);
         firstSortParts.sort(comparingDouble((PhysicalItem p) -> distDiff(p, kitTrays)));
         Map<PhysicalItem, List<PhysicalItem>> partsByTray
                 = new TreeMap<>(kitComparator);
         List<PhysicalItem> matchedParts = new ArrayList<>();
-        for (int i = 0; i < kitTrays.size(); i++) {
-            PhysicalItem kit = kitTrays.get(i);
+        for (Tray kitTray : kitTrays) {
+            PhysicalItem kit = kitTray;
             String kitFullName = kit.getFullName();
             if (null == kitFullName) {
                 kitFullName = kit.getName();
@@ -1919,7 +1919,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
                 PhysicalItem bestSlotFiller
                         = firstSortParts.stream()
-                        .filter((PhysicalItem p) -> p.isInsidePartsTray())
+                        .filter(PhysicalItem::isInsidePartsTray)
                         .filter((PhysicalItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
                         .findFirst()
                         .orElse(null);
@@ -1970,6 +1970,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                                     try {
                                         updatedCount = Integer.parseInt(value);
                                     } catch (NumberFormatException nfe) {
+                                        Logger.getLogger(DatabasePoseUpdater.class
+                                                .getName()).log(Level.SEVERE, null, nfe);
                                     }
                                 }
                                 resultMap.put(name, value);
@@ -1997,7 +1999,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 ur.setTotalUpdateCount(updatedCount + ur.getTotalUpdateCount());
                 ur.setReturnedResultSet(exec_result);
 //                    poses_updated += update_statement.getUpdateCount();
-                poses_updated++;
+                poses_updated.incrementAndGet();
             }
         } catch (Exception ex) {
             if (null != displayInterface && displayInterface.isDebug()) {
@@ -2060,8 +2062,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     debug = false;
                 }
                 int verifiedCount = -1;
-                for (int i = 0; i < list.size(); i++) {
-                    PhysicalItem ci = list.get(i);
+                for (PhysicalItem ci : list) {
                     if (null == ci || ci.getName().compareTo("*") == 0) {
                         continue;
                     }
@@ -2127,12 +2128,16 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                                                 value = rs.getString(name);
                                             }
                                         } catch (Exception exception) {
+                                            Logger.getLogger(DatabasePoseUpdater.class
+                                                    .getName()).log(Level.SEVERE, null, exception);
                                         }
                                         try {
                                             if (null == value) {
                                                 value = Objects.toString(rs.getObject(name, Object.class));
                                             }
                                         } catch (Exception exception) {
+                                            Logger.getLogger(AprsSystem.class
+                                                    .getName()).log(Level.SEVERE, null, exception);
                                         }
                                         if (j == 1 && verifiedCount < 0 && name.startsWith("count")) {
                                             try {
@@ -2140,6 +2145,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                                                     verifiedCount = Integer.parseInt(value);
                                                 }
                                             } catch (NumberFormatException nfe) {
+                                                Logger.getLogger(DatabasePoseUpdater.class
+                                                        .getName()).log(Level.SEVERE, null, nfe);
                                             }
                                         }
                                         if (null != value) {
@@ -2190,10 +2197,10 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         String queryStringFilled
                 = parameterizedQueryString;
         for (int paramIndex = 1; paramIndex < paramsList.size() + 1; paramIndex++) {
-            if (queryStringFilled.indexOf("{" + paramIndex + "}") >= 0) {
+            if (queryStringFilled.contains("{" + paramIndex + "}")) {
                 queryStringFilled
                         = queryStringFilled.replace("{" + paramIndex + "}", Objects.toString(paramsList.get(paramIndex - 1)));
-            } else if (queryStringFilled.indexOf("?") >= 0) {
+            } else if (queryStringFilled.contains("?")) {
                 queryStringFilled
                         = queryStringFilled.replace("?", Objects.toString(paramsList.get(paramIndex - 1)));
             }

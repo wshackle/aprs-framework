@@ -3,7 +3,7 @@ ${licenseFirst}
 </#if>
 ${licensePrefix}This software is public domain software, however it is preferred
 ${licensePrefix}that the following disclaimers be attached.
-${licensePrefix}Software Copywrite/Warranty Disclaimer
+${licensePrefix}Software Copyright/Warranty Disclaimer
 ${licensePrefix}
 ${licensePrefix}This software was developed at the National Institute of Standards and
 ${licensePrefix}Technology by employees of the Federal Government in the course of their

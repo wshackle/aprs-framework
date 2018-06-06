@@ -13,6 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings({"SameReturnValue", "unused"})
 public class OpEndAction  implements OpActionInterface{
 
     private Point2D.Double location;

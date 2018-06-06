@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -66,9 +66,8 @@ import crcl.ui.client.PendantClientJPanel;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLPosemath;
 import crcl.utils.CRCLSocket;
-import java.awt.Component;
-import java.awt.Desktop;
-import java.awt.Rectangle;
+
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -86,7 +85,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
@@ -100,13 +98,11 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 import javax.xml.bind.JAXBException;
-import java.awt.HeadlessException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.nio.file.Paths;
@@ -153,7 +149,7 @@ import java.util.Map.Entry;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"CanBeFinal", "UnusedReturnValue"})
+@SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "MagicConstant", "unused"})
 public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDisplayInterface, PendantClientJPanel.ProgramLineListener {
 
     public static List<Action> showActionsList(List<Action> actionsIn) {
@@ -513,7 +509,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private void handleActionCompleted(CrclGenerator.ActionCallbackInfo actionInfo) {
+    private void handleActionCompleted(ActionCallbackInfo actionInfo) {
         if (currentActionIndex != actionInfo.getActionIndex()) {
             LOGGER.log(Level.FINE, "(currentActionIndex != actionInfo.getActionIndex())");
             LOGGER.log(Level.FINE, "actionInfo = " + actionInfo);
@@ -1655,10 +1651,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jTableCrclProgram.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                { new Integer(1), null},
-                { new Integer(2), null},
-                { new Integer(3), null},
-                { new Integer(4), null}
+                {1, null},
+                {2, null},
+                {3, null},
+                {4, null}
             },
             new String [] {
                 "ID", "Text"
@@ -1774,7 +1770,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jTabbedPane1.addTab("Pose Cache", jPanelContainerPoseCache);
 
         opDisplayJPanelInput.setLabel("Input");
-        opDisplayJPanelInput.setLabelFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
+        opDisplayJPanelInput.setLabelFont(new java.awt.Font("SansSerif", Font.BOLD, 18)); // NOI18N
         opDisplayJPanelInput.setLabelPos(new java.awt.Point(200, 20));
 
         javax.swing.GroupLayout opDisplayJPanelInputLayout = new javax.swing.GroupLayout(opDisplayJPanelInput);
@@ -2063,7 +2059,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnIfNewActionsNotReady();
             }
             return ret;
-        } catch (CRCLException | PmException | IOException | IllegalStateException | SQLException | JAXBException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "Exception in doActions(" + comment + "," + startAbortCount + ")", ex);
             abortProgram();
             showExceptionInProgram(ex);
@@ -2097,7 +2093,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     });
             runningProgramFuture = ret;
             return ret;
-        } catch (IOException | IllegalStateException | SQLException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
             throw new RuntimeException(ex);
@@ -2226,7 +2222,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return relString;
             }
             return canString;
-        } catch (IOException iOException) {
+        } catch (Exception exception) {
+            Logger.getLogger(ExecutorJPanel.class
+                    .getName()).log(Level.SEVERE, null, exception);
         }
         return str;
     }
@@ -2318,7 +2316,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 runningProgramFuture.cancel(true);
             }
             runningProgramFuture = generateCrclAsync();
-        } catch (IOException | IllegalStateException | SQLException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
         }
@@ -2396,8 +2394,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             synchronized (actionsList) {
                 clearActionsList();
-                for (int i = 0; i < lines.size(); i++) {
-                    String line = lines.get(i);
+                for (String line : lines) {
                     if (line.length() < 1) {
                         continue;
                     }
@@ -2525,7 +2522,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (f.exists() && f.canRead()) {
             try {
                 loadActionsFile(f, true);
-                if (this.getErrorString() == origErrorString) {
+                if (Objects.equals(this.getErrorString(), origErrorString)) {
                     setErrorString(null);
                 }
             } catch (IOException ex) {
@@ -2697,8 +2694,7 @@ private JTextArea editTableArea = new JTextArea();
 
             @Override
             public boolean stopCellEditing() {
-                for (int i = 0; i < listeners.size(); i++) {
-                    CellEditorListener l = listeners.get(i);
+                for (CellEditorListener l : listeners) {
                     if (null != l) {
                         l.editingStopped(new ChangeEvent(jTableCrclProgram));
                     }
@@ -2708,8 +2704,7 @@ private JTextArea editTableArea = new JTextArea();
 
             @Override
             public void cancelCellEditing() {
-                for (int i = 0; i < listeners.size(); i++) {
-                    CellEditorListener l = listeners.get(i);
+                for (CellEditorListener l : listeners) {
                     if (null != l) {
                         l.editingCanceled(new ChangeEvent(jTableCrclProgram));
                     }
@@ -2926,7 +2921,7 @@ private JTextArea editTableArea = new JTextArea();
             setReplanFromIndex(0);
             cancelRunProgramFuture();
             runningProgramFuture = generateCrclAsync();
-        } catch (IOException | IllegalStateException | SQLException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
         }
@@ -3082,7 +3077,7 @@ private JTextArea editTableArea = new JTextArea();
                 return;
             }
             runningProgramFuture = this.takePart(part);
-        } catch (CRCLException | PmException | IOException | IllegalStateException | SQLException | InterruptedException | PendantClientInner.ConcurrentBlockProgramsException | ExecutionException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
             showExceptionInProgram(ex);
@@ -3104,7 +3099,7 @@ private JTextArea editTableArea = new JTextArea();
         DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
         boolean partfound = false;
         for (int i = 0; i < cbm.getSize(); i++) {
-            String parti = cbm.getElementAt(i).toString();
+            String parti = cbm.getElementAt(i);
             if (parti.equals(part)) {
                 partfound = true;
                 break;
@@ -3182,7 +3177,7 @@ private JTextArea editTableArea = new JTextArea();
         DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
         boolean partfound = false;
         for (int i = 0; i < cbm.getSize(); i++) {
-            String parti = cbm.getElementAt(i).toString();
+            String parti = cbm.getElementAt(i);
             if (parti.equals(slot)) {
                 partfound = true;
                 break;
@@ -3233,7 +3228,7 @@ private JTextArea editTableArea = new JTextArea();
                 return;
             }
             runningProgramFuture = this.returnPart(part);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             showExceptionInProgram(ex);
         }
@@ -3349,11 +3344,11 @@ private JTextArea editTableArea = new JTextArea();
         this.replanRunnable = this.customReplanRunnable;
         return this.randomDropOff()
                 .thenCompose("randomTest.lookForParts",
-                        x -> recursiveSupplyBoolean(x, () -> this.lookForParts()))
+                        x -> recursiveSupplyBoolean(x, this::lookForParts))
                 .thenCompose("randomTest.recordAndCompletTestPickup",
-                        x -> recursiveSupplyBoolean(x, () -> this.recordAndCompletTestPickup()))
+                        x -> recursiveSupplyBoolean(x, this::recordAndCompletTestPickup))
                 .thenCompose("randomTest.randomDropOff",
-                        x -> recursiveSupplyBoolean(x, () -> this.randomDropOff()));
+                        x -> recursiveSupplyBoolean(x, this::randomDropOff));
 //        } catch (IOException ex) {
 //            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
 //            XFuture<Boolean> ret = new XFuture<>();
@@ -3421,7 +3416,8 @@ private JTextArea editTableArea = new JTextArea();
             });
             this.customRunnablesIndex = 0;
             this.replanRunnable = this.customReplanRunnable;
-        } catch (IOException iOException) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -3531,7 +3527,7 @@ private JTextArea editTableArea = new JTextArea();
             jCheckBoxReplan.setSelected(true);
             cancelRunProgramFuture();
             runningProgramFuture = generateCrclAsync();
-        } catch (IOException | IllegalStateException | SQLException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
         }
@@ -3650,11 +3646,11 @@ private JTextArea editTableArea = new JTextArea();
             }
         }
         if (externalControlClientSockets != null) {
-            externalControlClientSockets.forEach(s -> closeSocket(s));
+            externalControlClientSockets.forEach(ExecutorJPanel::closeSocket);
             externalControlClientSockets.clear();
         }
         if (externalControlClientThreads != null) {
-            externalControlClientThreads.forEach(t -> closeThread(t));
+            externalControlClientThreads.forEach(ExecutorJPanel::closeThread);
             externalControlClientThreads.clear();
         }
     }
@@ -3861,7 +3857,7 @@ private JTextArea editTableArea = new JTextArea();
                 actionSetsCompleted.set(actionSetsStarted.get());
             }
             return ret;
-        } catch (CRCLException | PmException | IOException | IllegalStateException | SQLException | JAXBException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
             showExceptionInProgram(ex);
@@ -3903,7 +3899,7 @@ private JTextArea editTableArea = new JTextArea();
         } else {
             try {
                 runningProgramFuture = generateCrclAsync();
-            } catch (IOException | IllegalStateException | SQLException ex) {
+            } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
             }
         }
@@ -3932,7 +3928,7 @@ private JTextArea editTableArea = new JTextArea();
             }
             cancelRunProgramFuture();
             runningProgramFuture = this.placePartSlot(part, slot);
-        } catch (CRCLException | PmException | IOException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
             showExceptionInProgram(ex);
@@ -3956,7 +3952,7 @@ private JTextArea editTableArea = new JTextArea();
                 return;
             }
             runningProgramFuture = this.testPartPosition(part);
-        } catch (CRCLException | PmException | IOException | IllegalStateException | SQLException | InterruptedException | ExecutionException | PendantClientInner.ConcurrentBlockProgramsException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
             showExceptionInProgram(ex);
@@ -4104,8 +4100,7 @@ private JTextArea editTableArea = new JTextArea();
             }
             List<CSVRecord> records = parser.getRecords();
             int skipRows = 0;
-            for (int i = 0; i < records.size(); i++) {
-                CSVRecord rec = records.get(i);
+            for (CSVRecord rec : records) {
                 String colName = dtm.getColumnName(0);
                 Integer colIndex = headerMap.get(colName);
                 if (null == colIndex) {
@@ -4242,8 +4237,7 @@ private JTextArea editTableArea = new JTextArea();
             Map<String, Integer> headerMap = parser.getHeaderMap();
             List<CSVRecord> records = parser.getRecords();
             int skipRows = 0;
-            for (int i = 0; i < records.size(); i++) {
-                CSVRecord rec = records.get(i);
+            for (CSVRecord rec : records) {
                 String colName = dtm.getColumnName(0);
                 Integer colIndex = headerMap.get(colName);
                 if (colIndex == null) {
@@ -4401,7 +4395,7 @@ private JTextArea editTableArea = new JTextArea();
                 }
             }
         }
-        return names.toArray(new String[names.size()]);
+        return names.toArray(new String[0]);
     }
 
     private String[] getToolNames() {
@@ -4417,7 +4411,7 @@ private JTextArea editTableArea = new JTextArea();
                 }
             }
         }
-        return names.toArray(new String[names.size()]);
+        return names.toArray(new String[0]);
     }
 
     private String queryUserForToolHolderPosName(String qname) {
@@ -4783,7 +4777,7 @@ private JTextArea editTableArea = new JTextArea();
             Map<String, PoseType> toolHolderPoseMap
                     = crclGenerator.getToolHolderPoseMap();
             if (nameToAdd != null && nameToAdd.length() > 0) {
-                if (toolHolderPoseMap.containsKey(nameToAdd) || Arrays.stream(getToolChangerNames()).anyMatch(x -> nameToAdd.equals(x))) {
+                if (toolHolderPoseMap.containsKey(nameToAdd) || Arrays.stream(getToolChangerNames()).anyMatch(nameToAdd::equals)) {
                     JOptionPane.showMessageDialog(this, nameToAdd + " already added.");
                     return;
                 }
@@ -4938,7 +4932,7 @@ private JTextArea editTableArea = new JTextArea();
                     = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
             slotCbm.removeAllElements();
             newItems = new ArrayList<>(newItems);
-            Collections.sort(newItems, Comparators.fromFunctions(PhysicalItem::getFullName));
+            newItems.sort(Comparators.fromFunctions(PhysicalItem::getFullName));
             for (PhysicalItem item : newItems) {
                 String fullName = item.getFullName();
                 if (null != fullName) {
@@ -5103,7 +5097,7 @@ private JTextArea editTableArea = new JTextArea();
                 runningProgramFuture.cancel(true);
             }
             runningProgramFuture = generateCrclAsync();
-        } catch (IOException | IllegalStateException | SQLException ex) {
+        } catch (Exception ex) {
             replanStarted.set(false);
             abortProgram();
             showExceptionInProgram(ex);
@@ -5179,7 +5173,7 @@ private JTextArea editTableArea = new JTextArea();
                 return Utils.composeOnDispatchThread(supplier);
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
-                XFuture<Boolean> ret = new XFuture<Boolean>("recursiveSupplyBoolean");
+                XFuture<Boolean> ret = new XFuture<>("recursiveSupplyBoolean");
                 ret.completeExceptionally(ex);
                 return ret;
             }
@@ -5196,9 +5190,9 @@ private JTextArea editTableArea = new JTextArea();
         if (prevSuccess) {
             try {
                 return generateCrclAsync();
-            } catch (IOException | IllegalStateException | SQLException ex) {
+            } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
-                XFuture<Boolean> ret = new XFuture<Boolean>("recursiveApplyGenerateCrclException");
+                XFuture<Boolean> ret = new XFuture<>("recursiveApplyGenerateCrclException");
                 ret.completeExceptionally(ex);
                 return ret;
             }
@@ -5209,7 +5203,7 @@ private JTextArea editTableArea = new JTextArea();
     private int crclStartActionIndex = -1;
     private int crclEndActionIndex = -1;
 
-    private void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) throws IOException {
+    private void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
         if (null != aprsSystemInterface) {
             aprsSystemInterface.takeSimViewSnapshot(f, pose, label);
         }
@@ -5419,7 +5413,7 @@ private JTextArea editTableArea = new JTextArea();
                         .thenComposeAsync(taskName,
                                 x -> doPddlActionsSectionAsync(startSafeAbortRequestCount, 0),
                                 genCrclService);
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
                 XFuture<Boolean> xf = new XFuture<>("generateCrclException");
                 xf.completeExceptionally(ex);
@@ -5587,11 +5581,11 @@ private JTextArea editTableArea = new JTextArea();
 
     private void runProgramCompleteRunnables(int startSafeAbortRequestCount) {
         checkSafeAbortAsync(() -> XFuture.completedFuture(false), startSafeAbortRequestCount);
-        List<Runnable> runnables = new ArrayList<>();
+        List<Runnable> runnables;
         synchronized (this) {
             runProgramCompleteRunnablesTime = System.currentTimeMillis();
             this.runningProgram = false;
-            runnables.addAll(programCompleteRunnablesList);
+            runnables = new ArrayList<>(programCompleteRunnablesList);
             programCompleteRunnablesList.clear();
         }
         for (Runnable r : runnables) {
@@ -5961,7 +5955,7 @@ private JTextArea editTableArea = new JTextArea();
     public CRCLProgramType createLookForPartsProgram() {
         try {
             return createLookForPartsProgramInternal();
-        } catch (CRCLException | PmException | ExecutionException | IOException | InterruptedException | PendantClientInner.ConcurrentBlockProgramsException | SQLException | IllegalStateException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
         }
@@ -6122,7 +6116,7 @@ private JTextArea editTableArea = new JTextArea();
         }
     }
 
-    private volatile List<Future<?>> checkDbSupplierPublisherFuturesList = Collections.emptyList();
+    private volatile List<XFutureVoid> checkDbSupplierPublisherFuturesList = Collections.emptyList();
 
     private void checkDbSupplierPublisher() {
         assert (null != crclGenerator) : "null == pddlActionToCrclGenerator";
@@ -6158,7 +6152,7 @@ private JTextArea editTableArea = new JTextArea();
 
     private XFuture<Void> checkDbSupplierPublisherAsync() {
         if (null == this.crclGenerator) {
-            XFuture<Void> ret = new XFuture<Void>("checkDbSupplierPublisher(null==pddlActionToCrclGenerator)");
+            XFuture<Void> ret = new XFuture<>("checkDbSupplierPublisher(null==pddlActionToCrclGenerator)");
             ret.completeExceptionally(new IllegalStateException("checkDbSupplierPublisher(null==pddlActionToCrclGenerator)"));
             return ret;
         }
@@ -6167,7 +6161,7 @@ private JTextArea editTableArea = new JTextArea();
                 return XFutureVoid.completedFutureWithName("checkDbSupplierPublisher.alreadyConnected." + getConnnectionURL());
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
-                XFuture<Void> ret = new XFuture<Void>("checkDbSupplierPublisher.alreadyConnected.withException");
+                XFuture<Void> ret = new XFuture<>("checkDbSupplierPublisher.alreadyConnected.withException");
                 ret.completeExceptionally(ex);
                 return ret;
             }
@@ -6475,10 +6469,10 @@ private JTextArea editTableArea = new JTextArea();
         DefaultComboBoxModel<String> cbm
                 = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
         cbm.removeAllElements();
-        for (int i = 0; i < pna.length; i++) {
-            if (null != pna[i] && pna[i].length() > 0
-                    && !pna[i].equals("null")) {
-                cbm.addElement(pna[i]);
+        for (String aPna : pna) {
+            if (null != aPna && aPna.length() > 0
+                    && !aPna.equals("null")) {
+                cbm.addElement(aPna);
             }
         }
 
@@ -6488,10 +6482,10 @@ private JTextArea editTableArea = new JTextArea();
         cbm
                 = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
         cbm.removeAllElements();
-        for (int i = 0; i < sna.length; i++) {
-            if (null != sna[i] && sna[i].length() > 0
-                    && !sna[i].equals("null")) {
-                cbm.addElement(sna[i]);
+        for (String aSna : sna) {
+            if (null != aSna && aSna.length() > 0
+                    && !aSna.equals("null")) {
+                cbm.addElement(aSna);
             }
         }
     }
@@ -6630,25 +6624,7 @@ private JTextArea editTableArea = new JTextArea();
         return currentActionIndex;
     }
 
-    private int actionIndexFromCrclLine(int crclLine) {
-        if (null != crclIndexes) {
-            for (int i = crclStartActionIndex; i < crclIndexes.length && i <= crclEndActionIndex; i++) {
-                if (crclLine <= crclIndexes[i]) {
-                    return i;
-                }
-            }
-        }
-        return crclEndActionIndex;
-    }
-
-    @Nullable
-    Action actionFromIndex(int index) {
-        if (null != actionsList && actionsList.size() >= index && index >= 0) {
-            return actionsList.get(index);
-        }
-        return null;
-    }
-
+    @SuppressWarnings("unused")
     @Override
     public void accept(PendantClientJPanel panel, int line, CRCLProgramType program, CRCLStatusType status) {
         if (this.debug && null != program) {

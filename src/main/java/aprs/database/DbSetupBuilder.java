@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -45,7 +45,6 @@ import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
 /**
  * Builder to create DbSetup instances from data queried from the user and/or
@@ -157,7 +156,6 @@ public class DbSetupBuilder {
     }
 
     private static String getStringFromFile(String name) throws IOException {
-        ClassLoader cl = ClassLoader.getSystemClassLoader();
         StringBuilder sb = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new FileReader(name))) {
             String line = null;
@@ -354,7 +352,7 @@ public class DbSetupBuilder {
 
     /**
      * Set type option in builder
-     * @param type
+     * @param type database type
      * @return this builder
      */
     public DbSetupBuilder type(DbType type) {
@@ -366,7 +364,7 @@ public class DbSetupBuilder {
 
     /**
      * Set host option in builder
-     * @param host
+     * @param host database server host
      * @return this builder
      */
     public DbSetupBuilder host(String host) {
@@ -378,7 +376,7 @@ public class DbSetupBuilder {
 
     /**
      * Set port option in builder
-     * @param port
+     * @param port database server port
      * @return this builder
      */
     public DbSetupBuilder port(int port) {
@@ -388,7 +386,7 @@ public class DbSetupBuilder {
 
     /**
      * Set passwd option in builder
-     * @param passwd
+     * @param passwd database passwd
      * @return this builder
      */
     public DbSetupBuilder passwd(char[] passwd) {
@@ -400,7 +398,7 @@ public class DbSetupBuilder {
 
     /**
      * Set user option in builder
-     * @param user
+     * @param user database username
      * @return this builder
      */
     public DbSetupBuilder user(String user) {
@@ -412,7 +410,7 @@ public class DbSetupBuilder {
 
     /**
      * Set _queriesDir option in builder
-     * @param _queriesDir
+     * @param _queriesDir queries directory path
      * @return this builder
      */
     @EnsuresNonNull("this.queriesDir") public DbSetupBuilder queriesDir(String _queriesDir) {
@@ -422,7 +420,7 @@ public class DbSetupBuilder {
 
     /**
      * Set internalQueriesResourceDir option in builder
-     * @param internalQueriesResourceDir
+     * @param internalQueriesResourceDir directory path
      * @return this builder
      */
     public DbSetupBuilder internalQueriesResourceDir(boolean internalQueriesResourceDir) {
@@ -432,7 +430,7 @@ public class DbSetupBuilder {
 
     /**
      * Set startScript option in builder
-     * @param startScript
+     * @param startScript script path
      * @return this builder
      */
     public DbSetupBuilder startScript(String startScript) {
@@ -442,7 +440,7 @@ public class DbSetupBuilder {
 
     /**
      * Set dbname option in builder
-     * @param dbname
+     * @param dbname database name
      * @return this builder
      */
     public DbSetupBuilder dbname(String dbname) {
@@ -454,7 +452,7 @@ public class DbSetupBuilder {
 
      /**
      * Set connected option in builder
-     * @param connected
+     * @param connected desired connection state
      * @return this builder
      */
     public DbSetupBuilder connected(boolean connected) {
@@ -464,7 +462,7 @@ public class DbSetupBuilder {
 
     /**
      * Set debug option in builder
-     * @param debug
+     * @param debug desired debug preference
      * @return this builder
      */
     public DbSetupBuilder debug(boolean debug) {
@@ -474,7 +472,7 @@ public class DbSetupBuilder {
 
     /**
      * Set loginTimeout option in builder
-     * @param loginTimeout
+     * @param loginTimeout desired login timeout
      * @return this builder
      */
     public DbSetupBuilder loginTimeout(int loginTimeout) {
@@ -484,7 +482,7 @@ public class DbSetupBuilder {
 
     /**
      * Set queriesMap option in builder
-     * @param queriesMap
+     * @param queriesMap map of queries
      * @return this builder
      */
     public DbSetupBuilder queriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap) {
@@ -497,7 +495,6 @@ public class DbSetupBuilder {
         DbSetupBuilder builder = this;
 
         String argsMapDbTypeString = _argsMap.get("--dbtype");
-        DbSetup curSetup = null;
         DbType dbtype = builder.type;
         if (argsMapDbTypeString != null && argsMapDbTypeString.length() > 0) {
             dbtype = DbType.valueOf(argsMapDbTypeString);
@@ -642,78 +639,6 @@ public class DbSetupBuilder {
     }
 
     /**
-     * Create an initialized builder from the PropertiesFile potentially
-     * ignoring values in the file in favor the arguments passed instead.
-     *
-     * @param propertiesFile properties file
-     * @param dbtype database type
-     * @param host database host
-     * @param port database port
-     * @return builder with given settings
-     */
-    public static DbSetupBuilder loadFromPropertiesFile(File propertiesFile, DbType dbtype, String host, int port) {
-        DbSetupBuilder builder = new DbSetupBuilder();
-        if (null != propertiesFile && propertiesFile.exists()) {
-            Properties props = new Properties();
-            try (FileReader fr = new FileReader(propertiesFile)) {
-                props.load(fr);
-            } catch (IOException ex) {
-                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            Map<String, String> argsMap = getDefaultArgsMap();
-            for (String propName : props.stringPropertyNames()) {
-                String propValue = props.getProperty(propName);
-                if (propValue != null) {
-                    argsMap.put(propName, propValue);
-                }
-            }
-            if (dbtype == null) {
-                String argsMapDbTypeString = argsMap.get("--dbtype");
-                if (argsMapDbTypeString != null && argsMapDbTypeString.length() < 1) {
-                    dbtype = DbType.valueOf(argsMapDbTypeString);
-                }
-            }
-            builder = builder.type(dbtype);
-            if (host == null || host.length() < 1) {
-                String dbSpecificHost = argsMap.get(dbtype + ".host");
-                if (null != dbSpecificHost) {
-                    builder = builder.host(dbSpecificHost);
-                    host = dbSpecificHost;
-                } else {
-                    String hostFromArgsMap = argsMap.get("--dbhost");
-                    if (null != hostFromArgsMap && hostFromArgsMap.length() > 0) {
-                        builder = builder.host(hostFromArgsMap);
-                        host = hostFromArgsMap;
-                    }
-                }
-            } else {
-                builder = builder.host(host);
-            }
-            if (port < 1) {
-                String dbSpecificPort = argsMap.get(dbtype + "." + host + ".port");
-                if (null != dbSpecificPort) {
-                    port = Integer.parseInt(dbSpecificPort);
-                    builder = builder.port(port);
-                } else {
-                    String argsMapPortString = argsMap.get("--dbport");
-                    if (null != argsMapPortString && argsMapPortString.length() > 0) {
-                        try {
-                            port = Integer.parseInt(argsMapPortString);
-                            builder = builder.port(port);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            } else {
-                builder = builder.port(port);
-            }
-            return builder.updateFromArgs(argsMap, dbtype, host, port);
-        }
-        return builder;
-    }
-
-    /**
      * Save the given setup to a properties file.
      *
      * @param propertiesFile properties file
@@ -786,19 +711,6 @@ public class DbSetupBuilder {
      * another thread after this method returns. The returned future can be used
      * to wait for the connection.
      *
-     * @return future for new connection
-     */
-    @RequiresNonNull("this.queriesDir") public XFuture<Connection> connect() {
-        return connect(this.build());
-    }
-
-    /**
-     * Setup a connection given the settings.
-     *
-     * The connection may take some time and will be completed asynchronously in
-     * another thread after this method returns. The returned future can be used
-     * to wait for the connection.
-     *
      * @param setup database setup object
      * @return future for new connection
      */
@@ -862,7 +774,7 @@ public class DbSetupBuilder {
                     return DriverManager.getConnection(mysql_url, username, password);
                     
                 case NEO4J:
-                    Class<?> neo4jDriverClass = org.neo4j.jdbc.Driver.class;
+                    @SuppressWarnings("unused") Class<?> neo4jDriverClass = org.neo4j.jdbc.Driver.class;
                     try {
                         neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
                         //System.out.println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
@@ -900,7 +812,7 @@ public class DbSetupBuilder {
                 case NEO4J_BOLT:
                     throw new RuntimeException("Neo4J BOLT driver not supported.");
             }
-            throw new IllegalArgumentException("Unsuppored dbtype =" + dbtype);
+            throw new IllegalArgumentException("Unsupported dbtype =" + dbtype);
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);

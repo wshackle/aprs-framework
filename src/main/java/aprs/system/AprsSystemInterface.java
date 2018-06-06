@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -45,7 +45,6 @@ import crcl.base.MiddleCommandType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
-import crcl.ui.XFutureVoid;
 import crcl.ui.client.PendantClientInner;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.utils.outer.interfaces.ProgramRunData;
@@ -68,7 +67,7 @@ import java.awt.image.BufferedImage;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("UnusedReturnValue")
+@SuppressWarnings({"UnusedReturnValue", "unused","RedundantThrows"})
 public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, SlotOffsetProvider {
 
     /**
@@ -115,7 +114,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * state.
      *
      * @return duration in milliseconds or 0 if it has not been started and
-     * stopped atleast once.
+     * stopped at least once.
      */
     public long getRunDuration();
 
@@ -124,7 +123,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * state.
      *
      * @return duration in milliseconds or 0 if it has not been started and
-     * stopped atleast once.
+     * stopped at least once.
      */
     public long getStopDuration();
 
@@ -159,6 +158,8 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
     public void refreshSimView();
 
     public long getLastSimViewRefreshTime();
+
+    public long getLastSimViewPublishTime();
 
     public int getSimViewRefreshCount();
 
@@ -243,7 +244,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      *
      * @return current setting of menu item
      */
-    public boolean isEnableDebugDumpstacks();
+    public boolean isEnableDebugDumpStacks();
 
     /**
      * Creates a run name useful for identifying a run in log files or the names
@@ -625,6 +626,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @throws JAXBException a command within the program violates a constraint
      * in the schema
      */
+    
     public void setCRCLProgram(CRCLProgramType program) throws JAXBException;
 
     /**
@@ -639,7 +641,6 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param program program to be loaded
      * @return future that can be used to monitor, cancel or extend the
      * underlying task
-     * @throws JAXBException a command within the program violates a constraint
      * in the schema
      */
     public XFuture<Boolean> startCRCLProgram(CRCLProgramType program);
@@ -653,6 +654,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @return whether the program completed successfully
      * @throws JAXBException the program did not meet schema requirements
      */
+    
     public boolean runCRCLProgram(CRCLProgramType program) throws JAXBException;
 
     /**
@@ -835,6 +837,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
     /**
      * Query the user to select a properties file to open.
      */
+    @SuppressWarnings("unused")
     public void browseOpenPropertiesFile();
 
     /**
@@ -1189,7 +1192,6 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param f file to save snapshot image to
      * @param pose optional pose to mark or null
      * @param label optional label for pose or null
-     * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label);
 
@@ -1200,7 +1202,6 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param f file to save snapshot image to
      * @param point optional point to mark or null
      * @param label optional label for pose or null
-     * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, PointType point, String label);
 
@@ -1211,7 +1212,6 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param f file to save snapshot image to
      * @param point optional point to mark or null
      * @param label optional label for pose or null
-     * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label);
 
@@ -1222,8 +1222,8 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param imgLabel string that will be included in the image file name
      * @param pose optional pose to mark or null
      * @param poseLabel optional label for pose or null
-     * @throws IOException if writing the file fails
      */
+    
     public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException ;
 
     /**
@@ -1235,6 +1235,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param pointLabel optional label for point or null
      * @throws IOException if writing the file fails
      */
+    
     public void takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String pointLabel) throws IOException ;
 
     /**
@@ -1246,6 +1247,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param pointLabel optional label for point or null
      * @throws IOException if writing the file fails
      */
+    
     public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException ;
 
     /**
@@ -1264,6 +1266,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param itemsToPaint list of items to paint
      * @throws java.io.IOException problem writing to the file
      */
+    
     public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint) throws IOException;
 
     /**
@@ -1275,7 +1278,6 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param label optional label for pose or null
      * @param w width of snapshot image
      * @param h height of snapshot image
-     * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h);
 
@@ -1288,7 +1290,6 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param label optional label for pose or null
      * @param w width of snapshot image
      * @param h height of snapshot image
-     * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, PointType point, String label, int w, int h);
 
@@ -1301,7 +1302,6 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param label optional label for pose or null
      * @param w width of snapshot image
      * @param h height of snapshot image
-     * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h);
 
@@ -1316,6 +1316,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
+    
     public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) throws IOException;
 
     /**
@@ -1329,6 +1330,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
+    
     public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) throws IOException;
 
     /**
@@ -1342,6 +1344,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param h height of snapshot image
      * @throws IOException if writing the file fails
      */
+    
     public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) throws IOException;
 
     /**
@@ -1351,7 +1354,6 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param itemsToPaint list of items to paint
      * @param w width of snapshot image
      * @param h height of snapshot image
-     * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h);
 
@@ -1363,8 +1365,8 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param itemsToPaint list of items to paint
      * @param w width of image to create
      * @param h height of image to create
-     * @throws java.io.IOException problem writing to the file
      */
+    
     public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException;
 
  
@@ -1378,7 +1380,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
     /**
      * Select a window (InternalJFrame)to be shown on top.
      *
-     * @param activeWin
+     * @param activeWin enumerated window to activate
      */
     public void setActiveWin(ActiveWinEnum activeWin);
 
@@ -1432,6 +1434,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @throws java.io.IOException file can not be created ie default log
      * directory does not exist.
      */
+    
     public File getlogFileDir() throws IOException;
 
     /**
@@ -1446,6 +1449,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @throws IOException directory doesn't exist etc.
      *
      */
+    
     public File createTempFile(String prefix, String suffix) throws IOException;
 
     /**
@@ -1462,6 +1466,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      *
      * @throws IOException directory doesn't exist etc.
      */
+    
     public File createTempFile(String prefix, String suffix, File dir) throws IOException ;
     
 

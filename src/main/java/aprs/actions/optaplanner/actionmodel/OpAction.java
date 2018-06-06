@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
@@ -95,7 +94,6 @@ public class OpAction implements OpActionInterface {
     private static String[] argsFromName(String name) {
         int dindex = name.indexOf("-[");
         if (dindex > 0) {
-            String type = name.substring(0, dindex);
             return name.substring(dindex + 2).split("[,{}\\-\\[\\]]+");
         }
         return new String[]{};
@@ -167,14 +165,10 @@ public class OpAction implements OpActionInterface {
         this.name = name;
     }
 
-    private Point2D.Double location;
+    private final Point2D.Double location;
 
     public Point2D.Double getLocation() {
         return location;
-    }
-
-    public void setLocation(Point2D.Double location) {
-        this.location = location;
     }
 
     @PlanningVariable(graphType = PlanningVariableGraphType.CHAINED,
@@ -280,6 +274,7 @@ public class OpAction implements OpActionInterface {
         this.trayType = trayType;
     }
 
+    @SuppressWarnings("WeakerAccess")
     @Override
     public boolean skipNext() {
         OpActionInterface n = this.next;

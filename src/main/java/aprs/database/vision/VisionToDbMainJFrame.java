@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -32,7 +32,6 @@ import java.awt.Frame;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -45,7 +44,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFrameInterface {
+class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFrameInterface {
 
     private JTextField cellField = new JTextField();
 

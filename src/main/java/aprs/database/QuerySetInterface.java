@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -23,19 +23,19 @@
 package aprs.database;
 
 import crcl.base.PoseType;
-import java.sql.SQLException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("RedundantThrows")
 interface QuerySetInterface extends AutoCloseable{
     
-    @Nullable PoseType getPose(String name) throws SQLException;
+    @Nullable PoseType getPose(String name) throws  Exception;
     
-    public void setPose(String name, PoseType pose) throws SQLException;
+    public void setPose(String name, PoseType pose) throws Exception;
     
     @Override
-    public void close() throws SQLException;
+    public void close() throws  Exception;
 }
