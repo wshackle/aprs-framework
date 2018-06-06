@@ -36,6 +36,6 @@ interface QuerySetInterface extends AutoCloseable{
     
     public void setPose(String name, PoseType pose) throws Exception;
     
-    @Override
-    public void close() throws  Exception;
+    public void close();
+    
 }
