@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -101,7 +100,7 @@ public class VisionSocketClient implements AutoCloseable {
 
     public static interface VisionSocketClientListener {
 
-        public void visionClientUpdateRecieved(List<PhysicalItem> list, String line);
+        public void visionClientUpdateReceived(List<PhysicalItem> list, String line);
     }
 
     private final List<VisionSocketClientListener> listListeners = new ArrayList<>();
@@ -120,16 +119,15 @@ public class VisionSocketClient implements AutoCloseable {
 
     public void updateListeners() {
         if (null != visionList) {
-            List<PhysicalItem> listToSend = new ArrayList<>();
-            listToSend.addAll(visionList);
+            List<PhysicalItem> listToSend = new ArrayList<>(visionList);
             synchronized (listListeners) {
-                String lineRecieved = this.getLine();
-                if (null != lineRecieved) {
-                    for (int i = 0; i < listListeners.size(); i++) {
+                String lineReceived = this.getLine();
+                if (null != lineReceived) {
+                    for (VisionSocketClientListener listListener : listListeners) {
                         try {
-                            VisionSocketClientListener listener = listListeners.get(i);
+                            VisionSocketClientListener listener = listListener;
                             if (null != listener) {
-                                listener.visionClientUpdateRecieved(listToSend, lineRecieved);
+                                listener.visionClientUpdateReceived(listToSend, lineReceived);
                             }
                         } catch (Exception e) {
                             Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, null, e);
@@ -454,42 +452,6 @@ public class VisionSocketClient implements AutoCloseable {
         this.debug = debug;
     }
 
-//    public void publishVisionList(final DatabasePoseUpdater dpu, final VisionToDBJFrameInterface displayInterface) throws InterruptedException, ExecutionException {
-//        if (null != visionList) {
-//            if (acquire != AcquireEnum.OFF) {
-//                if (null != dpu) {
-//                    if (null != transform) {
-//                        transformedVisionList = transformList(visionList, transform);
-//                        dpu.updateVisionList(transformedVisionList, this.addRepeatCountsToDatabaseNames);
-//                    } else {
-//                        dpu.updateVisionList(visionList, this.addRepeatCountsToDatabaseNames);
-//                    }
-//                }
-//                if (acquire == AcquireEnum.ONCE) {
-//                    acquire = AcquireEnum.OFF;
-//                    if (null != replyPs) {
-//                        replyPs.println("Acquire Status: " + acquire);
-//                        replyPs = null;
-//                    }
-//                    if (null != displayInterface) {
-//                        displayInterface.setAquiring(acquire.toString());
-//                    }
-//                }
-//            }
-//            if (null != displayInterface) {
-//                java.awt.EventQueue.invokeLater(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        displayInterface.updateInfo(visionList, line);
-//                    }
-//                });
-//                if (null != dpu) {
-//                    dpu.queryDatabase();
-//                }
-//            }
-//            updateListeners();
-//        }
-//    }
     public boolean isConnected() {
         return null != visionSlr && visionSlr.isConnected();
     }

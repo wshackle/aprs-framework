@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -97,10 +97,6 @@ public class PddlPlannerJInternalFrame extends javax.swing.JInternalFrame implem
     @Override
     public void loadProperties() throws IOException {
         pddlPlannerJPanel1.loadProperties();
-    }
-
-   @Nullable public ExecutorJInternalFrame getActionsToCrclJInternalFrame1() {
-        return pddlPlannerJPanel1.getActionsToCrclJInternalFrame1();
     }
 
     public void setActionsToCrclJInternalFrame1(@Nullable ExecutorJInternalFrame actionsToCrclJInternalFrame1) {

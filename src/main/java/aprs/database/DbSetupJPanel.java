@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -39,7 +39,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -52,10 +51,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -72,7 +68,8 @@ import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
+
+import crcl.ui.XFutureVoid;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -513,11 +510,11 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                                     connected = false;
                                     Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, e);
                                     System.err.println("Called from :");
-                                    for (int i = 0; i < stackTraceElemArray.length; i++) {
-                                        System.err.println(stackTraceElemArray[i]);
+                                    for (StackTraceElement aStackTraceElemArray : stackTraceElemArray) {
+                                        System.err.println(aStackTraceElemArray);
                                     }
                                     System.err.println("Exception handled at ");
-                                    if (checkedParentFrame.isEnableDebugDumpstacks()) {
+                                    if (checkedParentFrame.isEnableDebugDumpStacks()) {
                                         Thread.dumpStack();
                                     }
                                     checkedParentFrame.setTitleErrorString("Database error: " + e.toString());
@@ -665,8 +662,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }
 
-    private boolean debug = false;
-
     private boolean connected = false;
     private volatile boolean updatingFromDbSetup = false;
 
@@ -675,7 +670,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      *
      * @param setup object to read properties from
      */
-    @SuppressWarnings("DoubleNegation")
+    @SuppressWarnings("WeakerAccess")
     @Override
     public void setDbSetup(DbSetup setup) {
         try {
@@ -731,6 +726,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             }
             this.connected = setup.isConnected();
 
+            //noinspection DoubleNegation
             if (jButtonConnectDB.isEnabled() != (!connected)) {
                 this.jButtonConnectDB.setEnabled(!connected);
             }
@@ -847,8 +843,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
             @Override
             public boolean stopCellEditing() {
-                for (int i = 0; i < listeners.size(); i++) {
-                    CellEditorListener l = listeners.get(i);
+                for (CellEditorListener l : listeners) {
                     if (null != l) {
                         l.editingStopped(new ChangeEvent(jTable));
                     }
@@ -858,8 +853,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
             @Override
             public void cancelCellEditing() {
-                for (int i = 0; i < listeners.size(); i++) {
-                    CellEditorListener l = listeners.get(i);
+                for (CellEditorListener l : listeners) {
                     if (null != l) {
                         l.editingCanceled(new ChangeEvent(jTable));
                     }
@@ -969,8 +963,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private static int parseIntOr(String string, int defaultValue) {
         try {
             return Integer.parseInt(string);
-        } catch (Exception ex) {
-
+        } catch (Exception exception) {
+            Logger.getLogger(DbSetupJPanel.class
+                    .getName()).log(Level.SEVERE, null, exception);
         }
         return defaultValue;
     }
@@ -980,6 +975,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      *
      * @return setup
      */
+    @SuppressWarnings("WeakerAccess")
     @Override
     public DbSetup getDbSetup() {
         DbType dbtype = (DbType) jComboBoxDbType.getSelectedItem();
@@ -1003,25 +999,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 .build();
     }
 
-//    private ExecutorService notifyService = Executors.newSingleThreadExecutor(new ThreadFactory() {
-//        @Override
-//        public Thread newThread(Runnable r) {
-//            Thread thread = new Thread(r, "dbSetupNotifyThread." + this.toString());
-//            thread.setDaemon(true);
-//            return thread;
-//        }
-//    });
     @Nullable
-    volatile private List<Future<?>> futures = null;
+    volatile private List<XFutureVoid> futures = null;
 
-//    public void shutDownNotifyService() {
-//        try {
-//            notifyService.shutdownNow();
-//            notifyService.awaitTermination(100, TimeUnit.MILLISECONDS);
-//        } catch (InterruptedException ex) {
-//            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//    }
+
     /**
      * Call the accept method of all registered listeners with the current setup
      * object.
@@ -1032,22 +1013,23 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      * @return list of futures for determining when all the listeners have been
      * notified.
      */
+    @SuppressWarnings("WeakerAccess")
     @Override
-    public List<Future<?>> notifyAllDbSetupListeners(@Nullable ExecutorService notifyService) {
+    public List<XFutureVoid> notifyAllDbSetupListeners(@Nullable ExecutorService notifyService) {
         boolean cancelWarnGiven = false;
         AprsSystemInterface parentFrame = this.aprsSystemInterface;
         if (null == parentFrame) {
             throw new IllegalStateException("this.aprsSystemInterface == null");
         }
         AprsSystemInterface checkedParentFrame = parentFrame;
-        List<Future<?>> origFutures = this.futures;
+        List<XFutureVoid> origFutures = this.futures;
         if (null != origFutures) {
             for (Future<?> f : origFutures) {
                 if (!f.isDone() && !f.isCancelled()) {
                     if (!cancelWarnGiven && !parentFrame.isClosing()) {
                         cancelWarnGiven = true;
                         System.err.println("Cancelling a dbSetup notification");
-                        if (checkedParentFrame.isEnableDebugDumpstacks()) {
+                        if (checkedParentFrame.isEnableDebugDumpStacks()) {
                             Thread.dumpStack();
                         }
                     }
@@ -1058,17 +1040,19 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         if (parentFrame.isClosing()) {
             return Collections.emptyList();
         }
-        List<Future<?>> newFutures = new ArrayList<>();
+        List<XFutureVoid> newFutures = new ArrayList<>();
         this.futures = newFutures;
         final DbSetup thisDbSetup = DbSetupJPanel.this.getDbSetup();
         if (notifyService != null) {
 
 //            System.out.println("thisDbSetup = " + thisDbSetup);
 //            System.out.println("thisDbSetup.getQueriesMap() = " + thisDbSetup.getQueriesMap());
-            Future<?> future
-                    = notifyService.submit(() -> {
+            XFutureVoid future
+                    = XFutureVoid.runAsync("broadcastDbSetup",
+                    ()-> {
                         broadcastDbSetup(thisDbSetup);
-                    });
+                    },
+            notifyService);
             newFutures.add(future);
             return newFutures;
         } else {
@@ -1108,12 +1092,12 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     }
                 }
                 jComboBoxPropertiesFiles.removeAllItems();
-                List<File> files = new ArrayList<>();
-                files.addAll(set.stream().map(File::new)
+                List<File> files = set.stream()
+                        .map(File::new)
                         .filter(File::exists)
                         .sorted(Comparator.comparing(File::lastModified).reversed())
                         .limit(3)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList());
                 try (PrintWriter pw = new PrintWriter(new FileWriter(recentSettingsFile))) {
                     for (File f : files) {
                         String p = f.getCanonicalPath();
@@ -1261,10 +1245,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 //    }
 private void addLogMessage(Exception e) {
         e.printStackTrace();
-    }
-
-    public void addLogMessage(String msg) {
-        System.err.println(msg);
     }
 
     private DbType getDbType() {
@@ -1441,7 +1421,6 @@ private void addLogMessage(Exception e) {
             int height = 0;
             for (int colIndex = 0; colIndex < table.getColumnCount(); colIndex++) {
                 DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
-                TableColumn col = colModel.getColumn(colIndex);
                 TableCellRenderer renderer = table.getCellRenderer(rowIndex, colIndex);
                 Object value = table.getValueAt(rowIndex, colIndex);
                 Component comp = renderer.getTableCellRendererComponent(table, value,

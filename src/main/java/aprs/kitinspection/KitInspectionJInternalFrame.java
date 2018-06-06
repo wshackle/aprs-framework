@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -23,10 +23,11 @@
 package aprs.kitinspection;
 
 import aprs.misc.Utils;
+
+import java.awt.*;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,7 +42,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author zeid
  */
-@SuppressWarnings({"nullness", "CanBeFinal"})
+@SuppressWarnings("ALL")
 public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
 
     /**
@@ -105,7 +106,7 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
         jPanel2.setBackground(new java.awt.Color(255, 204, 0));
         jPanel2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        kitTitleLabel.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        kitTitleLabel.setFont(new java.awt.Font("Tahoma", Font.BOLD, 14)); // NOI18N
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -178,13 +179,7 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(KitInspectionJInternalFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(KitInspectionJInternalFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(KitInspectionJInternalFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | javax.swing.UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException ex) {
             java.util.logging.Logger.getLogger(KitInspectionJInternalFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>

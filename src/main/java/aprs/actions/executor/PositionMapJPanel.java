@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -88,10 +88,10 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                { new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0)},
-                { new Double(1.0),  new Double(0.0),  new Double(0.0),  new Double(1.0),  new Double(0.0),  new Double(0.0)},
-                { new Double(0.0),  new Double(1.0),  new Double(0.0),  new Double(0.0),  new Double(1.0),  new Double(0.0)},
-                { new Double(0.0),  new Double(0.0),  new Double(1.0),  new Double(0.0),  new Double(0.0),  new Double(1.0)}
+                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                {1.0, 0.0, 0.0, 1.0, 0.0, 0.0},
+                {0.0, 1.0, 0.0, 0.0, 1.0, 0.0},
+                {0.0, 0.0, 1.0, 0.0, 0.0, 1.0}
             },
             new String [] {
                 "X", "Y", "Z", "Offset_X", "Offset_Y", "Offset_Z"

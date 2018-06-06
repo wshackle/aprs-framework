@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -26,10 +26,7 @@ import aprs.actions.executor.Action;
 import aprs.misc.SlotOffsetProvider;
 import aprs.database.PhysicalItem;
 import aprs.database.Slot;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.crypto.Mac;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.impl.block.factory.Comparators;
 
@@ -52,16 +49,6 @@ public class GoalLearner {
 
     private @Nullable
     Predicate<PhysicalItem> itemPredicate = null;
-
-    /**
-     * Get the value of itemPredicate
-     *
-     * @return the value of itemPredicate
-     */
-    @Nullable
-    public Predicate<PhysicalItem> getItemPredicate() {
-        return itemPredicate;
-    }
 
     /**
      * Set the value of itemPredicate
@@ -83,16 +70,6 @@ public class GoalLearner {
     Predicate<List<PhysicalItem>> kitTrayListPredicate;
 
     /**
-     * Get the value of kitTrayListPredicate
-     *
-     * @return the value of kitTrayListPredicate
-     */
-    @Nullable
-    public Predicate<List<PhysicalItem>> getKitTrayListPredicate() {
-        return kitTrayListPredicate;
-    }
-
-    /**
      * Set the value of kitTrayListPredicate
      *
      * @param kitTrayListPredicate new value of kitTrayListPredicate
@@ -110,16 +87,6 @@ public class GoalLearner {
 
     private @Nullable
     SlotOffsetProvider slotOffsetProvider;
-
-    /**
-     * Get the value of slotOffsetProvider
-     *
-     * @return the value of slotOffsetProvider
-     */
-    @Nullable
-    public SlotOffsetProvider getSlotOffsetProvider() {
-        return slotOffsetProvider;
-    }
 
     /**
      * Set the value of slotOffsetProvider
@@ -262,16 +229,12 @@ public class GoalLearner {
             if (null == slotOffsetList) {
                 throw new IllegalStateException("getSlotOffsetList(" + kit.getName() + ") returned null");
             }
-            double x = kit.x;
-            double y = kit.y;
-            double rot = kit.getRotation();
             String shortKitName = kit.getName();
             if (shortKitName.startsWith("sku_")) {
                 shortKitName = shortKitName.substring(4);
             }
             int kitNumber = -1;
-            for (int slotOffsetIndex = 0; slotOffsetIndex < slotOffsetList.size(); slotOffsetIndex++) {
-                Slot slotOffset = slotOffsetList.get(slotOffsetIndex);
+            for (Slot slotOffset : slotOffsetList) {
                 PhysicalItem absSlot;
                 if (!overrideRotationOffset) {
                     absSlot = localSlotOffsetProvider.absSlotFromTrayAndOffset(kit, slotOffset);
@@ -287,7 +250,7 @@ public class GoalLearner {
                     continue;
                 }
                 double minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
-                if (minDist < 20 + slotOffset.getDiameter()/2.0) {
+                if (minDist < 20 + slotOffset.getDiameter() / 2.0) {
                     int pt_used_num = ptUsedMap.compute(closestPart.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
                     String shortPartName = closestPart.getName();
                     if (shortPartName.startsWith("sku_")) {

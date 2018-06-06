@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -31,7 +31,7 @@ import aprs.database.DbSetupJPanel;
 import aprs.database.DbSetupListener;
 import aprs.database.DbType;
 //import com.fasterxml.jackson.databind.ObjectMapper;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -66,14 +66,13 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("CanBeFinal")
-public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener {
+@SuppressWarnings({"CanBeFinal", "unused"})
+class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener {
 
     private final TableModelListener nodeTableModelListener;
 
@@ -247,19 +246,15 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                     toKeys.addAll(objectToMap(lastObject).keySet());
                 }
             }
-            List<String> keyList = new ArrayList<>();
-            keyList.addAll(toKeys);
-            if (keyList.contains("name")) {
-                keyList.remove("name");
-            }
+            List<String> keyList = new ArrayList<>(toKeys);
+            keyList.remove("name");
             Collections.sort(keyList);
             keyList.add(0, "name");
             for (String key : keyList) {
                 model.addColumn("to." + key);
             }
             final int outTableWidth = colCount - 1 + keyList.size();
-            for (int rowIndex = 0; rowIndex < resultList.size(); rowIndex++) {
-                Object ao[] = resultList.get(rowIndex);
+            for (Object[] ao : resultList) {
                 Object newArray[] = new Object[outTableWidth];
                 System.arraycopy(ao, 0, newArray, 0, ao.length - 1);
                 for (int i = ao.length - 1; i < outTableWidth; i++) {
@@ -318,19 +313,15 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                     fromKeys.addAll(map.keySet());
                 }
             }
-            keyList = new ArrayList<>();
-            keyList.addAll(fromKeys);
-            if (keyList.contains("name")) {
-                keyList.remove("name");
-            }
+            keyList = new ArrayList<>(fromKeys);
+            keyList.remove("name");
             Collections.sort(keyList);
             keyList.add(0, "name");
             for (String key : keyList) {
                 model.addColumn("from." + key);
             }
             final int inTableWidth = colCount - 1 + keyList.size();
-            for (int rowIndex = 0; rowIndex < resultList.size(); rowIndex++) {
-                Object ao[] = resultList.get(rowIndex);
+            for (Object[] ao : resultList) {
                 Object newArray[] = new Object[inTableWidth];
                 System.arraycopy(ao, 0, newArray, 0, ao.length - 1);
                 for (int i = ao.length - 1; i < inTableWidth; i++) {
@@ -358,25 +349,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
 
     @MonotonicNonNull private Connection connection = null;
 
-    /**
-     * Get the value of connection
-     *
-     * @return the value of connection
-     */
-    @Nullable public Connection getConnection() {
-        return connection;
-    }
-
     private boolean sharedConnection;
-
-    /**
-     * Get the value of sharedConnection
-     *
-     * @return the value of sharedConnection
-     */
-    public boolean isSharedConnection() {
-        return sharedConnection;
-    }
 
     /**
      * Set the value of sharedConnection
@@ -535,7 +508,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         });
 
         jTextAreaErrors.setColumns(20);
-        jTextAreaErrors.setFont(new java.awt.Font("Monospaced", 0, 15)); // NOI18N
+        jTextAreaErrors.setFont(new java.awt.Font("Monospaced", Font.PLAIN, 15)); // NOI18N
         jTextAreaErrors.setRows(5);
         jScrollPane4.setViewportView(jTextAreaErrors);
 
@@ -889,8 +862,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     private void appendPropsString(Map<String, Object> map, StringBuilder sb) {
         if (map.keySet().size() > 0) {
             sb.append(" { ");
-            List<String> keyList = new ArrayList<>();
-            keyList.addAll(map.keySet());
+            List<String> keyList = new ArrayList<>(map.keySet());
             Collections.sort(keyList);
             boolean firstKey = true;
             for (String key : keyList) {
@@ -937,12 +909,12 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             throw new IllegalStateException("connection is null");
         }
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line = null;
-            while (null != (line = br.readLine())) {
+            StringBuilder line = null;
+            while (null != (line = new StringBuilder(br.readLine()))) {
                 PreparedStatement stmtn
-                        = connection.prepareStatement(line);
-                while (!line.trim().endsWith(")")) {
-                    line += br.readLine();
+                        = connection.prepareStatement(line.toString());
+                while (!line.toString().trim().endsWith(")")) {
+                    line.append(br.readLine());
                 }
                 System.out.println("Executing line:" + line);
                 boolean returnedResultSet = stmtn.execute();
@@ -1020,8 +992,7 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
         jTextAreaErrors.setText(ex.toString());
         jTextAreaErrors.append("\nCaused by: \n" + ex.getCause() + "\n");
         if (null != ctx) {
-            for (int i = 0; i < ctx.length; i++) {
-                String string = ctx[i];
+            for (String string : ctx) {
                 System.err.println(string);
                 jTextAreaErrors.append(string);
             }
@@ -1140,8 +1111,8 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
             }
             for (int rsIndex = 1; rsIndex <= metaColCount && rsIndex <= listOfLabelsLists.size(); rsIndex++) {
                 List<String> sublist = listOfLabelsLists.get(rsIndex - 1);
-                for (int tableIndex = 0; tableIndex < sublist.size(); tableIndex++) {
-                    model.addColumn(meta.getColumnName(rsIndex) + "." + sublist.get(tableIndex));
+                for (String aSublist : sublist) {
+                    model.addColumn(meta.getColumnName(rsIndex) + "." + aSublist);
                 }
             }
         }
@@ -1213,15 +1184,6 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
     @MonotonicNonNull private AprsSystemInterface aprsSystemInterface = null;
 
     /**
-     * Get the value of aprsSystemInterface
-     *
-     * @return the value of aprsSystemInterface
-     */
-    @Nullable public AprsSystemInterface getAprsSystemInterface() {
-        return aprsSystemInterface;
-    }
-
-    /**
      * Set the value of aprsSystemInterface
      *
      * @param aprsSystemInterface new value of aprsSystemInterface
@@ -1247,14 +1209,14 @@ public class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupL
                                         if (null != ex) {
                                             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, null, ex);
                                             System.err.println("Called from :");
-                                            for (int i = 0; i < stackTraceElemArray.length; i++) {
-                                                System.err.println(stackTraceElemArray[i]);
+                                            for (StackTraceElement aStackTraceElemArray : stackTraceElemArray) {
+                                                System.err.println(aStackTraceElemArray);
                                             }
-                                            System.err.println("");
+                                            System.err.println();
                                             System.err.println("Exception handled at ");
 
                                             if (null != aprsSystemInterface) {
-                                                if (aprsSystemInterface.isEnableDebugDumpstacks()) {
+                                                if (aprsSystemInterface.isEnableDebugDumpStacks()) {
                                                     Thread.dumpStack();
                                                 }
                                                 aprsSystemInterface.setTitleErrorString("Database error: " + ex.toString());

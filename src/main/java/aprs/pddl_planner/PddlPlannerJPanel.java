@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -38,7 +38,6 @@ import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,7 +65,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
+@SuppressWarnings("unused")
+class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
 
     /**
      * Creates new form PddlPlannerJPanel
@@ -558,11 +558,6 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         return actionsToCrclJInternalFrame1.getActionsList();
     }
 
-//    public void setActionsList(List<PddlAction> actionsList) {
-//        if (null != actionsToCrclJInternalFrame1) {
-//            actionsToCrclJInternalFrame1.setActionsList(actionsList);
-//        }
-//    }
     private void addAction(Action action) {
         if (null != actionsToCrclJInternalFrame1) {
             this.actionsToCrclJInternalFrame1.addAction(action);
@@ -652,7 +647,9 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
                 jSpinnerMaxLines.setValue(1);
                 maxLines = 1;
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
+            Logger.getLogger(PddlPlannerJPanel.class
+                    .getName()).log(Level.SEVERE, null, exception);
         }
         if (logLines.size() < maxLines) {
             addLogLine(l);
@@ -665,8 +662,8 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
             }
             addLogLine(l);
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < logLines.size(); i++) {
-                sb.append(logLines.get(i));
+            for (String logLine : logLines) {
+                sb.append(logLine);
             }
             if (!jCheckBoxPauseOutput.isSelected()) {
                 jTextAreaOutput.setText(sb.toString());
@@ -781,7 +778,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         printMessage("Finished copy of local file \"" + lfile + "\" to remote host " + host + " as remote file \"" + rfile + "\".");
     }
 
-    private static int checkAck(InputStream in) throws IOException, Exception {
+    private static int checkAck(InputStream in) throws Exception {
         int b = in.read();
         // b may be 0 for success,
         //          1 for error,
@@ -795,7 +792,7 @@ public class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInte
         }
 
         if (b == 1 || b == 2) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             int c;
             do {
                 c = in.read();

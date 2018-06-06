@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -105,7 +105,7 @@ public class VisionSocketServer implements AutoCloseable {
         }
     }
 
-    private final List<Socket> clients = Collections.synchronizedList(new ArrayList<Socket>());
+    private final List<Socket> clients = Collections.synchronizedList(new ArrayList<>());
 
     @SuppressWarnings("DefaultAnnotationParam")
     private void start(
@@ -163,8 +163,7 @@ public class VisionSocketServer implements AutoCloseable {
 
     public static String listToLine(List<PhysicalItem> list) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < list.size(); i++) {
-            PhysicalItem item = list.get(i);
+        for (PhysicalItem item : list) {
             if (null != item && item.getName() != null && item.getName().length() > 0) {
                 sb.append(item.getName());
                 sb.append(',');
@@ -290,8 +289,7 @@ public class VisionSocketServer implements AutoCloseable {
             publishService = null;
         }
 
-        for (int i = 0; i < clients.size(); i++) {
-            Socket client = clients.get(i);
+        for (Socket client : clients) {
             if (null != client) {
                 try {
                     client.close();

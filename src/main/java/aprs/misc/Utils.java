@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -80,6 +80,7 @@ public class Utils {
     /**
      * A Runnable that may throw a checked exception.
      */
+    @SuppressWarnings("RedundantThrows")
     public interface RunnableWithThrow {
 
         /**
@@ -478,7 +479,6 @@ public class Utils {
             int height = 0;
             for (int colIndex = 0; colIndex < table.getColumnCount(); colIndex++) {
                 DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
-                TableColumn col = colModel.getColumn(colIndex);
                 TableCellRenderer renderer = table.getCellRenderer(rowIndex, colIndex);
                 Object value = table.getValueAt(rowIndex, colIndex);
                 if (null != value) {

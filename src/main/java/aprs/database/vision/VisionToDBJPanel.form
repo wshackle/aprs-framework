@@ -338,7 +338,7 @@
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel17">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Last Command Recieved:"/>
+            <Property name="text" type="java.lang.String" value="Last Command Received:"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="jTextFieldLastCommand">

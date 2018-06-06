@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -35,6 +35,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("unused")
 public class Action {
 
     private volatile long planTime;
@@ -228,24 +229,24 @@ public class Action {
     public static Action parse(String s) {
 
         String label = "";
-        int endlabelindex = s.indexOf(':');
-        if (endlabelindex < s.length() && endlabelindex > 0) {
-            label = s.substring(0, endlabelindex).trim();
-            s = s.substring(endlabelindex + 1).trim();
+        int endLabelIndex = s.indexOf(':');
+        if (endLabelIndex < s.length() && endLabelIndex > 0) {
+            label = s.substring(0, endLabelIndex).trim();
+            s = s.substring(endLabelIndex + 1).trim();
         }
-        int p1indx = s.indexOf('(');
-        if (p1indx >= 0) {
-            s = s.substring(p1indx + 1).trim();
+        int p1index = s.indexOf('(');
+        if (p1index >= 0) {
+            s = s.substring(p1index + 1).trim();
         } else {
-            throw new IllegalArgumentException(" \"" + s + "\".indexOf('(') returned  " + p1indx);
+            throw new IllegalArgumentException(" \"" + s + "\".indexOf('(') returned  " + p1index);
         }
-        int p2indx = s.indexOf(')');
+        int p2index = s.indexOf(')');
         String cost = "";
-        if (p2indx > 0 && p2indx < s.length()) {
-            cost = s.substring(p2indx + 1).trim();
-            s = s.substring(0, p2indx);
+        if (p2index > 0 && p2index < s.length()) {
+            cost = s.substring(p2index + 1).trim();
+            s = s.substring(0, p2index);
         } else {
-            throw new IllegalArgumentException(" \"" + s + "\".indexOf(')') returned  " + p2indx);
+            throw new IllegalArgumentException(" \"" + s + "\".indexOf(')') returned  " + p2index);
         }
         String args[] = s.split("[ \t]+");
         String typename = args[0];

@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -45,6 +45,7 @@ public class SocketLineReader {
 
     public interface CallBack {
 
+        @SuppressWarnings("unused")
         public void call(String line, PrintStream ps);
     }
     @Nullable
@@ -73,7 +74,7 @@ public class SocketLineReader {
                     thread.interrupt();
                     thread.join(200);
                 }
-            } catch (Exception exception) {
+            } catch (Exception ignored) {
             }
 //            try {
 //                if (null != br) {
@@ -85,7 +86,7 @@ public class SocketLineReader {
                 if (null != socket) {
                     socket.close();
                 }
-            } catch (Exception exception) {
+            } catch (Exception ignored) {
             }
 //            br = null;
             socket = null;
@@ -175,7 +176,7 @@ public class SocketLineReader {
             ServerSocket lss = new ServerSocket(port);
             serverSocket = lss;
             lss.setReuseAddress(true);
-            ArrayList<Clnt> lcals = new ArrayList<Clnt>();
+            ArrayList<Clnt> lcals = new ArrayList<>();
             als = lcals;
             thread = new Thread(new Runnable() {
 
@@ -254,7 +255,7 @@ public class SocketLineReader {
                 thread.interrupt();
                 thread.join(200);
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
 //        try {
 //            if (null != br) {
@@ -272,7 +273,7 @@ public class SocketLineReader {
             if (null != socket) {
                 socket.close();
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
 
         try {
@@ -285,8 +286,7 @@ public class SocketLineReader {
         try {
             List<Clnt> lals = als;
             if (null != lals) {
-                for (int i = 0; i < lals.size(); i++) {
-                    Clnt c = lals.get(i);
+                for (Clnt c : lals) {
                     c.close();
                 }
             }

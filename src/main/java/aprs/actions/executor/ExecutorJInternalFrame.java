@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -138,10 +138,6 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     @Override
     public List<Action> getActionsList() {
         return this.executorJPanel1.getActionsList();
-    }
-
-    public XFuture<Void> continueActionList() {
-        return this.executorJPanel1.continueActionList();
     }
 
     public boolean completeActionList(String comment, int startAbortCount) {
@@ -292,10 +288,6 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.doActions(comment, safeAbortCount);
     }
 
-    public void setGeneateCrclService(ExecutorService geneateCrclService) {
-        executorJPanel1.setGenerateCrclService(geneateCrclService);
-    }
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.actions.executor.ExecutorJPanel executorJPanel1;
@@ -319,10 +311,6 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     public void close() {
         executorJPanel1.close();
         this.setVisible(false);
-    }
-
-    @Nullable public Callable<DbSetupPublisher> getDbSetupSupplier() {
-        return executorJPanel1.getDbSetupSupplier();
     }
 
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {

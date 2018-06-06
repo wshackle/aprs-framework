@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -499,8 +499,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     boolean changeFound = false;
 
                     if (!settingItems && !object2DJPanel1.isShowOutputItems()) {
-                        List<PhysicalItem> l = new ArrayList<>();
-                        l.addAll(getItems());
+                        List<PhysicalItem> l = new ArrayList<>(getItems());
                         PhysicalItem item = null;
                         for (int i = 0; i < jTableItems.getRowCount(); i++) {
                             int listIndex = (int) jTableItems.getValueAt(i, 0);
@@ -1590,9 +1589,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             throw new IllegalStateException("visionSocketServer is null");
         }
         if (jCheckBoxShuffleSimulatedUpdates.isSelected() || simulatedDropRate > 0.01 || jCheckBoxAddPosNoise.isSelected()) {
-            List<PhysicalItem> l = new ArrayList<>();
             List<PhysicalItem> origList = getItems();
-            l.addAll(origList);
+            List<PhysicalItem> l = new ArrayList<>(origList);
             if (simulatedDropRate > 0.01 || jCheckBoxAddPosNoise.isSelected()) {
                 l = l.stream()
                         .filter(this::dropFilter)
@@ -1610,8 +1608,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private void jButtonAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddActionPerformed
-        List<PhysicalItem> l = new ArrayList<>();
-        l.addAll(getItems());
+        List<PhysicalItem> l = new ArrayList<>(getItems());
         PhysicalItem item = newPhysicalItemNameRotXYScoreType("item_" + (l.size() + 1), 0,
                 (object2DJPanel1.getMaxX() + object2DJPanel1.getMinX()) / 2.0,
                 (object2DJPanel1.getMaxY() + object2DJPanel1.getMinY()) / 2.0,
@@ -1626,8 +1623,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int row = jTableItems.getSelectedRow();
         List<PhysicalItem> oldList = getItems();
         if (row >= 0 && row < oldList.size()) {
-            List<PhysicalItem> l = new ArrayList<>();
-            l.addAll(getItems());
+            List<PhysicalItem> l = new ArrayList<>(getItems());
             l.remove(jTableItems.getSelectedRow());
             setItems(l);
         }
@@ -2408,7 +2404,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 return relString;
             }
             return canString;
-        } catch (IOException iOException) {
+        } catch (Exception exception) {
+            Logger.getLogger(Object2DOuterJPanel.class
+                    .getName()).log(Level.SEVERE, null, exception);
         }
         return str;
     }
@@ -2724,7 +2722,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile long lastVisionUpdateTime = System.currentTimeMillis();
 
     @Override
-    public void visionClientUpdateRecieved(List<PhysicalItem> l, String line) {
+    public void visionClientUpdateReceived(List<PhysicalItem> l, String line) {
         long now = System.currentTimeMillis();
 
         String detailsMessage = null;
@@ -2855,8 +2853,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private double getClosestUncorrectedDistance(PointType ptIn) {
         PointType uncorrectedPoint = aprsSystemInterface.reverseCorrectPoint(ptIn);
-        List<PhysicalItem> l = new ArrayList<>();
-        l.addAll(getItems());
+        List<PhysicalItem> l = new ArrayList<>(getItems());
         return getClosestDistanceIndex(uncorrectedPoint.getX(), uncorrectedPoint.getY(), l).dist;
     }
 
@@ -2946,8 +2943,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setCurrentX(currentX);
         object2DJPanel1.setCurrentY(currentY);
         object2DJPanel1.setEndEffectorClosed(isHoldingObjectExpected);
-        List<PhysicalItem> l = new ArrayList<>();
-        l.addAll(getItems());
+        List<PhysicalItem> l = new ArrayList<>(getItems());
         DistIndex di = getClosestDistanceIndex(currentX, currentY, l);
         double min_dist = di.dist;
         int min_dist_index = di.index;

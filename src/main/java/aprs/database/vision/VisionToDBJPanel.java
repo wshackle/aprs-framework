@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -71,7 +71,6 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 import java.awt.Desktop;
 import java.io.BufferedWriter;
 import javax.swing.JTable;
@@ -88,7 +87,6 @@ import static crcl.utils.CRCLPosemath.vector;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
@@ -378,7 +376,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         });
 
-        jLabel17.setText("Last Command Recieved:");
+        jLabel17.setText("Last Command Received:");
 
         jTextFieldLastCommand.setEditable(false);
 
@@ -1162,7 +1160,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (this.jCheckBoxDebug.isSelected()) {
             appendLogDisplay(line + "\r\n");
         }
-        this.jTextFieldPoseUpdatesProcessed.setText(Integer.toString(DatabasePoseUpdater.poses_updated));
+        this.jTextFieldPoseUpdatesProcessed.setText(Integer.toString(DatabasePoseUpdater.poses_updated.get()));
         if (null != visionClient) {
             this.jTextFieldPoseUpdatesParsed.setText(Integer.toString(visionClient.getPoseUpdatesParsed()));
         }
@@ -1717,7 +1715,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private volatile String lastVisionClientUpdateLine = null;
 
     @Override
-    public void visionClientUpdateRecieved(List<PhysicalItem> visionList, String line) {
+    public void visionClientUpdateReceived(List<PhysicalItem> visionList, String line) {
         try {
             if (acquire == AcquireEnum.OFF) {
                 return;
@@ -2261,10 +2259,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             dpu.setForceUpdates(jCheckBoxForceUpdates.isSelected());
         }
     }//GEN-LAST:event_jCheckBoxForceUpdatesActionPerformed
-
-    private void callShowDatabaseTableImage() {
-        Utils.runOnDispatchThread(this::showDatabaseTableImage);
-    }
 
     private void showDatabaseTableImage() {
         try {

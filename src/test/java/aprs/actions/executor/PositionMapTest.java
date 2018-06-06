@@ -1,7 +1,7 @@
 /*
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
- * Software Copywrite/Warranty Disclaimer
+ * Software Copyright/Warranty Disclaimer
  * 
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
@@ -32,7 +32,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import static org.junit.Assert.*;
-import org.junit.Test;
+
 import rcs.posemath.PmCartesian;
 import rcs.posemath.PmException;
 import rcs.posemath.PmPose;
@@ -44,7 +44,7 @@ import rcs.posemath.Posemath;
  *
  * @author shackle
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings("ALL")
 public class PositionMapTest {
 
     public PositionMapTest() {
