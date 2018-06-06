@@ -909,12 +909,13 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
             throw new IllegalStateException("connection is null");
         }
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            StringBuilder line = null;
-            while (null != (line = new StringBuilder(br.readLine()))) {
+            String line = null;
+            while (null != (line = br.readLine())) {
                 PreparedStatement stmtn
-                        = connection.prepareStatement(line.toString());
-                while (!line.toString().trim().endsWith(")")) {
-                    line.append(br.readLine());
+                        = connection.prepareStatement(line);
+                String nextline  = null;
+                while (!line.trim().endsWith(")") && (null != (nextline = br.readLine()))) {
+                    line += nextline;
                 }
                 System.out.println("Executing line:" + line);
                 boolean returnedResultSet = stmtn.execute();

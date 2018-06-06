@@ -1342,14 +1342,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             if (pose == null) {
                                 skippedParts.add(partName);
                                 recordSkipTakePart(partName, pose);
-                                skipEndIndex = idx;
                                 if (skipStartIndex < 0) {
                                     skipStartIndex = idx;
                                 }
                                 needSkip = true;
                             } else {
                                 foundParts.add(partName);
-                                skipEndIndex = -1;
                                 skipStartIndex = -1;
                                 needSkip = false;
                             }
@@ -1363,13 +1361,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             if (null == lastTakenPart) {
                                 PoseType slotPose = getPose(slotName, getReverseFlag());
                                 recordSkipPlacePart(slotName, slotPose);
-                                skipEndIndex = idx;
                                 if (skipStartIndex < 0) {
                                     skipStartIndex = idx;
                                 }
                                 needSkip = true;
                             } else {
-                                skipEndIndex = -1;
                                 skipStartIndex = -1;
                                 needSkip = false;
                             }

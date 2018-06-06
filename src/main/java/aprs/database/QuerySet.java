@@ -985,15 +985,19 @@ public class QuerySet implements QuerySetInterface {
     }
 
     @Override
-    public void close() throws SQLException {
-        closed = true;
-        getPoseStatement.close();
-        setPoseStatement.close();
-        getTraySlotsFromKitSkuStatement.close();
-        getPartsTraysStatement.close();
-        getSlotsStatement.close();
-        getAllPartsInKtStatement.close();
-        getAllPartsInPtStatement.close();
+    public void close()  {
+        try {
+            closed = true;
+            getPoseStatement.close();
+            setPoseStatement.close();
+            getTraySlotsFromKitSkuStatement.close();
+            getPartsTraysStatement.close();
+            getSlotsStatement.close();
+            getAllPartsInKtStatement.close();
+            getAllPartsInPtStatement.close();
+        } catch (SQLException ex) {
+            Logger.getLogger(QuerySet.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
