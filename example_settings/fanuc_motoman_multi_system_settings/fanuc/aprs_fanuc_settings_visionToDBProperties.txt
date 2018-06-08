@@ -1,6 +1,6 @@
 #  Automatically saved 
---acquirestate=ON
 --Acquirestate=ON
+--acquirestate=ON
 --commandport=4001
 --dbhost=localhost
 --dbname=neo4j

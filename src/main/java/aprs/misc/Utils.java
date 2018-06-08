@@ -154,9 +154,11 @@ public class Utils {
 
         private static @Nullable
         final File logFileDir = createLogFileDir();
-        private static @Nullable IOException createLogFileException = null;
+        private static @Nullable
+        IOException createLogFileException = null;
 
-        @Nullable private static File createLogFileDir() {
+        @Nullable
+        private static File createLogFileDir() {
             try {
                 File tmpTest = File.createTempFile("temp_test", "txt");
                 File logFileDir = new File(tmpTest.getParentFile(), "aprs_logs_" + getDateTimeString());
@@ -389,7 +391,8 @@ public class Utils {
         }
     }
 
-    @Nullable private static <R> R unwrap(XFuture<R> f) {
+    @Nullable
+    private static <R> R unwrap(XFuture<R> f) {
         try {
             return f.get();
         } catch (InterruptedException | ExecutionException ex) {
@@ -443,9 +446,14 @@ public class Utils {
             if (renderer == null) {
                 renderer = table.getTableHeader().getDefaultRenderer();
             }
-            Component headerComp = renderer.getTableCellRendererComponent(table, col.getHeaderValue(),
+            Object colHeaderVal = col.getHeaderValue();
+            Component headerComp = renderer.getTableCellRendererComponent(table, colHeaderVal,
                     false, false, 0, i);
-            width = Math.max(width, headerComp.getPreferredSize().width);
+            if (null != headerComp && null != headerComp.getPreferredSize()) {
+                width = Math.max(width, headerComp.getPreferredSize().width);
+            } else {
+                System.err.println("table has invalid renderer for header (" + i + ") colHeaderVal=" + colHeaderVal);
+            }
             for (int r = 0; r < table.getRowCount(); r++) {
                 renderer = table.getCellRenderer(r, i);
                 Object tableValue = table.getValueAt(r, i);
@@ -453,7 +461,11 @@ public class Utils {
                     Component comp = renderer.getTableCellRendererComponent(table,
                             tableValue,
                             false, false, r, i);
-                    width = Math.max(width, comp.getPreferredSize().width);
+                    if (null != comp && null != comp.getPreferredSize()) {
+                        width = Math.max(width, comp.getPreferredSize().width);
+                    } else {
+                        System.err.println("table has invalid renderer for cell (" + r + "," + i + ")  colHeaderVal=" + colHeaderVal + ", tableValue=" + tableValue);
+                    }
                 }
             }
             if (i == table.getColumnCount() - 1) {
@@ -589,7 +601,7 @@ public class Utils {
                 List<Object> l = new ArrayList<>();
                 for (int j = 0; j < tm.getColumnCount(); j++) {
                     Object o = tm.getValueAt(i, j);
-                    if(o==null) {
+                    if (o == null) {
                         l.add("");
                     }
                     if (o instanceof File) {
