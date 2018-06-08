@@ -1,5 +1,5 @@
 #
-#Thu May 31 16:38:41 EDT 2018
+#Fri Jun 08 10:41:19 EDT 2018
 ode.exe=sensorServer.js
 autoStartPressureSensorServer=true
 fingerSensorServerCmd=C\:Program Files

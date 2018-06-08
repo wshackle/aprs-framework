@@ -22,6 +22,8 @@
  */
 package aprs.simview;
 
+import java.util.Objects;
+
 /**
  *
  * @author shackle
@@ -37,6 +39,7 @@ public enum DisplayAxis {
     DisplayAxis(String displayOption) {
         this.displayOption = displayOption;
     }
+    
 
     public String toString() {
         return displayOption;

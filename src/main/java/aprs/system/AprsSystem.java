@@ -739,6 +739,20 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
+    public void setToolHolderOperationEnabled(boolean enable) {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
+        }
+        pddlExecutorJInternalFrame1.setToolHolderOperationEnabled(enable);
+    }
+
+    public boolean isToolHolderOperationEnabled() {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
+        }
+        return pddlExecutorJInternalFrame1.isToolHolderOperationEnabled();
+    }
+
     /**
      * Add a position map.
      * <p>
@@ -4161,6 +4175,9 @@ public class AprsSystem implements AprsSystemInterface {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setPauseCheckboxSelected(val);
         }
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.showPaused(val);
+        }
         this.pauseCheckboxSelected = val;
     }
 
@@ -4175,12 +4192,17 @@ public class AprsSystem implements AprsSystemInterface {
      * Continue operations that were previously paused.
      */
     public void resume() {
+
         logEvent("resume", null);
+        if (null == crclClientJInternalFrame) {
+            throw new IllegalStateException("null == crclClientJInternalFrame");
+        }
         resumingThread = Thread.currentThread();
         resumingTrace = resumingThread.getStackTrace();
         resuming = true;
         boolean badState = pausing;
         try {
+            String startPauseInfo = crclClientJInternalFrame.pauseInfoString();
             if (this.titleErrorString != null && this.titleErrorString.length() > 0) {
                 throw new IllegalStateException("Can't resume when titleErrorString set to " + titleErrorString);
             }
@@ -4195,9 +4217,9 @@ public class AprsSystem implements AprsSystemInterface {
             badState = badState || pausing;
             clearErrors();
             badState = badState || pausing;
-            if (null != crclClientJInternalFrame) {
-                crclClientJInternalFrame.unpauseCrclProgram();
-            }
+            setPauseCheckboxSelected(false);
+            crclClientJInternalFrame.unpauseCrclProgram();
+            setPauseCheckboxSelected(false);
             notifyPauseFutures();
             badState = badState || pausing;
             clearErrors();
@@ -4205,16 +4227,23 @@ public class AprsSystem implements AprsSystemInterface {
             String methodName = "resume";
             takeSnapshots(methodName);
             badState = badState || pausing;
-            if (null != crclClientJInternalFrame) {
-                crclClientJInternalFrame.unpauseCrclProgram();
-            }
+            setPauseCheckboxSelected(false);
+            crclClientJInternalFrame.unpauseCrclProgram();
+            setPauseCheckboxSelected(false);
             badState = badState || pausing;
             updateTitle("", "");
             badState = badState || pausing;
+            boolean currentPaused = isPaused();
             if (null != pddlExecutorJInternalFrame1) {
-                pddlExecutorJInternalFrame1.showPaused(false);
+                pddlExecutorJInternalFrame1.showPaused(currentPaused);
             }
-            if (isPaused()) {
+            if (currentPaused) {
+                String currentPauseString = crclClientJInternalFrame.pauseInfoString();
+                System.err.println("Still paused after resume");
+                System.err.println("startPauseInfo = " + startPauseInfo);
+                System.err.println("currentPauseString = " + currentPauseString);
+                System.err.println("runName=" + getRunName());
+                setPauseCheckboxSelected(currentPaused);
                 throw new IllegalStateException("Still paused after resume. crclClientJInternalFrame.isPaused()="
                         + isCrclClientJInternalFramePaused());
             }

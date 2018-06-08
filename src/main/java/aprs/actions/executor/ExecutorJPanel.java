@@ -830,7 +830,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 {"visionCycleNewDiffThreshold", "3"},
                 {"pauseInsteadOfRecover", "false"},
                 {"skipMissingParts", "false"},
-                {"useJointMovesForToolHolderApproach", "true"}
+                {"useJointMovesForToolHolderApproach", "true"},
+                {"joint0DiffTolerance", "20.0"}
             },
             new String [] {
                 "Name", "Value"
@@ -1651,10 +1652,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jTableCrclProgram.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {1, null},
-                {2, null},
-                {3, null},
-                {4, null}
+                { new Integer(1), null},
+                { new Integer(2), null},
+                { new Integer(3), null},
+                { new Integer(4), null}
             },
             new String [] {
                 "ID", "Text"
@@ -1770,7 +1771,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jTabbedPane1.addTab("Pose Cache", jPanelContainerPoseCache);
 
         opDisplayJPanelInput.setLabel("Input");
-        opDisplayJPanelInput.setLabelFont(new java.awt.Font("SansSerif", Font.BOLD, 18)); // NOI18N
+        opDisplayJPanelInput.setLabelFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
         opDisplayJPanelInput.setLabelPos(new java.awt.Point(200, 20));
 
         javax.swing.GroupLayout opDisplayJPanelInputLayout = new javax.swing.GroupLayout(opDisplayJPanelInput);
@@ -6199,6 +6200,15 @@ private JTextArea editTableArea = new JTextArea();
         }
         crclGenerator.setOptions(getTableOptions());
     }
+    
+    public void setToolHolderOperationEnabled(boolean enable) {
+        crclGenerator.setToolHolderOperationEnabled(enable);
+    }
+
+    public boolean isToolHolderOperationEnabled() {
+        return crclGenerator.isToolHolderOperationEnabled();
+    }
+    
 
     public Map<String, String> getTableOptions() {
         Map<String, String> options = new HashMap<>();
