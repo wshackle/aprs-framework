@@ -199,6 +199,14 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         this.executorJPanel1.setOption(key, value);
     }
 
+    public void setToolHolderOperationEnabled(boolean enable) {
+        executorJPanel1.setToolHolderOperationEnabled(enable);
+    }
+
+    public boolean isToolHolderOperationEnabled() {
+        return executorJPanel1.isToolHolderOperationEnabled();
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

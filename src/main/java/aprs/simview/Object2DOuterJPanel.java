@@ -2622,9 +2622,21 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             String displayAxisString = props.getProperty("displayAxis");
             if (displayAxisString != null && displayAxisString.length() > 0) {
-                DisplayAxis displayAxis = DisplayAxis.valueOf(displayAxisString);
-                jComboBoxDisplayAxis.setSelectedItem(displayAxis);
-                object2DJPanel1.setDisplayAxis(displayAxis);
+                boolean axisFound = false;
+                for (DisplayAxis da : DisplayAxis.values()) {
+                    if (Objects.equals(da.toString(), displayAxisString)) {
+                        DisplayAxis displayAxis = da;
+                        jComboBoxDisplayAxis.setSelectedItem(displayAxis);
+                        object2DJPanel1.setDisplayAxis(displayAxis);
+                        axisFound = true;
+                        break;
+                    }
+                }
+                if (!axisFound) {
+                    DisplayAxis displayAxis = DisplayAxis.valueOf(displayAxisString);
+                    jComboBoxDisplayAxis.setSelectedItem(displayAxis);
+                    object2DJPanel1.setDisplayAxis(displayAxis);
+                }
             }
             String trackCurrentPosString = props.getProperty("trackcurrentpos");
             if (trackCurrentPosString != null && trackCurrentPosString.length() > 0) {
@@ -2910,7 +2922,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private volatile javax.swing.@Nullable Timer timer = null;
 
-    @Nullable private volatile PoseUpdateHistoryItem lastDropUpdate = null;
+    @Nullable
+    private volatile PoseUpdateHistoryItem lastDropUpdate = null;
 
     @Override
     public void handlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
@@ -3096,7 +3109,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             this.closestItem = localClosestItem;
         }
 
-        @Nullable PhysicalItem getClosestItem() {
+        @Nullable
+        PhysicalItem getClosestItem() {
             return closestItem;
         }
 

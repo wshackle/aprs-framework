@@ -22,6 +22,7 @@
  */
 package aprs.launcher;
 
+import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -42,6 +43,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 class Neo4JKiller {
 
+    
+    private static final Logger LOGGER = Logger.getLogger(Neo4JKiller.class.getName());
+    
+    private static boolean debug = Boolean.getBoolean("Neo4JKiller.debug");
+    
+    private static void logDebug(String string)  {
+        if(debug) {
+            LOGGER.log(Level.INFO, string);
+        }
+    }
+    
+    public static boolean isDebug() {
+        return debug;
+    }
+    
+    public static void setDebug(boolean newDebugVal) {
+        debug = newDebugVal;
+    }
+    
     @MonotonicNonNull
     private static File jpsCommandFile;
 
@@ -79,13 +99,13 @@ class Neo4JKiller {
         if (isWindowsOs()) {
             jpsCmd = DEFAULT_WINDOWS_JPS_COMMAND;
         }
-        System.out.println("Using command \"" + jpsCmd + "\" to run jps to find the neo4j processes, if you need to use a different command on your system put the text for that command in:");
+        logDebug("Using command \"" + jpsCmd + "\" to run jps to find the neo4j processes, if you need to use a different command on your system put the text for that command in:");
         if(null != jpsCommandFile) {
-            System.out.println(jpsCommandFile.getCanonicalPath());
+            logDebug(jpsCommandFile.getCanonicalPath());
         } else {
-            System.out.println(JPS_COMMAND_FILENAME_STRING+" in the directory with the launch.txt file");
+            logDebug(JPS_COMMAND_FILENAME_STRING+" in the directory with the launch.txt file");
         }
-        System.out.println(" or set the property jps.command");
+        logDebug(" or set the property jps.command");
         return jpsCmd;
     }
 
@@ -98,13 +118,13 @@ class Neo4JKiller {
         String line;
         List<Integer> pids = new ArrayList<>();
         while (null != (line = br.readLine())) {
-            System.out.println("getNeo4JPIDS: line = " + line);
+            logDebug("getNeo4JPIDS: line = " + line);
             String words[] = line.split("[ \t]+");
             if (words.length == 2) {
                 if (words[1].equals("org.neo4j.server.CommunityBootstrapper")) {
                     pids.add(Integer.valueOf(words[0]));
                 } else {
-                    System.out.println("words = " + Arrays.toString(words));
+                    logDebug("words = " + Arrays.toString(words));
                 }
             }
         }
@@ -124,7 +144,7 @@ class Neo4JKiller {
                     p.destroyForcibly();
                 }
             } catch (InterruptedException ex) {
-                Logger.getLogger(Neo4JKiller.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
                 p.destroyForcibly();
             }
         }
@@ -142,7 +162,7 @@ class Neo4JKiller {
                     p.destroyForcibly();
                 }
             } catch (InterruptedException ex) {
-                Logger.getLogger(Neo4JKiller.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
                 p.destroyForcibly();
             }
         }
@@ -162,10 +182,10 @@ class Neo4JKiller {
 
     static void killNeo4J() throws IOException {
         List<Integer> pids = getNeo4JPIDs();
-        System.out.println("killNeo4J: pids = " + pids);
+        logDebug("killNeo4J: pids = " + pids);
         killPIDs(pids);
         List<Integer> newpids = getNeo4JPIDs();
-        System.out.println("killNeo4J: newpids = " + newpids);
+        logDebug("killNeo4J: newpids = " + newpids);
     }
 
     public static void main(String[] args) throws IOException {

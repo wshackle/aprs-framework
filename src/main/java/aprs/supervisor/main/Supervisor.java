@@ -1324,6 +1324,7 @@ public class Supervisor {
                             stealFor.setExecutorOption(opt, stealFromOptionsCopy.get(opt));
                         }
                     }
+                    stealFor.setToolHolderOperationEnabled(false);
                     return stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
                 },
                 supervisorExecutorService)
@@ -1477,6 +1478,7 @@ public class Supervisor {
                                         stealFor.setExecutorOption(opt, stealForOptions.get(opt));
                                     }
                                 }
+                                stealFor.setToolHolderOperationEnabled(true);
                                 stealFor.removePositionMap(pm);
                                 logEvent("start returnRobot." + stealFor.getTaskName() + " connect to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
                                 return stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);

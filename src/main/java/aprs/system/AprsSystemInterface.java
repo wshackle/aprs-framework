@@ -323,6 +323,12 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      */
     public Map<String, String> getExecutorOptions();
 
+    
+    public void setToolHolderOperationEnabled(boolean enable);
+    
+    public boolean isToolHolderOperationEnabled();
+    
+    
     /**
      * Set an executor option.
      *
