@@ -58,6 +58,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     public ProcessLauncherJFrame() {
         initComponents();
     }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
