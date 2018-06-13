@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import javax.swing.JMenu;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -64,6 +65,10 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         executorJPanel1.showPaused(state);
     }
 
+    public JMenu getToolMenu() {
+        return executorJPanel1.getToolMenu();
+    }
+    
     /**
      * Get the value of externalGetPoseFunction
      *

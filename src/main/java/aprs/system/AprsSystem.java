@@ -3499,6 +3499,10 @@ public class AprsSystem implements AprsSystemInterface {
                                         xf3 = Utils.runOnDispatchThread(() -> {
                                             if (!alreadySelected) {
                                                 setupWindowsMenu();
+
+                                            }
+                                            if (null != aprsSystemDisplayJFrame) {
+                                                aprsSystemDisplayJFrame.addMenu(execFrame.getToolMenu());
                                             }
                                         });
                                     });

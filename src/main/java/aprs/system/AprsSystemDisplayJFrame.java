@@ -23,6 +23,7 @@
 package aprs.system;
 
 import aprs.misc.ActiveWinEnum;
+import com.google.common.base.Objects;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -48,6 +49,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import javax.swing.DesktopManager;
+import javax.swing.JMenu;
 
 /**
  * AprsSystemInterface is the container for one robotic system in the APRS (Agility
@@ -70,6 +72,26 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     public void setConnectDatabaseCheckboxEnabled(boolean enable) {
         jCheckBoxMenuItemConnectDatabase.setEnabled(enable);
+    }
+    
+    public boolean addMenu(JMenu menu) {
+        if(null == menu) {
+            return false;
+        }
+        for (int i = 0; i < jMenuBar1.getMenuCount(); i++) {
+            JMenu menuFromBar = jMenuBar1.getMenu(i);
+            if(menuFromBar == null) {
+                continue; // paranoid
+            }
+            if(menuFromBar == menu) {
+                return false;
+            }
+            if(menuFromBar.getText().equals(menu.getText())) {
+                return false;
+            }
+        }
+        this.jMenuBar1.add(menu);
+        return true;
     }
     
     /**

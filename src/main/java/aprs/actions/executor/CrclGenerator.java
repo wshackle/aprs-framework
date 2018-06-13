@@ -170,7 +170,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private static final Logger LOGGER = Logger.getLogger(CrclGenerator.class.getName());
 
-    private boolean debug = Boolean.getBoolean("Neo4JKiller.debug");
+    private static final boolean DEFAULT_DEBUG = Boolean.getBoolean("CrclGenerator.debug");
+
+    private boolean debug = DEFAULT_DEBUG;
 
     private void logDebug(String string) {
         if (debug) {
@@ -203,8 +205,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private List<Action> opActionsToPddlActions(OpActionPlan plan, int start) {
         List<? extends OpAction> listIn = plan.getEffectiveOrderedList(false);
         List<Action> ret = new ArrayList<>();
-        double accelleration = 100.0;
-        double maxSpeed = fastTransSpeed;
         OUTER:
         for (int i = start; i < listIn.size(); i++) {
             OpAction opa = listIn.get(i);
@@ -1482,12 +1482,20 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         gotoToolChangerPose(action, cmds);
                         break;
 
-                    case DROP_TOOL:
-                        dropTool(action, cmds);
+                    case DROP_TOOL_BY_HOLDER:
+                        dropToolByHolder(action, cmds);
                         break;
 
-                    case PICKUP_TOOL:
-                        pickupTool(action, cmds);
+                    case DROP_TOOL_ANY:
+                        dropToolAny(action, cmds);
+                        break;
+
+                    case PICKUP_TOOL_BY_HOLDER:
+                        pickupToolByHolder(action, cmds);
+                        break;
+
+                    case PICKUP_TOOL_BY_TOOL:
+                        pickupToolByTool(action, cmds);
                         break;
 
                     case END_PROGRAM:
@@ -4121,6 +4129,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private final Map<String, String> expectedToolHolderContentsMap = new ConcurrentHashMap<>();
 
+    private final Map<String, Set<String>> possibleToolHolderContentsMap = new ConcurrentHashMap<>();
+
+    /**
+     * Get the value of expectedToolHolderContentsMap
+     *
+     * @return the value of expectedToolHolderContentsMap
+     */
+    public Map<String, Set<String>> getPossibleToolHolderContentsMap() {
+        return possibleToolHolderContentsMap;
+    }
+
     /**
      * Get the value of expectedToolHolderContentsMap
      *
@@ -5290,9 +5309,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return ret;
     }
 
-    private void dropTool(Action action, List<MiddleCommandType> out) throws IllegalStateException, CRCLException, PmException {
-        lastTestApproachPose = null;
+    private void dropToolByHolder(Action action, List<MiddleCommandType> out) throws IllegalStateException, CRCLException, PmException {
         String toolHolderName = action.getArgs()[toolHolderNameArgIndex];
+        dropToolByHolderName(toolHolderName, out);
+    }
+
+    private void dropToolByHolderName(String toolHolderName, List<MiddleCommandType> out) throws IllegalStateException, CRCLException, PmException {
+        lastTestApproachPose = null;
         checkSettings();
         checkDbReady();
         PoseType pose = getToolHolderPose(toolHolderName);
@@ -5300,7 +5323,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             throw new IllegalStateException("no pose for " + toolHolderName);
         }
         addGotoToolChangerApproachByName(out, toolHolderName);
-        PoseType prepPose = addZToPose(pose, approachToolChangerZOffset*0.2);
+        PoseType prepPose = addZToPose(pose, approachToolChangerZOffset * 0.2);
         addMoveTo(out, prepPose, false);
         addSetSlowSpeed(out);
         addMoveTo(out, pose, false);
@@ -5312,6 +5335,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String toolInHolder = getExpectedToolHolderContents(toolHolderName);
         if (!isEmptyTool(toolInHolder)) {
             throw new IllegalStateException("planning to drop tool when holder expected to be holding " + toolInHolder);
+        }
+        Set<String> possibleTools = getPossibleToolHolderContents(toolHolderName);
+        if (!possibleTools.contains(toolInRobot)) {
+            throw new IllegalStateException("planning to drop tool when holder expected to be holding " + toolInHolder + " but " + toolHolderName + " may only store " + possibleTools);
         }
         addMarkerCommand(out,
                 "dropTool " + toolInRobot + " in " + toolHolderName,
@@ -5333,6 +5360,34 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         gotoToolChangerApproachByPose(pose, out);
     }
 
+    private void dropToolAny(Action action, List<MiddleCommandType> out) throws IllegalStateException, CRCLException, PmException {
+        lastTestApproachPose = null;
+        String toolHolderName = null;
+        String toolInRobot = getExpectedToolName();
+        if (isEmptyTool(toolInRobot)) {
+            throw new IllegalStateException("planning to drop tool when robot expected to be holding " + toolInRobot);
+        }
+        for (Entry<String, String> contentsEntry : getExpectedToolHolderContentsMap().entrySet()) {
+            String toolInHolder = contentsEntry.getValue();
+            if (!isEmptyTool(toolInHolder)) {
+                System.out.println("toolInHolder = " + toolInHolder + " is not empty");
+                continue;
+            }
+            String toolHolderNameToCheck = contentsEntry.getKey();
+            Set<String> possibleTools = getPossibleToolHolderContents(toolHolderNameToCheck);
+            if (!possibleTools.contains(toolInRobot)) {
+                System.out.println("toolInRobot = " + toolInRobot + " can not be added to holder " + toolHolderNameToCheck + ", possibleTools=" + possibleTools);
+                continue;
+            }
+            toolHolderName = toolHolderNameToCheck;
+            break;
+        }
+        if (null == toolHolderName) {
+            throw new IllegalStateException("null == toolHolderName");
+        }
+        dropToolByHolderName(toolHolderName, out);
+    }
+
     private void updateCurrentToolHolderContentsMap(String toolChangerPosName, String toolName) {
         currentToolHolderContentsMap.put(toolChangerPosName, toolName);
         if (null != parentExecutorJPanel) {
@@ -5340,10 +5395,41 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private void pickupTool(Action action, List<MiddleCommandType> out) throws IllegalStateException, CRCLException, PmException {
-        lastTestApproachPose = null;
+    private void pickupToolByHolder(Action action, List<MiddleCommandType> out) throws IllegalStateException, CRCLException, PmException {
         String toolHolderName = action.getArgs()[toolHolderNameArgIndex];
-//        String newToolName = action.getArgs()[toolChangeToolNameArgIndex];
+        pickupToolByHolderName(toolHolderName, out);
+    }
+
+    private void pickupToolByTool(Action action, List<MiddleCommandType> out) throws IllegalStateException, CRCLException, PmException {
+        String desiredToolName = action.getArgs()[toolHolderNameArgIndex];
+        String toolHolderName = null;
+        String toolInRobot = getExpectedToolName();
+        if (!isEmptyTool(toolInRobot)) {
+            throw new IllegalStateException("planning to pickup tool when tool robot expected to be holding = " + toolInRobot);
+        }
+        for (Entry<String, String> contentsEntry : getExpectedToolHolderContentsMap().entrySet()) {
+            String toolInHolder = contentsEntry.getValue();
+            String toolHolderNameToCheck = contentsEntry.getKey();
+            if (isEmptyTool(toolInHolder)) {
+                System.out.println("toolInHolder = " + toolInHolder + "for "+toolHolderNameToCheck+" is empty");
+                continue;
+            }
+            
+            if(!Objects.equals(toolInHolder, desiredToolName)) {
+                System.out.println("toolInHolder = " + toolInHolder + " for "+toolHolderNameToCheck+" does not equal desiredToolName="+desiredToolName);
+                continue;
+            }
+            toolHolderName = toolHolderNameToCheck;
+            break;
+        }
+        if(null == toolHolderName) {
+            throw new IllegalStateException("null == toolHolderName");
+        }
+        pickupToolByHolderName(toolHolderName, out);
+    }
+    
+    private void pickupToolByHolderName(String toolHolderName, List<MiddleCommandType> out) throws PmException, IllegalStateException, CRCLException {
+        lastTestApproachPose = null;
         checkSettings();
         checkDbReady();
         PoseType pose = getToolHolderPose(toolHolderName);
@@ -5351,7 +5437,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             throw new IllegalStateException("no pose for " + toolHolderName);
         }
         addGotoToolChangerApproachByName(out, toolHolderName);
-        PoseType prepPose = addZToPose(pose, approachToolChangerZOffset*0.2);
+        PoseType prepPose = addZToPose(pose, approachToolChangerZOffset * 0.2);
         addMoveTo(out, prepPose, false);
         addSetVerySlowSpeed(out);
         addMoveTo(out, pose, false);
@@ -5392,6 +5478,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return toolName;
     }
 
+    private Set<String> getPossibleToolHolderContents(String toolHolderName) {
+        Set<String> tools = possibleToolHolderContentsMap.get(toolHolderName);
+        if (null == tools) {
+            throw new IllegalStateException("expectedToolHolderContentsMap contains no entry for " + toolHolderName);
+        }
+        return tools;
+    }
+
     private String getCurrentToolHolderContents(String toolHolderName) {
         String toolName = currentToolHolderContentsMap.get(toolHolderName);
         if (null == toolName) {
@@ -5400,7 +5494,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return toolName;
     }
 
-    private static boolean isEmptyTool(@Nullable String toolName) {
+    public static boolean isEmptyTool(@Nullable String toolName) {
         return toolName == null || toolName.length() < 1 || "empty".equals(toolName);
     }
 

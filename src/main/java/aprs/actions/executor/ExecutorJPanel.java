@@ -22,6 +22,7 @@
  */
 package aprs.actions.executor;
 
+import static aprs.actions.executor.ActionType.DROP_TOOL_ANY;
 import aprs.misc.Utils;
 import aprs.misc.Utils.RunnableWithThrow;
 import static aprs.misc.Utils.autoResizeTableColWidths;
@@ -32,11 +33,9 @@ import aprs.database.DbSetupListener;
 import aprs.database.DbSetupPublisher;
 import aprs.database.PhysicalItem;
 import aprs.database.ToolHolder;
-import static aprs.actions.executor.ActionType.DROP_TOOL;
 import static aprs.actions.executor.ActionType.GOTO_TOOL_CHANGER_APPROACH;
 import static aprs.actions.executor.ActionType.GOTO_TOOL_CHANGER_POSE;
 import static aprs.actions.executor.ActionType.LOOK_FOR_PARTS;
-import static aprs.actions.executor.ActionType.PICKUP_TOOL;
 import static aprs.actions.executor.ActionType.PLACE_PART;
 import static aprs.actions.executor.ActionType.TAKE_PART;
 import static aprs.actions.executor.ActionType.TEST_PART_POSITION;
@@ -144,6 +143,10 @@ import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.util.Map.Entry;
+import javax.swing.JMenu;
+import static aprs.actions.executor.ActionType.DROP_TOOL_BY_HOLDER;
+import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_HOLDER;
+import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_TOOL;
 
 /**
  *
@@ -162,6 +165,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         diag.setVisible(true);
         return panel.getActionsList();
     }
+
+    private final JMenu toolMenu;
+    private final JMenu toolDropByHolderMenu;
+    private final JMenu toolPickupByHolderMenu;
+    private final JMenuItem toolDropCurrentToolMenuItem;
+    private final JMenu toolPickupByToolMenu;
+    private final JMenu toolSetToolMenu;
 
     /**
      * Creates new form ActionsToCrclJPanel
@@ -228,6 +238,25 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.crclGenerator.setParentExecutorJPanel(this);
         setToolOffsetTableModelListener();
         setTrayAttachOffsetTableModelListener();
+        toolMenu = new JMenu("Tools");
+        toolDropByHolderMenu = new JMenu("Drop By Holder");
+        toolPickupByHolderMenu = new JMenu("Pickup By Holder");
+        toolDropCurrentToolMenuItem = new JMenuItem("Drop Current Tool");
+        toolDropCurrentToolMenuItem.setEnabled(false);
+        toolDropCurrentToolMenuItem.addActionListener(e -> dropToolAny());
+        toolPickupByToolMenu = new JMenu("Pickup by Tool");
+        toolSetToolMenu = new JMenu("Set Tool");
+
+        toolMenu.add(toolDropByHolderMenu);
+        toolMenu.add(toolPickupByHolderMenu);
+        toolMenu.add(toolDropCurrentToolMenuItem);
+        toolMenu.add(toolPickupByHolderMenu);
+        toolMenu.add(toolPickupByToolMenu);
+        toolMenu.add(toolSetToolMenu);
+    }
+
+    public JMenu getToolMenu() {
+        return toolMenu;
     }
 
     @Nullable public String getSelectedToolName() {
@@ -336,6 +365,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+            loadToolMenus();
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, null, exception);
         }
@@ -2240,7 +2270,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         updateActionFileStrings();
         if (reverseActionsFileString != null && reverseActionsFileString.length() > 0) {
             String relPath = makeShortPath(propertiesFile, reverseActionsFileString);
-            System.out.println("relPath = " + relPath);
+            logDebug("relPath = " + relPath);
             File chkFile = new File(relPath);
             if (!chkFile.isDirectory()) {
                 propsMap.put(REVERSE_PDDLOUTPUT, relPath);
@@ -2248,7 +2278,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         if (actionsFileString != null && actionsFileString.length() > 0) {
             String relPath = makeShortPath(propertiesFile, actionsFileString);
-            System.out.println("relPath = " + relPath);
+            logDebug("relPath = " + relPath);
             File chkFile = new File(relPath);
             if (!chkFile.isDirectory()) {
                 propsMap.put(PDDLOUTPUT, relPath);
@@ -2463,7 +2493,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     solver = solverFactory.buildSolver();
                 }
             }
-            solver.addEventListener(e -> System.out.println(e.getTimeMillisSpent() + ", " + e.getNewBestScore()));
+            solver.addEventListener(e -> logDebug(e.getTimeMillisSpent() + ", " + e.getNewBestScore()));
 
             for (int i = 0; i < 10; i++) {
 
@@ -2622,7 +2652,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
 //    List<JTextArea> crclAreas = new ArrayList<>();
-private JTextArea editTableArea = new JTextArea();
+    private JTextArea editTableArea = new JTextArea();
 
     private String trimXml(String in) {
         int start = in.indexOf("?>");
@@ -2911,7 +2941,7 @@ private JTextArea editTableArea = new JTextArea();
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
         }
-//        System.out.println("runCrclProgram returned = " + ret);
+//        logDebug("runCrclProgram returned = " + ret);
         return ret;
     }
 
@@ -2970,7 +3000,7 @@ private JTextArea editTableArea = new JTextArea();
             setReplanFromIndexLastTrace = Thread.currentThread().getStackTrace();
             if (!aborting && oldRpi > replanFromIndex) {
                 if (replanFromIndex != 0 || !readyForNewActionsList()) {
-                    System.err.println("Reducing replanFromIndex when generater not readyForNewActionsList: oldRpi=" + oldRpi + ", new replanFromIndex=" + replanFromIndex + ",  pddlActionToCrclGenerator.getLastIndex()=" + crclGenerator.getLastIndex());
+                    logDebug("Reducing replanFromIndex when generater not readyForNewActionsList: oldRpi=" + oldRpi + ", new replanFromIndex=" + replanFromIndex + ",  pddlActionToCrclGenerator.getLastIndex()=" + crclGenerator.getLastIndex());
                 }
             }
             @Nullable
@@ -3087,7 +3117,7 @@ private JTextArea editTableArea = new JTextArea();
 
     private void warnDialog(String msg) throws HeadlessException {
         LOGGER.log(Level.WARNING, msg);
-        JOptionPane.showMessageDialog(this, msg);
+        Utils.showMessageDialog(this, msg);
     }
 
     @Nullable
@@ -3245,16 +3275,16 @@ private JTextArea editTableArea = new JTextArea();
             runningProgramFuture.cancel(true);
         }
         runningProgramFuture = this.randomDropOff();
-        System.out.println("randomDropOffCount = " + randomDropOffCount);
+        logDebug("randomDropOffCount = " + randomDropOffCount);
     }//GEN-LAST:event_jButtonRandDropOffActionPerformed
 
     private int randomPickupCount = 0;
 
     private void writeCorrectionCsv(String filename, String line) throws IOException {
         File f = new File(filename);
-        System.out.println("f.getCanonicalPath() = " + f.getCanonicalPath());
+        logDebug("f.getCanonicalPath() = " + f.getCanonicalPath());
         boolean newFile = !f.exists();
-        System.out.println("newFile = " + newFile);
+        logDebug("newFile = " + newFile);
         try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
             if (newFile) {
                 pw.println("Time,PartName,Robot_X,Robot_Y,Robot_Z,Db_X,Db_Y,Db_Z,Offset_X,Offset_Y,Offset_Z");
@@ -3279,8 +3309,8 @@ private JTextArea editTableArea = new JTextArea();
             String randomPoseString = testDropOffPose.getPoint().getX()
                     + "," + testDropOffPose.getPoint().getY()
                     + "," + testDropOffPose.getPoint().getZ();
-            System.out.println("randomPoseString = " + randomPoseString);
-            System.out.println("randomPickupCount = " + randomPickupCount);
+            logDebug("randomPoseString = " + randomPoseString);
+            logDebug("randomPickupCount = " + randomPickupCount);
             String partName = (String) jComboBoxManualObjectName.getSelectedItem();
             if (null != partName && partName.length() > 0) {
                 PoseType poseFromDb = crclGenerator.getPose(partName);
@@ -3288,12 +3318,12 @@ private JTextArea editTableArea = new JTextArea();
                     String poseFromDbString = poseFromDb.getPoint().getX()
                             + "," + poseFromDb.getPoint().getY()
                             + "," + poseFromDb.getPoint().getZ();
-                    System.out.println("poseFromDbString = " + poseFromDbString);
+                    logDebug("poseFromDbString = " + poseFromDbString);
                     String offsetString
                             = (testDropOffPose.getPoint().getX() - poseFromDb.getPoint().getX())
                             + "," + (testDropOffPose.getPoint().getY() - poseFromDb.getPoint().getY())
                             + "," + (testDropOffPose.getPoint().getZ() - poseFromDb.getPoint().getZ());
-                    System.out.println("offsetString = " + offsetString);
+                    logDebug("offsetString = " + offsetString);
                     writeCorrectionCsv(recordCsvName,
                             System.currentTimeMillis() + ", " + partName + ", " + randomPoseString + ", " + poseFromDbString + ", " + offsetString);
                 }
@@ -3326,19 +3356,19 @@ private JTextArea editTableArea = new JTextArea();
                         testDropOffPose.getPoint().getX(),
                         testDropOffPose.getPoint().getY(),
                         testDropOffPose.getPoint().getZ());
-        System.out.println("randomPoseString = " + randomPoseString);
-        System.out.println("randomDropOffCount = " + randomDropOffCount);
+        logDebug("randomPoseString = " + randomPoseString);
+        logDebug("randomDropOffCount = " + randomDropOffCount);
         customRunnables.clear();
         customRunnables.add(() -> {
-            System.out.println("Continuing with lookFor");
+            logDebug("Continuing with lookFor");
             this.lookForParts();
         });
         customRunnables.add(() -> {
-            System.out.println("Continuing with recordAndCompletRandomPickup");
+            logDebug("Continuing with recordAndCompletRandomPickup");
             this.recordAndCompletTestPickup();
         });
         customRunnables.add(() -> {
-            System.out.println("Continuing with randomDropOff");
+            logDebug("Continuing with randomDropOff");
             this.randomDropOff();
         });
         this.customRunnablesIndex = 0;
@@ -3365,30 +3395,30 @@ private JTextArea editTableArea = new JTextArea();
             String gridSizeString = jTextFieldGridSize.getText();
             String fa[] = gridSizeString.split("[ ,]+");
             if (fa.length != 2) {
-                System.err.println("Bad gridSizeStrng = " + gridSizeString);
+                logDebug("Bad gridSizeStrng = " + gridSizeString);
                 return;
             }
             try {
                 int xmax = Integer.parseInt(fa[0]);
                 if (xmax < 1) {
-                    System.err.println("Bad gridSizeStrng = " + gridSizeString);
+                    logDebug("Bad gridSizeStrng = " + gridSizeString);
                     return;
                 }
                 int ymax = Integer.parseInt(fa[1]);
                 if (ymax < 1) {
-                    System.err.println("Bad gridSizeStrng = " + gridSizeString);
+                    logDebug("Bad gridSizeStrng = " + gridSizeString);
                     return;
                 }
                 this.gridTestMaxX = (double) xmax;
                 this.gridTestMaxY = (double) ymax;
             } catch (Exception e) {
-                System.err.println("Bad gridSizeStrng = " + gridSizeString);
+                logDebug("Bad gridSizeStrng = " + gridSizeString);
                 return;
             }
             this.gridTestCurrentX = 0.0;
             this.gridTestCurrentY = 0.0;
-            System.out.println("gridTestMaxX = " + gridTestMaxX);
-            System.out.println("gridTestMaxY = " + gridTestMaxY);
+            logDebug("gridTestMaxX = " + gridTestMaxX);
+            logDebug("gridTestMaxY = " + gridTestMaxY);
             queryLogFileName();
             jCheckBoxReplan.setSelected(true);
             autoStart = true;
@@ -3400,19 +3430,19 @@ private JTextArea editTableArea = new JTextArea();
                             testDropOffPose.getPoint().getX(),
                             testDropOffPose.getPoint().getY(),
                             testDropOffPose.getPoint().getZ());
-            System.out.println("randomPoseString = " + randomPoseString);
-            System.out.println("randomDropOffCount = " + randomDropOffCount);
+            logDebug("randomPoseString = " + randomPoseString);
+            logDebug("randomDropOffCount = " + randomDropOffCount);
             customRunnables.clear();
             customRunnables.add(() -> {
-                System.out.println("Continuing with lookFor");
+                logDebug("Continuing with lookFor");
                 this.lookForParts();
             });
             customRunnables.add(() -> {
-                System.out.println("Continuing with recordAndCompletRandomPickup");
+                logDebug("Continuing with recordAndCompletRandomPickup");
                 this.recordAndCompletTestPickup();
             });
             customRunnables.add(() -> {
-                System.out.println("Continuing with gridDropOff");
+                logDebug("Continuing with gridDropOff");
                 this.gridDropOff();
             });
             this.customRunnablesIndex = 0;
@@ -3465,7 +3495,7 @@ private JTextArea editTableArea = new JTextArea();
                 String msg = "Unable to get pose for " + partName + " from the database.";
                 Logger.getLogger(VisionToDBJPanel.class
                         .getName()).log(Level.WARNING, msg);
-                JOptionPane.showMessageDialog(this, msg);
+                warnDialog(msg);
                 return;
             }
             String poseFromDbString = poseFromDb.getPoint().getX()
@@ -3492,7 +3522,7 @@ private JTextArea editTableArea = new JTextArea();
                 String msg = "Unable to get pose for " + partName + " from the database.";
                 Logger.getLogger(VisionToDBJPanel.class
                         .getName()).log(Level.WARNING, msg);
-                JOptionPane.showMessageDialog(this, msg);
+                warnDialog(msg);
                 return;
             }
             String poseFromDbString = poseFromDb.getPoint().getX()
@@ -3712,56 +3742,56 @@ private JTextArea editTableArea = new JTextArea();
 
     public void debugAction() {
         long curTime = System.currentTimeMillis();
-        System.out.println("curTime = " + curTime);
-        System.out.println("runningProgram = " + runningProgram);
-        System.out.println("safeAbortRunnablesVector = " + safeAbortRunnablesVector);
-        System.out.println("startSafeAbortRunningProgram = " + startSafeAbortRunningProgram);
-        System.out.println("startSafeAbortRunningProgramFuture = " + startSafeAbortRunningProgramFuture);
+        logDebug("curTime = " + curTime);
+        logDebug("runningProgram = " + runningProgram);
+        logDebug("safeAbortRunnablesVector = " + safeAbortRunnablesVector);
+        logDebug("startSafeAbortRunningProgram = " + startSafeAbortRunningProgram);
+        logDebug("startSafeAbortRunningProgramFuture = " + startSafeAbortRunningProgramFuture);
         if (null != startSafeAbortRunningProgramFuture) {
             startSafeAbortRunningProgramFuture.printStatus();
         }
-        System.out.println("startSafeAbortRunningProgramFutureDone = " + startSafeAbortRunningProgramFutureDone);
+        logDebug("startSafeAbortRunningProgramFutureDone = " + startSafeAbortRunningProgramFutureDone);
 
-        System.out.println("lastCheckAbortCurrentPart = " + lastCheckAbortCurrentPart);
-        System.out.println("lastCheckAbortSafeAbortRequested = " + lastCheckAbortSafeAbortRequested);
-        System.out.println("lastCheckSafeAbortTime = " + lastCheckSafeAbortTime);
-        System.out.println("lastReplanAfterCrclBlock = " + lastReplanAfterCrclBlock);
+        logDebug("lastCheckAbortCurrentPart = " + lastCheckAbortCurrentPart);
+        logDebug("lastCheckAbortSafeAbortRequested = " + lastCheckAbortSafeAbortRequested);
+        logDebug("lastCheckSafeAbortTime = " + lastCheckSafeAbortTime);
+        logDebug("lastReplanAfterCrclBlock = " + lastReplanAfterCrclBlock);
 
 //        private volatile String lastCheckAbortCurrentPart = null;
 //    private volatile boolean lastCheckAbortSafeAbortRequested = false;
 //    private volatile long lastCheckSafeAbortTime = 0;
-        System.out.println("continueActionsCount = " + continueActionsCount);
-        System.out.println("continueActionsListTime = " + continueActionsListTime);
-        System.out.println("clearAllCount = " + clearAllCount);
-        System.out.println("clearAllTime = " + clearAllTime);
-        System.out.println("startSafeAbortTime = " + startSafeAbortTime);
-        System.out.println("startCrclProgramTime = " + startCrclProgramTime);
-        System.out.println("startCrclProgramCount = " + startCrclProgramCount);
-        System.out.println("doSafeAbortCount = " + doSafeAbortCount);
-        System.out.println("doSafeAbortTime = " + doSafeAbortTime);
-        System.out.println("runningProgramFuture = " + runningProgramFuture);
-        System.out.println("runProgramCompleteRunnablesTime = " + runProgramCompleteRunnablesTime);
-        System.out.println("(curTime - lastCheckSafeAbortTime) = " + (curTime - lastCheckSafeAbortTime));
-        System.out.println("(curTime - doSafeAbortTime)        = " + (curTime - doSafeAbortTime));
-        System.out.println("(curTime - startCrclProgramTime)   = " + (curTime - startCrclProgramTime));
-        System.out.println("(curTime - startSafeAbortTime)     = " + (curTime - startSafeAbortTime));
-        System.out.println("(curTime - clearAllTime)           = " + (curTime - clearAllTime));
-        System.out.println("(curTime - runProgramCompleteRunnablesTime)           = " + (curTime - runProgramCompleteRunnablesTime));
+        logDebug("continueActionsCount = " + continueActionsCount);
+        logDebug("continueActionsListTime = " + continueActionsListTime);
+        logDebug("clearAllCount = " + clearAllCount);
+        logDebug("clearAllTime = " + clearAllTime);
+        logDebug("startSafeAbortTime = " + startSafeAbortTime);
+        logDebug("startCrclProgramTime = " + startCrclProgramTime);
+        logDebug("startCrclProgramCount = " + startCrclProgramCount);
+        logDebug("doSafeAbortCount = " + doSafeAbortCount);
+        logDebug("doSafeAbortTime = " + doSafeAbortTime);
+        logDebug("runningProgramFuture = " + runningProgramFuture);
+        logDebug("runProgramCompleteRunnablesTime = " + runProgramCompleteRunnablesTime);
+        logDebug("(curTime - lastCheckSafeAbortTime) = " + (curTime - lastCheckSafeAbortTime));
+        logDebug("(curTime - doSafeAbortTime)        = " + (curTime - doSafeAbortTime));
+        logDebug("(curTime - startCrclProgramTime)   = " + (curTime - startCrclProgramTime));
+        logDebug("(curTime - startSafeAbortTime)     = " + (curTime - startSafeAbortTime));
+        logDebug("(curTime - clearAllTime)           = " + (curTime - clearAllTime));
+        logDebug("(curTime - runProgramCompleteRunnablesTime)           = " + (curTime - runProgramCompleteRunnablesTime));
 
         if (null != runningProgramFuture) {
             runningProgramFuture.printStatus(System.out);
         }
 
-        System.out.println("lastSafeAbortFuture=" + lastSafeAbortFuture);
+        logDebug("lastSafeAbortFuture=" + lastSafeAbortFuture);
         if (null != lastSafeAbortFuture) {
             lastSafeAbortFuture.printStatus(System.out);
         }
-        System.out.println("lastContinueActionFuture = " + lastContinueActionFuture);
+        logDebug("lastContinueActionFuture = " + lastContinueActionFuture);
         if (null != lastContinueActionFuture) {
             lastContinueActionFuture.printStatus(System.out);
         }
 
-        System.out.println("checkDbSupplierPublisherFuturesList = " + checkDbSupplierPublisherFuturesList);
+        logDebug("checkDbSupplierPublisherFuturesList = " + checkDbSupplierPublisherFuturesList);
     }
 
     private volatile boolean startSafeAbortRunningProgram = false;
@@ -3805,7 +3835,7 @@ private JTextArea editTableArea = new JTextArea();
                     && startSafeAbortRunningProgramFuture.isDone();
             int runnablesSize = this.safeAbortRunnablesVector.size();
             if (runnablesSize > 0) {
-                System.out.println("safeAbortRunnablesVector.size() = " + runnablesSize);
+                logDebug("safeAbortRunnablesVector.size() = " + runnablesSize);
             }
             incSafeAbortRequestCount();
             if (!startSafeAbortRunningProgram) {
@@ -3974,7 +4004,7 @@ private JTextArea editTableArea = new JTextArea();
                     String poseFromDbString = poseFromDb.getPoint().getX()
                             + "," + poseFromDb.getPoint().getY()
                             + "," + poseFromDb.getPoint().getZ();
-                    System.out.println("poseFromDbString = " + poseFromDbString);
+                    logDebug("poseFromDbString = " + poseFromDbString);
                     PoseType curPose = aprsSystemInterface.getCurrentPose();
                     assert (null != curPose) :
                             "aprsSystemInterface.getCurrentPose() returned null : @AssumeAssertion(nullness)";
@@ -3987,7 +4017,7 @@ private JTextArea editTableArea = new JTextArea();
                             = (curPose.getPoint().getX() - poseFromDb.getPoint().getX())
                             + "," + (curPose.getPoint().getY() - poseFromDb.getPoint().getY())
                             + "," + (curPose.getPoint().getZ() - poseFromDb.getPoint().getZ());
-                    System.out.println("offsetString = " + offsetString);
+                    logDebug("offsetString = " + offsetString);
                     writeCorrectionCsv(recordCsvName,
                             System.currentTimeMillis() + ", " + partName + ", " + curPoseString + ", " + poseFromDbString + ", " + offsetString);
                 }
@@ -4024,7 +4054,7 @@ private JTextArea editTableArea = new JTextArea();
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
             String jointVals
                     = jointStatusListToString(jointList);
-            System.out.println("jointVals = " + jointVals);
+            logDebug("jointVals = " + jointVals);
             DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
             boolean keyFound = false;
             for (int i = 0; i < model.getRowCount(); i++) {
@@ -4399,6 +4429,38 @@ private JTextArea editTableArea = new JTextArea();
         return names.toArray(new String[0]);
     }
 
+    private String[] getEmptyToolChangerNames() {
+        Set<String> names = new TreeSet<>();
+        names.add("");
+        for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
+            Object o = jTableToolHolderPositions.getValueAt(i, 0);
+            if (o instanceof String) {
+                String s = (String) o;
+                String expectedContents = crclGenerator.getExpectedToolHolderContentsMap().get(s);
+                if (s.length() > 0 && CrclGenerator.isEmptyTool(expectedContents)) {
+                    names.add(s);
+                }
+            }
+        }
+        return names.toArray(new String[0]);
+    }
+
+    private String[] getFullToolChangerNames() {
+        Set<String> names = new TreeSet<>();
+        names.add("");
+        for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
+            Object o = jTableToolHolderPositions.getValueAt(i, 0);
+            if (o instanceof String) {
+                String s = (String) o;
+                String expectedContents = crclGenerator.getExpectedToolHolderContentsMap().get(s);
+                if (s.length() > 0 && !CrclGenerator.isEmptyTool(expectedContents)) {
+                    names.add(s);
+                }
+            }
+        }
+        return names.toArray(new String[0]);
+    }
+
     private String[] getToolNames() {
         Set<String> names = new TreeSet<>();
         names.add("");
@@ -4441,11 +4503,11 @@ private JTextArea editTableArea = new JTextArea();
 
     private int getToolChangerRow(String name, boolean approach) {
         for (int j = 0; j < jTableToolHolderPositions.getColumnCount(); j++) {
-            System.out.println("j = " + j);
+            logDebug("j = " + j);
             String colName = jTableToolHolderPositions.getColumnName(j);
-            System.out.println("colName = " + colName);
+            logDebug("colName = " + colName);
             TableColumn col = jTableToolHolderPositions.getColumn(colName);
-            System.out.println("col = " + col);
+            logDebug("col = " + col);
         }
         for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
             String entryName = (String) jTableToolHolderPositions.getValueAt(i, 0);
@@ -4456,7 +4518,7 @@ private JTextArea editTableArea = new JTextArea();
                     return i;
                 }
             } else {
-                System.err.println("Bad table entry: " + i + ", entryName=" + entryName + ", entryApproachObject=" + entryApproachObject);
+                logDebug("Bad table entry: " + i + ", entryName=" + entryName + ", entryApproachObject=" + entryApproachObject);
             }
         }
         return -1;
@@ -4493,7 +4555,7 @@ private JTextArea editTableArea = new JTextArea();
                     = crclGenerator.getToolHolderPoseMap();
             PoseType pose = aprsSystemInterface.getCurrentPose();
             if (null == pose) {
-                JOptionPane.showMessageDialog(this, "Can not read current pose.");
+                warnDialog("Can not read current pose.");
                 return;
             }
             String toolHolderPoseName = queryUserForToolHolderPosName("Record Pose");
@@ -4616,7 +4678,7 @@ private JTextArea editTableArea = new JTextArea();
                     = crclGenerator.getToolHolderPoseMap();
             PoseType pose = toolHolderPoseMap.get(name);
             if (null == pose) {
-                JOptionPane.showMessageDialog(this, "no pose for " + name + " in " + toolHolderPoseMap);
+                warnDialog("no pose for " + name + " in " + toolHolderPoseMap);
                 return;
             }
 //            toolChangerPose = pose;
@@ -4647,7 +4709,7 @@ private JTextArea editTableArea = new JTextArea();
 //            toolChangerPoseName = name;
             PoseType pose = toolHolderPoseMap.get(name);
             if (null == pose) {
-                JOptionPane.showMessageDialog(this, "no pose for " + name + " in " + toolHolderPoseMap);
+                warnDialog("no pose for " + name + " in " + toolHolderPoseMap);
                 return;
             }
 //            toolChangerPose = pose;
@@ -4678,11 +4740,11 @@ private JTextArea editTableArea = new JTextArea();
                     = crclGenerator.getToolHolderPoseMap();
             PoseType toolHolderPose = toolHolderPoseMap.get(toolHolderPoseName);
             if (null == toolHolderPose) {
-                JOptionPane.showMessageDialog(this, "No pose known for " + toolHolderPoseName + " in " + toolHolderPoseMap);
+                warnDialog("No pose known for " + toolHolderPoseName + " in " + toolHolderPoseMap);
                 return;
             }
 
-            runningProgramFuture = this.dropTool(toolHolderPoseName);
+            runningProgramFuture = this.dropToolByHolder(toolHolderPoseName);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, null, e);
             showExceptionInProgram(e);
@@ -4692,7 +4754,7 @@ private JTextArea editTableArea = new JTextArea();
     private void syncPanelToGeneratorToolData() {
         String toolName = jTextFieldCurrentToolName.getText();
         if (null == toolName || toolName.length() < 1) {
-            JOptionPane.showMessageDialog(this, "Invalid toolName =" + toolName);
+            warnDialog("Invalid toolName =" + toolName);
             throw new IllegalStateException("Invalid toolName =" + toolName);
         }
         crclGenerator.setCurrentToolName(toolName);
@@ -4701,11 +4763,15 @@ private JTextArea editTableArea = new JTextArea();
         for (int i = 0; i < holderContentsTableModel.getRowCount(); i++) {
             String holderName = (String) holderContentsTableModel.getValueAt(i, 0);
             String toolForHolder = (String) holderContentsTableModel.getValueAt(i, 1);
+            String toolsListString = (String) holderContentsTableModel.getValueAt(i, 2);
             if (toolForHolder == null || toolForHolder.length() < 1) {
                 toolForHolder = "empty";
             }
+            String toolsArray[] = toolsListString.split("[ ,\t\r\n]+");
+            Set<String> toolsSet = new TreeSet<>(Arrays.asList(toolsArray));
             crclGenerator.getCurrentToolHolderContentsMap().put(holderName, toolForHolder);
             crclGenerator.getExpectedToolHolderContentsMap().put(holderName, toolForHolder);
+            crclGenerator.getPossibleToolHolderContentsMap().put(holderName, toolsSet);
         }
     }
 
@@ -4734,10 +4800,10 @@ private JTextArea editTableArea = new JTextArea();
                     = crclGenerator.getToolHolderPoseMap();
             PoseType pose = toolHolderPoseMap.get(holderPosName);
             if (null == pose) {
-                JOptionPane.showMessageDialog(this, "no pose for " + holderPosName + " in " + toolHolderPoseMap);
+                warnDialog("no pose for " + holderPosName + " in " + toolHolderPoseMap);
                 return;
             }
-            runningProgramFuture = this.pickupTool(holderPosName);
+            runningProgramFuture = this.pickupToolByHolder(holderPosName);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, null, e);
             showExceptionInProgram(e);
@@ -4771,7 +4837,7 @@ private JTextArea editTableArea = new JTextArea();
             clearEmptyToolChangerPoseRows();
             PoseType pose = aprsSystemInterface.getCurrentPose();
             if (null == pose || null == pose.getPoint()) {
-                JOptionPane.showMessageDialog(this, "Can not read current pose.");
+                warnDialog("Can not read current pose.");
                 return;
             }
             String nameToAdd = JOptionPane.showInputDialog("New tool changer position name");
@@ -4779,7 +4845,7 @@ private JTextArea editTableArea = new JTextArea();
                     = crclGenerator.getToolHolderPoseMap();
             if (nameToAdd != null && nameToAdd.length() > 0) {
                 if (toolHolderPoseMap.containsKey(nameToAdd) || Arrays.stream(getToolChangerNames()).anyMatch(nameToAdd::equals)) {
-                    JOptionPane.showMessageDialog(this, nameToAdd + " already added.");
+                    warnDialog(nameToAdd + " already added.");
                     return;
                 }
                 PmRpy rpy = CRCLPosemath.toPmRpy(pose);
@@ -4801,7 +4867,7 @@ private JTextArea editTableArea = new JTextArea();
         try {
             PoseType pose = aprsSystemInterface.getCurrentPose();
             if (null == pose) {
-                JOptionPane.showMessageDialog(this, "Can not read current pose.");
+                warnDialog("Can not read current pose.");
                 return;
             }
             String toolHolderPoseName = queryUserForToolHolderPosName("Record Approach");
@@ -5220,10 +5286,10 @@ private JTextArea editTableArea = new JTextArea();
     private XFuture<Boolean> checkSafeAbortAsync(Supplier<XFuture<Boolean>> supplier, int startSafeAbortRequestCount) {
 
         if (aprsSystemInterface.isRunningCrclProgram()) {
-            System.err.println("crclProgramStill Running");
-            System.out.println("aprsSystemInterface.isRunningCrclProgram() = " + aprsSystemInterface.isRunningCrclProgram());
-            System.out.println("aprsSystemInterface.getCrclRunProgramFuture() = " + aprsSystemInterface.getCrclRunProgramFuture());
-            System.out.println("aprsSystemInterface.getCrclRunProgramThread() = " + aprsSystemInterface.getCrclRunProgramThread());
+            logDebug("crclProgramStill Running");
+            logDebug("aprsSystemInterface.isRunningCrclProgram() = " + aprsSystemInterface.isRunningCrclProgram());
+            logDebug("aprsSystemInterface.getCrclRunProgramFuture() = " + aprsSystemInterface.getCrclRunProgramFuture());
+            logDebug("aprsSystemInterface.getCrclRunProgramThread() = " + aprsSystemInterface.getCrclRunProgramThread());
             throw new IllegalStateException("crclProgramStill Running");
         }
         boolean doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
@@ -5239,7 +5305,7 @@ private JTextArea editTableArea = new JTextArea();
             lastCheckAbortCurrentPart = currentPart;
             boolean safeAbortRequested = (safeAbortRequestCount.get() != startSafeAbortRequestCount);
             if (safeAbortRequested != aprsSystemInterface.isAborting()) {
-                System.err.println("safeAbortRequested=" + safeAbortRequested + ", aprsSystemInterface.isAborting()=" + aprsSystemInterface.isAborting());
+                logDebug("safeAbortRequested=" + safeAbortRequested + ", aprsSystemInterface.isAborting()=" + aprsSystemInterface.isAborting());
                 safeAbortRequested = true;
             }
             lastCheckAbortSafeAbortRequested = safeAbortRequested;
@@ -5298,17 +5364,17 @@ private JTextArea editTableArea = new JTextArea();
         lil.add(li0);
         final int rpi0 = getReplanFromIndex();
 //        if (rpi0 < li0 && (rpi0 != 0 || !readyForNewActionsList())) {
-//            System.err.println("replanFromIndex less than lastIndex unexpectedly,  li0=" + li0 + ",rpi0=" + rpi0);
+//            logDebug("replanFromIndex less than lastIndex unexpectedly,  li0=" + li0 + ",rpi0=" + rpi0);
 //        }
         CRCLProgramType program = pddlActionSectionToCrcl(0);
         final int li1 = crclGenerator.getLastIndex();
         lil.add(li1);
         if (li1 < li0 && li1 < rpi0) {
-            System.err.println("lastIndex decreased: li0=" + li0 + ",li1=" + li1);
+            logDebug("lastIndex decreased: li0=" + li0 + ",li1=" + li1);
         }
         final int rpi1 = getReplanFromIndex();
         if (rpi1 <= li1 && rpi1 != actionsList.size() - 1) {
-            System.err.println("replanFromIndex <= lastIndex: replanFromIndex=" + rpi1 + ",li1=" + li1);
+            logDebug("replanFromIndex <= lastIndex: replanFromIndex=" + rpi1 + ",li1=" + li1);
         }
         if (!autoStart) {
             setCrclProgram(crclProgram);
@@ -5323,7 +5389,7 @@ private JTextArea editTableArea = new JTextArea();
             final int rpi2 = getReplanFromIndex();
             doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
             if (rpi2 != getReplanFromIndex()) {
-                System.err.println("replanFromIndex changed unexpectedly : replanFromIndex=" + replanFromIndex + ",rpi1=" + rpi2);
+                logDebug("replanFromIndex changed unexpectedly : replanFromIndex=" + replanFromIndex + ",rpi1=" + rpi2);
             }
             if (doSafeAbort) {
                 setReplanFromIndex(abortReplanFromIndex, true);
@@ -5337,9 +5403,9 @@ private JTextArea editTableArea = new JTextArea();
                 if (!nextReplanAfterCrclBlock) {
                     break;
                 } else {
-                    System.out.println("pddlActionToCrclGenerator.getLastIndex() = " + crclGenerator.getLastIndex());
-                    System.out.println("actionsList = " + actionsList);
-                    System.err.println("CRCL Program was empty but actions not complete.");
+                    logDebug("pddlActionToCrclGenerator.getLastIndex() = " + crclGenerator.getLastIndex());
+                    logDebug("actionsList = " + actionsList);
+                    logDebug("CRCL Program was empty but actions not complete.");
                 }
             } else if (!runCrclProgram(program)) {
                 checkSafeAbort(startSafeAbortRequestCount);
@@ -5351,7 +5417,7 @@ private JTextArea editTableArea = new JTextArea();
                 return atLastAction();
             }
             if (rpi2 != getReplanFromIndex()) {
-                System.err.println("replanFromIndex changed unexpectedly : replanFromIndex=" + replanFromIndex + ",rpi1=" + rpi2);
+                logDebug("replanFromIndex changed unexpectedly : replanFromIndex=" + replanFromIndex + ",rpi1=" + rpi2);
             }
             abortReplanFromIndex = getReplanFromIndex();
             final int li3 = crclGenerator.getLastIndex();
@@ -5359,11 +5425,11 @@ private JTextArea editTableArea = new JTextArea();
             final int li4 = crclGenerator.getLastIndex();
             lil.add(li4);
             if (li4 < li3) {
-                System.err.println("lastIndex decreased: li3=" + li3 + ",li4=" + li4);
+                logDebug("lastIndex decreased: li3=" + li3 + ",li4=" + li4);
             }
             final int rpi3 = getReplanFromIndex();
             if (rpi3 <= li4 && rpi3 != actionsList.size() - 1) {
-                System.err.println("replanFromIndex <= lastIndex: replanFromIndex=" + rpi3 + ",li4=" + li4);
+                logDebug("replanFromIndex <= lastIndex: replanFromIndex=" + rpi3 + ",li4=" + li4);
             }
             replanAfterCrclBlock
                     = nextReplanAfterCrclBlock;
@@ -5389,8 +5455,8 @@ private JTextArea editTableArea = new JTextArea();
     private boolean atLastAction() {
         boolean ret = crclGenerator.atLastIndex();
 //        if (ret) {
-//            System.out.println("crclGenerator.getLastIndex() = " + crclGenerator.getLastIndex());
-//            System.out.println("actionsList.size() = " + actionsList.size());
+//            logDebug("crclGenerator.getLastIndex() = " + crclGenerator.getLastIndex());
+//            logDebug("actionsList.size() = " + actionsList.size());
 //        }
         return ret;
 
@@ -5495,6 +5561,12 @@ private JTextArea editTableArea = new JTextArea();
         return program;
     }
 
+    private void logDebug(String string) {
+        if (debug) {
+            LOGGER.log(Level.INFO, string);
+        }
+    }
+
     private void setEndCanonCmdId(CRCLProgramType program) {
         setCommandId(program.getEndCanon());
         long initCmdId = program.getInitCanon().getCommandID();
@@ -5503,16 +5575,16 @@ private JTextArea editTableArea = new JTextArea();
         if (midSize > 0) {
             long firstMidCmdId = program.getMiddleCommand().get(0).getCommandID();
             if (firstMidCmdId != initCmdId + 1) {
-                System.err.println("firstMidCmdId != initCmdId+1 : " + firstMidCmdId + "!= " + (initCmdId + 1));
+                logDebug("firstMidCmdId != initCmdId+1 : " + firstMidCmdId + "!= " + (initCmdId + 1));
             }
             long lastMidCmdId = program.getMiddleCommand().get(midSize - 1).getCommandID();
             if (lastMidCmdId != initCmdId + midSize) {
-                System.err.println("lastMidCmdId != initCmdId+midSize : " + lastMidCmdId + "!= " + (initCmdId + midSize));
+                logDebug("lastMidCmdId != initCmdId+midSize : " + lastMidCmdId + "!= " + (initCmdId + midSize));
             }
         }
         long expectedEndCmdId = initCmdId + midSize + 1;
         if (endCmdId != expectedEndCmdId) {
-            System.err.println("EndCanon Id " + endCmdId + " doesn't match InitCanon id " + initCmdId + " + 1+ size of middle commands " + midSize);
+            logDebug("EndCanon Id " + endCmdId + " doesn't match InitCanon id " + initCmdId + " + 1+ size of middle commands " + midSize);
         }
     }
 
@@ -5853,7 +5925,7 @@ private JTextArea editTableArea = new JTextArea();
                         origPose.getPoint().getX(),
                         origPose.getPoint().getY(),
                         origPose.getPoint().getZ());
-        System.out.println("randomPoseString = " + randomPoseString);
+        logDebug("randomPoseString = " + randomPoseString);
         jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
         jTextFieldAdjPose.setText(randomPoseString);
         this.jTextFieldTestPose.setText(origPoseString);
@@ -5897,8 +5969,8 @@ private JTextArea editTableArea = new JTextArea();
             gridTestCurrentY += 1.0;
             gridTestCurrentX = 0.0;
         }
-        System.out.println("gridTestCurrentX = " + gridTestCurrentX);
-        System.out.println("gridTestCurrentY = " + gridTestCurrentY);
+        logDebug("gridTestCurrentX = " + gridTestCurrentX);
+        logDebug("gridTestCurrentY = " + gridTestCurrentY);
         PoseType origPose = pose(point(x, y, z), vector(1.0, 0.0, 0.0), vector(0.0, 0.0, -1.0));
         PointType offset = getOffset(x, y, z);
         testDropOffPose = correctPose(origPose);
@@ -5919,7 +5991,7 @@ private JTextArea editTableArea = new JTextArea();
                         origPose.getPoint().getX(),
                         origPose.getPoint().getY(),
                         origPose.getPoint().getZ());
-        System.out.println("gridPoseString = " + gridPoseString);
+        logDebug("gridPoseString = " + gridPoseString);
         jTextFieldOffset.setText(String.format("%.1f,%.1f,%.1f", offset.getX(), offset.getY(), offset.getZ()));
         jTextFieldAdjPose.setText(gridPoseString);
         this.jTextFieldTestPose.setText(origPoseString);
@@ -6045,22 +6117,43 @@ private JTextArea editTableArea = new JTextArea();
                 return;
             }
         }
+        loadToolMenus();
     }
 
-    private XFuture<Boolean> dropTool(String poseName) {
+    private XFuture<Boolean> dropToolByHolder(String holderName) {
         try {
             Map<String, String> options = getTableOptions();
             setReplanFromIndex(0);
-            List<Action> gototToolChangerApproachActionsList = new ArrayList<>();
-            Action gototToolChangerApproachAction
+            List<Action> newActionsList = new ArrayList<>();
+            Action dropToolByHolderAction
                     = new Action(
-                            DROP_TOOL,
-                            poseName);
-            gototToolChangerApproachActionsList.add(gototToolChangerApproachAction);
+                            DROP_TOOL_BY_HOLDER,
+                            holderName);
+            newActionsList.add(dropToolByHolderAction);
             crclGenerator.clearPoseCache();
             crclGenerator.clearLastRequiredPartsMap();
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
-            return executeActions(gototToolChangerApproachActionsList, options);
+            return executeActions(newActionsList, options);
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+            XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
+            future.completeExceptionally(ex);
+            return future;
+        }
+    }
+
+    private XFuture<Boolean> dropToolAny() {
+        try {
+            Map<String, String> options = getTableOptions();
+            setReplanFromIndex(0);
+            List<Action> newActionsList = new ArrayList<>();
+            Action dropToolAnyAction
+                    = new Action(DROP_TOOL_ANY);
+            newActionsList.add(dropToolAnyAction);
+            crclGenerator.clearPoseCache();
+            crclGenerator.clearLastRequiredPartsMap();
+            crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
+            return executeActions(newActionsList, options);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
@@ -6070,6 +6163,7 @@ private JTextArea editTableArea = new JTextArea();
     }
 
     private XFuture<Boolean> executeActions(List<Action> actionsList, Map<String, String> options) {
+        this.loadActionsList(actionsList);
         ExecutorService service = this.generateCrclService;
         if (null == service) {
             service = aprsSystemInterface.getRunProgramService();
@@ -6082,8 +6176,9 @@ private JTextArea editTableArea = new JTextArea();
     private XFuture<Boolean> executeActionsInternal(List<Action> actionsList, Map<String, String> options) {
         try {
 //            checkDbSupplierPublisher();
-            List<MiddleCommandType> cmds = crclGenerator.generate(actionsList, 0, options, safeAbortRequestCount.get());
             CRCLProgramType program = createEmptyProgram();
+            List<MiddleCommandType> cmds = crclGenerator.generate(actionsList, 0, options, safeAbortRequestCount.get());
+
             jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
             program.getMiddleCommand().clear();
             program.getMiddleCommand().addAll(cmds);
@@ -6096,22 +6191,43 @@ private JTextArea editTableArea = new JTextArea();
         }
     }
 
-    private XFuture<Boolean> pickupTool(String holderName) {
+    private XFuture<Boolean> pickupToolByHolder(String holderName) {
         try {
             Map<String, String> options = getTableOptions();
             setReplanFromIndex(0);
-            List<Action> actionsList = new ArrayList<>();
-            Action gototToolChangerApproachAction
+            List<Action> newActionsList = new ArrayList<>();
+            Action pickupToolByHolderAction
                     = new Action(
-                            PICKUP_TOOL,
+                            PICKUP_TOOL_BY_HOLDER,
                             new String[]{holderName});
-            actionsList.add(gototToolChangerApproachAction);
+            newActionsList.add(pickupToolByHolderAction);
             crclGenerator.clearLastRequiredPartsMap();
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
-            return executeActions(actionsList, options);
+            return executeActions(newActionsList, options);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
-            XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
+            XFuture<Boolean> future = new XFuture<>("pickupToolByHolder."+holderName);
+            future.completeExceptionally(ex);
+            return future;
+        }
+    }
+    
+    private XFuture<Boolean> pickupToolByTool(String toolName) {
+        try {
+            Map<String, String> options = getTableOptions();
+            setReplanFromIndex(0);
+            List<Action> newActionsList = new ArrayList<>();
+            Action pickupToolByToolAction
+                    = new Action(
+                            PICKUP_TOOL_BY_TOOL,
+                            new String[]{toolName});
+            newActionsList.add(pickupToolByToolAction);
+            crclGenerator.clearLastRequiredPartsMap();
+            crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
+            return executeActions(newActionsList, options);
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+            XFuture<Boolean> future = new XFuture<>("pickupToolByTool."+toolName);
             future.completeExceptionally(ex);
             return future;
         }
@@ -6183,7 +6299,7 @@ private JTextArea editTableArea = new JTextArea();
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
             checkDbSupplierPublisherFuturesList = dbSetupPublisher.notifyAllDbSetupListeners(generateCrclService);
         } else {
-            System.err.println("dbSetupPublisher == null");
+            logDebug("dbSetupPublisher == null");
             f1.completeExceptionally(new IllegalStateException("dbSetupPublisher == null"));
         }
         return f1; //XFuture.allOfWithName("checkDbSupplierPublisher.all", f1,f2);
@@ -6200,7 +6316,7 @@ private JTextArea editTableArea = new JTextArea();
         }
         crclGenerator.setOptions(getTableOptions());
     }
-    
+
     public void setToolHolderOperationEnabled(boolean enable) {
         crclGenerator.setToolHolderOperationEnabled(enable);
     }
@@ -6208,7 +6324,6 @@ private JTextArea editTableArea = new JTextArea();
     public boolean isToolHolderOperationEnabled() {
         return crclGenerator.isToolHolderOperationEnabled();
     }
-    
 
     public Map<String, String> getTableOptions() {
         Map<String, String> options = new HashMap<>();
@@ -6361,11 +6476,11 @@ private JTextArea editTableArea = new JTextArea();
     public void loadProperties() throws IOException {
         if (null != propertiesFile && propertiesFile.exists()) {
             if (propertiesFile.isDirectory()) {
-                System.err.println("Can not loadProperties file \"" + propertiesFile + "\" : It is a directory instead of text file.");
+                logDebug("Can not loadProperties file \"" + propertiesFile + "\" : It is a directory instead of text file.");
                 return;
             }
             if (!propertiesFile.canRead()) {
-                System.err.println("Can not loadProperties file \"" + propertiesFile + "\" : file is not readable.");
+                logDebug("Can not loadProperties file \"" + propertiesFile + "\" : file is not readable.");
                 return;
             }
             Properties props = new Properties();
@@ -6425,7 +6540,51 @@ private JTextArea editTableArea = new JTextArea();
                     setSelectedToolName(selectedTool);
                 }
             }
+            syncPanelToGeneratorToolData();
+            loadToolMenus();
         }
+    }
+
+    private void loadToolMenus() {
+        toolDropByHolderMenu.removeAll();
+        String[] emptyToolChangerNames = getEmptyToolChangerNames();
+        String currentToolName = crclGenerator.getCurrentToolName();
+        if (emptyToolChangerNames.length < 1 || CrclGenerator.isEmptyTool(currentToolName)) {
+            toolDropByHolderMenu.setEnabled(false);
+            toolDropCurrentToolMenuItem.setEnabled(false);
+        } else {
+            toolDropByHolderMenu.setEnabled(true);
+            for (String holderName : emptyToolChangerNames) {
+                JMenuItem mi = new JMenuItem(holderName);
+                mi.addActionListener(e -> dropToolByHolder(holderName));
+                toolDropByHolderMenu.add(mi);
+            }
+            toolDropCurrentToolMenuItem.setEnabled(true);
+        }
+        toolPickupByHolderMenu.removeAll();
+        toolPickupByToolMenu.removeAll();
+        String[] fullToolChangerNames = getFullToolChangerNames();
+        if (fullToolChangerNames.length < 1 || !CrclGenerator.isEmptyTool(currentToolName)) {
+            toolPickupByHolderMenu.setEnabled(false);
+            toolPickupByToolMenu.setEnabled(false);
+        } else {
+            toolPickupByHolderMenu.setEnabled(true);
+            toolPickupByToolMenu.setEnabled(true);
+            for (String holderName : fullToolChangerNames) {
+                JMenuItem holderMi = new JMenuItem(holderName);
+                holderMi.addActionListener(e -> pickupToolByHolder(holderName));
+                toolPickupByHolderMenu.add(holderMi);
+                String toolName = crclGenerator.getExpectedToolHolderContentsMap().get(holderName);
+                JMenuItem toolMi = new JMenuItem(toolName);
+                toolMi.addActionListener(e -> pickupToolByTool(toolName));
+                toolPickupByToolMenu.add(toolMi);
+            }
+        }
+//        toolPickupByHolderMenu = new JMenu("Pickup By Holder");
+//        toolDropCurrentToolMenuItem = new JMenuItem("Drop Current Tool");
+//        toolDropCurrentToolMenuItem.setEnabled(false);
+//        toolPickupByToolMenu = new JMenu("Pickup by Tool");
+//        toolSetToolMenu = new JMenu("Set Tool")
     }
 
     private void loadErrorMapFiles(String errorMapFiles) throws IOException {
@@ -6451,7 +6610,7 @@ private JTextArea editTableArea = new JTextArea();
                 if (null == parentFile) {
                     String errString = "Can't load errorMapFile : " + fname + ", parentFile is null";
                     setErrorString(errString);
-                    System.err.println(errString);
+                    logDebug(errString);
                     return;
                 }
                 String fullPath = parentFile.toPath().resolve(fname).normalize().toString();
@@ -6465,7 +6624,7 @@ private JTextArea editTableArea = new JTextArea();
                 } else {
                     String errString = "Can't load errorMapFile : " + fname + "   or " + fullPath;
                     setErrorString(errString);
-                    System.err.println(errString);
+                    logDebug(errString);
                 }
             }
         }
@@ -6579,7 +6738,7 @@ private JTextArea editTableArea = new JTextArea();
                 && customRunnables.size() > 0
                 && customRunnablesIndex < customRunnables.size()) {
             try {
-                System.out.println("customRunnablesIndex = " + customRunnablesIndex);
+                logDebug("customRunnablesIndex = " + customRunnablesIndex);
                 RunnableWithThrow runnable = customRunnables.get(customRunnablesIndex);
                 customRunnablesIndex = (customRunnablesIndex + 1) % customRunnables.size();
                 if (null != runnable) {
@@ -6604,8 +6763,9 @@ private JTextArea editTableArea = new JTextArea();
     };
 
     private Runnable replanRunnable = defaultReplanRunnable;
+    private static final boolean DEFAULT_DEBUG = Boolean.getBoolean("ExecutorJPanel.debug");
 
-    private boolean debug;
+    private boolean debug = DEFAULT_DEBUG;
 
     /**
      * Get the value of debug
@@ -6639,17 +6799,17 @@ private JTextArea editTableArea = new JTextArea();
     public void accept(PendantClientJPanel panel, int line, CRCLProgramType program, CRCLStatusType status) {
         if (this.debug && null != program) {
             int sz = program.getMiddleCommand().size();
-            System.out.println("replanStarted = " + replanStarted);
-            System.out.println("replanRunnable = " + replanRunnable);
-            System.out.println("jCheckBoxReplan.isSelected() = " + jCheckBoxReplan.isSelected());
-            System.out.println("sz = " + sz);
-            System.out.println("line = " + line);
+            logDebug("replanStarted = " + replanStarted);
+            logDebug("replanRunnable = " + replanRunnable);
+            logDebug("jCheckBoxReplan.isSelected() = " + jCheckBoxReplan.isSelected());
+            logDebug("sz = " + sz);
+            logDebug("line = " + line);
             CommandStateEnumType state = status.getCommandStatus().getCommandState();
 
-            System.out.println("state = " + state);
-            System.out.println("crclProgName = " + crclProgName);
-            System.out.println("lastCrclProgName = " + lastCrclProgName);
-            System.out.println("program.getName() = " + program.getName());
+            logDebug("state = " + state);
+            logDebug("crclProgName = " + crclProgName);
+            logDebug("lastCrclProgName = " + lastCrclProgName);
+            logDebug("program.getName() = " + program.getName());
         }
     }
 
@@ -6664,7 +6824,7 @@ private JTextArea editTableArea = new JTextArea();
         return positionMapJPanel1.getReversePositionMaps();
     }
 
-    private volatile List<PhysicalItem> availableToolHolders = Collections.emptyList();
+    @Nullable private volatile List<PhysicalItem> availableToolHolders = null;
 
     public List<PhysicalItem> getAvailableToolHolders() {
         if (null == availableToolHolders) {
@@ -6672,7 +6832,7 @@ private JTextArea editTableArea = new JTextArea();
                     = crclGenerator.getToolHolderPoseMap();
             List<PhysicalItem> newList = new ArrayList<>();
             for (Entry<String, PoseType> entry : toolHolderPoseMap.entrySet()) {
-                newList.add(new ToolHolder(entry.getKey(),entry.getValue()));
+                newList.add(new ToolHolder(entry.getKey(), entry.getValue()));
             }
             availableToolHolders = newList;
         }
