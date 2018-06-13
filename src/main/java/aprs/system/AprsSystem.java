@@ -128,6 +128,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.FileWriter;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import javax.swing.DesktopManager;
 import javax.swing.JDesktopPane;
@@ -189,6 +190,12 @@ public class AprsSystem implements AprsSystemInterface {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private volatile boolean snapshotsEnabled = false;
 
+    private final AtomicReference<Runnable> onCloseRunnable = new AtomicReference<>();
+    
+    public void setOnCloseRunnable(Runnable r) {
+        onCloseRunnable.set(r);
+    }
+    
     /**
      * Check if the user has selected a check box asking for snapshot files to
      * be created for logging/debugging.
@@ -6197,6 +6204,10 @@ public class AprsSystem implements AprsSystemInterface {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setVisible(false);
             aprsSystemDisplayJFrame.dispose();
+        }
+        Runnable r = onCloseRunnable.getAndSet(null);
+        if(null != r) {
+            r.run();
         }
     }
 

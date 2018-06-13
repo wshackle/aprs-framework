@@ -4762,6 +4762,7 @@ public class Supervisor {
             try {
                 AprsSystemInterface aj = aprsSystems.remove(selectedIndex);
                 try {
+                    aj.setOnCloseRunnable(null);
                     aj.close();
                 } catch (Exception ex) {
                     log(Level.SEVERE, null, ex);
@@ -4940,6 +4941,7 @@ public class Supervisor {
     private void completeLoadSys(AprsSystem aprsSys, int priority, String taskName, String robotName, File propertiesFile) {
         try {
             aprsSys.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            aprsSys.setOnCloseRunnable(this::close);
             aprsSys.setPriority(priority);
             aprsSys.setTaskName(taskName);
             aprsSys.setRobotName(robotName);

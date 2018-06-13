@@ -2895,6 +2895,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             AprsSystem.createEmptySystem()
                     .thenAccept((AprsSystem sys) -> {
                         try {
+                            sys.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                            sys.setOnCloseRunnable(this::close);
                             sys.setVisible(true);
                             addAprsSystem(sys);
                             updateRobotsTable();
