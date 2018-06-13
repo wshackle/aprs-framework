@@ -57,6 +57,7 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableColumnModel;
@@ -694,5 +695,19 @@ public class Utils {
             }
         }
         return out;
+    }
+    
+    public static void showMessageDialog(Component component, String message) {
+        if(null == message || message.trim().length() < 1) {
+            throw new IllegalArgumentException("message="+message);
+        }
+        String msgCopy = message;
+        if(msgCopy.length() > 400) {
+            msgCopy = msgCopy.substring(0, 396)+" ...";
+        }
+        for (int i = 80; i < message.length(); i += 80) {
+            msgCopy = msgCopy.substring(0, i) + "\r\n"+msgCopy.substring(i);
+        }
+        JOptionPane.showMessageDialog(component,msgCopy);
     }
 }

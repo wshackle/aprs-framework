@@ -68,6 +68,16 @@ public class Action {
      * Create an instance from the required parameters.
      *
      * @param actionType enumerated type of action
+     */
+    public Action(ActionType actionType) {
+        this("",actionType,new String[]{},"");
+    }
+        
+    
+    /**
+     * Create an instance from the required parameters.
+     *
+     * @param actionType enumerated type of action
      * @param arg single argument for the action
      */
     public Action(ActionType actionType, String arg) {
