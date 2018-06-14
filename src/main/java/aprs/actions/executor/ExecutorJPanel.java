@@ -147,6 +147,8 @@ import javax.swing.JMenu;
 import static aprs.actions.executor.ActionType.DROP_TOOL_BY_HOLDER;
 import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_HOLDER;
 import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_TOOL;
+import static aprs.actions.executor.ActionType.SWITCH_TOOL;
+import javax.swing.JRadioButtonMenuItem;
 
 /**
  *
@@ -172,6 +174,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private final JMenuItem toolDropCurrentToolMenuItem;
     private final JMenu toolPickupByToolMenu;
     private final JMenu toolSetToolMenu;
+    private final JMenu toolSwitchToolMenu;
 
     /**
      * Creates new form ActionsToCrclJPanel
@@ -245,6 +248,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         toolDropCurrentToolMenuItem.setEnabled(false);
         toolDropCurrentToolMenuItem.addActionListener(e -> dropToolAny());
         toolPickupByToolMenu = new JMenu("Pickup by Tool");
+        toolSwitchToolMenu = new JMenu("Switch (Drop and Pickup) Tool");
         toolSetToolMenu = new JMenu("Set Tool");
 
         toolMenu.add(toolDropByHolderMenu);
@@ -252,6 +256,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         toolMenu.add(toolDropCurrentToolMenuItem);
         toolMenu.add(toolPickupByHolderMenu);
         toolMenu.add(toolPickupByToolMenu);
+        toolMenu.add(toolSwitchToolMenu);
         toolMenu.add(toolSetToolMenu);
     }
 
@@ -6175,10 +6180,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> executeActionsInternal(List<Action> actionsList, Map<String, String> options) {
         try {
-//            checkDbSupplierPublisher();
             CRCLProgramType program = createEmptyProgram();
-            List<MiddleCommandType> cmds = crclGenerator.generate(actionsList, 0, options, safeAbortRequestCount.get());
-
+            List<MiddleCommandType> cmds
+                    = crclGenerator.generate(
+                            actionsList,
+                            0,
+                            options,
+                            safeAbortRequestCount.get());
             jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
             program.getMiddleCommand().clear();
             program.getMiddleCommand().addAll(cmds);
@@ -6206,12 +6214,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
-            XFuture<Boolean> future = new XFuture<>("pickupToolByHolder."+holderName);
+            XFuture<Boolean> future = new XFuture<>("pickupToolByHolder." + holderName);
             future.completeExceptionally(ex);
             return future;
         }
     }
-    
+
     private XFuture<Boolean> pickupToolByTool(String toolName) {
         try {
             Map<String, String> options = getTableOptions();
@@ -6227,7 +6235,28 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
-            XFuture<Boolean> future = new XFuture<>("pickupToolByTool."+toolName);
+            XFuture<Boolean> future = new XFuture<>("pickupToolByTool." + toolName);
+            future.completeExceptionally(ex);
+            return future;
+        }
+    }
+
+    private XFuture<Boolean> switchTool(String toolName) {
+        try {
+            Map<String, String> options = getTableOptions();
+            setReplanFromIndex(0);
+            List<Action> newActionsList = new ArrayList<>();
+            Action switchToolAction
+                    = new Action(
+                            SWITCH_TOOL,
+                            new String[]{toolName});
+            newActionsList.add(switchToolAction);
+            crclGenerator.clearLastRequiredPartsMap();
+            crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
+            return executeActions(newActionsList, options);
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+            XFuture<Boolean> future = new XFuture<>("pickupToolByTool." + toolName);
             future.completeExceptionally(ex);
             return future;
         }
@@ -6580,11 +6609,27 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 toolPickupByToolMenu.add(toolMi);
             }
         }
-//        toolPickupByHolderMenu = new JMenu("Pickup By Holder");
-//        toolDropCurrentToolMenuItem = new JMenuItem("Drop Current Tool");
-//        toolDropCurrentToolMenuItem.setEnabled(false);
-//        toolPickupByToolMenu = new JMenu("Pickup by Tool");
-//        toolSetToolMenu = new JMenu("Set Tool")
+        toolSetToolMenu.removeAll();
+        toolSwitchToolMenu.removeAll();
+        String toolNames[] = getToolNames();
+        boolean currentToolFound = false;
+        for (String toolName : toolNames) {
+            if (toolName.trim().length() < 1) {
+                continue;
+            }
+            JRadioButtonMenuItem toolMi = new JRadioButtonMenuItem(toolName);
+            toolSetToolMenu.add(toolMi);
+            if (Objects.equals(toolName, currentToolName) && !currentToolFound) {
+                toolMi.setSelected(true);
+                toolMi.setEnabled(false);
+                currentToolFound = true;
+            } else {
+                toolMi.addActionListener(e -> crclGenerator.setCurrentToolName(toolName));
+                JMenuItem switchToolMi = new JMenuItem(toolName);
+                switchToolMi.addActionListener(e -> switchTool(toolName));
+                toolSwitchToolMenu.add(switchToolMi);
+            }
+        }
     }
 
     private void loadErrorMapFiles(String errorMapFiles) throws IOException {
