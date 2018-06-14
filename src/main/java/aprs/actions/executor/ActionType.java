@@ -38,6 +38,7 @@ public enum ActionType {
     DROP_TOOL_ANY,
     PICKUP_TOOL_BY_HOLDER,
     PICKUP_TOOL_BY_TOOL,
+    SWITCH_TOOL,
     PAUSE,
     INSPECT_KIT,
     CLEAR_KITS_TO_CHECK,

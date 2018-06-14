@@ -1498,6 +1498,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         pickupToolByTool(action, cmds);
                         break;
 
+                    case SWITCH_TOOL:
+                        switchTool(action, cmds);
+                        break;
+                        
                     case END_PROGRAM:
                         endProgram(action, cmds);
                         updateActionToCrclArrays(idx, cmds);
@@ -5400,6 +5404,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         pickupToolByHolderName(toolHolderName, out);
     }
 
+    private void switchTool(Action action, List<MiddleCommandType> out) throws IllegalStateException, CRCLException, PmException {
+        String toolInRobot = getExpectedToolName();
+        if (!isEmptyTool(toolInRobot)) {
+            dropToolAny(action, out);
+        }
+        String desiredToolName = action.getArgs()[toolHolderNameArgIndex];
+        if (!isEmptyTool(desiredToolName)) {
+            pickupToolByTool(action, out);
+        }
+    }
+
     private void pickupToolByTool(Action action, List<MiddleCommandType> out) throws IllegalStateException, CRCLException, PmException {
         String desiredToolName = action.getArgs()[toolHolderNameArgIndex];
         String toolHolderName = null;
@@ -5411,23 +5426,23 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             String toolInHolder = contentsEntry.getValue();
             String toolHolderNameToCheck = contentsEntry.getKey();
             if (isEmptyTool(toolInHolder)) {
-                System.out.println("toolInHolder = " + toolInHolder + "for "+toolHolderNameToCheck+" is empty");
+                System.out.println("toolInHolder = " + toolInHolder + "for " + toolHolderNameToCheck + " is empty");
                 continue;
             }
-            
-            if(!Objects.equals(toolInHolder, desiredToolName)) {
-                System.out.println("toolInHolder = " + toolInHolder + " for "+toolHolderNameToCheck+" does not equal desiredToolName="+desiredToolName);
+
+            if (!Objects.equals(toolInHolder, desiredToolName)) {
+                System.out.println("toolInHolder = " + toolInHolder + " for " + toolHolderNameToCheck + " does not equal desiredToolName=" + desiredToolName);
                 continue;
             }
             toolHolderName = toolHolderNameToCheck;
             break;
         }
-        if(null == toolHolderName) {
+        if (null == toolHolderName) {
             throw new IllegalStateException("null == toolHolderName");
         }
         pickupToolByHolderName(toolHolderName, out);
     }
-    
+
     private void pickupToolByHolderName(String toolHolderName, List<MiddleCommandType> out) throws PmException, IllegalStateException, CRCLException {
         lastTestApproachPose = null;
         checkSettings();
