@@ -451,8 +451,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         @Override
         public void tableChanged(TableModelEvent e) {
+            syncPanelToGeneratorToolData();
             Utils.autoResizeTableColWidths(jTableHolderContents);
             saveToolHolderContentsMap();
+            loadToolMenus();
         }
     }
 
