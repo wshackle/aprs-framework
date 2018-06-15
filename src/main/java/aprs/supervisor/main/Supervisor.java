@@ -4891,7 +4891,6 @@ public class Supervisor {
         List<XFuture<?>> sysFutures = new ArrayList<>();
         try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader())) {
             DefaultTableModel tm = (DefaultTableModel) jTableTasks.getModel();
-            String line = null;
             tm.setRowCount(0);
             int linecount = 0;
             for (CSVRecord csvRecord : parser) {
