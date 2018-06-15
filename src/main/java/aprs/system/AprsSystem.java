@@ -1877,6 +1877,14 @@ public class AprsSystem implements AprsSystemInterface {
         return pddlExecutorJInternalFrame1.getAvailableToolHolders();
     }
 
+    @Override
+    public List<PhysicalItem> getToolsInHolders() {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame");
+        }
+        return pddlExecutorJInternalFrame1.getToolsInHolders();
+    }
+    
     static private class MyPrintStream extends PrintStream {
 
         final private PrintStream ps;
@@ -3925,6 +3933,8 @@ public class AprsSystem implements AprsSystemInterface {
         opts.enableAutoscale = false;
         opts.disableLimitsLine = true;
         opts.disableShowCurrent = false;
+        opts.addExtras = true;
+//        opts.debug = true;
         return object2DViewJInternalFrame.createSnapshotImage(opts);
     }
 

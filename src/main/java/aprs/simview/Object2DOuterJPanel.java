@@ -2433,6 +2433,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             props.put("simRefreshMillis", Integer.toString(simRefreshMillis));
             props.put("connected", Boolean.toString(jCheckBoxConnected.isSelected()));
             props.put("autoscale", Boolean.toString(jCheckBoxAutoscale.isSelected()));
+            props.put("tools", Boolean.toString(jCheckBoxTools.isSelected()));
             props.put("trackcurrentpos", Boolean.toString(jCheckBoxShowCurrent.isSelected()));
             props.put("showrotations", Boolean.toString(jCheckBoxShowRotations.isSelected()));
             props.put("viewDetails", Boolean.toString(jCheckBoxDetails.isSelected()));
@@ -2593,6 +2594,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 boolean autoscale = Boolean.valueOf(autoscaleString);
                 jCheckBoxAutoscale.setSelected(autoscale);
                 object2DJPanel1.setAutoscale(autoscale);
+            }
+            String toolsString = props.getProperty("tools");
+            if (null != toolsString && toolsString.length() > 0) {
+                boolean tools = Boolean.valueOf(toolsString);
+                jCheckBoxTools.setSelected(tools);
+                object2DJPanel1.setShowAddedToolsAndToolHolders(tools);
             }
             reverseDataFileString = props.getProperty("reverse_datafile");
             dataFileString = props.getProperty("datafile");

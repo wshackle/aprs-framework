@@ -1,3 +1,3 @@
 Holder Position Name,Contents,Possible Contents,Comment
-shared_gripper,pincher,"pincher,vacuum",
-private,vacuum,"pincher,vacuum",
+shared_gripper,pincher,"pincher,small_vacuum",
+private,empty,"pincher,small_vacuum",

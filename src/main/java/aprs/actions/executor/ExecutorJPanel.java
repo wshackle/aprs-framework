@@ -148,6 +148,7 @@ import static aprs.actions.executor.ActionType.DROP_TOOL_BY_HOLDER;
 import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_HOLDER;
 import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_TOOL;
 import static aprs.actions.executor.ActionType.SWITCH_TOOL;
+import aprs.database.Tool;
 import javax.swing.JRadioButtonMenuItem;
 
 /**
@@ -6884,6 +6885,21 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             availableToolHolders = newList;
         }
         return availableToolHolders;
+    }
+
+    public List<PhysicalItem> getToolsInHolders() {
+        Map<String, PoseType> toolHolderPoseMap
+                = crclGenerator.getToolHolderPoseMap();
+        Map<String, String> toolHolderContentsMap
+                = crclGenerator.getCurrentToolHolderContentsMap();
+        List<PhysicalItem> newList = new ArrayList<>();
+        for (Entry<String, PoseType> entry : toolHolderPoseMap.entrySet()) {
+            String contents = toolHolderContentsMap.get(entry.getKey());
+            if(!CrclGenerator.isEmptyTool(contents)) {
+                newList.add(new Tool(contents, entry.getValue()));
+            }
+        }
+        return newList;
     }
 
 }

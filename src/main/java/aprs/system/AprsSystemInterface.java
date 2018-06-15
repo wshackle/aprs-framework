@@ -1509,5 +1509,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
     
     public List<PhysicalItem> getAvailableToolHolders();
     
+    public List<PhysicalItem> getToolsInHolders();
+    
     public void setOnCloseRunnable(Runnable r);
 }

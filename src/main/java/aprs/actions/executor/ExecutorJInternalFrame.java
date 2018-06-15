@@ -356,4 +356,8 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     public List<PhysicalItem> getAvailableToolHolders() {
         return executorJPanel1.getAvailableToolHolders();
     }
+    
+    public List<PhysicalItem> getToolsInHolders() {
+        return executorJPanel1.getToolsInHolders();
+    }
 }
