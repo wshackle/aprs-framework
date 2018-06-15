@@ -5,6 +5,7 @@ doInspectKit=true
 enableOptaPlanner=true
 fastTransSpeed=200.0
 firstLookDwellTime=0.5
+joint0DiffTolerance=20.0
 jointAccel=100.0
 jointSpeed=5.0
 kitInspectDistThreshold=20.0

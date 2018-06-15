@@ -1,10 +1,11 @@
-#  Automatically saved by aprs.framework.pddl.executor.PddlExecutorJPanel.saveProperties()
+#  Automatically saved 
 afterMoveToLookForDwellTime=0.5
 approachZOffset=50.0
 doInspectKit=true
 enableOptaPlanner=true
 fastTransSpeed=200.0
 firstLookDwellTime=0.5
+joint0DiffTolerance=20.0
 jointAccel=100.0
 jointSpeed=5.0
 kitInspectDistThreshold=20.0
@@ -31,5 +32,6 @@ takeSnapshots=true
 takeZOffset=0.0
 testTransSpeed=50.0
 useJointLookFor=false
+useJointMovesForToolHolderApproach=false
 verySlowTransSpeed=25
 visionCycleNewDiffThreshold=3
