@@ -23,7 +23,7 @@
 package aprs.supervisor.main;
 
 import static aprs.supervisor.main.AprsSupervisorDisplayJFrame.getTimeString;
-import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 
 /**
  *
@@ -32,18 +32,18 @@ import crcl.ui.XFuture;
 class LockInfo {
 
     private final long startTime;
-    private final XFuture<Void> future;
+    private final XFutureVoid future;
 
     public LockInfo(String name) {
         startTime = System.currentTimeMillis();
-        future = new XFuture<>(name);
+        future = new XFutureVoid(name);
     }
 
     public long getStartTime() {
         return startTime;
     }
 
-    public XFuture<Void> getFuture() {
+    public XFutureVoid getFuture() {
         return future;
     }
 

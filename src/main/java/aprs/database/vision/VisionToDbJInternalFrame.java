@@ -31,6 +31,7 @@ import aprs.database.PartsTray;
 import aprs.database.Slot;
 import aprs.database.Tray;
 import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 import java.io.File;
 import java.sql.Connection;
 import java.util.Collections;
@@ -87,7 +88,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return this.visionToDBJPanel.getRotationOffset();
     }
 
-    public XFuture<Void> startNewItemsImageSave(File f) {
+    public XFutureVoid startNewItemsImageSave(File f) {
         return this.visionToDBJPanel.startNewItemsImageSave(f);
     }
 

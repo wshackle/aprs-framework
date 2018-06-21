@@ -606,7 +606,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     }
 
     @SuppressWarnings({"unchecked", "raw_types"})
-    public XFuture<Void> run(File f) throws IOException {
+    public XFutureVoid run(File f) throws IOException {
         List<XFutureVoid> futures = new ArrayList<>();
         stopLineSeen = false;
         processLaunchDirectory = f.getParentFile();
@@ -636,9 +636,9 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     private final AtomicBoolean closing = new AtomicBoolean();
 
     @SuppressWarnings("CanBeFinal")
-    private volatile XFuture<Void> closingFuture = new XFuture<>("processLauncherClosingFuture");
+    private volatile XFutureVoid closingFuture = new XFutureVoid("processLauncherClosingFuture");
 
-    public XFuture<Void> close() {
+    public XFutureVoid close() {
         boolean wasClosing = closing.getAndSet(true);
         if (wasClosing) {
             return closingFuture;

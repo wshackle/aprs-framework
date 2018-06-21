@@ -30,6 +30,7 @@ import crcl.base.CRCLProgramType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -128,7 +129,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         executorJPanel1.abortProgram();
     }
 
-    public XFuture<Void> startSafeAbort(String name) {
+    public XFutureVoid startSafeAbort(String name) {
         return this.executorJPanel1.startSafeAbort(name);
     }
 

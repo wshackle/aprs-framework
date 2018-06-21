@@ -35,6 +35,7 @@ import aprs.learninggoals.GoalLearner;
 import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.actions.executor.PositionMap;
 import aprs.database.vision.UpdateResults;
+import aprs.supervisor.main.Supervisor;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -45,6 +46,7 @@ import crcl.base.MiddleCommandType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 import crcl.ui.client.PendantClientInner;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.utils.outer.interfaces.ProgramRunData;
@@ -189,7 +191,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param f file to save
      * @return future with information on when the operation is complete.
      */
-    public XFuture<Void> startVisionToDbNewItemsImageSave(File f);
+    public XFutureVoid startVisionToDbNewItemsImageSave(File f);
 
     /**
      * Get a list of slots associated with a particular tray.
@@ -409,7 +411,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @return future or null if no safe abort requested
      */
     @Nullable
-    public XFuture<Void> getSafeAbortFuture();
+    public XFutureVoid getSafeAbortFuture();
 
     /**
      * Get the future that can be used to determine when the last requested run
@@ -445,7 +447,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @return a future that can be tested or used to wait until the abort is
      * completed.
      */
-    public XFuture<Void> startSafeAbort(String comment);
+    public XFutureVoid startSafeAbort(String comment);
 
     /**
      * Safely abort the current CRCL program and then disconnect from the
@@ -460,7 +462,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * future was created by which caller and to improve log messages
      * @return future providing info on when complete
      */
-    public XFuture<Void> startSafeAbortAndDisconnect(String comment);
+    public XFutureVoid startSafeAbortAndDisconnect(String comment);
 
     /**
      * Get a map of updates that were attempted the last time data was received
@@ -480,7 +482,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      *
      * @return future providing info on when complete
      */
-    public XFuture<Void> disconnectRobot();
+    public XFutureVoid disconnectRobot();
 
     public boolean isClosing();
 
@@ -507,7 +509,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @param port (TCP) port robot's CRCL server is bound to
      * @return future providing info on when complete
      */
-    public XFuture<Void> connectRobot(String robotName, String host, int port);
+    public XFutureVoid connectRobot(String robotName, String host, int port);
 
     /**
      * Get robot's CRCL host.
@@ -1022,7 +1024,22 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      */
     public void setSupervisorEventLogger(Consumer<String> supervisorEventLogger);
 
-        /**
+    /**
+     * Get the value of supervisor
+     *
+     * @return the value of supervisorEventLogger
+     */
+    @Nullable
+    public Supervisor getSupervisor();
+
+    /**
+     * Set the value of supervisor
+     *
+     * @param supervisor new value of supervisorEventLogger
+     */
+    public void setSupervisor(Supervisor supervisor);
+    
+     /**
      * Start a continuous demo where kits will be built , emptied and built
      * again repeating indefinitely. The demo will not begin by checking if the
      * robot can be enabled first. (This may avoid a second or two of delay and
@@ -1055,7 +1072,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @return a future object that can be used to determine when setting the
      * reverse flag and all related actions is complete.
      */
-    public XFuture<Void> startSetReverseFlag(boolean reverseFlag);
+    public XFutureVoid startSetReverseFlag(boolean reverseFlag);
 
     /**
      * Set the state of the reverse flag. It is set to indicate that an
@@ -1068,7 +1085,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @return a future object that can be used to determine when setting the
      * reverse flag and all related actions is complete.
      */
-    public XFuture<Void> startSetReverseFlag(boolean reverseFlag, boolean reloadSimFiles);
+    public XFutureVoid startSetReverseFlag(boolean reverseFlag, boolean reloadSimFiles);
 
     /**
      * Get the state of whether the system is paused
@@ -1084,13 +1101,15 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
     public void pause();
 
  
+    public XFutureVoid clearWayToHolders(String holderName);
+    
     /**
      * Reset errors and reload simulation files
      *
      * @return a future object that can be used to determine when setting the
      * reset and all related actions is complete.
      */
-    public XFuture<Void> reset();
+    public XFutureVoid reset();
 
     /**
      * Reset errors and optionally reload simulation files
@@ -1100,7 +1119,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * @return a future object that can be used to determine when setting the
      * reset and all related actions is complete.
      */
-    public XFuture<Void> reset(boolean reloadSimFiles);
+    public XFutureVoid reset(boolean reloadSimFiles);
 
     
     /**
@@ -1511,5 +1530,5 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
     
     public List<PhysicalItem> getToolsInHolders();
     
-    public void setOnCloseRunnable(Runnable r);
+    public void setOnCloseRunnable(@Nullable Runnable r);
 }

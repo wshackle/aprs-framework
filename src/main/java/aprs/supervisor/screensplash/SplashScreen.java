@@ -24,6 +24,7 @@ package aprs.supervisor.screensplash;
 
 import aprs.misc.Utils;
 import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -99,7 +100,7 @@ public class SplashScreen extends JFrame {
 
     private volatile javax.swing.@Nullable Timer timer = null;
 
-    private void close(GraphicsDevice gd, XFuture<Void> returnFuture) {
+    private void close(GraphicsDevice gd, XFutureVoid returnFuture) {
         gd.setFullScreenWindow(null);
         setVisible(false);
         if (null != timer) {
@@ -166,9 +167,9 @@ public class SplashScreen extends JFrame {
         return ListHider.BLUE_WHITE_GREEN_COLOR_LIST;
     }
 
-    public static XFuture<Void> showMessageFullScreen(String message, float fontSize, @Nullable Image image, List<Color> colors, @Nullable GraphicsDevice graphicsDevice) {
-        XFuture<Void> returnFuture = new XFuture<>("showMessageFullScreen(" + message + ")");
-        XFuture<Void> step1Future = Utils.runOnDispatchThread("showMessageFullScreen(" + message + ").start", () -> {
+    public static XFutureVoid showMessageFullScreen(String message, float fontSize, @Nullable Image image, List<Color> colors, @Nullable GraphicsDevice graphicsDevice) {
+        XFutureVoid returnFuture = new XFutureVoid("showMessageFullScreen(" + message + ")");
+        XFutureVoid step1Future = Utils.runOnDispatchThread("showMessageFullScreen(" + message + ").start", () -> {
             SplashScreen ss = new SplashScreen(message, fontSize, image);
             ss.setVisible(true);
             GraphicsDevice gd0 = graphicsDevice;
