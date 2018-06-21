@@ -48,11 +48,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,11 +63,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableColumnModel;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -260,6 +265,8 @@ public class Utils {
         return timeFormat.format(date);
     }
 
+    private static final Logger LOGGER = Logger.getLogger(Utils.class.getName());
+
     /**
      * Run something on the dispatch thread that may throw a checked exception.
      *
@@ -280,15 +287,14 @@ public class Utils {
                         r.run();
                         ret.complete(null);
                     } catch (Exception ex) {
-                        Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+                        LOGGER.log(Level.SEVERE, null, ex);
                         ret.completeExceptionally(ex);
                     }
                 });
                 return ret;
             }
         } catch (Throwable exception) {
-
-            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, exception);
+            LOGGER.log(Level.SEVERE, null, exception);
             ret.completeExceptionally(exception);
             return ret;
         }
@@ -320,7 +326,7 @@ public class Utils {
                 ret.complete(null);
             } catch (Exception e) {
                 ret.completeExceptionally(e);
-                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, name, e);
+                LOGGER.log(Level.SEVERE, name, e);
             }
 
             return ret;
@@ -330,7 +336,7 @@ public class Utils {
                     r.run();
                     ret.complete(null);
                 } catch (Exception e) {
-                    Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, name, e);
+                    LOGGER.log(Level.SEVERE, name, e);
                     ret.completeExceptionally(e);
                 }
             });
@@ -354,7 +360,7 @@ public class Utils {
             try {
                 r.run();
             } catch (Exception e) {
-                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, name, e);
+                LOGGER.log(Level.SEVERE, name, e);
                 exRef.set(e);
             }
         } else {
@@ -362,7 +368,7 @@ public class Utils {
                 try {
                     r.run();
                 } catch (Exception e) {
-                    Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, name, e);
+                    LOGGER.log(Level.SEVERE, name, e);
                     exRef.set(e);
                 }
             });
@@ -370,6 +376,25 @@ public class Utils {
         Exception ex = exRef.get();
         if (null != ex) {
             throw new InvocationTargetException(ex);
+        }
+    }
+    
+    /**
+     * Call a method that returns a value on the dispatch thread.
+     *
+     * @param <R> type of return of the caller
+     * @param s supplier object with get method to be called.
+     * @return future that will make the return value accessible when the call
+     * is complete.
+     */
+    public static SwingFuture<XFutureVoid> supplyXVoidOnDispatchThread(final Supplier<XFutureVoid> s) {
+        SwingFuture<XFutureVoid> ret = new SwingFuture<>("supplyOnDispatchThread");
+        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+            ret.complete(s.get());
+            return ret;
+        } else {
+            javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
+            return ret;
         }
     }
 
@@ -397,7 +422,7 @@ public class Utils {
         try {
             return f.get();
         } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             return null;
         }
     }
@@ -534,7 +559,7 @@ public class Utils {
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -696,18 +721,97 @@ public class Utils {
         }
         return out;
     }
-    
+
     public static void showMessageDialog(Component component, String message) {
-        if(null == message || message.trim().length() < 1) {
-            throw new IllegalArgumentException("message="+message);
+        if (null == message || message.trim().length() < 1) {
+            throw new IllegalArgumentException("message=" + message);
         }
         String msgCopy = message;
-        if(msgCopy.length() > 400) {
-            msgCopy = msgCopy.substring(0, 396)+" ...";
+        if (msgCopy.length() > 400) {
+            msgCopy = msgCopy.substring(0, 396) + " ...";
         }
         for (int i = 80; i < message.length(); i += 80) {
-            msgCopy = msgCopy.substring(0, i) + "\r\n"+msgCopy.substring(i);
+            msgCopy = msgCopy.substring(0, i) + "\r\n" + msgCopy.substring(i);
         }
-        JOptionPane.showMessageDialog(component,msgCopy);
+        JOptionPane.showMessageDialog(component, msgCopy);
+    }
+    
+    public static void readCsvFileToTable(JTable jtable,File f) {
+        readCsvFileToTableAndMap((DefaultTableModel) jtable.getModel(),f,null,null,null);
+    }
+
+    public static <T>  void readCsvFileToTableAndMap(@Nullable DefaultTableModel dtm, File f, @Nullable String nameRecord, @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
+
+        if (null != dtm) {
+            dtm.setRowCount(0);
+        }
+        try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
+            Map<String, Integer> headerMap = parser.getHeaderMap();
+            List<CSVRecord> records = parser.getRecords();
+            int skipRows = 0;
+            if (null != dtm) {
+                for (CSVRecord rec : records) {
+                    String colName = dtm.getColumnName(0);
+                    Integer colIndex = headerMap.get(colName);
+                    if (colIndex == null) {
+                        throw new IllegalArgumentException(f + " does not have field " + colName);
+                    }
+                    String val0 = rec.get(colIndex);
+                    if (!val0.equals(colName) && val0.length() > 0) {
+                        break;
+                    }
+                    if(val0.length() < 1) {
+                        LOGGER.log(Level.WARNING, "skipping record with empty name field : rec="+rec+" in file="+f.getCanonicalPath()+", colName="+colName+", val0="+val0+",skipRows="+skipRows);
+                    }
+                    skipRows++;
+                }
+                dtm.setRowCount(records.size() - skipRows);
+            }
+            ROW_LOOP:
+            for (int i = skipRows; i < records.size(); i++) {
+                CSVRecord rec = records.get(i);
+                if (null != dtm) {
+                    for (int j = 0; j < dtm.getColumnCount(); j++) {
+                        String colName = dtm.getColumnName(j);
+                        Integer colIndex = headerMap.get(colName);
+                        if (colIndex == null) {
+                            continue ROW_LOOP;
+                        }
+                        String val = rec.get(colIndex);
+                        try {
+                            if (null != val) {
+                                if (val.equals(colName) || (j == 0 && val.length() < 1)) {
+                                    continue ROW_LOOP;
+                                }
+                                Class<?> colClass = dtm.getColumnClass(j);
+                                if (colClass == Double.class) {
+                                    dtm.setValueAt(Double.valueOf(val), i - skipRows, j);
+                                } else if (colClass == Boolean.class) {
+                                    dtm.setValueAt(Boolean.valueOf(val), i - skipRows, j);
+                                } else {
+                                    dtm.setValueAt(val, i - skipRows, j);
+                                }
+                            }
+                        } catch (Exception exception) {
+                            String msg = "colName=" + colName + ", colIndex=" + colIndex + ", val=" + val + ", rec=" + rec;
+                            LOGGER.log(Level.SEVERE, msg, exception);
+                            throw new RuntimeException(msg, exception);
+                        }
+                    }
+                }
+                try {
+                    if (null != nameRecord && null != map && null != recordToValue) {
+                        String name = rec.get(nameRecord);
+                        T value = recordToValue.apply(rec);
+                        map.put(name, value);
+                    }
+                } catch (Exception exception) {
+                    LOGGER.log(Level.SEVERE, "rec=" + rec, exception);
+                    throw new RuntimeException(exception);
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
     }
 }

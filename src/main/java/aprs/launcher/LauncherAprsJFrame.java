@@ -397,10 +397,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private static void completePrevMulti(Supervisor supervisor) {
         supervisor.startColorTextReader();
-        supervisor.loadPrevSetup();
-        supervisor.loadPrevPosMapFile();
-        supervisor.loadPrevSimTeach();
-        supervisor.loadPrevTeachProperties();
+        supervisor.loadAllPrevFiles();
         supervisor.setVisible(true);
         PlayAlert();
     }

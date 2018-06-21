@@ -81,6 +81,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static aprs.misc.Utils.runOnDispatchThread;
 import aprs.database.Slot;
 import aprs.database.Tray;
+import crcl.ui.XFutureVoid;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
@@ -2004,22 +2005,22 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }//GEN-LAST:event_jButtonCheckActionPerformed
 
-    private XFuture<Void> queryDatabase() {
+    private XFutureVoid queryDatabase() {
         if (null != dpu) {
             return dpu.queryDatabase()
-                    .thenCompose("VisionToDB.queryDatabase.updataPoseQueryInfo",
+                    .thenComposeToVoid("VisionToDB.queryDatabase.updataPoseQueryInfo",
                             l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
-        return XFuture.completedFutureWithName("queryDatabase.null==dpu", null);
+        return XFutureVoid.completedFutureWithName("queryDatabase.null==dpu");
     }
 
-    private XFuture<Void> startQueryDatabaseNew() {
+    private XFutureVoid startQueryDatabaseNew() {
         if (null != dpu) {
             return dpu.queryDatabaseNew()
-                    .thenCompose("VisionToDB.startQueryDatabaseNew.updataPoseQueryInfo",
+                    .thenComposeToVoid("VisionToDB.startQueryDatabaseNew.updataPoseQueryInfo",
                             l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
-        return XFuture.completedFutureWithName("startQueryDatabaseNew.null==dpu", null);
+        return XFutureVoid.completedFutureWithName("startQueryDatabaseNew.null==dpu");
     }
 
     private void jButtonAddItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddItemActionPerformed
@@ -2349,7 +2350,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return listOut;
     }
 
-    XFuture<Void> startNewItemsImageSave(File f) {
+    XFutureVoid startNewItemsImageSave(File f) {
         if (null == dpu) {
             throw new NullPointerException("null == dpu");
         }
@@ -2361,7 +2362,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 });
     }
 
-    public XFuture<Void> startTakeSnapshot(File f) {
+    public XFutureVoid startTakeSnapshot(File f) {
         return Utils.runOnDispatchThread(() -> takeSnapshot(f));
     }
 
@@ -2370,7 +2371,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         startNewItemsCheck();
     }//GEN-LAST:event_jButtonCheckNewItemsOnlyActionPerformed
 
-    private XFuture<Void> startNewItemsCheck() {
+    private XFutureVoid startNewItemsCheck() {
 
         DefaultTableModel tm = (DefaultTableModel) this.jTableFromDatabase.getModel();
         tm.setRowCount(0);

@@ -74,6 +74,7 @@ import crcl.base.SetTransSpeedType;
 import crcl.base.TransSpeedAbsoluteType;
 import crcl.base.VectorType;
 import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 import crcl.ui.client.PendantClientInner;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLException;
@@ -750,7 +751,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param dbSetup new database setup object to use.
      * @return future providing status on when the connection is complete.
      */
-    public XFuture<Void> setDbSetup(DbSetup dbSetup) {
+    public XFutureVoid setDbSetup(DbSetup dbSetup) {
 
         this.dbSetup = dbSetup;
         if (null != this.dbSetup && this.dbSetup.isConnected()) {
@@ -758,7 +759,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 throw new IllegalArgumentException("dbSetup.getDbType() =" + dbSetup.getDbType());
             }
             if (dbConnectionIsClosedOrNull()) {
-                XFuture<Void> ret = new XFuture<>("PddlActionToCrclGenerator.setDbSetup");
+                XFutureVoid ret = new XFutureVoid("PddlActionToCrclGenerator.setDbSetup");
                 try {
                     final StackTraceElement stackTraceElemArray[] = Thread.currentThread().getStackTrace();
                     DbSetupBuilder.connect(dbSetup).handle(
@@ -791,10 +792,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
                 return ret;
             }
-            return XFuture.completedFutureWithName("setDbSetup.(dbConnection!=null)", null);
+            return XFutureVoid.completedFutureWithName("setDbSetup.(dbConnection!=null)");
         } else {
             setDbConnection(null);
-            return XFuture.completedFutureWithName("setDbSetup.setDbConnnection(null)", null);
+            return XFutureVoid.completedFutureWithName("setDbSetup.setDbConnnection(null)");
         }
     }
 
@@ -1501,7 +1502,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     case SWITCH_TOOL:
                         switchTool(action, cmds);
                         break;
-                        
+
                     case END_PROGRAM:
                         endProgram(action, cmds);
                         updateActionToCrclArrays(idx, cmds);
@@ -2114,6 +2115,24 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private void pause(Action action, List<MiddleCommandType> cmds) {
         addMarkerCommand(cmds, "pause", x -> checkedPause());
+    }
+
+    private void completeClearWayToHolder() {
+        if (null != aprsSystemInterface) {
+            aprsSystemInterface.resume();
+        }
+    }
+
+    private void clearWayToHolder(String holder) {
+        if (null != aprsSystemInterface) {
+            aprsSystemInterface.pause();
+            aprsSystemInterface.clearWayToHolders(holder)
+                    .thenRun(() -> completeClearWayToHolder());
+        }
+    }
+
+    private void clearWayToHolder(List<MiddleCommandType> cmds, String holder) {
+        addMarkerCommand(cmds, "clearWayToHolder", x -> clearWayToHolder(holder));
     }
 
     @SuppressWarnings("unused")
@@ -5245,6 +5264,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void addGotoToolChangerApproachByName(List<MiddleCommandType> out, String toolChangerPosName) throws PmException, CRCLException, IllegalStateException {
+        clearWayToHolder(out, toolChangerPosName);
         addSlowLimitedMoveUpFromCurrent(out);
         String jointValsString = getToolChangerJointVals(toolChangerPosName);
         if (useJointMovesForToolHolderApproach && null != jointValsString && jointValsString.length() > 0) {

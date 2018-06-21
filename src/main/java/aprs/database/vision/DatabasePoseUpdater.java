@@ -38,6 +38,7 @@ import aprs.database.Slot;
 import aprs.database.Tray;
 import aprs.system.AprsSystem;
 import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -438,7 +439,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         getSingleParamTypes = getQueryParams(queriesMap, DbQueryEnum.GET_SINGLE_POSE);
     }
 
-    private XFuture<Void> setupConnection(String host, int port, String db, String username, String password, boolean debug) {
+    private XFutureVoid setupConnection(String host, int port, String db, String username, String password, boolean debug) {
         closed = false;
         switch (dbtype) {
             case MYSQL:

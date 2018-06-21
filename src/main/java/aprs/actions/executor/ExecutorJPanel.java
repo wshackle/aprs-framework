@@ -150,6 +150,8 @@ import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_TOOL;
 import static aprs.actions.executor.ActionType.SWITCH_TOOL;
 import aprs.database.Tool;
 import javax.swing.JRadioButtonMenuItem;
+import static aprs.misc.Utils.readCsvFileToTable;
+import static aprs.misc.Utils.readCsvFileToTableAndMap;
 
 /**
  *
@@ -3806,7 +3808,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private volatile long startSafeAbortTime = 0;
 
     @Nullable
-    private volatile XFuture<Void> lastSafeAbortFuture = null;
+    private volatile XFutureVoid lastSafeAbortFuture = null;
     @Nullable
     private volatile XFuture<Boolean> startSafeAbortRunningProgramFuture = null;
     private volatile boolean startSafeAbortRunningProgramFutureDone = false;
@@ -3817,13 +3819,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private volatile String startSafeAbortProgramName = null;
     private volatile boolean startSafeAbortIsRunningCrclProgram = false;
 
-    private void completeSafeAbortFuture(XFuture<Void> f) {
+    private void completeSafeAbortFuture(XFutureVoid f) {
         incSafeAbortCount();
         crclGenerator.takeSnapshots("", "completeSafeAbortFuture." + f, null, null);
         f.complete(null);
     }
 
-    public XFuture<Void> startSafeAbort(String name) {
+    public XFutureVoid startSafeAbort(String name) {
         final int startSafeAbortRequestCount = safeAbortRequestCount.get();
         startSafeAbortTime = System.currentTimeMillis();
         synchronized (this) {
@@ -3848,18 +3850,18 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             incSafeAbortRequestCount();
             if (!startSafeAbortRunningProgram) {
                 incSafeAbortCount();
-                return XFuture.completedFutureWithName("!startSafeAbortRunningProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName(), null);
+                return XFutureVoid.completedFutureWithName("!startSafeAbortRunningProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName());
             }
             if (startSafeAbortRunningProgramFutureDone) {
                 incSafeAbortCount();
-                return XFuture.completedFutureWithName("startSafeAbortRunningProgramFutureDone" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName(), null);
+                return XFutureVoid.completedFutureWithName("startSafeAbortRunningProgramFutureDone" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName());
             }
             if (!startSafeAbortIsRunningCrclProgram) {
                 incSafeAbortCount();
-                return XFuture.completedFutureWithName("!startSafeAbortIsRunningCrclProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName(), null);
+                return XFutureVoid.completedFutureWithName("!startSafeAbortIsRunningCrclProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName());
             }
 
-            final XFuture<Void> ret = new XFuture<>(startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName());
+            final XFutureVoid ret = new XFutureVoid(startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName());
 
             this.safeAbortRunnablesVector.add(() -> completeSafeAbortFuture(ret));
             lastSafeAbortFuture = ret;
@@ -3881,7 +3883,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }//GEN-LAST:event_jButtonContinueActionPerformed
 
     @Nullable
-    private volatile XFuture<Void> lastContinueActionFuture = null;
+    private volatile XFutureVoid lastContinueActionFuture = null;
 
     public int getSafeAbortRequestCount() {
         return safeAbortRequestCount.get();
@@ -3906,8 +3908,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public XFuture<Void> continueActionList() {
-        XFuture<Void> ret = new XFuture<>("pddlExecutorContinueActionList");
+    public XFutureVoid continueActionList() {
+        XFutureVoid ret = new XFutureVoid("pddlExecutorContinueActionList");
         lastContinueActionFuture = ret;
         addProgramCompleteRunnable(() -> {
             ret.complete(null);
@@ -4228,8 +4230,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         clearToolHolderContentsTableModelListener();
         int lineNumber = 0;
-        DefaultTableModel dtm = (DefaultTableModel) jTableHolderContents.getModel();
-        readCsvPoseFileToTableAndMap(dtm, f, null, null);
+        readCsvFileToTable(jTableHolderContents, f);
         setToolHolderContentsTableModelListener();
     }
 
@@ -4247,7 +4248,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         clearToolOffsetTableModelListener();
         int lineNumber = 0;
         DefaultTableModel dtm = (DefaultTableModel) jTableToolOffsets.getModel();
-        readCsvPoseFileToTableAndMap(dtm, f, "ToolName", toolOffsetMap);
+        readCsvFileToTableAndMap(dtm, f, "ToolName", toolOffsetMap,ExecutorJPanel::recordToPose);
         clearEmptyToolOffsetPoseRows();
         loadToolOffsetsTableToMap();
         setToolOffsetTableModelListener();
@@ -4265,84 +4266,28 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         clearTrayAttachOffsetTableModelListener();
         int lineNumber = 0;
         DefaultTableModel dtm = (DefaultTableModel) jTableTrayAttachOffsets.getModel();
-        readCsvPoseFileToTableAndMap(dtm, f, "TrayName", crclGenerator.getTrayAttachOffsetsMap());
+        readCsvFileToTableAndMap(dtm, f, "TrayName", crclGenerator.getTrayAttachOffsetsMap(),ExecutorJPanel::recordToPose);
         loadTrayAttachOffsetsTableToMap();
         setTrayAttachOffsetTableModelListener();
     }
 
-    private void readCsvPoseFileToTableAndMap(DefaultTableModel dtm, File f, @Nullable String nameRecord, @Nullable Map<String, PoseType> map) {
-        dtm.setRowCount(0);
-        try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
-            Map<String, Integer> headerMap = parser.getHeaderMap();
-            List<CSVRecord> records = parser.getRecords();
-            int skipRows = 0;
-            for (CSVRecord rec : records) {
-                String colName = dtm.getColumnName(0);
-                Integer colIndex = headerMap.get(colName);
-                if (colIndex == null) {
-                    throw new IllegalArgumentException(f + " does not have field " + colName);
-                }
-                String val0 = rec.get(colIndex);
-                if (!val0.equals(colName) && val0.length() > 0) {
-                    break;
-                }
-                skipRows++;
-            }
-            dtm.setRowCount(records.size() - skipRows);
-            ROW_LOOP:
-            for (int i = skipRows; i < records.size(); i++) {
-                CSVRecord rec = records.get(i);
-                for (int j = 0; j < dtm.getColumnCount(); j++) {
-                    String colName = dtm.getColumnName(j);
-                    Integer colIndex = headerMap.get(colName);
-                    if (colIndex == null) {
-                        continue ROW_LOOP;
-                    }
-                    String val = rec.get(colIndex);
-                    try {
-                        if (null != val) {
-                            if (val.equals(colName) || (j == 0 && val.length() < 1)) {
-                                continue ROW_LOOP;
-                            }
-                            Class<?> colClass = dtm.getColumnClass(j);
-                            if (colClass == Double.class) {
-                                dtm.setValueAt(Double.valueOf(val), i - skipRows, j);
-                            } else if (colClass == Boolean.class) {
-                                dtm.setValueAt(Boolean.valueOf(val), i - skipRows, j);
-                            } else {
-                                dtm.setValueAt(val, i - skipRows, j);
-                            }
-                        }
-                    } catch (Exception exception) {
-                        String msg = "colName=" + colName + ", colIndex=" + colIndex + ", val=" + val + ", rec=" + rec;
-                        LOGGER.log(Level.SEVERE, msg, exception);
-                        throw new RuntimeException(msg, exception);
-                    }
-                }
-                try {
-                    if (null != nameRecord && null != map) {
-                        String name = rec.get(nameRecord);
-                        PoseType pose = CRCLPosemath.toPoseType(
-                                new PmCartesian(
-                                        Double.parseDouble(rec.get(X_COLUMN_HEADER)),
-                                        Double.parseDouble(rec.get(Y_COLUMN_HEADER)),
-                                        Double.parseDouble(rec.get(Z_COLUMN_HEADER))
-                                ),
-                                new PmRpy(
-                                        Math.toRadians(Double.parseDouble(rec.get(RX_COLUMN_HEADER))),
-                                        Math.toRadians(Double.parseDouble(rec.get(RY_COLUMN_HEADER))),
-                                        Math.toRadians(Double.parseDouble(rec.get(RZ_COLUMN_HEADER)))
-                                ));
-
-                        map.put(name, pose);
-                    }
-                } catch (Exception exception) {
-                    LOGGER.log(Level.SEVERE, "rec=" + rec, exception);
-                    throw new RuntimeException(exception);
-                }
-            }
+    public static PoseType recordToPose(CSVRecord rec) {
+        PoseType pose = null;
+        try {
+            pose = CRCLPosemath.toPoseType(
+                    new PmCartesian(
+                            Double.parseDouble(rec.get(X_COLUMN_HEADER)),
+                            Double.parseDouble(rec.get(Y_COLUMN_HEADER)),
+                            Double.parseDouble(rec.get(Z_COLUMN_HEADER))
+                    ),
+                    new PmRpy(
+                            Math.toRadians(Double.parseDouble(rec.get(RX_COLUMN_HEADER))),
+                            Math.toRadians(Double.parseDouble(rec.get(RY_COLUMN_HEADER))),
+                            Math.toRadians(Double.parseDouble(rec.get(RZ_COLUMN_HEADER)))
+                    ));
+            return pose;
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            throw new RuntimeException( ex);
         }
     }
 
@@ -6299,9 +6244,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return con.getMetaData().getURL();
     }
 
-    private XFuture<Void> checkDbSupplierPublisherAsync() {
+    private XFutureVoid checkDbSupplierPublisherAsync() {
         if (null == this.crclGenerator) {
-            XFuture<Void> ret = new XFuture<>("checkDbSupplierPublisher(null==pddlActionToCrclGenerator)");
+            XFutureVoid ret = new XFutureVoid("checkDbSupplierPublisher(null==pddlActionToCrclGenerator)");
             ret.completeExceptionally(new IllegalStateException("checkDbSupplierPublisher(null==pddlActionToCrclGenerator)"));
             return ret;
         }
@@ -6310,12 +6255,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return XFutureVoid.completedFutureWithName("checkDbSupplierPublisher.alreadyConnected." + getConnnectionURL());
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
-                XFuture<Void> ret = new XFuture<>("checkDbSupplierPublisher.alreadyConnected.withException");
+                XFutureVoid ret = new XFutureVoid("checkDbSupplierPublisher.alreadyConnected.withException");
                 ret.completeExceptionally(ex);
                 return ret;
             }
         }
-        XFuture<Void> f1 = new XFuture<>("checkDbSupplierPublisher.f1");
+        XFutureVoid f1 = new XFutureVoid("checkDbSupplierPublisher.f1");
         newDbSetupFutures.add(f1);
         if (null != dbSetupSupplier) {
             try {
@@ -6607,9 +6552,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 holderMi.addActionListener(e -> pickupToolByHolder(holderName));
                 toolPickupByHolderMenu.add(holderMi);
                 String toolName = crclGenerator.getExpectedToolHolderContentsMap().get(holderName);
-                JMenuItem toolMi = new JMenuItem(toolName);
-                toolMi.addActionListener(e -> pickupToolByTool(toolName));
-                toolPickupByToolMenu.add(toolMi);
+                if (null != toolName) {
+                    JMenuItem toolMi = new JMenuItem(toolName);
+                    toolMi.addActionListener(e -> pickupToolByTool(toolName));
+                    toolPickupByToolMenu.add(toolMi);
+                }
             }
         }
         toolSetToolMenu.removeAll();
@@ -6740,13 +6687,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public void close() {
     }
 
-    private final ConcurrentLinkedDeque<XFuture<Void>> newDbSetupFutures = new ConcurrentLinkedDeque<>();
+    private final ConcurrentLinkedDeque<XFutureVoid> newDbSetupFutures = new ConcurrentLinkedDeque<>();
 
     private void handleNewDbSetup(DbSetup setup) {
         if (null != crclGenerator) {
             crclGenerator.setDbSetup(setup)
                     .thenRun(() -> {
-                        XFuture<Void> f = newDbSetupFutures.poll();
+                        XFutureVoid f = newDbSetupFutures.poll();
                         while (f != null) {
                             f.complete(null);
                             f = newDbSetupFutures.poll();
@@ -6895,7 +6842,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         List<PhysicalItem> newList = new ArrayList<>();
         for (Entry<String, PoseType> entry : toolHolderPoseMap.entrySet()) {
             String contents = toolHolderContentsMap.get(entry.getKey());
-            if(!CrclGenerator.isEmptyTool(contents)) {
+            if (null != contents && !CrclGenerator.isEmptyTool(contents)) {
                 newList.add(new Tool(contents, entry.getValue()));
             }
         }

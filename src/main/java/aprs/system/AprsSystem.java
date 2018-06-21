@@ -50,6 +50,7 @@ import aprs.simview.Object2DJPanel;
 import aprs.simview.Object2DViewJInternalFrame;
 import aprs.database.vision.UpdateResults;
 import aprs.database.vision.VisionToDbJInternalFrame;
+import aprs.supervisor.main.Supervisor;
 
 import java.io.File;
 import java.io.FileReader;
@@ -190,9 +191,9 @@ public class AprsSystem implements AprsSystemInterface {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private volatile boolean snapshotsEnabled = false;
 
-    private final AtomicReference<Runnable> onCloseRunnable = new AtomicReference<>();
+    private final AtomicReference<@Nullable Runnable> onCloseRunnable = new AtomicReference<>();
     
-    public void setOnCloseRunnable(Runnable r) {
+    public void setOnCloseRunnable(@Nullable Runnable r) {
         onCloseRunnable.set(r);
     }
     
@@ -514,7 +515,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @return future with information on when the operation is complete.
      */
     @Override
-    public XFuture<Void> startVisionToDbNewItemsImageSave(File f) {
+    public XFutureVoid startVisionToDbNewItemsImageSave(File f) {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return this.visionToDbJInternalFrame.startNewItemsImageSave(f);
     }
@@ -915,10 +916,21 @@ public class AprsSystem implements AprsSystemInterface {
      */
     @Nullable
     @Override
-    public XFuture<Void> getSafeAbortFuture() {
+    public XFutureVoid getSafeAbortFuture() {
         return safeAbortFuture;
     }
 
+    @Nullable private volatile XFutureVoid lastClearWayToHoldersFuture =null;
+    
+    public XFutureVoid clearWayToHolders(String holderName){
+        if(null == supervisor) {
+            throw new IllegalStateException("null == supervisor");
+        }
+        XFutureVoid ret = supervisor.clearWayToHolders(this, holderName);
+        lastClearWayToHoldersFuture = ret;
+        return ret;
+    }
+    
     /**
      * Get the future that can be used to determine when the last requested run
      * program is finished. Only useful for debugging.
@@ -944,9 +956,9 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     @Nullable
-    private volatile XFuture<Void> safeAbortFuture = null;
+    private volatile XFutureVoid safeAbortFuture = null;
     @Nullable
-    private volatile XFuture<Void> safeAbortAndDisconnectFuture = null;
+    private volatile XFutureVoid safeAbortAndDisconnectFuture = null;
 
     /**
      * Attempt to safely abort the current CRCL program in a way that does not
@@ -965,7 +977,7 @@ public class AprsSystem implements AprsSystemInterface {
      * completed.
      */
     @Override
-    public XFuture<Void> startSafeAbort(String comment) {
+    public XFutureVoid startSafeAbort(String comment) {
 
         if (isAborting()) {
             String errMsg = "startSafeAbort(" + comment + ") called when already aborting";
@@ -986,7 +998,7 @@ public class AprsSystem implements AprsSystemInterface {
                         continuousDemoFuture = null;
                     }
                     setStopRunTime();
-                }).thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
+                }).thenComposeAsyncToVoid(x -> waitAllLastFutures(), runProgramService);
         return safeAbortFuture;
     }
 
@@ -1019,7 +1031,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @return future providing info on when complete
      */
     @Override
-    public XFuture<Void> startSafeAbortAndDisconnect(String comment) {
+    public XFutureVoid startSafeAbortAndDisconnect(String comment) {
 
         startingCheckEnabledCheck();
         if (isAborting()) {
@@ -1036,7 +1048,7 @@ public class AprsSystem implements AprsSystemInterface {
             if (isConnected()) {
                 assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
 
-                XFuture<Void> localSafeAbortFuture
+                XFutureVoid localSafeAbortFuture
                         = this.pddlExecutorJInternalFrame1.startSafeAbort(comment);
                 safeAbortFuture
                         = localSafeAbortFuture;
@@ -1050,31 +1062,31 @@ public class AprsSystem implements AprsSystemInterface {
                                 .thenRun(this::setStopRunTime)
                                 .thenCompose(x -> waitAllLastFutures())
                                 .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
-                                .thenComposeAsync(x -> waitAllLastFutures(), runProgramService);
+                                .thenComposeAsyncToVoid(x -> waitAllLastFutures(), runProgramService);
             } else {
-                safeAbortFuture = XFuture.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected", null);
+                safeAbortFuture = XFutureVoid.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected");
                 safeAbortAndDisconnectFuture = safeAbortFuture;
             }
             return safeAbortAndDisconnectFuture.always(() -> logEvent("finished startSafeAbortAndDisconnect", comment));
         } catch (Exception e) {
             setTitleErrorString(e.toString());
-            XFuture<Void> ret = new XFuture<>("startSafeAbortAndDisconnect." + e.toString());
+            XFutureVoid ret = new XFutureVoid("startSafeAbortAndDisconnect." + e.toString());
             ret.completeExceptionally(e);
             return ret;
         }
     }
 
     @SuppressWarnings({"unchecked", "nullness"})
-    private XFuture<Void> wait(@Nullable XFuture<?> f) {
+    private XFuture<?> wait(@Nullable XFuture<?> f) {
         if (null == f || f.isCancelled() || f.isCompletedExceptionally() || f.isDone()) {
-            return XFuture.completedFutureWithName("waitReady f=" + f, null);
+            return XFutureVoid.completedFutureWithName("waitReady f=" + f);
         } else {
             return f.handle((x, t) -> null);
         }
     }
 
-    private XFuture<Void> waitAllLastFutures() {
-        return XFuture.allOf(wait(lastContinueActionListFuture),
+    private XFutureVoid waitAllLastFutures() {
+        return XFutureVoid.allOf(wait(lastContinueActionListFuture),
                 wait(lastRunProgramFuture),
                 wait(lastStartActionsFuture));
     }
@@ -1094,7 +1106,7 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     @Nullable
-    private volatile XFuture<Void> disconnectRobotFuture = null;
+    private volatile XFutureVoid disconnectRobotFuture = null;
 
     private volatile boolean debug = false;
 
@@ -1106,12 +1118,12 @@ public class AprsSystem implements AprsSystemInterface {
      *
      * @return future providing info on when complete
      */
-    public XFuture<Void> disconnectRobot() {
+    public XFutureVoid disconnectRobot() {
         startingCheckEnabledCheck();
         disconnectRobotCount.incrementAndGet();
         checkReadyToDisconnect();
         enableCheckedAlready = false;
-        XFuture<Void> ret = waitForPause().
+        XFutureVoid ret = waitForPause().
                 thenRunAsync("disconnectRobot(" + getRobotName() + ")", this::disconnectRobotPrivate, connectService);
         this.disconnectRobotFuture = ret;
         if (debug) {
@@ -1196,7 +1208,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @param port (TCP) port robot's CRCL server is bound to
      * @return future providing info on when complete
      */
-    public XFuture<Void> connectRobot(String robotName, String host, int port) {
+    public XFutureVoid connectRobot(String robotName, String host, int port) {
         maybeSetOrigRobotName(robotName);
         maybeSetOrigCrclRobotHost(host);
         maybeSetOrigCrclRobotPort(port);
@@ -1207,7 +1219,7 @@ public class AprsSystem implements AprsSystemInterface {
                 && Objects.equals(this.getRobotCrclHost(), host)
                 && this.getRobotCrclPort() == port) {
             updateConnectedRobotDisplay(isConnected(), robotName, host, port);
-            return XFuture.completedFuture(null);
+            return XFutureVoid.completedFuture();
         }
         logEvent("connectRobot", robotName + " -> " + host + ":" + port);
         enableCheckedAlready = false;
@@ -1285,11 +1297,11 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     @Nullable
-    private volatile XFuture<Void> lastPauseFuture = null;
+    private volatile XFutureVoid lastPauseFuture = null;
 
-    private XFuture<Void> waitForPause() {
+    private XFutureVoid waitForPause() {
         boolean paused = isPaused();
-        XFuture<Void> pauseFuture = new XFuture<>("pauseFuture." + paused);
+        XFutureVoid pauseFuture = new XFutureVoid("pauseFuture." + paused);
         if (paused) {
             System.out.println("adding " + pauseFuture + " to " + futuresToCompleteOnUnPause);
             futuresToCompleteOnUnPause.add(pauseFuture);
@@ -3756,7 +3768,7 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     private XFuture<Boolean> checkDBConnected() {
-        XFuture<Void> cdf = connectDatabaseFuture;
+        XFutureVoid cdf = connectDatabaseFuture;
         if (null == cdf) {
             return startConnectDatabase();
         }
@@ -4508,6 +4520,27 @@ public class AprsSystem implements AprsSystemInterface {
         return supervisorEventLogger;
     }
 
+    @MonotonicNonNull private volatile Supervisor supervisor=null;
+    
+    /**
+     * Get the value of supervisor
+     *
+     * @return the value of supervisorEventLogger
+     */
+    @Nullable
+    public Supervisor getSupervisor() {
+        return supervisor;
+    }
+
+    /**
+     * Set the value of supervisor
+     *
+     * @param supervisor new value of supervisorEventLogger
+     */
+    public void setSupervisor(Supervisor supervisor) {
+        this.supervisor = supervisor;
+    }
+    
     /**
      * Set the value of supervisorEventLogger
      *
@@ -4659,7 +4692,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @return a future object that can be used to determine when setting the
      * reverse flag and all related actions is complete.
      */
-    public XFuture<Void> startSetReverseFlag(boolean reverseFlag) {
+    public XFutureVoid startSetReverseFlag(boolean reverseFlag) {
         return startSetReverseFlag(reverseFlag, true);
     }
 
@@ -4675,7 +4708,7 @@ public class AprsSystem implements AprsSystemInterface {
      * reverse flag and all related actions is complete.
      */
     @Override
-    public XFuture<Void> startSetReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
+    public XFutureVoid startSetReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
         logEvent("startSetReverseFlag", reverseFlag);
         return XFuture.runAsync("startSetReverseFlag(" + reverseFlag + "," + reloadSimFiles + ")",
                 () -> {
@@ -4813,7 +4846,7 @@ public class AprsSystem implements AprsSystemInterface {
      * @return a future object that can be used to determine when setting the
      * reset and all related actions is complete.
      */
-    public XFuture<Void> reset() {
+    public XFutureVoid reset() {
         return reset(true);
     }
 
@@ -4825,7 +4858,7 @@ public class AprsSystem implements AprsSystemInterface {
      * reset and all related actions is complete.
      */
     @Override
-    public XFuture<Void> reset(boolean reloadSimFiles) {
+    public XFutureVoid reset(boolean reloadSimFiles) {
         return XFuture.runAsync("reset",
                 () -> {
                     resetInternal(reloadSimFiles);
@@ -5673,7 +5706,7 @@ public class AprsSystem implements AprsSystemInterface {
                 this.pddlPlannerJInternalFrame.loadProperties();
             }
             if (null != this.pddlExecutorJInternalFrame1) {
-                XFuture<Void> loadPropertiesFuture
+                XFutureVoid loadPropertiesFuture
                         = XFuture.runAsync("loadProperties",
                                 () -> {
                                     try {
