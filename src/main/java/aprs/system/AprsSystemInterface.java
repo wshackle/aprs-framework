@@ -72,6 +72,10 @@ import java.awt.image.BufferedImage;
 @SuppressWarnings({"UnusedReturnValue", "unused","RedundantThrows"})
 public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, SlotOffsetProvider {
 
+    public void setStepMode(boolean step);
+    
+    public boolean isStepMode();
+    
     /**
      * Check if the user has selected a check box asking for snapshot files to
      * be created for logging/debugging.

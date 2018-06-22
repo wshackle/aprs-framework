@@ -267,11 +267,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return toolMenu;
     }
 
-    @Nullable public String getSelectedToolName() {
+    @Nullable
+    public String getSelectedToolName() {
         return crclGenerator.getCurrentToolName();
     }
 
-    @Nullable private String selectedToolNameFileName = null;
+    @Nullable
+    private String selectedToolNameFileName = null;
 
     /**
      * Get the value of selectedToolNameFileName
@@ -303,7 +305,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return propertiesFile.getName() + ".selectedToolName.txt";
     }
 
-    @Nullable private String readSelectedToolNameFile() throws IOException {
+    @Nullable
+    private String readSelectedToolNameFile() throws IOException {
         String filename = getSelectedToolNameFileName();
         if (null == filename || filename.length() < 1) {
             return null;
@@ -311,7 +314,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return readSelectedToolNameFile(filename);
     }
 
-    @Nullable private String readSelectedToolNameFile(String filename) throws IOException {
+    @Nullable
+    private String readSelectedToolNameFile(String filename) throws IOException {
         if (null == filename) {
             throw new IllegalArgumentException("filename == null");
         }
@@ -4083,11 +4087,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                        .stream()
-                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                        .map(JointStatusType::getJointPosition)
-                        .map(Objects::toString)
-                        .collect(Collectors.joining(","));
+                .stream()
+                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                .map(JointStatusType::getJointPosition)
+                .map(Objects::toString)
+                .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -4231,6 +4235,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         clearToolHolderContentsTableModelListener();
         int lineNumber = 0;
         readCsvFileToTable(jTableHolderContents, f);
+        clearEmptyRows(jTableHolderContents);
         setToolHolderContentsTableModelListener();
     }
 
@@ -4248,7 +4253,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         clearToolOffsetTableModelListener();
         int lineNumber = 0;
         DefaultTableModel dtm = (DefaultTableModel) jTableToolOffsets.getModel();
-        readCsvFileToTableAndMap(dtm, f, "ToolName", toolOffsetMap,ExecutorJPanel::recordToPose);
+        readCsvFileToTableAndMap(dtm, f, "ToolName", toolOffsetMap, ExecutorJPanel::recordToPose);
         clearEmptyToolOffsetPoseRows();
         loadToolOffsetsTableToMap();
         setToolOffsetTableModelListener();
@@ -4266,7 +4271,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         clearTrayAttachOffsetTableModelListener();
         int lineNumber = 0;
         DefaultTableModel dtm = (DefaultTableModel) jTableTrayAttachOffsets.getModel();
-        readCsvFileToTableAndMap(dtm, f, "TrayName", crclGenerator.getTrayAttachOffsetsMap(),ExecutorJPanel::recordToPose);
+        readCsvFileToTableAndMap(dtm, f, "TrayName", crclGenerator.getTrayAttachOffsetsMap(), ExecutorJPanel::recordToPose);
         loadTrayAttachOffsetsTableToMap();
         setTrayAttachOffsetTableModelListener();
     }
@@ -4287,7 +4292,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     ));
             return pose;
         } catch (Exception ex) {
-            throw new RuntimeException( ex);
+            throw new RuntimeException(ex);
         }
     }
 
@@ -4532,24 +4537,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }//GEN-LAST:event_jButtonRecordToolHolderPoseActionPerformed
 
     private void clearEmptyToolOffsetPoseRows() {
-        DefaultTableModel dtm = (DefaultTableModel) jTableToolOffsets.getModel();
-        for (int i = 0; i < dtm.getRowCount(); i++) {
-            Object val = dtm.getValueAt(i, 0);
-            if (val == null) {
-                dtm.removeRow(i);
-                i--;
-                continue;
-            }
-            String valString = val.toString();
-            if (valString.length() < 1) {
-                dtm.removeRow(i);
-                i--;
-            }
-        }
+        clearEmptyRows(jTableToolOffsets);
     }
 
     private void clearEmptyToolChangerPoseRows() {
-        DefaultTableModel dtm = (DefaultTableModel) jTableToolHolderPositions.getModel();
+        clearEmptyRows(jTableToolHolderPositions);
+    }
+
+    private void clearEmptHolderContentsRows() {
+        clearEmptyRows(jTableHolderContents);
+    }
+    
+    private void clearEmptyRows(JTable jtable) {
+        DefaultTableModel dtm = (DefaultTableModel) jtable.getModel();
         for (int i = 0; i < dtm.getRowCount(); i++) {
             Object val = dtm.getValueAt(i, 0);
             if (val == null) {
@@ -4715,16 +4715,21 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         TableModel holderContentsTableModel = jTableHolderContents.getModel();
         for (int i = 0; i < holderContentsTableModel.getRowCount(); i++) {
             String holderName = (String) holderContentsTableModel.getValueAt(i, 0);
+            if(holderName == null || holderName.length() < 1) {
+                continue;
+            }
             String toolForHolder = (String) holderContentsTableModel.getValueAt(i, 1);
-            String toolsListString = (String) holderContentsTableModel.getValueAt(i, 2);
             if (toolForHolder == null || toolForHolder.length() < 1) {
                 toolForHolder = "empty";
             }
-            String toolsArray[] = toolsListString.split("[ ,\t\r\n]+");
-            Set<String> toolsSet = new TreeSet<>(Arrays.asList(toolsArray));
+            String toolsListString = (String) holderContentsTableModel.getValueAt(i, 2);
             crclGenerator.getCurrentToolHolderContentsMap().put(holderName, toolForHolder);
             crclGenerator.getExpectedToolHolderContentsMap().put(holderName, toolForHolder);
-            crclGenerator.getPossibleToolHolderContentsMap().put(holderName, toolsSet);
+            if (null != toolsListString) {
+                String toolsArray[] = toolsListString.split("[ ,\t\r\n]+");
+                Set<String> toolsSet = new TreeSet<>(Arrays.asList(toolsArray));
+                crclGenerator.getPossibleToolHolderContentsMap().put(holderName, toolsSet);
+            }
         }
     }
 
@@ -4769,21 +4774,44 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void jButtonDeleteToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteToolHolderPoseActionPerformed
         clearEmptyToolChangerPoseRows();
+        clearEmptHolderContentsRows();
         String nameToDelete = queryUserForToolHolderPosName("Delete Pose");
-        DefaultTableModel model = (DefaultTableModel) jTableToolHolderPositions.getModel();
-        for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
-            String nameFromTable = (String) jTableToolHolderPositions.getValueAt(i, 0);
+        deleteFromToolHolderPositionsTable(nameToDelete);
+        deleteFromToolHolderContentsTable(nameToDelete);
+        syncPanelToGeneratorToolData();
+        saveToolChangerPoseMap();
+        saveToolHolderContentsMap();
+    }//GEN-LAST:event_jButtonDeleteToolHolderPoseActionPerformed
+
+    private void deleteFromToolHolderPositionsTable(String nameToDelete) {
+        deleteMatchingRowsFromTable(jTableToolHolderPositions, nameToDelete);
+        Map<String, PoseType> toolHolderPoseMap
+                = crclGenerator.getToolHolderPoseMap();
+        toolHolderPoseMap.remove(nameToDelete);
+    }
+
+    private void deleteMatchingRowsFromTable(JTable jtable, String nameToDelete) {
+        DefaultTableModel model = (DefaultTableModel) jtable.getModel();
+        for (int i = 0; i < jtable.getRowCount(); i++) {
+            String nameFromTable = (String) jtable.getValueAt(i, 0);
             if (null == nameFromTable || nameFromTable.equals(nameToDelete)) {
                 model.removeRow(i);
                 i--;
             }
         }
-        Map<String, PoseType> toolHolderPoseMap
-                = crclGenerator.getToolHolderPoseMap();
-        toolHolderPoseMap.remove(nameToDelete);
-        clearEmptyToolChangerPoseRows();
-        Utils.autoResizeTableColWidths(jTableToolHolderPositions);
-    }//GEN-LAST:event_jButtonDeleteToolHolderPoseActionPerformed
+        clearEmptyRows(jtable);
+        Utils.autoResizeTableColWidths(jtable);
+    }
+    
+    private void deleteFromToolHolderContentsTable(String nameToDelete) {
+        deleteMatchingRowsFromTable(jTableHolderContents, nameToDelete);
+        Map<String, String> expectedToolHolderContentsMap
+                = crclGenerator.getExpectedToolHolderContentsMap();
+        expectedToolHolderContentsMap.remove(nameToDelete);
+        Map<String, String> currentToolHolderContentsMap
+                = crclGenerator.getCurrentToolHolderContentsMap();
+        currentToolHolderContentsMap.remove(nameToDelete);
+    }
 
     private void jButtonAddToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddToolHolderPoseActionPerformed
         try {
@@ -4983,6 +5011,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             String newToolName = queryUserForToolName("Which tool is currently in the robot? ");
             if (null != newToolName && newToolName.length() > 0) {
                 crclGenerator.setCurrentToolName(newToolName);
+                syncPanelToGeneratorToolData();
 //                jTextFieldCurrentToolName.setText(newToolName);
 //                PoseType newPose = crclGenerator.getToolOffsetMap().get(newToolName);
 //                if (null != newPose) {
@@ -6819,7 +6848,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return positionMapJPanel1.getReversePositionMaps();
     }
 
-    @Nullable private volatile List<PhysicalItem> availableToolHolders = null;
+    @Nullable
+    private volatile List<PhysicalItem> availableToolHolders = null;
 
     public List<PhysicalItem> getAvailableToolHolders() {
         if (null == availableToolHolders) {

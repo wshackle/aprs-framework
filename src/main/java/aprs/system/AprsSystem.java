@@ -398,6 +398,27 @@ public class AprsSystem implements AprsSystemInterface {
         return visionToDbJInternalFrame.getNotifySingleUpdateListenersTime();
     }
 
+    private volatile boolean stepMode = false;
+    
+    public void setStepMode(boolean stepMode) {
+        if(null == crclClientJInternalFrame) {
+            throw new IllegalStateException("null == crclClientJInternalFrame");
+        }
+        crclClientJInternalFrame.setStepMode(stepMode);
+        if(null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setStepping(stepMode);
+        }
+        this.stepMode = stepMode;
+    }
+    
+    public boolean isStepMode() {
+        return this.stepMode;
+//        if(null == crclClientJInternalFrame) {
+//            throw new IllegalStateException("null == crclClientJInternalFrame");
+//        }
+//        return crclClientJInternalFrame.isStepMode();
+    }
+    
     /**
      * Get the most recent list of parts and kit trays from the vision system.
      * This will not block waiting for the vision system or database but could
@@ -1619,7 +1640,7 @@ public class AprsSystem implements AprsSystemInterface {
         takeSnapshots("startCRCLProgram(" + program.getName() + ")");
         setProgram(program);
         assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
-        return crclClientJInternalFrame.runCurrentProgram();
+        return crclClientJInternalFrame.runCurrentProgram(stepMode);
     }
 
     @SuppressWarnings("RedundantIfStatement")
@@ -1687,7 +1708,7 @@ public class AprsSystem implements AprsSystemInterface {
         long startTime = logEvent("start runCrclProgram", programToString(program));
         setProgram(program);
         assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
-        boolean ret = crclClientJInternalFrame.runCurrentProgram();
+        boolean ret = crclClientJInternalFrame.runCurrentProgram(stepMode);
         logEvent("end runCrclProgram",
                 "(" + crclClientJInternalFrame.getCurrentProgramLine() + "/" + program.getMiddleCommand().size() + ")"
                 + "\n started at" + startTime
@@ -5011,7 +5032,7 @@ public class AprsSystem implements AprsSystemInterface {
             setCommandID(emptyProgram.getEndCanon());
             emptyProgram.setName("checkEnabled." + checkEnabledCount.incrementAndGet());
             setProgram(emptyProgram);
-            boolean progRunRet = crclClientJInternalFrame.runCurrentProgram();
+            boolean progRunRet = crclClientJInternalFrame.runCurrentProgram(stepMode);
 
 //            System.out.println("startCheckEnabled finishing with " + progRunRet);
             enableCheckedAlready = progRunRet;
@@ -6286,7 +6307,7 @@ public class AprsSystem implements AprsSystemInterface {
     public XFuture<Boolean> continueCrclProgram() {
         setStartRunTime();
         if (null != crclClientJInternalFrame) {
-            return crclClientJInternalFrame.continueCurrentProgram();
+            return crclClientJInternalFrame.continueCurrentProgram(stepMode);
         } else {
             return XFuture.completedFuture(false);
         }

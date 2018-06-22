@@ -181,6 +181,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
+    private void logError(String string) {
+        LOGGER.log(Level.SEVERE, string);
+    }
+
     private static String posNameToType(String partName) {
         if (partName.startsWith("empty_slot")) {
             int for_index = partName.indexOf("_for_");
@@ -1262,7 +1266,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             genThread = curThread;
             genThreadSetTrace = curThread.getStackTrace();
         } else if (genThread != curThread) {
-            logDebug("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
+            logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
         if (null != solver && gparams.replan) {
@@ -1955,13 +1959,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                    .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -1985,15 +1989,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             MutableMultimap<String, PhysicalItem> availSlotsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("ES")
+                    .select(item -> item.getType().equals("ES")
                             && item.getName().startsWith("empty_slot_")
                             && !item.getName().contains("_in_kit_"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> placePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
+                    .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
 
             for (String partTypeName : placePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeSlots
@@ -2132,7 +2136,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void clearWayToHolder(List<MiddleCommandType> cmds, String holder) {
-        addMarkerCommand(cmds, "clearWayToHolder", x -> clearWayToHolder(holder));
+        addMarkerCommand(cmds, "clearWayToHolder" + holder, x -> clearWayToHolder(holder));
     }
 
     @SuppressWarnings("unused")
@@ -2141,8 +2145,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                        .map(arg -> arg.split("="))
-                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                .map(arg -> arg.split("="))
+                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -4838,6 +4842,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private void addPrepJointMove(double[] jointVals, List<MiddleCommandType> out) {
         double joint0 = jointVals[0];
         double joint0diff = joint0 - expectedJoint0Val;
+        addMessageCommand(out, "addJointPrepMove");
         if (toolHolderOperationEnabled && Double.isFinite(expectedJoint0Val) && Math.abs(joint0diff) > joint0DiffTolerance) {
             double jointValsCopy[] = Arrays.copyOf(jointVals, jointVals.length);
             jointValsCopy[0] = expectedJoint0Val;
@@ -5265,6 +5270,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private void addGotoToolChangerApproachByName(List<MiddleCommandType> out, String toolChangerPosName) throws PmException, CRCLException, IllegalStateException {
         clearWayToHolder(out, toolChangerPosName);
+        addMessageCommand(out, "Goto Tool Changer Approach By Name " + toolChangerPosName);
         addSlowLimitedMoveUpFromCurrent(out);
         String jointValsString = getToolChangerJointVals(toolChangerPosName);
         if (useJointMovesForToolHolderApproach && null != jointValsString && jointValsString.length() > 0) {
@@ -5280,6 +5286,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     double lookForJointVals[] = jointValStringToArray(lookForJointsString);
                     addPrepJointMove(lookForJointVals, out);
                     lookForJointVals[0] = jointVals[0];
+                    addMessageCommand(out, "Goto Tool Changer Approach By Name " + toolChangerPosName+" addJointMove(lookForJointVals)");
                     addJointMove(out, lookForJointVals, 1.0);
                 }
             }
@@ -5554,6 +5561,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
     }
+    
+    public void setStepMode(boolean step) {
+        if(null == aprsSystemInterface) {
+            throw new IllegalStateException("null == aprsSystemInterface");
+        }
+        aprsSystemInterface.setStepMode(step);
+    }
 
     private final AtomicInteger visionUpdateCount = new AtomicInteger();
 
@@ -5650,6 +5664,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void addSlowLimitedMoveUpFromCurrent(List<MiddleCommandType> out) {
+        addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent");
         addSetSlowSpeed(out);
         double limit = Double.POSITIVE_INFINITY;
         PointType pt = getLookForXYZ();
