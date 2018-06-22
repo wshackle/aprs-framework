@@ -23,7 +23,6 @@
 package aprs.system;
 
 import aprs.misc.ActiveWinEnum;
-import com.google.common.base.Objects;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -72,6 +71,17 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     public void setConnectDatabaseCheckboxEnabled(boolean enable) {
         jCheckBoxMenuItemConnectDatabase.setEnabled(enable);
+    }
+    
+    
+    public boolean isStepping() {
+        return jCheckBoxMenuItemStepping.isSelected();
+    }
+    
+    public void setStepping(boolean stepping) {
+        if(jCheckBoxMenuItemStepping.isSelected() != stepping) {
+            jCheckBoxMenuItemStepping.setSelected(stepping);
+        }
     }
     
     public boolean addMenu(JMenu menu) {
@@ -494,15 +504,16 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenuItemCreateActionListFromVision = new javax.swing.JMenuItem();
         jMenuItemLookFor = new javax.swing.JMenuItem();
         jMenuItemClearErrors = new javax.swing.JMenuItem();
+        jCheckBoxMenuItemStepping = new javax.swing.JCheckBoxMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosed(java.awt.event.WindowEvent evt) {
-                formWindowClosed(evt);
-            }
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
+            }
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
             }
         });
 
@@ -833,6 +844,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuExecute.add(jMenuItemClearErrors);
+
+        jCheckBoxMenuItemStepping.setText("Single Stepping");
+        jCheckBoxMenuItemStepping.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemSteppingActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jCheckBoxMenuItemStepping);
 
         jMenuBar1.add(jMenuExecute);
 
@@ -1675,6 +1694,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         setDebug(selected);
     }//GEN-LAST:event_jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed
 
+    private void jCheckBoxMenuItemSteppingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemSteppingActionPerformed
+        if(null != aprsSystem) {
+            aprsSystem.setStepMode(jCheckBoxMenuItemStepping.isSelected());
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemSteppingActionPerformed
+
     public boolean isConnectDatabaseCheckboxSelected() {
         return jCheckBoxMenuItemConnectDatabase.isSelected();
     }
@@ -1785,6 +1810,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupPDDLPlanner;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobotCrclGUI;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobtCRCLSimServer;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStepping;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseTeachTable;
     private javax.swing.JDesktopPane jDesktopPane1;
     private javax.swing.JMenu jMenu1;
