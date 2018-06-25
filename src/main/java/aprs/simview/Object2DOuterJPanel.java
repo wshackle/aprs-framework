@@ -1565,14 +1565,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private final Random posRandom = new Random();
 
+    
     private PhysicalItem noiseFilter(PhysicalItem in) {
         if (!jCheckBoxAddPosNoise.isSelected()) {
             return in;
         }
         PhysicalItem out = newPhysicalItemNameRotXYScoreType(in.getName(),
-                in.getRotation() + posRandom.nextGaussian() * Math.toRadians(rotNoise),
-                in.x + posRandom.nextGaussian() * posNoise,
-                in.y + posRandom.nextGaussian() * posNoise, in.getScore(), in.getType());
+                in.getRotation() + nextRotNoise(),
+                in.x + nextPosNoise(),
+                in.y + nextPosNoise(), in.getScore(), in.getType());
         String fullName = in.getFullName();
         if (null != fullName && in.isFullNameSet()) {
             out.setFullName(fullName);
@@ -1580,6 +1581,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return out;
     }
 
+    private double nextLimitedGaussian() {
+        double g =  posRandom.nextGaussian() ;
+        if(g < -3.5) {
+            return -3.5;
+        } else if(g > 3.5) {
+            return 3.5;
+        } else {
+            return g;
+        }
+    }
+    
+    private double nextPosNoise() {
+        return nextLimitedGaussian()*posNoise;
+    }
+
+    private double nextRotNoise() {
+        return nextLimitedGaussian()* Math.toRadians(rotNoise);
+    }
+
+    
     private void publishCurrentItems() {
         if (forceOutputFlag) {
             return;
