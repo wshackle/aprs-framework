@@ -22,7 +22,7 @@
  */
 package aprs.simview;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.misc.SlotOffsetProvider;
 import aprs.misc.Utils;
 import static aprs.misc.Utils.autoResizeTableColWidths;
@@ -74,6 +74,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import crcl.base.CommandStateEnumType;
+import crcl.base.CommandStatusType;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -82,6 +84,8 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JDialog;
 import javax.swing.table.TableModel;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -153,10 +157,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             saveFile(new File(csvDir, f.getName() + ".csv"));
-            if (null != aprsSystemInterface) {
+            if (null != aprsSystem) {
                 File xmlDir = new File(f.getParentFile(), "crclStatusXml");
                 xmlDir.mkdirs();
-                CRCLStatusType status = aprsSystemInterface.getCurrentStatus();
+                CRCLStatusType status = aprsSystem.getCurrentStatus();
                 if (null != status) {
                     String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
@@ -197,9 +201,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             saveFile(new File(csvDir, f.getName() + ".csv"));
             File xmlDir = new File(f.getParentFile(), "crclStatusXml");
             xmlDir.mkdirs();
-            AprsSystemInterface af = this.aprsSystemInterface;
+            AprsSystem af = this.aprsSystem;
             if (null != af) {
-                CRCLStatusType status = aprsSystemInterface.getCurrentStatus();
+                CRCLStatusType status = aprsSystem.getCurrentStatus();
                 if (null != status) {
                     String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
@@ -317,8 +321,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private void setItemsInternal(List<PhysicalItem> items) {
-        if (null != aprsSystemInterface && aprsSystemInterface.isVisionToDbConnected()) {
-            object2DJPanel1.setRotationOffset(aprsSystemInterface.getVisionToDBRotationOffset());
+        if (null != aprsSystem && aprsSystem.isVisionToDbConnected()) {
+            object2DJPanel1.setRotationOffset(aprsSystem.getVisionToDBRotationOffset());
         }
         object2DJPanel1.setItems(items);
         updateItemsTableInternal(items);
@@ -1901,25 +1905,25 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jComboBoxDisplayAxisActionPerformed
 
     private File createTempFile(String prefix, String suffix) throws IOException {
-        if (null == aprsSystemInterface) {
+        if (null == aprsSystem) {
             return Utils.createTempFile(prefix, suffix);
         }
 
-        return aprsSystemInterface.createTempFile(prefix, suffix);
+        return aprsSystem.createTempFile(prefix, suffix);
     }
 
     public File createTempFile(String prefix, String suffix, File dir) throws IOException {
-        if (null == aprsSystemInterface) {
+        if (null == aprsSystem) {
             return Utils.createTempFile(prefix, suffix, dir);
         }
-        return aprsSystemInterface.createTempFile(prefix, suffix, dir);
+        return aprsSystem.createTempFile(prefix, suffix, dir);
     }
 
     private boolean isSnapshotsEnabled() {
-        if (null == aprsSystemInterface) {
+        if (null == aprsSystem) {
             return true;
         }
-        return aprsSystemInterface.isSnapshotsEnabled();
+        return aprsSystem.isSnapshotsEnabled();
     }
 
     public void loadFile(File f) throws IOException {
@@ -2022,15 +2026,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private double currentX = 0.0;
     private double currentY = 0.0;
 
-    private AprsSystemInterface aprsSystemInterface;
+    private AprsSystem aprsSystem;
 
     /**
      * Get the value of aprsSystemInterface
      *
      * @return the value of aprsSystemInterface
      */
-    public AprsSystemInterface getAprsSystemInterface() {
-        return aprsSystemInterface;
+    public AprsSystem getAprsSystem() {
+        return aprsSystem;
     }
 
     /**
@@ -2038,9 +2042,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      *
      * @param aprsSystemInterface new value of aprsSystemInterface
      */
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
-        this.aprsSystemInterface = aprsSystemInterface;
-        this.object2DJPanel1.setAprsSystemInterface(aprsSystemInterface);
+    public void setAprsSystem(AprsSystem aprsSystemInterface) {
+        this.aprsSystem = aprsSystemInterface;
+        this.object2DJPanel1.setAprsSystem(aprsSystemInterface);
         setSlotOffsetProvider(aprsSystemInterface);
     }
 
@@ -2058,14 +2062,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private void connectCurrentPosition() {
-        if (null != aprsSystemInterface) {
-            aprsSystemInterface.addCurrentPoseListener(this);
+        if (null != aprsSystem) {
+            aprsSystem.addCurrentPoseListener(this);
         }
     }
 
     private void disconnectCurrentPosition() {
-        if (null != aprsSystemInterface) {
-            aprsSystemInterface.removeCurrentPoseListener(this);
+        if (null != aprsSystem) {
+            aprsSystem.removeCurrentPoseListener(this);
         }
     }
 
@@ -2093,7 +2097,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private PmCartesian getMinOffset() {
         PmCartesian minDiffCart = new PmCartesian();
-        PointType current = aprsSystemInterface.getCurrentPosePoint();
+        PointType current = aprsSystem.getCurrentPosePoint();
         double min_diff = Double.POSITIVE_INFINITY;
         if (null != current) {
             PmCartesian currentCart = CRCLPosemath.toPmCartesian(current);
@@ -2881,10 +2885,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public double getClosestRobotPartDistance() {
-        if (null == aprsSystemInterface) {
+        if (null == aprsSystem) {
             return Double.POSITIVE_INFINITY;
         }
-        PointType currentPoint = aprsSystemInterface.getCurrentPosePoint();
+        PointType currentPoint = aprsSystem.getCurrentPosePoint();
         if (null == currentPoint) {
             return Double.POSITIVE_INFINITY;
         }
@@ -2892,11 +2896,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private double getClosestUncorrectedDistance(PointType ptIn) {
-        PointType uncorrectedPoint = aprsSystemInterface.reverseCorrectPoint(ptIn);
+        PointType uncorrectedPoint = aprsSystem.reverseCorrectPoint(ptIn);
         List<PhysicalItem> l = new ArrayList<>(getItems());
         return getClosestDistanceIndex(uncorrectedPoint.getX(), uncorrectedPoint.getY(), l).dist;
     }
 
+    private volatile DistIndex lastClosestDistanceIndexRet;
+    private volatile double lastClosestDistanceIndexX;
+    private volatile double lastClosestDistanceIndexY;
+    private volatile List<PhysicalItem> lastClosestDistanceIndexList;
+    
     private DistIndex getClosestDistanceIndex(double x, double y, List<PhysicalItem> l) {
 
         double min_dist = Double.POSITIVE_INFINITY;
@@ -2909,38 +2918,151 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (!item.getType().equals("P")) {
                 continue;
             }
-            double dist = item.dist(currentX, currentY);
+            double dist = item.dist(x, y);
             if (dist < min_dist) {
                 min_dist_index = i;
                 min_dist = dist;
             }
         }
-        return new DistIndex(min_dist, min_dist_index);
+        DistIndex ret = new DistIndex(min_dist, min_dist_index);
+        lastClosestDistanceIndexX =x;
+        lastClosestDistanceIndexY= y;
+        this.lastClosestDistanceIndexRet = ret;
+        lastClosestDistanceIndexList = l;
+        return ret;
     }
 
     private class PoseUpdateHistoryItem {
 
-        final PoseType pose;
         final CRCLStatusType stat;
         final CRCLCommandType cmd;
         final boolean isHoldingObjectExpected;
         final long time;
+        final Point2D.@Nullable Double capturedPartPoint;
+        final int captured_item_index;
+        final DistIndex di;
+        final PhysicalItem closestItem;
+        final long statReceiveTime;
 
-        PoseUpdateHistoryItem(PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected, long time) {
-            this.pose = pose;
+        PoseUpdateHistoryItem(
+                CRCLStatusType stat, 
+                CRCLCommandType cmd, 
+                boolean isHoldingObjectExpected, 
+                long time,
+                Point2D.@Nullable Double capturedPartPoint,
+                int captured_item_index,
+                DistIndex di,
+                PhysicalItem closestItem,
+                long statRecieveTime) {
             this.stat = stat;
             this.isHoldingObjectExpected = isHoldingObjectExpected;
             this.time = time;
             this.cmd = cmd;
+            this.capturedPartPoint = capturedPartPoint;
+            this.captured_item_index = captured_item_index;
+            this.di = di;
+            this.closestItem = closestItem;
+            this.statReceiveTime = statRecieveTime;
         }
 
         @Override
         public String toString() {
-            return "\nPoseUpdateHistoryItem{" + "pose=" + CRCLPosemath.toString(pose) + ", cmd=" + CRCLSocket.commandToSimpleString(cmd) + ", isHoldingObjectExpected=" + isHoldingObjectExpected + ", time=" + (time - poseUpdateHistoryTime) + ", stat=" + CRCLSocket.statusToPrettyString(stat) + '}';
+            return "\nPoseUpdateHistoryItem{ cmd=" + CRCLSocket.commandToSimpleString(cmd) + ", isHoldingObjectExpected=" + isHoldingObjectExpected + ", time=" + (time - poseUpdateHistoryTime) + ", stat=" + CRCLSocket.statusToPrettyString(stat) + '}';
         }
-
+    }
+    
+     
+    private static String fmtDouble(double d) {
+        return String.format("%.3f",d);
     }
 
+    
+    private Object[] poseUpdateHistoryRecordItems(PoseUpdateHistoryItem item) throws IOException {
+        File cmdFile = null;
+        String cmdClassName = null;
+        String cmdFileName = null;
+        CRCLCommandType cmd = item.cmd;
+        long cmdId = -1;
+        if(null != cmd) {
+            cmdClassName = cmd.getClass().getSimpleName();
+            if(cmdClassName.startsWith("crcl.base.")) {
+                cmdClassName = cmdClassName.substring("crcl.base.".length());
+            }
+            cmdFile = aprsSystem.logCrclCommand("puh_"+cmdClassName, cmd);
+            cmdFileName = (cmdFile != null)?cmdFile.getCanonicalPath():null;
+            cmdId = cmd.getCommandID();
+        }
+        CRCLStatusType stat = item.stat;
+        PointType point = CRCLPosemath.getPoint(stat);
+        File statFile = null;
+        String statFileName =null;
+        long statCmdId = -1;
+        CommandStateEnumType state = null;
+        if(null != stat) {
+            CommandStatusType cs = stat.getCommandStatus();
+            if(null != cs) {
+                statCmdId = cs.getCommandID();
+                state = cs.getCommandState();
+            }
+            statFile = aprsSystem.logCrclStatus("puh_", stat);
+            statFileName = (cmdFile != null)?statFile.getCanonicalPath():null;
+        }
+        
+        return new Object[] {
+            Utils.getTimeString(item.time),
+            item.time-item.statReceiveTime,
+            fmtDouble(point.getX()),
+            fmtDouble(point.getY()),
+            fmtDouble(point.getZ()),
+            item.isHoldingObjectExpected,
+            item.di.index,
+            fmtDouble(item.di.dist),
+            item.captured_item_index,
+            (item.closestItem!=null)?fmtDouble(item.closestItem.x):null,
+            (item.closestItem!=null)?fmtDouble(item.closestItem.y):null,
+            (item.closestItem!=null)?item.closestItem.getFullName():null,
+            cmdId,
+            statCmdId,
+            state,
+            (null != item.cmd)?item.cmd.getName():null,
+            cmdFileName,
+            statFileName
+        };
+    }
+    
+    private static final String[] POSE_UPDATE_HISTORY_HEADER =
+            new String[]{
+                "time",
+                "timeSinceStat",
+                "X",
+                "Y",
+                "Z",
+                "isHoldingObjectExpected",
+                "min_index",
+                "min_distance",
+                "captured_item_index",
+                "closest_item_x",
+                "closest_item_y",
+                "closest_item_name",
+                "cmdId",
+                "statEchoCmdId",
+                "state",
+                "cmdName",
+                "cmdFile",
+                "statFileName"
+            };
+    
+    
+    private File printPoseUpdateHistory(String err) throws IOException {
+        File f = createTempFile("puh_"+err, ".csv");
+        try(CSVPrinter printer = new CSVPrinter(new FileWriter(f), CSVFormat.DEFAULT.withHeader(POSE_UPDATE_HISTORY_HEADER))){
+            for(PoseUpdateHistoryItem item : poseUpdateHistory) {
+                printer.printRecord(poseUpdateHistoryRecordItems(item));
+            }
+        }
+        return f;
+    }
+    
     private final ConcurrentLinkedDeque<PoseUpdateHistoryItem> poseUpdateHistory
             = new ConcurrentLinkedDeque<>();
 
@@ -2954,30 +3076,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile PoseUpdateHistoryItem lastDropUpdate = null;
 
     @Override
-    public void handlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
-//        timer = new javax.swing.Timer(r.nextInt(100), (ActionEvent e) -> delayedHandlePoseUpdate(panel, pose, stat, cmd, isHoldingObjectExpected));
-//        timer.setRepeats(false);
-//        timer.setInitialDelay(r.nextInt(100));
-//        timer.start();
-//    }
-//
-//    public void delayedHandlePoseUpdate(PendantClientJPanel panel, PoseType pose, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected) {
-
-        PoseUpdateHistoryItem currentUpdate
-                = new PoseUpdateHistoryItem(pose, stat, cmd, isHoldingObjectExpected, System.currentTimeMillis());
-        poseUpdateHistory.add(currentUpdate);
-        if (poseUpdateHistory.size() > 5) {
-            poseUpdateHistory.removeFirst();
-        }
-        poseUpdateHistoryTime = System.currentTimeMillis();
-
+    public void handlePoseUpdate(
+            PendantClientJPanel panel,
+            CRCLStatusType stat, 
+            CRCLCommandType cmd, 
+            boolean isHoldingObjectExpected, 
+            long statRecievTime) {
         if (!jCheckBoxShowCurrent.isSelected()) {
             return;
         }
+        PoseType pose = CRCLPosemath.getPose(stat);
         PointType ptIn = pose.getPoint();
 
         boolean takeSnapshots = isSnapshotsEnabled();
-        PointType uncorrectedPoint = aprsSystemInterface.reverseCorrectPoint(ptIn);
+        PointType uncorrectedPoint = aprsSystem.reverseCorrectPoint(ptIn);
         currentX = uncorrectedPoint.getX();
         currentY = uncorrectedPoint.getY();
         jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));
@@ -2990,6 +3102,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int min_dist_index = di.index;
 
         long time = System.currentTimeMillis();
+        poseUpdateHistoryTime = time;
+        PoseUpdateHistoryItem currentUpdate
+                = new PoseUpdateHistoryItem(
+                        stat, 
+                        cmd, 
+                        isHoldingObjectExpected, 
+                        time,
+                        object2DJPanel1.getCapturedPartPoint(),
+                        captured_item_index,
+                        di,
+                        (min_dist_index >=0 && min_dist_index < l.size())?l.get(min_dist_index):null,
+                        statRecievTime
+                );
+        poseUpdateHistory.add(currentUpdate);
+        if (poseUpdateHistory.size() > 25) {
+            poseUpdateHistory.removeFirst();
+        }
+        
 
         if (isHoldingObjectExpected) {
             lastIsHoldingObjectExpectedTime = time;
@@ -3016,15 +3146,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         + ", captured_item_index=" + captured_item_index
                         + ", bottom item at min_dist_index =" + l.get(min_dist_index)
                         + ", captured_item  =" + captured_item;
-                this.aprsSystemInterface.setTitleErrorString(errString);
-                this.aprsSystemInterface.pause();
+                try {
+                    printHandlePoseErrorInfo(errString, stat, pose, cmd);
+                } catch (IOException ex) {
+                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                this.aprsSystem.setTitleErrorString(errString);
+                this.aprsSystem.pause();
             }
             if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
                 if (min_dist < pickupDist && min_dist_index >= 0) {
                     captured_item_index = min_dist_index;
                     if (true) {
                         try {
-                            System.out.println(aprsSystemInterface.getRunName() + " : Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                            System.out.println(aprsSystem.getRunName() + " : Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
                             if (takeSnapshots) {
                                 takeSnapshot(createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
                             }
@@ -3041,23 +3176,21 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             System.out.println("closestItem.getFullName() = " + closestItem.getFullName());
                             System.out.println("closestItem.(x,y) = " + closestItem.x + "," + closestItem.y);
                         }
-                        System.out.println("poseUpdateHistory = \n" + poseUpdateHistory);
-                        System.out.println("stat = \n" + CRCLSocket.statusToPrettyString(stat));
-                        System.out.println("pose = " + CRCLPosemath.toString(pose));
-                        System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
+                        String err ="failed_to_capture_part_at_" + currentX + "_" + currentY + "_";
+                        printHandlePoseErrorInfo(err, stat, pose, cmd);
                         if (takeSnapshots) {
-                            takeSnapshot(createTempFile("failed_to_capture_part_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                            takeSnapshot(createTempFile(err, ".PNG"), (PmCartesian) null, "");
                         }
                         System.err.println("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
 
                     } catch (Exception ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    this.aprsSystemInterface.setTitleErrorString("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+                    this.aprsSystem.setTitleErrorString("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
                 }
             } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
                 if (true) {
-                    System.out.println(aprsSystemInterface.getRunName() + " : Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                    System.out.println(aprsSystem.getRunName() + " : Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
                     if (takeSnapshots) {
                         try {
                             takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
@@ -3067,13 +3200,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 }
                 if (captured_item_index < 0) {
-
-                    System.out.println("poseUpdateHistory = \n" + poseUpdateHistory);
-                    System.out.println("stat = \n" + CRCLSocket.statusToPrettyString(stat));
-                    System.out.println("pose = " + CRCLPosemath.toString(pose));
-                    System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
+                    String err = "Should be dropping item but no item captured";
+                    try {
+                        printHandlePoseErrorInfo(err, stat, pose, cmd);
+                    } catch (IOException ex) {
+                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     System.out.println("lastDropUpdate = " + lastDropUpdate);
-                    this.aprsSystemInterface.setTitleErrorString("Should be dropping item but no item captured");
+                    this.aprsSystem.setTitleErrorString(err);
                 }
             }
         }
@@ -3092,6 +3226,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
         lastIsHoldingObjectExpected = isHoldingObjectExpected;
+    }
+
+    private void printHandlePoseErrorInfo(String err, CRCLStatusType stat, PoseType pose, CRCLCommandType cmd) throws IOException {
+        System.out.println("poseUpdateHistory = " + printPoseUpdateHistory(err));
+        System.out.println("statFile = " + aprsSystem.logCrclStatus(err, stat));
+        System.out.println("pose = " + CRCLPosemath.toString(pose));
+        System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
+        System.out.println("cmdFile = " + aprsSystem.logCrclCommand(err, cmd));
     }
 
     private class ClosestItemInfo {

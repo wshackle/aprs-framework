@@ -22,7 +22,7 @@
  */
 package aprs.actions.executor;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.misc.DisplayInterface;
 import java.io.IOException;
 import java.util.List;
@@ -69,15 +69,15 @@ interface ExecutorDisplayInterface extends DisplayInterface {
 
     
     /**
-     * Set the AprsSystemInterface 
+     * Set the AprsSystem 
      * @param aprsSystemInterface new value of aprsSystemInterface.
      */
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface);
+    public void setAprsSystem(AprsSystem aprsSystemInterface);
     
     /**
      * Get the current aprsSystemInterface
      * @return aprsSystemInterface
      */
-    public AprsSystemInterface getAprsSystemInterface();
+    public AprsSystem getAprsSystem();
 
 }

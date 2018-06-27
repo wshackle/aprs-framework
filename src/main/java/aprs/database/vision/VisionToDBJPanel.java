@@ -22,7 +22,7 @@
  */
 package aprs.database.vision;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.misc.Utils;
 import static aprs.misc.Utils.autoResizeTableColWidths;
 import aprs.database.AcquireEnum;
@@ -1435,7 +1435,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         }
 
-        if (!ret) {
+        if (!ret && isDebug()) {
             System.out.println("lastIsEnableDatabaseUpdateListenersUpdateEndCount = " + lastIsEnableDatabaseUpdateListenersUpdateEndCount);
             System.out.println("lastIsEnableDatabaseUpdateListenersUpdateBeginCount = " + lastIsEnableDatabaseUpdateListenersUpdateBeginCount);
         }
@@ -1504,7 +1504,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private File createTempFile(String prefix, String suffix) throws IOException {
-        AprsSystemInterface af = this.aprsSystemInterface;
+        AprsSystem af = this.aprsSystemInterface;
         if (null != af) {
             return af.createTempFile(prefix, suffix);
         }
@@ -1512,7 +1512,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private File createTempFile(String prefix, String suffix, File dir) throws IOException {
-        AprsSystemInterface af = this.aprsSystemInterface;
+        AprsSystem af = this.aprsSystemInterface;
         if (null != af) {
             return af.createTempFile(prefix, suffix, dir);
         }
@@ -1520,7 +1520,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
-        AprsSystemInterface af = this.aprsSystemInterface;
+        AprsSystem af = this.aprsSystemInterface;
         if (null != af) {
             af.takeSimViewSnapshot(f, itemsToPaint);
         }
@@ -1832,7 +1832,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     @MonotonicNonNull
-    private AprsSystemInterface aprsSystemInterface = null;
+    private AprsSystem aprsSystemInterface = null;
 
     /**
      * Get the value of aprsSystemInterface
@@ -1840,7 +1840,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      * @return the value of aprsSystemInterface
      */
     @Nullable
-    public AprsSystemInterface getAprsSystemInterface() {
+    public AprsSystem getAprsSystem() {
         return aprsSystemInterface;
     }
 
@@ -1849,7 +1849,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      *
      * @param aprsSystemInterface new value of aprsSystemInterface
      */
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
+    public void setAprsSystem(AprsSystem aprsSystemInterface) {
         this.aprsSystemInterface = aprsSystemInterface;
     }
 

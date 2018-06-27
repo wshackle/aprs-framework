@@ -23,7 +23,7 @@
 package aprs.pddl_planner;
 
 import aprs.actions.executor.ExecutorJInternalFrame;
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.misc.DisplayInterface;
 import aprs.actions.executor.Action;
 import aprs.misc.Utils;
@@ -456,7 +456,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
         try {
             browseProgramExecutable();
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonPlannerProgramExecutableBrowseActionPerformed
 
@@ -468,7 +468,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
         try {
             browsePddlDomain();
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonPddlDomainBrowseActionPerformed
 
@@ -476,7 +476,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
         try {
             browsePddlProblem();
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonPddlProblemBrowseActionPerformed
 
@@ -484,7 +484,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
         try {
             runPddlPlannerOnce();
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonRunOnceActionPerformed
 
@@ -895,7 +895,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                                 });
                             }
                         } catch (IOException ex) {
-                            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }
@@ -935,7 +935,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                     }
                     processActions();
                 } catch (IOException ex) {
-                    Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
@@ -1009,7 +1009,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                 pddlProcess = null;
             }
         } catch (InterruptedException interruptedException) {
-            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, interruptedException);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, interruptedException);
         }
         try {
             if (null != ppdlInputStreamFuture) {
@@ -1017,7 +1017,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                 ppdlInputStreamFuture = null;
             }
         } catch (Exception e) {
-            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, e);
         }
         try {
             if (null != ppdlErrorStreamFuture) {
@@ -1025,7 +1025,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                 ppdlErrorStreamFuture = null;
             }
         } catch (Exception e) {
-            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, e);
         }
         try {
             if (null != pddlInputStream) {
@@ -1033,7 +1033,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                 pddlInputStream = null;
             }
         } catch (IOException iOException) {
-            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, iOException);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, iOException);
         }
         try {
             if (null != pddlErrorStream) {
@@ -1041,7 +1041,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                 pddlErrorStream = null;
             }
         } catch (IOException iOException) {
-            Logger.getLogger(AprsSystemInterface.class.getName()).log(Level.SEVERE, null, iOException);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, iOException);
         }
         closing = orig_closing;
     }

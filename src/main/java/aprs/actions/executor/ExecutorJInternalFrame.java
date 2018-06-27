@@ -22,7 +22,7 @@
  */
 package aprs.actions.executor;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.database.DbSetupPublisher;
 import aprs.database.PhysicalItem;
 import aprs.actions.executor.CrclGenerator.PoseProvider;
@@ -331,14 +331,12 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         executorJPanel1.setDbSetupSupplier(dbSetupSupplier);
     }
 
-    @Override
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
-        executorJPanel1.setAprsSystemInterface(aprsSystemInterface);
+    public void setAprsSystem(AprsSystem aprsSystemInterface) {
+        executorJPanel1.setAprsSystem(aprsSystemInterface);
     }
 
-    @Override
-    public AprsSystemInterface getAprsSystemInterface() {
-        return executorJPanel1.getAprsSystemInterface();
+   public AprsSystem getAprsSystem() {
+        return executorJPanel1.getAprsSystem();
     }
 
     public boolean readyForNewActionsList() {

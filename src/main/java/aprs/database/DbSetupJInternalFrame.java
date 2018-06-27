@@ -22,7 +22,7 @@
  */
 package aprs.database;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.File;
@@ -53,8 +53,8 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
      *
      * @param aprsSystemInterface new value of aprsSystemInterface
      */
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
-        dbSetupJPanel1.setAprsSystemInterface(aprsSystemInterface);
+    public void setAprsSystem(AprsSystem aprsSystemInterface) {
+        dbSetupJPanel1.setAprsSystem(aprsSystemInterface);
     }
 
     /**

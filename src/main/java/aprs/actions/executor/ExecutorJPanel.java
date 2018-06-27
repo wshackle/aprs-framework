@@ -44,7 +44,7 @@ import aprs.actions.optaplanner.actionmodel.OpAction;
 import aprs.actions.optaplanner.actionmodel.OpActionPlan;
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import aprs.database.vision.VisionToDBJPanel;
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import crcl.base.CRCLCommandInstanceType;
 import crcl.base.CRCLCommandType;
 import crcl.base.CRCLProgramType;
@@ -468,7 +468,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private final TableModelListener toolHolderContentsModelListener = new ToolHolderContentsModelListenerClass();
 
     private void runSingleRow() {
-        this.aprsSystemInterface.abortCrclProgram();
+        this.aprsSystem.abortCrclProgram();
         int row = jTablePddlOutput.getSelectedRow();
         currentActionIndex = row;
         setReplanFromIndex(row);
@@ -503,8 +503,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         int sarc = safeAbortRequestCount.get();
         int ppiSarc = ppi.getStartSafeAbortRequestCount();
         boolean requestCountDiffer = ppiSarc != sarc;
-        boolean aborting = aprsSystemInterface.isAborting();
-        aprsSystemInterface.logEvent("handlePlacePartCompleted", "requestCountDiffer=" + requestCountDiffer + ",aboring=" + aborting + ", ppi.getPddlActionIndex()=" + ppi.getPddlActionIndex() + ",action=" + ppi.getAction().asPddlLine());
+        boolean aborting = aprsSystem.isAborting();
+        aprsSystem.logEvent("handlePlacePartCompleted", "requestCountDiffer=" + requestCountDiffer + ",aboring=" + aborting + ", ppi.getPddlActionIndex()=" + ppi.getPddlActionIndex() + ",action=" + ppi.getAction().asPddlLine());
         if (requestCountDiffer || aborting) {
             crclGenerator.takeSnapshots("exec", "safeAbortRequested" + sarc + ":" + safeAboutCount.get() + ".ppi=" + ppi, null, null);
             CrclCommandWrapper wrapper = ppi.getWrapper();
@@ -562,8 +562,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (currentActionIndex < actionInfo.getActionIndex() + 1) {
             currentActionIndex = actionInfo.getActionIndex() + 1;
             updateSelectionInterval();
-            if (null != aprsSystemInterface) {
-                Utils.runOnDispatchThread(aprsSystemInterface::updateTitle);
+            if (null != aprsSystem) {
+                Utils.runOnDispatchThread(aprsSystem::updateTitle);
                 if (stepping) {
                     pause();
                 }
@@ -2085,6 +2085,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public boolean doActions(String comment, int startAbortCount) {
+        checkReverse();
         final int start = doingActionsStarted.incrementAndGet();
         this.abortProgram();
         try {
@@ -2119,6 +2120,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public XFuture<Boolean> startActions() {
+        checkReverse();
         this.abortProgram();
         try {
             setReplanFromIndex(0);
@@ -2142,6 +2144,28 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             LOGGER.log(Level.SEVERE, null, ex);
             abortProgram();
             throw new RuntimeException(ex);
+        }
+    }
+
+    private void checkReverse() throws IllegalStateException {
+        if (aprsSystem.isReverseFlag() != isReverseFlag()) {
+            throw new IllegalStateException("aprsSystem.isReverseFlag() " + aprsSystem.isReverseFlag() + "!= isReverseFlag() " + isReverseFlag());
+        }
+        for (Action action : actionsList) {
+            switch (action.getType()) {
+                case TAKE_PART:
+                    String partname = action.getArgs()[0];
+                    if (partname.contains("_in_pt_") && isReverseFlag()) {
+                        throw new IllegalStateException("taking part in parttray when in reversee");
+                    }
+                    if (partname.contains("_in_kt_") && !isReverseFlag()) {
+                        throw new IllegalStateException("taking part in kittray when not in reversee");
+                    }
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
 
@@ -2281,7 +2305,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     public void saveProperties() {
         Map<String, String> propsMap = new HashMap<>();
-        updateActionFileStrings();
+        try {
+            updateActionFileStrings();
+        } catch (HeadlessException | IllegalStateException | IOException ex) {
+            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
         if (reverseActionsFileString != null && reverseActionsFileString.length() > 0) {
             String relPath = makeShortPath(propertiesFile, reverseActionsFileString);
             logDebug("relPath = " + relPath);
@@ -2324,13 +2352,38 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return newNames;
     }
 
-    private void updateActionFileStrings() {
+    private void updateActionFileStrings() throws HeadlessException, IllegalStateException, IOException {
         if (reverseFlag) {
             this.reverseActionsFileString = jTextFieldPddlOutputActions.getText();
+            checkFilename(reverseActionsFileString);
+
         } else {
             this.actionsFileString = jTextFieldPddlOutputActions.getText();
+            checkFilename(actionsFileString);
         }
     }
+
+    private void checkFilename(String filename) throws HeadlessException, IllegalStateException, IOException {
+        if (null != filename && filename.length() > 0) {
+            File f = new File(filename);
+            if (!f.exists()) {
+                System.out.println("f.getCanonicalPath() = " + f.getCanonicalPath());
+                Utils.showMessageDialog(this, filename + " does not exist");
+                throw new IllegalStateException(filename + " does not exist");
+            }
+            if (!f.canRead()) {
+                System.out.println("f.getCanonicalPath() = " + f.getCanonicalPath());
+                Utils.showMessageDialog(this, filename + " can not be read");
+                throw new IllegalStateException(filename + " can not be read");
+            }
+            if (f.isDirectory()) {
+                System.out.println("f.getCanonicalPath() = " + f.getCanonicalPath());
+                Utils.showMessageDialog(this, filename + " is a directory");
+                throw new IllegalStateException(filename + " is a directory");
+            }
+        }
+    }
+
     private static final String POS_ERROR_MAP_FILES = "positionMapFileNames";
     private static final String MANUAL_PART_NAMES = "manualPartNames";
     private static final String MANUAL_SLOT_NAMES = "manualSlotNames";
@@ -2356,6 +2409,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @Override
     public void processActions() {
+        checkReverse();
         try {
             if (null != runningProgramFuture) {
                 runningProgramFuture.cancel(true);
@@ -2468,8 +2522,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             updateComboSlotModel();
 
             if (!jTextFieldPddlOutputActions.getText().equals(canonName)) {
-                jTextFieldPddlOutputActions.setText(canonName);
-                updateActionFileStrings();
+                try {
+                    jTextFieldPddlOutputActions.setText(canonName);
+                    updateActionFileStrings();
+                } catch (Exception ex) {
+                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
     }
@@ -2582,7 +2640,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemInterface.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonLoadPddlActionsFromFileActionPerformed
@@ -2592,7 +2650,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemInterface.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonLoadActionPerformed
@@ -2602,7 +2660,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
 
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystemInterface.class
+            Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jTextFieldPddlOutputActionsActionPerformed
@@ -2828,15 +2886,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @Nullable
     private volatile CRCLProgramType unstartedProgram = null;
 
-    private AprsSystemInterface aprsSystemInterface;
+    private AprsSystem aprsSystem;
 
     /**
      * Get the value of aprsSystemInterface
      *
      * @return the value of aprsSystemInterface
      */
-    public AprsSystemInterface getAprsSystemInterface() {
-        return aprsSystemInterface;
+    public AprsSystem getAprsSystem() {
+        return aprsSystem;
     }
 
     /**
@@ -2844,10 +2902,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      *
      * @param aprsSystemInterface new value of aprsSystemInterface
      */
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
-        this.aprsSystemInterface = aprsSystemInterface;
+    public void setAprsSystem(AprsSystem aprsSystemInterface) {
+        this.aprsSystem = aprsSystemInterface;
         if (null != crclGenerator) {
-            crclGenerator.setAprsSystemInterface(aprsSystemInterface);
+            crclGenerator.setAprsSystem(aprsSystemInterface);
         }
     }
 
@@ -2859,8 +2917,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (_force != jCheckBoxForceFakeTake.isSelected()) {
             jCheckBoxForceFakeTake.setSelected(_force);
         }
-        if (null != aprsSystemInterface) {
-            aprsSystemInterface.setForceFakeTakeFlag(_force);
+        if (null != aprsSystem) {
+            aprsSystem.setForceFakeTakeFlag(_force);
         }
     }
 
@@ -2890,9 +2948,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 crclProgram.setName(getActionsCrclName());
             }
             Utils.runOnDispatchThreadWithCatch(() -> loadProgramToTable(crclProgram));
-            if (null != aprsSystemInterface) {
-                aprsSystemInterface.addProgramLineListener(this);
-                aprsSystemInterface.setCRCLProgram(crclProgram);
+            if (null != aprsSystem) {
+                aprsSystem.addProgramLineListener(this);
+                aprsSystem.setCRCLProgram(crclProgram);
             }
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, null, ex);
@@ -2900,7 +2958,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> continueCurrentCrclProgram() {
-        return aprsSystemInterface.continueCrclProgram();
+        return aprsSystem.continueCrclProgram();
     }
 
     private volatile long startCrclProgramTime = 0;
@@ -2922,7 +2980,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private XFuture<Boolean> startCrclProgram(CRCLProgramType crclProgram) {
         try {
             prepCrclProgram(crclProgram);
-            return aprsSystemInterface.startCRCLProgram(crclProgram);
+            return aprsSystem.startCRCLProgram(crclProgram);
         } catch (Exception ex) {
             XFuture<Boolean> future = new XFuture<>("startCrclProgramException");
             LOGGER.log(Level.SEVERE, null, ex);
@@ -2938,10 +2996,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         unstartedProgram = null;
         Utils.runOnDispatchThreadWithCatch(() -> loadProgramToTable(crclProgram1));
         this.runningProgram = true;
-        if (null == aprsSystemInterface) {
+        if (null == aprsSystem) {
             throw new IllegalStateException("Can't start crcl program with null aprsSystemInterface reference.");
         }
-        aprsSystemInterface.addProgramLineListener(this);
+        aprsSystem.addProgramLineListener(this);
         if (crclProgram1.getName() == null || crclProgram1.getName().length() < 1) {
             crclProgram1.setName(getActionsCrclName());
         }
@@ -2949,9 +3007,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private boolean runCrclProgram(CRCLProgramType crclProgram) throws JAXBException {
         prepCrclProgram(crclProgram);
-        boolean ret = aprsSystemInterface.runCRCLProgram(crclProgram);
+        boolean ret = aprsSystem.runCRCLProgram(crclProgram);
         try {
-            aprsSystemInterface.saveLastProgramRunDataListToCsv(aprsSystemInterface.createTempFile("programRunData", ".csv"));
+            aprsSystem.saveLastProgramRunDataListToCsv(aprsSystem.createTempFile("programRunData", ".csv"));
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
         }
@@ -3064,7 +3122,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         abortProgram();
         lastActionMillis = System.currentTimeMillis();
         setErrorString(null);
-        aprsSystemInterface.setTitleErrorString(null);
+        aprsSystem.setTitleErrorString(null);
         clearPoseCache();
         lastContinueActionFuture = null;
         lastSafeAbortFuture = null;
@@ -3087,8 +3145,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             replanActionTimer = null;
         }
         this.replanRunnable = this.defaultReplanRunnable;
-        if (null != aprsSystemInterface) {
-            aprsSystemInterface.abortCrclProgram();
+        if (null != aprsSystem) {
+            aprsSystem.abortCrclProgram();
         }
         completeSafeAbort();
         replanStarted.set(rps);
@@ -3837,11 +3895,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 //                return lastSafeAbortFuture;
 //            }
 
-            startSafeAbortProgram = aprsSystemInterface.getCrclProgram();
+            startSafeAbortProgram = aprsSystem.getCrclProgram();
             if (null != startSafeAbortProgram) {
                 startSafeAbortProgramName = startSafeAbortProgram.getName();
             }
-            startSafeAbortIsRunningCrclProgram = aprsSystemInterface.isRunningCrclProgram();
+            startSafeAbortIsRunningCrclProgram = aprsSystem.isRunningCrclProgram();
             startSafeAbortRunningProgram = runningProgram;
             startSafeAbortRunningProgramFuture = runningProgramFuture;
             startSafeAbortRunningProgramFutureDone
@@ -3854,18 +3912,18 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             incSafeAbortRequestCount();
             if (!startSafeAbortRunningProgram) {
                 incSafeAbortCount();
-                return XFutureVoid.completedFutureWithName("!startSafeAbortRunningProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName());
+                return XFutureVoid.completedFutureWithName("!startSafeAbortRunningProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystem.getRunName());
             }
             if (startSafeAbortRunningProgramFutureDone) {
                 incSafeAbortCount();
-                return XFutureVoid.completedFutureWithName("startSafeAbortRunningProgramFutureDone" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName());
+                return XFutureVoid.completedFutureWithName("startSafeAbortRunningProgramFutureDone" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystem.getRunName());
             }
             if (!startSafeAbortIsRunningCrclProgram) {
                 incSafeAbortCount();
-                return XFutureVoid.completedFutureWithName("!startSafeAbortIsRunningCrclProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName());
+                return XFutureVoid.completedFutureWithName("!startSafeAbortIsRunningCrclProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystem.getRunName());
             }
 
-            final XFutureVoid ret = new XFutureVoid(startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystemInterface.getRunName());
+            final XFutureVoid ret = new XFutureVoid(startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystem.getRunName());
 
             this.safeAbortRunnablesVector.add(() -> completeSafeAbortFuture(ret));
             lastSafeAbortFuture = ret;
@@ -3878,7 +3936,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }//GEN-LAST:event_jButtonSafeAbortActionPerformed
 
     private void jButtonContinueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonContinueActionPerformed
-        this.aprsSystemInterface.abortCrclProgram();
+        this.aprsSystem.abortCrclProgram();
         int row = jTablePddlOutput.getSelectedRow();
         currentActionIndex = row;
         setReplanFromIndex(row);
@@ -3895,6 +3953,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     public boolean completeActionList(String comment, int startSafeAbortRequestCount) {
         try {
+            checkReverse();
             doingActionsStarted.incrementAndGet();
             autoStart = true;
             boolean ret = generateCrcl(comment, startSafeAbortRequestCount);
@@ -3926,6 +3985,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private volatile long continueActionsListTime = 0;
 
     private void continueActionListPrivate() {
+        checkReverse();
         continueActionsCount.incrementAndGet();
         continueActionsListTime = System.currentTimeMillis();
         autoStart = true;
@@ -4019,7 +4079,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             + "," + poseFromDb.getPoint().getY()
                             + "," + poseFromDb.getPoint().getZ();
                     logDebug("poseFromDbString = " + poseFromDbString);
-                    PoseType curPose = aprsSystemInterface.getCurrentPose();
+                    PoseType curPose = aprsSystem.getCurrentPose();
                     assert (null != curPose) :
                             "aprsSystemInterface.getCurrentPose() returned null : @AssumeAssertion(nullness)";
                     String curPoseString
@@ -4046,7 +4106,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }//GEN-LAST:event_jButtonPauseActionPerformed
 
     private void pause() {
-        aprsSystemInterface.pauseCrclProgram();
+        aprsSystem.pauseCrclProgram();
     }
 
     public void showPaused(boolean paused) {
@@ -4087,16 +4147,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                .stream()
-                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                .map(JointStatusType::getJointPosition)
-                .map(Objects::toString)
-                .collect(Collectors.joining(","));
+                        .stream()
+                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                        .map(JointStatusType::getJointPosition)
+                        .map(Objects::toString)
+                        .collect(Collectors.joining(","));
         return jointVals;
     }
 
     private void jButtonRecordLookForJointsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordLookForJointsActionPerformed
-        CRCLStatusType status = aprsSystemInterface.getCurrentStatus();
+        CRCLStatusType status = aprsSystem.getCurrentStatus();
         if (null != status) {
             this.updateLookForJoints(status);
         }
@@ -4439,7 +4499,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return (String) JOptionPane.showInputDialog(
                 this, // parentComponent
                 "Tool Holder Pose Name?", // Object message
-                aprsSystemInterface.getTaskName() + " " + aprsSystemInterface.getRobotName() + " " + qname + " choice", //  String title
+                aprsSystem.getTaskName() + " " + aprsSystem.getRobotName() + " " + qname + " choice", //  String title
                 JOptionPane.QUESTION_MESSAGE, // messageType
                 null,// icon 
                 getToolChangerNames(), // selectionValues
@@ -4451,7 +4511,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return (String) JOptionPane.showInputDialog(
                 this, // parentComponent
                 "Tool Name?", // Object message
-                aprsSystemInterface.getTaskName() + " " + aprsSystemInterface.getRobotName() + " " + qname + " choice", //  String title
+                aprsSystem.getTaskName() + " " + aprsSystem.getRobotName() + " " + qname + " choice", //  String title
                 JOptionPane.QUESTION_MESSAGE, // messageType
                 null,// icon 
                 getToolNames(), // selectionValues
@@ -4496,7 +4556,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @Nullable
     private String getJointValsString() {
-        CRCLStatusType stat = aprsSystemInterface.getCurrentStatus();
+        CRCLStatusType stat = aprsSystem.getCurrentStatus();
         if (null != stat && null != stat.getJointStatuses()) {
             List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
             String jointVals
@@ -4511,7 +4571,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             Map<String, PoseType> toolHolderPoseMap
                     = crclGenerator.getToolHolderPoseMap();
-            PoseType pose = aprsSystemInterface.getCurrentPose();
+            PoseType pose = aprsSystem.getCurrentPose();
             if (null == pose) {
                 warnDialog("Can not read current pose.");
                 return;
@@ -4547,7 +4607,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void clearEmptHolderContentsRows() {
         clearEmptyRows(jTableHolderContents);
     }
-    
+
     private void clearEmptyRows(JTable jtable) {
         DefaultTableModel dtm = (DefaultTableModel) jtable.getModel();
         for (int i = 0; i < dtm.getRowCount(); i++) {
@@ -4715,7 +4775,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         TableModel holderContentsTableModel = jTableHolderContents.getModel();
         for (int i = 0; i < holderContentsTableModel.getRowCount(); i++) {
             String holderName = (String) holderContentsTableModel.getValueAt(i, 0);
-            if(holderName == null || holderName.length() < 1) {
+            if (holderName == null || holderName.length() < 1) {
                 continue;
             }
             String toolForHolder = (String) holderContentsTableModel.getValueAt(i, 1);
@@ -4802,7 +4862,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         clearEmptyRows(jtable);
         Utils.autoResizeTableColWidths(jtable);
     }
-    
+
     private void deleteFromToolHolderContentsTable(String nameToDelete) {
         deleteMatchingRowsFromTable(jTableHolderContents, nameToDelete);
         Map<String, String> expectedToolHolderContentsMap
@@ -4816,7 +4876,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void jButtonAddToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddToolHolderPoseActionPerformed
         try {
             clearEmptyToolChangerPoseRows();
-            PoseType pose = aprsSystemInterface.getCurrentPose();
+            PoseType pose = aprsSystem.getCurrentPose();
             if (null == pose || null == pose.getPoint()) {
                 warnDialog("Can not read current pose.");
                 return;
@@ -4846,7 +4906,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void jButtonRecordToolHolderApproachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolHolderApproachActionPerformed
         try {
-            PoseType pose = aprsSystemInterface.getCurrentPose();
+            PoseType pose = aprsSystem.getCurrentPose();
             if (null == pose) {
                 warnDialog("Can not read current pose.");
                 return;
@@ -5191,8 +5251,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jTableCrclProgram.setBackground(Color.red);
         jTabbedPane1.setSelectedComponent(jPanelCrcl);
         setErrorString(ex.toString());
-        if (null != aprsSystemInterface) {
-            aprsSystemInterface.setTitleErrorString(errorString);
+        if (null != aprsSystem) {
+            aprsSystem.setTitleErrorString(errorString);
         }
     }
 
@@ -5236,6 +5296,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> recursiveApplyGenerateCrcl(boolean prevSuccess) {
+        checkReverse();
         if (prevSuccess) {
             try {
                 return generateCrclAsync();
@@ -5253,8 +5314,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private int crclEndActionIndex = -1;
 
     private void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
-        if (null != aprsSystemInterface) {
-            aprsSystemInterface.takeSimViewSnapshot(f, pose, label);
+        if (null != aprsSystem) {
+            aprsSystem.takeSimViewSnapshot(f, pose, label);
         }
     }
 
@@ -5267,11 +5328,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> checkSafeAbortAsync(Supplier<XFuture<Boolean>> supplier, int startSafeAbortRequestCount) {
 
-        if (aprsSystemInterface.isRunningCrclProgram()) {
+        if (aprsSystem.isRunningCrclProgram()) {
             logDebug("crclProgramStill Running");
-            logDebug("aprsSystemInterface.isRunningCrclProgram() = " + aprsSystemInterface.isRunningCrclProgram());
-            logDebug("aprsSystemInterface.getCrclRunProgramFuture() = " + aprsSystemInterface.getCrclRunProgramFuture());
-            logDebug("aprsSystemInterface.getCrclRunProgramThread() = " + aprsSystemInterface.getCrclRunProgramThread());
+            logDebug("aprsSystemInterface.isRunningCrclProgram() = " + aprsSystem.isRunningCrclProgram());
+            logDebug("aprsSystemInterface.getCrclRunProgramFuture() = " + aprsSystem.getCrclRunProgramFuture());
+            logDebug("aprsSystemInterface.getCrclRunProgramThread() = " + aprsSystem.getCrclRunProgramThread());
             throw new IllegalStateException("crclProgramStill Running");
         }
         boolean doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
@@ -5286,8 +5347,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         synchronized (this) {
             lastCheckAbortCurrentPart = currentPart;
             boolean safeAbortRequested = (safeAbortRequestCount.get() != startSafeAbortRequestCount);
-            if (safeAbortRequested != aprsSystemInterface.isAborting()) {
-                logDebug("safeAbortRequested=" + safeAbortRequested + ", aprsSystemInterface.isAborting()=" + aprsSystemInterface.isAborting());
+            if (safeAbortRequested != aprsSystem.isAborting()) {
+                logDebug("safeAbortRequested=" + safeAbortRequested + ", aprsSystemInterface.isAborting()=" + aprsSystem.isAborting());
                 safeAbortRequested = true;
             }
             lastCheckAbortSafeAbortRequested = safeAbortRequested;
@@ -5305,8 +5366,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             doSafeAbortCount.incrementAndGet();
             this.abortProgram();
             try {
-                if (crclGenerator.isTakeSnapshots() && aprsSystemInterface.snapshotsEnabled()) {
-                    takeSimViewSnapshot(aprsSystemInterface.createTempFile("-safe-abort-", ".PNG"), null, "");
+                if (crclGenerator.isTakeSnapshots() && aprsSystem.snapshotsEnabled()) {
+                    takeSimViewSnapshot(aprsSystem.createTempFile("-safe-abort-", ".PNG"), null, "");
                 }
             } catch (IOException iOException) {
                 iOException.printStackTrace();
@@ -5329,6 +5390,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private boolean generateCrcl(String comment, int startSafeAbortRequestCount)
             throws IllegalStateException, SQLException, JAXBException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
+
+        checkReverse();
         boolean doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
         if (doSafeAbort) {
             return atLastAction();
@@ -5446,15 +5509,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> generateCrclAsync() throws IllegalStateException {
 
+        checkReverse();
         int startSafeAbortRequestCount = safeAbortRequestCount.get();
 
         ExecutorService service = this.generateCrclService;
         if (null == service) {
-            service = aprsSystemInterface.getRunProgramService();
+            service = aprsSystem.getRunProgramService();
             this.generateCrclService = service;
         }
         ExecutorService genCrclService = service;
-        String taskName = "generateCrcl(" + aprsSystemInterface.getTaskName() + ").doPddlActionsSection(" + crclGenerator.getLastIndex() + " out of " + actionsList.size() + ")";
+        String taskName = "generateCrcl(" + aprsSystem.getTaskName() + ").doPddlActionsSection(" + crclGenerator.getLastIndex() + " out of " + actionsList.size() + ")";
 
         return checkSafeAbortAsync(() -> {
             try {
@@ -5493,12 +5557,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         crclStartActionIndex = this.getReplanFromIndex();
         currentActionIndex = crclStartActionIndex;
-        if (null != aprsSystemInterface) {
-            aprsSystemInterface.updateTitle();
+        if (null != aprsSystem) {
+            aprsSystem.updateTitle();
         }
         CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds;
         final int startReplanFromIndex = this.getReplanFromIndex();
+        checkReverse();
         synchronized (actionsList) {
             cmds = crclGenerator.generate(actionsList, startReplanFromIndex, options, safeAbortRequestCount.get());
             resetReadOnlyActionsList();
@@ -5597,6 +5662,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> doPddlActionsSectionAsync(int startSafeAbortRequestCount, int sectionNumber) {
         try {
+            checkReverse();
             CRCLProgramType program = pddlActionSectionToCrcl(sectionNumber);
 
             if (autoStart) {
@@ -5985,7 +6051,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         setReplanFromIndex(0);
         List<MiddleCommandType> cmds = new ArrayList<>();
         crclGenerator.setOptions(options);
-        crclGenerator.takePartByPose(cmds, testDropOffPose);
+        crclGenerator.takePartByPose(cmds, testDropOffPose, "testDropOffPose");
         CRCLProgramType program = createEmptyProgram();
         jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
@@ -6148,7 +6214,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.loadActionsList(actionsList);
         ExecutorService service = this.generateCrclService;
         if (null == service) {
-            service = aprsSystemInterface.getRunProgramService();
+            service = aprsSystem.getRunProgramService();
             this.generateCrclService = service;
         }
         return checkDbSupplierPublisherAsync()
@@ -6478,6 +6544,32 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private aprs.actions.executor.PositionMapJPanel positionMapJPanel1;
     // End of variables declaration//GEN-END:variables
 
+    private String propsGetFileName(Properties props, String key) throws IOException {
+        String filename = props.getProperty(key);
+        if (null == filename || !filename.startsWith("..") || null == propertiesFile) {
+            return filename;
+        }
+        String newfilename = filename;
+        File dir = propertiesFile.getParentFile();
+        while (null != dir && (newfilename.startsWith("../") || newfilename.startsWith("..\\"))) {
+            newfilename = newfilename.substring(3);
+            dir = dir.getParentFile();
+        }
+        File f = new File(dir, newfilename);
+        if (!f.exists() && (new File(dir, newfilename.replace('\\', File.separatorChar))).exists()) {
+            newfilename = newfilename.replace('\\', File.separatorChar);
+            f = new File(dir, newfilename);
+        } else if (!f.exists() && (new File(dir, newfilename.replace('/', File.separatorChar))).exists()) {
+            newfilename = newfilename.replace('/', File.separatorChar);
+            f = new File(dir, newfilename);
+        }
+        String fullfilename = f.getCanonicalPath();
+        System.out.println("newfilename = " + newfilename);
+        System.out.println("filename = " + filename);
+        System.out.println("fullfilename = " + fullfilename);
+        return fullfilename;
+    }
+
     @Override
     public void loadProperties() throws IOException {
         if (null != propertiesFile && propertiesFile.exists()) {
@@ -6494,8 +6586,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 props.load(fr);
             }
             loadComboModels(props);
-            this.actionsFileString = props.getProperty(PDDLOUTPUT);
-            this.reverseActionsFileString = props.getProperty(REVERSE_PDDLOUTPUT);
+            this.actionsFileString = propsGetFileName(props, PDDLOUTPUT);
+            checkFilename(actionsFileString);
+            this.reverseActionsFileString = propsGetFileName(props, REVERSE_PDDLOUTPUT);
+            checkFilename(reverseActionsFileString);
             reloadActionsFile();
             String autostartString = props.getProperty(PDDLCRCLAUTOSTART);
             if (null != autostartString) {
@@ -6686,6 +6780,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public void reloadActionsFile() throws IOException {
         String output = reverseFlag ? reverseActionsFileString : actionsFileString;
         if (null != output) {
+            checkFilename(output);
             File f = new File(output);
             if (f.exists() && f.canRead() && !f.isDirectory()) {
                 loadActionsFile(f, true);

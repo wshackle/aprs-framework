@@ -22,7 +22,7 @@
  */
 package aprs.database.vision;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.database.DbSetupPublisher;
 import aprs.database.DbType;
 import aprs.database.PhysicalItem;
@@ -121,8 +121,8 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return Collections.emptyList();
     }
 
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
-        this.visionToDBJPanel.setAprsSystemInterface(aprsSystemInterface);
+    public void setAprsSystem(AprsSystem aprsSystemInterface) {
+        this.visionToDBJPanel.setAprsSystem(aprsSystemInterface);
     }
 
 

@@ -22,7 +22,7 @@
  */
 package aprs.supervisor.main;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import java.util.concurrent.Callable;
 
 /**
@@ -33,17 +33,17 @@ public class NamedCallable<T> implements Callable<T> {
 
     private final Callable<T> callable;
     private final String name;
-    private final AprsSystemInterface[] systems;
+    private final AprsSystem[] systems;
 
     public String getName() {
         return name;
     }
 
-    public AprsSystemInterface[] getSystems() {
+    public AprsSystem[] getSystems() {
         return systems;
     }
 
-    public NamedCallable(Callable<T> r, String name, AprsSystemInterface... systems) {
+    public NamedCallable(Callable<T> r, String name, AprsSystem... systems) {
         this.callable = r;
         this.name = name;
         this.systems = systems;

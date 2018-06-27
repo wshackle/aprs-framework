@@ -78,6 +78,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         return jCheckBoxMenuItemStepping.isSelected();
     }
     
+    public boolean isLogCrclProgramsEnabled() {
+        return jCheckBoxMenuItemLogCrclPrograms.isSelected();
+    }
+
+    public void setLogCrclProgramsEnabled(boolean logCrclProgramsEnabled) {
+         jCheckBoxMenuItemLogCrclPrograms.setSelected(logCrclProgramsEnabled);
+    }
+    
     public void setStepping(boolean stepping) {
         if(jCheckBoxMenuItemStepping.isSelected() != stepping) {
             jCheckBoxMenuItemStepping.setSelected(stepping);
@@ -492,6 +500,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemSnapshotImageSize = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemReloadSimFilesOnReverse = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemUseTeachTable = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemLogCrclPrograms = new javax.swing.JCheckBoxMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
@@ -751,6 +760,10 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
         jCheckBoxMenuItemUseTeachTable.setText("Use Teach Table");
         jMenu4.add(jCheckBoxMenuItemUseTeachTable);
+
+        jCheckBoxMenuItemLogCrclPrograms.setSelected(true);
+        jCheckBoxMenuItemLogCrclPrograms.setText("Log CRCL Programs");
+        jMenu4.add(jCheckBoxMenuItemLogCrclPrograms);
 
         jMenuBar1.add(jMenu4);
 
@@ -1797,6 +1810,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemForceFakeTake;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKitInspectionStartup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemLogCrclPrograms;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReloadSimFilesOnReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReverse;
