@@ -22,7 +22,7 @@
  */
 package aprs.database;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.database.vision.VisionToDBJPanel;
 import aprs.misc.DisplayInterface;
 import aprs.misc.Utils;
@@ -470,7 +470,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }//GEN-LAST:event_jComboBoxDbTypeActionPerformed
 
     @MonotonicNonNull
-    private AprsSystemInterface aprsSystemInterface = null;
+    private AprsSystem aprsSystem = null;
 
     /**
      * Get the value of aprsSystemInterface
@@ -478,27 +478,27 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      * @return the value of aprsSystemInterface
      */
     @Nullable
-    public AprsSystemInterface getAprsSystemInterface() {
-        return aprsSystemInterface;
+    public AprsSystem getAprsSystem() {
+        return aprsSystem;
     }
 
     /**
      * Set the value of aprsSystemInterface
      *
-     * @param aprsSystemInterface new value of aprsSystemInterface
+     * @param aprsSystem new value of aprsSystemInterface
      */
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
-        this.aprsSystemInterface = aprsSystemInterface;
+    public void setAprsSystem(AprsSystem aprsSystem) {
+        this.aprsSystem = aprsSystem;
     }
 
     private void jButtonConnectDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectDBActionPerformed
         try {
-            AprsSystemInterface parentFrame = this.aprsSystemInterface;
+            AprsSystem parentFrame = this.aprsSystem;
             if (null == parentFrame) {
                 System.err.println(" this.aprsSystemInterface == null");
                 return;
             }
-            AprsSystemInterface checkedParentFrame = parentFrame;
+            AprsSystem checkedParentFrame = parentFrame;
             connected = true;
             DbSetup setup = this.getDbSetup();
             final StackTraceElement stackTraceElemArray[] = Thread.currentThread().getStackTrace();
@@ -1017,11 +1017,11 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     @Override
     public List<XFutureVoid> notifyAllDbSetupListeners(@Nullable ExecutorService notifyService) {
         boolean cancelWarnGiven = false;
-        AprsSystemInterface parentFrame = this.aprsSystemInterface;
+        AprsSystem parentFrame = this.aprsSystem;
         if (null == parentFrame) {
             throw new IllegalStateException("this.aprsSystemInterface == null");
         }
-        AprsSystemInterface checkedParentFrame = parentFrame;
+        AprsSystem checkedParentFrame = parentFrame;
         List<XFutureVoid> origFutures = this.futures;
         if (null != origFutures) {
             for (Future<?> f : origFutures) {
@@ -1199,7 +1199,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @Override
     public String toString() {
-        return "DbSetupJPanel{" + "aprsSystemInterface=" + aprsSystemInterface + ", connected=" + connected + '}';
+        return "DbSetupJPanel{" + "aprsSystemInterface=" + aprsSystem + ", connected=" + connected + '}';
     }
 
     private volatile boolean restoringProperties = false;

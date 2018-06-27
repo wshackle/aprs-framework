@@ -797,21 +797,17 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     static public void PlayAlert(String resourceName) {
         try {
             Toolkit.getDefaultToolkit().beep();
-            System.out.println("beep");
+            System.out.println("PlayAlert "+resourceName);
             Thread.sleep(100);
             URL url = LauncherAprsJFrame.class.getResource(resourceName);
-            System.out.println("url = " + url);
             if (null != url) {
                 Clip clip = AudioSystem.getClip();
                 InputStream inputStream
                         = LauncherAprsJFrame.class.getResourceAsStream(resourceName);
                 if (null != inputStream) {
-                    System.out.println("inputStream = " + inputStream);
-                    System.out.println("inputStream.available() = " + inputStream.available());
                     AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream);
                     clip.open(audioInputStream);
                     clip.start();
-                    System.out.println("clip = " + clip);
                 }
             }
         } catch (Exception ex) {

@@ -22,7 +22,7 @@
  */
 package aprs.supervisor.main;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.misc.SlotOffsetProvider;
 import aprs.misc.Utils;
 import static aprs.misc.Utils.readFirstLine;
@@ -156,7 +156,7 @@ public class Supervisor {
     private final JTable jTableTasks;
     private final JTable jTableSharedTools;
 
-    public ConcurrentHashMap<String, AprsSystemInterface> getSlotProvidersMap() {
+    public ConcurrentHashMap<String, AprsSystem> getSlotProvidersMap() {
         return slotProvidersMap;
     }
 
@@ -351,7 +351,7 @@ public class Supervisor {
         return jtable;
     }
 
-    private final ConcurrentHashMap<String, AprsSystemInterface> slotProvidersMap
+    private final ConcurrentHashMap<String, AprsSystem> slotProvidersMap
             = new ConcurrentHashMap<>();
 
     public boolean isDebugStartReverseActions() {
@@ -387,9 +387,9 @@ public class Supervisor {
         @SuppressWarnings("WeakerAccess")
         @Override
         public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty) {
-            for (AprsSystemInterface aprsSystem : aprsSystems) {
+            for (AprsSystem aprsSystem : aprsSystems) {
                 try {
-                    AprsSystemInterface sys = aprsSystem;
+                    AprsSystem sys = aprsSystem;
                     List<Slot> l = sys.getSlotOffsets(name, true);
                     if (null != l && !l.isEmpty()) {
                         slotProvidersMap.put(name, sys);
@@ -405,7 +405,7 @@ public class Supervisor {
         @Override
         @Nullable
         public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
-            AprsSystemInterface sys = slotProvidersMap.get(tray.origName);
+            AprsSystem sys = slotProvidersMap.get(tray.origName);
             if (null != sys) {
                 return sys.absSlotFromTrayAndOffset(tray, offsetItem, 0);
             }
@@ -415,7 +415,7 @@ public class Supervisor {
         @Override
         @Nullable
         public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
-            AprsSystemInterface sys = slotProvidersMap.get(tray.origName);
+            AprsSystem sys = slotProvidersMap.get(tray.origName);
             if (null != sys) {
                 return sys.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
             }
@@ -650,8 +650,8 @@ public class Supervisor {
     }
 
     @Nullable
-    AprsSystemInterface findSystemWithRobot(String robot) {
-        for (AprsSystemInterface aj : aprsSystems) {
+    AprsSystem findSystemWithRobot(String robot) {
+        for (AprsSystem aj : aprsSystems) {
             String robotName = aj.getRobotName();
             if (robotName != null && robotName.equals(robot)) {
                 return aj;
@@ -979,7 +979,7 @@ public class Supervisor {
     private XFutureVoid stealRobot(String robotName) throws IOException, PositionMap.BadErrorMapFormatException {
         Set<String> names = new HashSet<>();
         for (int i = 0; i < aprsSystems.size() - 1; i++) {
-            AprsSystemInterface sys = aprsSystems.get(i);
+            AprsSystem sys = aprsSystems.get(i);
             if (null != sys) {
                 String sysRobotName = sys.getRobotName();
                 if (null != sysRobotName) {
@@ -1024,7 +1024,7 @@ public class Supervisor {
     private final AtomicReference<@Nullable NamedCallable<XFutureVoid>> returnRobotRunnable = new AtomicReference<>();
 
     @SuppressWarnings("unchecked")
-    private NamedCallable<XFutureVoid> setReturnRobotRunnable(String name, Callable<XFutureVoid> r, AprsSystemInterface... systems) {
+    private NamedCallable<XFutureVoid> setReturnRobotRunnable(String name, Callable<XFutureVoid> r, AprsSystem... systems) {
         NamedCallable<XFutureVoid> namedR = new NamedCallable<>(r, name, systems);
         returnRobotRunnable.set(namedR);
         return namedR;
@@ -1048,7 +1048,7 @@ public class Supervisor {
 
     void checkRobotsUniquePorts() {
         Set<Integer> set = new HashSet<>();
-        for (AprsSystemInterface sys : aprsSystems) {
+        for (AprsSystem sys : aprsSystems) {
             if (sys.isConnected()) {
                 int port = sys.getRobotCrclPort();
                 if (set.contains(port)) {
@@ -1406,32 +1406,32 @@ public class Supervisor {
     }
 
     @MonotonicNonNull
-    private AprsSystemInterface posMapInSys = null;
+    private AprsSystem posMapInSys = null;
     @MonotonicNonNull
-    private AprsSystemInterface posMapOutSys = null;
+    private AprsSystem posMapOutSys = null;
 
     @Nullable
-    AprsSystemInterface getPosMapInSys() {
+    AprsSystem getPosMapInSys() {
         return posMapInSys;
     }
 
-    void setPosMapInSys(AprsSystemInterface posMapInSys) {
+    void setPosMapInSys(AprsSystem posMapInSys) {
         this.posMapInSys = posMapInSys;
     }
 
     @Nullable
-    AprsSystemInterface getPosMapOutSys() {
+    AprsSystem getPosMapOutSys() {
         return posMapOutSys;
     }
 
-    public void setPosMapOutSys(AprsSystemInterface posMapOutSys) {
+    public void setPosMapOutSys(AprsSystem posMapOutSys) {
         this.posMapOutSys = posMapOutSys;
     }
 
     private final AtomicInteger stealRobotNumber = new AtomicInteger();
     private final AtomicInteger reverseRobotTransferNumber = new AtomicInteger();
 
-    XFutureVoid stealRobot(AprsSystemInterface stealFrom, AprsSystemInterface stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
+    XFutureVoid stealRobot(AprsSystem stealFrom, AprsSystem stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
 
         String stealForRobotName = stealFor.getRobotName();
         if (null == stealForRobotName) {
@@ -1454,7 +1454,7 @@ public class Supervisor {
         }
     }
 
-    private XFutureVoid stealRobotsInternal(AprsSystemInterface stealFrom, AprsSystemInterface stealFor, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost) throws IOException, PositionMap.BadErrorMapFormatException {
+    private XFutureVoid stealRobotsInternal(AprsSystem stealFrom, AprsSystem stealFor, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost) throws IOException, PositionMap.BadErrorMapFormatException {
         final int srn = stealRobotNumber.incrementAndGet();
         logEvent("Transferring " + stealFrom.getRobotName() + " to " + stealFor.getTaskName() + " : srn=" + srn);
         String blocker = "stealRobot" + srn;
@@ -1606,7 +1606,7 @@ public class Supervisor {
                 });
     }
 
-    private NamedCallable<XFutureVoid> setupReturnRobots(final int srn, AprsSystemInterface stealFor, AprsSystemInterface stealFrom, Map<String, String> stealForOptions, PositionMap pm) {
+    private NamedCallable<XFutureVoid> setupReturnRobots(final int srn, AprsSystem stealFor, AprsSystem stealFrom, Map<String, String> stealForOptions, PositionMap pm) {
         String stealFromOrigCrclHost = stealFrom.getRobotCrclHost();
         if (null == stealFromOrigCrclHost) {
             throw new IllegalStateException("null robotCrclHost in stealFrom =" + stealFrom);
@@ -1632,7 +1632,7 @@ public class Supervisor {
     private final AtomicLong totalRandomDelays = new AtomicLong();
     private final AtomicInteger randomDelayCount = new AtomicInteger();
 
-    private NamedCallable<XFutureVoid> setupRobotReturnInternal(AprsSystemInterface stealFrom, AprsSystemInterface stealFor, final int srn, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost, Map<String, String> stealForOptions, PositionMap pm, String stealForOrigCrclHost) {
+    private NamedCallable<XFutureVoid> setupRobotReturnInternal(AprsSystem stealFrom, AprsSystem stealFor, final int srn, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost, Map<String, String> stealForOptions, PositionMap pm, String stealForOrigCrclHost) {
         int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
         int stealForOrigCrclPort = stealFor.getRobotCrclPort();
         String returnName = "Return  : srn=" + srn + " " + stealForRobotName + "-> " + stealFor.getTaskName() + " , " + stealFromRobotName + "->" + stealFrom.getTaskName();
@@ -1685,7 +1685,7 @@ public class Supervisor {
                 }, stealFor, stealFrom);
     }
 
-    private void checkRunningOrDoingActions(AprsSystemInterface sys, int srn) throws IllegalStateException {
+    private void checkRunningOrDoingActions(AprsSystem sys, int srn) throws IllegalStateException {
         if (sys.isRunningCrclProgram()) {
             String msg = sys.getTaskName() + " is running crcl program when trying to return robot" + " : srn=" + srn;
             logEvent(msg);
@@ -1698,11 +1698,11 @@ public class Supervisor {
         }
     }
 
-    private void setupUnstealRobots(int srn, AprsSystemInterface stealFor, AprsSystemInterface stealFrom, String stealForRobotName, @Nullable GraphicsDevice gd) {
+    private void setupUnstealRobots(int srn, AprsSystem stealFor, AprsSystem stealFrom, String stealForRobotName, @Nullable GraphicsDevice gd) {
         unStealRobotsSupplier.set(() -> executeUnstealRobots(srn, stealFor, stealFrom, stealForRobotName, gd));
     }
 
-    private XFutureVoid executeUnstealRobots(final int srn, AprsSystemInterface stealFor, AprsSystemInterface stealFrom, String stealForRobotName, @Nullable GraphicsDevice gd) {
+    private XFutureVoid executeUnstealRobots(final int srn, AprsSystem stealFor, AprsSystem stealFrom, String stealForRobotName, @Nullable GraphicsDevice gd) {
         String revBlocker = "reverseRobotTransfer" + reverseRobotTransferNumber.incrementAndGet();
         logEvent("Reversing robot transfer after robot reenabled." + " : srn=" + srn);
         disallowToggles(revBlocker, stealFor, stealFrom);
@@ -1786,7 +1786,7 @@ public class Supervisor {
         return "";
     }
 
-    private void completeSystemsContinueIndFuture(AprsSystemInterface sys, boolean value) {
+    private void completeSystemsContinueIndFuture(AprsSystem sys, boolean value) {
         assert (null != sys) : assertFail() + "sys == null";
         String sysRobotName = sys.getRobotName();
         assert (sysRobotName != null) : assertFail() + "sys.getRobotName() == null: sys=" + sys + " @AssumeAssertion(nullness)";
@@ -1987,7 +1987,7 @@ public class Supervisor {
      *
      * @param sys system to add
      */
-    void addAprsSystem(AprsSystemInterface sys) {
+    void addAprsSystem(AprsSystem sys) {
         sys.setPriority(aprsSystems.size() + 1);
         sys.setVisible(true);
         sys.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -2383,7 +2383,7 @@ public class Supervisor {
             }
         }
 
-        for (AprsSystemInterface aprsSystem : aprsSystems) {
+        for (AprsSystem aprsSystem : aprsSystems) {
             aprsSystem.debugAction();
         }
 
@@ -2417,7 +2417,7 @@ public class Supervisor {
         stopColorTextReader();
         closeAllAprsSystems();
         if (null != aprsSystems) {
-            for (AprsSystemInterface sys : aprsSystems) {
+            for (AprsSystem sys : aprsSystems) {
                 sys.forceClose();
             }
         }
@@ -2576,7 +2576,7 @@ public class Supervisor {
         @SuppressWarnings("unchecked")
         XFutureVoid allResetFutures[] = new XFutureVoid[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface sys = aprsSystems.get(i);
+            AprsSystem sys = aprsSystems.get(i);
             allResetFutures[i] = sys.reset(reloadSimFiles);
             sys.setCorrectionMode(false);
         }
@@ -2743,8 +2743,8 @@ public class Supervisor {
      * @return system with given task
      */
     @Nullable
-    public AprsSystemInterface getSysByTask(String s) {
-        for (AprsSystemInterface sys : aprsSystems) {
+    public AprsSystem getSysByTask(String s) {
+        for (AprsSystem sys : aprsSystems) {
             if (sys.getTaskName().startsWith(s)) {
                 return sys;
             }
@@ -2872,7 +2872,7 @@ public class Supervisor {
         }
     }
 
-    private void setTeachSystemFilter(@Nullable AprsSystemInterface sys) {
+    private void setTeachSystemFilter(@Nullable AprsSystem sys) {
         if (null == sys) {
             object2DOuterJPanel1.setForceOutputFlag(false);
             object2DOuterJPanel1.setShowOutputItems(false);
@@ -2909,7 +2909,7 @@ public class Supervisor {
                 .min().orElse(Double.POSITIVE_INFINITY);
     }
 
-    List<PhysicalItem> filterForSystem(AprsSystemInterface sys, List<PhysicalItem> listIn) {
+    List<PhysicalItem> filterForSystem(AprsSystem sys, List<PhysicalItem> listIn) {
 
         Set<PhysicalItem> allTrays = listIn.stream()
                 .filter(x -> "KT".equals(x.getType()) || "PT".equals(x.getType()))
@@ -2940,7 +2940,7 @@ public class Supervisor {
     private XFutureVoid lookForPartsAll() {
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface aprsSys = aprsSystems.get(i);
+            AprsSystem aprsSys = aprsSystems.get(i);
             futures[i] = aprsSys.startLookForParts();
         }
         return XFuture.allOfWithName("lookForPartsAll", futures);
@@ -2949,7 +2949,7 @@ public class Supervisor {
     private XFutureVoid clearReverseAll() {
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface aprsSys = aprsSystems.get(i);
+            AprsSystem aprsSys = aprsSystems.get(i);
             if (aprsSys.isReverseFlag()) {
                 logEvent("Set reverse flag false for " + aprsSys);
                 futures[i] = aprsSys.startSetReverseFlag(false, false);
@@ -2965,7 +2965,7 @@ public class Supervisor {
         if (isUseTeachCameraSelected()) {
             teachItems = object2DOuterJPanel1.getItems();
         }
-        for (AprsSystemInterface aprsSys : aprsSystems) {
+        for (AprsSystem aprsSys : aprsSystems) {
             aprsSys.setCorrectionMode(false);
             if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
                 aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0);
@@ -3026,7 +3026,7 @@ public class Supervisor {
                     continue OUTER_WHILE;
                 }
             }
-            for (AprsSystemInterface aprsSys : aprsSystems) {
+            for (AprsSystem aprsSys : aprsSystems) {
                 List<String> startingKitStrings = aprsSys.getLastCreateActionListFromVisionKitToCheckStrings();
                 aprsSys.setCorrectionMode(true);
                 if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
@@ -3325,14 +3325,14 @@ public class Supervisor {
 
     private final AtomicLong totalBlockTime = new AtomicLong();
 
-    private void allowToggles(String blockerName, AprsSystemInterface... systems) {
+    private void allowToggles(String blockerName, AprsSystem... systems) {
 
         if (closing) {
             return;
         }
         try {
             if (null != systems && systems.length > 0) {
-                for (AprsSystemInterface sys : systems) {
+                for (AprsSystem sys : systems) {
                     if (!checkMaxCycles()) {
                         break;
                     } else if (sys.getRobotName() == null || !sys.isConnected() || sys.isAborting()) {
@@ -3394,7 +3394,7 @@ public class Supervisor {
     private final ConcurrentHashMap<String, LockInfo> toggleBlockerMap = new ConcurrentHashMap<>();
 
     @SuppressWarnings("UnusedReturnValue")
-    private LockInfo disallowToggles(String blockerName, AprsSystemInterface... systems) {
+    private LockInfo disallowToggles(String blockerName, AprsSystem... systems) {
 
         disallowTogglesCount.incrementAndGet();
         LockInfo lockInfo = new LockInfo(blockerName);
@@ -3404,7 +3404,7 @@ public class Supervisor {
         togglesAllowed = false;
         togglesAllowedXfuture.updateAndGet(this::createWaitForTogglesFuture);
         if (null != systems) {
-            for (AprsSystemInterface sys : systems) {
+            for (AprsSystem sys : systems) {
                 addFinishBlocker(sys.getMyThreadId(), lockInfo.getFuture());
             }
         }
@@ -3490,7 +3490,7 @@ public class Supervisor {
     }
 
     private boolean allSystemsOk() {
-        for (AprsSystemInterface sys : aprsSystems) {
+        for (AprsSystem sys : aprsSystems) {
             CRCLStatusType status = sys.getCurrentStatus();
             if (status != null
                     && status.getCommandStatus() != null
@@ -3636,7 +3636,7 @@ public class Supervisor {
         @SuppressWarnings("rawtypes")
         XFuture fa[] = new XFuture[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface sys = aprsSystems.get(i);
+            AprsSystem sys = aprsSystems.get(i);
             if (sys.isReverseFlag() != reverseFlag) {
                 logEvent("setting reverseFlag for " + sys + " to " + reverseFlag);
                 fa[i] = sys.startSetReverseFlag(reverseFlag);
@@ -3648,7 +3648,7 @@ public class Supervisor {
     }
 
     private void disconnectAllNoLog() {
-        for (AprsSystemInterface aprsSystem : aprsSystems) {
+        for (AprsSystem aprsSystem : aprsSystems) {
             aprsSystem.setConnected(false);
         }
     }
@@ -3658,7 +3658,7 @@ public class Supervisor {
      */
     private void disconnectAll() {
         logEvent("disconnectAll");
-        for (AprsSystemInterface sys : aprsSystems) {
+        for (AprsSystem sys : aprsSystems) {
             if (sys.isConnected()) {
                 logEvent("Disconnecting " + sys);
                 sys.setConnected(false);
@@ -3699,7 +3699,7 @@ public class Supervisor {
     XFutureVoid startContinuousScanAndRun() {
         logEvent("Start Continuous scan and run");
         connectAll();
-        for (AprsSystemInterface aprsSys : aprsSystems) {
+        for (AprsSystem aprsSys : aprsSystems) {
             aprsSys.setLastCreateActionListFromVisionKitToCheckStrings(Collections.emptyList());
         }
         ContinuousDemoFuture
@@ -3870,7 +3870,7 @@ public class Supervisor {
             return XFutureVoid.completedFutureWithName(msg);
         }
         String blockerName = "start continueContinuousDemo" + ContinuousDemoCycle.get();
-        AprsSystemInterface sysArray[] = getAprsSystems().toArray(new AprsSystemInterface[0]);
+        AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
         disallowToggles(blockerName, sysArray);
         return ContinuousDemoSetup()
                 .thenComposeToVoid("ContinuouseDemo.part2", x2 -> {
@@ -3913,18 +3913,17 @@ public class Supervisor {
 
     private XFuture<@Nullable Void> ContinuousDemoSetup() {
         return XFuture
-                .runAsync("contiousDemoSetup", () -> {
-                    System.out.println("stealingRobots = " + stealingRobots);
-                    System.out.println("returnRobotRunnable = " + returnRobotRunnable);
-                }, supervisorExecutorService)
-                .thenComposeAsync("contiousDemoSetup.part2", x -> {
+                .supplyAsync("contiousDemoSetup", () -> {
+//                    System.out.println("stealingRobots = " + stealingRobots);
+//                    System.out.println("returnRobotRunnable = " + returnRobotRunnable);
                     if (this.stealingRobots || null != returnRobotRunnable.get()) {
                         disconnectAll();
-                        return returnRobotsDirect("contiousDemoSetup.part2");
+                        return returnRobotsDirect("contiousDemoSetup");
                     } else {
                         return XFuture.completedFuture(null);
                     }
                 }, supervisorExecutorService)
+                .thenCompose(x-> x)
                 .thenRunAsync(() -> {
 //                    disconnectAll();
                     checkRobotsUniquePorts();
@@ -3948,7 +3947,7 @@ public class Supervisor {
     XFutureVoid startReverseActions() {
         logEvent("startReverseActions");
         String blockerName = "start startReverseActions" + ContinuousDemoCycle.get();
-        AprsSystemInterface sysArray[] = getAprsSystems().toArray(new AprsSystemInterface[0]);
+        AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
         disallowToggles(blockerName, sysArray);
         setAllReverseFlag(true);
         if (debugStartReverseActions) {
@@ -4036,7 +4035,7 @@ public class Supervisor {
     private XFuture<Boolean> startCheckAndEnableAllRobots() {
 
         String blockerName = "startCheckAndEnableAllRobots" + enableAndCheckAllRobotsCount.incrementAndGet();
-        AprsSystemInterface sysArray[] = getAprsSystems().toArray(new AprsSystemInterface[0]);
+        AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
         disallowToggles(blockerName, sysArray);
         XFutureVoid step1Future = updateRobotsTableFromMapsAndEnableAll();
         boolean KeepAndDisplayXFutureProfilesSelected = isKeepAndDisplayXFutureProfilesSelected();
@@ -4090,7 +4089,7 @@ public class Supervisor {
         @SuppressWarnings("unchecked")
         XFuture<Boolean> futures[] = (XFuture<Boolean>[]) new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface sys = aprsSystems.get(i);
+            AprsSystem sys = aprsSystems.get(i);
             futures[i] = sys.startCheckEnabled()
                     .thenApplyAsync(x -> {
                         logEvent(sys.getRobotName() + " checkEnabled returned " + x);
@@ -4140,7 +4139,7 @@ public class Supervisor {
         if (!isPauseSelected()) {
             setPauseSelected(true);
         }
-        for (AprsSystemInterface aprsSys : aprsSystems) {
+        for (AprsSystem aprsSys : aprsSystems) {
             if (aprsSys.isConnected() && !aprsSys.isPaused()) {
                 aprsSys.pause();
             }
@@ -4181,13 +4180,13 @@ public class Supervisor {
         if (isPauseSelected()) {
             setPauseSelected(false);
         }
-        for (AprsSystemInterface aprsSys : aprsSystems) {
+        for (AprsSystem aprsSys : aprsSystems) {
             if (aprsSys.isPaused()) {
                 aprsSys.resume();
             }
         }
         completeResumeFuture();
-        for (AprsSystemInterface aprsSys : aprsSystems) {
+        for (AprsSystem aprsSys : aprsSystems) {
             if (aprsSys.isPaused()) {
                 throw new IllegalStateException(aprsSys + " is still paused after resume");
             }
@@ -4199,7 +4198,7 @@ public class Supervisor {
     private final ConcurrentHashMap<Integer, XFuture<Boolean>> systemContinueMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, XFutureVoid> debugSystemContinueMap = new ConcurrentHashMap<>();
 
-    private XFutureVoid continueSingleContinuousDemo(AprsSystemInterface sys, int recurseNum) {
+    private XFutureVoid continueSingleContinuousDemo(AprsSystem sys, int recurseNum) {
         XFutureVoid ret = debugSystemContinueMap.compute(sys.getMyThreadId(),
                 (k, v) -> {
                     return continueSingleContinuousDemoInner(sys, recurseNum);
@@ -4217,7 +4216,7 @@ public class Supervisor {
             }
         }
         assert (i == futures.length) : "futures=" + Arrays.toString(futures) + ",keySet=" + keySet + ",i=" + i;
-        for (AprsSystemInterface sysTemp : aprsSystems) {
+        for (AprsSystem sysTemp : aprsSystems) {
             if (debugSystemContinueMap.containsKey(sysTemp.getMyThreadId())) {
                 tasksNames.append(sysTemp.getTaskName()).append(',');
             }
@@ -4229,7 +4228,7 @@ public class Supervisor {
         return ret;
     }
 
-    private XFutureVoid continueSingleContinuousDemoInner(AprsSystemInterface sys, int recurseNum) {
+    private XFutureVoid continueSingleContinuousDemoInner(AprsSystem sys, int recurseNum) {
         String toggleLockName = "continueSingleContinuousDemoInner" + recurseNum + "_" + sys.getMyThreadId();
         return systemContinueMap.computeIfAbsent(sys.getMyThreadId(), k -> {
             return new XFuture<>("continueSingleContinuousDemo.holder " + sys);
@@ -4258,7 +4257,7 @@ public class Supervisor {
         StringBuilder tasksNames = new StringBuilder();
         boolean revFirst = isContinuousDemoRevFirstSelected();
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface sys = aprsSystems.get(i);
+            AprsSystem sys = aprsSystems.get(i);
             logEvent("startContinuousDemo(reverseFirst=false) for " + sys);
             futures[i] = sys.startContinuousDemo("startAllIndContinuousDemo", revFirst)
                     .thenComposeToVoid(x -> continueSingleContinuousDemo(sys, 1));
@@ -4278,7 +4277,7 @@ public class Supervisor {
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         StringBuilder tasksNames = new StringBuilder();
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface sys = aprsSystems.get(i);
+            AprsSystem sys = aprsSystems.get(i);
             int sysThreadId = sys.getMyThreadId();
             logEvent("startActions for " + sys);
             futures[i] = sys.startActions("startAllActions" + saaNumber)
@@ -4379,7 +4378,7 @@ public class Supervisor {
         }
     }
 
-    private XFutureVoid finishAction(AprsSystemInterface sys) {
+    private XFutureVoid finishAction(AprsSystem sys) {
         return finishAction(sys.getMyThreadId());
     }
 
@@ -4388,7 +4387,7 @@ public class Supervisor {
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         StringBuilder tasksNames = new StringBuilder();
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface sys = aprsSystems.get(i);
+            AprsSystem sys = aprsSystems.get(i);
             int sysThreadId = sys.getMyThreadId();
             logEvent("Continue actions for " + sys.getTaskName() + " with " + sys.getRobotName());
             futures[i] = aprsSystems.get(i).continueActionList("continueAllActions")
@@ -4465,7 +4464,7 @@ public class Supervisor {
      */
     void clearAllErrors() {
         boolean origIgnoreTitleErrs = ignoreTitleErrors.getAndSet(true);
-        for (AprsSystemInterface aprsSystem : aprsSystems) {
+        for (AprsSystem aprsSystem : aprsSystems) {
             aprsSystem.clearErrors();
         }
         if (!origIgnoreTitleErrs) {
@@ -4500,7 +4499,7 @@ public class Supervisor {
             logPrintStream.close();
             logPrintStream = null;
         }
-        for (AprsSystemInterface aprsSystem : aprsSystems) {
+        for (AprsSystem aprsSystem : aprsSystems) {
             aprsSystem.immediateAbort();
         }
         if (this.stealingRobots || null != returnRobotRunnable.get()) {
@@ -4579,7 +4578,7 @@ public class Supervisor {
     }
 
     void restoreRobotNames() {
-        for (AprsSystemInterface aprsSys : aprsSystems) {
+        for (AprsSystem aprsSys : aprsSystems) {
             if (aprsSys.isConnected()) {
                 continue;
             }
@@ -4603,7 +4602,7 @@ public class Supervisor {
             log(Level.SEVERE, null, ex);
         }
         boolean globalPause = isPauseSelected();
-        for (AprsSystemInterface aprsSys : aprsSystems) {
+        for (AprsSystem aprsSys : aprsSystems) {
             if (!aprsSys.isConnected()) {
                 aprsSys.setConnected(true);
             }
@@ -4629,7 +4628,7 @@ public class Supervisor {
         XFuture<?> prevLastFuture = lastFutureReturned;
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface sys = aprsSystems.get(i);
+            AprsSystem sys = aprsSystems.get(i);
             futures[i] = sys.startSafeAbort("safeAbortAll")
                     .thenRun(() -> logEvent("safeAbort completed for " + sys + " (part of safeAbortAll)"));
         }
@@ -5036,7 +5035,7 @@ public class Supervisor {
     public void performRemoveSelectedSystemAction(int selectedIndex) {
         if (selectedIndex >= 0 && selectedIndex < aprsSystems.size()) {
             try {
-                AprsSystemInterface aj = aprsSystems.remove(selectedIndex);
+                AprsSystem aj = aprsSystems.remove(selectedIndex);
                 try {
                     aj.setOnCloseRunnable(null);
                     aj.close();
@@ -5104,14 +5103,14 @@ public class Supervisor {
         saveLastTeachPropsFile(f);
     }
 
-    private final List<AprsSystemInterface> aprsSystems = new ArrayList<>();
+    private final List<AprsSystem> aprsSystems = new ArrayList<>();
 
     /**
      * Get the value of aprsSystems
      *
      * @return the value of aprsSystems
      */
-    List<AprsSystemInterface> getAprsSystems() {
+    List<AprsSystem> getAprsSystems() {
         return Collections.unmodifiableList(aprsSystems);
     }
 
@@ -5123,9 +5122,9 @@ public class Supervisor {
         if (aprsSystems.isEmpty()) {
             return XFutureVoid.completedFutureWithName("closeAllAprsSystems.aprsSystems=" + aprsSystems);
         }
-        List<AprsSystemInterface> aprsSystemsCopy = new ArrayList<>(aprsSystems);
+        List<AprsSystem> aprsSystemsCopy = new ArrayList<>(aprsSystems);
         aprsSystems.clear();
-        for (AprsSystemInterface aprsSystemInterface : aprsSystemsCopy) {
+        for (AprsSystem aprsSystemInterface : aprsSystemsCopy) {
             try {
                 aprsSystemInterface.setOnCloseRunnable(null);
                 aprsSystemInterface.close();
@@ -5207,7 +5206,7 @@ public class Supervisor {
 
     private XFutureVoid completeLoadSetupFile(File f) {
         try {
-            aprsSystems.sort(Comparator.comparingInt(AprsSystemInterface::getPriority));
+            aprsSystems.sort(Comparator.comparingInt(AprsSystem::getPriority));
             updateTasksTable();
             return updateRobotsTable()
                     .thenRun(() -> {
@@ -5250,10 +5249,10 @@ public class Supervisor {
         }
     }
     
-    public XFutureVoid clearWayToHolders(AprsSystemInterface requester, String holderName) {
+    public XFutureVoid clearWayToHolders(AprsSystem requester, String holderName) {
         List<XFutureVoid> l = new ArrayList<>();
         String name = "clearWayToHolders."+holderName+"."+requester.getTaskName();
-        for(AprsSystemInterface sys : aprsSystems) {
+        for(AprsSystem sys : aprsSystems) {
             if(sys != requester && !Objects.equals(sys.getTaskName(), requester.getTaskName())) {
                 l.add(sys.startSafeAbort(name));
             }
@@ -5262,10 +5261,10 @@ public class Supervisor {
                 .thenComposeToVoid( () -> clearWayToHoldersStep2(requester,holderName));
     }
     
-    private XFutureVoid clearWayToHoldersStep2(AprsSystemInterface requester, String holderName) {
+    private XFutureVoid clearWayToHoldersStep2(AprsSystem requester, String holderName) {
         List<XFuture<Boolean>> l = new ArrayList<>();
         String name = "clearWayToHolders."+holderName+"."+requester.getTaskName();
-        for(AprsSystemInterface sys : aprsSystems) {
+        for(AprsSystem sys : aprsSystems) {
             if(sys != requester && !Objects.equals(sys.getTaskName(), requester.getTaskName())) {
                 l.add(sys.startLookForParts());
             }
@@ -5422,7 +5421,7 @@ public class Supervisor {
         BufferedImage liveImages[] = new BufferedImage[aprsSystems.size()];
         boolean newImage = false;
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface aprsSystemInterface = aprsSystems.get(i);
+            AprsSystem aprsSystemInterface = aprsSystems.get(i);
             String taskName = aprsSystemInterface.getTaskName();
             if (null != lastUpdateTaskTableTaskNames) {
                 if (!Objects.equals(taskName, lastUpdateTaskTableTaskNames[i])) {
@@ -5611,7 +5610,7 @@ public class Supervisor {
 
         if (depth >= XFUTURE_MAX_DEPTH) {
             if (!firstDepthOverOccured) {
-                Logger.getLogger(AprsSystemInterface.class
+                Logger.getLogger(AprsSystem.class
                         .getName()).log(Level.SEVERE, "xfutureToNode : depth >= XFUTURE_MAX_DEPTH");
                 firstDepthOverOccured = true;
             }
@@ -5647,7 +5646,7 @@ public class Supervisor {
         if (closing) {
             return XFutureVoid.completedFutureWithName("updateRobotsTable.closing");
         }
-        for (AprsSystemInterface aprsSystemInterface : aprsSystems) {
+        for (AprsSystem aprsSystemInterface : aprsSystems) {
             String robotname = aprsSystemInterface.getRobotName();
             if (null != robotname) {
                 robotEnableMap.put(robotname, true);
@@ -5661,7 +5660,7 @@ public class Supervisor {
                 });
     }
 
-    private XFutureVoid loadRobotsTableFromSystemsList(List<AprsSystemInterface> aprsSystems) {
+    private XFutureVoid loadRobotsTableFromSystemsList(List<AprsSystem> aprsSystems) {
         if (null != displayJFrame) {
             final AprsSupervisorDisplayJFrame checkedDisplayJFrame = displayJFrame;
             return Utils.runOnDispatchThread(() -> checkedDisplayJFrame.loadRobotsTableFromSystemsList(aprsSystems));

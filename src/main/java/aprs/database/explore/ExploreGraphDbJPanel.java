@@ -22,7 +22,7 @@
  */
 package aprs.database.explore;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.misc.Utils;
 import static aprs.misc.Utils.autoResizeTableColWidths;
 import aprs.database.DbSetup;
@@ -1182,15 +1182,15 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
     private javax.swing.JTextField jTextFieldSelectedNodeName;
     // End of variables declaration//GEN-END:variables
 
-    @MonotonicNonNull private AprsSystemInterface aprsSystemInterface = null;
+    @MonotonicNonNull private AprsSystem aprsSystem = null;
 
     /**
      * Set the value of aprsSystemInterface
      *
-     * @param aprsSystemInterface new value of aprsSystemInterface
+     * @param aprsSystem new value of aprsSystemInterface
      */
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
-        this.aprsSystemInterface = aprsSystemInterface;
+    public void setAprsSystem(AprsSystem aprsSystem) {
+        this.aprsSystem = aprsSystem;
     }
 
     @Override
@@ -1216,11 +1216,11 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                                             System.err.println();
                                             System.err.println("Exception handled at ");
 
-                                            if (null != aprsSystemInterface) {
-                                                if (aprsSystemInterface.isEnableDebugDumpStacks()) {
+                                            if (null != aprsSystem) {
+                                                if (aprsSystem.isEnableDebugDumpStacks()) {
                                                     Thread.dumpStack();
                                                 }
-                                                aprsSystemInterface.setTitleErrorString("Database error: " + ex.toString());
+                                                aprsSystem.setTitleErrorString("Database error: " + ex.toString());
                                             }
                                         }
                                         return c;

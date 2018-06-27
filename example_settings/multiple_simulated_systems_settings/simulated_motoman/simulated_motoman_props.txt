@@ -1,4 +1,5 @@
 #  Automatically saved 
+LogCrclProgramsEnabled=true
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 USETEACHTABLE=true
 aprs.robotName=Sim_Motoman

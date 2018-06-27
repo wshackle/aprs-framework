@@ -1464,7 +1464,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      * directory does not exist.
      */
     
-    public File getlogFileDir() throws IOException;
+    public File getLogDir() throws IOException;
 
     /**
      * Create a temporary file in the current log file directory with the

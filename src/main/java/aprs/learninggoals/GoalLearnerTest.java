@@ -23,7 +23,7 @@
 package aprs.learninggoals;
 
 import aprs.misc.ActiveWinEnum;
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.actions.executor.Action;
 import aprs.misc.SlotOffsetProvider;
 import aprs.database.KitTray;
@@ -262,7 +262,7 @@ public class GoalLearnerTest {
                 });
     }
 
-    private static void completeCreateSimpleViewer(AprsSystemInterface aprsSystem, SlotOffsetProvider sop, List<PhysicalItem> testData) {
+    private static void completeCreateSimpleViewer(AprsSystem aprsSystem, SlotOffsetProvider sop, List<PhysicalItem> testData) {
         aprsSystem.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         aprsSystem.setExternalSlotOffsetProvider(sop);
         aprsSystem.startActionListExecutor();

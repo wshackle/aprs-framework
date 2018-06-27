@@ -252,6 +252,17 @@ public class Utils {
         Date date = new Date();
         return dateFormat.format(date);
     }
+    
+    /**
+     * Get the current date and time in the default format.
+     *
+     * @return date and time in formatted string
+     */
+    public static String getDateTimeString(long time) {
+        Date date = new Date(time);
+        return dateFormat.format(date);
+    }
+    
 
     private static final DateFormat timeFormat = new SimpleDateFormat("HHmmss.SSS");
 
@@ -265,6 +276,15 @@ public class Utils {
         return timeFormat.format(date);
     }
 
+    /**
+     * Get the current time in the default format.
+     *
+     * @return time in formatted string
+     */
+    public static String getTimeString(long time) {
+        Date date = new Date(time);
+        return timeFormat.format(date);
+    }
     private static final Logger LOGGER = Logger.getLogger(Utils.class.getName());
 
     /**
@@ -733,7 +753,17 @@ public class Utils {
         for (int i = 80; i < message.length(); i += 80) {
             msgCopy = msgCopy.substring(0, i) + "\r\n" + msgCopy.substring(i);
         }
-        JOptionPane.showMessageDialog(component, msgCopy);
+        if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+            JOptionPane.showMessageDialog(component, msgCopy);
+        } else {
+            try { 
+                final Component componentFinal = component;
+                final String msgCopyFinal =msgCopy;
+                javax.swing.SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(componentFinal, msgCopyFinal));
+            } catch (Exception ex) {
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
     
     public static void readCsvFileToTable(JTable jtable,File f) {

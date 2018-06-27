@@ -128,6 +128,7 @@ import crcl.utils.CrclCommandWrapper;
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -148,7 +149,7 @@ import org.apache.commons.csv.CSVPrinter;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @SuppressWarnings("SameReturnValue")
-public class AprsSystem implements AprsSystemInterface {
+public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
     @MonotonicNonNull
     private final AprsSystemDisplayJFrame aprsSystemDisplayJFrame;
@@ -192,11 +193,12 @@ public class AprsSystem implements AprsSystemInterface {
     private volatile boolean snapshotsEnabled = false;
 
     private final AtomicReference<@Nullable Runnable> onCloseRunnable = new AtomicReference<>();
-    
+
+    @Override
     public void setOnCloseRunnable(@Nullable Runnable r) {
         onCloseRunnable.set(r);
     }
-    
+
     /**
      * Check if the user has selected a check box asking for snapshot files to
      * be created for logging/debugging.
@@ -399,18 +401,18 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     private volatile boolean stepMode = false;
-    
+
     public void setStepMode(boolean stepMode) {
-        if(null == crclClientJInternalFrame) {
+        if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("null == crclClientJInternalFrame");
         }
         crclClientJInternalFrame.setStepMode(stepMode);
-        if(null != aprsSystemDisplayJFrame) {
+        if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setStepping(stepMode);
         }
         this.stepMode = stepMode;
     }
-    
+
     public boolean isStepMode() {
         return this.stepMode;
 //        if(null == crclClientJInternalFrame) {
@@ -418,7 +420,7 @@ public class AprsSystem implements AprsSystemInterface {
 //        }
 //        return crclClientJInternalFrame.isStepMode();
     }
-    
+
     /**
      * Get the most recent list of parts and kit trays from the vision system.
      * This will not block waiting for the vision system or database but could
@@ -629,6 +631,8 @@ public class AprsSystem implements AprsSystemInterface {
         return debug;
     }
 
+    @Nullable private volatile String runName = null;
+
     /**
      * Creates a run name useful for identifying a run in log files or the names
      * of snapshot files. The name is composed of the current robot name, task
@@ -638,8 +642,14 @@ public class AprsSystem implements AprsSystemInterface {
      */
     @Override
     public String getRunName() {
-        return ((this.taskName != null) ? this.taskName.replace(" ", "-") : "") + "-run-" + String.format("%03d", runNumber.get()) + "-"
+        String rn = this.runName;
+        if (null != rn) {
+            return rn;
+        }
+        String ret = ((this.taskName != null) ? this.taskName.replace(" ", "-") : "") + "-run-" + String.format("%03d", runNumber.get()) + "-"
                 + ((this.robotName != null) ? this.robotName : "") + (isReverseFlag() ? "-Reverse" : "");
+        this.runName = ret;
+        return ret;
     }
 
     /**
@@ -941,17 +951,17 @@ public class AprsSystem implements AprsSystemInterface {
         return safeAbortFuture;
     }
 
-    @Nullable private volatile XFutureVoid lastClearWayToHoldersFuture =null;
-    
-    public XFutureVoid clearWayToHolders(String holderName){
-        if(null == supervisor) {
+    @Nullable private volatile XFutureVoid lastClearWayToHoldersFuture = null;
+
+    public XFutureVoid clearWayToHolders(String holderName) {
+        if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
         XFutureVoid ret = supervisor.clearWayToHolders(this, holderName);
         lastClearWayToHoldersFuture = ret;
         return ret;
     }
-    
+
     /**
      * Get the future that can be used to determine when the last requested run
      * program is finished. Only useful for debugging.
@@ -1406,9 +1416,17 @@ public class AprsSystem implements AprsSystemInterface {
      */
     public void setTaskName(String taskName) {
         this.taskName = taskName;
+        clearLogDirCache();
         updateTitle("", "");
     }
 
+    private void clearLogDirCache() {
+        this.runName = null;
+        this.logDir = null;
+        this.logCrclProgramDir = null;
+        this.logImageDir = null;
+    }
+    
     @Nullable
     private String robotName = null;
 
@@ -1455,6 +1473,7 @@ public class AprsSystem implements AprsSystemInterface {
             setRobotNameNonNullThreadTime = System.currentTimeMillis();
         }
         this.robotName = robotName;
+        clearLogDirCache();
         Utils.runOnDispatchThread(() -> updateTitle("", ""));
     }
 
@@ -1917,7 +1936,7 @@ public class AprsSystem implements AprsSystemInterface {
         }
         return pddlExecutorJInternalFrame1.getToolsInHolders();
     }
-    
+
     static private class MyPrintStream extends PrintStream {
 
         final private PrintStream ps;
@@ -2050,8 +2069,10 @@ public class AprsSystem implements AprsSystemInterface {
                 updateTitle();
                 if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
                     setTitleErrorStringTrace = Thread.currentThread().getStackTrace();
+                    System.err.println("RunName=" + getRunName());
                     System.err.println(newTitleErrorString);
                     Thread.dumpStack();
+                    LauncherAprsJFrame.PlayAlert2();
                     boolean snapshotsEnabled = this.isSnapshotsEnabled();
                     if (!snapshotsEnabled) {
                         setSnapshotsEnabled(true);
@@ -3200,7 +3221,7 @@ public class AprsSystem implements AprsSystemInterface {
             }
             object2DViewJInternalFrame = new Object2DViewJInternalFrame();
             updateSubPropertiesFiles();
-            object2DViewJInternalFrame.setAprsSystemInterface(this);
+            object2DViewJInternalFrame.setAprsSystem(this);
             if (null != externalSlotOffsetProvider) {
                 object2DViewJInternalFrame.setSlotOffsetProvider(externalSlotOffsetProvider);
             }
@@ -3451,7 +3472,7 @@ public class AprsSystem implements AprsSystemInterface {
     private void createDbSetupFrame() {
         if (null == dbSetupJInternalFrame) {
             dbSetupJInternalFrame = new DbSetupJInternalFrame();
-            dbSetupJInternalFrame.setAprsSystemInterface(this);
+            dbSetupJInternalFrame.setAprsSystem(this);
             dbSetupJInternalFrame.pack();
             dbSetupJInternalFrame.loadRecentSettings();
             addToDesktopPane(dbSetupJInternalFrame);
@@ -3486,7 +3507,7 @@ public class AprsSystem implements AprsSystemInterface {
     public void startVisionToDbJinternalFrame() {
         try {
             visionToDbJInternalFrame = new VisionToDbJInternalFrame();
-            visionToDbJInternalFrame.setAprsSystemInterface(this);
+            visionToDbJInternalFrame.setAprsSystem(this);
             updateSubPropertiesFiles();
             visionToDbJInternalFrame.loadProperties();
             visionToDbJInternalFrame.pack();
@@ -3526,7 +3547,7 @@ public class AprsSystem implements AprsSystemInterface {
                             }
                             ExecutorJInternalFrame execFrame = this.pddlExecutorJInternalFrame1;
                             assert (null != execFrame) : "";
-                            execFrame.setAprsSystemInterface(this);
+                            execFrame.setAprsSystem(this);
                             execFrame.setVisible(true);
                             addToDesktopPane(execFrame);
                             maximizeJInteralFrame(execFrame);
@@ -4357,7 +4378,7 @@ public class AprsSystem implements AprsSystemInterface {
     public void takeSnapshots(String comment) {
         try {
             if (snapshotsEnabled()) {
-                takeSimViewSnapshot(createTempFile(comment, ".PNG"), (PmCartesian) null, (String) null);
+                takeSimViewSnapshot(createImageTempFile(comment), (PmCartesian) null, (String) null);
                 if (null != visionToDbJInternalFrame && visionToDbJInternalFrame.isDbConnected()) {
                     startVisionToDbNewItemsImageSave(createTempFile(comment + "_new_database_items", ".PNG"));
                 }
@@ -4541,8 +4562,8 @@ public class AprsSystem implements AprsSystemInterface {
         return supervisorEventLogger;
     }
 
-    @MonotonicNonNull private volatile Supervisor supervisor=null;
-    
+    @MonotonicNonNull private volatile Supervisor supervisor = null;
+
     /**
      * Get the value of supervisor
      *
@@ -4561,7 +4582,7 @@ public class AprsSystem implements AprsSystemInterface {
     public void setSupervisor(Supervisor supervisor) {
         this.supervisor = supervisor;
     }
-    
+
     /**
      * Set the value of supervisorEventLogger
      *
@@ -4714,6 +4735,7 @@ public class AprsSystem implements AprsSystemInterface {
      * reverse flag and all related actions is complete.
      */
     public XFutureVoid startSetReverseFlag(boolean reverseFlag) {
+        clearLogDirCache();
         return startSetReverseFlag(reverseFlag, true);
     }
 
@@ -4757,6 +4779,7 @@ public class AprsSystem implements AprsSystemInterface {
     }
 
     private void setReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
+        clearLogDirCache();
         if (isReverseCheckboxSelected() != reverseFlag) {
             setReverseCheckboxSelected(reverseFlag);
         }
@@ -4780,6 +4803,7 @@ public class AprsSystem implements AprsSystemInterface {
                 Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        clearLogDirCache();
     }
 
     /**
@@ -5043,6 +5067,24 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
+    private volatile boolean logCrclProgramsEnabled = true;
+
+    public boolean isLogCrclProgramsEnabled() {
+        if (null != aprsSystemDisplayJFrame) {
+            boolean ret = aprsSystemDisplayJFrame.isLogCrclProgramsEnabled();
+            this.logCrclProgramsEnabled = ret;
+            return ret;
+        }
+        return logCrclProgramsEnabled;
+    }
+
+    public void setLogCrclProgramsEnabled(boolean logCrclProgramsEnabled) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setLogCrclProgramsEnabled(logCrclProgramsEnabled);
+        }
+        this.logCrclProgramsEnabled = logCrclProgramsEnabled;
+    }
+
     private final AtomicInteger emptyProgramCount = new AtomicInteger();
     private final AtomicInteger consecutiveEmptyProgramCount = new AtomicInteger();
 
@@ -5062,6 +5104,21 @@ public class AprsSystem implements AprsSystemInterface {
                 consecutiveEmptyProgramCount.set(0);
             }
             clntJiF.setProgram(program);
+        }
+        logCrclProgFile(program);
+    }
+
+    public void logCrclProgFile(CRCLProgramType program) {
+        if (isLogCrclProgramsEnabled()) {
+            try {
+                String progString = CRCLSocket.getUtilSocket().programToPrettyString(program, false);
+                File progFile = createTempFile("prog", ".xml", getLogCrclProgramDir());
+                try (PrintWriter writer = new PrintWriter(new FileWriter(progFile))) {
+                    writer.print(progString);
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -5154,6 +5211,7 @@ public class AprsSystem implements AprsSystemInterface {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         setStartRunTime();
         long startRunNumber = runNumber.incrementAndGet();
+        clearLogDirCache();
         startActionsStartComments.add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + runNumber);
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         lastContinueStartAbortCount = startAbortCount;
@@ -5237,7 +5295,7 @@ public class AprsSystem implements AprsSystemInterface {
         try {
             if (null == this.exploreGraphDbJInternalFrame) {
                 this.exploreGraphDbJInternalFrame = new ExploreGraphDbJInternalFrame();
-                this.exploreGraphDbJInternalFrame.setAprsSystemInterface(this);
+                this.exploreGraphDbJInternalFrame.setAprsSystem(this);
                 DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
                 dbSetupPublisher.addDbSetupListener(exploreGraphDbJInternalFrame);
                 exploreGraphDbJInternalFrame.accept(dbSetupPublisher.getDbSetup());
@@ -5432,7 +5490,7 @@ public class AprsSystem implements AprsSystemInterface {
      */
     public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pose, poseLabel, snapShotWidth, snapShotHeight);
+            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pose, poseLabel, snapShotWidth, snapShotHeight);
         }
     }
 
@@ -5447,7 +5505,7 @@ public class AprsSystem implements AprsSystemInterface {
      */
     public void takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String pointLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, snapShotWidth, snapShotHeight);
+            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
         }
     }
 
@@ -5462,7 +5520,7 @@ public class AprsSystem implements AprsSystemInterface {
      */
     public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, snapShotWidth, snapShotHeight);
+            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
         }
     }
 
@@ -5489,7 +5547,7 @@ public class AprsSystem implements AprsSystemInterface {
     @Override
     public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
-            this.object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), itemsToPaint, snapShotWidth, snapShotHeight);
+            this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), itemsToPaint, snapShotWidth, snapShotHeight);
         }
     }
 
@@ -5554,7 +5612,7 @@ public class AprsSystem implements AprsSystemInterface {
      */
     public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pose, poseLabel, w, h);
+            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pose, poseLabel, w, h);
         }
     }
 
@@ -5571,7 +5629,7 @@ public class AprsSystem implements AprsSystemInterface {
      */
     public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, w, h);
+            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, w, h);
         }
     }
 
@@ -5588,7 +5646,7 @@ public class AprsSystem implements AprsSystemInterface {
      */
     public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), pt, pointLabel, w, h);
+            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, w, h);
         }
     }
 
@@ -5618,7 +5676,7 @@ public class AprsSystem implements AprsSystemInterface {
      */
     public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException {
         if (null != object2DViewJInternalFrame) {
-            this.object2DViewJInternalFrame.takeSnapshot(createTempFile(imgLabel, ".PNG"), itemsToPaint, w, h);
+            this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), itemsToPaint, w, h);
         }
     }
 
@@ -5796,6 +5854,10 @@ public class AprsSystem implements AprsSystemInterface {
             if (null != reloadSimFilesOnReverseString && reloadSimFilesOnReverseString.trim().length() > 0) {
                 setReloadSimFilesOnReverseCheckboxSelected(Boolean.valueOf(reloadSimFilesOnReverseString));
             }
+            String logCrclProgramsEnabledString = props.getProperty(LOG_CRCL_PROGRAMS_ENABLED);
+            if (null != logCrclProgramsEnabledString && logCrclProgramsEnabledString.trim().length() > 0) {
+                setLogCrclProgramsEnabled(Boolean.valueOf(logCrclProgramsEnabledString));
+            }
             String snapShotEnableString = props.getProperty(SNAP_SHOT_ENABLE_PROP);
             if (null != snapShotEnableString && snapShotEnableString.trim().length() > 0) {
                 setSnapshotCheckboxSelected(Boolean.valueOf(snapShotEnableString));
@@ -5934,6 +5996,7 @@ public class AprsSystem implements AprsSystemInterface {
         propsMap.put(SNAP_SHOT_WIDTH_PROP, Integer.toString(snapShotWidth));
         propsMap.put(SNAP_SHOT_HEIGHT_PROP, Integer.toString(snapShotHeight));
         propsMap.put(RELOAD_SIM_FILES_ON_REVERSE_PROP, Boolean.toString(isReloadSimFilesOnReverseCheckboxSelected()));
+        propsMap.put(LOG_CRCL_PROGRAMS_ENABLED, Boolean.toString(isLogCrclProgramsEnabled()));
         setDefaultRobotName();
         if (null != robotName) {
             propsMap.put(APRSROBOT_PROPERTY_NAME, robotName);
@@ -5995,6 +6058,7 @@ public class AprsSystem implements AprsSystemInterface {
             DbSetupBuilder.savePropertiesFile(dbPropsFile, dbSetup);
         }
     }
+    private static final String LOG_CRCL_PROGRAMS_ENABLED = "LogCrclProgramsEnabled";
 
     private static final String USETEACHTABLE = "USETEACHTABLE";
     private static final String RELOAD_SIM_FILES_ON_REVERSE_PROP = "reloadSimFilesOnReverse";
@@ -6270,7 +6334,7 @@ public class AprsSystem implements AprsSystemInterface {
             aprsSystemDisplayJFrame.dispose();
         }
         Runnable r = onCloseRunnable.getAndSet(null);
-        if(null != r) {
+        if (null != r) {
             r.run();
         }
     }
@@ -6340,6 +6404,8 @@ public class AprsSystem implements AprsSystemInterface {
         }
     }
 
+    @Nullable private volatile File logDir = null;
+
     /**
      * Get the current directory for saving log files
      *
@@ -6348,12 +6414,97 @@ public class AprsSystem implements AprsSystemInterface {
      * directory does not exist.
      */
     @Override
-    public File getlogFileDir() throws IOException {
-        File f = new File(Utils.getlogFileDir(), getRunName());
+    public File getLogDir() throws IOException {
+        File f = this.logDir;
+        if (f != null) {
+            return f;
+        }
+        f = new File(Utils.getlogFileDir(), getRunName());
         f.mkdirs();
+        this.logDir = f;
         return f;
     }
 
+    @Nullable private volatile File logImageDir = null;
+
+    public File getLogImageDir() throws IOException {
+        File f = logImageDir;
+        if (f != null) {
+            return f;
+        }
+        f = new File(getLogDir(), "images");
+        f.mkdirs();
+        this.logImageDir = f;
+        return f;
+    }
+
+    @Nullable private volatile File logCrclProgramDir = null;
+
+    public File getLogCrclProgramDir() throws IOException {
+        File f = logCrclProgramDir;
+        if (f != null) {
+            return f;
+        }
+        f = new File(getLogDir(), "crclProgram");
+        f.mkdirs();
+        this.logCrclProgramDir = f;
+        return f;
+    }
+    
+    @Nullable private volatile File logCrclStatusDir = null;
+
+    public File getLogCrclStatusDir() throws IOException {
+        File f = logCrclStatusDir;
+        if (f != null) {
+            return f;
+        }
+        f = new File(getLogDir(), "crclStatus");
+        f.mkdirs();
+        this.logCrclStatusDir = f;
+        return f;
+    }
+    
+    @Nullable private volatile File logCrclCommandDir = null;
+
+    public File getLogCrclCommandDir() throws IOException {
+        File f = logCrclCommandDir;
+        if (f != null) {
+            return f;
+        }
+        f = new File(getLogDir(), "crclCommand");
+        f.mkdirs();
+        this.logCrclCommandDir = f;
+        return f;
+    }
+    
+    @Nullable public File logCrclCommand(String prefix, CRCLCommandType cmd) {
+        File f=null;
+        try {
+            String xmlString = CRCLSocket.getUtilSocket().commandToPrettyString(cmd);
+            f = createTempFile(prefix, ".xml", getLogCrclCommandDir());
+            try(PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+                printer.print(xmlString);
+            }
+        } catch (JAXBException | CRCLException | IOException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return f;
+    }
+    
+    @Nullable public File logCrclStatus(String prefix, CRCLStatusType stat) {
+        File f=null;
+        try {
+            String xmlString = CRCLSocket.getUtilSocket().statusToPrettyString(stat);
+            f = createTempFile(prefix, ".xml", getLogCrclStatusDir());
+            try(PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+                printer.print(xmlString);
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return f;
+    }
+    
     private static String cleanAndLimitFilePrefix(String prefix_in) {
         if (prefix_in.length() > 80) {
             prefix_in = prefix_in.substring(0, 79);
@@ -6383,7 +6534,7 @@ public class AprsSystem implements AprsSystemInterface {
         if (suffix.endsWith(".PNG")) {
             System.out.println("suffix = " + suffix);
         }
-        return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, getlogFileDir());
+        return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, getLogDir());
     }
 
     /**
@@ -6400,6 +6551,10 @@ public class AprsSystem implements AprsSystemInterface {
     @Override
     public File createTempFile(String prefix, String suffix, File dir) throws IOException {
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, dir);
+    }
+
+    public File createImageTempFile(String prefix) throws IOException {
+        return createTempFile(prefix, ".PNG", getLogImageDir());
     }
 
     private volatile String asString = "";

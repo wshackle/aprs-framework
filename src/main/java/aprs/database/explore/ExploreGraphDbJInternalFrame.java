@@ -22,7 +22,7 @@
  */
 package aprs.database.explore;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.database.DbSetup;
 import aprs.database.DbSetupListener;
 import java.sql.SQLException;
@@ -106,8 +106,8 @@ public class ExploreGraphDbJInternalFrame extends javax.swing.JInternalFrame imp
     }//GEN-LAST:event_formInternalFrameClosed
 
 
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
-        this.exploreGraphDbJPanel1.setAprsSystemInterface(aprsSystemInterface);
+    public void setAprsSystem(AprsSystem aprsSystemInterface) {
+        this.exploreGraphDbJPanel1.setAprsSystem(aprsSystemInterface);
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.database.explore.ExploreGraphDbJPanel exploreGraphDbJPanel1;

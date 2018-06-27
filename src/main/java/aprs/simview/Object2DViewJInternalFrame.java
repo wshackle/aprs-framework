@@ -22,7 +22,7 @@
  */
 package aprs.simview;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.misc.SlotOffsetProvider;
 import aprs.database.PhysicalItem;
 import crcl.base.PointType;
@@ -172,16 +172,16 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         object2DOuterJPanel1.loadProperties();
     }
     
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
-        object2DOuterJPanel1.setAprsSystemInterface(aprsSystemInterface);
+    public void setAprsSystem(AprsSystem aprsSystemInterface) {
+        object2DOuterJPanel1.setAprsSystem(aprsSystemInterface);
     }
     
     public void setSlotOffsetProvider(SlotOffsetProvider slotOffsetProvider) {
         object2DOuterJPanel1.setSlotOffsetProvider(slotOffsetProvider);
     }
 
-    public AprsSystemInterface getAprsSystemInterface() {
-        return object2DOuterJPanel1.getAprsSystemInterface();
+    public AprsSystem getAprsSystem() {
+        return object2DOuterJPanel1.getAprsSystem();
     }
 
     @Override

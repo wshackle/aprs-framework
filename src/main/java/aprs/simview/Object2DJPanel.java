@@ -22,7 +22,7 @@
  */
 package aprs.simview;
 
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.misc.SlotOffsetProvider;
 import aprs.database.PhysicalItem;
 import aprs.database.Slot;
@@ -1067,7 +1067,7 @@ public class Object2DJPanel extends JPanel {
     };
 
     @MonotonicNonNull
-    private AprsSystemInterface aprsSysInterface;
+    private AprsSystem aprsSysInterface;
 
     /**
      * Get the value of aprsSystemInterface
@@ -1075,7 +1075,7 @@ public class Object2DJPanel extends JPanel {
      * @return the value of aprsSystemInterface
      */
     @Nullable
-    public AprsSystemInterface getAprsSystemInterface() {
+    public AprsSystem getAprsSystem() {
         return aprsSysInterface;
     }
 
@@ -1084,7 +1084,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param aprsSystemInterface new value of aprsSystemInterface
      */
-    public void setAprsSystemInterface(AprsSystemInterface aprsSystemInterface) {
+    public void setAprsSystem(AprsSystem aprsSystemInterface) {
         this.aprsSysInterface = aprsSystemInterface;
         setSlotOffsetProvider(aprsSystemInterface);
     }

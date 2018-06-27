@@ -23,7 +23,7 @@
 package aprs.supervisor.main;
 
 import aprs.launcher.LauncherAprsJFrame;
-import aprs.system.AprsSystemInterface;
+import aprs.system.AprsSystem;
 import aprs.misc.Utils;
 import aprs.misc.MultiFileDialogJPanel;
 import static aprs.misc.Utils.runTimeToString;
@@ -193,7 +193,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == robotEnableMap) {
             throw new IllegalStateException("null == robotEnableMap");
         }
-        System.out.println("source = " + source);
         if (jTableRobots.getRowCount() > 0) {
             System.out.println("handleRobotTableChange: firstRow=" + firstRow + ",lastRow=" + lastRow + ",jTableRobots.getValueAt(" + firstRow + ",1) = " + jTableRobots.getValueAt(firstRow, 1));
         }
@@ -652,7 +651,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private final ListSelectionListener jListFuturesSelectionListener
             = this::handleListFuturesSelectionEvent;
 
-    List<AprsSystemInterface> getAprsSystems() {
+    List<AprsSystem> getAprsSystems() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -701,12 +700,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 futureToDisplaySupplier = () -> sup2.getUnstealAbortFuture();
                 break;
         }
-        List<AprsSystemInterface> aprsSystems = sup2.getAprsSystems();
+        List<AprsSystem> aprsSystems = sup2.getAprsSystems();
         int sindex = selectedFutureString.indexOf('/');
         if (sindex > 0 && sindex < selectedFutureString.length()) {
             String selectedFutureStringBase = selectedFutureString.substring(0, sindex);
             String selectedFutureStringExt = selectedFutureString.substring(sindex + 1);
-            for (AprsSystemInterface sys : aprsSystems) {
+            for (AprsSystem sys : aprsSystems) {
                 if (sys.getTaskName().equals(selectedFutureStringBase)) {
                     switch (selectedFutureStringExt) {
                         case "actions":
@@ -790,7 +789,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     JPanel blankPanel = new JPanel();
 
     @Nullable
-    private AprsSystemInterface findSystemWithRobot(String robot) {
+    private AprsSystem findSystemWithRobot(String robot) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -814,7 +813,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     logEventErr("No outSys entry in jTablePositionMappings for row=" + row);
                     return;
                 }
-                AprsSystemInterface posMapInSys = findSystemWithRobot(inSys);
+                AprsSystem posMapInSys = findSystemWithRobot(inSys);
 
                 if (null == posMapInSys) {
                     throw new IllegalStateException("findSystemWithRobot(" + inSys + ") returned null");
@@ -822,7 +821,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 jButtonSetInFromCurrent.setText("Set In From " + posMapInSys.getRobotName());
                 jButtonSetInFromCurrent.setEnabled(true);
                 setPosMapInSys(posMapInSys);
-                AprsSystemInterface posMapOutSys = findSystemWithRobot(outSys);
+                AprsSystem posMapOutSys = findSystemWithRobot(outSys);
                 if (null == posMapOutSys) {
                     throw new IllegalStateException("findSystemWithRobot(" + outSys + ") returned null");
                 }
@@ -1137,7 +1136,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return SplashScreen.showMessageFullScreen(message, fontSize, image, colors, graphicsDevice);
     }
 
-    private XFutureVoid stealRobot(AprsSystemInterface stealFrom, AprsSystemInterface stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
+    private XFutureVoid stealRobot(AprsSystem stealFrom, AprsSystem stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -2439,7 +2438,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      *
      * @param sys system to add
      */
-    private void addAprsSystem(AprsSystemInterface sys) {
+    private void addAprsSystem(AprsSystem sys) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -2648,14 +2647,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     @Nullable
-    private AprsSystemInterface getPosMapInSys() {
+    private AprsSystem getPosMapInSys() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
         return supervisor.getPosMapInSys();
     }
 
-    private void setPosMapInSys(AprsSystemInterface posMapInSys) {
+    private void setPosMapInSys(AprsSystem posMapInSys) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -2663,14 +2662,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     @Nullable
-    private AprsSystemInterface getPosMapOutSys() {
+    private AprsSystem getPosMapOutSys() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
         return supervisor.getPosMapOutSys();
     }
 
-    private void setPosMapOutSys(AprsSystemInterface posMapOutSys) {
+    private void setPosMapOutSys(AprsSystem posMapOutSys) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -2681,7 +2680,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private void jButtonSetInFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSetInFromCurrentActionPerformed
         int row = jTableSelectedPosMapFile.getSelectedRow();
         if (row >= 0 && row < jTableSelectedPosMapFile.getRowCount()) {
-            AprsSystemInterface posMapInSys = getPosMapInSys();
+            AprsSystem posMapInSys = getPosMapInSys();
             if (null != posMapInSys) {
                 PoseType pose = posMapInSys.getCurrentPose();
                 if (null != pose) {
@@ -2713,7 +2712,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private void jButtonSetOutFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSetOutFromCurrentActionPerformed
         int row = jTableSelectedPosMapFile.getSelectedRow();
         if (row >= 0 && row < jTableSelectedPosMapFile.getRowCount()) {
-            AprsSystemInterface posMapOutSys = getPosMapOutSys();
+            AprsSystem posMapOutSys = getPosMapOutSys();
             if (null != posMapOutSys) {
                 PoseType pose = posMapOutSys.getCurrentPose();
                 if (null != pose) {
@@ -3476,13 +3475,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private void jComboBoxTeachSystemViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxTeachSystemViewActionPerformed
         try {
-            List<AprsSystemInterface> aprsSystems = getAprsSystems();
+            List<AprsSystem> aprsSystems = getAprsSystems();
             String sysString = (String) jComboBoxTeachSystemView.getSelectedItem();
             if (null == sysString || sysString.equals("All")) {
                 setTeachSystemFilter(null);
             } else {
                 int id = Integer.parseInt(sysString.trim().split("[ \t:]+")[0]);
-                for (AprsSystemInterface sys : aprsSystems) {
+                for (AprsSystem sys : aprsSystems) {
                     if (sys.getMyThreadId() == id) {
                         setTeachSystemFilter(sys);
                         break;
@@ -3679,7 +3678,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void setTeachSystemFilter(@Nullable AprsSystemInterface sys) {
+    private void setTeachSystemFilter(@Nullable AprsSystem sys) {
         if (null == sys) {
             object2DOuterJPanel1.setForceOutputFlag(false);
             object2DOuterJPanel1.setShowOutputItems(false);
@@ -3700,7 +3699,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .orElse(null);
     }
 
-    private List<PhysicalItem> filterForSystem(AprsSystemInterface sys, List<PhysicalItem> listIn) {
+    private List<PhysicalItem> filterForSystem(AprsSystem sys, List<PhysicalItem> listIn) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -3708,20 +3707,20 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private XFutureVoid lookForPartsAll() {
-        List<AprsSystemInterface> aprsSystems = getAprsSystems();
+        List<AprsSystem> aprsSystems = getAprsSystems();
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface aprsSys = aprsSystems.get(i);
+            AprsSystem aprsSys = aprsSystems.get(i);
             futures[i] = aprsSys.startLookForParts();
         }
         return XFuture.allOfWithName("lookForPartsAll", futures);
     }
 
     private XFutureVoid clearReverseAll() {
-        List<AprsSystemInterface> aprsSystems = getAprsSystems();
+        List<AprsSystem> aprsSystems = getAprsSystems();
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystemInterface aprsSys = aprsSystems.get(i);
+            AprsSystem aprsSys = aprsSystems.get(i);
             if (aprsSys.isReverseFlag()) {
                 logEvent("Set reverse flag false for " + aprsSys);
                 futures[i] = aprsSys.startSetReverseFlag(false, false);
@@ -4443,9 +4442,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         listModel.addElement("ContinuousDemo");
         listModel.addElement("stealAbort");
         listModel.addElement("unstealAbort");
-        List<AprsSystemInterface> aprsSystems = getAprsSystems();
+        List<AprsSystem> aprsSystems = getAprsSystems();
 
-        for (AprsSystemInterface aprsSystemInterface : aprsSystems) {
+        for (AprsSystem aprsSystemInterface : aprsSystems) {
             listModel.addElement(aprsSystemInterface.getTaskName() + "/actions");
             listModel.addElement(aprsSystemInterface.getTaskName() + "/abort");
             listModel.addElement(aprsSystemInterface.getTaskName() + "/resume");
@@ -4479,14 +4478,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private static final int MAX_EXPAND_NODE_COUNT = 2000;
     private static final int MAX_RECURSE_DEPTH = 100;
 
-    public void loadRobotsTableFromSystemsList(List<AprsSystemInterface> aprsSystems) {
+    public void loadRobotsTableFromSystemsList(List<AprsSystem> aprsSystems) {
         if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
             throw new IllegalThreadStateException("call me from AWT event thread.");
         }
         synchronized (jTableRobots) {
             DefaultTableModel tm = (DefaultTableModel) jTableRobots.getModel();
             tm.setRowCount(0);
-            for (AprsSystemInterface aprsSys : aprsSystems) {
+            for (AprsSystem aprsSys : aprsSystems) {
                 String robotname = aprsSys.getRobotName();
                 tm.addRow(new Object[]{
                     robotname,
@@ -4690,7 +4689,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(future);
         if (depth >= XFUTURE_MAX_DEPTH) {
             if (!firstDepthOverOccured) {
-                Logger.getLogger(AprsSystemInterface.class
+                Logger.getLogger(AprsSystem.class
                         .getName()).log(Level.SEVERE, "xfutureToNode : depth >= XFUTURE_MAX_DEPTH");
                 firstDepthOverOccured = true;
             }
@@ -4791,7 +4790,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (closing) {
             return;
         }
-        List<AprsSystemInterface> aprsSystems = getAprsSystems();
+        List<AprsSystem> aprsSystems = getAprsSystems();
         updateTeachSystemsComboBoxFromSystemsList(aprsSystems);
 //        loadRobotsTableFromSystemsList(aprsSystems);
         Utils.autoResizeTableColWidths(jTableRobots);
@@ -4817,12 +4816,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    public void updateTeachSystemsComboBoxFromSystemsList(List<AprsSystemInterface> aprsSystems) {
+    public void updateTeachSystemsComboBoxFromSystemsList(List<AprsSystem> aprsSystems) {
         DefaultComboBoxModel<String> cbmModel = (DefaultComboBoxModel<String>) jComboBoxTeachSystemView.getModel();
         cbmModel.removeAllElements();
         cbmModel.addElement("All");
         cbmModel.setSelectedItem("All");
-        for (AprsSystemInterface aprsSystemInterface : aprsSystems) {
+        for (AprsSystem aprsSystemInterface : aprsSystems) {
             cbmModel.addElement(aprsSystemInterface.getMyThreadId() + " : " + aprsSystemInterface.toString());
         }
     }
