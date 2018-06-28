@@ -1569,7 +1569,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private final Random posRandom = new Random();
 
-    
     private PhysicalItem noiseFilter(PhysicalItem in) {
         if (!jCheckBoxAddPosNoise.isSelected()) {
             return in;
@@ -1586,25 +1585,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private double nextLimitedGaussian() {
-        double g =  posRandom.nextGaussian() ;
-        if(g < -3.5) {
+        double g = posRandom.nextGaussian();
+        if (g < -3.5) {
             return -3.5;
-        } else if(g > 3.5) {
+        } else if (g > 3.5) {
             return 3.5;
         } else {
             return g;
         }
     }
-    
+
     private double nextPosNoise() {
-        return nextLimitedGaussian()*posNoise;
+        return nextLimitedGaussian() * posNoise;
     }
 
     private double nextRotNoise() {
-        return nextLimitedGaussian()* Math.toRadians(rotNoise);
+        return nextLimitedGaussian() * Math.toRadians(rotNoise);
     }
 
-    
     private void publishCurrentItems() {
         if (forceOutputFlag) {
             return;
@@ -2905,7 +2903,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile double lastClosestDistanceIndexX;
     private volatile double lastClosestDistanceIndexY;
     private volatile List<PhysicalItem> lastClosestDistanceIndexList;
-    
+
     private DistIndex getClosestDistanceIndex(double x, double y, List<PhysicalItem> l) {
 
         double min_dist = Double.POSITIVE_INFINITY;
@@ -2925,8 +2923,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
         DistIndex ret = new DistIndex(min_dist, min_dist_index);
-        lastClosestDistanceIndexX =x;
-        lastClosestDistanceIndexY= y;
+        lastClosestDistanceIndexX = x;
+        lastClosestDistanceIndexY = y;
         this.lastClosestDistanceIndexRet = ret;
         lastClosestDistanceIndexList = l;
         return ret;
@@ -2941,18 +2939,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         final Point2D.@Nullable Double capturedPartPoint;
         final int captured_item_index;
         final DistIndex di;
-        final PhysicalItem closestItem;
+        @Nullable final PhysicalItem closestItem;
         final long statReceiveTime;
 
         PoseUpdateHistoryItem(
-                CRCLStatusType stat, 
-                CRCLCommandType cmd, 
-                boolean isHoldingObjectExpected, 
+                CRCLStatusType stat,
+                CRCLCommandType cmd,
+                boolean isHoldingObjectExpected,
                 long time,
                 Point2D.@Nullable Double capturedPartPoint,
                 int captured_item_index,
                 DistIndex di,
-                PhysicalItem closestItem,
+                @Nullable PhysicalItem closestItem,
                 long statRecieveTime) {
             this.stat = stat;
             this.isHoldingObjectExpected = isHoldingObjectExpected;
@@ -2970,47 +2968,139 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             return "\nPoseUpdateHistoryItem{ cmd=" + CRCLSocket.commandToSimpleString(cmd) + ", isHoldingObjectExpected=" + isHoldingObjectExpected + ", time=" + (time - poseUpdateHistoryTime) + ", stat=" + CRCLSocket.statusToPrettyString(stat) + '}';
         }
     }
-    
-     
+
     private static String fmtDouble(double d) {
-        return String.format("%.3f",d);
+        return String.format("%.3f", d);
     }
 
-    
     private Object[] poseUpdateHistoryRecordItems(PoseUpdateHistoryItem item) throws IOException {
         File cmdFile = null;
-        String cmdClassName = null;
-        String cmdFileName = null;
+        String cmdClassName = "";
+        String cmdFileName = "";
         CRCLCommandType cmd = item.cmd;
         long cmdId = -1;
-        if(null != cmd) {
+        String cmdName = "";
+        if (null != cmd) {
             cmdClassName = cmd.getClass().getSimpleName();
-            if(cmdClassName.startsWith("crcl.base.")) {
+            if (cmdClassName.startsWith("crcl.base.")) {
                 cmdClassName = cmdClassName.substring("crcl.base.".length());
             }
-            cmdFile = aprsSystem.logCrclCommand("puh_"+cmdClassName, cmd);
-            cmdFileName = (cmdFile != null)?cmdFile.getCanonicalPath():null;
+            cmdFile = aprsSystem.logCrclCommand("puh_" + cmdClassName, cmd);
+            if (null != cmdFile) {
+                cmdFileName = cmdFile.getCanonicalPath();
+            }
             cmdId = cmd.getCommandID();
+            String itemCmdName = cmd.getName();
+            if (null != itemCmdName) {
+                cmdName = itemCmdName;
+            }
         }
         CRCLStatusType stat = item.stat;
         PointType point = CRCLPosemath.getPoint(stat);
         File statFile = null;
-        String statFileName =null;
+        String statFileName = "";
         long statCmdId = -1;
-        CommandStateEnumType state = null;
-        if(null != stat) {
+        CommandStateEnumType state = CommandStateEnumType.CRCL_READY;
+        if (null != stat) {
             CommandStatusType cs = stat.getCommandStatus();
-            if(null != cs) {
+            if (null != cs) {
                 statCmdId = cs.getCommandID();
                 state = cs.getCommandState();
             }
             statFile = aprsSystem.logCrclStatus("puh_", stat);
-            statFileName = (cmdFile != null)?statFile.getCanonicalPath():null;
+            if (null != statFile) {
+                statFileName = statFile.getCanonicalPath();
+            }
         }
-        
-        return new Object[] {
+
+        String closestItemXString = "NaN";
+        String closestItemYString = "NaN";
+        String closestItemName = "";
+        PhysicalItem closestItem = item.closestItem;
+        if (null != closestItem) {
+            closestItemXString = fmtDouble(closestItem.x);
+            closestItemYString = fmtDouble(closestItem.y);
+            closestItemName = closestItem.getFullName();
+        }
+        switch (new Random().nextInt(20)) {
+
+//            case 0:
+//                return new Object[]{
+//                    Utils.getTimeString(item.time),
+//                    item.time - item.statReceiveTime,
+//                    fmtDouble(point.getX()),
+//                    fmtDouble(point.getY()),
+//                    fmtDouble(point.getZ()),
+//                    item.isHoldingObjectExpected,
+//                    item.di.index,
+//                    fmtDouble(item.di.dist),
+//                    item.captured_item_index,
+//                    closestItemXString,
+//                    closestItemYString,
+//                    closestItemName,
+//                    cmdId,
+//                    statCmdId,
+//                    state,
+//                    cmdName,
+//                    cmdFileName,
+//                    statFileName
+//                };
+//
+//            case 1:
+//                return new Object[]{
+//                    Utils.getTimeString(item.time),
+//                    item.time - item.statReceiveTime,
+//                    fmtDouble(point.getX()),
+//                    fmtDouble(point.getY()),
+//                    fmtDouble(point.getZ()),
+//                    item.isHoldingObjectExpected,
+//                    item.di.index,
+//                    fmtDouble(item.di.dist),
+//                    item.captured_item_index
+//                };
+//
+//            case 2:
+//                return new Object[]{
+//                    closestItemXString,
+//                    closestItemYString,
+//                    closestItemName,
+//                    cmdId,
+//                    statCmdId,
+//                    state,
+//                    cmdName,
+//                    cmdFileName,
+//                    statFileName
+//                };
+//
+//            case 3:
+//                return new Object[]{
+//                    item.isHoldingObjectExpected,
+//                    item.di.index,
+//                    fmtDouble(item.di.dist),
+//                    item.captured_item_index,
+//                    closestItemXString,
+//                    closestItemYString,
+//                    closestItemName
+//                };
+            case 4:
+                return new Object[]{
+                    cmdId,
+                    statCmdId,
+                    state
+                };
+
+            case 5:
+                return new Object[]{
+                    cmdName,
+                    cmdFileName,
+                    statFileName
+                };
+
+        }
+
+        return new Object[]{
             Utils.getTimeString(item.time),
-            item.time-item.statReceiveTime,
+            item.time - item.statReceiveTime,
             fmtDouble(point.getX()),
             fmtDouble(point.getY()),
             fmtDouble(point.getZ()),
@@ -3018,20 +3108,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             item.di.index,
             fmtDouble(item.di.dist),
             item.captured_item_index,
-            (item.closestItem!=null)?fmtDouble(item.closestItem.x):null,
-            (item.closestItem!=null)?fmtDouble(item.closestItem.y):null,
-            (item.closestItem!=null)?item.closestItem.getFullName():null,
+            closestItemXString,
+            closestItemYString,
+            closestItemName,
             cmdId,
             statCmdId,
             state,
-            (null != item.cmd)?item.cmd.getName():null,
+            cmdName,
             cmdFileName,
             statFileName
         };
     }
-    
-    private static final String[] POSE_UPDATE_HISTORY_HEADER =
-            new String[]{
+
+    private static final String[] POSE_UPDATE_HISTORY_HEADER
+            = new String[]{
                 "time",
                 "timeSinceStat",
                 "X",
@@ -3051,18 +3141,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 "cmdFile",
                 "statFileName"
             };
-    
-    
+
     private File printPoseUpdateHistory(String err) throws IOException {
-        File f = createTempFile("puh_"+err, ".csv");
-        try(CSVPrinter printer = new CSVPrinter(new FileWriter(f), CSVFormat.DEFAULT.withHeader(POSE_UPDATE_HISTORY_HEADER))){
-            for(PoseUpdateHistoryItem item : poseUpdateHistory) {
+        File f = createTempFile("puh_" + err, ".csv");
+        try (CSVPrinter printer = new CSVPrinter(new FileWriter(f), CSVFormat.DEFAULT.withHeader(POSE_UPDATE_HISTORY_HEADER))) {
+            for (PoseUpdateHistoryItem item : poseUpdateHistory) {
                 printer.printRecord(poseUpdateHistoryRecordItems(item));
             }
         }
         return f;
     }
-    
+
     private final ConcurrentLinkedDeque<PoseUpdateHistoryItem> poseUpdateHistory
             = new ConcurrentLinkedDeque<>();
 
@@ -3078,9 +3167,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @Override
     public void handlePoseUpdate(
             PendantClientJPanel panel,
-            CRCLStatusType stat, 
-            CRCLCommandType cmd, 
-            boolean isHoldingObjectExpected, 
+            CRCLStatusType stat,
+            CRCLCommandType cmd,
+            boolean isHoldingObjectExpected,
             long statRecievTime) {
         if (!jCheckBoxShowCurrent.isSelected()) {
             return;
@@ -3105,21 +3194,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         poseUpdateHistoryTime = time;
         PoseUpdateHistoryItem currentUpdate
                 = new PoseUpdateHistoryItem(
-                        stat, 
-                        cmd, 
-                        isHoldingObjectExpected, 
+                        stat,
+                        cmd,
+                        isHoldingObjectExpected,
                         time,
                         object2DJPanel1.getCapturedPartPoint(),
                         captured_item_index,
                         di,
-                        (min_dist_index >=0 && min_dist_index < l.size())?l.get(min_dist_index):null,
+                        (min_dist_index >= 0 && min_dist_index < l.size()) ? l.get(min_dist_index) : null,
                         statRecievTime
                 );
         poseUpdateHistory.add(currentUpdate);
         if (poseUpdateHistory.size() > 25) {
             poseUpdateHistory.removeFirst();
         }
-        
 
         if (isHoldingObjectExpected) {
             lastIsHoldingObjectExpectedTime = time;
@@ -3176,7 +3264,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             System.out.println("closestItem.getFullName() = " + closestItem.getFullName());
                             System.out.println("closestItem.(x,y) = " + closestItem.x + "," + closestItem.y);
                         }
-                        String err ="failed_to_capture_part_at_" + currentX + "_" + currentY + "_";
+                        String err = "failed_to_capture_part_at_" + currentX + "_" + currentY + "_";
                         printHandlePoseErrorInfo(err, stat, pose, cmd);
                         if (takeSnapshots) {
                             takeSnapshot(createTempFile(err, ".PNG"), (PmCartesian) null, "");

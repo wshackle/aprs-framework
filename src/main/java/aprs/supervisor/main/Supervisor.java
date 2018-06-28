@@ -3906,7 +3906,7 @@ public class Supervisor {
         return ret;
     }
 
-    private XFuture<@Nullable Void> ContinuousDemoSetup() {
+    private XFutureVoid ContinuousDemoSetup() {
         return XFuture
                 .supplyAsync("contiousDemoSetup", () -> {
 //                    System.out.println("stealingRobots = " + stealingRobots);
@@ -3915,10 +3915,10 @@ public class Supervisor {
                         disconnectAll();
                         return returnRobotsDirect("contiousDemoSetup");
                     } else {
-                        return XFuture.completedFuture(null);
+                        return XFutureVoid.completedFuture();
                     }
                 }, supervisorExecutorService)
-                .thenCompose(x-> x)
+                .thenComposeToVoid(x-> x)
                 .thenRunAsync(() -> {
 //                    disconnectAll();
                     checkRobotsUniquePorts();
@@ -4490,9 +4490,10 @@ public class Supervisor {
             runTimeTimer = null;
         }
         cancelAll(true);
-        if (null != logPrintStream) {
+        PrintStream ps = logPrintStream;
+        if (null != ps) {
             System.out.println("Supervisor closing event log file for immediateAbortAll.");
-            logPrintStream.close();
+            ps.close();
             logPrintStream = null;
         }
         for (AprsSystem aprsSystem : aprsSystems) {
@@ -5265,7 +5266,7 @@ public class Supervisor {
                 l.add(sys.startLookForParts());
             }
         }
-        return XFutureVoid.allOfWithName("allof"+name, l.toArray(new XFuture[0]));
+        return XFutureVoid.allOfWithName("allof"+name, l);
     }
     
     
