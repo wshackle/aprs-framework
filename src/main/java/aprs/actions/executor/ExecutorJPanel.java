@@ -6564,9 +6564,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             f = new File(dir, newfilename);
         }
         String fullfilename = f.getCanonicalPath();
-        System.out.println("newfilename = " + newfilename);
-        System.out.println("filename = " + filename);
-        System.out.println("fullfilename = " + fullfilename);
         return fullfilename;
     }
 
