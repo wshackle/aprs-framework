@@ -4336,6 +4336,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 double distToPart = af.getClosestRobotPartDistance();
                 if (distToPart > pickupDistMax) {
                     PointType currentPoint = af.getCurrentPosePoint();
+                    if(null == currentPoint) {
+                        throw new IllegalStateException("null == currentPoint");
+                    }
                     PointType uncorrectedPoint = af.reverseCorrectPoint(currentPoint);
                     List<PhysicalItem> items = af.getSimItemsData();
                     String errString

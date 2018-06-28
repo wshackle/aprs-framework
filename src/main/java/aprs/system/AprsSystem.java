@@ -6516,7 +6516,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     @Nullable public File logCrclStatus(String prefix, CRCLStatusType stat) {
         File f = null;
         try {
-            String xmlString = CRCLSocket.getUtilSocket().statusToPrettyString(stat);
+            String xmlString = CRCLSocket.statusToPrettyString(stat);
             f = createTempFile(prefix, ".xml", getLogCrclStatusDir());
             try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);

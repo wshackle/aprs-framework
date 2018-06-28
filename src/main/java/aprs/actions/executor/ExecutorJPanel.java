@@ -2363,7 +2363,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private void checkFilename(String filename) throws HeadlessException, IllegalStateException, IOException {
+    private void checkFilename(@Nullable String filename) throws HeadlessException, IllegalStateException, IOException {
         if (null != filename && filename.length() > 0) {
             File f = new File(filename);
             if (!f.exists()) {
@@ -6544,7 +6544,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private aprs.actions.executor.PositionMapJPanel positionMapJPanel1;
     // End of variables declaration//GEN-END:variables
 
-    private String propsGetFileName(Properties props, String key) throws IOException {
+    @Nullable private String propsGetFileName(Properties props, String key) throws IOException {
         String filename = props.getProperty(key);
         if (null == filename || !filename.startsWith("..") || null == propertiesFile) {
             return filename;
