@@ -193,9 +193,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == robotEnableMap) {
             throw new IllegalStateException("null == robotEnableMap");
         }
-        if (jTableRobots.getRowCount() > 0) {
-            System.out.println("handleRobotTableChange: firstRow=" + firstRow + ",lastRow=" + lastRow + ",jTableRobots.getValueAt(" + firstRow + ",1) = " + jTableRobots.getValueAt(firstRow, 1));
-        }
+//        if (jTableRobots.getRowCount() > 0) {
+//            System.out.println("handleRobotTableChange: firstRow=" + firstRow + ",lastRow=" + lastRow + ",jTableRobots.getValueAt(" + firstRow + ",1) = " + jTableRobots.getValueAt(firstRow, 1));
+//        }
         if (type != TableModelEvent.UPDATE) {
             System.out.println("handleRobotTableChange: ignoring event of type = " + type);
         }
@@ -204,12 +204,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
         if (ignoreRobotTableChanges) {
             ignoreRobotTableChangesCount++;
-            System.out.println("ignoreRobotTableChangesCount = " + ignoreRobotTableChangesCount);
+//            System.out.println("ignoreRobotTableChangesCount = " + ignoreRobotTableChangesCount);
 //            flushTableRobotEventDeque(false);
             return;
         }
         handleRobotTableChangesCount++;
-        System.out.println("handleRobotTableChangesCount = " + handleRobotTableChangesCount);
         boolean changeFound = false;
         disableRobotTableModelListener();
         for (int i = firstRow; i < jTableRobots.getRowCount() && i <= lastRow; i++) {
@@ -249,7 +248,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 }
                 break;
             } else {
-                System.err.println("event triggered no change.");
+//                System.err.println("event triggered no change.");
             }
         }
 //        flushTableRobotEventDeque(false);
@@ -4505,7 +4504,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private void setupRobotTableListener() {
         if (!robotTableListenerSetup) {
             robotTableListenerSetup = true;
-            System.out.println("setupRobotTableListener called.");
             jTableRobots.getModel().addTableModelListener(robotTableModelListener);
             for (int i = 0; i < jTableRobots.getRowCount(); i++) {
                 jTableRobots.setValueAt(true, i, 1);
@@ -4725,7 +4723,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return Utils.runOnDispatchThread("updateRandomTest.runOnDispatchThread" + count,
                 () -> {
 //                    int count = randomTestCount.incrementAndGet();
-                    System.out.println("updateRandomTestCount count = " + count);
+//                    System.out.println("updateRandomTestCount count = " + count);
                     jCheckBoxMenuItemRandomTest.setText("Randomized Enable Toggle Continuous Demo " + count);
                 });
     }

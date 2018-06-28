@@ -1858,7 +1858,7 @@ public class Supervisor {
         if (null == logPrintStream) {
             try {
                 File logFile = Utils.createTempFile("events_log_", ".txt");
-                System.out.println("logFile = " + logFile.getCanonicalPath());
+                System.out.println("Supervisor event log file =" + logFile.getCanonicalPath());
                 logPrintStream = new PrintStream(new FileOutputStream(logFile));
 
             } catch (IOException ex) {
@@ -3472,16 +3472,11 @@ public class Supervisor {
 
     private XFutureVoid updateRandomTestCount() {
         int count = randomTestCount.incrementAndGet();
-        XFutureVoid xf
-                = Utils.runOnDispatchThread("updateRandomTest.runOnDispatchThread" + count,
-                        () -> {
-                            System.out.println("updateRandomTestCount count = " + count);
-                        });
         if (null != displayJFrame) {
             final AprsSupervisorDisplayJFrame jfrm = displayJFrame;
-            return xf.thenComposeToVoid(() -> jfrm.updateRandomTestCount(count));
+            return jfrm.updateRandomTestCount(count);
         }
-        return xf;
+        return XFutureVoid.completedFutureWithName("updateRandomTest.displayJFrame==null");
     }
 
     private void logEventErr(String err) {
@@ -3927,8 +3922,8 @@ public class Supervisor {
                 .thenRunAsync(() -> {
 //                    disconnectAll();
                     checkRobotsUniquePorts();
-                    System.out.println("stealingRobots = " + stealingRobots);
-                    System.out.println("returnRobotRunnable = " + returnRobotRunnable);
+//                    System.out.println("stealingRobots = " + stealingRobots);
+//                    System.out.println("returnRobotRunnable = " + returnRobotRunnable);
                     cancelAllStealUnsteal(false);
                     connectAll();
                     setAllReverseFlag(false);
@@ -4496,6 +4491,7 @@ public class Supervisor {
         }
         cancelAll(true);
         if (null != logPrintStream) {
+            System.out.println("Supervisor closing event log file for immediateAbortAll.");
             logPrintStream.close();
             logPrintStream = null;
         }

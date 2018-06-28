@@ -1172,6 +1172,9 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     }
 
     private void disconnectRobotPrivate() {
+        String startingRobotName = this.getRobotName();
+        String startingCrclHost = this.getRobotCrclHost();
+        int startingCrclPort = this.getRobotCrclPort();
         startingCheckEnabledCheck();
         if (!closing) {
             checkReadyToDisconnect();
@@ -1190,7 +1193,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             takeSnapshots("disconnectRobot");
         }
         this.setRobotName(null);
-        System.out.println("disconnectRobot completed");
+        System.out.println("AprsSystem with taskName="+taskName+" disconnectRobot completed from robotNeme="+startingRobotName+", host="+startingCrclHost+":"+startingCrclPort+", disconnectRobotCount="+disconnectRobotCount);
         AprsSystemDisplayJFrame displayFrame = this.aprsSystemDisplayJFrame;
         if (null != displayFrame) {
             final AprsSystemDisplayJFrame displayFrameFinal = displayFrame;
@@ -2391,6 +2394,11 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
+        if(null != propertiesFile) {
+            System.out.println("Constructor for AprsSystem with taskName="+taskName+", robotName="+robotName+", propertiesFile=" +propertiesFile.getName()+" complete.");
+        } else {
+            System.out.println("Constructor for AprsSystem with taskName="+taskName+", robotName="+robotName+" complete.");
+        }
     }
 
     private void setTitle(String newTitle) {
@@ -2553,6 +2561,11 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
+        if(null != propertiesFile) {
+            System.out.println("Constructor for AprsSystem with taskName="+taskName+", robotName="+robotName+", propertiesFile=" +propertiesFile.getName()+" complete.");
+        } else {
+            System.out.println("Constructor for AprsSystem with taskName="+taskName+", robotName="+robotName+" complete.");
+        }
     }
 
     private boolean skipCreateDbSetupFrame = false;
@@ -2568,7 +2581,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     private final AtomicInteger completeCommonInitCount = new AtomicInteger();
 
     private void completeCommonInit() {
-        System.out.println("completeCommonInitCount = " + completeCommonInitCount.incrementAndGet());
         if (null != aprsSystemDisplayJFrame) {
             try {
                 URL aprsPngUrl = AprsSystem.class.getResource("aprs.png");
@@ -2875,7 +2887,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             updateSubPropertiesFiles();
             setupWindowsMenu();
             boolean startConnectDatabaseSelected = isConnectDatabaseOnSetupStartupSelected();
-            System.out.println("In propertiesFile=" + getPropertiesFile() + ", startConnectDatabaseSelected=" + startConnectDatabaseSelected);
             if (startConnectDatabaseSelected) {
                 XFuture<Boolean> startConnectDatabaseFuture = startConnectDatabase();
                 futures.add(startConnectDatabaseFuture);
@@ -2884,7 +2895,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 XFutureVoid connectVisionFuture = connectVision();
                 futures.add(connectVisionFuture);
             }
-            System.out.println("Constructor for AprsSystem complete.");
             if (futures.isEmpty()) {
                 return XFutureVoid.completedFutureWithName("startWindowsFromMenuCheckboxes");
             } else {
