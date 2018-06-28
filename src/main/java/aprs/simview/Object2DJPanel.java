@@ -1256,6 +1256,8 @@ public class Object2DJPanel extends JPanel {
         final double yoffset;
         double scale;
         Image scaledImage;
+        int scaledImageWidth;
+        int scaledImageHeight;
 
         PartImageInfo(BufferedImage image, double ratio, double width, boolean ignoreRotations, double xoffset, double yoffset) {
             this.image = image;
@@ -1265,8 +1267,20 @@ public class Object2DJPanel extends JPanel {
             this.yoffset = yoffset;
             this.ignoreRotations = ignoreRotations;
             scale = 1.0;
-            scaledImage = image.getScaledInstance(image.getWidth(), image.getHeight(), Image.SCALE_DEFAULT);
+            scaledImageWidth = image.getWidth();
+            scaledImageHeight = image.getHeight();
+            scaledImage = image.getScaledInstance(scaledImageWidth, scaledImageHeight, Image.SCALE_DEFAULT);
         }
+
+        public int getScaledImageWidth() {
+            return scaledImageWidth;
+        }
+
+        public int getScaledImageHeight() {
+            return scaledImageHeight;
+        }
+        
+        
 
         Image getScaledImage(double scale) {
             int old_w = (int) (ratio * this.scale * image.getWidth());
@@ -1277,6 +1291,8 @@ public class Object2DJPanel extends JPanel {
                 return scaledImage;
             }
             this.scale = scale;
+            scaledImageWidth = new_w;
+            scaledImageHeight = new_h;
             scaledImage = image.getScaledInstance(new_w, new_h, Image.SCALE_DEFAULT);
             return scaledImage;
         }
@@ -1866,6 +1882,8 @@ public class Object2DJPanel extends JPanel {
         PartImageInfo info = getPartImageInfo(item);
         if (null != info) {
             Image img = info.getScaledImage(currentScale);
+            int img_w = info.getScaledImageWidth();
+            int img_h = info.getScaledImageHeight();
             MinMax tempMinMax = new MinMax();
             tempMinMax.min.x = minX;
             tempMinMax.max.x = maxX;
@@ -1873,12 +1891,12 @@ public class Object2DJPanel extends JPanel {
             tempMinMax.max.y = maxY;
             translateThenRotate(g2d, item.x + info.xoffset, item.y + info.yoffset, tempMinMax, currentScale, info.ignoreRotations, -rotationOffsetParam - item.getRotation());
 //            translateThenRotateItem(g2d, minX, minY, maxX, maxY, item, rotationOffsetParam, currentScale, info.ignoreRotations);
-            g2d.translate(-(img.getWidth(this) / 2.0), -(img.getHeight(this) / 2.0));
+            g2d.translate(-(img_w / 2.0), -(img_h / 2.0));
             g2d.drawImage(img, null, null);
             if (viewDetails) {
                 g2d.translate(-1, -1);
                 g2d.setColor(item.getLabelColor());
-                g2d.draw(new Rectangle2D.Double(0, 0, img.getWidth(this) + 2, img.getHeight(this) + 2));
+                g2d.draw(new Rectangle2D.Double(0, 0, img_w + 2,img_h + 2));
             }
             g2d.setColor(Color.BLACK);
 

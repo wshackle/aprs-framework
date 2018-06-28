@@ -40,6 +40,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Objects;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
@@ -368,6 +369,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         desktopManager.activateFrame(frameToShow);
     }
 
+    private String lastFrameTitles[] = new String[0];
     public void setupWindowsMenu() {
 //        jMenuWindow.removeAll();
 
@@ -380,6 +382,22 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         int count = 1;
         ArrayList<JInternalFrame> framesList = new ArrayList<>(Arrays.asList(jDesktopPane1.getAllFrames()));
         framesList.sort(Comparator.comparing(JInternalFrame::getTitle));
+        boolean framesChanged = false;
+        if(lastFrameTitles.length != framesList.size()) {
+            framesChanged = true;
+            lastFrameTitles = new String[framesList.size()];
+        }
+        for (int i = 0; i < framesList.size(); i++) {
+            JInternalFrame f = framesList.get(i);
+            String title = f.getTitle();
+            if(!Objects.equals(lastFrameTitles[i], title)) {
+                lastFrameTitles[i] = title;
+                framesChanged= true;
+            }
+        }
+        if(!framesChanged) {
+            return;
+        }
         List<JMenuItem> menuItems = new ArrayList<>();
         int framesListSize = framesList.size();
         for (JInternalFrame f : framesList) {
