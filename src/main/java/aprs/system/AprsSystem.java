@@ -1426,7 +1426,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         this.logCrclProgramDir = null;
         this.logImageDir = null;
     }
-    
+
     @Nullable
     private String robotName = null;
 
@@ -3274,6 +3274,8 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 || (null != safeAbortFuture && !safeAbortFuture.isDone());
     }
 
+    private long lastRunAllUpdateRunnableTime = System.currentTimeMillis();
+
     private void updateTitle(String stateString, String stateDescription) {
         String oldTitle = getTitle();
         String crclClientError = getCrclClientErrorString();
@@ -3299,10 +3301,20 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             setTitle(newTitle);
             this.asString = newTitle;
             setupWindowsMenu();
+            runAllUpdateRunnables();
+        } else {
+            long time = System.currentTimeMillis();
+            if (time - lastRunAllUpdateRunnableTime > 100) {
+                runAllUpdateRunnables();
+            }
         }
+    }
+
+    private void runAllUpdateRunnables() {
         for (Runnable r : titleUpdateRunnables) {
             r.run();
         }
+        lastRunAllUpdateRunnableTime = System.currentTimeMillis();
     }
 
     private String pddlActionString() {
@@ -6450,7 +6462,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         this.logCrclProgramDir = f;
         return f;
     }
-    
+
     @Nullable private volatile File logCrclStatusDir = null;
 
     public File getLogCrclStatusDir() throws IOException {
@@ -6463,7 +6475,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         this.logCrclStatusDir = f;
         return f;
     }
-    
+
     @Nullable private volatile File logCrclCommandDir = null;
 
     public File getLogCrclCommandDir() throws IOException {
@@ -6476,13 +6488,13 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         this.logCrclCommandDir = f;
         return f;
     }
-    
+
     @Nullable public File logCrclCommand(String prefix, CRCLCommandType cmd) {
-        File f=null;
+        File f = null;
         try {
             String xmlString = CRCLSocket.getUtilSocket().commandToPrettyString(cmd);
             f = createTempFile(prefix, ".xml", getLogCrclCommandDir());
-            try(PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (JAXBException | CRCLException | IOException ex) {
@@ -6490,13 +6502,13 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         }
         return f;
     }
-    
+
     @Nullable public File logCrclStatus(String prefix, CRCLStatusType stat) {
-        File f=null;
+        File f = null;
         try {
             String xmlString = CRCLSocket.getUtilSocket().statusToPrettyString(stat);
             f = createTempFile(prefix, ".xml", getLogCrclStatusDir());
-            try(PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {
@@ -6504,7 +6516,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         }
         return f;
     }
-    
+
     private static String cleanAndLimitFilePrefix(String prefix_in) {
         if (prefix_in.length() > 80) {
             prefix_in = prefix_in.substring(0, 79);

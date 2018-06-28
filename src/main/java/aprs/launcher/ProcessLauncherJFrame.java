@@ -620,7 +620,8 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 parseLaunchFileLine(line, futures);
             }
         }
-        return XFuture.allOf(futures.toArray(new XFuture<?>[0]));
+        return XFuture.allOf(futures.toArray(new XFuture<?>[0]))
+                .always(WrappedProcess::shutdownStarterService);
     }
 
     private final ConcurrentLinkedDeque<Runnable> onCloseRunnables = new ConcurrentLinkedDeque<>();
