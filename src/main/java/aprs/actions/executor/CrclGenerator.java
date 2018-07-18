@@ -144,6 +144,7 @@ import rcs.posemath.Posemath;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.util.Iterator;
+import static java.util.Objects.requireNonNull;
 import java.util.TreeMap;
 
 /**
@@ -357,6 +358,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         }
                     } else {
                         PointType partPt = partPose.getPoint();
+                        if (null == partPt) {
+                            throw new IllegalStateException("pose for " + partName + " has null point property");
+                        }
                         takePartOpAction = new OpAction(pa.getType(), pa.getArgs(), partPt.getX(), partPt.getY(), posNameToType(partName), inKitTrayByName(partName));
                         takePartPddlAction = pa;
                         skipNextPlace = false;
@@ -400,6 +404,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             }
                         } else {
                             PointType slotPt = slotPose.getPoint();
+                            if (null == slotPt) {
+                                throw new IllegalStateException("pose for " + slotName + " has null point property");
+                            }
                             OpAction placePartOpAction = new OpAction(pa.getType(), pa.getArgs(), slotPt.getX(), slotPt.getY(), posNameToType(slotName), inKitTrayByName(slotName));
                             ret.add(takePartOpAction);
                             ret.add(placePartOpAction);
@@ -3161,11 +3168,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             try {
                 PoseType trayPose = tray.getPartsTrayPose();
                 if (null != trayPose) {
-                    takeSimViewSnapshot("inspectKit.correctPartsTray.partsTrayPose",
-                            new PmCartesian(
-                                    trayPose.getPoint().getX(),
-                                    trayPose.getPoint().getY(), 0),
-                            tray.getPartsTrayName());
+                    PointType trayPosePoint = trayPose.getPoint();
+                    if (null != trayPosePoint) {
+                        takeSimViewSnapshot("inspectKit.correctPartsTray.partsTrayPose",
+                                new PmCartesian(
+                                        trayPosePoint.getX(),
+                                        trayPosePoint.getY(), 0),
+                                tray.getPartsTrayName());
+                    }
                 }
                 takeSimViewSnapshot("inspectKit.correctPartsTray.slotList",
                         tray.getSlotList());
@@ -3198,8 +3208,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             //-- Get all the slots for the current parts tray
             List<Slot> slotList = tray.getSlotList();
             for (Slot slot : slotList) {
-                double slotx = slot.getSlotPose().getPoint().getX();
-                double sloty = slot.getSlotPose().getPoint().getY();
+                PoseType slotPose = slot.getSlotPose();
+                PointType slotPosePoint = slotPose.getPoint();
+                if (null == slotPosePoint) {
+                    throw new IllegalStateException("pose for slot=" + slot + " has null point property");
+                }
+                double slotx = slotPosePoint.getX();
+                double sloty = slotPosePoint.getY();
                 //logDebug(slot.getSlotName() + ":(" + x_offset + "," + y_offset + ")");
                 logDebug("++++++ " + slot.getSlotName() + ":(" + slotx + "," + sloty + ")");
 
@@ -3381,11 +3396,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 continue;
             }
 //            partsTrayPose = visionToRobotPose(partsTrayPose);
-            logDebug("-Checking parts tray [" + partsTray.getPartsTrayName() + "] :(" + partsTrayPose.getPoint().getX() + "," + partsTrayPose.getPoint().getY() + ")");
+            PointType partsTrayPosePoint = partsTrayPose.getPoint();
+            if (null == partsTrayPosePoint) {
+                throw new IllegalStateException("pose for tray=" + trayName + " has null point property");
+            }
+            logDebug("-Checking parts tray [" + partsTray.getPartsTrayName() + "] :(" + partsTrayPosePoint.getX() + "," + partsTrayPosePoint.getY() + ")");
             partsTray.setpartsTrayPose(partsTrayPose);
-            double partsTrayPoseX = partsTrayPose.getPoint().getX();
-            double partsTrayPoseY = partsTrayPose.getPoint().getY();
-            double partsTrayPoseZ = partsTrayPose.getPoint().getZ();
+            double partsTrayPoseX = partsTrayPosePoint.getX();
+            double partsTrayPoseY = partsTrayPosePoint.getY();
+            double partsTrayPoseZ = partsTrayPosePoint.getZ();
 
             double rotation = 0;
             //-- Read partsTrayList
@@ -3464,8 +3483,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logDebug("+++ " + slot.getSlotName() + ":(" + slotX + "," + slotY + ")");
                 //-- compare this slot pose with the ones in PlacePartSlotPoseList
                 for (PoseType pose : PlacePartSlotPoseList) {
-                    logDebug("      placepartpose :(" + pose.getPoint().getX() + "," + pose.getPoint().getY() + ")");
-                    double distance = Math.hypot(pose.getPoint().getX() - slotX, pose.getPoint().getY() - slotY);
+                    PointType point = pose.getPoint();
+                    if (null == point) {
+                        throw new IllegalStateException("pose on PlacePartSlotPoseList has null point property: PlacePartSlotPoseList=" + PlacePartSlotPoseList);
+                    }
+                    logDebug("      placepartpose :(" + point.getX() + "," + point.getY() + ")");
+                    double distance = Math.hypot(point.getX() - slotX, point.getY() - slotY);
                     logDebug("         Distance = " + distance + "\n");
                     if (distance < 5.0) {
                         count++;
@@ -3594,11 +3617,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null == posePart) {
             throw new IllegalStateException("getPose(" + partName + ") returned null");
         }
+        PointType posePartPoint = posePart.getPoint();
+        if (null == posePartPoint) {
+            throw new IllegalStateException("getPose(" + partName + ") returned pose with null point property");
+        }
 //        posePart = visionToRobotPose(posePart);
-        double partX = posePart.getPoint().getX();
-        double partY = posePart.getPoint().getY();
-        double slotX = slot.getSlotPose().getPoint().getX();
-        double slotY = slot.getSlotPose().getPoint().getY();
+        double partX = posePartPoint.getX();
+        double partY = posePartPoint.getY();
+        PointType slotPosePoint = slot.getSlotPose().getPoint();
+        if (null == slotPosePoint) {
+            throw new IllegalStateException("slot has pose with null point property : slot=" + slot);
+        }
+        double slotX = slotPosePoint.getX();
+        double slotY = slotPosePoint.getY();
         logDebug(":(" + partX + "," + partY + ")");
         double distance = Math.hypot(partX - slotX, partY - slotY);
         System.out.print("-------- Distance = " + distance);
@@ -3921,7 +3952,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         continue;
                     }
                     PointType point = pose.getPoint();
+                    if (point == null) {
+                        throw new IllegalStateException("pose has null point property");
+                    }
                     PointType entryPoint = entry.getValue().getPoint();
+                    if (entryPoint == null) {
+                        throw new IllegalStateException("pose has null point property");
+                    }
                     double diff = CRCLPosemath.diffPoints(point, entryPoint);
                     if (diff < 15.0) {
                         String errMsg = "two poses in cache are too close : diff=" + diff + " posename=" + posename + ",pose=" + CRCLPosemath.toString(point) + ", entry=" + entry + ", entryPoint=" + CRCLPosemath.toString(entryPoint);
@@ -4048,6 +4085,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     private void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
 
+        if (null == pose) {
+            throw new IllegalArgumentException("null == pose");
+        }
         addOpenGripper(cmds);
 
         checkSettings();
@@ -4065,8 +4105,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //        approachPose.getPoint().setZ(pose.getPoint().getZ() + approachZOffset);
         lastTestApproachPose = approachPose;
 
-        PoseType takePose = CRCLPosemath.copy(pose);
-        takePose.getPoint().setZ(pose.getPoint().getZ() + takeZOffset);
+        PoseType takePose = requireNonNull(CRCLPosemath.copy(pose), "CRCLPosemath.copy(pose)");
+        PointType posePoint = pose.getPoint();
+        if (null == posePoint) {
+            throw new IllegalStateException("pose has null point property");
+        }
+        PointType takePosePoint = takePose.getPoint();
+        if (null == takePosePoint) {
+            throw new IllegalStateException("pose has null point property");
+        }
+        takePosePoint.setZ(posePoint.getZ() + takeZOffset);
 
         addSetFastTestSpeed(cmds);
 
@@ -4317,7 +4365,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         lastTestApproachPose = null;
 
         PoseType takePose = CRCLPosemath.copy(poseWithToolOffset);
-        takePose.getPoint().setZ(poseWithToolOffset.getPoint().getZ() + takeZOffset);
+        PointType poseWithToolOffsetPoint = poseWithToolOffset.getPoint();
+        if (null == poseWithToolOffsetPoint) {
+            throw new IllegalStateException("null == poseWithToolOffsetPoint");
+        }
+        PointType takePosePoint = takePose.getPoint();
+        if (null == takePosePoint) {
+            throw new IllegalStateException("null == takePosePoint");
+        }
+        takePosePoint.setZ(poseWithToolOffsetPoint.getZ() + takeZOffset);
 
         addSetFastSpeed(cmds);
 
@@ -4336,7 +4392,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 double distToPart = af.getClosestRobotPartDistance();
                 if (distToPart > pickupDistMax) {
                     PointType currentPoint = af.getCurrentPosePoint();
-                    if(null == currentPoint) {
+                    if (null == currentPoint) {
                         throw new IllegalStateException("null == currentPoint");
                     }
                     PointType uncorrectedPoint = af.reverseCorrectPoint(currentPoint);
@@ -4384,7 +4440,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         PoseType approachPose = addZToPose(pose, approachZOffset);
 
         PoseType takePose = CRCLPosemath.copy(pose);
-        takePose.getPoint().setZ(pose.getPoint().getZ() + takeZOffset);
+        PointType takePosePoint = takePose.getPoint();
+        if (null == takePosePoint) {
+            throw new IllegalStateException("null == takePosePoint");
+        }
+        PointType posePoint = pose.getPoint();
+        if (null == posePoint) {
+            throw new IllegalStateException("null == posePoint");
+        }
+        takePosePoint.setZ(posePoint.getZ() + takeZOffset);
 
         addSetFastSpeed(cmds);
 
@@ -4425,6 +4489,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.rotSpeed = rotSpeed;
     }
 
+    private boolean checkPose(PoseType pose) {
+        assert null != aprsSystem : "(null == aprsSystemInterface)";
+        return aprsSystem.checkPose(pose);
+    }
+
     private void checkSettings() {
         String rpyString = options.get("rpy");
         if (null != rpyString && rpyString.length() > 0) {
@@ -4436,8 +4505,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     rpy.p = Math.toRadians(Double.parseDouble(rpyFields[1]));
                     rpy.y = Math.toRadians(Double.parseDouble(rpyFields[2]));
                     PoseType pose = CRCLPosemath.toPoseType(new PmCartesian(), rpy);
-                    xAxis = pose.getXAxis();
-                    zAxis = pose.getZAxis();
+                    if (!checkPose(pose)) {
+                        throw new RuntimeException("invalid pose passed with rpy setting :" + CRCLPosemath.poseToString(pose));
+                    }
+                    VectorType xAxisVector = pose.getXAxis();
+                    if (null == xAxisVector) {
+                        throw new IllegalStateException("null == xAxisVector");
+                    }
+                    xAxis = xAxisVector;
+                    VectorType zAxisVector = pose.getZAxis();
+                    if (null == zAxisVector) {
+                        throw new IllegalStateException("null == zAxisVector");
+                    }
+                    zAxis = zAxisVector;
                 } else {
                     throw new Exception("bad rpyString = \"" + rpyString + "\", rpyFields=" + Arrays.toString(rpyFields));
                 }
@@ -4663,16 +4743,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addOptionalCommand(openGripperCmd, cmds, cb);
     }
 
-    @SuppressWarnings("unused")
-    private PoseType copyAndAddZ(PoseType pose_in, double offset, double limit) {
-        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
-        PoseType currentPose = aprsSystem.getCurrentPose();
-        if (null == currentPose) {
-            throw new IllegalStateException("currentPose is null");
+    private PoseType copyAndAddZ(PoseType poseIn, double offset, double limit) {
+        PoseType poseOut = requireNonNull(CRCLPosemath.copy(poseIn), "CRCLPosemath.copy(poseIn)");
+        PointType outPoint = poseOut.getPoint();
+        if (null == outPoint) {
+            throw new IllegalStateException("null == outPoint");
         }
-        PoseType out = CRCLPosemath.copy(currentPose);
-        out.getPoint().setZ(Math.min(limit, out.getPoint().getZ() + offset));
-        return out;
+        outPoint.setZ(Math.min(limit, outPoint.getZ() + offset));
+        return poseOut;
     }
 
     private void addMoveUpFromCurrent(List<MiddleCommandType> cmds, double offset, double limit) {
@@ -4683,10 +4761,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         origMessageCmd.setMessage("moveUpFromCurrent" + " action=" + lastIndex + " crclNumber=" + crclNumber.get() + ",offset=" + offset + ",limit=" + limit);
         addOptionalCommand(origMessageCmd, cmds, (CrclCommandWrapper wrapper) -> {
             MiddleCommandType cmd = wrapper.getWrappedCommand();
-            AprsSystem af = aprsSystem;
-            assert (af != null) : "af == null : @AssumeAssertion(nullness)";
-            PoseType pose = af.getCurrentPose();
-            if (pose == null || pose.getPoint() == null || pose.getPoint().getZ() >= (limit - 1e-6)) {
+            AprsSystem af = requireNonNull(aprsSystem, "aprsSystem");
+            PoseType pose = requireNonNull(af.getCurrentPose(), "af.getCurrentPose()");
+            PointType posePoint = requireNonNull(pose.getPoint(), "pose.getPoint()");
+            if (posePoint.getZ() >= (limit - 1e-6)) {
                 MessageType messageCommand = new MessageType();
                 messageCommand.setMessage("moveUpFromCurrent NOT needed." + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
                 wrapper.setWrappedCommand(messageCommand);
@@ -4728,11 +4806,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         MoveToType moveCmd = new MoveToType();
         moveCmd.setName(name);
         setCommandId(moveCmd);
+        if (!checkPose(pose)) {
+            throw new RuntimeException("invalid pose passed to addMoveTo :" + CRCLPosemath.poseToString(pose));
+        }
         moveCmd.setEndPosition(pose);
         moveCmd.setMoveStraight(straight);
         cmds.add(moveCmd);
         atLookForPosition = false;
-        expectedJoint0Val = getExpectedJoint0(pose.getPoint());
+        PointType posePoint = requireNonNull(pose.getPoint(), "pose.getPoint()");
+        expectedJoint0Val = getExpectedJoint0(posePoint);
         logDebug("addMoveTo: expectedJoint0Val = " + expectedJoint0Val);
     }
 
@@ -4961,7 +5043,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 String jointValsString = this.toolChangerJointValsMap.get(name);
                 if (null != jointValsString && jointValsString.length() > 0) {
                     PoseType pose = entry.getValue();
-                    double atanxy = atanPoint(pose.getPoint());
+                    PointType posePoint = requireNonNull(pose.getPoint(), "pose.getPoint()");
+                    double atanxy = atanPoint(posePoint);
                     double jointVals[] = jointValStringToArray(jointValsString);
                     double joint0 = jointVals[0];
                     logDebug(name + "," + atanxy + "," + joint0);
@@ -5971,10 +6054,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         lastTestApproachPose = null;
 
         //logDebug("Z= " + pose.getPoint().getZ());
-        approachPose.getPoint().setZ(poseWithToolOffset.getPoint().getZ() + approachZOffset);
+        PointType approachPosePoint = requireNonNull(approachPose.getPoint(), "approachPose.getPoint()");
+        PointType poseWithToolOffsetPoint = requireNonNull(poseWithToolOffset.getPoint(), "poseWithToolOffset.getPoint()");
+        approachPosePoint.setZ(poseWithToolOffsetPoint.getZ() + approachZOffset);
 
         PoseType placePose = CRCLPosemath.copy(poseWithToolOffset);
-        placePose.getPoint().setZ(poseWithToolOffset.getPoint().getZ() + placeZOffset);
+        PointType placePosePoint = requireNonNull(placePose.getPoint(), "placePose.getPoint()");
+        placePosePoint.setZ(poseWithToolOffsetPoint.getZ() + placeZOffset);
 
         addSetFastSpeed(cmds);
 
@@ -6001,15 +6087,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (debug && toolOffsetPose != DEFAULT_TOOL_OFFSET_POSE) {
             addMessageCommand(cmds,
                     "pose=" + CRCLPosemath.poseToXyzRpyString(pose) + "\n"
-                            + "toolOffsetPose=" + CRCLPosemath.poseToXyzRpyString(toolOffsetPose) + "\n"
-                                    + "poseWithToolOffset=" + CRCLPosemath.poseToXyzRpyString(poseWithToolOffset) + "\n"
+                    + "toolOffsetPose=" + CRCLPosemath.poseToXyzRpyString(toolOffsetPose) + "\n"
+                    + "poseWithToolOffset=" + CRCLPosemath.poseToXyzRpyString(poseWithToolOffset) + "\n"
             );
             System.out.println("pose=" + CRCLPosemath.poseToXyzRpyString(pose) + "\n"
                     + "toolOffsetPose=" + CRCLPosemath.poseToXyzRpyString(toolOffsetPose) + "\n"
-                            + "poseWithToolOffset=" + CRCLPosemath.poseToXyzRpyString(poseWithToolOffset) + "\n");
+                    + "poseWithToolOffset=" + CRCLPosemath.poseToXyzRpyString(poseWithToolOffset) + "\n");
             System.out.println("pose=" + CRCLPosemath.poseToString(pose) + "\n"
                     + "toolOffsetPose=" + CRCLPosemath.poseToString(toolOffsetPose) + "\n"
-                            + "poseWithToolOffset=" + CRCLPosemath.poseToString(poseWithToolOffset) + "\n");
+                    + "poseWithToolOffset=" + CRCLPosemath.poseToString(poseWithToolOffset) + "\n");
         }
     }
 

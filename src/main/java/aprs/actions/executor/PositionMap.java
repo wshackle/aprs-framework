@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import static crcl.utils.CRCLPosemath.point;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import static java.util.Objects.requireNonNull;
 import java.util.function.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
@@ -218,18 +219,21 @@ public class PositionMap {
             }
             return poseIn;
         }
-        lastPointIn = poseIn.getPoint();
+        PointType poseInPoint = requireNonNull(poseIn.getPoint(), "poseIn.getPoint()");
+        lastPointIn = poseInPoint;
         PointType offsetPt = getOffset(
-                poseIn.getPoint().getX(),
-                poseIn.getPoint().getY(),
-                poseIn.getPoint().getZ()
+                poseInPoint.getX(),
+                poseInPoint.getY(),
+                poseInPoint.getZ()
         );
         PointType pt = point(
-                offsetPt.getX() + poseIn.getPoint().getX(),
-                offsetPt.getY() + poseIn.getPoint().getY(),
-                offsetPt.getZ() + poseIn.getPoint().getZ()
+                offsetPt.getX() + poseInPoint.getX(),
+                offsetPt.getY() + poseInPoint.getY(),
+                offsetPt.getZ() + poseInPoint.getZ()
         );
-        PoseType poseOut = pose(pt, poseIn.getXAxis(), poseIn.getZAxis()
+        PoseType poseOut = pose(pt,
+                requireNonNull(poseIn.getXAxis(), "poseIn.getXAxis()"),
+                requireNonNull(poseIn.getZAxis(), "poseIn.getZAxis()")
         );
         lastPointOut = poseOut.getPoint();
         return poseOut;

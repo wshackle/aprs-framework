@@ -152,6 +152,9 @@ import aprs.database.Tool;
 import javax.swing.JRadioButtonMenuItem;
 import static aprs.misc.Utils.readCsvFileToTable;
 import static aprs.misc.Utils.readCsvFileToTableAndMap;
+import crcl.base.JointStatusesType;
+import java.util.HashSet;
+import static java.util.Objects.requireNonNull;
 
 /**
  *
@@ -355,7 +358,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             PoseType newPose = crclGenerator.getToolOffsetPose();
             if (null != newPose) {
                 PmRpy rpy = CRCLPosemath.toPmRpy(newPose);
-                PmCartesian tran = CRCLPosemath.toPmCartesian(newPose.getPoint());
+                PointType newPosePoint = requireNonNull(newPose.getPoint(), "newPose.getPoint()");
+                PmCartesian tran = CRCLPosemath.toPmCartesian(newPosePoint);
                 String offsetText
                         = String.format("X=%.3f,Y=%.3f,Z=%.3f,roll=%.3f,pitch=%.3f,yaw=%.3f",
                                 tran.x, tran.y, tran.z,
@@ -714,6 +718,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jButtonRecordToolHolderApproach = new javax.swing.JButton();
         jButtonDeleteToolHolderPose = new javax.swing.JButton();
         jButtonAddToolHolderPose = new javax.swing.JButton();
+        jButtonRenameToolHolderPose = new javax.swing.JButton();
         jPanelToolOffsets = new javax.swing.JPanel();
         jButtonAddToolOffset = new javax.swing.JButton();
         jButtonDeleteToolOffset = new javax.swing.JButton();
@@ -844,6 +849,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jCheckBoxReplan.setText("Continue");
 
+        jTableOptions.setAutoCreateRowSorter(true);
         jTableOptions.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {"rpy", "175.0,0.0,0.0"},
@@ -1295,6 +1301,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         });
 
+        jTableHolderContents.setAutoCreateRowSorter(true);
         jTableHolderContents.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -1315,6 +1322,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jTabbedPaneToolChangeInner.addTab("Holder Contents", jScrollPaneHolderContents);
 
+        jTableToolHolderPositions.setAutoCreateRowSorter(true);
         jTableToolHolderPositions.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -1361,6 +1369,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         });
 
+        jButtonRenameToolHolderPose.setText("Rename");
+        jButtonRenameToolHolderPose.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonRenameToolHolderPoseActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelToolHolderPositionsLayout = new javax.swing.GroupLayout(jPanelToolHolderPositions);
         jPanelToolHolderPositions.setLayout(jPanelToolHolderPositionsLayout);
         jPanelToolHolderPositionsLayout.setHorizontalGroup(
@@ -1374,7 +1389,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 .addComponent(jButtonAddToolHolderPose)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonDeleteToolHolderPose)
-                .addContainerGap(546, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonRenameToolHolderPose)
+                .addContainerGap(461, Short.MAX_VALUE))
             .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
                     .addContainerGap()
@@ -1389,7 +1406,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jButtonRecordToolHolderPose)
                     .addComponent(jButtonRecordToolHolderApproach)
                     .addComponent(jButtonDeleteToolHolderPose)
-                    .addComponent(jButtonAddToolHolderPose))
+                    .addComponent(jButtonAddToolHolderPose)
+                    .addComponent(jButtonRenameToolHolderPose))
                 .addContainerGap())
             .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolHolderPositionsLayout.createSequentialGroup()
@@ -1414,6 +1432,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         });
 
+        jTableToolOffsets.setAutoCreateRowSorter(true);
         jTableToolOffsets.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -1474,6 +1493,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jButtonDeleteTrayAttach.setText("Delete");
 
+        jTableTrayAttachOffsets.setAutoCreateRowSorter(true);
         jTableTrayAttachOffsets.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -2944,7 +2964,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             this.crclProgram = crclProgram;
             unstartedProgram = crclProgram;
-            if (crclProgram.getName() == null || crclProgram.getName().length() < 1) {
+            String crclProgramName = crclProgram.getName();
+            if (crclProgramName == null || crclProgramName.length() < 1) {
                 crclProgram.setName(getActionsCrclName());
             }
             Utils.runOnDispatchThreadWithCatch(() -> loadProgramToTable(crclProgram));
@@ -3000,7 +3021,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             throw new IllegalStateException("Can't start crcl program with null aprsSystemInterface reference.");
         }
         aprsSystem.addProgramLineListener(this);
-        if (crclProgram1.getName() == null || crclProgram1.getName().length() < 1) {
+        String crclProgramName = crclProgram.getName();
+        if (crclProgramName == null || crclProgramName.length() < 1) {
             crclProgram1.setName(getActionsCrclName());
         }
     }
@@ -3377,24 +3399,25 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             randomPickupCount++;
             this.jTextFieldRandomPickupCount.setText(Integer.toString(randomPickupCount));
-
-            String randomPoseString = testDropOffPose.getPoint().getX()
-                    + "," + testDropOffPose.getPoint().getY()
-                    + "," + testDropOffPose.getPoint().getZ();
+            PointType testDropOffPosePoint = requireNonNull(testDropOffPose.getPoint(), "testDropOffPose.getPoint()");
+            String randomPoseString = testDropOffPosePoint.getX()
+                    + "," + testDropOffPosePoint.getY()
+                    + "," + testDropOffPosePoint.getZ();
             logDebug("randomPoseString = " + randomPoseString);
             logDebug("randomPickupCount = " + randomPickupCount);
             String partName = (String) jComboBoxManualObjectName.getSelectedItem();
             if (null != partName && partName.length() > 0) {
                 PoseType poseFromDb = crclGenerator.getPose(partName);
                 if (null != poseFromDb) {
-                    String poseFromDbString = poseFromDb.getPoint().getX()
-                            + "," + poseFromDb.getPoint().getY()
-                            + "," + poseFromDb.getPoint().getZ();
+                    PointType poseFromDbPoint = requireNonNull(poseFromDb.getPoint(), "poseFromDb.getPoint()");
+                    String poseFromDbString = poseFromDbPoint.getX()
+                            + "," + poseFromDbPoint.getY()
+                            + "," + poseFromDbPoint.getZ();
                     logDebug("poseFromDbString = " + poseFromDbString);
                     String offsetString
-                            = (testDropOffPose.getPoint().getX() - poseFromDb.getPoint().getX())
-                            + "," + (testDropOffPose.getPoint().getY() - poseFromDb.getPoint().getY())
-                            + "," + (testDropOffPose.getPoint().getZ() - poseFromDb.getPoint().getZ());
+                            = (testDropOffPosePoint.getX() - poseFromDbPoint.getX())
+                            + "," + (testDropOffPosePoint.getY() - poseFromDbPoint.getY())
+                            + "," + (testDropOffPosePoint.getZ() - poseFromDbPoint.getZ());
                     logDebug("offsetString = " + offsetString);
                     writeCorrectionCsv(recordCsvName,
                             System.currentTimeMillis() + ", " + partName + ", " + randomPoseString + ", " + poseFromDbString + ", " + offsetString);
@@ -3415,19 +3438,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }//GEN-LAST:event_jButtonContRandomTestActionPerformed
 
     private XFuture<Boolean> startRandomTest() {
-//        try {
         clearAll();
         queryLogFileName();
         jCheckBoxReplan.setSelected(true);
         autoStart = true;
-//            jCheckBoxAutoStartCrcl.setSelected(true);
-        final String partName = (String) jComboBoxManualObjectName.getSelectedItem();
 
+        PointType testDropOffPosePoint = requireNonNull(testDropOffPose.getPoint(), "testDropOffPose.getPoint()");
         String randomPoseString
                 = String.format("%.1f, %.1f, %.1f",
-                        testDropOffPose.getPoint().getX(),
-                        testDropOffPose.getPoint().getY(),
-                        testDropOffPose.getPoint().getZ());
+                        testDropOffPosePoint.getX(),
+                        testDropOffPosePoint.getY(),
+                        testDropOffPosePoint.getZ());
         logDebug("randomPoseString = " + randomPoseString);
         logDebug("randomDropOffCount = " + randomDropOffCount);
         customRunnables.clear();
@@ -3452,12 +3473,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         x -> recursiveSupplyBoolean(x, this::recordAndCompletTestPickup))
                 .thenCompose("randomTest.randomDropOff",
                         x -> recursiveSupplyBoolean(x, this::randomDropOff));
-//        } catch (IOException ex) {
-//            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//            XFuture<Boolean> ret = new XFuture<>();
-//            ret.completeExceptionally(ex);
-//            return ret;
-//        }
     }
 
     private void startGridTest() throws HeadlessException {
@@ -3497,11 +3512,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 //            jCheckBoxAutoStartCrcl.setSelected(true);
             final String partName = (String) jComboBoxManualObjectName.getSelectedItem();
             this.gridDropOff();
+            PointType testDropOffPosePoint = requireNonNull(testDropOffPose.getPoint(), "testDropOffPose.getPoint()");
             String randomPoseString
                     = String.format("%.1f, %.1f, %.1f",
-                            testDropOffPose.getPoint().getX(),
-                            testDropOffPose.getPoint().getY(),
-                            testDropOffPose.getPoint().getZ());
+                            testDropOffPosePoint.getX(),
+                            testDropOffPosePoint.getY(),
+                            testDropOffPosePoint.getZ());
             logDebug("randomPoseString = " + randomPoseString);
             logDebug("randomDropOffCount = " + randomDropOffCount);
             customRunnables.clear();
@@ -3570,8 +3586,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog(msg);
                 return;
             }
-            String poseFromDbString = poseFromDb.getPoint().getX()
-                    + "," + poseFromDb.getPoint().getY();
+            PointType poseFromDbPoint = requireNonNull(poseFromDb.getPoint(), "poseFromDb.getPoint()");
+            String poseFromDbString
+                    = poseFromDbPoint.getX()
+                    + "," + poseFromDbPoint.getY();
             try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
                 pw.println(System.currentTimeMillis() + ",FAIL," + partName + "," + poseFromDbString);
             }
@@ -3597,8 +3615,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog(msg);
                 return;
             }
-            String poseFromDbString = poseFromDb.getPoint().getX()
-                    + "," + poseFromDb.getPoint().getY();
+            PointType poseFromDbPoint = requireNonNull(poseFromDb.getPoint(), "poseFromDb.getPoint()");
+            String poseFromDbString
+                    = poseFromDbPoint.getX()
+                    + "," + poseFromDbPoint.getY();
             try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
                 pw.println(System.currentTimeMillis() + ",SUCCESS," + partName + "," + poseFromDbString);
             }
@@ -4075,22 +4095,23 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             try {
                 PoseType poseFromDb = crclGenerator.getPose(partName);
                 if (null != poseFromDb) {
-                    String poseFromDbString = poseFromDb.getPoint().getX()
-                            + "," + poseFromDb.getPoint().getY()
-                            + "," + poseFromDb.getPoint().getZ();
+                    PointType poseFromDbPoint = requireNonNull(poseFromDb.getPoint(), "poseFromDb.getPoint()");
+                    String poseFromDbString
+                            = poseFromDbPoint.getX()
+                            + "," + poseFromDbPoint.getY()
+                            + "," + poseFromDbPoint.getZ();
                     logDebug("poseFromDbString = " + poseFromDbString);
-                    PoseType curPose = aprsSystem.getCurrentPose();
-                    assert (null != curPose) :
-                            "aprsSystemInterface.getCurrentPose() returned null : @AssumeAssertion(nullness)";
+                    PoseType curPose = requireNonNull(aprsSystem.getCurrentPose(), "aprsSystem.getCurrentPose()");
+                    PointType curPosePoint = requireNonNull(curPose.getPoint(), "curPose.getPoint()");
                     String curPoseString
                             = String.format("%.1f, %.1f, %.1f",
-                                    curPose.getPoint().getX(),
-                                    curPose.getPoint().getY(),
-                                    curPose.getPoint().getZ());
+                                    curPosePoint.getX(),
+                                    curPosePoint.getY(),
+                                    curPosePoint.getZ());
                     String offsetString
-                            = (curPose.getPoint().getX() - poseFromDb.getPoint().getX())
-                            + "," + (curPose.getPoint().getY() - poseFromDb.getPoint().getY())
-                            + "," + (curPose.getPoint().getZ() - poseFromDb.getPoint().getZ());
+                            = (curPosePoint.getX() - poseFromDbPoint.getX())
+                            + "," + (curPosePoint.getY() - poseFromDbPoint.getY())
+                            + "," + (curPosePoint.getZ() - poseFromDbPoint.getZ());
                     logDebug("offsetString = " + offsetString);
                     writeCorrectionCsv(recordCsvName,
                             System.currentTimeMillis() + ", " + partName + ", " + curPoseString + ", " + poseFromDbString + ", " + offsetString);
@@ -4124,23 +4145,26 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private void updateLookForJoints(CRCLStatusType stat) {
-        if (null != stat && null != stat.getJointStatuses()) {
-            List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
-            String jointVals
-                    = jointStatusListToString(jointList);
-            logDebug("jointVals = " + jointVals);
-            DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
-            boolean keyFound = false;
-            for (int i = 0; i < model.getRowCount(); i++) {
-                if (Objects.equals("lookForJoints", model.getValueAt(i, 0))) {
-                    model.setValueAt(jointVals, i, 1);
-                    keyFound = true;
+        if (null != stat) {
+            JointStatusesType jointStatuses = stat.getJointStatuses();
+            if (null != jointStatuses) {
+                List<JointStatusType> jointList = jointStatuses.getJointStatus();
+                String jointVals
+                        = jointStatusListToString(jointList);
+                logDebug("jointVals = " + jointVals);
+                DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
+                boolean keyFound = false;
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    if (Objects.equals("lookForJoints", model.getValueAt(i, 0))) {
+                        model.setValueAt(jointVals, i, 1);
+                        keyFound = true;
+                    }
                 }
+                if (!keyFound) {
+                    model.addRow(new Object[]{"lookForJoints", jointVals});
+                }
+                crclGenerator.setOptions(getTableOptions());
             }
-            if (!keyFound) {
-                model.addRow(new Object[]{"lookForJoints", jointVals});
-            }
-            crclGenerator.setOptions(getTableOptions());
         }
     }
 
@@ -4296,6 +4320,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         int lineNumber = 0;
         readCsvFileToTable(jTableHolderContents, f);
         clearEmptyRows(jTableHolderContents);
+        clearRedundantRows(jTableHolderContents);
         setToolHolderContentsTableModelListener();
     }
 
@@ -4377,7 +4402,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return;
             }
             toolChangerPoseMapFileName = propertiesFile.getName() + ".toolChangerPoses.csv";
-            Utils.saveJTable(new File(propertiesFile.getParentFile(), toolChangerPoseMapFileName), jTableToolHolderPositions);
+            Utils.autoResizeTableColWidths(jTableToolHolderPositions);
+            File properitesParent = propertiesFile.getParentFile();
+            if (null != properitesParent && null != toolChangerPoseMapFileName) {
+                Utils.saveJTable(new File(propertiesFile.getParentFile(), toolChangerPoseMapFileName), jTableToolHolderPositions);
+            } else {
+                throw new IllegalStateException("properitesParent=" + properitesParent + ", toolChangerPoseMapFileName=" + toolChangerPoseMapFileName);
+            }
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
         }
@@ -4557,11 +4588,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @Nullable
     private String getJointValsString() {
         CRCLStatusType stat = aprsSystem.getCurrentStatus();
-        if (null != stat && null != stat.getJointStatuses()) {
-            List<JointStatusType> jointList = stat.getJointStatuses().getJointStatus();
-            String jointVals
-                    = jointStatusListToString(jointList);
-            return jointVals;
+        if (null != stat) {
+            JointStatusesType jointStatuses = stat.getJointStatuses();
+            if (null != jointStatuses) {
+                List<JointStatusType> jointList = jointStatuses.getJointStatus();
+                String jointVals
+                        = jointStatusListToString(jointList);
+                return jointVals;
+            }
         }
         return null;
     }
@@ -4602,10 +4636,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void clearEmptyToolChangerPoseRows() {
         clearEmptyRows(jTableToolHolderPositions);
+        Utils.autoResizeTableColWidths(jTableToolHolderPositions);
     }
 
     private void clearEmptHolderContentsRows() {
         clearEmptyRows(jTableHolderContents);
+        clearRedundantRows(jTableHolderContents);
     }
 
     private void clearEmptyRows(JTable jtable) {
@@ -4625,6 +4661,30 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
+    private void clearRedundantRows(JTable jtable) {
+        DefaultTableModel dtm = (DefaultTableModel) jtable.getModel();
+        Set<String> valStringSet = new HashSet<>();
+        for (int i = 0; i < dtm.getRowCount(); i++) {
+            Object val = dtm.getValueAt(i, 0);
+            if (val == null) {
+                dtm.removeRow(i);
+                i--;
+                continue;
+            }
+            String valString = val.toString();
+            if (valString.length() < 1) {
+                dtm.removeRow(i);
+                i--;
+            }
+            if (valStringSet.contains(valString)) {
+                dtm.removeRow(i);
+                i--;
+            } else {
+                valStringSet.add(valString);
+            }
+        }
+    }
+
     private void updateToolChangePose(String name, boolean approach, PoseType pose, PmRpy rpy, @Nullable String jointString) {
         clearEmptyToolChangerPoseRows();
         if (name == null || name.length() < 1) {
@@ -4632,12 +4692,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         int tableRowIndex = getToolChangerRow(name, approach);
         DefaultTableModel dtm = (DefaultTableModel) jTableToolHolderPositions.getModel();
+        PointType posePoint = requireNonNull(pose.getPoint(),"pose.getPoint()");
         if (tableRowIndex < 0) {
             dtm.addRow(new Object[]{
                 name,
-                pose.getPoint().getX(),
-                pose.getPoint().getY(),
-                pose.getPoint().getZ(),
+                posePoint.getX(),
+                posePoint.getY(),
+                posePoint.getZ(),
                 Math.toDegrees(rpy.r),
                 Math.toDegrees(rpy.p),
                 Math.toDegrees(rpy.y),
@@ -4645,9 +4706,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 jointString
             });
         } else {
-            dtm.setValueAt(pose.getPoint().getX(), tableRowIndex, 1);
-            dtm.setValueAt(pose.getPoint().getY(), tableRowIndex, 2);
-            dtm.setValueAt(pose.getPoint().getZ(), tableRowIndex, 3);
+            dtm.setValueAt(posePoint.getX(), tableRowIndex, 1);
+            dtm.setValueAt(posePoint.getY(), tableRowIndex, 2);
+            dtm.setValueAt(posePoint.getZ(), tableRowIndex, 3);
             dtm.setValueAt(Math.toDegrees(rpy.r), tableRowIndex, 4);
             dtm.setValueAt(Math.toDegrees(rpy.p), tableRowIndex, 5);
             dtm.setValueAt(Math.toDegrees(rpy.y), tableRowIndex, 6);
@@ -4835,9 +4896,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void jButtonDeleteToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteToolHolderPoseActionPerformed
         clearEmptyToolChangerPoseRows();
         clearEmptHolderContentsRows();
-        String nameToDelete = queryUserForToolHolderPosName("Delete Pose");
+        String nameToDelete = queryUserForToolHolderPosName("Holder name of pose to delete");
         deleteFromToolHolderPositionsTable(nameToDelete);
         deleteFromToolHolderContentsTable(nameToDelete);
+        Utils.autoResizeTableColWidths(jTableToolHolderPositions);
+        Utils.autoResizeTableColWidths(jTableHolderContents);
         syncPanelToGeneratorToolData();
         saveToolChangerPoseMap();
         saveToolHolderContentsMap();
@@ -4848,6 +4911,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         Map<String, PoseType> toolHolderPoseMap
                 = crclGenerator.getToolHolderPoseMap();
         toolHolderPoseMap.remove(nameToDelete);
+    }
+
+    private void renameFromToolHolderPositionsTable(String oldName, String newName) {
+        Map<String, PoseType> toolHolderPoseMap
+                = crclGenerator.getToolHolderPoseMap();
+        PoseType pose = toolHolderPoseMap.get(oldName);
+        renameMatchingRowsFromTable(jTableToolHolderPositions, oldName, newName);
+        if (null != pose) {
+            toolHolderPoseMap.put(newName, pose);
+        }
+        toolHolderPoseMap.remove(oldName);
     }
 
     private void deleteMatchingRowsFromTable(JTable jtable, String nameToDelete) {
@@ -4861,6 +4935,37 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         clearEmptyRows(jtable);
         Utils.autoResizeTableColWidths(jtable);
+    }
+
+    private void renameMatchingRowsFromTable(JTable jtable, String oldName, String newName) {
+        DefaultTableModel model = (DefaultTableModel) jtable.getModel();
+        for (int i = 0; i < jtable.getRowCount(); i++) {
+            String nameFromTable = (String) jtable.getValueAt(i, 0);
+            if (null != nameFromTable && nameFromTable.equals(oldName)) {
+                model.setValueAt(newName, i, 0);
+                i--;
+            }
+        }
+        clearEmptyRows(jtable);
+        Utils.autoResizeTableColWidths(jtable);
+    }
+
+    private void renameFromToolHolderContentsTable(String oldName, String newName) {
+        Map<String, String> expectedToolHolderContentsMap
+                = crclGenerator.getExpectedToolHolderContentsMap();
+        String oldExpectedContents = expectedToolHolderContentsMap.get(oldName);
+        Map<String, String> currentToolHolderContentsMap
+                = crclGenerator.getCurrentToolHolderContentsMap();
+        String oldCurrentContents = currentToolHolderContentsMap.get(oldName);
+        renameMatchingRowsFromTable(jTableHolderContents, oldName, newName);
+        if (null != oldExpectedContents) {
+            expectedToolHolderContentsMap.put(newName, oldExpectedContents);
+        }
+        if (null != oldCurrentContents) {
+            currentToolHolderContentsMap.put(newName, oldCurrentContents);
+        }
+        expectedToolHolderContentsMap.remove(oldName);
+        currentToolHolderContentsMap.remove(oldName);
     }
 
     private void deleteFromToolHolderContentsTable(String nameToDelete) {
@@ -5099,6 +5204,25 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         loadTrayAttachOffsetsTableToMap();
         setTrayAttachOffsetTableModelListener();
     }//GEN-LAST:event_jButtonAddTrayAttachActionPerformed
+
+    private void jButtonRenameToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRenameToolHolderPoseActionPerformed
+        clearEmptyToolChangerPoseRows();
+        clearEmptHolderContentsRows();
+        String oldName = queryUserForToolHolderPosName("old holder name to rename");
+        String newName = JOptionPane.showInputDialog(
+                this, // parentComponent
+                "Tool Holder Pose Name?", // Object message
+                aprsSystem.getTaskName() + " " + aprsSystem.getRobotName() + " new holder name for " + oldName, //  String title
+                JOptionPane.QUESTION_MESSAGE // messageType
+        );
+        renameFromToolHolderPositionsTable(oldName, newName);
+        renameFromToolHolderContentsTable(oldName, newName);
+        Utils.autoResizeTableColWidths(jTableToolHolderPositions);
+        Utils.autoResizeTableColWidths(jTableHolderContents);
+        syncPanelToGeneratorToolData();
+        saveToolChangerPoseMap();
+        saveToolHolderContentsMap();
+    }//GEN-LAST:event_jButtonRenameToolHolderPoseActionPerformed
 
     private void clearPoseCache() {
         crclGenerator.clearPoseCache();
@@ -5963,16 +6087,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
 
+        PointType testDropOffPosePoint =
+                requireNonNull(testDropOffPose.getPoint(), "testDropOffPose.getPoint()");
         String randomPoseString
                 = String.format("%.1f, %.1f, %.1f",
-                        testDropOffPose.getPoint().getX(),
-                        testDropOffPose.getPoint().getY(),
-                        testDropOffPose.getPoint().getZ());
+                        testDropOffPosePoint.getX(),
+                        testDropOffPosePoint.getY(),
+                        testDropOffPosePoint.getZ());
+        PointType origPosePoint =
+                requireNonNull(origPose.getPoint(), "origPose.getPoint()");
         String origPoseString
                 = String.format("%.1f, %.1f, %.1f",
-                        origPose.getPoint().getX(),
-                        origPose.getPoint().getY(),
-                        origPose.getPoint().getZ());
+                        origPosePoint.getX(),
+                        origPosePoint.getY(),
+                        origPosePoint.getZ());
         logDebug("randomPoseString = " + randomPoseString);
         jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
         jTextFieldAdjPose.setText(randomPoseString);
@@ -6029,16 +6157,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
         setCrclProgram(program);
+        PointType testDropOffPosePoint =
+                requireNonNull(testDropOffPose.getPoint(), "testDropOffPose.getPoint()");
         String gridPoseString
                 = String.format("%.1f, %.1f, %.1f",
-                        testDropOffPose.getPoint().getX(),
-                        testDropOffPose.getPoint().getY(),
-                        testDropOffPose.getPoint().getZ());
+                        testDropOffPosePoint.getX(),
+                        testDropOffPosePoint.getY(),
+                        testDropOffPosePoint.getZ());
+        PointType origPosePoint =
+                requireNonNull(origPose.getPoint(), "origPose.getPoint()");
         String origPoseString
                 = String.format("%.1f, %.1f, %.1f",
-                        origPose.getPoint().getX(),
-                        origPose.getPoint().getY(),
-                        origPose.getPoint().getZ());
+                        origPosePoint.getX(),
+                        origPosePoint.getY(),
+                        origPosePoint.getZ());
         logDebug("gridPoseString = " + gridPoseString);
         jTextFieldOffset.setText(String.format("%.1f,%.1f,%.1f", offset.getX(), offset.getY(), offset.getZ()));
         jTextFieldAdjPose.setText(gridPoseString);
@@ -6444,6 +6576,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JButton jButtonRecordSuccess;
     private javax.swing.JButton jButtonRecordToolHolderApproach;
     private javax.swing.JButton jButtonRecordToolHolderPose;
+    private javax.swing.JButton jButtonRenameToolHolderPose;
     private javax.swing.JButton jButtonReset;
     private javax.swing.JButton jButtonReturn;
     private javax.swing.JButton jButtonSafeAbort;

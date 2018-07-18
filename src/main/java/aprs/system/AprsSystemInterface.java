@@ -1505,7 +1505,7 @@ public interface AprsSystemInterface extends DisplayInterface, AutoCloseable, Sl
      *
      * @return run data for last program
      */
-    public List<ProgramRunData> getLastProgRunDataList();
+    @Nullable public List<ProgramRunData> getLastProgRunDataList();
 
     /**
      * Save the given run data which contains information on how a given program

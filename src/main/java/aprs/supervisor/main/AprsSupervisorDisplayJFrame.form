@@ -280,12 +280,12 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemStartColorTextDisplayActionPerformed"/>
               </Events>
             </MenuItem>
-            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemDebugStartReverse">
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemDebug">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Debug Start Reverse"/>
+                <Property name="text" type="java.lang.String" value="Debug"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemDebugStartReverseActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemDebugActionPerformed"/>
               </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemShowSplashMessages">
@@ -1190,7 +1190,7 @@
                         <Column editable="true" title="Robot" type="java.lang.String"/>
                         <Column editable="true" title="Tools" type="java.lang.String"/>
                         <Column editable="true" title="Holders" type="java.lang.String"/>
-                        <Column editable="true" title="Aborting Robots" type="java.lang.String"/>
+                        <Column editable="true" title="HolderContents" type="java.lang.String"/>
                         <Column editable="true" title="Comment" type="java.lang.String"/>
                       </Table>
                     </Property>
