@@ -1,0 +1,29 @@
+package crcl.base;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+
+class CommandStatusType extends DataThingType {
+    protected long commandID;
+    protected long statusID;
+    protected CommandStateEnumType commandState;
+    @Nullable protected String stateDescription;
+    @Nullable protected String programFile;
+    @Nullable protected Integer programIndex;
+    @Nullable protected Integer programLength;
+    CommandStatusType();
+    long getCommandID();
+    void setCommandID(long arg0);
+    long getStatusID();
+    void setStatusID(long arg0);
+    CommandStateEnumType getCommandState();
+    void setCommandState(CommandStateEnumType arg0);
+    @Nullable String getStateDescription();
+    void setStateDescription(String arg0);
+    @Nullable String getProgramFile();
+    void setProgramFile(String arg0);
+    @Nullable Integer getProgramIndex();
+    void setProgramIndex(Integer arg0);
+    @Nullable Integer getProgramLength();
+    void setProgramLength(Integer arg0);
+}

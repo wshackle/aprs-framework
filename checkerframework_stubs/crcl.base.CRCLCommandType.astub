@@ -1,0 +1,8 @@
+package crcl.base;
+
+class CRCLCommandType extends DataThingType {
+    protected long commandID;
+    CRCLCommandType();
+    long getCommandID();
+    void setCommandID(long arg0);
+}

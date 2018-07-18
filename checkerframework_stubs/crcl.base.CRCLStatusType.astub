@@ -1,0 +1,22 @@
+package crcl.base;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class CRCLStatusType extends DataThingType {
+    @Nullable protected CommandStatusType commandStatus;
+    @Nullable protected JointStatusesType jointStatuses;
+    @Nullable protected PoseStatusType poseStatus;
+    @Nullable protected GripperStatusType gripperStatus;
+    @Nullable protected SettingsStatusType settingsStatus;
+    CRCLStatusType();
+    CommandStatusType getCommandStatus();
+    void setCommandStatus(CommandStatusType arg0);
+    @Nullable JointStatusesType getJointStatuses();
+    void setJointStatuses(JointStatusesType arg0);
+    @Nullable PoseStatusType getPoseStatus();
+    void setPoseStatus(PoseStatusType arg0);
+    @Nullable GripperStatusType getGripperStatus();
+    void setGripperStatus(GripperStatusType arg0);
+    @Nullable SettingsStatusType getSettingsStatus();
+    void setSettingsStatus(SettingsStatusType arg0);
+}

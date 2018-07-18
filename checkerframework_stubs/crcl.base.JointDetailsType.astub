@@ -1,0 +1,5 @@
+package crcl.base;
+
+class JointDetailsType extends DataThingType {
+    JointDetailsType();
+}

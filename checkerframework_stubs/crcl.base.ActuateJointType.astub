@@ -1,0 +1,16 @@
+package crcl.base;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class ActuateJointType extends DataThingType {
+    protected int jointNumber;
+    protected double jointPosition;
+    @Nullable protected JointDetailsType jointDetails;
+    ActuateJointType();
+    int getJointNumber();
+    void setJointNumber(int arg0);
+    double getJointPosition();
+    void setJointPosition(double arg0);
+    @Nullable JointDetailsType getJointDetails();
+    void setJointDetails(JointDetailsType arg0);
+}
