@@ -2,6 +2,7 @@
 --visionhost=agility
 --visionport=4001
 addPosNoise=true
+alternativeRotation=180.00
 autoscale=false
 connected=true
 datafile=start_run_motoman_shared_table_objects_in_parts_trays.csv

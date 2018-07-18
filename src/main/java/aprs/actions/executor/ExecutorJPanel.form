@@ -234,6 +234,7 @@
           <SubComponents>
             <Component class="javax.swing.JTable" name="jTableOptions">
               <Properties>
+                <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                 <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
                   <Table columnCount="2" rowCount="30">
                     <Column editable="false" title="Name" type="java.lang.String">
@@ -952,6 +953,7 @@
                   <SubComponents>
                     <Component class="javax.swing.JTable" name="jTableHolderContents">
                       <Properties>
+                        <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                         <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
                           <Table columnCount="4" rowCount="0">
                             <Column editable="true" title="Holder Position Name" type="java.lang.String"/>
@@ -985,7 +987,9 @@
                               <Component id="jButtonAddToolHolderPose" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButtonDeleteToolHolderPose" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="546" max="32767" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonRenameToolHolderPose" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace pref="461" max="32767" attributes="0"/>
                           </Group>
                           <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="0" attributes="0">
@@ -1005,6 +1009,7 @@
                                   <Component id="jButtonRecordToolHolderApproach" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="jButtonDeleteToolHolderPose" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="jButtonAddToolHolderPose" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jButtonRenameToolHolderPose" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                           </Group>
@@ -1025,6 +1030,7 @@
                       <SubComponents>
                         <Component class="javax.swing.JTable" name="jTableToolHolderPositions">
                           <Properties>
+                            <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
                               <Table columnCount="9" rowCount="0">
                                 <Column editable="true" title="Name" type="java.lang.String"/>
@@ -1072,6 +1078,14 @@
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonAddToolHolderPoseActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="jButtonRenameToolHolderPose">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Rename"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonRenameToolHolderPoseActionPerformed"/>
                       </Events>
                     </Component>
                   </SubComponents>
@@ -1150,6 +1164,7 @@
                       <SubComponents>
                         <Component class="javax.swing.JTable" name="jTableToolOffsets">
                           <Properties>
+                            <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
                               <Table columnCount="8" rowCount="0">
                                 <Column editable="true" title="ToolName" type="java.lang.String"/>
@@ -1233,6 +1248,7 @@
                       <SubComponents>
                         <Component class="javax.swing.JTable" name="jTableTrayAttachOffsets">
                           <Properties>
+                            <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
                               <Table columnCount="8" rowCount="0">
                                 <Column editable="true" title="TrayName" type="java.lang.String"/>

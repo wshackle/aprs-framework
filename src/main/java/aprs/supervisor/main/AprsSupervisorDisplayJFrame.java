@@ -1423,7 +1423,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jMenuOptions = new javax.swing.JMenu();
         jCheckBoxMenuItemDisableTextPopups = new javax.swing.JCheckBoxMenuItem();
         jMenuItemStartColorTextDisplay = new javax.swing.JMenuItem();
-        jCheckBoxMenuItemDebugStartReverse = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemDebug = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemShowSplashMessages = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemFixedRandomTestSeed = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemPauseAllForOne = new javax.swing.JCheckBoxMenuItem();
@@ -1956,7 +1956,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Robot", "Tools", "Holders", "Aborting Robots", "Comment"
+                "Robot", "Tools", "Holders", "HolderContents", "Comment"
             }
         ) {
             Class[] types = new Class [] {
@@ -2258,13 +2258,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jMenuOptions.add(jMenuItemStartColorTextDisplay);
 
-        jCheckBoxMenuItemDebugStartReverse.setText("Debug Start Reverse");
-        jCheckBoxMenuItemDebugStartReverse.addActionListener(new java.awt.event.ActionListener() {
+        jCheckBoxMenuItemDebug.setText("Debug");
+        jCheckBoxMenuItemDebug.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemDebugStartReverseActionPerformed(evt);
+                jCheckBoxMenuItemDebugActionPerformed(evt);
             }
         });
-        jMenuOptions.add(jCheckBoxMenuItemDebugStartReverse);
+        jMenuOptions.add(jCheckBoxMenuItemDebug);
 
         jCheckBoxMenuItemShowSplashMessages.setSelected(true);
         jCheckBoxMenuItemShowSplashMessages.setText("Show Full Screeen  Messages");
@@ -3134,16 +3134,16 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.resetMainPauseTestFuture();
     }
 
-    private void setDebugStartReverseActions(boolean dbg) {
+    private void setDebug(boolean dbg) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        supervisor.setDebugStartReverseActions(dbg);
+        supervisor.setDebug(dbg);
     }
 
-    private void jCheckBoxMenuItemDebugStartReverseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemDebugStartReverseActionPerformed
-        setDebugStartReverseActions(jCheckBoxMenuItemDebugStartReverse.isSelected());
-    }//GEN-LAST:event_jCheckBoxMenuItemDebugStartReverseActionPerformed
+    private void jCheckBoxMenuItemDebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemDebugActionPerformed
+        setDebug(jCheckBoxMenuItemDebug.isSelected());
+    }//GEN-LAST:event_jCheckBoxMenuItemDebugActionPerformed
 
     private void jMenuItemContinueAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemContinueAllActionPerformed
         if (null != lastFutureReturned) {
@@ -4922,7 +4922,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContDemoReverseFirstOption;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinuousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinuousDemoRevFirst;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDebugStartReverse;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDebug;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDisableTextPopups;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemFixedRandomTestSeed;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemIndContinuousDemo;

@@ -115,7 +115,7 @@ public class PhysicalItem extends PM_CARTESIAN {
             vxk = xvec.getK();
             rotation = Math.atan2(vxj, vxi);
         }
-        VectorType zvec = pose.getXAxis();
+        VectorType zvec = pose.getZAxis();
         if (null != zvec) {
             vzi = zvec.getI();
             vzj = zvec.getJ();

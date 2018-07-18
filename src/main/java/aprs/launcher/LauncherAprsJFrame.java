@@ -567,10 +567,17 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
                         System.out.println("timeDiff = " + timeDiff);
                         LauncherAprsJFrame.PlayAlert();
+                        System.out.println();
+                        System.out.println("===============================================================");
+                        System.out.println();
                         String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
-                                (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count);
+                                (timeDiff / 1000.0),
+                                (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count);
                         System.out.println(msg);
 //                        JOptionPane.showMessageDialog(amsFrame,msg);
+                        System.out.println();
+                        System.out.println("===============================================================");
+                        System.out.println();
                         supervisor.close();
                         System.exit(0);
                     });
@@ -684,9 +691,15 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
                         System.out.println("timeDiff = " + timeDiff);
                         LauncherAprsJFrame.PlayAlert();
+                        System.out.println();
+                        System.out.println("===============================================================");
+                        System.out.println();
                         String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
                                 (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count);
                         System.out.println(msg);
+                        System.out.println();
+                        System.out.println("===============================================================");
+                        System.out.println();
                         supervisor.close();
                         System.exit(0);
                     });

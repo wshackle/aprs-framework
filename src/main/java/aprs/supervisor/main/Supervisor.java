@@ -354,12 +354,12 @@ public class Supervisor {
     private final ConcurrentHashMap<String, AprsSystem> slotProvidersMap
             = new ConcurrentHashMap<>();
 
-    public boolean isDebugStartReverseActions() {
-        return debugStartReverseActions;
+    public boolean isDebug() {
+        return debug;
     }
 
-    void setDebugStartReverseActions(boolean debugStartReverseActions) {
-        this.debugStartReverseActions = debugStartReverseActions;
+    void setDebug(boolean debug) {
+        this.debug = debug;
     }
 
     boolean isTogglesAllowed() {
@@ -2012,18 +2012,18 @@ public class Supervisor {
             return setupFile;
         }
         File ret = new File(getSetupFilePathString());
-        setSetupFile(ret );
+        setSetupFile(ret);
         return ret;
     }
 
     @MonotonicNonNull private volatile String setupFileDirName = null;
-    
+
     public String getSetupFileDirName() throws IOException {
-        if(null != setupFileDirName) {
+        if (null != setupFileDirName) {
             return setupFileDirName;
         }
         if (null != setupFile) {
-            setupFileDirName=  getDirNameOrHome(setupFile);
+            setupFileDirName = getDirNameOrHome(setupFile);
             return setupFileDirName;
         }
         File f = Supervisor.getLastSetupFile();
@@ -2041,70 +2041,69 @@ public class Supervisor {
     }
 
     public String getPosMapFilePathString() throws IOException {
-        String dirName  = getSetupFileDirName();
+        String dirName = getSetupFileDirName();
         File f = Supervisor.getLastPosMapFile();
-        return  canonicalPathOrBuildPath(f, dirName, "posmap.csv");
+        return canonicalPathOrBuildPath(f, dirName, "posmap.csv");
     }
-    
+
     @MonotonicNonNull private volatile File posMapFile = null;
-    
+
     public File getPosMapFile() throws IOException {
-        if(null != posMapFile) {
+        if (null != posMapFile) {
             return posMapFile;
         }
-        posMapFile=  new File(getPosMapFilePathString());
+        posMapFile = new File(getPosMapFilePathString());
         return posMapFile;
     }
-    
+
     public String getSimTeachFilePathString() throws IOException {
-        String dirName  = getSetupFileDirName();
+        String dirName = getSetupFileDirName();
         File f = Supervisor.getLastSimTeachFile();
-        return  canonicalPathOrBuildPath(f, dirName, "simTeach.csv");
+        return canonicalPathOrBuildPath(f, dirName, "simTeach.csv");
     }
-    
+
     @MonotonicNonNull private volatile File simTeachFile = null;
-    
+
     public File getSimTeachFile() throws IOException {
-        if(null != simTeachFile) {
+        if (null != simTeachFile) {
             return simTeachFile;
         }
-        simTeachFile=  new File(getSimTeachFilePathString());
+        simTeachFile = new File(getSimTeachFilePathString());
         return simTeachFile;
     }
-    
-    
+
     public String getTeachPropsFilePathString() throws IOException {
-        String dirName  = getSetupFileDirName();
+        String dirName = getSetupFileDirName();
         File f = Supervisor.getLastTeachPropertiesFile();
-        return  canonicalPathOrBuildPath(f, dirName, "teachProps.txt");
+        return canonicalPathOrBuildPath(f, dirName, "teachProps.txt");
     }
-    
+
     @MonotonicNonNull private volatile File teachPropsFile = null;
-    
+
     public File getTeachPropsFile() throws IOException {
-        if(null != teachPropsFile) {
+        if (null != teachPropsFile) {
             return teachPropsFile;
         }
-        teachPropsFile=  new File(getTeachPropsFilePathString());
+        teachPropsFile = new File(getTeachPropsFilePathString());
         return teachPropsFile;
     }
-    
+
     public String getSharedToolsFilePathString() throws IOException {
-        String dirName  = getSetupFileDirName();
+        String dirName = getSetupFileDirName();
         File f = Supervisor.getLastSharedToolsFile();
-        return  canonicalPathOrBuildPath(f, dirName, "sharedTools.csv");
+        return canonicalPathOrBuildPath(f, dirName, "sharedTools.csv");
     }
-    
+
     @MonotonicNonNull private volatile File sharedToolsFile = null;
-    
+
     public File getSharedToolsFile() throws IOException {
-        if(null != sharedToolsFile) {
+        if (null != sharedToolsFile) {
             return sharedToolsFile;
         }
-        sharedToolsFile=  new File(getSharedToolsFilePathString());
+        sharedToolsFile = new File(getSharedToolsFilePathString());
         return sharedToolsFile;
     }
-    
+
     @Nullable
     private volatile XFuture<?> lastFutureReturned = null;
 
@@ -2134,7 +2133,7 @@ public class Supervisor {
                 .thenCompose(x -> Utils.supplyXVoidOnDispatchThread(supplier))
                 .thenComposeToVoid(x -> x);
     }
-    
+
     void setAllReverseFlag(boolean reverseFlag) {
         startSetAllReverseFlag(reverseFlag).join();
     }
@@ -3595,8 +3594,8 @@ public class Supervisor {
                         return XFuture.completedFuture(null);
                     }
                 })
-                .thenComposeAsyncToVoid("continueRandomTest.recurse" + randomTestCount.get(), 
-                        this::continueRandomTest, 
+                .thenComposeAsyncToVoid("continueRandomTest.recurse" + randomTestCount.get(),
+                        this::continueRandomTest,
                         randomDelayExecutorService);
         randomTestFuture = ret;
         resetMainRandomTestFuture();
@@ -3732,7 +3731,7 @@ public class Supervisor {
         connectAll();
         XFutureVoid ret
                 = startCheckAndEnableAllRobots()
-                        .thenComposeToVoid("startIndContinuousDemo", 
+                        .thenComposeToVoid("startIndContinuousDemo",
                                 ok -> checkOkElseToVoid(ok, this::startAllIndContinuousDemo, this::showCheckEnabledErrorSplash));
         ContinuousDemoFuture = ret;
         if (null != randomTestFuture && isIndRandomToggleTestSelected()) {
@@ -3918,7 +3917,7 @@ public class Supervisor {
                         return XFutureVoid.completedFuture();
                     }
                 }, supervisorExecutorService)
-                .thenComposeToVoid(x-> x)
+                .thenComposeToVoid(x -> x)
                 .thenRunAsync(() -> {
 //                    disconnectAll();
                     checkRobotsUniquePorts();
@@ -3930,7 +3929,7 @@ public class Supervisor {
                 }, supervisorExecutorService);
     }
 
-    private volatile boolean debugStartReverseActions = false;
+    private volatile boolean debug = false;
 
     /**
      * Start actions in reverse mode where kit trays will be emptied rather than
@@ -3945,7 +3944,7 @@ public class Supervisor {
         AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
         disallowToggles(blockerName, sysArray);
         setAllReverseFlag(true);
-        if (debugStartReverseActions) {
+        if (debug) {
             debugAction();
         }
         return startCheckAndEnableAllRobots()
@@ -4248,7 +4247,7 @@ public class Supervisor {
     private XFutureVoid startAllIndContinuousDemo() {
         logEvent("startAllIndContinuousDemo");
         @SuppressWarnings("unchecked")
-        XFutureVoid futures[] =  new XFutureVoid[aprsSystems.size()];
+        XFutureVoid futures[] = new XFutureVoid[aprsSystems.size()];
         StringBuilder tasksNames = new StringBuilder();
         boolean revFirst = isContinuousDemoRevFirstSelected();
         for (int i = 0; i < aprsSystems.size(); i++) {
@@ -4307,7 +4306,7 @@ public class Supervisor {
                             l.add(f);
                             return l.toArray(new XFutureVoid[0]);
                         } else {
-                            return  new XFutureVoid[]{f};
+                            return new XFutureVoid[]{f};
                         }
                     } catch (Throwable e) {
                         log(Level.SEVERE, null, e);
@@ -4418,7 +4417,7 @@ public class Supervisor {
             return notOkSupplier.get();
         }
     }
-    
+
     private XFutureVoid checkOk(Boolean ok, Supplier<XFutureVoid> okSupplier) {
         if (ok) {
             return okSupplier.get();
@@ -4976,7 +4975,7 @@ public class Supervisor {
             pw.println(f.getCanonicalPath());
         }
     }
-    
+
     public void saveSharedTools(File f) throws IOException {
         Utils.saveJTable(f, jTableSharedTools);
         sharedToolsFile = f;
@@ -5245,32 +5244,29 @@ public class Supervisor {
             throw new RuntimeException(ex);
         }
     }
-    
+
     public XFutureVoid clearWayToHolders(AprsSystem requester, String holderName) {
         List<XFutureVoid> l = new ArrayList<>();
-        String name = "clearWayToHolders."+holderName+"."+requester.getTaskName();
-        for(AprsSystem sys : aprsSystems) {
-            if(sys != requester && !Objects.equals(sys.getTaskName(), requester.getTaskName())) {
+        String name = "clearWayToHolders." + holderName + "." + requester.getTaskName();
+        for (AprsSystem sys : aprsSystems) {
+            if (sys != requester && !Objects.equals(sys.getTaskName(), requester.getTaskName())) {
                 l.add(sys.startSafeAbort(name));
             }
         }
-        return XFutureVoid.allOfWithName("allof"+name, l.toArray(new XFutureVoid[0]))
-                .thenComposeToVoid( () -> clearWayToHoldersStep2(requester,holderName));
+        return XFutureVoid.allOfWithName("allof" + name, l.toArray(new XFutureVoid[0]))
+                .thenComposeToVoid(() -> clearWayToHoldersStep2(requester, holderName));
     }
-    
+
     private XFutureVoid clearWayToHoldersStep2(AprsSystem requester, String holderName) {
         List<XFuture<Boolean>> l = new ArrayList<>();
-        String name = "clearWayToHolders."+holderName+"."+requester.getTaskName();
-        for(AprsSystem sys : aprsSystems) {
-            if(sys != requester && !Objects.equals(sys.getTaskName(), requester.getTaskName())) {
+        String name = "clearWayToHolders." + holderName + "." + requester.getTaskName();
+        for (AprsSystem sys : aprsSystems) {
+            if (sys != requester && !Objects.equals(sys.getTaskName(), requester.getTaskName())) {
                 l.add(sys.startLookForParts());
             }
         }
-        return XFutureVoid.allOfWithName("allof"+name, l);
+        return XFutureVoid.allOfWithName("allof" + name, l);
     }
-    
-    
-    
 
     int incrementAndGetContinuousDemoCycle() {
         return ContinuousDemoCycle.incrementAndGet();
@@ -5388,15 +5384,18 @@ public class Supervisor {
             }
             liveImageMovieEncoder = null;
             lastLiveImageMovieFile = liveImageMovieFile;
-            System.out.println("liveImageStartTime = " + liveImageStartTime);
-            System.out.println("liveImageLastTime = " + liveImageStartTime);
-            int secs = (int) (500 + liveImageLastTime - liveImageStartTime) / 1000;
-            System.out.println("secs = " + secs);
-            System.out.println("liveImageFrameCount = " + liveImageFrameCount);
-            if (secs > 0) {
-                System.out.println("(liveImageFrameCount/secs) = " + (liveImageFrameCount / secs));
+
+            if (debug || liveImageFrameCount > 1) {
+                System.out.println("liveImageStartTime = " + liveImageStartTime);
+                System.out.println("liveImageLastTime = " + liveImageStartTime);
+                int secs = (int) (500 + liveImageLastTime - liveImageStartTime) / 1000;
+                System.out.println("secs = " + secs);
+                System.out.println("liveImageFrameCount = " + liveImageFrameCount);
+                if (secs > 0) {
+                    System.out.println("(liveImageFrameCount/secs) = " + (liveImageFrameCount / secs));
+                }
+                System.out.println("finishEncodingLiveImageMovie: lastLiveImageMovieFile = " + lastLiveImageMovieFile);
             }
-            System.out.println("finishEncodingLiveImageMovie: lastLiveImageMovieFile = " + lastLiveImageMovieFile);
             liveImageMovieFile = null;
             lastLiveImageFrameCount = liveImageFrameCount;
             liveImageFrameCount = 0;

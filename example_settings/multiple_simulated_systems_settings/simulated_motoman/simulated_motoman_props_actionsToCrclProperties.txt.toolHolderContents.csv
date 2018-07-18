@@ -1,5 +1,5 @@
 Holder Position Name,Contents,Possible Contents,Comment
 big_gripper_holder,big_gripper,big_gripper,
 big_vacuum_holder,big_vacuum,big_vacuum,
-shared_with_fanuc_holder,empty,small_vacuum,
-small_private_holder,empty,small_vacuum,
+sharedBackCenterHolder,pincher,"pincher, small_vacuum",
+motomanBackCenterRightHolder,small_vacuum,"pincher, small_vacuum",

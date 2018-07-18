@@ -80,6 +80,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
+import java.util.Enumeration;
+import static java.util.Objects.requireNonNull;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JDialog;
@@ -142,7 +144,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public void takeSnapshot(File f, PointType point, String label) {
+    public void takeSnapshot(File f, @Nullable PointType point, String label) {
         if (null != point) {
             takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label);
         } else {
@@ -504,7 +506,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
                     if (!settingItems && !object2DJPanel1.isShowOutputItems()) {
                         List<PhysicalItem> l = new ArrayList<>(getItems());
-                        PhysicalItem item = null;
+                        PhysicalItem item;
                         for (int i = 0; i < jTableItems.getRowCount(); i++) {
                             int listIndex = (int) jTableItems.getValueAt(i, 0);
                             if (jTableItems.getValueAt(i, 1) == null || jTableItems.getValueAt(i, 1).toString().length() < 1) {
@@ -677,9 +679,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldPickupDist = new javax.swing.JTextField();
         jLabel10 = new javax.swing.JLabel();
         jTextFieldDropOffThreshold = new javax.swing.JTextField();
-        jPanel1 = new javax.swing.JPanel();
+        jPanelTrays = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableTraySlots = new javax.swing.JTable();
+        jScrollPaneProperties = new javax.swing.JScrollPane();
+        jTableProperties = new javax.swing.JTable();
 
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
@@ -712,7 +716,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setLayout(object2DJPanel1Layout);
         object2DJPanel1Layout.setHorizontalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 346, Short.MAX_VALUE)
+            .addGap(0, 326, Short.MAX_VALUE)
         );
         object2DJPanel1Layout.setVerticalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1038,7 +1042,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                         .addComponent(jCheckBoxSimulated)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.DEFAULT_SIZE, 198, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE)
                         .addGap(142, 142, 142))
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                         .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1202,7 +1206,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldPosNoise, javax.swing.GroupLayout.DEFAULT_SIZE, 116, Short.MAX_VALUE)
+                        .addComponent(jTextFieldPosNoise, javax.swing.GroupLayout.DEFAULT_SIZE, 142, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel8)
                         .addGap(120, 120, 120))
@@ -1289,23 +1293,51 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         });
         jScrollPane2.setViewportView(jTableTraySlots);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanelTraysLayout = new javax.swing.GroupLayout(jPanelTrays);
+        jPanelTrays.setLayout(jPanelTraysLayout);
+        jPanelTraysLayout.setHorizontalGroup(
+            jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 444, Short.MAX_VALUE)
                 .addContainerGap())
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+        jPanelTraysLayout.setVerticalGroup(
+            jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 231, Short.MAX_VALUE))
         );
 
-        jTabbedPane1.addTab("Trays", jPanel1);
+        jTabbedPane1.addTab("Trays", jPanelTrays);
+
+        jTableProperties.setAutoCreateRowSorter(true);
+        jTableProperties.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Key", "Value"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, true
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPaneProperties.setViewportView(jTableProperties);
+
+        jTabbedPane1.addTab("Properties", jScrollPaneProperties);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -2361,15 +2393,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JLabel jLabelHost;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanelConnectionsTab;
     private javax.swing.JPanel jPanelOptionsTab;
     private javax.swing.JPanel jPanelSimulationTab;
+    private javax.swing.JPanel jPanelTrays;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPaneProperties;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTableItems;
+    private javax.swing.JTable jTableProperties;
     private javax.swing.JTable jTableTraySlots;
     private javax.swing.JTextArea jTextAreaConnectDetails;
     private javax.swing.JTextField jTextFieldCurrentXY;
@@ -2441,6 +2475,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 parentFile.mkdirs();
             }
             Properties props = new Properties();
+            props.put("alternativeRotation", String.format("%.2f", Math.toDegrees(object2DJPanel1.getAlternativeRotation())));
             props.put("--visionport", jTextFieldPort.getText().trim());
             props.put("--visionhost", jTextFieldHost.getText().trim());
             props.put("simulated", Boolean.toString(jCheckBoxSimulated.isSelected()));
@@ -2512,188 +2547,269 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public void loadProperties() throws IOException {
+        loadingProperties = true;
+        DefaultTableModel model = (DefaultTableModel) jTableProperties.getModel();
+        model.removeTableModelListener(propertiesTableModelListener);
         if (null != propertiesFile && propertiesFile.exists()) {
             Properties props = new Properties();
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
-            String itemsLine = props.getProperty(ITEMS_PROPERTY_NAME);
-            if (null != itemsLine && itemsLine.length() > 0) {
-                List<PhysicalItem> l = VisionSocketClient.lineToList(itemsLine);
-                if (null != l && l.size() > 0) {
-                    setItems(l);
-                }
-            }
-            String portString = props.getProperty("--visionport");
-            try {
-                if (null != portString && portString.length() > 0) {
-                    int port = Integer.parseInt(portString);
-                    jTextFieldPort.setText(Integer.toString(port));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            String hostString = props.getProperty("--visionhost");
-            try {
-                if (null != hostString && hostString.length() > 0) {
-                    jTextFieldHost.setText(hostString);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            updateDisplayFromProperties(props);
+            loadPropertiesTable(props);
+        }
+        loadingProperties = false;
+    }
 
-            String simulationUpdateAsNeededString = props.getProperty("simulationUpdateAsNeeded");
-            if (null != simulationUpdateAsNeededString && simulationUpdateAsNeededString.length() > 0) {
-                boolean simulationUpdateAsNeeded = Boolean.valueOf(simulationUpdateAsNeededString);
-                jCheckBoxSimulationUpdateAsNeeded.setSelected(simulationUpdateAsNeeded);
-                jTextFieldSimulationUpdateTime.setEditable(jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
-                jTextFieldSimulationUpdateTime.setEnabled(jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
-            }
+    private volatile boolean loadingProperties = false;
+    private volatile boolean loadingTableProperties = false;
+    private volatile boolean updatingDisplayFromProperties = false;
 
-            String shuffleSimulatedUpdatesString = props.getProperty("shuffleSimulatedUpdates");
-            if (null != shuffleSimulatedUpdatesString && shuffleSimulatedUpdatesString.length() > 0) {
-                boolean shuffleSimulatedUpdates = Boolean.valueOf(shuffleSimulatedUpdatesString);
-                jCheckBoxShuffleSimulatedUpdates.setSelected(shuffleSimulatedUpdates);
+    private final TableModelListener propertiesTableModelListener = new TableModelListener() {
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            if (loadingProperties) {
+                return;
             }
-
-            String viewOutputString = props.getProperty("viewOutput");
-            if (null != viewOutputString && viewOutputString.length() > 0) {
-                boolean viewOutput = Boolean.valueOf(viewOutputString);
-                jCheckBoxViewOutput.setSelected(viewOutput);
+            Properties props = tableLoadedProperties;
+            if (null == props) {
+                return;
             }
-
-            String addPosNoiseString = props.getProperty("addPosNoise");
-            if (null != addPosNoiseString && addPosNoiseString.length() > 0) {
-                boolean addPosNoise = Boolean.valueOf(addPosNoiseString);
-                jCheckBoxAddPosNoise.setSelected(addPosNoise);
-            }
-            String simulatedDropRateString = props.getProperty("simulatedDropRate");
-            if (null != simulatedDropRateString && simulatedDropRateString.length() > 0) {
-                double simDropRate = Double.parseDouble(simulatedDropRateString);
-                if (simDropRate < 0.001) {
-                    simDropRate = 0;
-                }
-                setSimulatedDropRate(simDropRate);
-            }
-
-            String pickupDistString = props.getProperty("pickupDist");
-            if (null != pickupDistString && pickupDistString.length() > 0) {
-                double simPickupDist = Double.parseDouble(pickupDistString);
-                setPickupDist(simPickupDist);
-            }
-
-            String dropOffThresholdString = props.getProperty("dropOffThreshold");
-            if (null != dropOffThresholdString && dropOffThresholdString.length() > 0) {
-                double simDropOffThreshold = Double.parseDouble(dropOffThresholdString);
-                setDropOffThreshold(simDropOffThreshold);
-            }
-
-            String posNoiseString = props.getProperty("posNoise");
-            if (null != posNoiseString && posNoiseString.length() > 0) {
-                double simPosNoise = Double.parseDouble(posNoiseString);
-                setPosNoise(simPosNoise);
-            }
-
-            String rotNoiseString = props.getProperty("rotNoise");
-            if (null != rotNoiseString && rotNoiseString.length() > 0) {
-                double simRotNoise = Double.parseDouble(rotNoiseString);
-                setRotNoise(simRotNoise);
-            }
-            String simRefreshMillisString = props.getProperty("simRefreshMillis");
-            if (null != simRefreshMillisString && simRefreshMillisString.length() > 0) {
-                int simRefreshMs = Integer.parseInt(simRefreshMillisString);
-                setSimRefreshMillis(simRefreshMs);
-            }
-
-            String simulatedString = props.getProperty("simulated");
-            if (null != simulatedString && simulatedString.length() > 0) {
-                boolean simulated = Boolean.valueOf(simulatedString);
-                jCheckBoxSimulated.setSelected(simulated);
-                setSimulatedInternal(simulated);
-            }
-
-            String autoscaleString = props.getProperty("autoscale");
-            if (null != autoscaleString && autoscaleString.length() > 0) {
-                boolean autoscale = Boolean.valueOf(autoscaleString);
-                jCheckBoxAutoscale.setSelected(autoscale);
-                object2DJPanel1.setAutoscale(autoscale);
-            }
-            String toolsString = props.getProperty("tools");
-            if (null != toolsString && toolsString.length() > 0) {
-                boolean tools = Boolean.valueOf(toolsString);
-                jCheckBoxTools.setSelected(tools);
-                object2DJPanel1.setShowAddedToolsAndToolHolders(tools);
-            }
-            reverseDataFileString = props.getProperty("reverse_datafile");
-            dataFileString = props.getProperty("datafile");
-
-            String xmaxymaxString = props.getProperty("xmaxymax");
-            if (null != xmaxymaxString) {
-                setMaxXMaxYText(xmaxymaxString);
-                jTextFieldMaxXMaxY.setText(xmaxymaxString);
-            }
-            String xminyminString = props.getProperty("xminymin");
-            if (null != xminyminString) {
-                setMinXMinYText(xminyminString);
-                jTextFieldMinXMinY.setText(xminyminString);
-            }
-            String connectedString = props.getProperty("connected");
-            if (null != connectedString && connectedString.length() > 0) {
-                boolean connected = Boolean.valueOf(connectedString);
-                jCheckBoxConnected.setSelected(connected);
-                if (connected) {
-                    connect();
-                }
-            }
-            if (jCheckBoxSimulated.isSelected() || !jCheckBoxConnected.isSelected()) {
-                if (needReloadDataFile()) {
-                    reloadDataFile();
-                }
-            }
-            String displayAxisString = props.getProperty("displayAxis");
-            if (displayAxisString != null && displayAxisString.length() > 0) {
-                boolean axisFound = false;
-                for (DisplayAxis da : DisplayAxis.values()) {
-                    if (Objects.equals(da.toString(), displayAxisString)) {
-                        DisplayAxis displayAxis = da;
-                        jComboBoxDisplayAxis.setSelectedItem(displayAxis);
-                        object2DJPanel1.setDisplayAxis(displayAxis);
-                        axisFound = true;
-                        break;
+            boolean propschanged = false;
+            if (e.getType() == TableModelEvent.UPDATE && e.getColumn() == 1) {
+                int firstRow = e.getFirstRow();
+                int lastRow = e.getLastRow();
+                DefaultTableModel model = (DefaultTableModel) jTableProperties.getModel();
+                for (int i = Math.max(firstRow, 0); i < Math.min(lastRow + 1, model.getRowCount()); i++) {
+                    Object key = model.getValueAt(i, 0);
+                    Object value = model.getValueAt(i, 1);
+                    if (null != key && null != value) {
+                        props.put(key, value);
                     }
+                    propschanged = true;
                 }
-                if (!axisFound) {
-                    DisplayAxis displayAxis = DisplayAxis.valueOf(displayAxisString);
-                    jComboBoxDisplayAxis.setSelectedItem(displayAxis);
-                    object2DJPanel1.setDisplayAxis(displayAxis);
+                if (!propschanged) {
+                    return;
                 }
-            }
-            String trackCurrentPosString = props.getProperty("trackcurrentpos");
-            if (trackCurrentPosString != null && trackCurrentPosString.length() > 0) {
-                boolean trackCurrentPos = Boolean.valueOf(trackCurrentPosString);
-                jCheckBoxShowCurrent.setSelected(trackCurrentPos);
-                this.setTrackCurrentPos(trackCurrentPos);
-            }
-            //showrotations
-            String showRotationsString = props.getProperty("showrotations");
-            if (showRotationsString != null && showRotationsString.length() > 0) {
-                boolean showRotations = Boolean.valueOf(showRotationsString);
-                jCheckBoxShowRotations.setSelected(showRotations);
-                object2DJPanel1.setViewRotationsAndImages(showRotations);
-            }
-            String viewDetailsString = props.getProperty("viewDetails");
-            if (viewDetailsString != null && viewDetailsString.length() > 0) {
-                boolean viewDetails = Boolean.valueOf(viewDetailsString);
-                jCheckBoxDetails.setSelected(viewDetails);
-                object2DJPanel1.setViewDetails(viewDetails);
-            }
-            String useSeparateNamesString = props.getProperty("separatenames");
-            if (useSeparateNamesString != null && useSeparateNamesString.length() > 0) {
-                boolean useSeparateNames = Boolean.valueOf(useSeparateNamesString);
-                jCheckBoxSeparateNames.setSelected(useSeparateNames);
-                object2DJPanel1.setUseSeparateNames(useSeparateNames);
+                if (loadingProperties || loadingTableProperties || updatingDisplayFromProperties) {
+                    return;
+                }
+                updateDisplayFromProperties(props);
             }
         }
+    };
+
+    @MonotonicNonNull private volatile Properties tableLoadedProperties = null;
+
+    private void loadPropertiesTable(Properties props) {
+        loadingTableProperties = true;
+        DefaultTableModel model = (DefaultTableModel) jTableProperties.getModel();
+        model.removeTableModelListener(propertiesTableModelListener);
+        model.setRowCount(0);
+        Enumeration<?> propsEnum = props.propertyNames();
+        while (propsEnum.hasMoreElements()) {
+            Object keyObject = propsEnum.nextElement();
+            if (keyObject instanceof String) {
+                String key = (String) keyObject;
+                if (key.length() > 0) {
+                    Object valueObject = props.get(key);
+                    model.addRow(new Object[]{key, valueObject});
+                }
+            }
+        }
+        tableLoadedProperties = props;
+        loadingTableProperties = false;
+        model.addTableModelListener(propertiesTableModelListener);
+    }
+
+    private void updateDisplayFromProperties(Properties props) {
+        updatingDisplayFromProperties = true;
+        String itemsLine = props.getProperty(ITEMS_PROPERTY_NAME);
+        if (null != itemsLine && itemsLine.length() > 0) {
+            List<PhysicalItem> l = VisionSocketClient.lineToList(itemsLine);
+            if (null != l && l.size() > 0) {
+                setItems(l);
+            }
+        }
+        String alternativeRotationString = props.getProperty("alternativeRotation");
+        if (null != alternativeRotationString) {
+            object2DJPanel1.setAlternativeRotation(Math.toRadians(Double.parseDouble(alternativeRotationString)));
+        }
+
+        String portString = props.getProperty("--visionport");
+        try {
+            if (null != portString && portString.length() > 0) {
+                int port = Integer.parseInt(portString);
+                jTextFieldPort.setText(Integer.toString(port));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String hostString = props.getProperty("--visionhost");
+        try {
+            if (null != hostString && hostString.length() > 0) {
+                jTextFieldHost.setText(hostString);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        String simulationUpdateAsNeededString = props.getProperty("simulationUpdateAsNeeded");
+        if (null != simulationUpdateAsNeededString && simulationUpdateAsNeededString.length() > 0) {
+            boolean simulationUpdateAsNeeded = Boolean.valueOf(simulationUpdateAsNeededString);
+            jCheckBoxSimulationUpdateAsNeeded.setSelected(simulationUpdateAsNeeded);
+            jTextFieldSimulationUpdateTime.setEditable(jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
+            jTextFieldSimulationUpdateTime.setEnabled(jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
+        }
+
+        String shuffleSimulatedUpdatesString = props.getProperty("shuffleSimulatedUpdates");
+        if (null != shuffleSimulatedUpdatesString && shuffleSimulatedUpdatesString.length() > 0) {
+            boolean shuffleSimulatedUpdates = Boolean.valueOf(shuffleSimulatedUpdatesString);
+            jCheckBoxShuffleSimulatedUpdates.setSelected(shuffleSimulatedUpdates);
+        }
+
+        String viewOutputString = props.getProperty("viewOutput");
+        if (null != viewOutputString && viewOutputString.length() > 0) {
+            boolean viewOutput = Boolean.valueOf(viewOutputString);
+            jCheckBoxViewOutput.setSelected(viewOutput);
+        }
+
+        String addPosNoiseString = props.getProperty("addPosNoise");
+        if (null != addPosNoiseString && addPosNoiseString.length() > 0) {
+            boolean addPosNoise = Boolean.valueOf(addPosNoiseString);
+            jCheckBoxAddPosNoise.setSelected(addPosNoise);
+        }
+        String simulatedDropRateString = props.getProperty("simulatedDropRate");
+        if (null != simulatedDropRateString && simulatedDropRateString.length() > 0) {
+            double simDropRate = Double.parseDouble(simulatedDropRateString);
+            if (simDropRate < 0.001) {
+                simDropRate = 0;
+            }
+            setSimulatedDropRate(simDropRate);
+        }
+
+        String pickupDistString = props.getProperty("pickupDist");
+        if (null != pickupDistString && pickupDistString.length() > 0) {
+            double simPickupDist = Double.parseDouble(pickupDistString);
+            setPickupDist(simPickupDist);
+        }
+
+        String dropOffThresholdString = props.getProperty("dropOffThreshold");
+        if (null != dropOffThresholdString && dropOffThresholdString.length() > 0) {
+            double simDropOffThreshold = Double.parseDouble(dropOffThresholdString);
+            setDropOffThreshold(simDropOffThreshold);
+        }
+
+        String posNoiseString = props.getProperty("posNoise");
+        if (null != posNoiseString && posNoiseString.length() > 0) {
+            double simPosNoise = Double.parseDouble(posNoiseString);
+            setPosNoise(simPosNoise);
+        }
+
+        String rotNoiseString = props.getProperty("rotNoise");
+        if (null != rotNoiseString && rotNoiseString.length() > 0) {
+            double simRotNoise = Double.parseDouble(rotNoiseString);
+            setRotNoise(simRotNoise);
+        }
+        String simRefreshMillisString = props.getProperty("simRefreshMillis");
+        if (null != simRefreshMillisString && simRefreshMillisString.length() > 0) {
+            int simRefreshMs = Integer.parseInt(simRefreshMillisString);
+            setSimRefreshMillis(simRefreshMs);
+        }
+
+        String simulatedString = props.getProperty("simulated");
+        if (null != simulatedString && simulatedString.length() > 0) {
+            boolean simulated = Boolean.valueOf(simulatedString);
+            jCheckBoxSimulated.setSelected(simulated);
+            setSimulatedInternal(simulated);
+        }
+
+        String autoscaleString = props.getProperty("autoscale");
+        if (null != autoscaleString && autoscaleString.length() > 0) {
+            boolean autoscale = Boolean.valueOf(autoscaleString);
+            jCheckBoxAutoscale.setSelected(autoscale);
+            object2DJPanel1.setAutoscale(autoscale);
+        }
+        String toolsString = props.getProperty("tools");
+        if (null != toolsString && toolsString.length() > 0) {
+            boolean tools = Boolean.valueOf(toolsString);
+            jCheckBoxTools.setSelected(tools);
+            object2DJPanel1.setShowAddedToolsAndToolHolders(tools);
+        }
+        reverseDataFileString = props.getProperty("reverse_datafile");
+        dataFileString = props.getProperty("datafile");
+
+        String xmaxymaxString = props.getProperty("xmaxymax");
+        if (null != xmaxymaxString) {
+            setMaxXMaxYText(xmaxymaxString);
+            jTextFieldMaxXMaxY.setText(xmaxymaxString);
+        }
+        String xminyminString = props.getProperty("xminymin");
+        if (null != xminyminString) {
+            setMinXMinYText(xminyminString);
+            jTextFieldMinXMinY.setText(xminyminString);
+        }
+        String connectedString = props.getProperty("connected");
+        if (null != connectedString && connectedString.length() > 0) {
+            boolean connected = Boolean.valueOf(connectedString);
+            jCheckBoxConnected.setSelected(connected);
+            if (connected) {
+                connect();
+            }
+        }
+        if (jCheckBoxSimulated.isSelected() || !jCheckBoxConnected.isSelected()) {
+            if (needReloadDataFile()) {
+                try {
+                    reloadDataFile();
+                } catch (IOException ex) {
+                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        String displayAxisString = props.getProperty("displayAxis");
+        if (displayAxisString != null && displayAxisString.length() > 0) {
+            boolean axisFound = false;
+            for (DisplayAxis da : DisplayAxis.values()) {
+                if (Objects.equals(da.toString(), displayAxisString)) {
+                    DisplayAxis displayAxis = da;
+                    jComboBoxDisplayAxis.setSelectedItem(displayAxis);
+                    object2DJPanel1.setDisplayAxis(displayAxis);
+                    axisFound = true;
+                    break;
+                }
+            }
+            if (!axisFound) {
+                DisplayAxis displayAxis = DisplayAxis.valueOf(displayAxisString);
+                jComboBoxDisplayAxis.setSelectedItem(displayAxis);
+                object2DJPanel1.setDisplayAxis(displayAxis);
+            }
+        }
+        String trackCurrentPosString = props.getProperty("trackcurrentpos");
+        if (trackCurrentPosString != null && trackCurrentPosString.length() > 0) {
+            boolean trackCurrentPos = Boolean.valueOf(trackCurrentPosString);
+            jCheckBoxShowCurrent.setSelected(trackCurrentPos);
+            this.setTrackCurrentPos(trackCurrentPos);
+        }
+        //showrotations
+        String showRotationsString = props.getProperty("showrotations");
+        if (showRotationsString != null && showRotationsString.length() > 0) {
+            boolean showRotations = Boolean.valueOf(showRotationsString);
+            jCheckBoxShowRotations.setSelected(showRotations);
+            object2DJPanel1.setViewRotationsAndImages(showRotations);
+        }
+        String viewDetailsString = props.getProperty("viewDetails");
+        if (viewDetailsString != null && viewDetailsString.length() > 0) {
+            boolean viewDetails = Boolean.valueOf(viewDetailsString);
+            jCheckBoxDetails.setSelected(viewDetails);
+            object2DJPanel1.setViewDetails(viewDetails);
+        }
+        String useSeparateNamesString = props.getProperty("separatenames");
+        if (useSeparateNamesString != null && useSeparateNamesString.length() > 0) {
+            boolean useSeparateNames = Boolean.valueOf(useSeparateNamesString);
+            jCheckBoxSeparateNames.setSelected(useSeparateNames);
+            object2DJPanel1.setUseSeparateNames(useSeparateNames);
+        }
+        updatingDisplayFromProperties = false;
     }
 
     public boolean isSimulated() {
@@ -2933,7 +3049,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private class PoseUpdateHistoryItem {
 
         final CRCLStatusType stat;
-        final CRCLCommandType cmd;
+        @Nullable final CRCLCommandType cmd;
         final boolean isHoldingObjectExpected;
         final long time;
         final Point2D.@Nullable Double capturedPartPoint;
@@ -2944,7 +3060,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         PoseUpdateHistoryItem(
                 CRCLStatusType stat,
-                CRCLCommandType cmd,
+                @Nullable CRCLCommandType cmd,
                 boolean isHoldingObjectExpected,
                 long time,
                 Point2D.@Nullable Double capturedPartPoint,
@@ -2965,7 +3081,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         @Override
         public String toString() {
-            return "\nPoseUpdateHistoryItem{ cmd=" + CRCLSocket.commandToSimpleString(cmd) + ", isHoldingObjectExpected=" + isHoldingObjectExpected + ", time=" + (time - poseUpdateHistoryTime) + ", stat=" + CRCLSocket.statusToPrettyString(stat) + '}';
+            return "\nPoseUpdateHistoryItem{ cmd=" + ((null != cmd) ? CRCLSocket.commandToSimpleString(cmd) : "null") + ", isHoldingObjectExpected=" + isHoldingObjectExpected + ", time=" + (time - poseUpdateHistoryTime) + ", stat=" + CRCLSocket.statusToPrettyString(stat) + '}';
         }
     }
 
@@ -2973,7 +3089,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return String.format("%.3f", d);
     }
 
-    private Object[] poseUpdateHistoryRecordItems(PoseUpdateHistoryItem item) throws IOException {
+    private Object @Nullable [] poseUpdateHistoryRecordItems(PoseUpdateHistoryItem item) throws IOException {
         File cmdFile = null;
         String cmdClassName = "";
         String cmdFileName = "";
@@ -2997,6 +3113,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         CRCLStatusType stat = item.stat;
         PointType point = CRCLPosemath.getPoint(stat);
+        if (null == point) {
+            return null;
+        }
         File statFile = null;
         String statFileName = "";
         long statCmdId = -1;
@@ -3022,82 +3141,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             closestItemYString = fmtDouble(closestItem.y);
             closestItemName = closestItem.getFullName();
         }
-        switch (new Random().nextInt(20)) {
-
-//            case 0:
-//                return new Object[]{
-//                    Utils.getTimeString(item.time),
-//                    item.time - item.statReceiveTime,
-//                    fmtDouble(point.getX()),
-//                    fmtDouble(point.getY()),
-//                    fmtDouble(point.getZ()),
-//                    item.isHoldingObjectExpected,
-//                    item.di.index,
-//                    fmtDouble(item.di.dist),
-//                    item.captured_item_index,
-//                    closestItemXString,
-//                    closestItemYString,
-//                    closestItemName,
-//                    cmdId,
-//                    statCmdId,
-//                    state,
-//                    cmdName,
-//                    cmdFileName,
-//                    statFileName
-//                };
-//
-//            case 1:
-//                return new Object[]{
-//                    Utils.getTimeString(item.time),
-//                    item.time - item.statReceiveTime,
-//                    fmtDouble(point.getX()),
-//                    fmtDouble(point.getY()),
-//                    fmtDouble(point.getZ()),
-//                    item.isHoldingObjectExpected,
-//                    item.di.index,
-//                    fmtDouble(item.di.dist),
-//                    item.captured_item_index
-//                };
-//
-//            case 2:
-//                return new Object[]{
-//                    closestItemXString,
-//                    closestItemYString,
-//                    closestItemName,
-//                    cmdId,
-//                    statCmdId,
-//                    state,
-//                    cmdName,
-//                    cmdFileName,
-//                    statFileName
-//                };
-//
-//            case 3:
-//                return new Object[]{
-//                    item.isHoldingObjectExpected,
-//                    item.di.index,
-//                    fmtDouble(item.di.dist),
-//                    item.captured_item_index,
-//                    closestItemXString,
-//                    closestItemYString,
-//                    closestItemName
-//                };
-            case 4:
-                return new Object[]{
-                    cmdId,
-                    statCmdId,
-                    state
-                };
-
-            case 5:
-                return new Object[]{
-                    cmdName,
-                    cmdFileName,
-                    statFileName
-                };
-
-        }
-
         return new Object[]{
             Utils.getTimeString(item.time),
             item.time - item.statReceiveTime,
@@ -3146,7 +3189,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         File f = createTempFile("puh_" + err, ".csv");
         try (CSVPrinter printer = new CSVPrinter(new FileWriter(f), CSVFormat.DEFAULT.withHeader(POSE_UPDATE_HISTORY_HEADER))) {
             for (PoseUpdateHistoryItem item : poseUpdateHistory) {
-                printer.printRecord(poseUpdateHistoryRecordItems(item));
+                Object array[] = poseUpdateHistoryRecordItems(item);
+                if (null != array) {
+                    printer.printRecord(array);
+                }
             }
         }
         return f;
@@ -3168,14 +3214,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void handlePoseUpdate(
             PendantClientJPanel panel,
             CRCLStatusType stat,
-            CRCLCommandType cmd,
+            @Nullable CRCLCommandType cmd,
             boolean isHoldingObjectExpected,
             long statRecievTime) {
         if (!jCheckBoxShowCurrent.isSelected()) {
             return;
         }
         PoseType pose = CRCLPosemath.getPose(stat);
-        PointType ptIn = pose.getPoint();
+        if (null == pose) {
+            return;
+        }
+        PointType ptIn = requireNonNull(pose.getPoint(), "pose.getPoint()");
 
         boolean takeSnapshots = isSnapshotsEnabled();
         PointType uncorrectedPoint = aprsSystem.reverseCorrectPoint(ptIn);
@@ -3316,12 +3365,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         lastIsHoldingObjectExpected = isHoldingObjectExpected;
     }
 
-    private void printHandlePoseErrorInfo(String err, CRCLStatusType stat, PoseType pose, CRCLCommandType cmd) throws IOException {
+    private void printHandlePoseErrorInfo(String err, CRCLStatusType stat, PoseType pose, @Nullable CRCLCommandType cmd) throws IOException {
         System.out.println("poseUpdateHistory = " + printPoseUpdateHistory(err));
         System.out.println("statFile = " + aprsSystem.logCrclStatus(err, stat));
         System.out.println("pose = " + CRCLPosemath.toString(pose));
-        System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
-        System.out.println("cmdFile = " + aprsSystem.logCrclCommand(err, cmd));
+        if (null != cmd) {
+            System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
+            System.out.println("cmdFile = " + aprsSystem.logCrclCommand(err, cmd));
+        }
     }
 
     private class ClosestItemInfo {

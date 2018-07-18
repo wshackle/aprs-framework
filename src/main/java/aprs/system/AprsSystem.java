@@ -1150,12 +1150,20 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return future providing info on when complete
      */
     public XFutureVoid disconnectRobot() {
+        if (null == robotName
+                && !isConnected()) {
+            return XFutureVoid.completedFutureWithName("alreadyDisconnected");
+        }
         startingCheckEnabledCheck();
         disconnectRobotCount.incrementAndGet();
         checkReadyToDisconnect();
         enableCheckedAlready = false;
-        XFutureVoid ret = waitForPause().
-                thenRunAsync("disconnectRobot(" + getRobotName() + ")", this::disconnectRobotPrivate, connectService);
+        XFutureVoid waitForPausFuture = waitForPause();
+        if (connectService == null || connectService.isShutdown()) {
+            return waitForPausFuture;
+        }
+        XFutureVoid ret = waitForPausFuture
+                .thenRunAsync("disconnectRobot(" + getRobotName() + ")", this::disconnectRobotPrivate, connectService);
         this.disconnectRobotFuture = ret;
         if (debug) {
             System.out.println("disconnectRobotFuture = " + disconnectRobotFuture);
@@ -1172,6 +1180,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     }
 
     private void disconnectRobotPrivate() {
+        boolean startingIsConnected = isConnected();
         String startingRobotName = this.getRobotName();
         String startingCrclHost = this.getRobotCrclHost();
         int startingCrclPort = this.getRobotCrclPort();
@@ -1189,15 +1198,19 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.disconnect();
         }
-        if (null != getRobotName()) {
+        if (null != startingRobotName) {
             takeSnapshots("disconnectRobot");
         }
         this.setRobotName(null);
-        System.out.println("AprsSystem with taskName="+taskName+" disconnectRobot completed from robotNeme="+startingRobotName+", host="+startingCrclHost+":"+startingCrclPort+", disconnectRobotCount="+disconnectRobotCount);
+        System.out.println("AprsSystem with taskName=" + taskName
+                + " disconnectRobot completed from robotNeme=" + startingRobotName
+                + ", host=" + startingCrclHost + ":" + startingCrclPort
+                + ", disconnectRobotCount=" + disconnectRobotCount
+                + ",startingIsConnected=" + startingIsConnected);
         AprsSystemDisplayJFrame displayFrame = this.aprsSystemDisplayJFrame;
         if (null != displayFrame) {
             final AprsSystemDisplayJFrame displayFrameFinal = displayFrame;
-            Utils.runOnDispatchThread(() -> displayFrameFinal.setConnectedRobotCheckBox(isConnected()));
+            Utils.runOnDispatchThread(() -> displayFrameFinal.setConnectedRobotCheckBox(false));
         }
     }
 
@@ -1828,14 +1841,16 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             }
             if (null != crclClientJInternalFrame) {
                 crclClientJInternalFrame.getCurrentStatus().ifPresent(status -> {
-                    if (null != status.getCommandStatus()
-                            && null != status.getCommandStatus().getStateDescription()
-                            && status.getCommandStatus().getStateDescription().length() > 0) {
-                        sb.append("state description = ").append(status.getCommandStatus().getStateDescription()).append("\r\n");
+                    CommandStatusType commandStatus = status.getCommandStatus();
+                    if (null != commandStatus) {
+                        String stateDescrition = commandStatus.getStateDescription();
+                        if (null != stateDescrition
+                                && stateDescrition.length() > 0) {
+                            sb.append("state description = ").append(stateDescrition).append("\r\n");
+                        }
                     }
                 });
             }
-//            pendantClientJInternalFrame.getCurrentState().ifPresent(state -> sb.append("state=").append(state).append("\r\n"));
         }
         ExecutorJInternalFrame execFrame = this.pddlExecutorJInternalFrame1;
         if (null != execFrame) {
@@ -2072,15 +2087,17 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 updateTitle();
                 if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
                     setTitleErrorStringTrace = Thread.currentThread().getStackTrace();
-                    System.err.println("RunName=" + getRunName());
-                    System.err.println(newTitleErrorString);
-                    Thread.dumpStack();
-                    LauncherAprsJFrame.PlayAlert2();
-                    boolean snapshotsEnabled = this.isSnapshotsEnabled();
-                    if (!snapshotsEnabled) {
-                        setSnapshotsEnabled(true);
+                    if (!closing) {
+                        System.err.println("RunName=" + getRunName());
+                        System.err.println(newTitleErrorString);
+                        Thread.dumpStack();
+                        LauncherAprsJFrame.PlayAlert2();
+                        boolean snapshotsEnabled = this.isSnapshotsEnabled();
+                        if (!snapshotsEnabled) {
+                            setSnapshotsEnabled(true);
+                        }
+                        takeSnapshots("setTitleError_" + newTitleErrorString + "_");
                     }
-                    takeSnapshots("setTitleError_" + newTitleErrorString + "_");
                     pause();
                     if (!snapshotsEnabled) {
                         setSnapshotsEnabled(false);
@@ -2394,10 +2411,10 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if(null != propertiesFile) {
-            System.out.println("Constructor for AprsSystem with taskName="+taskName+", robotName="+robotName+", propertiesFile=" +propertiesFile.getName()+" complete.");
+        if (null != propertiesFile) {
+            System.out.println("Constructor for AprsSystem with taskName=" + taskName + ", robotName=" + robotName + ", propertiesFile=" + propertiesFile.getName() + " complete.");
         } else {
-            System.out.println("Constructor for AprsSystem with taskName="+taskName+", robotName="+robotName+" complete.");
+            System.out.println("Constructor for AprsSystem with taskName=" + taskName + ", robotName=" + robotName + " complete.");
         }
     }
 
@@ -2561,10 +2578,10 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if(null != propertiesFile) {
-            System.out.println("Constructor for AprsSystem with taskName="+taskName+", robotName="+robotName+", propertiesFile=" +propertiesFile.getName()+" complete.");
+        if (null != propertiesFile) {
+            System.out.println("Constructor for AprsSystem with taskName=" + taskName + ", robotName=" + robotName + ", propertiesFile=" + propertiesFile.getName() + " complete.");
         } else {
-            System.out.println("Constructor for AprsSystem with taskName="+taskName+", robotName="+robotName+" complete.");
+            System.out.println("Constructor for AprsSystem with taskName=" + taskName + ", robotName=" + robotName + " complete.");
         }
     }
 
@@ -3391,7 +3408,8 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                         titleErrorString = null;
                     }
                 }
-                updateTitle(cs.getCommandState().toString(), cs.getStateDescription());
+                String description = Objects.toString(cs.getStateDescription(),"");
+                updateTitle(cs.getCommandState().toString(), description);
             }
         } else {
             updateTitle("", "");
@@ -3407,7 +3425,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             if (!alreadySelected) {
                 setRobotCrclGUIStartupSelected(true);
             }
-            crclClientJInternalFrame = new PendantClientJInternalFrame();
+            crclClientJInternalFrame = new PendantClientJInternalFrame(this.aprsSystemDisplayJFrame);
             crclClientJInternalFrame.setRunProgramService(runProgramService);
             crclClientJInternalFrame.setTempLogDir(Utils.getlogFileDir());
             updateSubPropertiesFiles();
@@ -3751,6 +3769,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     }
 
     public void windowClosing() {
+        closing = true;
         startingCheckEnabled = false;
         try {
             immediateAbort();
@@ -4571,7 +4590,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     }
 
     @Nullable
-    private volatile transient Consumer<String> supervisorEventLogger = null;
+    private volatile  Consumer<String> supervisorEventLogger = null;
 
     /**
      * Get the value of supervisorEventLogger
@@ -6080,6 +6099,14 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             DbSetupBuilder.savePropertiesFile(dbPropsFile, dbSetup);
         }
     }
+    
+   public boolean checkPose(PoseType goalPose) {
+        if (null == crclClientJInternalFrame) {
+            throw new IllegalStateException("null == crclClientJInternalFrame");
+        }
+        return crclClientJInternalFrame.checkPose(goalPose);
+    }
+   
     private static final String LOG_CRCL_PROGRAMS_ENABLED = "LogCrclProgramsEnabled";
 
     private static final String USETEACHTABLE = "USETEACHTABLE";
@@ -6593,6 +6620,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return run data for last program
      */
     @Override
+    @Nullable
     public List<ProgramRunData> getLastProgRunDataList() {
         if (null == crclClientJInternalFrame) {
             return Collections.emptyList();

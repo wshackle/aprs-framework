@@ -66,24 +66,34 @@ public class Object2DJPanel extends JPanel {
 
     public Object2DJPanel() {
         partImageMap = new HashMap<>();
-        addPartImage("private", "aprs/partImages/fanuc_tool_holder2.png", 115.0, true, false, -60.0, 10.0);
-        addPartImage("shared_gripper", "aprs/partImages/fanuc_tool_holder2.png", 115.0, true, false, -60.0, 10.0);
-        addPartImage("small_private_holder", "aprs/partImages/fanuc_tool_holder2.png", 115.0, true, false, 10.0, -60.0);
-        addPartImage("pincher", "aprs/partImages/pincher_small_vac_top.png", 115.0, true, false, 0.0, 10.0);
-        addPartImage("small_vacuum", "aprs/partImages/pincher_small_vac_top.png", 115.0, true, false, 0.0, 10.0);
-        addPartImage("shared_with_fanuc_holder", "aprs/partImages/fanuc_tool_holder2.png", 115.0, true, false, 10.0, -60.0);
-        addPartImage("big_gripper_holder", "aprs/partImages/big_gripper_holder2.png", 125.0, true, false, 0.0, 0.0);
-        addPartImage("big_vacuum_holder", "aprs/partImages/big_vacuum_holder.png", 215.0, true, false, 0.0, -15.0);
-        addPartImage("big_vacuum", "aprs/partImages/big_vacuum.png", 215.0, true, false, 0.0, -15.0);
-        addPartImage("big_gripper", "aprs/partImages/big_vacuum.png", 125.0, true, false, 0.0, 0.0);
-        addPartImage("sku_part_medium_gear", "aprs/partImages/medium_orange_gear.png", 75.0);
-        addPartImage("sku_part_large_gear", "aprs/partImages/large_green_gear.png", 100.0);
-        addPartImage("sku_part_small_gear", "aprs/partImages/small_yellow_gear.png", 45.0);
-        addPartImage("sku_kit_s2l2_vessel", "aprs/partImages/red_s2l2_kit_tray_up.png", 220.0);
-        addPartImage("sku_large_gear_vessel", "aprs/partImages/purple_large_gear_tray_horz.png", 220.0);
-        addPartImage("sku_medium_gear_vessel", "aprs/partImages/blue_medium_gear_parts_tray.png", 160.0);
-        addPartImage("sku_small_gear_vessel", "aprs/partImages/orange_small_gear_parts_tray.png", 110.0);
-        addPartImage("sku_kit_m2l1_vessel", "aprs/partImages/m2l1_kit_tray_right.png", 190.0);
+        try {
+            BufferedImage fanucToolHolder2Image = getImageFromResourceName("aprs/partImages/fanuc_tool_holder2.png");
+            addPartImage("private", fanucToolHolder2Image, 115.0, true, false, -60.0, 10.0);
+            addPartImage("fanucBackLeftHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
+            addPartImage("shared_gripper", fanucToolHolder2Image, 115.0, true, false, -60.0, 10.0);
+            addPartImage("sharedBackCenterHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
+            addPartImage("small_private_holder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
+            addPartImage("motomanBackCenterRightHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
+            addPartImage("shared_with_fanuc_holder", fanucToolHolder2Image, 115.0, true, false, 10.0, -60.0);
+            BufferedImage pincherSmallVacTopImage = getImageFromResourceName("aprs/partImages/pincher_small_vac_top.png");
+
+            addPartImage("pincher", pincherSmallVacTopImage, 115.0, true, false, -4.0, 10.0);
+            addPartImage("small_vacuum", pincherSmallVacTopImage, 115.0, true, false, -4.0, 10.0);
+            addPartImage("big_gripper_holder", "aprs/partImages/big_gripper_holder2.png", 125.0, true, false, 0.0, 0.0);
+            addPartImage("big_vacuum_holder", "aprs/partImages/big_vacuum_holder.png", 215.0, true, false, 0.0, -15.0);
+            addPartImage("big_vacuum", "aprs/partImages/big_vacuum.png", 215.0, true, false, 0.0, -15.0);
+            addPartImage("big_gripper", "aprs/partImages/big_vacuum.png", 125.0, true, false, 0.0, 0.0);
+            addPartImage("sku_part_medium_gear", "aprs/partImages/medium_orange_gear.png", 75.0);
+            addPartImage("sku_part_large_gear", "aprs/partImages/large_green_gear.png", 100.0);
+            addPartImage("sku_part_small_gear", "aprs/partImages/small_yellow_gear.png", 45.0);
+            addPartImage("sku_kit_s2l2_vessel", "aprs/partImages/red_s2l2_kit_tray_up.png", 220.0);
+            addPartImage("sku_large_gear_vessel", "aprs/partImages/purple_large_gear_tray_horz.png", 220.0);
+            addPartImage("sku_medium_gear_vessel", "aprs/partImages/blue_medium_gear_parts_tray.png", 160.0);
+            addPartImage("sku_small_gear_vessel", "aprs/partImages/orange_small_gear_parts_tray.png", 110.0);
+            addPartImage("sku_kit_m2l1_vessel", "aprs/partImages/m2l1_kit_tray_right.png", 190.0);
+        } catch (IOException ex) {
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private double rotationOffset;
@@ -135,7 +145,16 @@ public class Object2DJPanel extends JPanel {
     private void addPartImage(@UnknownInitialization Object2DJPanel this,
             String partName, String resName, double realWidth, boolean ignoreRotations, boolean useHeight, double xoffset, double yoffset) {
         try {
-            BufferedImage img = getImageFromSystemResourceName(resName);
+            BufferedImage img = getImageFromResourceName(resName);
+            addPartImage(partName, img, realWidth, ignoreRotations, useHeight, xoffset, yoffset);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void addPartImage(@UnknownInitialization Object2DJPanel this,
+            String partName, BufferedImage img, double realWidth, boolean ignoreRotations, boolean useHeight, double xoffset, double yoffset) {
+        try {
             if (null != img) {
                 double ratio = useHeight ? realWidth / img.getHeight() : realWidth / img.getWidth();
                 if (null != partImageMap) {
@@ -147,8 +166,32 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    static private BufferedImage getImageFromSystemResourceName(String resName) throws IOException {
-        URL url = ClassLoader.getSystemResource(resName);
+    static private BufferedImage getImageFromResourceName(String resName) throws IOException {
+        URL url = null;
+        try {
+            if (null == url) {
+                ClassLoader cl = Object2DJPanel.class.getClassLoader();
+                if (null != cl) {
+                    url = cl.getResource(resName);//.getResource(resName);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        try {
+            if (null == url) {
+                url = ClassLoader.getSystemResource(resName);//.getResource(resName);
+            }
+        } catch (Exception ignored) {
+        }
+        try {
+            if (null == url) {
+                ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                if (null != cl) {
+                    url = cl.getResource(resName);//.getResource(resName);
+                }
+            }
+        } catch (Exception ignored) {
+        }
         if (null == url) {
             throw new IllegalArgumentException("ClassLoader.getSystemResource(" + resName + ") returned null");
         }
@@ -382,7 +425,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    private void takeSnapshot(File f, PointType point, String label, final int w, final int h) {
+    private void takeSnapshot(File f, @Nullable PointType point, String label, final int w, final int h) {
         if (null != point) {
             takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label, w, h);
         } else {
@@ -1138,7 +1181,7 @@ public class Object2DJPanel extends JPanel {
         }
         return aprsSysInterface.getAvailableToolHolders();
     }
-    
+
     private List<PhysicalItem> getToolsInHolders() {
         if (null == aprsSysInterface) {
             throw new IllegalStateException("null == aprsSysInterface");
@@ -1151,7 +1194,7 @@ public class Object2DJPanel extends JPanel {
         l.addAll(getToolsInHolders());
         return l;
     }
-    
+
     private void updateAddedExtras() {
         if (showAddedSlotPositions || showAddedToolsAndToolHolders) {
             if (showAddedToolsAndToolHolders) {
@@ -1279,8 +1322,6 @@ public class Object2DJPanel extends JPanel {
         public int getScaledImageHeight() {
             return scaledImageHeight;
         }
-        
-        
 
         Image getScaledImage(double scale) {
             int old_w = (int) (ratio * this.scale * image.getWidth());
@@ -1800,7 +1841,7 @@ public class Object2DJPanel extends JPanel {
         switch (displayAxis) {
             case POS_X_POS_Y:
             case NEG_X_NEG_Y:
-                scale_x = diffwidth / diffx ;
+                scale_x = diffwidth / diffx;
                 scale_y = diffheight / diffy;
                 break;
             case POS_Y_NEG_X:
@@ -1889,14 +1930,58 @@ public class Object2DJPanel extends JPanel {
             tempMinMax.max.x = maxX;
             tempMinMax.min.y = minY;
             tempMinMax.max.y = maxY;
-            translateThenRotate(g2d, item.x + info.xoffset, item.y + info.yoffset, tempMinMax, currentScale, info.ignoreRotations, -rotationOffsetParam - item.getRotation());
+            double infoXOffset = info.xoffset;
+            double infoYOffset = info.yoffset;
+            double displayRot = 0;
+            double xo = infoXOffset;
+            double yo = infoYOffset;
+            if (info.ignoreRotations) {
+//                if(item.origName.startsWith("fanuc")) {
+//                    System.out.println("debug me");
+//                }
+
+                double cs = Math.cos(alternativeRotation);
+                double sn = Math.sin(alternativeRotation);
+                infoXOffset = xo * cs + yo * sn;
+                infoYOffset = -xo * sn + yo * cs;
+                xo = infoXOffset;
+                yo = infoYOffset;
+            }
+
+//            switch (displayAxis) {
+//                case POS_X_POS_Y:
+//                    infoXOffset = xo;
+//                    infoYOffset = yo;
+//                    displayRot = 0;
+//                    break;
+//
+//                case POS_Y_NEG_X:
+//
+//                    infoXOffset = yo;
+//                    infoYOffset = -xo;
+//                    displayRot = Math.PI / 2.0;
+//                    break;
+//
+//                case NEG_X_NEG_Y:
+//                    infoXOffset = -xo;
+//                    infoYOffset = -yo;
+//                    displayRot = Math.PI;
+//                    break;
+//
+//                case NEG_Y_POS_X:
+//                    infoXOffset = -yo;
+//                    infoYOffset = xo;
+//                    displayRot = 3.0 * Math.PI / 2.0;
+//                    break;
+//            }
+            translateThenRotate(g2d, item.x - infoXOffset, item.y - infoYOffset, tempMinMax, currentScale, info.ignoreRotations, -rotationOffsetParam - item.getRotation());
 //            translateThenRotateItem(g2d, minX, minY, maxX, maxY, item, rotationOffsetParam, currentScale, info.ignoreRotations);
             g2d.translate(-(img_w / 2.0), -(img_h / 2.0));
             g2d.drawImage(img, null, null);
             if (viewDetails) {
                 g2d.translate(-1, -1);
                 g2d.setColor(item.getLabelColor());
-                g2d.draw(new Rectangle2D.Double(0, 0, img_w + 2,img_h + 2));
+                g2d.draw(new Rectangle2D.Double(0, 0, img_w + 2, img_h + 2));
             }
             g2d.setColor(Color.BLACK);
 
@@ -1954,10 +2039,6 @@ public class Object2DJPanel extends JPanel {
                 item.setDisplayRect(itemDisplayRect);
             }
         }
-//        if (null == info) {
-//            System.err.println("partImageMap.keySet() = " + partImageMap.keySet());
-//            throw new IllegalStateException("Failed to find info for " + item.getName() + " in \r\n " + partImageMap.keySet());
-//        }
         return info;
     }
 
@@ -1968,43 +2049,51 @@ public class Object2DJPanel extends JPanel {
         translateThenRotate(g2d, itemx, itemy, minMaxParam, scaleParam, ignoreRotation, rot);
     }
 
+    private double alternativeRotation = 0.0;
+
+    /**
+     * Get the value of alternativeRotation
+     *
+     * @return the value of alternativeRotation
+     */
+    public double getAlternativeRotation() {
+        return alternativeRotation;
+    }
+
+    /**
+     * Set the value of alternativeRotation
+     *
+     * @param alternativeRotation new value of alternativeRotation
+     */
+    public void setAlternativeRotation(double alternativeRotation) {
+        this.alternativeRotation = alternativeRotation;
+        this.repaint();
+    }
+
     private void translateThenRotate(Graphics2D g2d, double itemx, double itemy, MinMax minMaxParam, double scaleParam, boolean ignoreRotation, double rot) {
         Point2D.Double translatePoint = toScreenPoint(displayAxis, itemx, itemy, minMaxParam, scaleParam);
-//        switch (displayAxis) {
-//            case POS_X_POS_Y:
-//                g2d.translate((itemx - minX1) * scaleParam + 15, (maxY1 - itemy) * scaleParam + 20);
-//                break;
-//            case POS_Y_NEG_X:
-//                g2d.translate((itemy - minY1) * scaleParam + 15, (itemx - minX1) * scaleParam + 20);
-//                break;
-//            case NEG_X_NEG_Y:
-//                g2d.translate((maxX1 - itemx) * scaleParam + 15, (itemy - minY1) * scaleParam + 20);
-//                break;
-//            case NEG_Y_POS_X:
-//                g2d.translate((maxY1 - itemy) * scaleParam + 15, (maxX1 - itemx) * scaleParam + 20);
-//                break;
-//        }
         g2d.translate(translatePoint.x, translatePoint.y);
         if (viewRotationsAndImages) {
+            switch (displayAxis) {
+                case POS_X_POS_Y:
+                    break;
+
+                case POS_Y_NEG_X:
+                    g2d.rotate(Math.PI / 2.0);
+                    break;
+
+                case NEG_X_NEG_Y:
+                    g2d.rotate(Math.PI);
+                    break;
+
+                case NEG_Y_POS_X:
+                    g2d.rotate(3 * Math.PI / 2.0);
+                    break;
+            }
             if (!ignoreRotation) {
-                switch (displayAxis) {
-                    case POS_X_POS_Y:
-//                    g2d.rotate(Math.PI/2.0);
-                        break;
-
-                    case POS_Y_NEG_X:
-                        g2d.rotate(Math.PI / 2.0);
-                        break;
-
-                    case NEG_X_NEG_Y:
-                        g2d.rotate(Math.PI);
-                        break;
-
-                    case NEG_Y_POS_X:
-                        g2d.rotate(3 * Math.PI / 2.0);
-                        break;
-                }
                 g2d.rotate(rot);
+            } else {
+                g2d.rotate(alternativeRotation);
             }
         }
     }
