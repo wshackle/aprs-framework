@@ -1,0 +1,14 @@
+package crcl.base;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+
+class MoveToType extends MiddleCommandType {
+    protected boolean moveStraight;
+    @Nullable protected PoseType endPosition;
+    MoveToType();
+    boolean isMoveStraight();
+    void setMoveStraight(boolean arg0);
+    @Nullable PoseType getEndPosition();
+    void setEndPosition(PoseType arg0);
+}

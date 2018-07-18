@@ -1,0 +1,10 @@
+package crcl.base;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class DataThingType {
+    @Nullable protected String name;
+    DataThingType();
+    @Nullable String getName();
+    void setName(String arg0);
+}

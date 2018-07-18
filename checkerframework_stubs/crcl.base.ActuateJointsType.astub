@@ -1,0 +1,7 @@
+package crcl.base;
+
+class ActuateJointsType extends MiddleCommandType {
+    protected List<ActuateJointType> actuateJoint;
+    ActuateJointsType();
+    List<ActuateJointType> getActuateJoint();
+}

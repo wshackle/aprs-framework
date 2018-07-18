@@ -1,0 +1,13 @@
+package crcl.base;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class JointSpeedAccelType extends JointDetailsType {
+    @Nullable protected Double jointSpeed;
+    @Nullable protected Double jointAccel;
+    JointSpeedAccelType();
+    @Nullable Double getJointSpeed();
+    void setJointSpeed(Double arg0);
+    @Nullable Double getJointAccel();
+    void setJointAccel(Double arg0);
+}

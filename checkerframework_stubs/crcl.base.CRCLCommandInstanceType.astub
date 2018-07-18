@@ -1,0 +1,19 @@
+package crcl.base;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class CRCLCommandInstanceType extends DataThingType {
+    @Nullable protected CRCLCommandType crclCommand;
+    @Nullable protected String programFile;
+    @Nullable protected Integer programIndex;
+    @Nullable protected Integer programLength;
+    CRCLCommandInstanceType();
+    @Nullable CRCLCommandType getCRCLCommand();
+    void setCRCLCommand(CRCLCommandType arg0);
+    @Nullable String getProgramFile();
+    void setProgramFile(String arg0);
+    @Nullable Integer getProgramIndex();
+    void setProgramIndex(Integer arg0);
+    @Nullable Integer getProgramLength();
+    void setProgramLength(Integer arg0);
+}

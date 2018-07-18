@@ -1,0 +1,19 @@
+package crcl.base;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class PoseStatusType extends DataThingType {
+    @Nullable protected PoseType pose;
+    @Nullable protected TwistType twist;
+    @Nullable protected WrenchType wrench;
+    @Nullable protected String configuration;
+    PoseStatusType();
+    @Nullable PoseType getPose();
+    void setPose(PoseType arg0);
+    @Nullable TwistType getTwist();
+    void setTwist(TwistType arg0);
+    @Nullable WrenchType getWrench();
+    void setWrench(WrenchType arg0);
+    @Nullable String getConfiguration();
+    void setConfiguration(String arg0);
+}

@@ -1,0 +1,16 @@
+package crcl.base;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class PoseType extends DataThingType {
+    @Nullable protected PointType point;
+    @Nullable protected VectorType xAxis;
+    @Nullable protected VectorType zAxis;
+    PoseType();
+    @Nullable PointType getPoint();
+    void setPoint(PointType arg0);
+    @Nullable VectorType getXAxis();
+    void setXAxis(VectorType arg0);
+    @Nullable VectorType getZAxis();
+    void setZAxis(VectorType arg0);
+}
