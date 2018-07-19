@@ -3437,7 +3437,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             crclClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
 
                 @Override
-                public void titleChanged(CommandStatusType ccst, Container container, String stateString, String stateDescription) {
+                public void titleChanged(CommandStatusType ccst, @Nullable Container container, String stateString, String stateDescription) {
                     updateTitle(stateString, stateDescription);
                 }
             });
