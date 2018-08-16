@@ -2,11 +2,12 @@
 --visionhost=agility.el.nist.gov
 --visionport=5001
 addPosNoise=false
+alternativeRotation=0.00
 autoscale=false
 connected=true
 displayAxis=(Y+,X-)
 dropOffThreshold=25.00
-items=sku_part_large_gear,0.0,345.49,38.66,0.99,P,sku_part_large_gear,0.0,385.21,-206.63,0.99,P,sku_part_medium_gear,0.0,532.37,-164.42,0.94,P,sku_part_medium_gear,0.0,426.8,100.99,0.94,P,sku_part_medium_gear,0.0,629.76,153.91,0.9,P,sku_part_medium_gear,0.0,358.82,142.36,0.88,P,sku_large_gear_vessel,0.59,353.81,-157.4,0.95,PT,sku_medium_gear_vessel,-0.8,533.18,-107.28,0.93,PT,sku_kit_m2l1_vessel,2.56,365.95,73.75,0.54,KT,sku_kit_m2l1_vessel,1.61,577.73,110.89,0.62,KT,
+items=sku_part_large_gear,0.0,439.25,-95.32,0.98,P,sku_part_large_gear,0.0,428.16,103.61,0.96,P,sku_part_medium_gear,0.0,467.07,202.44,0.97,P,sku_part_medium_gear,0.0,472.95,-187.82,0.94,P,sku_part_medium_gear,0.0,386.61,203.44,0.94,P,sku_part_medium_gear,0.0,394.24,-185.27,0.94,P,sku_large_gear_vessel,-0.01,635.96,-138.97,0.99,PT,sku_medium_gear_vessel,0.01,627.07,104.31,0.94,PT,sku_kit_m2l1_vessel,3.09,426.3,143.84,0.51,KT,sku_kit_m2l1_vessel,-0.06,437.03,-130.45,0.57,KT,
 
 pickupDist=5.00
 posNoise=1.00
